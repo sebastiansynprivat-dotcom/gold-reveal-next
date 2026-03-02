@@ -138,7 +138,7 @@ const QuizResult = ({ questions, answers, onRestart }: QuizResultProps) => {
       {wrongCategories.length === 0 && (
         <motion.div className="mt-14 p-6 rounded-xl glass-card max-w-md text-center" initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.8, duration: 0.8, ease }}>
           <h2 className="text-lg gold-gradient-text mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>Perfektes Ergebnis ✨</h2>
-          <p className="text-muted-foreground/60 text-sm leading-relaxed mb-6">Schick bitte einen Screenshot von deinem Ergebnis in die Gruppe. Im Anschluss erhältst du nach einer kurzen Einführung deinen Account.</p>
+          <p className="text-foreground text-base leading-relaxed mb-6 font-medium">Nun folgt der letzte Schritt: Die Einführung in die Plattform auf der du arbeiten wirst.</p>
           <WeightedRouteButton />
         </motion.div>
       )}
