@@ -11,7 +11,7 @@ const videos = [
   },
   {
     title: "Telegram Nachrichten Video",
-    embedUrl: "https://www.loom.com/embed/PLATZHALTER_2?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true",
+    embedUrl: "https://www.loom.com/embed/0582b0ea68b942728a535a98f990660b?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true",
   },
 ];
 
