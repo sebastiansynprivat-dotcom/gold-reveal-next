@@ -85,20 +85,63 @@ const Index = () => {
         Bitte schau das Video vollständig an. Erst danach erscheint der Button, der dich zum nächsten Schritt führt.
       </p>
 
-      {/* CTA Button – erscheint nach Video-Completion */}
+      {/* Resources + CTA – erscheint nach 90% Video */}
       <div
-        className={`transition-all duration-1000 ease-out ${
+        className={`transition-all duration-1000 ease-out w-full max-w-[800px] ${
           showButton
             ? "opacity-100 translate-y-0"
             : "opacity-0 translate-y-4 pointer-events-none"
         }`}
       >
-        <a
-          href="/quiz"
-          className="inline-block px-10 py-4 rounded-lg bg-primary text-primary-foreground font-semibold text-lg tracking-wide gold-glow hover:gold-glow-strong hover:scale-105 transition-all duration-300"
-        >
-          Weiter zum nächsten Schritt →
-        </a>
+        {/* Resource Links */}
+        <div className="glass-card-subtle rounded-xl p-6 mb-8 space-y-4 text-sm">
+          <div className="flex items-start gap-2">
+            <span>📁</span>
+            <span className="text-foreground">
+              Der Chat den wir im Coaching durch gegangen sind als PDF 👉🏻{" "}
+              <a href="https://drive.google.com/file/d/1RfhdcJKDyY3Uu4O94SlUQJ2MRKLCurfx/view?usp=sharing" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 underline underline-offset-2 transition-colors">
+                PDF öffnen
+              </a>
+            </span>
+          </div>
+          <div className="flex items-start gap-2">
+            <span>📁</span>
+            <span className="text-foreground">
+              Fortsetzung des Coaching Chats am nächsten Tag 👉🏻{" "}
+              <a href="https://drive.google.com/file/d/1v-eVMarJsuprLMgmuqm713b1_hNFMKZS/view?usp=sharing" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 underline underline-offset-2 transition-colors">
+                PDF öffnen
+              </a>
+            </span>
+          </div>
+          <div className="flex items-start gap-2">
+            <span>📁</span>
+            <span className="text-foreground">
+              Chatverlauf mit einem komplizierteren Kunden (Einwandsbehandlung) 👉🏻{" "}
+              <a href="https://drive.google.com/file/d/11LVnjZAbh8JRMfwnOAvzNq7EtU5r90HL/view?usp=sharing" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 underline underline-offset-2 transition-colors">
+                PDF öffnen
+              </a>
+            </span>
+          </div>
+          <div className="flex items-start gap-2">
+            <span>⭐️</span>
+            <span className="text-foreground">
+              Lies dir unsere Bewertungen bei Trustpilot durch 👉🏻{" "}
+              <a href="https://de.trustpilot.com/review/she-x.de" target="_blank" rel="noopener noreferrer" className="text-primary hover:text-primary/80 underline underline-offset-2 transition-colors">
+                Trustpilot öffnen
+              </a>
+            </span>
+          </div>
+        </div>
+
+        {/* CTA Button */}
+        <div className="flex justify-center">
+          <a
+            href="/quiz"
+            className="inline-block px-10 py-4 rounded-lg bg-primary text-primary-foreground font-semibold text-lg tracking-wide gold-glow hover:gold-glow-strong hover:scale-105 transition-all duration-300"
+          >
+            Weiter zum nächsten Schritt →
+          </a>
+        </div>
       </div>
 
 
