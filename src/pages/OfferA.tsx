@@ -6,7 +6,7 @@ const ease = [0.16, 1, 0.3, 1] as const;
 const videos = [
   {
     title: "Mass DM System",
-    embedUrl: "https://www.loom.com/embed/5b12680aecdb4a0c985d1fedac174807?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true",
+    embedUrl: "https://www.loom.com/embed/ffb4a4cd46ef49d1be746a9161d5f21c?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true",
   },
   {
     title: "Plattform Erklärungs Video",
