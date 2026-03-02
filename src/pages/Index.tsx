@@ -58,8 +58,8 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-start px-4 py-12 md:py-20">
-      {/* Subtle top accent line */}
-      <div className="w-20 h-px bg-primary mb-10 opacity-40" />
+
+
 
       {/* Headline */}
       <h1 className="gold-gradient-text text-3xl md:text-5xl font-bold text-center tracking-tight leading-tight mb-10 max-w-2xl">
@@ -101,10 +101,8 @@ const Index = () => {
         </a>
       </div>
 
-      {/* Bottom accent */}
-      <div className="mt-auto pt-16">
-        <div className="w-10 h-px bg-primary opacity-20" />
-      </div>
+
+
     </div>
   );
 };
