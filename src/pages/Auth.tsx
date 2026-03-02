@@ -9,6 +9,7 @@ const translateError = (msg: string): string => {
   if (msg.includes("already registered")) return "Diese E-Mail ist bereits registriert.";
   if (msg.includes("invalid")) return "Bitte gib eine gültige E-Mail-Adresse ein.";
   if (msg.includes("security purposes")) return "Bitte warte einen Moment und versuche es erneut.";
+  if (msg.includes("rate limit")) return "Zu viele Versuche. Bitte warte einen Moment und versuche es erneut.";
   if (msg.includes("Password should be")) return "Das Passwort muss mindestens 6 Zeichen haben.";
   return msg;
 };
