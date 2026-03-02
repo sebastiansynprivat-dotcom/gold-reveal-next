@@ -1,6 +1,8 @@
-import { useMemo, useEffect } from "react";
+import { useMemo, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import confetti from "canvas-confetti";
+import { supabase } from "@/integrations/supabase/client";
 import type { QuizQuestion } from "@/data/quizQuestions";
 import logo from "@/assets/logo.png";
 
@@ -136,7 +138,8 @@ const QuizResult = ({ questions, answers, onRestart }: QuizResultProps) => {
       {wrongCategories.length === 0 && (
         <motion.div className="mt-14 p-6 rounded-xl glass-card max-w-md text-center" initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.8, duration: 0.8, ease }}>
           <h2 className="text-lg gold-gradient-text mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>Perfektes Ergebnis ✨</h2>
-          <p className="text-muted-foreground/60 text-sm leading-relaxed">Schick bitte einen Screenshot von deinem Ergebnis in die Gruppe. Im Anschluss erhältst du nach einer kurzen Einführung deinen Account.</p>
+          <p className="text-muted-foreground/60 text-sm leading-relaxed mb-6">Schick bitte einen Screenshot von deinem Ergebnis in die Gruppe. Im Anschluss erhältst du nach einer kurzen Einführung deinen Account.</p>
+          <WeightedRouteButton />
         </motion.div>
       )}
 
@@ -146,6 +149,55 @@ const QuizResult = ({ questions, answers, onRestart }: QuizResultProps) => {
         </motion.button>
       )}
     </motion.div>
+  );
+};
+
+const WeightedRouteButton = () => {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+
+  const handleContinue = async () => {
+    setLoading(true);
+    try {
+      const { data: routes } = await supabase
+        .from("quiz_routes")
+        .select("target_path, weight")
+        .eq("is_active", true);
+
+      if (!routes || routes.length === 0) {
+        navigate("/offer-a");
+        return;
+      }
+
+      // Weighted random selection
+      const totalWeight = routes.reduce((sum, r) => sum + r.weight, 0);
+      let random = Math.random() * totalWeight;
+      let selectedPath = routes[0].target_path;
+
+      for (const route of routes) {
+        random -= route.weight;
+        if (random <= 0) {
+          selectedPath = route.target_path;
+          break;
+        }
+      }
+
+      navigate(selectedPath);
+    } catch {
+      navigate("/offer-a");
+    }
+  };
+
+  return (
+    <motion.button
+      onClick={handleContinue}
+      disabled={loading}
+      className="px-10 py-4 rounded-xl bg-primary text-primary-foreground font-semibold tracking-wide transition-all duration-500 gold-glow hover:gold-glow-strong disabled:opacity-50"
+      whileHover={{ scale: 1.02, y: -2 }}
+      whileTap={{ scale: 0.98 }}
+    >
+      {loading ? "Bitte warten..." : "Weiter →"}
+    </motion.button>
   );
 };
 
