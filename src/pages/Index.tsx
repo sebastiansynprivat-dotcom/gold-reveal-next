@@ -65,7 +65,7 @@ const Index = () => {
       </h1>
 
       {/* Video + Sidebar Layout */}
-      <div className="w-full max-w-[1100px] flex flex-col lg:flex-row gap-6 mb-12">
+      <div className={`w-full flex flex-col lg:flex-row gap-6 mb-12 transition-all duration-1000 ease-out ${showButton ? "max-w-[1100px]" : "max-w-[800px]"}`}>
         {/* Video */}
         <div className="flex-1 gold-border-glow rounded-xl overflow-hidden">
           <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
@@ -84,8 +84,8 @@ const Index = () => {
         <div
           className={`transition-all duration-1000 ease-out lg:w-[280px] shrink-0 ${
             showButton
-              ? "opacity-100 translate-y-0"
-              : "opacity-0 translate-y-4 pointer-events-none"
+              ? "opacity-100 translate-x-0"
+              : "opacity-0 lg:w-0 lg:overflow-hidden pointer-events-none"
           }`}
         >
           <div className="glass-card-subtle rounded-xl p-5 space-y-4 text-sm h-full">
