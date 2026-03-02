@@ -94,7 +94,7 @@ const Index = () => {
         }`}
       >
         <a
-          href="#"
+          href="/quiz"
           className="inline-block px-10 py-4 rounded-lg bg-primary text-primary-foreground font-semibold text-lg tracking-wide gold-glow hover:gold-glow-strong hover:scale-105 transition-all duration-300"
         >
           Weiter zum nächsten Schritt →

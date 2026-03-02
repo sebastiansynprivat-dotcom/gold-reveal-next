@@ -94,4 +94,25 @@
     box-shadow: 0 0 15px hsl(43 56% 52% / 0.1),
                 inset 0 0 15px hsl(43 56% 52% / 0.05);
   }
+
+  .text-gold-gradient {
+    background: linear-gradient(135deg, hsl(43 56% 72%), hsl(43 56% 52%), hsl(43 76% 46%));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .glass-card {
+    background: hsl(0 0% 8% / 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid hsl(43 30% 20% / 0.5);
+  }
+
+  .glass-card-subtle {
+    background: hsl(0 0% 6% / 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid hsl(43 30% 20% / 0.3);
+  }
 }
