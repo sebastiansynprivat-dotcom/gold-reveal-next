@@ -117,7 +117,7 @@ const QuizResult = ({ questions, answers, onRestart }: QuizResultProps) => {
       {wrongCategories.length > 0 && (
         <motion.div className="w-full max-w-md mt-14" initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.8, duration: 0.8, ease }}>
           <h2 className="text-lg gold-gradient-text mb-2 text-center" style={{ fontFamily: "'Playfair Display', serif" }}>Du musst noch etwas lernen 🧠</h2>
-          <p className="text-foreground text-base leading-relaxed mb-6 font-medium">Schau dir die Optimierungen unten an und wiederhole dann das Quiz nochmal. Erst ab 100% richtige Fragen können wir gemeinsam starten.</p>
+          <p className="text-foreground/90 text-sm leading-relaxed mb-6 text-center">Schau dir die Optimierungen unten an und wiederhole dann das Quiz nochmal. Erst ab 100% richtige Fragen können wir gemeinsam starten.</p>
           <h3 className="text-xs uppercase tracking-[0.2em] text-primary/50 mb-6 text-center font-medium">Optimierungspotenzial</h3>
           <div className="space-y-2.5">
             {wrongCategories.map((cat, i) => (
