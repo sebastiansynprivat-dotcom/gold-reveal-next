@@ -131,10 +131,12 @@ const Index = () => {
         )}
       </div>
 
-      {/* Disclaimer */}
-      <p className="text-muted-foreground text-sm text-center max-w-md mb-10">
-        Bitte schau das Video vollständig an. Erst danach erscheint der Button, der dich zum nächsten Schritt führt.
-      </p>
+      {/* Disclaimer – hidden once video is 90% watched */}
+      {!showButton && (
+        <p className="text-muted-foreground text-sm text-center max-w-md mb-10">
+          Bitte schau das Video vollständig an. Erst danach erscheint der Button, der dich zum nächsten Schritt führt.
+        </p>
+      )}
 
       {/* CTA Button */}
       <div
