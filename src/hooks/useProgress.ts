@@ -1,6 +1,4 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "./useAuth";
+import { useState } from "react";
 
 interface UserProgress {
   current_step: string;
@@ -10,36 +8,11 @@ interface UserProgress {
 }
 
 export const useProgress = () => {
-  const { user } = useAuth();
   const [progress, setProgress] = useState<UserProgress | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!user) { setLoading(false); return; }
-
-    const fetch = async () => {
-      const { data } = await supabase
-        .from("user_progress")
-        .select("current_step, video_completed, quiz_completed, quiz_score")
-        .eq("user_id", user.id)
-        .single();
-      setProgress(data);
-      setLoading(false);
-    };
-
-    fetch();
-  }, [user]);
 
   const updateProgress = async (updates: Partial<UserProgress>) => {
-    if (!user) return;
-    const { data } = await supabase
-      .from("user_progress")
-      .update(updates)
-      .eq("user_id", user.id)
-      .select("current_step, video_completed, quiz_completed, quiz_score")
-      .single();
-    if (data) setProgress(data);
+    setProgress((prev) => (prev ? { ...prev, ...updates } : { current_step: "video", video_completed: false, quiz_completed: false, quiz_score: null, ...updates }));
   };
 
-  return { progress, loading, updateProgress };
+  return { progress, loading: false, updateProgress };
 };
