@@ -10,7 +10,7 @@ const videos = [
   },
   {
     title: "Plattform Erklärungs Video",
-    embedUrl: "https://www.loom.com/embed/b0b1ac14b15a4b2b9251a184a43060a6?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true",
+    embedUrl: "https://www.loom.com/embed/9223723737e74705b735d3cc3065814b?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true",
   },
   {
     title: "Telegram Nachrichten",
