@@ -14,8 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      quiz_routes: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          target_path: string
+          weight: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          target_path: string
+          weight?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          target_path?: string
+          weight?: number
+        }
+        Relationships: []
+      }
       user_progress: {
         Row: {
+          assigned_route: string | null
           created_at: string
           current_step: string
           id: string
@@ -26,6 +54,7 @@ export type Database = {
           video_completed: boolean
         }
         Insert: {
+          assigned_route?: string | null
           created_at?: string
           current_step?: string
           id?: string
@@ -36,6 +65,7 @@ export type Database = {
           video_completed?: boolean
         }
         Update: {
+          assigned_route?: string | null
           created_at?: string
           current_step?: string
           id?: string
