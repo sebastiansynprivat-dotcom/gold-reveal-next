@@ -1,15 +1,27 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import logo from "@/assets/logo.png";
+import ProgressChecklist from "@/components/ProgressChecklist";
+import StepBadge from "@/components/StepBadge";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
+const steps = [
+  { id: 1, title: "Plattform Erklärungs Video anschauen" },
+  { id: 2, title: "Telegram Nachrichten Video anschauen" },
+  { id: 3, title: "Brezzels Notifications aktivieren" },
+  { id: 4, title: "My ID Bot einrichten" },
+  { id: 5, title: "Tägliches Feedback einrichten" },
+];
+
 const videos = [
   {
+    step: 1,
     title: "Plattform Erklärungs Video",
     embedUrl: "https://www.loom.com/embed/b161be42f5484688b862f8cd5753690b?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true",
   },
   {
+    step: 2,
     title: "Telegram Nachrichten Video",
     embedUrl: "https://www.loom.com/embed/0582b0ea68b942728a535a98f990660b?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true",
   },
@@ -17,12 +29,14 @@ const videos = [
 
 const links = [
   {
+    step: 3,
     title: "Brezzels Notifications",
     description: "Aktiviere Benachrichtigungen damit du keine Nachricht verpasst",
     url: "https://t.me/Notifications_brezzels_bot",
     icon: "🔔",
   },
   {
+    step: 4,
     title: "My ID Bot",
     description: "Finde deine Telegram ID für die Einrichtung",
     url: "https://t.me/myidbot",
@@ -38,8 +52,32 @@ Was lief gut?:
 Was lief schlecht?:
 Offene Fragen (optional)`;
 
+const STORAGE_KEY = "offerb-completed-steps";
+
+const loadCompleted = (): Set<number> => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) return new Set(JSON.parse(raw));
+  } catch {}
+  return new Set();
+};
+
 const OfferB = () => {
   const [showPopup, setShowPopup] = useState(true);
+  const [completedSteps, setCompletedSteps] = useState<Set<number>>(loadCompleted);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify([...completedSteps]));
+  }, [completedSteps]);
+
+  const toggleStep = (id: number) => {
+    setCompletedSteps((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   const handleCopy = () => {
     navigator.clipboard.writeText(feedbackTemplate);
@@ -106,7 +144,7 @@ const OfferB = () => {
 
       {/* Hero */}
       <motion.div
-        className="flex flex-col items-center text-center mb-16"
+        className="flex flex-col items-center text-center mb-10"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease }}
@@ -124,21 +162,32 @@ const OfferB = () => {
         </p>
       </motion.div>
 
+      {/* Progress Checklist */}
+      <ProgressChecklist
+        steps={steps}
+        completedSteps={completedSteps}
+        onToggle={toggleStep}
+      />
+
       {/* Videos */}
       <div className="max-w-3xl mx-auto space-y-14 mb-16">
         {videos.map((video, i) => (
           <motion.div
             key={video.title}
+            className={`transition-opacity duration-300 ${completedSteps.has(video.step) ? "opacity-60" : ""}`}
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 + i * 0.15, duration: 0.8, ease }}
           >
-            <h2
-              className="gold-gradient-text text-xl md:text-2xl font-bold mb-4 text-center"
-              style={{ fontFamily: "'Playfair Display', serif" }}
-            >
-              {video.title}
-            </h2>
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <StepBadge step={video.step} completed={completedSteps.has(video.step)} />
+              <h2
+                className="gold-gradient-text text-xl md:text-2xl font-bold"
+                style={{ fontFamily: "'Playfair Display', serif" }}
+              >
+                {video.title}
+              </h2>
+            </div>
             <div className="gold-border-glow rounded-xl overflow-hidden">
               <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
                 <iframe
@@ -174,10 +223,12 @@ const OfferB = () => {
               href={link.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="glass-card-subtle rounded-xl p-5 flex items-start gap-4 hover:scale-[1.02] transition-transform duration-300 group"
+              className={`glass-card-subtle rounded-xl p-5 flex items-start gap-4 hover:scale-[1.02] transition-all duration-300 group ${
+                completedSteps.has(link.step) ? "opacity-60" : ""
+              }`}
             >
-              <span className="text-2xl">{link.icon}</span>
-              <div>
+              <StepBadge step={link.step} completed={completedSteps.has(link.step)} />
+              <div className="flex-1">
                 <h3 className="text-foreground font-semibold group-hover:text-primary transition-colors">
                   {link.title}
                 </h3>
@@ -188,19 +239,22 @@ const OfferB = () => {
         </div>
       </motion.div>
 
-      {/* Feedback Section */}
+      {/* Feedback Section – Schritt 5 */}
       <motion.div
-        className="max-w-3xl mx-auto"
+        className={`max-w-3xl mx-auto transition-opacity duration-300 ${completedSteps.has(5) ? "opacity-60" : ""}`}
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.9, duration: 0.8, ease }}
       >
-        <h2
-          className="gold-gradient-text text-xl md:text-2xl font-bold mb-2 text-center"
-          style={{ fontFamily: "'Playfair Display', serif" }}
-        >
-          Tägliches Feedback
-        </h2>
+        <div className="flex items-center justify-center gap-3 mb-2">
+          <StepBadge step={5} completed={completedSteps.has(5)} />
+          <h2
+            className="gold-gradient-text text-xl md:text-2xl font-bold"
+            style={{ fontFamily: "'Playfair Display', serif" }}
+          >
+            Tägliches Feedback
+          </h2>
+        </div>
         <p className="text-muted-foreground text-sm text-center mb-6 max-w-md mx-auto">
           Damit wir dich optimal unterstützen können, gib uns bitte 1x am Ende des Tages ein Feedback in folgendem Format:
         </p>
