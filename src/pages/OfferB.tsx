@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import logo from "@/assets/logo.png";
 import ProgressChecklist from "@/components/ProgressChecklist";
 import StepBadge from "@/components/StepBadge";
+import LoomVideoStep from "@/components/LoomVideoStep";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -69,6 +70,15 @@ const OfferB = () => {
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify([...completedSteps]));
   }, [completedSteps]);
+
+  const markComplete = useCallback((id: number) => {
+    setCompletedSteps((prev) => {
+      if (prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+  }, []);
 
   const toggleStep = (id: number) => {
     setCompletedSteps((prev) => {
@@ -172,34 +182,15 @@ const OfferB = () => {
       {/* Videos */}
       <div className="max-w-3xl mx-auto space-y-14 mb-16">
         {videos.map((video, i) => (
-          <motion.div
-            key={video.title}
-            className={`transition-opacity duration-300 ${completedSteps.has(video.step) ? "opacity-60" : ""}`}
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 + i * 0.15, duration: 0.8, ease }}
-          >
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <StepBadge step={video.step} completed={completedSteps.has(video.step)} />
-              <h2
-                className="gold-gradient-text text-xl md:text-2xl font-bold"
-                style={{ fontFamily: "'Playfair Display', serif" }}
-              >
-                {video.title}
-              </h2>
-            </div>
-            <div className="gold-border-glow rounded-xl overflow-hidden">
-              <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
-                <iframe
-                  src={video.embedUrl}
-                  frameBorder="0"
-                  allowFullScreen
-                  className="absolute inset-0 w-full h-full"
-                  allow="autoplay; fullscreen"
-                />
-              </div>
-            </div>
-          </motion.div>
+          <LoomVideoStep
+            key={video.step}
+            step={video.step}
+            title={video.title}
+            embedUrl={video.embedUrl}
+            completed={completedSteps.has(video.step)}
+            onAutoComplete={markComplete}
+            animDelay={0.2 + i * 0.15}
+          />
         ))}
       </div>
 
