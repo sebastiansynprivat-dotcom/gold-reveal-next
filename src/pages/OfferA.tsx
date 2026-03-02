@@ -1,4 +1,5 @@
-import { motion } from "framer-motion";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import logo from "@/assets/logo.png";
 
 const ease = [0.16, 1, 0.3, 1] as const;
@@ -42,12 +43,60 @@ Was lief schlecht?:
 Offene Fragen (optional)`;
 
 const OfferA = () => {
+  const [showPopup, setShowPopup] = useState(true);
+
   const handleCopy = () => {
     navigator.clipboard.writeText(feedbackTemplate);
   };
 
   return (
     <div className="min-h-screen px-4 py-12 md:py-20">
+      {/* Welcome Popup */}
+      <AnimatePresence>
+        {showPopup && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center px-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <div
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+              onClick={() => setShowPopup(false)}
+            />
+            <motion.div
+              className="relative z-10 w-full max-w-md glass-card-subtle rounded-2xl p-8 flex flex-col items-center text-center"
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ duration: 0.5, ease }}
+            >
+              <span className="text-4xl mb-4">👋</span>
+              <h2
+                className="gold-gradient-text text-xl md:text-2xl font-bold mb-2"
+                style={{ fontFamily: "'Playfair Display', serif" }}
+              >
+                Eine kleine Nachricht von Sebastian an dich
+              </h2>
+              <p className="text-muted-foreground text-sm mb-6">
+                Hör dir kurz die Nachricht an, bevor du loslegst.
+              </p>
+              <audio
+                controls
+                className="w-full mb-6 rounded-lg"
+                src="/audio/welcome-message.mp3"
+              />
+              <button
+                onClick={() => setShowPopup(false)}
+                className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors"
+              >
+                Los geht's 🚀
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       {/* Hero */}
       <motion.div
         className="flex flex-col items-center text-center mb-16"
