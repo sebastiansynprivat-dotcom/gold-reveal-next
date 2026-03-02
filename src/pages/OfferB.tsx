@@ -19,7 +19,7 @@ const links = [
   {
     title: "Brezzels Notifications",
     description: "Aktiviere Benachrichtigungen damit du keine Nachricht verpasst",
-    url: "https://t.me/PLATZHALTER",
+    url: "https://t.me/Notifications_brezzels_bot",
     icon: "🔔",
   },
   {
