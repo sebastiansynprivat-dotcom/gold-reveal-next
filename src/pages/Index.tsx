@@ -63,7 +63,7 @@ const Index = () => {
 
       {/* Headline */}
       <h1 className="gold-gradient-text text-3xl md:text-5xl font-bold text-center tracking-tight leading-tight mb-10 max-w-2xl">
-        Schau jetzt das Coaching Video komplett
+        Lerne wie du mit Chatten Geld verdienen kannst
       </h1>
 
       {/* Video Container */}
@@ -79,6 +79,11 @@ const Index = () => {
           />
         </div>
       </div>
+
+      {/* Disclaimer */}
+      <p className="text-muted-foreground text-sm text-center max-w-md mb-10">
+        Bitte schau das Video vollständig an. Erst danach erscheint der Button, der dich zum nächsten Schritt führt.
+      </p>
 
       {/* CTA Button – erscheint nach Video-Completion */}
       <div
