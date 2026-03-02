@@ -65,9 +65,9 @@ const Index = () => {
       </h1>
 
       {/* Video + Sidebar Layout */}
-      <div className={`w-full flex flex-col lg:flex-row gap-6 mb-12 transition-all duration-1000 ease-out ${showButton ? "max-w-[1100px]" : "max-w-[800px]"}`}>
-        {/* Video */}
-        <div className="flex-1 gold-border-glow rounded-xl overflow-hidden">
+      <div className="w-full max-w-[1100px] flex flex-col lg:flex-row gap-6 mb-12 items-start justify-center">
+        {/* Video – immer max 800px */}
+        <div className="w-full max-w-[800px] gold-border-glow rounded-xl overflow-hidden">
           <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
             <iframe
               ref={iframeRef}
@@ -81,13 +81,8 @@ const Index = () => {
         </div>
 
         {/* Resource Links – rechts vom Video */}
-        <div
-          className={`transition-all duration-1000 ease-out lg:w-[280px] shrink-0 ${
-            showButton
-              ? "opacity-100 translate-x-0"
-              : "opacity-0 lg:w-0 lg:overflow-hidden pointer-events-none"
-          }`}
-        >
+        {showButton && (
+          <div className="w-full lg:w-[280px] shrink-0 animate-fade-in">
           <div className="glass-card-subtle rounded-xl p-5 space-y-4 text-sm h-full">
             <div className="flex items-start gap-2">
               <span>📁</span>
@@ -127,6 +122,7 @@ const Index = () => {
             </div>
           </div>
         </div>
+        )}
       </div>
 
       {/* Disclaimer */}
