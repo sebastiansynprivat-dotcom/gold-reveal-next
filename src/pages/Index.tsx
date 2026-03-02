@@ -140,7 +140,7 @@ const Index = () => {
 
       {/* CTA Button */}
       <div
-        className={`transition-all duration-1000 ease-out ${
+        className={`transition-all duration-1000 ease-out md:mt-0 -mt-4 ${
           showButton
             ? "opacity-100 translate-y-0"
             : "opacity-0 translate-y-4 pointer-events-none"
