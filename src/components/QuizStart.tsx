@@ -60,7 +60,7 @@ const QuizStart = ({ onStart }: QuizStartProps) => {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.8, duration: 1 }}
       >
-        11 Fragen · ca. 3 Min.
+        11 Fragen · ca. 7 Min.
       </motion.span>
     </motion.div>
   );
