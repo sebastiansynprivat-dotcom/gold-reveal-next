@@ -71,7 +71,7 @@ const Index = () => {
         <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
           <iframe
             ref={iframeRef}
-            src="https://www.loom.com/embed/a35ff06ac2254fa5bd9aea1de765235f?sid=auto&hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true"
+            src="https://www.loom.com/embed/70e886bf25ac4faf9e10d1f72be3c956?sid=auto&hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true"
             frameBorder="0"
             allowFullScreen
             className="absolute inset-0 w-full h-full"
