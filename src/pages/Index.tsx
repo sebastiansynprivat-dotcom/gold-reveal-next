@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useProgress } from "@/hooks/useProgress";
-import { useAuth } from "@/hooks/useAuth";
+
 
 const Index = () => {
-  const { signOut } = useAuth();
+  
   const { updateProgress } = useProgress();
   const [showButton, setShowButton] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -64,13 +64,6 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-start px-4 py-12 md:py-20 relative">
-      {/* Logout */}
-      <button
-        onClick={signOut}
-        className="absolute top-4 right-4 text-xs text-muted-foreground hover:text-foreground transition-colors"
-      >
-        Abmelden
-      </button>
 
       {/* Headline */}
       <h1 className="gold-gradient-text text-3xl md:text-5xl font-bold text-center tracking-tight leading-tight mb-10 max-w-2xl">
