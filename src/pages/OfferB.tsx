@@ -7,7 +7,7 @@ const ease = [0.16, 1, 0.3, 1] as const;
 const videos = [
   {
     title: "Plattform Erklärungs Video",
-    embedUrl: "https://www.loom.com/embed/PLATZHALTER_1?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true",
+    embedUrl: "https://www.loom.com/embed/b161be42f5484688b862f8cd5753690b?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true",
   },
   {
     title: "Telegram Nachrichten Video",
