@@ -82,11 +82,21 @@ const OfferA = () => {
               <p className="text-muted-foreground text-sm mb-6">
                 Hör dir kurz die Nachricht an, bevor du loslegst.
               </p>
-              <audio
-                controls
-                className="w-full mb-6 rounded-lg"
-                src="/audio/welcome-message.mp3"
-              />
+              <motion.div
+                className="w-full mb-6"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4, duration: 0.6, ease }}
+              >
+                <div className="relative rounded-xl bg-primary/5 border border-primary/20 p-3 shadow-[0_0_20px_hsl(var(--primary)/0.15)]">
+                  <div className="absolute -inset-[1px] rounded-xl bg-gradient-to-r from-primary/20 via-primary/5 to-primary/20 animate-pulse opacity-50 pointer-events-none" />
+                  <audio
+                    controls
+                    className="w-full relative z-10"
+                    src="/audio/welcome-message.mp3"
+                  />
+                </div>
+              </motion.div>
               <button
                 onClick={() => setShowPopup(false)}
                 className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors"
