@@ -165,7 +165,7 @@ const OfferB = () => {
           style={{ fontFamily: "'Playfair Display', serif" }}
         >
           <span className="text-foreground">Kurze Anleitung für deinen Start mit </span>
-          <span className="text-[hsl(14,100%,50%)]">Brezzels</span>
+          <span className="text-[hsl(210,100%,50%)]">Brezzels</span>
         </h1>
         <p className="text-muted-foreground text-base max-w-md">
           Schau dir alle Videos an und richte alles Schritt für Schritt ein.
