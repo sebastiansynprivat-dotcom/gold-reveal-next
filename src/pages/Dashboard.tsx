@@ -12,6 +12,7 @@ import DashboardChat from "@/components/DashboardChat";
 import DailyChecklist from "@/components/DailyChecklist";
 import DailyGoal from "@/components/DailyGoal";
 import StreakTracker from "@/components/StreakTracker";
+import NotificationBanner from "@/components/NotificationBanner";
 import logo from "@/assets/logo.png";
 
 const GOLD_THRESHOLD = 2000;
