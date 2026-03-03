@@ -376,7 +376,7 @@ function DashboardBillingInfo({ onNavigate }: { onNavigate: () => void }) {
                 Warum dauert das so lange?
               </button>
             </DialogTrigger>
-            <DialogContent className="glass-card border-accent/20 sm:max-w-md shadow-[0_0_30px_-5px_hsl(var(--accent)/0.15),0_0_60px_-10px_hsl(var(--accent)/0.08)]">
+            <DialogContent className="glass-card border-accent/20 max-w-[calc(100vw-2rem)] sm:max-w-md max-h-[80vh] overflow-y-auto shadow-[0_0_30px_-5px_hsl(var(--accent)/0.15),0_0_60px_-10px_hsl(var(--accent)/0.08)]">
               <DialogHeader>
                 <DialogTitle className="text-foreground text-sm">Warum dauert das so lange?</DialogTitle>
                 <DialogDescription className="text-muted-foreground text-xs">Hier erkläre ich es dir kurz per Sprachmemo.</DialogDescription>
