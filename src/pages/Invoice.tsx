@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import DashboardChat from "@/components/DashboardChat";
 import BillingAudioDialog from "@/components/BillingAudioDialog";
 import GewerbeDialog from "@/components/GewerbeDialog";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -31,6 +33,20 @@ const DEFAULT_DESCRIPTION = "Verwaltung und Vertrieb von digitalen Inhalten";
 const Invoice = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const [groupName, setGroupName] = useState("");
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("group_name")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.group_name) setGroupName(data.group_name);
+      });
+  }, [user]);
 
   const STORAGE_KEY = "invoice_sender_data";
   const [saveData, setSaveData] = useState(() => !!localStorage.getItem(STORAGE_KEY));
@@ -304,23 +320,51 @@ const Invoice = () => {
 
         {billingUnlocked && (
           <Card className="glass-card border-accent/30 gold-border-glow">
-            <CardContent className="p-4 space-y-2">
+            <CardContent className="p-4 space-y-3">
               <p className="text-sm font-semibold text-foreground">
                 📩 Deine Abrechnung ist jetzt möglich!
               </p>
               <p className="text-xs text-muted-foreground">
-                Schreibe eine E-Mail an die Adresse unten und frage deinen Rechnungsbetrag an.
+                Schreibe eine E-Mail an die Adresse unten und frage deinen Rechnungsbetrag an. Du kannst die fertige Vorlage direkt kopieren!
               </p>
               <button
                 onClick={() => {
                   navigator.clipboard.writeText("support@basedbuilders.com");
                   toast({ title: "E-Mail kopiert! ✅", description: "support@basedbuilders.com wurde in die Zwischenablage kopiert." });
                 }}
-                className="flex items-center gap-2 mt-1 px-3 py-2 rounded-lg bg-secondary border border-border hover:border-accent/50 transition-colors group cursor-pointer"
+                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary border border-border hover:border-accent/50 transition-colors group cursor-pointer"
               >
                 <span className="text-sm font-semibold text-accent">support@basedbuilders.com</span>
                 <span className="text-[10px] text-muted-foreground group-hover:text-foreground transition-colors">📋 Kopieren</span>
               </button>
+
+              {/* Email template */}
+              <div className="mt-2 rounded-lg bg-secondary/50 border border-border p-3 space-y-2">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">📝 E-Mail Vorlage</p>
+                <div className="text-xs text-foreground whitespace-pre-line leading-relaxed bg-background/50 rounded-md p-3 border border-border">
+{`Liebes BasedBuilders Team,
+
+mir wird angezeigt, dass ich meinen Abrechnungsbetrag anfragen kann. Könnt ihr mir den zukommen lassen?
+
+Mein Gruppenname ist: ${groupName || "[Bitte Gruppenname im Dashboard eintragen]"}`}
+                </div>
+                <button
+                  onClick={() => {
+                    const text = `Liebes BasedBuilders Team,\n\nmir wird angezeigt, dass ich meinen Abrechnungsbetrag anfragen kann. Könnt ihr mir den zukommen lassen?\n\nMein Gruppenname ist: ${groupName || "[Bitte Gruppenname im Dashboard eintragen]"}`;
+                    navigator.clipboard.writeText(text);
+                    toast({ title: "Vorlage kopiert! ✅", description: "Du kannst den Text jetzt in deine E-Mail einfügen." });
+                  }}
+                  className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-accent/10 border border-accent/30 hover:bg-accent/20 transition-colors cursor-pointer"
+                >
+                  <span className="text-xs font-semibold text-accent">📋 Vorlage kopieren</span>
+                </button>
+                {!groupName && (
+                  <p className="text-[10px] text-destructive">
+                    ⚠️ Du hast noch keinen Gruppennamen eingetragen. Gehe ins Dashboard und trage ihn oben ein.
+                  </p>
+                )}
+              </div>
+
               <p className="text-xs text-accent font-medium">
                 ⚠️ Wichtig: Erstelle deine Rechnung erst, nachdem du die Abrechnung von uns per E-Mail erhalten hast!
               </p>
