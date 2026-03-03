@@ -41,7 +41,7 @@ const Auth = () => {
     if (pendingId || pendingOffer) {
       const updates: Record<string, string> = {};
       if (pendingId) updates.telegram_id = pendingId;
-      if (pendingOffer) updates.group_name = pendingOffer;
+      if (pendingOffer) updates.offer = pendingOffer;
       supabase
         .from("profiles")
         .update(updates)
