@@ -253,14 +253,25 @@ export default function AdminDashboard() {
                       {new Date(chatter.created_at).toLocaleDateString("de-DE")}
                     </p>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setPushTarget(chatter)}
-                    className="text-accent hover:text-accent/80 shrink-0"
-                  >
-                    <Send className="h-3.5 w-3.5" />
-                  </Button>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => openAccountDialog(chatter)}
+                      className="text-primary hover:text-primary/80"
+                      title="Account-Daten"
+                    >
+                      <KeyRound className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setPushTarget(chatter)}
+                      className="text-accent hover:text-accent/80"
+                    >
+                      <Send className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
