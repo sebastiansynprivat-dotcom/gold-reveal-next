@@ -32,13 +32,6 @@ export default function AdminNotifications() {
 
     setSending(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        toast.error("Nicht eingeloggt");
-        setSending(false);
-        return;
-      }
-
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const res = await fetch(
         `https://${projectId}.supabase.co/functions/v1/send-notification`,
@@ -46,7 +39,6 @@ export default function AdminNotifications() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${session.access_token}`,
             apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
           body: JSON.stringify({ title: title.trim(), body: body.trim() }),
