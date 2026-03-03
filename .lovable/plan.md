@@ -1,75 +1,41 @@
 
+# Fortschrittsanzeige und Schritt-Nummerierung fur OfferB
 
-# Chatter Dashboard – Neue Unterseite `/dashboard`
+## Was wird gemacht
 
-## Überblick
+### 1. Alle Schritte als einheitliche Liste definieren
+Die Videos und Links werden zu einer gemeinsamen Schritt-Liste zusammengefasst:
+- Schritt 1: Plattform Erklärungs Video
+- Schritt 2: Telegram Nachrichten Video
+- Schritt 3: Brezzels Notifications aktivieren
+- Schritt 4: My ID Bot einrichten
+- Schritt 5: Tägliches Feedback
 
-Eine neue, mobile-first Dashboard-Seite im bestehenden Schwarz-Gold-Design mit vier Bereichen: Plattform-Header, Telegram-ID-Eingabe, Earnings-Dashboard mit Bonus-System und KI-Chat-Support.
+### 2. Fortschritts-Bar oben auf der Seite
+Direkt unter dem Hero-Bereich wird eine Progress-Bar eingefügt, die den Gesamtfortschritt anzeigt (z.B. "2 von 5 Schritten erledigt"). Nutzt die vorhandene `Progress`-Komponente im Gold-Styling.
 
-## Seitenstruktur
+### 3. Klickbare Checkliste
+Unter der Progress-Bar eine kompakte Checkliste mit allen 5 Schritten. Jeder Schritt hat:
+- Eine Checkbox zum Abhaken
+- Schritt-Nummer ("Schritt 1", "Schritt 2" etc.)
+- Kurzer Titel
 
-```text
-┌────────────────────────────────┐
-│  Logo + "Aktiv auf: [Plattform]" │  ← URL-Param ?platform=Brezzels
-├────────────────────────────────┤
-│  Telegram ID Eingabefeld       │  ← localStorage-Persistenz
-├────────────────────────────────┤
-│  Earnings Dashboard            │
-│  ┌──────────┐ ┌──────────┐    │
-│  │ Umsatz   │ │ Verdienst│    │
-│  └──────────┘ └──────────┘    │
-│  [Umsatz-Eingabefeld zum Test] │
-│  ┌─ Status: Starter / Gold ──┐ │
-│  │ Progress-Bar → 2.000€     │ │
-│  │ 20% → 25% Gold-Status     │ │
-│  └───────────────────────────┘ │
-│  🎆 Konfetti bei Gold-Status   │
-├────────────────────────────────┤
-│  KI-Chat (fixiert unten)       │
-│  FAQ-fähig + freie Fragen      │
-└────────────────────────────────┘
-```
+Der Fortschritt wird im `localStorage` gespeichert, damit er beim Neuladen erhalten bleibt.
 
-## Neue Dateien
-
-### 1. `src/pages/Dashboard.tsx`
-Hauptseite mit allen vier Bereichen:
-
-- **Plattform-Header**: Liest `?platform=` aus URL-Params, Fallback "Brezzels"
-- **Telegram-ID**: Input + Speichern-Button, persistiert in `localStorage`
-- **Earnings-Dashboard**:
-  - Umsatz-Eingabefeld (Slider oder Input) zum Testen
-  - Berechnung: unter 2.000€ → 20%, ab 2.000€ → 25% auf alles
-  - Goldene Progress-Bar (vorhandene `Progress`-Komponente) Richtung 2.000€
-  - Status-Badge "Starter" vs "Gold-Status" mit Animation
-  - `canvas-confetti` (bereits installiert!) bei Erreichen von 2.000€
-- **Verdienst-Anzeige**: Zwei glass-cards mit Umsatz und errechnetem Verdienst
-
-### 2. `supabase/functions/chat/index.ts`
-Edge Function für KI-Chat via Lovable AI Gateway:
-- System-Prompt auf Deutsch mit Brezzels-Kontext und FAQ-Wissen eingebaut
-- FAQ-Antworten im System-Prompt: Auszahlung, Rate erhöhen, technische Probleme
-- Streaming SSE, Fehlerbehandlung (429/402)
-- Model: `google/gemini-3-flash-preview`
-
-### 3. `src/components/DashboardChat.tsx`
-Chat-Komponente fixiert am unteren Rand:
-- Eingabefeld + Senden-Button
-- Streaming token-by-token Rendering
-- Collapsed/Expanded-Toggle
-- Glass-Morphism Styling
-- Mobile: volle Breite, Desktop: max-width Panel
-
-## Bestehende Dateien
-
-### `src/App.tsx`
-- Neue Route `/dashboard` → `<Dashboard />`
+### 4. Schritt-Nummern bei den Sektionen
+Jede Video-/Link-/Feedback-Sektion bekommt eine prominente Schritt-Nummer als Badge (z.B. goldener Kreis mit "1" darin) neben dem Titel.
 
 ## Technische Details
 
-- Bonus-Logik rein im Frontend: `verdienst = umsatz >= 2000 ? umsatz * 0.25 : umsatz * 0.20`
-- Konfetti via `canvas-confetti` (bereits als Dependency vorhanden)
-- Chat streamt via `fetch` + SSE-Parsing direkt an die Edge Function
-- Kein Auth nötig, `verify_jwt = false` für die Chat-Funktion
-- Alle Texte auf Deutsch
+**Datei: `src/pages/OfferB.tsx`**
 
+- Neue `steps`-Array-Konstante mit id, title, type fur alle 5 Schritte
+- `useState` + `localStorage` fur `completedSteps: Set<number>`
+- Progress-Bar-Sektion nach dem Hero mit `Progress`-Komponente (Wert = `completedSteps.size / steps.length * 100`)
+- Checkliste mit `Checkbox`-Komponenten, gestylt im bestehenden `glass-card-subtle` Look
+- Videos bekommen "Schritt 1" / "Schritt 2" als nummerierte Badge-Kreise
+- Links-Sektion wird zu Schritt 3 und 4 mit individuellen Nummern
+- Feedback wird Schritt 5
+- Erledigte Schritte bekommen eine subtile visuelle Markierung (leicht reduzierte Opazitat / Hakchen)
+
+Keine neuen Abhangigkeiten notwendig -- nutzt vorhandene `Progress`, `Checkbox` und `framer-motion`.
