@@ -329,22 +329,18 @@ export default function Dashboard() {
         {/* Account-Daten */}
         <section className="glass-card-subtle rounded-xl p-4 lg:p-6">
           <h2 className="text-sm lg:text-base font-semibold text-foreground mb-3">Deine Account-Daten</h2>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <p className="text-[10px] text-muted-foreground mb-0.5">E-Mail</p>
-              <p className="text-xs lg:text-sm font-medium text-foreground truncate">{user?.email || "–"}</p>
+              <p className="text-xs lg:text-sm font-medium text-foreground truncate">{accountEmail || "–"}</p>
             </div>
             <div>
-              <p className="text-[10px] text-muted-foreground mb-0.5">Gruppenname</p>
-              <p className="text-xs lg:text-sm font-medium text-foreground truncate">{groupName || "–"}</p>
+              <p className="text-[10px] text-muted-foreground mb-0.5">Passwort</p>
+              <p className="text-xs lg:text-sm font-medium text-foreground truncate">{accountPassword || "–"}</p>
             </div>
             <div>
-              <p className="text-[10px] text-muted-foreground mb-0.5">Telegram ID</p>
-              <p className="text-xs lg:text-sm font-medium text-foreground truncate">{telegramId || "–"}</p>
-            </div>
-            <div>
-              <p className="text-[10px] text-muted-foreground mb-0.5">Plattform</p>
-              <p className="text-xs lg:text-sm font-medium text-foreground truncate">{offer || platform || "–"}</p>
+              <p className="text-[10px] text-muted-foreground mb-0.5">Domain</p>
+              <p className="text-xs lg:text-sm font-medium text-foreground truncate">{accountDomain || "–"}</p>
             </div>
           </div>
         </section>
