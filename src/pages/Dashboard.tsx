@@ -340,6 +340,16 @@ export default function Dashboard() {
             7 Tage in Folge mind. 30€ = <strong className="text-foreground">Upgrade auf besseren Account</strong>.
           </p>
         </section>
+
+        {/* Invoice Tool Link */}
+        <Button
+          onClick={() => navigate("/rechnung")}
+          variant="outline"
+          className="w-full h-11 border-border text-foreground hover:bg-secondary"
+        >
+          <FileText className="mr-2 h-4 w-4 text-accent" />
+          Rechnung erstellen
+        </Button>
       </main>
 
       <DashboardChat />
