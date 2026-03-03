@@ -1,6 +1,7 @@
-import { useEffect, useRef, useCallback } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useRef, useCallback, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import StepBadge from "./StepBadge";
+import { CheckCircle2 } from "lucide-react";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -23,43 +24,32 @@ const LoomVideoStep = ({
 }: LoomVideoStepProps) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const completedRef = useRef(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Reset when completed prop changes to false
   useEffect(() => {
     if (!completed) completedRef.current = false;
   }, [completed]);
 
+  // Try Loom postMessage tracking
   const handleMessage = useCallback(
     (event: MessageEvent) => {
       if (!event.data || typeof event.data !== "object") return;
-      
       const msg = event.data;
-      
-      // Debug: log all Loom-related messages
-      if (msg.context === "player.js" || msg.event === "ready" || msg.event === "timeupdate" || msg.event === "ended" || msg.event === "play" || msg.event === "pause") {
-        console.log(`[LoomDebug step=${step}]`, JSON.stringify(msg));
-      }
 
-      // Skip source check for Loom – cross-origin iframes may not match event.source reliably
-      
-      // When Loom player is ready, subscribe to events
-      if (msg.event === "ready") {
-        console.log(`[LoomDebug step=${step}] Player ready, subscribing to events`);
-        if (iframeRef.current?.contentWindow) {
-          ["timeupdate", "ended", "play", "pause"].forEach((evt) => {
-            iframeRef.current!.contentWindow!.postMessage(
-              { method: "addEventListener", value: evt, context: "player.js" },
-              "*"
-            );
-          });
-        }
+      if (msg.event === "ready" && iframeRef.current?.contentWindow) {
+        ["timeupdate", "ended"].forEach((evt) => {
+          iframeRef.current!.contentWindow!.postMessage(
+            { method: "addEventListener", value: evt, context: "player.js" },
+            "*"
+          );
+        });
         return;
       }
 
       if (completedRef.current) return;
 
       if (msg.event === "ended") {
-        console.log(`[LoomDebug step=${step}] Video ended – marking complete`);
         completedRef.current = true;
         onAutoComplete(step);
         return;
@@ -67,13 +57,11 @@ const LoomVideoStep = ({
 
       if (
         msg.event === "timeupdate" &&
-        typeof msg.data?.percent === "number"
+        typeof msg.data?.percent === "number" &&
+        msg.data.percent >= 0.9
       ) {
-        if (msg.data.percent >= 0.9) {
-          console.log(`[LoomDebug step=${step}] 90% reached – marking complete`);
-          completedRef.current = true;
-          onAutoComplete(step);
-        }
+        completedRef.current = true;
+        onAutoComplete(step);
       }
     },
     [onAutoComplete, step]
@@ -83,6 +71,19 @@ const LoomVideoStep = ({
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
   }, [handleMessage]);
+
+  // Fallback: show "Video geschaut" button after 30 seconds
+  useEffect(() => {
+    if (completed || showConfirm) return;
+    timerRef.current = setTimeout(() => {
+      if (!completedRef.current) {
+        setShowConfirm(true);
+      }
+    }, 30000);
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [completed, showConfirm]);
 
   return (
     <motion.div
@@ -112,6 +113,25 @@ const LoomVideoStep = ({
           />
         </div>
       </div>
+      <AnimatePresence>
+        {showConfirm && !completed && (
+          <motion.button
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4, ease }}
+            onClick={() => {
+              completedRef.current = true;
+              onAutoComplete(step);
+              setShowConfirm(false);
+            }}
+            className="mt-3 mx-auto flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors"
+          >
+            <CheckCircle2 className="w-4 h-4" />
+            Video geschaut ✓
+          </motion.button>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };
