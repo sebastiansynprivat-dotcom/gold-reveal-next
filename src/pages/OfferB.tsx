@@ -68,8 +68,11 @@ const loadCompleted = (): Set<number> => {
 };
 
 const OfferB = () => {
+  const navigate = useNavigate();
   const [showPopup, setShowPopup] = useState(true);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(loadCompleted);
+  const [telegramId, setTelegramId] = useState("");
+  const [idSaved, setIdSaved] = useState(false);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify([...completedSteps]));
