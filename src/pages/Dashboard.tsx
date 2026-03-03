@@ -87,7 +87,7 @@ export default function Dashboard() {
           {/* Bottom row: Telegram ID + Umsatz compact */}
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 sm:items-center">
             {/* Telegram compact */}
-            <div className="flex items-center gap-2 flex-1 min-w-0">
+            <div className="flex items-center gap-2 min-w-0">
               {telegramSaved ? (
                 <div className="flex items-center gap-2 text-xs text-muted-foreground min-w-0">
                   <CheckCircle2 className="h-3.5 w-3.5 text-accent shrink-0" />
@@ -97,22 +97,25 @@ export default function Dashboard() {
                   </Button>
                 </div>
               ) : (
-                <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                  <Input
-                    value={telegramId}
-                    onChange={(e) => setTelegramId(e.target.value)}
-                    placeholder="Telegram @username"
-                    className="h-8 text-xs flex-1 min-w-0"
-                  />
-                  <Button onClick={saveTelegram} size="sm" disabled={!telegramId.trim()} className="h-8 text-xs px-3">
-                    <Save className="h-3 w-3 mr-1" /> OK
-                  </Button>
-                </div>
-              )}
-              <Dialog onOpenChange={(open) => { setVideoOpen(open); if (!open) setVideoLoaded(false); }}>
-                <DialogTrigger asChild>
-                  <button className="text-accent hover:text-accent/80 transition-colors shrink-0">
-                    <HelpCircle className="h-3.5 w-3.5" />
+                <div className="space-y-1">
+                  <div className="flex items-center gap-1.5">
+                    <Input
+                      value={telegramId}
+                      onChange={(e) => setTelegramId(e.target.value)}
+                      placeholder="Deine Telegram ID"
+                      className="h-8 text-xs w-40"
+                    />
+                    <Button onClick={saveTelegram} size="sm" disabled={!telegramId.trim()} className="h-8 text-xs px-3">
+                      <Save className="h-3 w-3 mr-1" /> OK
+                    </Button>
+                  </div>
+                  <Dialog onOpenChange={(open) => { setVideoOpen(open); if (!open) setVideoLoaded(false); }}>
+                    <DialogTrigger asChild>
+                      <button className="flex items-center gap-1 text-[10px] text-accent hover:text-accent/80 transition-colors">
+                        <HelpCircle className="h-3 w-3" />
+                        Wo finde ich meine Telegram ID?
+                      </button>
+                    </DialogTrigger>
                   </button>
                 </DialogTrigger>
                 <DialogContent className="glass-card border-border sm:max-w-lg">
