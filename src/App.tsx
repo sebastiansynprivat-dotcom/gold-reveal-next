@@ -8,6 +8,7 @@ import Quiz from "./pages/Quiz";
 import OfferA from "./pages/OfferA";
 import OfferB from "./pages/OfferB";
 import Dashboard from "./pages/Dashboard";
+import AdminNotifications from "./pages/AdminNotifications";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/offer-a" element={<OfferA />} />
           <Route path="/offer-b" element={<OfferB />} />
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/admin/notifications" element={<AdminNotifications />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

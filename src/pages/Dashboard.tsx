@@ -12,6 +12,7 @@ import DashboardChat from "@/components/DashboardChat";
 import DailyChecklist from "@/components/DailyChecklist";
 import DailyGoal from "@/components/DailyGoal";
 import StreakTracker from "@/components/StreakTracker";
+import NotificationBanner from "@/components/NotificationBanner";
 import logo from "@/assets/logo.png";
 
 const GOLD_THRESHOLD = 2000;
@@ -169,6 +170,8 @@ export default function Dashboard() {
       </header>
 
       <main className="container max-w-5xl mx-auto p-4 lg:px-8 lg:py-8 space-y-5 lg:space-y-6">
+        {/* Notification Banner */}
+        <NotificationBanner />
         {/* Stats Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 lg:gap-4">
           <div className="glass-card-subtle rounded-xl p-3 lg:p-5 text-center">
