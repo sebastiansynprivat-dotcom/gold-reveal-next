@@ -376,8 +376,8 @@ function DashboardBillingInfo({ onNavigate }: { onNavigate: () => void }) {
                 Warum dauert das so lange?
               </button>
             </DialogTrigger>
-            <DialogContent className="glass-card border-accent/20 sm:max-w-md shadow-[0_0_30px_-5px_hsl(var(--accent)/0.15),0_0_60px_-10px_hsl(var(--accent)/0.08)]">
-              <DialogHeader>
+            <DialogContent className="glass-card border-accent/20 w-[92vw] sm:max-w-md max-h-[85vh] overflow-y-auto p-4 sm:p-6 shadow-[0_0_30px_-5px_hsl(var(--accent)/0.15),0_0_60px_-10px_hsl(var(--accent)/0.08)]">
+              <DialogHeader className="pr-6">
                 <DialogTitle className="text-foreground text-sm">Warum dauert das so lange?</DialogTitle>
                 <DialogDescription className="text-muted-foreground text-xs">Hier erkläre ich es dir kurz per Sprachmemo.</DialogDescription>
               </DialogHeader>
@@ -387,15 +387,15 @@ function DashboardBillingInfo({ onNavigate }: { onNavigate: () => void }) {
               <div className="pt-2 space-y-2">
                 <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Was andere sagen</p>
                 <Carousel opts={{ loop: true }} className="w-full">
-                  <CarouselContent>
+                  <CarouselContent className="-ml-0">
                     {[
                       { name: "Mark", date: "Jan 2026", title: "Sehr positiver Einstieg und tolles Arbeitsumfeld", text: "Ich wurde von Anfang an sehr herzlich aufgenommen und umfassend eingearbeitet. Der Einstieg verlief reibungslos. Das gesamte Team ist ausgesprochen freundlich, hilfsbereit und gut organisiert. Auch die Bezahlung verläuft zuverlässig und problemlos.", stars: 5 },
                       { name: "Michaela", date: "Jan 2026", title: "Seit über einem Jahr zu 100% Zufrieden", text: "Wer bereit ist zu arbeiten hat hier einen zuverlässigen, freundlichen und kompetenten Partner. Das Geld kommt super pünktlich und immer korrekt abgerechnet. Ich bin jedenfalls froh, etwas gefunden zu haben, wo ich jederzeit und von überall mir ein gutes Zubrot verdienen kann 😃", stars: 5 },
                       { name: "Nikolett T.", date: "Jan 2026", title: "Super Team", text: "Die Einarbeitung ging schnell und unkompliziert. Die Unterstützung ist mehr als gut, man kann jederzeit Fragen stellen. Man bleibt komplett anonym und kann von überall aus arbeiten. Ich kann sie nur weiterempfehlen. ☺️", stars: 5 },
                       { name: "Mika O.", date: "Jan 2026", title: "Sehr guter Arbeitgeber", text: "Zuverlässig, fair und professionell. Kann ich nur weiterempfehlen.", stars: 5 },
                     ].map((review, i) => (
-                      <CarouselItem key={i}>
-                        <div className="glass-card-subtle rounded-lg p-3 space-y-2">
+                      <CarouselItem key={i} className="min-w-0 pl-0">
+                        <div className="glass-card-subtle rounded-lg p-3 space-y-2 overflow-hidden">
                           {/* Header: Avatar + Name + Date */}
                           <div className="flex items-center gap-2.5">
                             <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center shrink-0">
