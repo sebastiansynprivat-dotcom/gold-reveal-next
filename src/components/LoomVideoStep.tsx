@@ -31,10 +31,7 @@ const LoomVideoStep = ({
 
   const handleMessage = useCallback(
     (event: MessageEvent) => {
-      if (completedRef.current) return;
       if (!event.data || typeof event.data !== "object") return;
-
-      // Check if this message is from our iframe
       if (
         iframeRef.current &&
         event.source !== iframeRef.current.contentWindow
@@ -42,6 +39,22 @@ const LoomVideoStep = ({
         return;
 
       const msg = event.data;
+
+      // When Loom player is ready, subscribe to events
+      if (msg.event === "ready" && iframeRef.current) {
+        const win = iframeRef.current.contentWindow;
+        if (win) {
+          ["timeupdate", "ended"].forEach((evt) => {
+            win.postMessage(
+              { method: "addEventListener", value: evt, context: "player.js" },
+              "*"
+            );
+          });
+        }
+        return;
+      }
+
+      if (completedRef.current) return;
 
       if (msg.event === "ended") {
         completedRef.current = true;
