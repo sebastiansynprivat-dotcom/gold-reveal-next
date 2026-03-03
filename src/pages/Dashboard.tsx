@@ -147,82 +147,18 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Bottom row: Telegram ID + Umsatz compact */}
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 sm:items-center">
-            {/* Telegram compact */}
-            <div className="min-w-0">
-              {telegramSaved ? (
-                <div className="flex items-center gap-2 text-xs text-muted-foreground min-w-0">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-accent shrink-0" />
-                  <span className="truncate">{telegramId}</span>
-                  <Button onClick={() => setTelegramSaved(false)} variant="ghost" size="sm" className="text-[10px] text-accent h-6 px-2">
-                    Ändern
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-1">
-                  <div className="flex items-center gap-1.5">
-                    <Input
-                      value={telegramId}
-                      onChange={(e) => setTelegramId(e.target.value)}
-                      placeholder="Deine Telegram ID"
-                      className="h-8 text-xs w-40"
-                    />
-                    <Button onClick={saveTelegram} size="sm" disabled={!telegramId.trim()} className="h-8 text-xs px-3">
-                      <Save className="h-3 w-3 mr-1" /> OK
-                    </Button>
-                  </div>
-                  <Dialog onOpenChange={(open) => { setVideoOpen(open); if (!open) setVideoLoaded(false); }}>
-                    <DialogTrigger asChild>
-                      <button className="flex items-center gap-1 text-[10px] text-accent hover:text-accent/80 transition-colors">
-                        <HelpCircle className="h-3 w-3" />
-                        Wo finde ich meine Telegram ID?
-                      </button>
-                    </DialogTrigger>
-                    <DialogContent className="glass-card border-border sm:max-w-lg">
-                      <DialogHeader>
-                        <DialogTitle className="text-foreground">Wo finde ich meine Telegram-ID?</DialogTitle>
-                        <DialogDescription className="text-muted-foreground text-xs">
-                          Schau dir das kurze Video an, um deine Telegram-ID zu finden.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="aspect-video w-full rounded-lg overflow-hidden bg-secondary relative">
-                        {!videoLoaded && (
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="h-8 w-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-                          </div>
-                        )}
-                        {videoOpen && (
-                          <iframe
-                            src="https://www.loom.com/embed/0582b0ea68b942728a535a98f990660b?autoplay=1"
-                            frameBorder="0"
-                            allowFullScreen
-                            allow="autoplay"
-                            className={`w-full h-full transition-opacity duration-300 ${videoLoaded ? "opacity-100" : "opacity-0"}`}
-                            title="Telegram ID finden"
-                            onLoad={() => setVideoLoaded(true)}
-                          />
-                        )}
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                </div>
-              )}
-            </div>
-
-            {/* Umsatz compact */}
-            <div className="flex items-center gap-2 shrink-0">
-              <Zap className="h-3.5 w-3.5 text-accent shrink-0" />
-              <Input
-                type="number"
-                min={0}
-                step={50}
-                value={umsatz || ""}
-                onChange={(e) => setUmsatz(Number(e.target.value) || 0)}
-                placeholder="Umsatz €"
-                className="h-8 text-xs w-28 font-semibold"
-              />
-            </div>
+          {/* Umsatz input row */}
+          <div className="flex items-center gap-2">
+            <Zap className="h-3.5 w-3.5 text-accent shrink-0" />
+            <Input
+              type="number"
+              min={0}
+              step={50}
+              value={umsatz || ""}
+              onChange={(e) => setUmsatz(Number(e.target.value) || 0)}
+              placeholder="Umsatz €"
+              className="h-8 text-xs w-28 font-semibold"
+            />
           </div>
         </div>
       </header>
