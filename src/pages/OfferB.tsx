@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { motion, AnimatePresence } from "framer-motion";
 import logo from "@/assets/logo.png";
 import ProgressChecklist from "@/components/ProgressChecklist";
 import StepBadge from "@/components/StepBadge";
