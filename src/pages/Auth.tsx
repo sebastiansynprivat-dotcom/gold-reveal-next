@@ -33,6 +33,26 @@ const Auth = () => {
     );
   }
 
+  // Transfer pending telegram ID and offer after login
+  useEffect(() => {
+    if (!user) return;
+    const pendingId = localStorage.getItem("pending_telegram_id");
+    const pendingOffer = localStorage.getItem("pending_offer");
+    if (pendingId || pendingOffer) {
+      const updates: Record<string, string> = {};
+      if (pendingId) updates.telegram_id = pendingId;
+      if (pendingOffer) updates.group_name = pendingOffer;
+      supabase
+        .from("profiles")
+        .update(updates)
+        .eq("user_id", user.id)
+        .then(() => {
+          localStorage.removeItem("pending_telegram_id");
+          localStorage.removeItem("pending_offer");
+        });
+    }
+  }, [user]);
+
   if (user) return <Navigate to="/dashboard" replace />;
 
   const handleSubmit = async (e: React.FormEvent) => {
