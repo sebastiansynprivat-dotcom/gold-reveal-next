@@ -8,6 +8,7 @@ import Quiz from "./pages/Quiz";
 import OfferA from "./pages/OfferA";
 import OfferB from "./pages/OfferB";
 import Dashboard from "./pages/Dashboard";
+import AdminNotifications from "./pages/AdminNotifications";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
