@@ -109,6 +109,38 @@ export default function AdminDashboard() {
     setAddingAccount(false);
   };
 
+  const assignAccounts = async () => {
+    if (!selectedPlatform) return;
+    setAssigning(true);
+    try {
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const session = await supabase.auth.getSession();
+      const res = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/assign-accounts`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            Authorization: `Bearer ${session.data.session?.access_token}`,
+          },
+          body: JSON.stringify({ platform: selectedPlatform }),
+        }
+      );
+      const result = await res.json();
+      if (res.ok) {
+        toast.success(result.message || "Accounts zugewiesen!");
+        loadAccounts();
+        loadChatters();
+      } else {
+        toast.error(result.error || "Fehler beim Zuweisen");
+      }
+    } catch (err: any) {
+      toast.error("Fehler: " + err.message);
+    }
+    setAssigning(false);
+  };
+
   const sendIndividualPush = async () => {
     if (!pushTarget || !pushTitle.trim() || !pushBody.trim()) return;
     setSending(true);
