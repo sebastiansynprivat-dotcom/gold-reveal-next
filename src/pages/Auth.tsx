@@ -19,6 +19,7 @@ const Auth = () => {
   const [isSignUp, setIsSignUp] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [groupName, setGroupName] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [signUpSuccess, setSignUpSuccess] = useState(false);
@@ -39,7 +40,12 @@ const Auth = () => {
     setSubmitting(true);
 
     if (isSignUp) {
-      const { error } = await signUp(email, password);
+      if (!groupName.trim()) {
+        setError("Bitte gib deinen Gruppennamen ein.");
+        setSubmitting(false);
+        return;
+      }
+      const { error } = await signUp(email, password, { group_name: groupName.trim() });
       if (error) {
         setError(translateError(error.message));
       } else {
@@ -83,6 +89,7 @@ const Auth = () => {
               setIsSignUp(false);
               setEmail("");
               setPassword("");
+              setGroupName("");
             }}
             className="mt-4 text-sm text-primary hover:text-primary/80 transition-colors underline underline-offset-2"
           >
@@ -103,6 +110,16 @@ const Auth = () => {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {isSignUp && (
+              <input
+                type="text"
+                placeholder="Gruppenname (z.B. Team Alpha)"
+                value={groupName}
+                onChange={(e) => setGroupName(e.target.value)}
+                required
+                className="w-full px-4 py-3 rounded-xl bg-card border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+              />
+            )}
             <input
               type="email"
               placeholder="E-Mail Adresse"
