@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Save, CheckCircle2, Award, Zap, HelpCircle, FileText } from "lucide-react";
+import { Save, CheckCircle2, Award, Zap, HelpCircle, FileText, Clock } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,8 @@ import NotificationBanner from "@/components/NotificationBanner";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo.png";
+import { format, endOfMonth, addMonths, differenceInDays } from "date-fns";
+import { de } from "date-fns/locale";
 
 const GOLD_THRESHOLD = 2000;
 const STARTER_RATE = 0.2;
@@ -341,18 +343,58 @@ export default function Dashboard() {
           </p>
         </section>
 
-        {/* Invoice Tool Link */}
-        <Button
-          onClick={() => navigate("/rechnung")}
-          variant="outline"
-          className="w-full h-11 border-border text-foreground hover:bg-secondary"
-        >
-          <FileText className="mr-2 h-4 w-4 text-accent" />
-          Rechnung erstellen
-        </Button>
+        {/* Billing countdown + Invoice button */}
+        <DashboardBillingInfo onNavigate={() => navigate("/rechnung")} />
       </main>
 
       <DashboardChat />
+    </div>
+  );
+}
+
+function DashboardBillingInfo({ onNavigate }: { onNavigate: () => void }) {
+  const now = new Date();
+  const deadline = endOfMonth(addMonths(now, 1));
+  const daysLeft = differenceInDays(deadline, now);
+  const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+  const totalDays = differenceInDays(deadline, startDate);
+  const progressPct = Math.round(((totalDays - daysLeft) / totalDays) * 100);
+
+  return (
+    <div className="space-y-3">
+      <div className="glass-card-subtle rounded-xl p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <Clock className="h-4 w-4 text-accent" />
+          <span className="text-xs font-semibold text-foreground">Abrechnungszeitraum</span>
+        </div>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-0.5">
+            <p className="text-[10px] text-muted-foreground">Startdatum</p>
+            <p className="text-xs font-semibold text-foreground">{format(startDate, "dd. MMM yyyy", { locale: de })}</p>
+          </div>
+          <div className="space-y-0.5">
+            <p className="text-[10px] text-muted-foreground">Nächste Abrechnung</p>
+            <p className="text-xs font-semibold text-gold-gradient">{format(deadline, "dd. MMM yyyy", { locale: de })}</p>
+          </div>
+        </div>
+        <div className="space-y-1">
+          <div className="flex justify-between text-[10px] text-muted-foreground">
+            <span>Noch {daysLeft} Tage</span>
+            <span>{format(deadline, "dd.MM.yyyy")}</span>
+          </div>
+          <div className="w-full h-1.5 rounded-full bg-secondary overflow-hidden">
+            <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${progressPct}%` }} />
+          </div>
+        </div>
+      </div>
+      <Button
+        onClick={onNavigate}
+        variant="outline"
+        className="w-full h-11 border-border text-foreground hover:bg-secondary"
+      >
+        <FileText className="mr-2 h-4 w-4 text-accent" />
+        Rechnung erstellen
+      </Button>
     </div>
   );
 }
