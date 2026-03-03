@@ -232,36 +232,84 @@ export default function Dashboard() {
             </div>
           </section>
 
-          {/* Bonus Table - narrower */}
-          <section className="lg:col-span-2 glass-card rounded-xl p-4 lg:p-6 space-y-3">
-            <h2 className="text-sm lg:text-base font-semibold text-foreground">Bonus-Modell</h2>
-            <div className="rounded-lg border border-border overflow-hidden text-sm lg:text-base">
-              <div className={`flex items-center justify-between px-3 lg:px-4 py-3 ${!isGold ? "bg-secondary" : ""}`}>
-                <span className="text-muted-foreground">Starter</span>
-                <span className="text-xs lg:text-sm">0€ – 1.999€</span>
-                <span className="font-semibold">20%</span>
-              </div>
-              <div className={`flex items-center justify-between px-3 lg:px-4 py-3 border-t border-border ${isGold ? "bg-accent/10 gold-border-glow" : ""}`}>
-                <span className="text-gold-gradient font-semibold">Gold</span>
-                <span className="text-xs lg:text-sm">Ab 2.000€</span>
-                <span className="font-bold text-gold-gradient">25%</span>
-              </div>
-              <div className="flex items-center justify-between px-3 lg:px-4 py-3 border-t border-border bg-accent/5">
-                <span className="text-accent font-semibold">⬆ Account Upgrade</span>
-                <span className="text-xs lg:text-sm">7 Tage × 30€</span>
-                <span className="font-bold text-accent">Besserer Account</span>
-              </div>
-            </div>
-            <p className="text-[10px] lg:text-xs text-muted-foreground">
-              Ab 2.000€ Umsatz gilt die 25%-Rate auf den <strong className="text-foreground">gesamten</strong> Betrag.
-              <br />7 Tage in Folge mind. 30€ Umsatz = <strong className="text-foreground">Upgrade auf einen besseren Account</strong>.
-            </p>
-          </section>
+          {/* Bonus Model + Streak - full width */}
         </div>
 
-        {/* Streak Tracker */}
-        <section className="glass-card rounded-xl p-4 lg:p-6">
-          <StreakTracker dailyRevenue={umsatz} />
+        <section className="glass-card rounded-xl p-4 lg:p-6 space-y-5">
+          <h2 className="text-sm lg:text-base font-semibold text-foreground">Bonus-Modell</h2>
+
+          {/* Tier cards with visual indicator */}
+          <div className="space-y-2">
+            {/* Account Upgrade - Tier 1 */}
+            <div className="relative rounded-xl overflow-hidden border border-accent/30 bg-accent/5 p-4 lg:p-5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-accent/20 flex items-center justify-center">
+                    <span className="text-lg">⬆</span>
+                  </div>
+                  <div>
+                    <p className="font-bold text-accent text-sm lg:text-base">Account Upgrade</p>
+                    <p className="text-[10px] lg:text-xs text-muted-foreground">7 Tage in Folge mind. 30€ Umsatz</p>
+                  </div>
+                </div>
+                <span className="font-bold text-accent text-sm lg:text-base">Besserer Account</span>
+              </div>
+            </div>
+
+            {/* Gold - Tier 2 */}
+            <div className={`relative rounded-xl overflow-hidden border p-4 lg:p-5 transition-all ${isGold ? "border-accent/40 gold-border-glow bg-accent/10" : "border-border bg-secondary/30"}`}>
+              {isGold && (
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-accent" />
+              )}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`h-10 w-10 rounded-full flex items-center justify-center ${isGold ? "bg-accent/20 gold-glow" : "bg-secondary"}`}>
+                    <Award className={`h-5 w-5 ${isGold ? "text-accent" : "text-muted-foreground"}`} />
+                  </div>
+                  <div>
+                    <p className={`font-bold text-sm lg:text-base ${isGold ? "text-gold-gradient" : "text-muted-foreground"}`}>Gold-Status</p>
+                    <p className="text-[10px] lg:text-xs text-muted-foreground">Ab 2.000€ Umsatz</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className={`font-bold text-lg lg:text-xl ${isGold ? "text-gold-gradient" : "text-muted-foreground"}`}>25%</span>
+                  {isGold && <p className="text-[10px] text-accent">Aktiv ✓</p>}
+                </div>
+              </div>
+            </div>
+
+            {/* Starter - Tier 3 */}
+            <div className={`relative rounded-xl overflow-hidden border p-4 lg:p-5 transition-all ${!isGold ? "border-border bg-secondary/50" : "border-border/50 bg-secondary/20"}`}>
+              {!isGold && (
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-accent" />
+              )}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`h-10 w-10 rounded-full flex items-center justify-center ${!isGold ? "bg-secondary" : "bg-secondary/50"}`}>
+                    <Zap className={`h-5 w-5 ${!isGold ? "text-foreground" : "text-muted-foreground/50"}`} />
+                  </div>
+                  <div>
+                    <p className={`font-bold text-sm lg:text-base ${!isGold ? "text-foreground" : "text-muted-foreground/50"}`}>Starter</p>
+                    <p className="text-[10px] lg:text-xs text-muted-foreground">0€ – 1.999€ Umsatz</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className={`font-bold text-lg lg:text-xl ${!isGold ? "text-foreground" : "text-muted-foreground/50"}`}>20%</span>
+                  {!isGold && <p className="text-[10px] text-accent">Aktiv ✓</p>}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <p className="text-[10px] lg:text-xs text-muted-foreground">
+            Ab 2.000€ Umsatz gilt die 25%-Rate auf den <strong className="text-foreground">gesamten</strong> Betrag.
+            7 Tage in Folge mind. 30€ = <strong className="text-foreground">Upgrade auf besseren Account</strong>.
+          </p>
+
+          {/* Integrated Streak Tracker */}
+          <div className="border-t border-border pt-5">
+            <StreakTracker dailyRevenue={umsatz} />
+          </div>
         </section>
       </main>
 
