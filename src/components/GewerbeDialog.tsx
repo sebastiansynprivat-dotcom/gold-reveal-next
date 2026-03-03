@@ -32,8 +32,8 @@ export default function GewerbeDialog() {
 
         <div className="space-y-4">
           {/* Audio */}
-          <div className="space-y-1.5">
-            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">🎧 Sprachnachricht</p>
+          <div className="space-y-2">
+            <p className="text-xs font-semibold text-foreground">🎧 Hier erkläre ich dir, wieso du ein Gewerbe brauchst:</p>
             <audio controls className="w-full" preload="none">
               <source src="/audio/gewerbe-info.mp3" type="audio/mpeg" />
               Dein Browser unterstützt kein Audio.
@@ -42,8 +42,8 @@ export default function GewerbeDialog() {
 
           {/* Text */}
           <div className="space-y-2 rounded-xl bg-secondary/50 p-4 border border-border">
-            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">📝 Zusammenfassung</p>
-            <p className="text-sm text-foreground whitespace-pre-line leading-relaxed">
+            <p className="text-xs font-semibold text-foreground">📝 So meldest du ein Gewerbe an:</p>
+            <p className="text-[13px] text-foreground/90 whitespace-pre-line leading-[1.7]">
               {GEWERBE_TEXT}
             </p>
           </div>
