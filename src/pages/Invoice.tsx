@@ -321,7 +321,6 @@ const Invoice = () => {
                 <span className="text-sm font-semibold text-accent">support@basedbuilders.com</span>
                 <span className="text-[10px] text-muted-foreground group-hover:text-foreground transition-colors">📋 Kopieren</span>
               </button>
-              </p>
               <p className="text-xs text-accent font-medium">
                 ⚠️ Wichtig: Erstelle deine Rechnung erst, nachdem du die Abrechnung von uns per E-Mail erhalten hast!
               </p>
