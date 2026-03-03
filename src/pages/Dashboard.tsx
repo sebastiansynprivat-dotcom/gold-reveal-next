@@ -389,18 +389,24 @@ function DashboardBillingInfo({ onNavigate }: { onNavigate: () => void }) {
                 <Carousel opts={{ loop: true }} className="w-full">
                   <CarouselContent>
                     {[
-                      { name: "Lena M.", text: "Am Anfang dachte ich auch, das dauert ewig – aber es lohnt sich mega! 💰", stars: 5 },
-                      { name: "Kevin S.", text: "Die Auszahlung kam pünktlich, alles super transparent.", stars: 5 },
-                      { name: "Sarah T.", text: "Einfach dranbleiben, der Zeitraum geht schneller rum als man denkt!", stars: 4 },
-                      { name: "Nico R.", text: "Top Support und faire Abrechnung. Kann ich nur empfehlen.", stars: 5 },
+                      { name: "Mark", date: "Jan 2026", title: "Sehr positiver Einstieg und tolles Arbeitsumfeld", text: "Ich wurde von Anfang an sehr herzlich aufgenommen und umfassend eingearbeitet. Der Einstieg verlief reibungslos. Das gesamte Team ist ausgesprochen freundlich, hilfsbereit und gut organisiert. Auch die Bezahlung verläuft zuverlässig und problemlos.", stars: 5 },
+                      { name: "Michaela", date: "Jan 2026", title: "Seit über einem Jahr zu 100% Zufrieden", text: "Wer bereit ist zu arbeiten hat hier einen zuverlässigen, freundlichen und kompetenten Partner. Das Geld kommt super pünktlich und immer korrekt abgerechnet. Ich bin jedenfalls froh, etwas gefunden zu haben, wo ich jederzeit und von überall mir ein gutes Zubrot verdienen kann 😃", stars: 5 },
+                      { name: "Nikolett T.", date: "Jan 2026", title: "Super Team", text: "Die Einarbeitung ging schnell und unkompliziert. Die Unterstützung ist mehr als gut, man kann jederzeit Fragen stellen. Man bleibt komplett anonym und kann von überall aus arbeiten. Ich kann sie nur weiterempfehlen. ☺️", stars: 5 },
+                      { name: "Mika O.", date: "Jan 2026", title: "Sehr guter Arbeitgeber", text: "Zuverlässig, fair und professionell. Kann ich nur weiterempfehlen.", stars: 5 },
                     ].map((review, i) => (
                       <CarouselItem key={i}>
                         <div className="glass-card-subtle rounded-lg p-3 space-y-1.5">
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-semibold text-foreground">{review.name}</span>
-                            <span className="text-[10px]">{"⭐".repeat(review.stars)}</span>
+                            <span className="text-[10px] text-muted-foreground">{review.date}</span>
                           </div>
-                          <p className="text-xs text-muted-foreground leading-relaxed">"{review.text}"</p>
+                          <div className="flex gap-0.5">
+                            {Array.from({ length: review.stars }).map((_, s) => (
+                              <span key={s} className="text-[10px] text-green-500">★</span>
+                            ))}
+                          </div>
+                          <p className="text-xs font-semibold text-foreground">{review.title}</p>
+                          <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-4">{review.text}</p>
                         </div>
                       </CarouselItem>
                     ))}
