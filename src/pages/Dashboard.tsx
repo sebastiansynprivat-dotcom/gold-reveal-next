@@ -432,6 +432,14 @@ function DashboardBillingInfo({ onNavigate }: { onNavigate: () => void }) {
                     <p className="text-[11px] text-muted-foreground leading-relaxed">{review.text}</p>
                   </div>
                 ))}
+                <a
+                  href="https://www.trustpilot.com/review/she-x.de?languages=all"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full text-center py-2.5 rounded-lg bg-accent text-accent-foreground font-semibold text-sm hover:bg-accent/90 transition-colors"
+                >
+                  Mehr Bewertungen lesen
+                </a>
               </div>
             </DialogContent>
           </Dialog>
