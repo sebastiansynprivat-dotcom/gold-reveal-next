@@ -56,6 +56,7 @@ export default function AdminDashboard() {
   const [newAccPassword, setNewAccPassword] = useState("");
   const [newAccDomain, setNewAccDomain] = useState("");
   const [addingAccount, setAddingAccount] = useState(false);
+  const [assigning, setAssigning] = useState(false);
 
   useEffect(() => {
     loadChatters();
@@ -106,6 +107,38 @@ export default function AdminDashboard() {
       loadAccounts();
     }
     setAddingAccount(false);
+  };
+
+  const assignAccounts = async () => {
+    if (!selectedPlatform) return;
+    setAssigning(true);
+    try {
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const session = await supabase.auth.getSession();
+      const res = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/assign-accounts`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            Authorization: `Bearer ${session.data.session?.access_token}`,
+          },
+          body: JSON.stringify({ platform: selectedPlatform }),
+        }
+      );
+      const result = await res.json();
+      if (res.ok) {
+        toast.success(result.message || "Accounts zugewiesen!");
+        loadAccounts();
+        loadChatters();
+      } else {
+        toast.error(result.error || "Fehler beim Zuweisen");
+      }
+    } catch (err: any) {
+      toast.error("Fehler: " + err.message);
+    }
+    setAssigning(false);
   };
 
   const sendIndividualPush = async () => {
@@ -404,17 +437,24 @@ export default function AdminDashboard() {
               </Button>
             </div>
 
-            {/* Stats */}
-            <div className="flex gap-3 text-xs">
-              <span className="text-muted-foreground">
-                Gesamt: <span className="text-foreground font-semibold">{platformAccounts.length}</span>
-              </span>
-              <span className="text-green-500">
-                Frei: <span className="font-semibold">{freeCount}</span>
-              </span>
-              <span className="text-muted-foreground">
-                Vergeben: <span className="font-semibold">{assignedCount}</span>
-              </span>
+            {/* Stats + Assign button */}
+            <div className="flex items-center justify-between">
+              <div className="flex gap-3 text-xs">
+                <span className="text-muted-foreground">
+                  Gesamt: <span className="text-foreground font-semibold">{platformAccounts.length}</span>
+                </span>
+                <span className="text-accent">
+                  Frei: <span className="font-semibold">{freeCount}</span>
+                </span>
+                <span className="text-muted-foreground">
+                  Vergeben: <span className="font-semibold">{assignedCount}</span>
+                </span>
+              </div>
+              {freeCount > 0 && (
+                <Button size="sm" onClick={assignAccounts} disabled={assigning} variant="outline">
+                  {assigning ? "Wird zugewiesen..." : "Freie Accounts zuweisen"}
+                </Button>
+              )}
             </div>
 
             {/* Account list */}
