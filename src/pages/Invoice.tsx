@@ -3,6 +3,7 @@ import DashboardChat from "@/components/DashboardChat";
 import BillingAudioDialog from "@/components/BillingAudioDialog";
 import GewerbeDialog from "@/components/GewerbeDialog";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -233,22 +234,35 @@ const Invoice = () => {
         <BillingCountdown onUnlock={setBillingUnlocked} demoMode={demoMode} />
 
         {/* Gewerbe To-Do */}
-        <Card className="glass-card border-accent/30 gold-border-glow">
-          <CardContent className="p-4 space-y-2">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="h-5 w-5 text-accent mt-0.5 shrink-0" />
-              <div className="space-y-1.5">
-                <p className="text-sm font-semibold text-foreground">
-                  📌 To-Do: Gewerbe anmelden
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Um deine Rechnungen stellen zu können, brauchst du ein angemeldetes Gewerbe.
-                </p>
-                <GewerbeDialog />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {(() => {
+          const [gewerbeDone, setGewerbeDone] = useState(() => localStorage.getItem("gewerbe_done") === "true");
+          const toggle = (checked: boolean) => {
+            setGewerbeDone(checked);
+            localStorage.setItem("gewerbe_done", String(checked));
+          };
+          return (
+            <Card className={cn("glass-card border-accent/30 gold-border-glow transition-opacity", gewerbeDone && "opacity-60")}>
+              <CardContent className="p-4 space-y-2">
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    checked={gewerbeDone}
+                    onCheckedChange={(v) => toggle(!!v)}
+                    className="mt-1 shrink-0 border-accent data-[state=checked]:bg-accent data-[state=checked]:text-accent-foreground"
+                  />
+                  <div className="space-y-1.5">
+                    <p className={cn("text-sm font-semibold text-foreground", gewerbeDone && "line-through text-muted-foreground")}>
+                      📌 To-Do: Gewerbe anmelden
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      Um deine Rechnungen stellen zu können, brauchst du ein angemeldetes Gewerbe.
+                    </p>
+                    {!gewerbeDone && <GewerbeDialog />}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })()}
 
         {!billingUnlocked && (
           <Card className="glass-card-subtle border-border">
