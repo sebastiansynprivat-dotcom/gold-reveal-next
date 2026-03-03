@@ -147,6 +147,34 @@ export default function AdminDashboard() {
       c.telegram_id?.toLowerCase().includes(search.toLowerCase())
   );
 
+  const openAccountDialog = (chatter: ChatterProfile) => {
+    setAccountTarget(chatter);
+    setAccEmail(chatter.account_email || "");
+    setAccPassword(chatter.account_password || "");
+    setAccDomain(chatter.account_domain || "");
+  };
+
+  const saveAccountData = async () => {
+    if (!accountTarget) return;
+    setAccSaving(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        account_email: accEmail.trim(),
+        account_password: accPassword.trim(),
+        account_domain: accDomain.trim(),
+      })
+      .eq("user_id", accountTarget.user_id);
+    if (error) {
+      toast.error("Fehler beim Speichern");
+    } else {
+      toast.success("Account-Daten gespeichert!");
+      setAccountTarget(null);
+      loadChatters();
+    }
+    setAccSaving(false);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border">
