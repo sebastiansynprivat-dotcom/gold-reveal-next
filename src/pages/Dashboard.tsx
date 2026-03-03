@@ -35,18 +35,26 @@ export default function Dashboard() {
   const [telegramSaved, setTelegramSaved] = useState(false);
   const [telegramLoading, setTelegramLoading] = useState(true);
 
-  // Load telegram_id from profiles table
+  const [groupName, setGroupName] = useState("");
+  const [groupNameSaved, setGroupNameSaved] = useState(false);
+  const [editingGroupName, setEditingGroupName] = useState(false);
+
+  // Load telegram_id + group_name from profiles table
   useEffect(() => {
     if (!user) return;
     supabase
       .from("profiles")
-      .select("telegram_id")
+      .select("telegram_id, group_name")
       .eq("user_id", user.id)
       .maybeSingle()
       .then(({ data }) => {
         if (data?.telegram_id) {
           setTelegramId(data.telegram_id);
           setTelegramSaved(true);
+        }
+        if (data?.group_name) {
+          setGroupName(data.group_name);
+          setGroupNameSaved(true);
         }
         setTelegramLoading(false);
       });
@@ -64,6 +72,21 @@ export default function Dashboard() {
     }
     setTelegramSaved(true);
     toast.success("Telegram-ID gespeichert!");
+  };
+
+  const saveGroupName = async () => {
+    if (!user) return;
+    const { error } = await supabase
+      .from("profiles")
+      .update({ group_name: groupName.trim() })
+      .eq("user_id", user.id);
+    if (error) {
+      toast.error("Fehler beim Speichern");
+      return;
+    }
+    setGroupNameSaved(true);
+    setEditingGroupName(false);
+    toast.success("Gruppenname gespeichert!");
   };
 
   const [videoOpen, setVideoOpen] = useState(false);
