@@ -29,7 +29,7 @@ export default function Dashboard() {
   };
 
   const [videoOpen, setVideoOpen] = useState(false);
-  const [videoPlaying, setVideoPlaying] = useState(false);
+  const [videoLoaded, setVideoLoaded] = useState(false);
   const [umsatz, setUmsatz] = useState(0);
   const [hadConfetti, setHadConfetti] = useState(false);
 
@@ -102,7 +102,7 @@ export default function Dashboard() {
                 <Save className="h-4 w-4 mr-1" /> Speichern
               </Button>
             </div>
-            <Dialog onOpenChange={(open) => { setVideoOpen(open); if (!open) setVideoPlaying(false); }}>
+            <Dialog onOpenChange={(open) => { setVideoOpen(open); if (!open) setVideoLoaded(false); }}>
               <DialogTrigger asChild>
                 <button className="flex items-center gap-1 text-xs text-accent hover:text-accent/80 transition-colors">
                   <HelpCircle className="h-3.5 w-3.5" />
@@ -117,33 +117,21 @@ export default function Dashboard() {
                   </DialogDescription>
                 </DialogHeader>
                 <div className="aspect-video w-full rounded-lg overflow-hidden bg-secondary relative">
-                  {videoOpen && videoPlaying ? (
+                  {!videoLoaded && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="h-8 w-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  )}
+                  {videoOpen && (
                     <iframe
                       src="https://www.loom.com/embed/0582b0ea68b942728a535a98f990660b?autoplay=1"
                       frameBorder="0"
                       allowFullScreen
                       allow="autoplay"
-                      className="w-full h-full"
+                      className={`w-full h-full transition-opacity duration-300 ${videoLoaded ? "opacity-100" : "opacity-0"}`}
                       title="Telegram ID finden"
+                      onLoad={() => setVideoLoaded(true)}
                     />
-                  ) : (
-                    <button
-                      onClick={() => setVideoPlaying(true)}
-                      className="w-full h-full relative group cursor-pointer"
-                    >
-                      <img
-                        src="https://cdn.loom.com/sessions/thumbnails/0582b0ea68b942728a535a98f990660b-00001.jpg"
-                        alt="Video Thumbnail"
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-background/40 flex items-center justify-center group-hover:bg-background/20 transition-colors">
-                        <div className="h-16 w-16 rounded-full bg-accent/90 flex items-center justify-center gold-glow-strong group-hover:scale-110 transition-transform">
-                          <svg className="h-7 w-7 text-accent-foreground ml-1" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M8 5v14l11-7z" />
-                          </svg>
-                        </div>
-                      </div>
-                    </button>
                   )}
                 </div>
               </DialogContent>
