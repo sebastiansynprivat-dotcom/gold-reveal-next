@@ -50,18 +50,21 @@ export async function subscribeToPush(): Promise<boolean> {
     const subJson = subscription.toJSON();
 
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) return false;
+
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+    };
+    if (session?.access_token) {
+      headers["Authorization"] = `Bearer ${session.access_token}`;
+    }
 
     const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
     const res = await fetch(
       `https://${projectId}.supabase.co/functions/v1/subscribe-push`,
       {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.access_token}`,
-          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-        },
+        headers,
         body: JSON.stringify({
           endpoint: subJson.endpoint,
           keys: subJson.keys,
