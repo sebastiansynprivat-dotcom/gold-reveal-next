@@ -37,6 +37,12 @@ export default function AdminDashboard() {
   const [broadcastBody, setBroadcastBody] = useState("");
   const [broadcastSending, setBroadcastSending] = useState(false);
 
+  // Account data dialog
+  const [accountTarget, setAccountTarget] = useState<ChatterProfile | null>(null);
+  const [accEmail, setAccEmail] = useState("");
+  const [accPassword, setAccPassword] = useState("");
+  const [accDomain, setAccDomain] = useState("");
+  const [accSaving, setAccSaving] = useState(false);
   useEffect(() => {
     loadChatters();
   }, []);
