@@ -60,79 +60,96 @@ export default function Dashboard() {
     <div className="min-h-screen bg-background pb-24">
       {/* Header with Telegram + Umsatz inline */}
       <header className="border-b border-border">
-        <div className="container max-w-5xl mx-auto p-4 lg:px-8 space-y-3">
-          {/* Top row: Logo + Telegram ID + Badge */}
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3 shrink-0">
-              <img src={logo} alt="Logo" className="h-10 w-10 lg:h-12 lg:w-12 rounded-full" />
-              <div>
-                <h1 className="text-lg lg:text-xl font-bold text-foreground">Chatter Dashboard</h1>
-                <p className="text-xs text-muted-foreground">
-                  Aktiv auf: <span className="text-gold-gradient font-semibold">{platform}</span>
-                </p>
-              </div>
+        <div className="container max-w-5xl mx-auto px-4 py-3 lg:px-8">
+          <div className="flex items-center gap-3">
+            {/* Logo */}
+            <img src={logo} alt="Logo" className="h-9 w-9 rounded-full shrink-0" />
+
+            {/* Title + Platform */}
+            <div className="shrink-0">
+              <h1 className="text-base lg:text-lg font-bold text-foreground leading-tight">Chatter Dashboard</h1>
+              <p className="text-[10px] text-muted-foreground">
+                Aktiv auf: <span className="text-gold-gradient font-semibold">{platform}</span>
+              </p>
             </div>
 
-            {/* Telegram ID - right side */}
-            <div className="flex items-center gap-3">
-              <div className="min-w-0">
-                {telegramSaved ? (
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-accent shrink-0" />
-                    <span className="truncate max-w-[120px]">{telegramId}</span>
-                    <Button onClick={() => setTelegramSaved(false)} variant="ghost" size="sm" className="text-[10px] text-accent h-6 px-2">
-                      Ändern
+            {/* Divider */}
+            <div className="h-8 w-px bg-border shrink-0 hidden sm:block" />
+
+            {/* Telegram ID */}
+            <div className="ml-auto sm:ml-0 flex items-center gap-2">
+              {telegramSaved ? (
+                <>
+                  <CheckCircle2 className="h-4 w-4 text-accent shrink-0" />
+                  <span className="text-sm text-foreground font-medium">{telegramId}</span>
+                  <Button onClick={() => setTelegramSaved(false)} variant="ghost" size="sm" className="text-[10px] text-accent h-6 px-2">
+                    Ändern
+                  </Button>
+                </>
+              ) : (
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-1.5">
+                    <Input
+                      value={telegramId}
+                      onChange={(e) => setTelegramId(e.target.value)}
+                      placeholder="Deine Telegram ID"
+                      className="h-7 text-xs w-44"
+                    />
+                    <Button onClick={saveTelegram} size="sm" disabled={!telegramId.trim()} className="h-7 text-xs px-2.5">
+                      <Save className="h-3 w-3" />
                     </Button>
                   </div>
-                ) : (
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-1.5">
-                      <Input
-                        value={telegramId}
-                        onChange={(e) => setTelegramId(e.target.value)}
-                        placeholder="Deine Telegram ID"
-                        className="h-7 text-xs w-36"
-                      />
-                      <Button onClick={saveTelegram} size="sm" disabled={!telegramId.trim()} className="h-7 text-xs px-2">
-                        <Save className="h-3 w-3" />
-                      </Button>
-                    </div>
-                    <Dialog onOpenChange={(open) => { setVideoOpen(open); if (!open) setVideoLoaded(false); }}>
-                      <DialogTrigger asChild>
-                        <button className="flex items-center gap-1 text-[10px] text-accent hover:text-accent/80 transition-colors">
-                          <HelpCircle className="h-3 w-3" />
-                          Wo finde ich meine Telegram ID?
-                        </button>
-                      </DialogTrigger>
-                      <DialogContent className="glass-card border-border sm:max-w-lg">
-                        <DialogHeader>
-                          <DialogTitle className="text-foreground">Wo finde ich meine Telegram-ID?</DialogTitle>
-                          <DialogDescription className="text-muted-foreground text-xs">
-                            Schau dir das kurze Video an, um deine Telegram-ID zu finden.
-                          </DialogDescription>
-                        </DialogHeader>
-                        <div className="aspect-video w-full rounded-lg overflow-hidden bg-secondary relative">
-                          {!videoLoaded && (
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <div className="h-8 w-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-                            </div>
-                          )}
-                          {videoOpen && (
-                            <iframe
-                              src="https://www.loom.com/embed/0582b0ea68b942728a535a98f990660b?autoplay=1"
-                              frameBorder="0"
-                              allowFullScreen
-                              allow="autoplay"
-                              className={`w-full h-full transition-opacity duration-300 ${videoLoaded ? "opacity-100" : "opacity-0"}`}
-                              title="Telegram ID finden"
-                              onLoad={() => setVideoLoaded(true)}
-                            />
-                          )}
-                        </div>
-                      </DialogContent>
-                    </Dialog>
-                  </div>
-                )}
+                  <Dialog onOpenChange={(open) => { setVideoOpen(open); if (!open) setVideoLoaded(false); }}>
+                    <DialogTrigger asChild>
+                      <button className="flex items-center gap-1 text-[10px] text-accent hover:text-accent/80 transition-colors">
+                        <HelpCircle className="h-3 w-3" />
+                        Wo finde ich meine Telegram ID?
+                      </button>
+                    </DialogTrigger>
+                    <DialogContent className="glass-card border-border sm:max-w-lg">
+                      <DialogHeader>
+                        <DialogTitle className="text-foreground">Wo finde ich meine Telegram-ID?</DialogTitle>
+                        <DialogDescription className="text-muted-foreground text-xs">
+                          Schau dir das kurze Video an, um deine Telegram-ID zu finden.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="aspect-video w-full rounded-lg overflow-hidden bg-secondary relative">
+                        {!videoLoaded && (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="h-8 w-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                          </div>
+                        )}
+                        {videoOpen && (
+                          <iframe
+                            src="https://www.loom.com/embed/0582b0ea68b942728a535a98f990660b?autoplay=1"
+                            frameBorder="0"
+                            allowFullScreen
+                            allow="autoplay"
+                            className={`w-full h-full transition-opacity duration-300 ${videoLoaded ? "opacity-100" : "opacity-0"}`}
+                            title="Telegram ID finden"
+                            onLoad={() => setVideoLoaded(true)}
+                          />
+                        )}
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              )}
+            </div>
+
+            {/* Umsatz + Badge - right end */}
+            <div className="ml-auto flex items-center gap-3">
+              <div className="flex items-center gap-1.5">
+                <Zap className="h-3.5 w-3.5 text-accent shrink-0" />
+                <Input
+                  type="number"
+                  min={0}
+                  step={50}
+                  value={umsatz || ""}
+                  onChange={(e) => setUmsatz(Number(e.target.value) || 0)}
+                  placeholder="Umsatz €"
+                  className="h-7 text-xs w-24 font-semibold"
+                />
               </div>
               <Badge
                 className={
@@ -145,20 +162,6 @@ export default function Dashboard() {
                 {isGold ? "Gold" : "Starter"}
               </Badge>
             </div>
-          </div>
-
-          {/* Umsatz input row */}
-          <div className="flex items-center gap-2">
-            <Zap className="h-3.5 w-3.5 text-accent shrink-0" />
-            <Input
-              type="number"
-              min={0}
-              step={50}
-              value={umsatz || ""}
-              onChange={(e) => setUmsatz(Number(e.target.value) || 0)}
-              placeholder="Umsatz €"
-              className="h-8 text-xs w-28 font-semibold"
-            />
           </div>
         </div>
       </header>
