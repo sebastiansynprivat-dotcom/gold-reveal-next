@@ -27,6 +27,7 @@ const Invoice = () => {
   const { toast } = useToast();
 
   const [senderName, setSenderName] = useState("");
+  const [billingUnlocked, setBillingUnlocked] = useState(false);
   const [senderAddress, setSenderAddress] = useState("");
   const [senderCity, setSenderCity] = useState("");
   const [taxId, setTaxId] = useState("");
