@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import DashboardChat from "@/components/DashboardChat";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -402,6 +403,7 @@ const Invoice = () => {
           Die Rechnung wird lokal erstellt – keine Daten werden gespeichert.
         </p>
       </div>
+      <DashboardChat />
     </div>
   );
 };
