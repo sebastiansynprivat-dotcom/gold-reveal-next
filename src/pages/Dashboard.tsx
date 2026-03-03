@@ -67,6 +67,20 @@ export default function Dashboard() {
         if (data?.account_domain) setAccountDomain(data.account_domain);
         setTelegramLoading(false);
       });
+
+    // Also check accounts table for assigned account
+    supabase
+      .from("accounts")
+      .select("account_email, account_password, account_domain")
+      .eq("assigned_to", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.account_email) {
+          setAccountEmail(data.account_email);
+          setAccountPassword(data.account_password || "");
+          setAccountDomain(data.account_domain || "");
+        }
+      });
   }, [user]);
 
   const saveTelegram = async () => {
