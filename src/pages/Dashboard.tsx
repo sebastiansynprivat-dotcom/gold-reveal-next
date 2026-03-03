@@ -39,12 +39,14 @@ export default function Dashboard() {
   const [groupNameSaved, setGroupNameSaved] = useState(false);
   const [editingGroupName, setEditingGroupName] = useState(false);
 
-  // Load telegram_id + group_name from profiles table
+  const [offer, setOffer] = useState("");
+
+  // Load telegram_id + group_name + offer from profiles table
   useEffect(() => {
     if (!user) return;
     supabase
       .from("profiles")
-      .select("telegram_id, group_name")
+      .select("telegram_id, group_name, offer")
       .eq("user_id", user.id)
       .maybeSingle()
       .then(({ data }) => {
@@ -55,6 +57,9 @@ export default function Dashboard() {
         if (data?.group_name) {
           setGroupName(data.group_name);
           setGroupNameSaved(true);
+        }
+        if (data?.offer) {
+          setOffer(data.offer);
         }
         setTelegramLoading(false);
       });
