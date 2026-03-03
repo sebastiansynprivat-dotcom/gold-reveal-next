@@ -376,7 +376,7 @@ function DashboardBillingInfo({ onNavigate }: { onNavigate: () => void }) {
                 Warum dauert das so lange?
               </button>
             </DialogTrigger>
-            <DialogContent className="glass-card border-accent/20 max-w-[calc(100vw-2rem)] sm:max-w-md max-h-[80vh] overflow-y-auto shadow-[0_0_30px_-5px_hsl(var(--accent)/0.15),0_0_60px_-10px_hsl(var(--accent)/0.08)]">
+            <DialogContent className="glass-card border-accent/20 w-[calc(100vw-2rem)] sm:max-w-md max-h-[85vh] overflow-y-auto p-4 sm:p-6 shadow-[0_0_30px_-5px_hsl(var(--accent)/0.15),0_0_60px_-10px_hsl(var(--accent)/0.08)]">
               <DialogHeader>
                 <DialogTitle className="text-foreground text-sm">Warum dauert das so lange?</DialogTitle>
                 <DialogDescription className="text-muted-foreground text-xs">Hier erkläre ich es dir kurz per Sprachmemo.</DialogDescription>
@@ -386,7 +386,7 @@ function DashboardBillingInfo({ onNavigate }: { onNavigate: () => void }) {
               </audio>
               <div className="pt-2 space-y-2">
                 <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Was andere sagen</p>
-                <Carousel opts={{ loop: true }} className="w-full overflow-hidden">
+                <Carousel opts={{ loop: true }} className="w-full -mx-1 px-1 overflow-hidden">
                   <CarouselContent>
                     {[
                       { name: "Mark", date: "Jan 2026", title: "Sehr positiver Einstieg und tolles Arbeitsumfeld", text: "Ich wurde von Anfang an sehr herzlich aufgenommen und umfassend eingearbeitet. Der Einstieg verlief reibungslos. Das gesamte Team ist ausgesprochen freundlich, hilfsbereit und gut organisiert. Auch die Bezahlung verläuft zuverlässig und problemlos.", stars: 5 },
