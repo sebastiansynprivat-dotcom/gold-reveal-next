@@ -73,6 +73,7 @@ export type Database = {
           created_at: string
           group_name: string
           id: string
+          offer: string | null
           telegram_id: string | null
           updated_at: string
           user_id: string
@@ -81,6 +82,7 @@ export type Database = {
           created_at?: string
           group_name?: string
           id?: string
+          offer?: string | null
           telegram_id?: string | null
           updated_at?: string
           user_id: string
@@ -89,6 +91,7 @@ export type Database = {
           created_at?: string
           group_name?: string
           id?: string
+          offer?: string | null
           telegram_id?: string | null
           updated_at?: string
           user_id?: string
