@@ -170,7 +170,7 @@ export default function Dashboard() {
 
       <main className="container max-w-5xl mx-auto p-4 lg:px-8 lg:py-8 space-y-5 lg:space-y-6">
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 lg:gap-4">
           <div className="glass-card-subtle rounded-xl p-3 lg:p-5 text-center">
             <p className="text-[10px] lg:text-xs text-muted-foreground mb-0.5">Umsatz</p>
             <p className="text-xl lg:text-2xl font-bold text-gold-gradient">
@@ -187,6 +187,12 @@ export default function Dashboard() {
             <p className="text-[10px] lg:text-xs text-muted-foreground mb-0.5">Deine Rate</p>
             <p className="text-xl lg:text-2xl font-bold text-gold-gradient">
               {Math.round(rate * 100)}%
+            </p>
+          </div>
+          <div className="glass-card-subtle rounded-xl p-3 lg:p-5 text-center">
+            <p className="text-[10px] lg:text-xs text-muted-foreground mb-0.5">Status</p>
+            <p className={`text-xl lg:text-2xl font-bold ${isGold ? "text-gold-gradient" : "text-muted-foreground"}`}>
+              {isGold ? "Gold" : "Starter"}
             </p>
           </div>
           <DailyGoal />
