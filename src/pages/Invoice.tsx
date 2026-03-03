@@ -187,10 +187,22 @@ const Invoice = () => {
         </div>
 
         {/* Countdown section */}
-        <BillingCountdown />
+        <BillingCountdown onUnlock={setBillingUnlocked} />
 
-        {/* Sender */}
-        <Card className="glass-card border-border">
+        {!billingUnlocked && (
+          <Card className="glass-card-subtle border-border">
+            <CardContent className="p-4 text-center space-y-2">
+              <p className="text-sm text-muted-foreground">
+                Das Rechnungsformular wird freigeschaltet, sobald dein Abrechnungszeitraum erreicht ist.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Du kannst jetzt eine E-Mail an <a href="mailto:support@basedbuilders.com" className="text-accent hover:underline font-medium">support@basedbuilders.com</a> schreiben und nach deiner Abrechnung fragen.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        <div className={!billingUnlocked ? "opacity-40 pointer-events-none select-none" : ""}>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm text-foreground">Deine Daten (Rechnungssteller)</CardTitle>
           </CardHeader>
