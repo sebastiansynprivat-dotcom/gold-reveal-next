@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { useSearchParams } from "react-router-dom";
-import { Save, CheckCircle2, Award, Zap, HelpCircle } from "lucide-react";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { Save, CheckCircle2, Award, Zap, HelpCircle, FileText } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,7 @@ const GOLD_RATE = 0.25;
 
 export default function Dashboard() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const platform = searchParams.get("platform") || "Brezzels";
 
   const { user } = useAuth();
@@ -339,6 +340,16 @@ export default function Dashboard() {
             7 Tage in Folge mind. 30€ = <strong className="text-foreground">Upgrade auf besseren Account</strong>.
           </p>
         </section>
+
+        {/* Invoice Tool Link */}
+        <Button
+          onClick={() => navigate("/rechnung")}
+          variant="outline"
+          className="w-full h-11 border-border text-foreground hover:bg-secondary"
+        >
+          <FileText className="mr-2 h-4 w-4 text-accent" />
+          Rechnung erstellen
+        </Button>
       </main>
 
       <DashboardChat />
