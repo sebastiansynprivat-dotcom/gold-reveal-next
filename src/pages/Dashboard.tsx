@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import DashboardChat from "@/components/DashboardChat";
+import StreakTracker from "@/components/StreakTracker";
 import logo from "@/assets/logo.png";
 
 const GOLD_THRESHOLD = 2000;
@@ -245,12 +246,23 @@ export default function Dashboard() {
                 <span className="text-xs lg:text-sm">Ab 2.000€</span>
                 <span className="font-bold text-gold-gradient">25%</span>
               </div>
+              <div className="flex items-center justify-between px-3 lg:px-4 py-3 border-t border-border">
+                <span className="text-accent font-semibold">🔥 Streak</span>
+                <span className="text-xs lg:text-sm">7 Tage × 30€</span>
+                <span className="font-bold text-accent">Upgrade</span>
+              </div>
             </div>
             <p className="text-[10px] lg:text-xs text-muted-foreground">
               Ab 2.000€ Umsatz gilt die 25%-Rate auf den <strong className="text-foreground">gesamten</strong> Betrag.
+              <br />7 Tage in Folge mind. 30€ Umsatz = <strong className="text-foreground">Account-Upgrade</strong>.
             </p>
           </section>
         </div>
+
+        {/* Streak Tracker */}
+        <section className="glass-card rounded-xl p-4 lg:p-6">
+          <StreakTracker dailyRevenue={umsatz} />
+        </section>
       </main>
 
       <DashboardChat />
