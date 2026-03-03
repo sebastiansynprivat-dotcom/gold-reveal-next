@@ -355,7 +355,8 @@ const Invoice = () => {
           {/* Generate button */}
           <Button
             onClick={generatePDF}
-            className="w-full h-12 text-base font-bold gold-glow"
+            disabled={!allFieldsFilled}
+            className="w-full h-12 text-base font-bold gold-glow disabled:opacity-50 disabled:cursor-not-allowed"
             size="lg"
           >
             <FileDown className="mr-2 h-5 w-5" />
