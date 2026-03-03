@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Save, CheckCircle2, Award, Zap, HelpCircle, FileText, Clock } from "lucide-react";
+import { Save, CheckCircle2, Award, Zap, HelpCircle, FileText, Clock, Users, Pencil } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,18 +35,26 @@ export default function Dashboard() {
   const [telegramSaved, setTelegramSaved] = useState(false);
   const [telegramLoading, setTelegramLoading] = useState(true);
 
-  // Load telegram_id from profiles table
+  const [groupName, setGroupName] = useState("");
+  const [groupNameSaved, setGroupNameSaved] = useState(false);
+  const [editingGroupName, setEditingGroupName] = useState(false);
+
+  // Load telegram_id + group_name from profiles table
   useEffect(() => {
     if (!user) return;
     supabase
       .from("profiles")
-      .select("telegram_id")
+      .select("telegram_id, group_name")
       .eq("user_id", user.id)
       .maybeSingle()
       .then(({ data }) => {
         if (data?.telegram_id) {
           setTelegramId(data.telegram_id);
           setTelegramSaved(true);
+        }
+        if (data?.group_name) {
+          setGroupName(data.group_name);
+          setGroupNameSaved(true);
         }
         setTelegramLoading(false);
       });
@@ -64,6 +72,21 @@ export default function Dashboard() {
     }
     setTelegramSaved(true);
     toast.success("Telegram-ID gespeichert!");
+  };
+
+  const saveGroupName = async () => {
+    if (!user) return;
+    const { error } = await supabase
+      .from("profiles")
+      .update({ group_name: groupName.trim() })
+      .eq("user_id", user.id);
+    if (error) {
+      toast.error("Fehler beim Speichern");
+      return;
+    }
+    setGroupNameSaved(true);
+    setEditingGroupName(false);
+    toast.success("Gruppenname gespeichert!");
   };
 
   const [videoOpen, setVideoOpen] = useState(false);
@@ -143,6 +166,23 @@ export default function Dashboard() {
                 </div>
               )}
             </div>
+            <div className="h-8 w-px bg-border shrink-0" />
+            <div className="flex items-center gap-2">
+              <Users className="h-3.5 w-3.5 text-accent shrink-0" />
+              {groupNameSaved && !editingGroupName ? (
+                <>
+                  <span className="text-sm text-foreground font-medium">{groupName}</span>
+                  <Button onClick={() => setEditingGroupName(true)} variant="ghost" size="sm" className="text-[10px] text-accent h-6 px-2">
+                    <Pencil className="h-3 w-3" />
+                  </Button>
+                </>
+              ) : (
+                <div className="flex items-center gap-1.5">
+                  <Input value={groupName} onChange={(e) => setGroupName(e.target.value)} placeholder="Gruppenname" className="h-7 text-xs w-36" />
+                  <Button onClick={saveGroupName} size="sm" disabled={!groupName.trim()} className="h-7 text-xs px-2.5"><Save className="h-3 w-3" /></Button>
+                </div>
+              )}
+            </div>
             <div className="ml-auto flex items-center gap-3">
               <div className="flex items-center gap-1.5">
                 <Zap className="h-3.5 w-3.5 text-accent shrink-0" />
@@ -170,7 +210,25 @@ export default function Dashboard() {
               </Badge>
             </div>
 
-            {/* Row 2: Telegram + Umsatz side by side */}
+            {/* Row 2: Gruppenname */}
+            <div className="flex items-center gap-2">
+              <Users className="h-3.5 w-3.5 text-accent shrink-0" />
+              {groupNameSaved && !editingGroupName ? (
+                <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                  <span className="text-xs text-foreground font-medium truncate">{groupName}</span>
+                  <Button onClick={() => setEditingGroupName(true)} variant="ghost" size="sm" className="text-[10px] text-accent h-5 px-1.5">
+                    <Pencil className="h-3 w-3" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1 flex-1 min-w-0">
+                  <Input value={groupName} onChange={(e) => setGroupName(e.target.value)} placeholder="Gruppenname eingeben" className="h-7 text-xs flex-1 min-w-0" />
+                  <Button onClick={saveGroupName} size="sm" disabled={!groupName.trim()} className="h-7 text-xs px-2"><Save className="h-3 w-3" /></Button>
+                </div>
+              )}
+            </div>
+
+            {/* Row 3: Telegram + Umsatz side by side */}
             <div className="flex items-center gap-2">
               {telegramSaved ? (
                 <div className="flex items-center gap-1.5 flex-1 min-w-0">
