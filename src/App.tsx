@@ -9,6 +9,7 @@ import Onboarding from "./pages/Onboarding";
 import Quiz from "./pages/Quiz";
 import OfferA from "./pages/OfferA";
 import OfferB from "./pages/OfferB";
+import OfferC from "./pages/OfferC";
 import Dashboard from "./pages/Dashboard";
 import AdminNotifications from "./pages/AdminNotifications";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -44,6 +45,7 @@ const App = () => (
             <Route path="/quiz" element={<Quiz />} />
             <Route path="/offer-a" element={<OfferA />} />
             <Route path="/offer-b" element={<OfferB />} />
+            <Route path="/offer-c" element={<OfferC />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/admin/notifications" element={<ProtectedRoute><AdminNotifications /></ProtectedRoute>} />
