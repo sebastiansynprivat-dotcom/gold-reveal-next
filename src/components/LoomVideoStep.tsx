@@ -4,9 +4,6 @@ import StepBadge from "./StepBadge";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
-/** Seconds the iframe must be visible before auto-completing */
-const VIEW_THRESHOLD = 45;
-
 interface LoomVideoStepProps {
   step: number;
   title: string;
@@ -26,37 +23,58 @@ const LoomVideoStep = ({
 }: LoomVideoStepProps) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const completedRef = useRef(false);
-  const viewTimeRef = useRef(0);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const playerReadyRef = useRef(false);
 
   useEffect(() => {
     if (!completed) {
       completedRef.current = false;
-      viewTimeRef.current = 0;
+      playerReadyRef.current = false;
     }
   }, [completed]);
 
-  // Loom postMessage tracking (works on published URL)
   const handleMessage = useCallback(
     (event: MessageEvent) => {
-      if (!event.data || typeof event.data !== "object") return;
-      const msg = event.data;
+      if (!event.origin.includes("loom.com")) return;
 
-      if (msg.event === "ready" && iframeRef.current?.contentWindow) {
-        ["timeupdate", "ended"].forEach((evt) => {
-          iframeRef.current!.contentWindow!.postMessage(
-            { method: "addEventListener", value: evt, context: "player.js" },
-            "*"
-          );
-        });
-        return;
-      }
+      try {
+        const data = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
 
-      if (completedRef.current) return;
+        // player.js ready – register for timeupdate + ended
+        if (data?.context === "player.js" && data?.event === "ready" && !playerReadyRef.current) {
+          playerReadyRef.current = true;
+          const win = iframeRef.current?.contentWindow;
+          if (win) {
+            win.postMessage(
+              JSON.stringify({ context: "player.js", method: "addEventListener", value: "timeupdate" }),
+              "*"
+            );
+            win.postMessage(
+              JSON.stringify({ context: "player.js", method: "addEventListener", value: "ended" }),
+              "*"
+            );
+          }
+          return;
+        }
 
-      if (msg.event === "ended" || (msg.event === "timeupdate" && msg.data?.percent >= 0.9)) {
-        completedRef.current = true;
-        onAutoComplete(step);
+        if (completedRef.current) return;
+
+        // Video ended
+        if (data?.context === "player.js" && data?.event === "ended") {
+          completedRef.current = true;
+          onAutoComplete(step);
+          return;
+        }
+
+        // timeupdate – complete at 90%
+        if (data?.context === "player.js" && data?.event === "timeupdate" && data?.value) {
+          const { seconds, duration } = data.value;
+          if (duration > 0 && seconds / duration >= 0.9) {
+            completedRef.current = true;
+            onAutoComplete(step);
+          }
+        }
+      } catch {
+        // Ignore non-JSON messages
       }
     },
     [onAutoComplete, step]
@@ -66,45 +84,6 @@ const LoomVideoStep = ({
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
   }, [handleMessage]);
-
-  // Fallback: IntersectionObserver – track cumulative view time
-  useEffect(() => {
-    if (completed) return;
-    const el = iframeRef.current;
-    if (!el) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !completedRef.current) {
-          // Start counting
-          if (!intervalRef.current) {
-            intervalRef.current = setInterval(() => {
-              viewTimeRef.current += 1;
-              if (viewTimeRef.current >= VIEW_THRESHOLD && !completedRef.current) {
-                completedRef.current = true;
-                onAutoComplete(step);
-                if (intervalRef.current) clearInterval(intervalRef.current);
-                intervalRef.current = null;
-              }
-            }, 1000);
-          }
-        } else {
-          // Pause counting when not visible
-          if (intervalRef.current) {
-            clearInterval(intervalRef.current);
-            intervalRef.current = null;
-          }
-        }
-      },
-      { threshold: 0.5 }
-    );
-
-    observer.observe(el);
-    return () => {
-      observer.disconnect();
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [completed, onAutoComplete, step]);
 
   return (
     <motion.div
