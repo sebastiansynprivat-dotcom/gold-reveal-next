@@ -23,6 +23,7 @@ const GOLD_RATE = 0.25;
 
 export default function Dashboard() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const platform = searchParams.get("platform") || "Brezzels";
 
   const { user } = useAuth();
