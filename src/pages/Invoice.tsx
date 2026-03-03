@@ -236,10 +236,31 @@ const Invoice = () => {
         {/* Gewerbe To-Do */}
         {(() => {
           const [gewerbeDone, setGewerbeDone] = useState(() => localStorage.getItem("gewerbe_done") === "true");
+          const [hidden, setHidden] = useState(() => localStorage.getItem("gewerbe_hidden") === "true");
           const toggle = (checked: boolean) => {
             setGewerbeDone(checked);
             localStorage.setItem("gewerbe_done", String(checked));
+            if (!checked) {
+              setHidden(false);
+              localStorage.setItem("gewerbe_hidden", "false");
+            }
           };
+          const hide = () => {
+            setHidden(true);
+            localStorage.setItem("gewerbe_hidden", "true");
+          };
+
+          if (hidden) {
+            return (
+              <button
+                onClick={() => { setHidden(false); localStorage.setItem("gewerbe_hidden", "false"); }}
+                className="text-[10px] text-muted-foreground hover:text-foreground transition-colors text-left"
+              >
+                📌 Gewerbe-To-Do wieder einblenden
+              </button>
+            );
+          }
+
           return (
             <Card className={cn("glass-card border-accent/30 gold-border-glow transition-opacity", gewerbeDone && "opacity-60")}>
               <CardContent className="p-4 space-y-2">
@@ -249,10 +270,17 @@ const Invoice = () => {
                     onCheckedChange={(v) => toggle(!!v)}
                     className="mt-1 shrink-0 border-accent data-[state=checked]:bg-accent data-[state=checked]:text-accent-foreground"
                   />
-                  <div className="space-y-1.5">
-                    <p className={cn("text-sm font-semibold text-foreground", gewerbeDone && "line-through text-muted-foreground")}>
-                      📌 To-Do: Gewerbe anmelden
-                    </p>
+                  <div className="space-y-1.5 flex-1">
+                    <div className="flex items-center justify-between">
+                      <p className={cn("text-sm font-semibold text-foreground", gewerbeDone && "line-through text-muted-foreground")}>
+                        📌 To-Do: Gewerbe anmelden
+                      </p>
+                      {gewerbeDone && (
+                        <button onClick={hide} className="text-[10px] text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap ml-2">
+                          Ausblenden
+                        </button>
+                      )}
+                    </div>
                     <p className="text-xs text-muted-foreground">
                       Um deine Rechnungen stellen zu können, brauchst du ein angemeldetes Gewerbe.
                     </p>
