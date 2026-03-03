@@ -19,12 +19,12 @@ const videos = [
   {
     step: 1,
     title: "Plattform Erklärungs Video",
-    embedUrl: "https://www.loom.com/embed/b161be42f5484688b862f8cd5753690b?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true",
+    embedUrl: "https://www.loom.com/embed/b161be42f5484688b862f8cd5753690b?sid=1&hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true",
   },
   {
     step: 2,
     title: "Telegram Nachrichten Video",
-    embedUrl: "https://www.loom.com/embed/0582b0ea68b942728a535a98f990660b?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true",
+    embedUrl: "https://www.loom.com/embed/0582b0ea68b942728a535a98f990660b?sid=1&hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true",
   },
 ];
 
