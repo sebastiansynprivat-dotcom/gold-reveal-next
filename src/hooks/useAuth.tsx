@@ -34,8 +34,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({ email, password });
+  const signUp = async (email: string, password: string, metadata?: { group_name?: string }) => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: metadata ? { data: metadata } : undefined,
+    });
     return { error };
   };
 
