@@ -85,23 +85,37 @@ export default function Dashboard() {
       <main className="container max-w-5xl mx-auto p-4 lg:px-8 lg:py-8 space-y-6 lg:space-y-8">
         {/* Top row: Telegram + Umsatz Input side by side on desktop */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
-          {/* Telegram ID */}
           <section className="glass-card rounded-xl p-4 lg:p-6 space-y-3">
             <h2 className="text-sm lg:text-base font-semibold text-foreground flex items-center gap-2">
-              Telegram ID hinterlegen
-              {telegramSaved && <CheckCircle2 className="h-4 w-4 text-accent" />}
+              {telegramSaved ? (
+                <>
+                  Telegram ID hinterlegt
+                  <CheckCircle2 className="h-4 w-4 text-accent" />
+                </>
+              ) : (
+                "Telegram ID hinterlegen"
+              )}
             </h2>
-            <div className="flex gap-2">
-              <Input
-                value={telegramId}
-                onChange={(e) => { setTelegramId(e.target.value); setTelegramSaved(false); }}
-                placeholder="@dein_username"
-                className="flex-1"
-              />
-              <Button onClick={saveTelegram} size="sm" disabled={!telegramId.trim()}>
-                <Save className="h-4 w-4 mr-1" /> Speichern
-              </Button>
-            </div>
+            {telegramSaved ? (
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">{telegramId}</span>
+                <Button onClick={() => setTelegramSaved(false)} variant="ghost" size="sm" className="text-xs text-accent">
+                  Ändern
+                </Button>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <Input
+                  value={telegramId}
+                  onChange={(e) => setTelegramId(e.target.value)}
+                  placeholder="@dein_username"
+                  className="flex-1"
+                />
+                <Button onClick={saveTelegram} size="sm" disabled={!telegramId.trim()}>
+                  <Save className="h-4 w-4 mr-1" /> Speichern
+                </Button>
+              </div>
+            )}
             <Dialog onOpenChange={(open) => { setVideoOpen(open); if (!open) setVideoLoaded(false); }}>
               <DialogTrigger asChild>
                 <button className="flex items-center gap-1 text-xs text-accent hover:text-accent/80 transition-colors">
