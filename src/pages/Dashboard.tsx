@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Save, CheckCircle2, Award, Zap, HelpCircle, FileText, Clock } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
@@ -384,6 +384,33 @@ function DashboardBillingInfo({ onNavigate }: { onNavigate: () => void }) {
               <audio controls className="w-full" preload="none">
                 <source src="/audio/billing-info.mp3" type="audio/mpeg" />
               </audio>
+              <div className="pt-2 space-y-2">
+                <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Was andere sagen</p>
+                <Carousel opts={{ loop: true }} className="w-full">
+                  <CarouselContent>
+                    {[
+                      { name: "Lena M.", text: "Am Anfang dachte ich auch, das dauert ewig – aber es lohnt sich mega! 💰", stars: 5 },
+                      { name: "Kevin S.", text: "Die Auszahlung kam pünktlich, alles super transparent.", stars: 5 },
+                      { name: "Sarah T.", text: "Einfach dranbleiben, der Zeitraum geht schneller rum als man denkt!", stars: 4 },
+                      { name: "Nico R.", text: "Top Support und faire Abrechnung. Kann ich nur empfehlen.", stars: 5 },
+                    ].map((review, i) => (
+                      <CarouselItem key={i}>
+                        <div className="glass-card-subtle rounded-lg p-3 space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-semibold text-foreground">{review.name}</span>
+                            <span className="text-[10px]">{"⭐".repeat(review.stars)}</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground leading-relaxed">"{review.text}"</p>
+                        </div>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <div className="flex justify-center gap-2 pt-2">
+                    <CarouselPrevious className="static translate-y-0 h-6 w-6 border-border" />
+                    <CarouselNext className="static translate-y-0 h-6 w-6 border-border" />
+                  </div>
+                </Carousel>
+              </div>
             </DialogContent>
           </Dialog>
         </div>
