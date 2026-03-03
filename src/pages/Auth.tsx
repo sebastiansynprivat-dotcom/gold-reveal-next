@@ -98,7 +98,7 @@ const Auth = () => {
           </h1>
           <p className="text-muted-foreground text-sm text-center mb-8">
             {isSignUp
-              ? "damit du deinen Fortschritt im Coaching speichern kannst"
+              ? "Erstelle dein Konto, um loszulegen"
               : "Melde dich an, um weiterzumachen"}
           </p>
 
