@@ -26,7 +26,7 @@ export default function GewerbeDialog() {
         <DialogHeader className="pr-6">
           <DialogTitle className="text-foreground text-sm">📋 Gewerbeanmeldung – So geht's</DialogTitle>
           <DialogDescription className="text-muted-foreground text-xs">
-            Hier erkläre ich dir Schritt für Schritt, wie du dein Gewerbe anmeldest.
+            Hier erkläre ich dir, wieso du ein Gewerbe brauchst.
           </DialogDescription>
         </DialogHeader>
 
