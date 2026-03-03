@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,9 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
+import { format, endOfMonth, addMonths, differenceInDays } from "date-fns";
 import { de } from "date-fns/locale";
-import { CalendarIcon, FileDown, ArrowLeft } from "lucide-react";
+import { CalendarIcon, FileDown, ArrowLeft, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import jsPDF from "jspdf";
@@ -316,6 +316,9 @@ const Invoice = () => {
           Rechnung als PDF herunterladen
         </Button>
 
+        {/* Countdown section */}
+        <BillingCountdown />
+
         <p className="text-[10px] text-muted-foreground text-center pb-4">
           Die Rechnung wird lokal erstellt – keine Daten werden gespeichert.
         </p>
@@ -323,5 +326,51 @@ const Invoice = () => {
     </div>
   );
 };
+
+function BillingCountdown() {
+  const now = new Date();
+  const deadline = endOfMonth(addMonths(now, 1));
+  const totalDays = differenceInDays(deadline, new Date(now.getFullYear(), now.getMonth(), 1));
+  const daysLeft = differenceInDays(deadline, now);
+  const progressPct = Math.round(((totalDays - daysLeft) / totalDays) * 100);
+
+  // Start of current billing period = 1st of current month
+  const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  return (
+    <Card className="glass-card-subtle border-border">
+      <CardContent className="p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <Clock className="h-4 w-4 text-accent" />
+          <span className="text-sm font-semibold text-foreground">Abrechnungszeitraum</span>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-0.5">
+            <p className="text-[10px] text-muted-foreground">Startdatum</p>
+            <p className="text-sm font-semibold text-foreground">{format(startDate, "dd. MMMM yyyy", { locale: de })}</p>
+          </div>
+          <div className="space-y-0.5">
+            <p className="text-[10px] text-muted-foreground">Deine erste Abrechnung</p>
+            <p className="text-sm font-semibold text-gold-gradient">{format(deadline, "dd. MMMM yyyy", { locale: de })}</p>
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <div className="flex justify-between text-[10px] text-muted-foreground">
+            <span>Noch {daysLeft} Tage bis zur Abrechnung</span>
+            <span>{format(deadline, "dd.MM.yyyy")}</span>
+          </div>
+          <div className="w-full h-2 rounded-full bg-secondary overflow-hidden">
+            <div
+              className="h-full rounded-full bg-accent transition-all"
+              style={{ width: `${progressPct}%` }}
+            />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default Invoice;
