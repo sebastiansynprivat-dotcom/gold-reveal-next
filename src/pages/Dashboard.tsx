@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Save, CheckCircle2, TrendingUp, Award } from "lucide-react";
+import { Save, CheckCircle2, TrendingUp, Award, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
@@ -18,7 +18,6 @@ export default function Dashboard() {
   const [searchParams] = useSearchParams();
   const platform = searchParams.get("platform") || "Brezzels";
 
-  // Telegram ID
   const [telegramId, setTelegramId] = useState(() => localStorage.getItem("telegram_id") || "");
   const [telegramSaved, setTelegramSaved] = useState(!!localStorage.getItem("telegram_id"));
 
@@ -28,7 +27,6 @@ export default function Dashboard() {
     toast.success("Telegram-ID gespeichert!");
   };
 
-  // Earnings
   const [umsatz, setUmsatz] = useState(0);
   const [hadConfetti, setHadConfetti] = useState(false);
 
@@ -58,46 +56,57 @@ export default function Dashboard() {
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
       <header className="border-b border-border">
-        <div className="container max-w-lg mx-auto flex items-center gap-3 p-4">
-          <img src={logo} alt="Logo" className="h-10 w-10 rounded-full" />
-          <div>
-            <h1 className="text-lg font-bold text-foreground">Chatter Dashboard</h1>
-            <p className="text-xs text-muted-foreground">
-              Aktiv auf: <span className="text-gold-gradient font-semibold">{platform}</span>
-            </p>
+        <div className="container max-w-5xl mx-auto flex items-center justify-between p-4 lg:px-8">
+          <div className="flex items-center gap-3">
+            <img src={logo} alt="Logo" className="h-10 w-10 lg:h-12 lg:w-12 rounded-full" />
+            <div>
+              <h1 className="text-lg lg:text-xl font-bold text-foreground">Chatter Dashboard</h1>
+              <p className="text-xs lg:text-sm text-muted-foreground">
+                Aktiv auf: <span className="text-gold-gradient font-semibold">{platform}</span>
+              </p>
+            </div>
           </div>
+          <Badge
+            className={
+              isGold
+                ? "bg-accent text-accent-foreground gold-glow hidden sm:flex"
+                : "bg-secondary text-secondary-foreground hidden sm:flex"
+            }
+          >
+            <Award className="h-3 w-3 mr-1" />
+            {isGold ? "Gold-Status" : "Starter"}
+          </Badge>
         </div>
       </header>
 
-      <main className="container max-w-lg mx-auto p-4 space-y-6">
-        {/* Telegram ID */}
-        <section className="glass-card rounded-xl p-4 space-y-3">
-          <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-            Telegram ID hinterlegen
-            {telegramSaved && <CheckCircle2 className="h-4 w-4 text-accent" />}
-          </h2>
-          <div className="flex gap-2">
-            <Input
-              value={telegramId}
-              onChange={(e) => { setTelegramId(e.target.value); setTelegramSaved(false); }}
-              placeholder="@dein_username"
-              className="flex-1"
-            />
-            <Button onClick={saveTelegram} size="sm" disabled={!telegramId.trim()}>
-              <Save className="h-4 w-4 mr-1" /> Speichern
-            </Button>
-          </div>
-        </section>
-
-        {/* Earnings Dashboard */}
-        <section className="glass-card rounded-xl p-4 space-y-4">
-          <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-accent" /> Earnings Dashboard
-          </h2>
+      <main className="container max-w-5xl mx-auto p-4 lg:px-8 lg:py-8 space-y-6 lg:space-y-8">
+        {/* Top row: Telegram + Umsatz Input side by side on desktop */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
+          {/* Telegram ID */}
+          <section className="glass-card rounded-xl p-4 lg:p-6 space-y-3">
+            <h2 className="text-sm lg:text-base font-semibold text-foreground flex items-center gap-2">
+              Telegram ID hinterlegen
+              {telegramSaved && <CheckCircle2 className="h-4 w-4 text-accent" />}
+            </h2>
+            <div className="flex gap-2">
+              <Input
+                value={telegramId}
+                onChange={(e) => { setTelegramId(e.target.value); setTelegramSaved(false); }}
+                placeholder="@dein_username"
+                className="flex-1"
+              />
+              <Button onClick={saveTelegram} size="sm" disabled={!telegramId.trim()}>
+                <Save className="h-4 w-4 mr-1" /> Speichern
+              </Button>
+            </div>
+          </section>
 
           {/* Umsatz Input */}
-          <div className="space-y-1">
-            <label className="text-xs text-muted-foreground">Umsatz eingeben (zum Testen)</label>
+          <section className="glass-card rounded-xl p-4 lg:p-6 space-y-3">
+            <h2 className="text-sm lg:text-base font-semibold text-foreground flex items-center gap-2">
+              <Zap className="h-4 w-4 text-accent" /> Umsatz eingeben
+            </h2>
+            <p className="text-xs text-muted-foreground">Gib deinen aktuellen Umsatz ein, um deinen Verdienst zu berechnen.</p>
             <Input
               type="number"
               min={0}
@@ -105,69 +114,94 @@ export default function Dashboard() {
               value={umsatz || ""}
               onChange={(e) => setUmsatz(Number(e.target.value) || 0)}
               placeholder="0"
-              className="font-semibold"
+              className="font-semibold text-lg"
             />
-          </div>
+          </section>
+        </div>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="glass-card-subtle rounded-lg p-3 text-center">
-              <p className="text-xs text-muted-foreground">Umsatz</p>
-              <p className="text-xl font-bold text-gold-gradient">
-                {umsatz.toLocaleString("de-DE")}€
-              </p>
-            </div>
-            <div className="glass-card-subtle rounded-lg p-3 text-center">
-              <p className="text-xs text-muted-foreground">Verdienst ({Math.round(rate * 100)}%)</p>
-              <p className="text-xl font-bold text-gold-gradient">
-                {verdienst.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
-              </p>
-            </div>
+        {/* Stats Cards - 2 on mobile, 4 metrics on desktop */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6">
+          <div className="glass-card-subtle rounded-xl p-4 lg:p-6 text-center">
+            <p className="text-xs lg:text-sm text-muted-foreground mb-1">Umsatz</p>
+            <p className="text-2xl lg:text-3xl font-bold text-gold-gradient">
+              {umsatz.toLocaleString("de-DE")}€
+            </p>
           </div>
+          <div className="glass-card-subtle rounded-xl p-4 lg:p-6 text-center">
+            <p className="text-xs lg:text-sm text-muted-foreground mb-1">Verdienst</p>
+            <p className="text-2xl lg:text-3xl font-bold text-gold-gradient">
+              {verdienst.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€
+            </p>
+          </div>
+          <div className="glass-card-subtle rounded-xl p-4 lg:p-6 text-center">
+            <p className="text-xs lg:text-sm text-muted-foreground mb-1">Deine Rate</p>
+            <p className="text-2xl lg:text-3xl font-bold text-gold-gradient">
+              {Math.round(rate * 100)}%
+            </p>
+          </div>
+          <div className="glass-card-subtle rounded-xl p-4 lg:p-6 text-center">
+            <p className="text-xs lg:text-sm text-muted-foreground mb-1">Status</p>
+            <p className={`text-2xl lg:text-3xl font-bold ${isGold ? "text-gold-gradient" : "text-muted-foreground"}`}>
+              {isGold ? "Gold" : "Starter"}
+            </p>
+          </div>
+        </div>
 
-          {/* Status & Progress */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Badge
-                className={
-                  isGold
-                    ? "bg-accent text-accent-foreground gold-glow"
-                    : "bg-secondary text-secondary-foreground"
-                }
-              >
-                <Award className="h-3 w-3 mr-1" />
-                {isGold ? "Gold-Status" : "Starter"}
-              </Badge>
-              <span className="text-xs text-muted-foreground">
-                {isGold
-                  ? "25% auf alles – Glückwunsch! 🎉"
-                  : `Noch ${(GOLD_THRESHOLD - umsatz).toLocaleString("de-DE")}€ bis Gold-Status`}
-              </span>
+        {/* Progress & Bonus - side by side on desktop */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 lg:gap-6">
+          {/* Progress Section - wider */}
+          <section className="lg:col-span-3 glass-card rounded-xl p-4 lg:p-6 space-y-4">
+            <h2 className="text-sm lg:text-base font-semibold text-foreground flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-accent" /> Fortschritt zum Gold-Status
+            </h2>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Badge
+                  className={
+                    isGold
+                      ? "bg-accent text-accent-foreground gold-glow"
+                      : "bg-secondary text-secondary-foreground"
+                  }
+                >
+                  <Award className="h-3 w-3 mr-1" />
+                  {isGold ? "Gold-Status aktiv" : "Starter"}
+                </Badge>
+                <span className="text-xs lg:text-sm text-muted-foreground">
+                  {isGold
+                    ? "25% auf alles – Glückwunsch! 🎉"
+                    : `Noch ${(GOLD_THRESHOLD - umsatz).toLocaleString("de-DE")}€ bis Gold-Status`}
+                </span>
+              </div>
+              <Progress value={progressPct} className="h-3 lg:h-4 [&>div]:bg-accent" />
+              <div className="flex justify-between text-[10px] lg:text-xs text-muted-foreground">
+                <span>0€</span>
+                <span>2.000€ = Gold-Status (25%)</span>
+              </div>
             </div>
-            <Progress value={progressPct} className="h-3 [&>div]:bg-accent" />
-            <div className="flex justify-between text-[10px] text-muted-foreground">
-              <span>0€</span>
-              <span>2.000€ = Gold-Status (25%)</span>
-            </div>
-          </div>
+          </section>
 
-          {/* Bonus Table */}
-          <div className="rounded-lg border border-border overflow-hidden text-sm">
-            <div className={`flex items-center justify-between px-3 py-2 ${!isGold ? "bg-secondary" : ""}`}>
-              <span className="text-muted-foreground">Starter</span>
-              <span>0€ – 1.999€</span>
-              <span className="font-semibold">20%</span>
+          {/* Bonus Table - narrower */}
+          <section className="lg:col-span-2 glass-card rounded-xl p-4 lg:p-6 space-y-3">
+            <h2 className="text-sm lg:text-base font-semibold text-foreground">Bonus-Modell</h2>
+            <div className="rounded-lg border border-border overflow-hidden text-sm lg:text-base">
+              <div className={`flex items-center justify-between px-3 lg:px-4 py-3 ${!isGold ? "bg-secondary" : ""}`}>
+                <span className="text-muted-foreground">Starter</span>
+                <span className="text-xs lg:text-sm">0€ – 1.999€</span>
+                <span className="font-semibold">20%</span>
+              </div>
+              <div className={`flex items-center justify-between px-3 lg:px-4 py-3 border-t border-border ${isGold ? "bg-accent/10 gold-border-glow" : ""}`}>
+                <span className="text-gold-gradient font-semibold">Gold</span>
+                <span className="text-xs lg:text-sm">Ab 2.000€</span>
+                <span className="font-bold text-gold-gradient">25%</span>
+              </div>
             </div>
-            <div className={`flex items-center justify-between px-3 py-2 border-t border-border ${isGold ? "bg-accent/10 gold-border-glow" : ""}`}>
-              <span className="text-gold-gradient font-semibold">Gold-Status</span>
-              <span>Ab 2.000€</span>
-              <span className="font-bold text-gold-gradient">25%</span>
-            </div>
-          </div>
-        </section>
+            <p className="text-[10px] lg:text-xs text-muted-foreground">
+              Ab 2.000€ Umsatz gilt die 25%-Rate auf den <strong className="text-foreground">gesamten</strong> Betrag.
+            </p>
+          </section>
+        </div>
       </main>
 
-      {/* AI Chat */}
       <DashboardChat />
     </div>
   );
