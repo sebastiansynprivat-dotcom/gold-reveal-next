@@ -279,34 +279,25 @@ const OfferC = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 1.1, duration: 0.8, ease }}
       >
-        <div className="glass-card-subtle rounded-2xl p-8 text-center space-y-5">
-          <h2
-            className="gold-gradient-text text-xl md:text-2xl font-bold"
+      <div className="glass-card-subtle rounded-xl p-5 text-center space-y-3">
+          <h3
+            className="gold-gradient-text text-lg font-bold"
             style={{ fontFamily: "'Playfair Display', serif" }}
           >
             🤖 Deine Telegram ID
-          </h2>
-          <p className="text-muted-foreground text-sm max-w-md mx-auto">
-            Trage hier die ID ein, die du vom{" "}
-            <a
-              href="https://t.me/myidbot"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:text-primary/80 underline underline-offset-2"
-            >
-              @myidbot
-            </a>{" "}
-            erhalten hast.
+          </h3>
+          <p className="text-muted-foreground text-sm">
+            Trage hier deine Telegram ID ein.
           </p>
-          <div className="max-w-xs mx-auto">
+          <div className="max-w-[200px] mx-auto">
             <Input
               type="text"
               inputMode="numeric"
-              placeholder="z.B. 123456789"
+              placeholder=""
               value={telegramId}
               onChange={(e) => setTelegramId(e.target.value.replace(/\D/g, ""))}
               disabled={idSaved}
-              className="text-center text-lg"
+              className="text-center text-sm"
             />
           </div>
           {!idSaved ? (
