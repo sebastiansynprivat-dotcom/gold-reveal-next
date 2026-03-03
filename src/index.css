@@ -63,6 +63,11 @@
 
   body {
     @apply bg-background text-foreground font-montserrat antialiased;
+    overflow-x: hidden;
+  }
+
+  html {
+    overflow-x: hidden;
   }
 }
 
