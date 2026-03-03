@@ -70,6 +70,9 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_domain: string | null
+          account_email: string | null
+          account_password: string | null
           created_at: string
           group_name: string
           id: string
@@ -79,6 +82,9 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          account_domain?: string | null
+          account_email?: string | null
+          account_password?: string | null
           created_at?: string
           group_name?: string
           id?: string
@@ -88,6 +94,9 @@ export type Database = {
           user_id: string
         }
         Update: {
+          account_domain?: string | null
+          account_email?: string | null
+          account_password?: string | null
           created_at?: string
           group_name?: string
           id?: string
