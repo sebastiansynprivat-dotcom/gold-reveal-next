@@ -130,7 +130,7 @@ export default function StreakTracker({ dailyRevenue }: { dailyRevenue: number }
           </span>
         ) : todayCompleted ? (
           <span className="text-accent">
-            ✅ Heute erledigt – mach morgen weiter! ({STREAK_GOAL - consecutiveDays} Tage übrig)
+            🔥 Tagesziel erreicht – weiter so, jeder Euro zählt! Noch {STREAK_GOAL - consecutiveDays} Tage bis zum Upgrade!
           </span>
         ) : (
           <span className="text-muted-foreground">
