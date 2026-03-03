@@ -547,7 +547,7 @@ function BillingCountdown({ onUnlock, demoMode }: { onUnlock: (v: boolean) => vo
               </Badge>
             )}
           </div>
-          {!billingUnlocked && <BillingAudioDialog />}
+          {!unlocked && <BillingAudioDialog />}
         </div>
 
         <div className="grid grid-cols-2 gap-3">
