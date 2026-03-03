@@ -56,6 +56,7 @@ export default function AdminDashboard() {
   const [newAccPassword, setNewAccPassword] = useState("");
   const [newAccDomain, setNewAccDomain] = useState("");
   const [addingAccount, setAddingAccount] = useState(false);
+  const [assigning, setAssigning] = useState(false);
 
   useEffect(() => {
     loadChatters();
