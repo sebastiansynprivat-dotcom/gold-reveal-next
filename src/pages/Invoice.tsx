@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -357,7 +357,7 @@ function BillingCountdown({ onUnlock }: { onUnlock: (v: boolean) => void }) {
   const unlocked = DEMO_UNLOCK || isUnlocked;
 
   // Notify parent
-  useState(() => { onUnlock(unlocked); });
+  useEffect(() => { onUnlock(unlocked); }, [unlocked, onUnlock]);
 
   const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
 
