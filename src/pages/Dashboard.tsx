@@ -28,6 +28,7 @@ export default function Dashboard() {
     toast.success("Telegram-ID gespeichert!");
   };
 
+  const [videoOpen, setVideoOpen] = useState(false);
   const [umsatz, setUmsatz] = useState(0);
   const [hadConfetti, setHadConfetti] = useState(false);
 
