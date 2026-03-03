@@ -196,6 +196,9 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Tägliche Aufgaben */}
+        <DailyChecklist />
+
         {/* Bonus Model - alles in einer Karte */}
         <section className="glass-card rounded-xl p-4 lg:p-6 space-y-4">
           <h2 className="text-sm lg:text-base font-semibold text-foreground">Bonus-Modell</h2>
