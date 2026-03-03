@@ -395,18 +395,28 @@ function DashboardBillingInfo({ onNavigate }: { onNavigate: () => void }) {
                       { name: "Mika O.", date: "Jan 2026", title: "Sehr guter Arbeitgeber", text: "Zuverlässig, fair und professionell. Kann ich nur weiterempfehlen.", stars: 5 },
                     ].map((review, i) => (
                       <CarouselItem key={i}>
-                        <div className="glass-card-subtle rounded-lg p-3 space-y-1.5">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-semibold text-foreground">{review.name}</span>
-                            <span className="text-[10px] text-muted-foreground">{review.date}</span>
+                        <div className="glass-card-subtle rounded-lg p-3 space-y-2">
+                          {/* Header: Avatar + Name + Date */}
+                          <div className="flex items-center gap-2.5">
+                            <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center shrink-0">
+                              <span className="text-[10px] font-bold text-muted-foreground">{review.name.split(" ").map(n => n[0]).join("").toUpperCase()}</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-semibold text-foreground">{review.name}</p>
+                              <p className="text-[10px] text-muted-foreground">DE · {review.date}</p>
+                            </div>
                           </div>
+                          {/* Trustpilot-style green star boxes */}
                           <div className="flex gap-0.5">
                             {Array.from({ length: review.stars }).map((_, s) => (
-                              <span key={s} className="text-[10px] text-green-500">★</span>
+                              <div key={s} className="h-5 w-5 bg-[#00b67a] flex items-center justify-center">
+                                <span className="text-[11px] text-white leading-none">★</span>
+                              </div>
                             ))}
                           </div>
-                          <p className="text-xs font-semibold text-foreground">{review.title}</p>
-                          <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-4">{review.text}</p>
+                          {/* Title + Text */}
+                          <p className="text-xs font-bold text-foreground">{review.title}</p>
+                          <p className="text-[11px] text-muted-foreground leading-relaxed">{review.text}</p>
                         </div>
                       </CarouselItem>
                     ))}
