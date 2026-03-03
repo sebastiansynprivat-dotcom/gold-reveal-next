@@ -1,9 +1,11 @@
-import { useEffect, useRef, useCallback, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useRef, useCallback } from "react";
+import { motion } from "framer-motion";
 import StepBadge from "./StepBadge";
-import { CheckCircle2 } from "lucide-react";
 
 const ease = [0.16, 1, 0.3, 1] as const;
+
+/** Seconds the iframe must be visible before auto-completing */
+const VIEW_THRESHOLD = 45;
 
 interface LoomVideoStepProps {
   step: number;
@@ -24,14 +26,17 @@ const LoomVideoStep = ({
 }: LoomVideoStepProps) => {
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const completedRef = useRef(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const viewTimeRef = useRef(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    if (!completed) completedRef.current = false;
+    if (!completed) {
+      completedRef.current = false;
+      viewTimeRef.current = 0;
+    }
   }, [completed]);
 
-  // Try Loom postMessage tracking
+  // Loom postMessage tracking (works on published URL)
   const handleMessage = useCallback(
     (event: MessageEvent) => {
       if (!event.data || typeof event.data !== "object") return;
@@ -49,17 +54,7 @@ const LoomVideoStep = ({
 
       if (completedRef.current) return;
 
-      if (msg.event === "ended") {
-        completedRef.current = true;
-        onAutoComplete(step);
-        return;
-      }
-
-      if (
-        msg.event === "timeupdate" &&
-        typeof msg.data?.percent === "number" &&
-        msg.data.percent >= 0.9
-      ) {
+      if (msg.event === "ended" || (msg.event === "timeupdate" && msg.data?.percent >= 0.9)) {
         completedRef.current = true;
         onAutoComplete(step);
       }
@@ -72,18 +67,44 @@ const LoomVideoStep = ({
     return () => window.removeEventListener("message", handleMessage);
   }, [handleMessage]);
 
-  // Fallback: show "Video geschaut" button after 30 seconds
+  // Fallback: IntersectionObserver – track cumulative view time
   useEffect(() => {
-    if (completed || showConfirm) return;
-    timerRef.current = setTimeout(() => {
-      if (!completedRef.current) {
-        setShowConfirm(true);
-      }
-    }, 30000);
+    if (completed) return;
+    const el = iframeRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !completedRef.current) {
+          // Start counting
+          if (!intervalRef.current) {
+            intervalRef.current = setInterval(() => {
+              viewTimeRef.current += 1;
+              if (viewTimeRef.current >= VIEW_THRESHOLD && !completedRef.current) {
+                completedRef.current = true;
+                onAutoComplete(step);
+                if (intervalRef.current) clearInterval(intervalRef.current);
+                intervalRef.current = null;
+              }
+            }, 1000);
+          }
+        } else {
+          // Pause counting when not visible
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+          }
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    observer.observe(el);
     return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
+      observer.disconnect();
+      if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [completed, showConfirm]);
+  }, [completed, onAutoComplete, step]);
 
   return (
     <motion.div
@@ -113,25 +134,6 @@ const LoomVideoStep = ({
           />
         </div>
       </div>
-      <AnimatePresence>
-        {showConfirm && !completed && (
-          <motion.button
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.4, ease }}
-            onClick={() => {
-              completedRef.current = true;
-              onAutoComplete(step);
-              setShowConfirm(false);
-            }}
-            className="mt-3 mx-auto flex items-center gap-2 px-4 py-2 rounded-lg bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors"
-          >
-            <CheckCircle2 className="w-4 h-4" />
-            Video geschaut ✓
-          </motion.button>
-        )}
-      </AnimatePresence>
     </motion.div>
   );
 };
