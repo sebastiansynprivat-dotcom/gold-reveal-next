@@ -189,13 +189,13 @@ export default function Dashboard() {
               {Math.round(rate * 100)}%
             </p>
           </div>
+          <DailyGoal />
           <div className="glass-card-subtle rounded-xl p-3 lg:p-5 text-center">
             <p className="text-[10px] lg:text-xs text-muted-foreground mb-0.5">Status</p>
             <p className={`text-xl lg:text-2xl font-bold ${isGold ? "text-gold-gradient" : "text-muted-foreground"}`}>
               {isGold ? "Gold" : "Starter"}
             </p>
           </div>
-          <DailyGoal />
         </div>
 
         {/* Tägliche Aufgaben */}
