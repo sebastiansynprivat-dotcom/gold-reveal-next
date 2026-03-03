@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      accounts: {
+        Row: {
+          account_domain: string
+          account_email: string
+          account_password: string
+          assigned_at: string | null
+          assigned_to: string | null
+          created_at: string
+          id: string
+          platform: string
+        }
+        Insert: {
+          account_domain?: string
+          account_email?: string
+          account_password?: string
+          assigned_at?: string | null
+          assigned_to?: string | null
+          created_at?: string
+          id?: string
+          platform?: string
+        }
+        Update: {
+          account_domain?: string
+          account_email?: string
+          account_password?: string
+          assigned_at?: string | null
+          assigned_to?: string | null
+          created_at?: string
+          id?: string
+          platform?: string
+        }
+        Relationships: []
+      }
       daily_goals: {
         Row: {
           created_at: string
