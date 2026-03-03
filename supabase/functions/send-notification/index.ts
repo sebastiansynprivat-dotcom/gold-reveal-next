@@ -14,7 +14,7 @@ serve(async (req) => {
   }
 
   try {
-    const { title, body } = await req.json();
+    const { title, body, target_user_id } = await req.json();
 
     if (!title || !body) {
       return new Response(
@@ -40,11 +40,13 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Get all subscriptions
-    const { data: subscriptions, error: fetchError } = await adminClient
-      .from("push_subscriptions")
-      .select("*");
+    // Get subscriptions - either for a specific user or all
+    let query = adminClient.from("push_subscriptions").select("*");
+    if (target_user_id) {
+      query = query.eq("user_id", target_user_id);
+    }
 
+    const { data: subscriptions, error: fetchError } = await query;
     if (fetchError) throw fetchError;
 
     const payload = JSON.stringify({ title, body, url: "/dashboard" });
@@ -62,7 +64,6 @@ serve(async (req) => {
         );
         sent++;
       } catch (err: any) {
-        // Remove invalid subscriptions (410 Gone or 404)
         if (err.statusCode === 410 || err.statusCode === 404) {
           await adminClient
             .from("push_subscriptions")

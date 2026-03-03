@@ -10,6 +10,7 @@ import OfferA from "./pages/OfferA";
 import OfferB from "./pages/OfferB";
 import Dashboard from "./pages/Dashboard";
 import AdminNotifications from "./pages/AdminNotifications";
+import AdminDashboard from "./pages/AdminDashboard";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -43,6 +44,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/admin/notifications" element={<ProtectedRoute><AdminNotifications /></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

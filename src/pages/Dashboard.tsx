@@ -13,6 +13,8 @@ import DailyChecklist from "@/components/DailyChecklist";
 import DailyGoal from "@/components/DailyGoal";
 import StreakTracker from "@/components/StreakTracker";
 import NotificationBanner from "@/components/NotificationBanner";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo.png";
 
 const GOLD_THRESHOLD = 2000;
@@ -23,11 +25,39 @@ export default function Dashboard() {
   const [searchParams] = useSearchParams();
   const platform = searchParams.get("platform") || "Brezzels";
 
-  const [telegramId, setTelegramId] = useState(() => localStorage.getItem("telegram_id") || "");
-  const [telegramSaved, setTelegramSaved] = useState(!!localStorage.getItem("telegram_id"));
+  const { user } = useAuth();
 
-  const saveTelegram = () => {
-    localStorage.setItem("telegram_id", telegramId);
+  const [telegramId, setTelegramId] = useState("");
+  const [telegramSaved, setTelegramSaved] = useState(false);
+  const [telegramLoading, setTelegramLoading] = useState(true);
+
+  // Load telegram_id from profiles table
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("telegram_id")
+      .eq("user_id", user.id)
+      .single()
+      .then(({ data }) => {
+        if (data?.telegram_id) {
+          setTelegramId(data.telegram_id);
+          setTelegramSaved(true);
+        }
+        setTelegramLoading(false);
+      });
+  }, [user]);
+
+  const saveTelegram = async () => {
+    if (!user) return;
+    const { error } = await supabase
+      .from("profiles")
+      .update({ telegram_id: telegramId.trim() })
+      .eq("user_id", user.id);
+    if (error) {
+      toast.error("Fehler beim Speichern");
+      return;
+    }
     setTelegramSaved(true);
     toast.success("Telegram-ID gespeichert!");
   };

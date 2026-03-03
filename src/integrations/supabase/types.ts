@@ -68,6 +68,33 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          created_at: string
+          group_name: string
+          id: string
+          telegram_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          group_name?: string
+          id?: string
+          telegram_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          group_name?: string
+          id?: string
+          telegram_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       push_subscriptions: {
         Row: {
           created_at: string
@@ -163,7 +190,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
