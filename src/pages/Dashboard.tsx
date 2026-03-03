@@ -20,7 +20,7 @@ import logo from "@/assets/logo.png";
 import { format, endOfMonth, addMonths, differenceInDays } from "date-fns";
 import { de } from "date-fns/locale";
 
-const GOLD_THRESHOLD = 2000;
+const GOLD_THRESHOLD = 3000;
 const STARTER_RATE = 0.2;
 const GOLD_RATE = 0.25;
 
@@ -295,7 +295,7 @@ export default function Dashboard() {
                   </div>
                   <div>
                     <p className={`font-bold text-sm lg:text-base ${isGold ? "text-gold-gradient" : "text-muted-foreground"}`}>Gold-Status</p>
-                    <p className="text-[10px] lg:text-xs text-muted-foreground">Ab 2.000€ Umsatz</p>
+                    <p className="text-[10px] lg:text-xs text-muted-foreground">Ab 3.000€ Umsatz</p>
                   </div>
                 </div>
                 <div className="text-right">
@@ -339,7 +339,7 @@ export default function Dashboard() {
           </div>
 
           <p className="text-[10px] lg:text-xs text-muted-foreground">
-            Ab 2.000€ Umsatz gilt die 25%-Rate auf den <strong className="text-foreground">gesamten</strong> Betrag.
+            Ab 3.000€ Umsatz gilt die 25%-Rate auf den <strong className="text-foreground">gesamten</strong> Betrag.
             7 Tage in Folge mind. 30€ = <strong className="text-foreground">Upgrade auf besseren Account</strong>.
           </p>
         </section>
