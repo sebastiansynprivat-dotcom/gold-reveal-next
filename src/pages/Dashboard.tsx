@@ -210,7 +210,25 @@ export default function Dashboard() {
               </Badge>
             </div>
 
-            {/* Row 2: Telegram + Umsatz side by side */}
+            {/* Row 2: Gruppenname */}
+            <div className="flex items-center gap-2">
+              <Users className="h-3.5 w-3.5 text-accent shrink-0" />
+              {groupNameSaved && !editingGroupName ? (
+                <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                  <span className="text-xs text-foreground font-medium truncate">{groupName}</span>
+                  <Button onClick={() => setEditingGroupName(true)} variant="ghost" size="sm" className="text-[10px] text-accent h-5 px-1.5">
+                    <Pencil className="h-3 w-3" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1 flex-1 min-w-0">
+                  <Input value={groupName} onChange={(e) => setGroupName(e.target.value)} placeholder="Gruppenname eingeben" className="h-7 text-xs flex-1 min-w-0" />
+                  <Button onClick={saveGroupName} size="sm" disabled={!groupName.trim()} className="h-7 text-xs px-2"><Save className="h-3 w-3" /></Button>
+                </div>
+              )}
+            </div>
+
+            {/* Row 3: Telegram + Umsatz side by side */}
             <div className="flex items-center gap-2">
               {telegramSaved ? (
                 <div className="flex items-center gap-1.5 flex-1 min-w-0">
