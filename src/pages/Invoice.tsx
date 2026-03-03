@@ -45,11 +45,15 @@ const Invoice = () => {
   const [description, setDescription] = useState(DEFAULT_DESCRIPTION);
   const [vatNote, setVatNote] = useState("Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.");
 
+  const allFieldsFilled = senderName.trim() && senderAddress.trim() && senderCity.trim() && taxId.trim() &&
+    bankName.trim() && iban.trim() && bic.trim() && invoiceNumber.trim() && invoiceDate &&
+    periodFrom.trim() && periodTo.trim() && description.trim() && amount.trim() && vatNote.trim();
+
   const generatePDF = () => {
-    if (!senderName || !invoiceNumber || !amount || !invoiceDate) {
+    if (!allFieldsFilled) {
       toast({
         title: "Fehlende Angaben",
-        description: "Bitte fülle mindestens Name, Rechnungsnummer, Betrag und Datum aus.",
+        description: "Bitte fülle alle Felder aus, bevor du die Rechnung erstellst.",
         variant: "destructive",
       });
       return;
