@@ -51,7 +51,7 @@ export default function AdminDashboard() {
     setLoading(true);
     const { data, error } = await supabase
       .from("profiles")
-      .select("user_id, group_name, telegram_id, created_at")
+      .select("user_id, group_name, telegram_id, created_at, account_email, account_password, account_domain")
       .order("created_at", { ascending: false });
 
     if (error) {
