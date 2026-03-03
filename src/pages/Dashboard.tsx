@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import DashboardChat from "@/components/DashboardChat";
+import DailyChecklist from "@/components/DailyChecklist";
 import StreakTracker from "@/components/StreakTracker";
 import logo from "@/assets/logo.png";
 
