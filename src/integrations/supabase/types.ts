@@ -41,6 +41,60 @@ export type Database = {
         }
         Relationships: []
       }
+      notifications: {
+        Row: {
+          body: string
+          id: string
+          recipients_count: number | null
+          sent_at: string
+          sent_by: string | null
+          title: string
+        }
+        Insert: {
+          body: string
+          id?: string
+          recipients_count?: number | null
+          sent_at?: string
+          sent_by?: string | null
+          title: string
+        }
+        Update: {
+          body?: string
+          id?: string
+          recipients_count?: number | null
+          sent_at?: string
+          sent_by?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          created_at: string
+          endpoint: string
+          id: string
+          keys_auth: string
+          keys_p256dh: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          endpoint: string
+          id?: string
+          keys_auth: string
+          keys_p256dh: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          endpoint?: string
+          id?: string
+          keys_auth?: string
+          keys_p256dh?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       quiz_routes: {
         Row: {
           created_at: string
