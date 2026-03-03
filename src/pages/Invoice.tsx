@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { format, endOfMonth, addMonths, differenceInDays } from "date-fns";
 import { de } from "date-fns/locale";
 import { CalendarIcon, FileDown, ArrowLeft, Clock } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import jsPDF from "jspdf";
@@ -29,6 +30,7 @@ const Invoice = () => {
 
   const [senderName, setSenderName] = useState("");
   const [billingUnlocked, setBillingUnlocked] = useState(false);
+  const [demoMode, setDemoMode] = useState(true);
   const [senderAddress, setSenderAddress] = useState("");
   const [senderCity, setSenderCity] = useState("");
   const [taxId, setTaxId] = useState("");
@@ -186,10 +188,14 @@ const Invoice = () => {
           <h1 className="text-xl sm:text-2xl font-bold gold-gradient-text">
             Rechnung erstellen
           </h1>
+          <div className="ml-auto flex items-center gap-2">
+            <span className="text-[10px] text-muted-foreground">Demo</span>
+            <Switch checked={demoMode} onCheckedChange={setDemoMode} className="scale-75" />
+          </div>
         </div>
 
         {/* Countdown section */}
-        <BillingCountdown onUnlock={setBillingUnlocked} />
+        <BillingCountdown onUnlock={setBillingUnlocked} demoMode={demoMode} />
 
         {!billingUnlocked && (
           <Card className="glass-card-subtle border-border">
@@ -344,7 +350,7 @@ const Invoice = () => {
   );
 };
 
-function BillingCountdown({ onUnlock }: { onUnlock: (v: boolean) => void }) {
+function BillingCountdown({ onUnlock, demoMode }: { onUnlock: (v: boolean) => void; demoMode: boolean }) {
   const now = new Date();
   const deadline = endOfMonth(addMonths(now, 1));
   const totalDays = differenceInDays(deadline, new Date(now.getFullYear(), now.getMonth(), 1));
@@ -352,11 +358,8 @@ function BillingCountdown({ onUnlock }: { onUnlock: (v: boolean) => void }) {
   const progressPct = Math.round(((totalDays - daysLeft) / totalDays) * 100);
   const isUnlocked = daysLeft <= 0;
 
-  // DEMO: set to true to simulate unlocked state
-  const DEMO_UNLOCK = true;
-  const unlocked = DEMO_UNLOCK || isUnlocked;
+  const unlocked = demoMode || isUnlocked;
 
-  // Notify parent
   useEffect(() => { onUnlock(unlocked); }, [unlocked, onUnlock]);
 
   const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
