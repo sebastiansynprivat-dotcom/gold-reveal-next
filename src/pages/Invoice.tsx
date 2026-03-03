@@ -33,6 +33,20 @@ const DEFAULT_DESCRIPTION = "Verwaltung und Vertrieb von digitalen Inhalten";
 const Invoice = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
+  const [groupName, setGroupName] = useState("");
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("group_name")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.group_name) setGroupName(data.group_name);
+      });
+  }, [user]);
 
   const STORAGE_KEY = "invoice_sender_data";
   const [saveData, setSaveData] = useState(() => !!localStorage.getItem(STORAGE_KEY));
