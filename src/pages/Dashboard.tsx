@@ -16,6 +16,8 @@ import NotificationBanner from "@/components/NotificationBanner";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo.png";
+import { format, endOfMonth, addMonths, differenceInDays } from "date-fns";
+import { de } from "date-fns/locale";
 
 const GOLD_THRESHOLD = 2000;
 const STARTER_RATE = 0.2;
@@ -341,15 +343,8 @@ export default function Dashboard() {
           </p>
         </section>
 
-        {/* Invoice Tool Link */}
-        <Button
-          onClick={() => navigate("/rechnung")}
-          variant="outline"
-          className="w-full h-11 border-border text-foreground hover:bg-secondary"
-        >
-          <FileText className="mr-2 h-4 w-4 text-accent" />
-          Rechnung erstellen
-        </Button>
+        {/* Billing countdown + Invoice button */}
+        <DashboardBillingInfo onNavigate={() => navigate("/rechnung")} />
       </main>
 
       <DashboardChat />
