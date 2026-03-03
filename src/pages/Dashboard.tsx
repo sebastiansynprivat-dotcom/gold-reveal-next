@@ -166,6 +166,23 @@ export default function Dashboard() {
                 </div>
               )}
             </div>
+            <div className="h-8 w-px bg-border shrink-0" />
+            <div className="flex items-center gap-2">
+              <Users className="h-3.5 w-3.5 text-accent shrink-0" />
+              {groupNameSaved && !editingGroupName ? (
+                <>
+                  <span className="text-sm text-foreground font-medium">{groupName}</span>
+                  <Button onClick={() => setEditingGroupName(true)} variant="ghost" size="sm" className="text-[10px] text-accent h-6 px-2">
+                    <Pencil className="h-3 w-3" />
+                  </Button>
+                </>
+              ) : (
+                <div className="flex items-center gap-1.5">
+                  <Input value={groupName} onChange={(e) => setGroupName(e.target.value)} placeholder="Gruppenname" className="h-7 text-xs w-36" />
+                  <Button onClick={saveGroupName} size="sm" disabled={!groupName.trim()} className="h-7 text-xs px-2.5"><Save className="h-3 w-3" /></Button>
+                </div>
+              )}
+            </div>
             <div className="ml-auto flex items-center gap-3">
               <div className="flex items-center gap-1.5">
                 <Zap className="h-3.5 w-3.5 text-accent shrink-0" />
