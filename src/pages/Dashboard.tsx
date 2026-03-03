@@ -413,6 +413,7 @@ function DashboardBillingInfo({ onNavigate }: { onNavigate: () => void }) {
                   </div>
                 ))}
               </div>
+            </DialogContent>
           </Dialog>
         </div>
         <div className="grid grid-cols-2 gap-3">
