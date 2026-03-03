@@ -437,17 +437,24 @@ export default function AdminDashboard() {
               </Button>
             </div>
 
-            {/* Stats */}
-            <div className="flex gap-3 text-xs">
-              <span className="text-muted-foreground">
-                Gesamt: <span className="text-foreground font-semibold">{platformAccounts.length}</span>
-              </span>
-              <span className="text-green-500">
-                Frei: <span className="font-semibold">{freeCount}</span>
-              </span>
-              <span className="text-muted-foreground">
-                Vergeben: <span className="font-semibold">{assignedCount}</span>
-              </span>
+            {/* Stats + Assign button */}
+            <div className="flex items-center justify-between">
+              <div className="flex gap-3 text-xs">
+                <span className="text-muted-foreground">
+                  Gesamt: <span className="text-foreground font-semibold">{platformAccounts.length}</span>
+                </span>
+                <span className="text-accent">
+                  Frei: <span className="font-semibold">{freeCount}</span>
+                </span>
+                <span className="text-muted-foreground">
+                  Vergeben: <span className="font-semibold">{assignedCount}</span>
+                </span>
+              </div>
+              {freeCount > 0 && (
+                <Button size="sm" onClick={assignAccounts} disabled={assigning} variant="outline">
+                  {assigning ? "Wird zugewiesen..." : "Freie Accounts zuweisen"}
+                </Button>
+              )}
             </div>
 
             {/* Account list */}
