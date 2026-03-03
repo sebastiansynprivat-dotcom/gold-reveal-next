@@ -10,7 +10,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { format, endOfMonth, addMonths, differenceInDays } from "date-fns";
 import { de } from "date-fns/locale";
-import { CalendarIcon, FileDown, ArrowLeft, Clock } from "lucide-react";
+import { CalendarIcon, FileDown, ArrowLeft, Clock, HelpCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -425,14 +426,33 @@ function BillingCountdown({ onUnlock, demoMode }: { onUnlock: (v: boolean) => vo
   return (
     <Card className="glass-card-subtle border-border">
       <CardContent className="p-4 space-y-3">
-        <div className="flex items-center gap-2">
-          <Clock className="h-4 w-4 text-accent" />
-          <span className="text-sm font-semibold text-foreground">Abrechnungszeitraum</span>
-          {unlocked && (
-            <Badge className="ml-auto bg-accent text-accent-foreground text-[10px]">
-              Abrechnung möglich ✓
-            </Badge>
-          )}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-accent" />
+            <span className="text-sm font-semibold text-foreground">Abrechnungszeitraum</span>
+            {unlocked && (
+              <Badge className="ml-2 bg-accent text-accent-foreground text-[10px]">
+                Abrechnung möglich ✓
+              </Badge>
+            )}
+          </div>
+          <Dialog>
+            <DialogTrigger asChild>
+              <button className="flex items-center gap-1 text-[10px] text-accent hover:text-accent/80 transition-colors">
+                <HelpCircle className="h-3 w-3" />
+                Warum dauert das so lange?
+              </button>
+            </DialogTrigger>
+            <DialogContent className="glass-card border-accent/20 sm:max-w-xl max-h-[85vh] overflow-y-auto shadow-[0_0_30px_-5px_hsl(var(--accent)/0.15),0_0_60px_-10px_hsl(var(--accent)/0.08)]">
+              <DialogHeader className="pr-6">
+                <DialogTitle className="text-foreground text-sm">Warum dauert das so lange?</DialogTitle>
+                <DialogDescription className="text-muted-foreground text-xs">Hier erkläre ich es dir kurz per Sprachmemo.</DialogDescription>
+              </DialogHeader>
+              <audio controls className="w-full" preload="none">
+                <source src="/audio/billing-info.mp3" type="audio/mpeg" />
+              </audio>
+            </DialogContent>
+          </Dialog>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
