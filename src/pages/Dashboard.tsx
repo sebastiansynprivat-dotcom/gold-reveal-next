@@ -376,7 +376,7 @@ function DashboardBillingInfo({ onNavigate }: { onNavigate: () => void }) {
                 Warum dauert das so lange?
               </button>
             </DialogTrigger>
-            <DialogContent className="glass-card border-accent/20 w-[calc(100vw-2rem)] sm:max-w-md max-h-[85vh] overflow-y-auto p-4 sm:p-6 shadow-[0_0_30px_-5px_hsl(var(--accent)/0.15),0_0_60px_-10px_hsl(var(--accent)/0.08)]">
+            <DialogContent className="glass-card border-accent/20 !max-w-[min(24rem,calc(100vw-2rem))] max-h-[85vh] overflow-y-auto p-4 sm:p-6 shadow-[0_0_30px_-5px_hsl(var(--accent)/0.15),0_0_60px_-10px_hsl(var(--accent)/0.08)]">
               <DialogHeader>
                 <DialogTitle className="text-foreground text-sm">Warum dauert das so lange?</DialogTitle>
                 <DialogDescription className="text-muted-foreground text-xs">Hier erkläre ich es dir kurz per Sprachmemo.</DialogDescription>
@@ -395,7 +395,7 @@ function DashboardBillingInfo({ onNavigate }: { onNavigate: () => void }) {
                       { name: "Mika O.", date: "Jan 2026", title: "Sehr guter Arbeitgeber", text: "Zuverlässig, fair und professionell. Kann ich nur weiterempfehlen.", stars: 5 },
                     ].map((review, i) => (
                       <CarouselItem key={i} className="min-w-0">
-                        <div className="glass-card-subtle rounded-lg p-3 space-y-2">
+                        <div className="glass-card-subtle rounded-lg p-3 space-y-2 overflow-hidden">
                           {/* Header: Avatar + Name + Date */}
                           <div className="flex items-center gap-2.5">
                             <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center shrink-0">
