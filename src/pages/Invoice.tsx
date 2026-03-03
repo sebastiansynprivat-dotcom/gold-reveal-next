@@ -342,7 +342,7 @@ const Invoice = () => {
               <div className="mt-2 rounded-lg bg-secondary/50 border border-border p-3 space-y-2">
                 <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">📝 E-Mail Vorlage</p>
                 <div className="text-xs text-foreground whitespace-pre-line leading-relaxed bg-background/50 rounded-md p-3 border border-border">
-{`Liebes BasedBuilders Team,
+{`Liebes SheX Team,
 
 mir wird angezeigt, dass ich meinen Abrechnungsbetrag anfragen kann. Könnt ihr mir den zukommen lassen?
 
@@ -350,7 +350,7 @@ Mein Gruppenname ist: ${groupName || "[Bitte Gruppenname im Dashboard eintragen]
                 </div>
                 <button
                   onClick={() => {
-                    const text = `Liebes BasedBuilders Team,\n\nmir wird angezeigt, dass ich meinen Abrechnungsbetrag anfragen kann. Könnt ihr mir den zukommen lassen?\n\nMein Gruppenname ist: ${groupName || "[Bitte Gruppenname im Dashboard eintragen]"}`;
+                    const text = `Liebes SheX Team,\n\nmir wird angezeigt, dass ich meinen Abrechnungsbetrag anfragen kann. Könnt ihr mir den zukommen lassen?\n\nMein Gruppenname ist: ${groupName || "[Bitte Gruppenname im Dashboard eintragen]"}`;
                     navigator.clipboard.writeText(text);
                     toast({ title: "Vorlage kopiert! ✅", description: "Du kannst den Text jetzt in deine E-Mail einfügen." });
                   }}
