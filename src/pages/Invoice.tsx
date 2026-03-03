@@ -232,6 +232,24 @@ const Invoice = () => {
         {/* Countdown section */}
         <BillingCountdown onUnlock={setBillingUnlocked} demoMode={demoMode} />
 
+        {/* Gewerbe To-Do */}
+        <Card className="glass-card border-accent/30 gold-border-glow">
+          <CardContent className="p-4 space-y-2">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="h-5 w-5 text-accent mt-0.5 shrink-0" />
+              <div className="space-y-1.5">
+                <p className="text-sm font-semibold text-foreground">
+                  📌 To-Do: Gewerbe anmelden
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Um deine Rechnungen stellen zu können, brauchst du ein angemeldetes Gewerbe mit Steuernummer.
+                </p>
+                <GewerbeDialog />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {!billingUnlocked && (
           <Card className="glass-card-subtle border-border">
             <CardContent className="p-4 text-center space-y-2">
