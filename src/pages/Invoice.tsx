@@ -309,12 +309,18 @@ const Invoice = () => {
                 📩 Deine Abrechnung ist jetzt möglich!
               </p>
               <p className="text-xs text-muted-foreground">
-                Schreibe eine E-Mail an{" "}
-                <a href="mailto:support@basedbuilders.com" className="text-accent hover:underline font-medium">
-                  support@basedbuilders.com
-                </a>{" "}
-                und frage deinen Rechnungsbetrag an.
+                Schreibe eine E-Mail an die Adresse unten und frage deinen Rechnungsbetrag an.
               </p>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText("support@basedbuilders.com");
+                  toast({ title: "E-Mail kopiert! ✅", description: "support@basedbuilders.com wurde in die Zwischenablage kopiert." });
+                }}
+                className="flex items-center gap-2 mt-1 px-3 py-2 rounded-lg bg-secondary border border-border hover:border-accent/50 transition-colors group cursor-pointer"
+              >
+                <span className="text-sm font-semibold text-accent">support@basedbuilders.com</span>
+                <span className="text-[10px] text-muted-foreground group-hover:text-foreground transition-colors">📋 Kopieren</span>
+              </button>
               <p className="text-xs text-accent font-medium">
                 ⚠️ Wichtig: Erstelle deine Rechnung erst, nachdem du die Abrechnung von uns per E-Mail erhalten hast!
               </p>
