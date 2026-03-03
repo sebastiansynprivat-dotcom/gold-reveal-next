@@ -203,7 +203,8 @@ const Invoice = () => {
           </Card>
         )}
 
-        <div className={!billingUnlocked ? "opacity-40 pointer-events-none select-none" : ""}>
+        <div className={!billingUnlocked ? "opacity-40 pointer-events-none select-none space-y-6" : "space-y-6"}>
+        <Card className="glass-card border-border">
           <CardHeader className="pb-3">
             <CardTitle className="text-sm text-foreground">Deine Daten (Rechnungssteller)</CardTitle>
           </CardHeader>
