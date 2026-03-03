@@ -437,23 +437,7 @@ function BillingCountdown({ onUnlock, demoMode }: { onUnlock: (v: boolean) => vo
               </Badge>
             )}
           </div>
-          <Dialog>
-            <DialogTrigger asChild>
-              <button className="flex items-center gap-1 text-[10px] text-accent hover:text-accent/80 transition-colors">
-                <HelpCircle className="h-3 w-3" />
-                Warum dauert das so lange?
-              </button>
-            </DialogTrigger>
-            <DialogContent className="glass-card border-accent/20 sm:max-w-xl max-h-[85vh] overflow-y-auto shadow-[0_0_30px_-5px_hsl(var(--accent)/0.15),0_0_60px_-10px_hsl(var(--accent)/0.08)]">
-              <DialogHeader className="pr-6">
-                <DialogTitle className="text-foreground text-sm">Warum dauert das so lange?</DialogTitle>
-                <DialogDescription className="text-muted-foreground text-xs">Hier erkläre ich es dir kurz per Sprachmemo.</DialogDescription>
-              </DialogHeader>
-              <audio controls className="w-full" preload="none">
-                <source src="/audio/billing-info.mp3" type="audio/mpeg" />
-              </audio>
-            </DialogContent>
-          </Dialog>
+          <BillingAudioDialog />
         </div>
 
         <div className="grid grid-cols-2 gap-3">
