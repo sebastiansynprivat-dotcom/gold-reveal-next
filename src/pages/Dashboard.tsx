@@ -195,35 +195,13 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Gold Progress - compact */}
-        <section className="glass-card rounded-xl p-4 lg:p-5 space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-accent" /> Fortschritt zum Gold-Status
-            </h2>
-            <span className="text-xs text-muted-foreground">
-              {isGold
-                ? "25% auf alles – Glückwunsch! 🎉"
-                : `Noch ${(GOLD_THRESHOLD - umsatz).toLocaleString("de-DE")}€`}
-            </span>
-          </div>
-          <Progress value={progressPct} className="h-2.5 lg:h-3 [&>div]:bg-accent" />
-          <div className="flex justify-between text-[10px] text-muted-foreground">
-            <span>0€</span>
-            <span className="flex items-center gap-1">
-              <Award className="h-3 w-3 text-accent" />
-              2.000€ = Gold (25%)
-            </span>
-          </div>
-        </section>
-
-        {/* Bonus Model */}
-        <section className="glass-card rounded-xl p-4 lg:p-6 space-y-5">
+        {/* Bonus Model - alles in einer Karte */}
+        <section className="glass-card rounded-xl p-4 lg:p-6 space-y-4">
           <h2 className="text-sm lg:text-base font-semibold text-foreground">Bonus-Modell</h2>
 
           <div className="space-y-2">
-            {/* Account Upgrade - Tier 1 (top) */}
-            <div className="relative rounded-xl overflow-hidden border border-accent/30 bg-accent/5 p-4 lg:p-5">
+            {/* Account Upgrade - Tier 1 (top) with streak */}
+            <div className="relative rounded-xl overflow-hidden border border-accent/30 bg-accent/5 p-4 lg:p-5 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-accent/20 flex items-center justify-center">
@@ -236,10 +214,12 @@ export default function Dashboard() {
                 </div>
                 <span className="font-bold text-accent text-sm lg:text-base">Besserer Account</span>
               </div>
+              {/* Streak tracker inline */}
+              <StreakTracker dailyRevenue={umsatz} />
             </div>
 
-            {/* Gold - Tier 2 */}
-            <div className={`relative rounded-xl overflow-hidden border p-4 lg:p-5 transition-all ${isGold ? "border-accent/40 gold-border-glow bg-accent/10" : "border-border bg-secondary/30"}`}>
+            {/* Gold - Tier 2 with progress bar */}
+            <div className={`relative rounded-xl overflow-hidden border p-4 lg:p-5 space-y-3 transition-all ${isGold ? "border-accent/40 gold-border-glow bg-accent/10" : "border-border bg-secondary/30"}`}>
               {isGold && <div className="absolute left-0 top-0 bottom-0 w-1 bg-accent" />}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -254,6 +234,18 @@ export default function Dashboard() {
                 <div className="text-right">
                   <span className={`font-bold text-lg lg:text-xl ${isGold ? "text-gold-gradient" : "text-muted-foreground"}`}>25%</span>
                   {isGold && <p className="text-[10px] text-accent">Aktiv ✓</p>}
+                </div>
+              </div>
+              {/* Gold progress bar */}
+              <div className="space-y-1.5">
+                <Progress value={progressPct} className="h-2 [&>div]:bg-accent" />
+                <div className="flex justify-between text-[10px] text-muted-foreground">
+                  <span>{umsatz.toLocaleString("de-DE")}€</span>
+                  <span>
+                    {isGold
+                      ? "Gold-Status aktiv 🎉"
+                      : `Noch ${(GOLD_THRESHOLD - umsatz).toLocaleString("de-DE")}€`}
+                  </span>
                 </div>
               </div>
             </div>
@@ -283,11 +275,6 @@ export default function Dashboard() {
             Ab 2.000€ Umsatz gilt die 25%-Rate auf den <strong className="text-foreground">gesamten</strong> Betrag.
             7 Tage in Folge mind. 30€ = <strong className="text-foreground">Upgrade auf besseren Account</strong>.
           </p>
-
-          {/* Integrated Streak Tracker */}
-          <div className="border-t border-border pt-5">
-            <StreakTracker dailyRevenue={umsatz} />
-          </div>
         </section>
       </main>
 
