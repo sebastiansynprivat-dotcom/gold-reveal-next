@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Users, Send, Bell, Search, ArrowLeft } from "lucide-react";
+import { Users, Send, Bell, Search, ArrowLeft, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,7 +15,9 @@ interface ChatterProfile {
   group_name: string;
   telegram_id: string;
   created_at: string;
-  email?: string;
+  account_email?: string;
+  account_password?: string;
+  account_domain?: string;
 }
 
 export default function AdminDashboard() {
@@ -35,6 +37,12 @@ export default function AdminDashboard() {
   const [broadcastBody, setBroadcastBody] = useState("");
   const [broadcastSending, setBroadcastSending] = useState(false);
 
+  // Account data dialog
+  const [accountTarget, setAccountTarget] = useState<ChatterProfile | null>(null);
+  const [accEmail, setAccEmail] = useState("");
+  const [accPassword, setAccPassword] = useState("");
+  const [accDomain, setAccDomain] = useState("");
+  const [accSaving, setAccSaving] = useState(false);
   useEffect(() => {
     loadChatters();
   }, []);
@@ -43,7 +51,7 @@ export default function AdminDashboard() {
     setLoading(true);
     const { data, error } = await supabase
       .from("profiles")
-      .select("user_id, group_name, telegram_id, created_at")
+      .select("user_id, group_name, telegram_id, created_at, account_email, account_password, account_domain")
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -139,6 +147,34 @@ export default function AdminDashboard() {
       c.telegram_id?.toLowerCase().includes(search.toLowerCase())
   );
 
+  const openAccountDialog = (chatter: ChatterProfile) => {
+    setAccountTarget(chatter);
+    setAccEmail(chatter.account_email || "");
+    setAccPassword(chatter.account_password || "");
+    setAccDomain(chatter.account_domain || "");
+  };
+
+  const saveAccountData = async () => {
+    if (!accountTarget) return;
+    setAccSaving(true);
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        account_email: accEmail.trim(),
+        account_password: accPassword.trim(),
+        account_domain: accDomain.trim(),
+      })
+      .eq("user_id", accountTarget.user_id);
+    if (error) {
+      toast.error("Fehler beim Speichern");
+    } else {
+      toast.success("Account-Daten gespeichert!");
+      setAccountTarget(null);
+      loadChatters();
+    }
+    setAccSaving(false);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border">
@@ -217,14 +253,25 @@ export default function AdminDashboard() {
                       {new Date(chatter.created_at).toLocaleDateString("de-DE")}
                     </p>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setPushTarget(chatter)}
-                    className="text-accent hover:text-accent/80 shrink-0"
-                  >
-                    <Send className="h-3.5 w-3.5" />
-                  </Button>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => openAccountDialog(chatter)}
+                      className="text-primary hover:text-primary/80"
+                      title="Account-Daten"
+                    >
+                      <KeyRound className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setPushTarget(chatter)}
+                      className="text-accent hover:text-accent/80"
+                    >
+                      <Send className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -293,6 +340,52 @@ export default function AdminDashboard() {
             >
               <Bell className="h-4 w-4 mr-2" />
               {broadcastSending ? "Wird gesendet..." : "An alle senden"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Account Data Dialog */}
+      <Dialog open={!!accountTarget} onOpenChange={(o) => { if (!o) setAccountTarget(null); }}>
+        <DialogContent className="glass-card border-border sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">
+              Account-Daten für {accountTarget?.group_name || "Chatter"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">E-Mail</label>
+              <Input
+                value={accEmail}
+                onChange={(e) => setAccEmail(e.target.value)}
+                placeholder="account@example.com"
+                type="email"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Passwort</label>
+              <Input
+                value={accPassword}
+                onChange={(e) => setAccPassword(e.target.value)}
+                placeholder="Passwort"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Domain</label>
+              <Input
+                value={accDomain}
+                onChange={(e) => setAccDomain(e.target.value)}
+                placeholder="brezzels.com"
+              />
+            </div>
+            <Button
+              onClick={saveAccountData}
+              disabled={accSaving}
+              className="w-full"
+            >
+              <KeyRound className="h-4 w-4 mr-2" />
+              {accSaving ? "Wird gespeichert..." : "Account-Daten speichern"}
             </Button>
           </div>
         </DialogContent>
