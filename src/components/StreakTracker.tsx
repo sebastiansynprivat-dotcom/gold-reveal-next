@@ -89,7 +89,7 @@ export default function StreakTracker({ dailyRevenue }: { dailyRevenue: number }
       <div className="flex items-center justify-between">
         <h2 className="text-sm lg:text-base font-semibold text-foreground flex items-center gap-2">
           <Flame className="h-4 w-4 text-accent" />
-          Streak-Tracker
+          Account Upgrade – 7-Tage-Challenge
         </h2>
         <div className="flex items-center gap-1.5">
           <span className="text-2xl font-bold text-gold-gradient">{consecutiveDays}</span>
