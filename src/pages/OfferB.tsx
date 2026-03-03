@@ -271,6 +271,71 @@ const OfferB = () => {
           Kopiere einfach die Vorlage und fülle sie einmal am Tag aus
         </p>
       </motion.div>
+      {/* Telegram ID Section */}
+      <motion.div
+        className="max-w-3xl mx-auto mt-16"
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1.1, duration: 0.8, ease }}
+      >
+        <div className="glass-card-subtle rounded-2xl p-8 text-center space-y-5">
+          <h2
+            className="gold-gradient-text text-xl md:text-2xl font-bold"
+            style={{ fontFamily: "'Playfair Display', serif" }}
+          >
+            🤖 Deine Telegram ID
+          </h2>
+          <p className="text-muted-foreground text-sm max-w-md mx-auto">
+            Trage hier die ID ein, die du vom{" "}
+            <a
+              href="https://t.me/myidbot"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:text-primary/80 underline underline-offset-2"
+            >
+              @myidbot
+            </a>{" "}
+            erhalten hast.
+          </p>
+          <div className="max-w-xs mx-auto">
+            <Input
+              type="text"
+              inputMode="numeric"
+              placeholder="z.B. 123456789"
+              value={telegramId}
+              onChange={(e) => setTelegramId(e.target.value.replace(/\D/g, ""))}
+              disabled={idSaved}
+              className="text-center text-lg"
+            />
+          </div>
+          {!idSaved ? (
+            <Button
+              onClick={() => {
+                if (!telegramId.trim()) {
+                  toast.error("Bitte gib deine Telegram ID ein.");
+                  return;
+                }
+                localStorage.setItem("pending_telegram_id", telegramId.trim());
+                localStorage.setItem("pending_offer", "Brezzels");
+                setIdSaved(true);
+                toast.success("Telegram ID gespeichert!");
+              }}
+              className="gold-glow hover:gold-glow-strong px-8"
+              disabled={!telegramId.trim()}
+            >
+              ID speichern
+            </Button>
+          ) : (
+            <Button
+              onClick={() => navigate("/auth")}
+              size="lg"
+              className="gold-glow hover:gold-glow-strong text-lg px-10"
+            >
+              Zum Dashboard Login →
+            </Button>
+          )}
+        </div>
+      </motion.div>
     </div>
   );
 };
