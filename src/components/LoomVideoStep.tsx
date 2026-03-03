@@ -32,20 +32,22 @@ const LoomVideoStep = ({
   const handleMessage = useCallback(
     (event: MessageEvent) => {
       if (!event.data || typeof event.data !== "object") return;
-      if (
-        iframeRef.current &&
-        event.source !== iframeRef.current.contentWindow
-      )
-        return;
-
+      
       const msg = event.data;
+      
+      // Debug: log all Loom-related messages
+      if (msg.context === "player.js" || msg.event === "ready" || msg.event === "timeupdate" || msg.event === "ended" || msg.event === "play" || msg.event === "pause") {
+        console.log(`[LoomDebug step=${step}]`, JSON.stringify(msg));
+      }
 
+      // Skip source check for Loom – cross-origin iframes may not match event.source reliably
+      
       // When Loom player is ready, subscribe to events
-      if (msg.event === "ready" && iframeRef.current) {
-        const win = iframeRef.current.contentWindow;
-        if (win) {
-          ["timeupdate", "ended"].forEach((evt) => {
-            win.postMessage(
+      if (msg.event === "ready") {
+        console.log(`[LoomDebug step=${step}] Player ready, subscribing to events`);
+        if (iframeRef.current?.contentWindow) {
+          ["timeupdate", "ended", "play", "pause"].forEach((evt) => {
+            iframeRef.current!.contentWindow!.postMessage(
               { method: "addEventListener", value: evt, context: "player.js" },
               "*"
             );
@@ -57,6 +59,7 @@ const LoomVideoStep = ({
       if (completedRef.current) return;
 
       if (msg.event === "ended") {
+        console.log(`[LoomDebug step=${step}] Video ended – marking complete`);
         completedRef.current = true;
         onAutoComplete(step);
         return;
@@ -64,11 +67,13 @@ const LoomVideoStep = ({
 
       if (
         msg.event === "timeupdate" &&
-        typeof msg.data?.percent === "number" &&
-        msg.data.percent >= 0.9
+        typeof msg.data?.percent === "number"
       ) {
-        completedRef.current = true;
-        onAutoComplete(step);
+        if (msg.data.percent >= 0.9) {
+          console.log(`[LoomDebug step=${step}] 90% reached – marking complete`);
+          completedRef.current = true;
+          onAutoComplete(step);
+        }
       }
     },
     [onAutoComplete, step]
