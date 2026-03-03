@@ -343,14 +343,21 @@ const Invoice = () => {
   );
 };
 
-function BillingCountdown() {
+function BillingCountdown({ onUnlock }: { onUnlock: (v: boolean) => void }) {
   const now = new Date();
   const deadline = endOfMonth(addMonths(now, 1));
   const totalDays = differenceInDays(deadline, new Date(now.getFullYear(), now.getMonth(), 1));
   const daysLeft = differenceInDays(deadline, now);
   const progressPct = Math.round(((totalDays - daysLeft) / totalDays) * 100);
+  const isUnlocked = daysLeft <= 0;
 
-  // Start of current billing period = 1st of current month
+  // DEMO: set to true to simulate unlocked state
+  const DEMO_UNLOCK = true;
+  const unlocked = DEMO_UNLOCK || isUnlocked;
+
+  // Notify parent
+  useState(() => { onUnlock(unlocked); });
+
   const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
 
   return (
@@ -359,6 +366,11 @@ function BillingCountdown() {
         <div className="flex items-center gap-2">
           <Clock className="h-4 w-4 text-accent" />
           <span className="text-sm font-semibold text-foreground">Abrechnungszeitraum</span>
+          {unlocked && (
+            <Badge className="ml-auto bg-accent text-accent-foreground text-[10px]">
+              Abrechnung möglich ✓
+            </Badge>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-3">
@@ -372,18 +384,20 @@ function BillingCountdown() {
           </div>
         </div>
 
-        <div className="space-y-1.5">
-          <div className="flex justify-between text-[10px] text-muted-foreground">
-            <span>Noch {daysLeft} Tage bis zur Abrechnung</span>
-            <span>{format(deadline, "dd.MM.yyyy")}</span>
+        {!unlocked && (
+          <div className="space-y-1.5">
+            <div className="flex justify-between text-[10px] text-muted-foreground">
+              <span>Noch {daysLeft} Tage bis zur Abrechnung</span>
+              <span>{format(deadline, "dd.MM.yyyy")}</span>
+            </div>
+            <div className="w-full h-2 rounded-full bg-secondary overflow-hidden">
+              <div
+                className="h-full rounded-full bg-accent transition-all"
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
           </div>
-          <div className="w-full h-2 rounded-full bg-secondary overflow-hidden">
-            <div
-              className="h-full rounded-full bg-accent transition-all"
-              style={{ width: `${progressPct}%` }}
-            />
-          </div>
-        </div>
+        )}
       </CardContent>
     </Card>
   );
