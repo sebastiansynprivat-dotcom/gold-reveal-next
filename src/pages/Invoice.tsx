@@ -3,6 +3,7 @@ import DashboardChat from "@/components/DashboardChat";
 import BillingAudioDialog from "@/components/BillingAudioDialog";
 import GewerbeDialog from "@/components/GewerbeDialog";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
