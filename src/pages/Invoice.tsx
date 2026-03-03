@@ -329,9 +329,10 @@ const Invoice = () => {
 
 function BillingCountdown() {
   const now = new Date();
-  // Deadline = end of the following month
   const deadline = endOfMonth(addMonths(now, 1));
+  const totalDays = differenceInDays(deadline, new Date(now.getFullYear(), now.getMonth(), 1));
   const daysLeft = differenceInDays(deadline, now);
+  const progressPct = Math.round(((totalDays - daysLeft) / totalDays) * 100);
 
   // Start of current billing period = 1st of current month
   const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -363,7 +364,7 @@ function BillingCountdown() {
           <div className="w-full h-2 rounded-full bg-secondary overflow-hidden">
             <div
               className="h-full rounded-full bg-accent transition-all"
-              style={{ width: `${Math.max(0, Math.min(100, ((endOfMonth(now).getDate() + (addMonths(now, 1).getMonth() === deadline.getMonth() ? deadline.getDate() : 0) - daysLeft) / (endOfMonth(now).getDate() + deadline.getDate())) * 100))}%` }}
+              style={{ width: `${progressPct}%` }}
             />
           </div>
         </div>
