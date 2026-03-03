@@ -242,7 +242,7 @@ const Invoice = () => {
                   📌 To-Do: Gewerbe anmelden
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Um deine Rechnungen stellen zu können, brauchst du ein angemeldetes Gewerbe mit Steuernummer.
+                  Um deine Rechnungen stellen zu können, brauchst du ein angemeldetes Gewerbe.
                 </p>
                 <GewerbeDialog />
               </div>
