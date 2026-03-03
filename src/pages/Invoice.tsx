@@ -28,15 +28,43 @@ const Invoice = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const [senderName, setSenderName] = useState("");
+  const STORAGE_KEY = "invoice_sender_data";
+  const [saveData, setSaveData] = useState(() => !!localStorage.getItem(STORAGE_KEY));
+
+  const loadSaved = () => {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) return JSON.parse(saved);
+    return null;
+  };
+  const savedData = loadSaved();
+
+  const [senderName, setSenderName] = useState(savedData?.senderName || "");
   const [billingUnlocked, setBillingUnlocked] = useState(false);
   const [demoMode, setDemoMode] = useState(true);
-  const [senderAddress, setSenderAddress] = useState("");
-  const [senderCity, setSenderCity] = useState("");
-  const [taxId, setTaxId] = useState("");
-  const [bankName, setBankName] = useState("");
-  const [iban, setIban] = useState("");
-  const [bic, setBic] = useState("");
+  const [senderAddress, setSenderAddress] = useState(savedData?.senderAddress || "");
+  const [senderCity, setSenderCity] = useState(savedData?.senderCity || "");
+  const [taxId, setTaxId] = useState(savedData?.taxId || "");
+  const [bankName, setBankName] = useState(savedData?.bankName || "");
+  const [iban, setIban] = useState(savedData?.iban || "");
+  const [bic, setBic] = useState(savedData?.bic || "");
+
+  const handleSaveToggle = (checked: boolean) => {
+    setSaveData(checked);
+    if (checked) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ senderName, senderAddress, senderCity, taxId, bankName, iban, bic }));
+      toast({ title: "Daten gespeichert ✅", description: "Deine Rechnungsdaten werden beim nächsten Mal automatisch ausgefüllt." });
+    } else {
+      localStorage.removeItem(STORAGE_KEY);
+      toast({ title: "Daten gelöscht", description: "Gespeicherte Rechnungsdaten wurden entfernt." });
+    }
+  };
+
+  // Auto-save when data changes and toggle is on
+  useEffect(() => {
+    if (saveData) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ senderName, senderAddress, senderCity, taxId, bankName, iban, bic }));
+    }
+  }, [saveData, senderName, senderAddress, senderCity, taxId, bankName, iban, bic]);
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [invoiceDate, setInvoiceDate] = useState<Date | undefined>(new Date());
   const [periodFrom, setPeriodFrom] = useState("");
@@ -235,7 +263,13 @@ const Invoice = () => {
           {/* Sender */}
           <Card className="glass-card border-border">
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm text-foreground">Deine Daten (Rechnungssteller)</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-sm text-foreground">Deine Daten (Rechnungssteller)</CardTitle>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-muted-foreground">Daten merken</span>
+                  <Switch checked={saveData} onCheckedChange={handleSaveToggle} className="scale-75" />
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
