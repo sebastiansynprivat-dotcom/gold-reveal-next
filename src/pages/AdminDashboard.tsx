@@ -344,6 +344,52 @@ export default function AdminDashboard() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Account Data Dialog */}
+      <Dialog open={!!accountTarget} onOpenChange={(o) => { if (!o) setAccountTarget(null); }}>
+        <DialogContent className="glass-card border-border sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">
+              Account-Daten für {accountTarget?.group_name || "Chatter"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">E-Mail</label>
+              <Input
+                value={accEmail}
+                onChange={(e) => setAccEmail(e.target.value)}
+                placeholder="account@example.com"
+                type="email"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Passwort</label>
+              <Input
+                value={accPassword}
+                onChange={(e) => setAccPassword(e.target.value)}
+                placeholder="Passwort"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">Domain</label>
+              <Input
+                value={accDomain}
+                onChange={(e) => setAccDomain(e.target.value)}
+                placeholder="brezzels.com"
+              />
+            </div>
+            <Button
+              onClick={saveAccountData}
+              disabled={accSaving}
+              className="w-full"
+            >
+              <KeyRound className="h-4 w-4 mr-2" />
+              {accSaving ? "Wird gespeichert..." : "Account-Daten speichern"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
