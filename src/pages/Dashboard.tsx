@@ -113,7 +113,7 @@ export default function Dashboard() {
                 </DialogHeader>
                 <div className="aspect-video w-full rounded-lg overflow-hidden">
                   <iframe
-                    src="https://www.loom.com/embed/DEINE_LOOM_VIDEO_ID"
+                    src="https://www.loom.com/embed/0582b0ea68b942728a535a98f990660b"
                     frameBorder="0"
                     allowFullScreen
                     className="w-full h-full"
