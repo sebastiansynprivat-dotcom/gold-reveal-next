@@ -38,7 +38,7 @@ export default function Dashboard() {
       .from("profiles")
       .select("telegram_id")
       .eq("user_id", user.id)
-      .single()
+      .maybeSingle()
       .then(({ data }) => {
         if (data?.telegram_id) {
           setTelegramId(data.telegram_id);
