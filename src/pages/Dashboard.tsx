@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import DashboardChat from "@/components/DashboardChat";
+import DailyChecklist from "@/components/DailyChecklist";
 import StreakTracker from "@/components/StreakTracker";
 import logo from "@/assets/logo.png";
 
@@ -194,6 +195,9 @@ export default function Dashboard() {
             </p>
           </div>
         </div>
+
+        {/* Tägliche Aufgaben */}
+        <DailyChecklist />
 
         {/* Bonus Model - alles in einer Karte */}
         <section className="glass-card rounded-xl p-4 lg:p-6 space-y-4">
