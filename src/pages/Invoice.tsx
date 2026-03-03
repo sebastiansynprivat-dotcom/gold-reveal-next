@@ -203,8 +203,25 @@ const Invoice = () => {
               <p className="text-sm text-muted-foreground">
                 Das Rechnungsformular wird freigeschaltet, sobald dein Abrechnungszeitraum erreicht ist.
               </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {billingUnlocked && (
+          <Card className="glass-card border-accent/30 gold-border-glow">
+            <CardContent className="p-4 space-y-2">
+              <p className="text-sm font-semibold text-foreground">
+                📩 Deine Abrechnung ist jetzt möglich!
+              </p>
               <p className="text-xs text-muted-foreground">
-                Du kannst jetzt eine E-Mail an <a href="mailto:support@basedbuilders.com" className="text-accent hover:underline font-medium">support@basedbuilders.com</a> schreiben und nach deiner Abrechnung fragen.
+                Schreibe eine E-Mail an{" "}
+                <a href="mailto:support@basedbuilders.com" className="text-accent hover:underline font-medium">
+                  support@basedbuilders.com
+                </a>{" "}
+                und frage deinen Rechnungsbetrag an.
+              </p>
+              <p className="text-xs text-accent font-medium">
+                ⚠️ Wichtig: Erstelle deine Rechnung erst, nachdem du die Abrechnung von uns per E-Mail erhalten hast!
               </p>
             </CardContent>
           </Card>
