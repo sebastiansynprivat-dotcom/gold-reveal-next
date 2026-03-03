@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Save, CheckCircle2, Award, Zap, HelpCircle, FileText, Clock } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
@@ -363,9 +364,25 @@ function DashboardBillingInfo({ onNavigate }: { onNavigate: () => void }) {
   return (
     <div className="space-y-3">
       <div className="glass-card-subtle rounded-xl p-4 space-y-3">
-        <div className="flex items-center gap-2">
-          <Clock className="h-4 w-4 text-accent" />
-          <span className="text-xs font-semibold text-foreground">Abrechnungszeitraum</span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-accent" />
+            <span className="text-xs font-semibold text-foreground">Abrechnungszeitraum</span>
+          </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className="flex items-center gap-1 text-[10px] text-accent hover:text-accent/80 transition-colors">
+                <HelpCircle className="h-3 w-3" />
+                Warum dauert das so lange?
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-72 space-y-3">
+              <p className="text-xs font-semibold text-foreground">Hier erkläre ich dir warum:</p>
+              <audio controls className="w-full" preload="none">
+                <source src="/audio/billing-info.mp3" type="audio/mpeg" />
+              </audio>
+            </PopoverContent>
+          </Popover>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-0.5">
