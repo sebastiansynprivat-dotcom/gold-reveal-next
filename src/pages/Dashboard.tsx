@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import DashboardChat from "@/components/DashboardChat";
 import DailyChecklist from "@/components/DailyChecklist";
+import DailyGoal from "@/components/DailyGoal";
 import StreakTracker from "@/components/StreakTracker";
 import logo from "@/assets/logo.png";
 
