@@ -386,15 +386,15 @@ function DashboardBillingInfo({ onNavigate }: { onNavigate: () => void }) {
               </audio>
               <div className="pt-2 space-y-2">
                 <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Was andere sagen</p>
-                <Carousel opts={{ loop: true }} className="w-full -mx-1 px-1 overflow-hidden">
-                  <CarouselContent>
+                <Carousel opts={{ loop: true }} className="w-full">
+                  <CarouselContent className="-ml-0">
                     {[
                       { name: "Mark", date: "Jan 2026", title: "Sehr positiver Einstieg und tolles Arbeitsumfeld", text: "Ich wurde von Anfang an sehr herzlich aufgenommen und umfassend eingearbeitet. Der Einstieg verlief reibungslos. Das gesamte Team ist ausgesprochen freundlich, hilfsbereit und gut organisiert. Auch die Bezahlung verläuft zuverlässig und problemlos.", stars: 5 },
                       { name: "Michaela", date: "Jan 2026", title: "Seit über einem Jahr zu 100% Zufrieden", text: "Wer bereit ist zu arbeiten hat hier einen zuverlässigen, freundlichen und kompetenten Partner. Das Geld kommt super pünktlich und immer korrekt abgerechnet. Ich bin jedenfalls froh, etwas gefunden zu haben, wo ich jederzeit und von überall mir ein gutes Zubrot verdienen kann 😃", stars: 5 },
                       { name: "Nikolett T.", date: "Jan 2026", title: "Super Team", text: "Die Einarbeitung ging schnell und unkompliziert. Die Unterstützung ist mehr als gut, man kann jederzeit Fragen stellen. Man bleibt komplett anonym und kann von überall aus arbeiten. Ich kann sie nur weiterempfehlen. ☺️", stars: 5 },
                       { name: "Mika O.", date: "Jan 2026", title: "Sehr guter Arbeitgeber", text: "Zuverlässig, fair und professionell. Kann ich nur weiterempfehlen.", stars: 5 },
                     ].map((review, i) => (
-                      <CarouselItem key={i} className="min-w-0">
+                      <CarouselItem key={i} className="min-w-0 pl-0">
                         <div className="glass-card-subtle rounded-lg p-3 space-y-2 overflow-hidden">
                           {/* Header: Avatar + Name + Date */}
                           <div className="flex items-center gap-2.5">
