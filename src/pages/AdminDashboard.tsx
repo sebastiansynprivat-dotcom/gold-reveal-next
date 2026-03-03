@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Users, Send, Bell, Search, ArrowLeft } from "lucide-react";
+import { Users, Send, Bell, Search, ArrowLeft, KeyRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,7 +15,9 @@ interface ChatterProfile {
   group_name: string;
   telegram_id: string;
   created_at: string;
-  email?: string;
+  account_email?: string;
+  account_password?: string;
+  account_domain?: string;
 }
 
 export default function AdminDashboard() {
