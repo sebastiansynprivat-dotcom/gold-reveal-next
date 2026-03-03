@@ -87,7 +87,7 @@ export default function Dashboard() {
           {/* Bottom row: Telegram ID + Umsatz compact */}
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 sm:items-center">
             {/* Telegram compact */}
-            <div className="flex items-center gap-2 min-w-0">
+            <div className="min-w-0">
               {telegramSaved ? (
                 <div className="flex items-center gap-2 text-xs text-muted-foreground min-w-0">
                   <CheckCircle2 className="h-3.5 w-3.5 text-accent shrink-0" />
@@ -116,35 +116,35 @@ export default function Dashboard() {
                         Wo finde ich meine Telegram ID?
                       </button>
                     </DialogTrigger>
-                  </button>
-                </DialogTrigger>
-                <DialogContent className="glass-card border-border sm:max-w-lg">
-                  <DialogHeader>
-                    <DialogTitle className="text-foreground">Wo finde ich meine Telegram-ID?</DialogTitle>
-                    <DialogDescription className="text-muted-foreground text-xs">
-                      Schau dir das kurze Video an, um deine Telegram-ID zu finden.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="aspect-video w-full rounded-lg overflow-hidden bg-secondary relative">
-                    {!videoLoaded && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="h-8 w-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                    <DialogContent className="glass-card border-border sm:max-w-lg">
+                      <DialogHeader>
+                        <DialogTitle className="text-foreground">Wo finde ich meine Telegram-ID?</DialogTitle>
+                        <DialogDescription className="text-muted-foreground text-xs">
+                          Schau dir das kurze Video an, um deine Telegram-ID zu finden.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="aspect-video w-full rounded-lg overflow-hidden bg-secondary relative">
+                        {!videoLoaded && (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="h-8 w-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                          </div>
+                        )}
+                        {videoOpen && (
+                          <iframe
+                            src="https://www.loom.com/embed/0582b0ea68b942728a535a98f990660b?autoplay=1"
+                            frameBorder="0"
+                            allowFullScreen
+                            allow="autoplay"
+                            className={`w-full h-full transition-opacity duration-300 ${videoLoaded ? "opacity-100" : "opacity-0"}`}
+                            title="Telegram ID finden"
+                            onLoad={() => setVideoLoaded(true)}
+                          />
+                        )}
                       </div>
-                    )}
-                    {videoOpen && (
-                      <iframe
-                        src="https://www.loom.com/embed/0582b0ea68b942728a535a98f990660b?autoplay=1"
-                        frameBorder="0"
-                        allowFullScreen
-                        allow="autoplay"
-                        className={`w-full h-full transition-opacity duration-300 ${videoLoaded ? "opacity-100" : "opacity-0"}`}
-                        title="Telegram ID finden"
-                        onLoad={() => setVideoLoaded(true)}
-                      />
-                    )}
-                  </div>
-                </DialogContent>
-              </Dialog>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              )}
             </div>
 
             {/* Umsatz compact */}
