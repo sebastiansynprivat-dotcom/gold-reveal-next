@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { Users, Send, Bell, Search, ArrowLeft, KeyRound } from "lucide-react";
+import { Users, Send, Bell, Search, KeyRound, Plus, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -20,6 +21,17 @@ interface ChatterProfile {
   account_domain?: string;
 }
 
+interface AccountEntry {
+  id: string;
+  platform: string;
+  account_email: string;
+  account_password: string;
+  account_domain: string;
+  assigned_to: string | null;
+  assigned_at: string | null;
+  created_at: string;
+}
+
 export default function AdminDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -31,20 +43,23 @@ export default function AdminDashboard() {
   const [pushBody, setPushBody] = useState("");
   const [sending, setSending] = useState(false);
 
-  // Broadcast state
   const [broadcastOpen, setBroadcastOpen] = useState(false);
   const [broadcastTitle, setBroadcastTitle] = useState("");
   const [broadcastBody, setBroadcastBody] = useState("");
   const [broadcastSending, setBroadcastSending] = useState(false);
 
-  // Account data dialog
-  const [accountTarget, setAccountTarget] = useState<ChatterProfile | null>(null);
-  const [accEmail, setAccEmail] = useState("");
-  const [accPassword, setAccPassword] = useState("");
-  const [accDomain, setAccDomain] = useState("");
-  const [accSaving, setAccSaving] = useState(false);
+  // Account pool state
+  const [accounts, setAccounts] = useState<AccountEntry[]>([]);
+  const [accountPoolOpen, setAccountPoolOpen] = useState(false);
+  const [selectedPlatform, setSelectedPlatform] = useState("");
+  const [newAccEmail, setNewAccEmail] = useState("");
+  const [newAccPassword, setNewAccPassword] = useState("");
+  const [newAccDomain, setNewAccDomain] = useState("");
+  const [addingAccount, setAddingAccount] = useState(false);
+
   useEffect(() => {
     loadChatters();
+    loadAccounts();
   }, []);
 
   const loadChatters = async () => {
@@ -53,20 +68,48 @@ export default function AdminDashboard() {
       .from("profiles")
       .select("user_id, group_name, telegram_id, created_at, account_email, account_password, account_domain")
       .order("created_at", { ascending: false });
-
     if (error) {
       toast.error("Fehler beim Laden der Chatter");
       setLoading(false);
       return;
     }
-
     setChatters(data || []);
     setLoading(false);
   };
 
+  const loadAccounts = async () => {
+    const { data } = await supabase
+      .from("accounts")
+      .select("*")
+      .order("created_at", { ascending: true });
+    setAccounts(data || []);
+  };
+
+  const platforms = [...new Set(accounts.map((a) => a.platform).filter(Boolean))];
+
+  const addAccount = async () => {
+    if (!newAccEmail.trim() || !newAccDomain.trim() || !selectedPlatform) return;
+    setAddingAccount(true);
+    const { error } = await supabase.from("accounts").insert({
+      platform: selectedPlatform,
+      account_email: newAccEmail.trim(),
+      account_password: newAccPassword.trim(),
+      account_domain: newAccDomain.trim(),
+    });
+    if (error) {
+      toast.error("Fehler beim Hinzufügen");
+    } else {
+      toast.success("Account hinzugefügt!");
+      setNewAccEmail("");
+      setNewAccPassword("");
+      setNewAccDomain("");
+      loadAccounts();
+    }
+    setAddingAccount(false);
+  };
+
   const sendIndividualPush = async () => {
     if (!pushTarget || !pushTitle.trim() || !pushBody.trim()) return;
-
     setSending(true);
     try {
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
@@ -87,7 +130,6 @@ export default function AdminDashboard() {
           }),
         }
       );
-
       const result = await res.json();
       if (res.ok) {
         toast.success(`Push an ${pushTarget.group_name || "Chatter"} gesendet!`);
@@ -105,7 +147,6 @@ export default function AdminDashboard() {
 
   const sendBroadcast = async () => {
     if (!broadcastTitle.trim() || !broadcastBody.trim()) return;
-
     setBroadcastSending(true);
     try {
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
@@ -125,7 +166,6 @@ export default function AdminDashboard() {
           }),
         }
       );
-
       const result = await res.json();
       if (res.ok) {
         toast.success(`Gesendet an ${result.sent} Empfänger!`);
@@ -147,32 +187,17 @@ export default function AdminDashboard() {
       c.telegram_id?.toLowerCase().includes(search.toLowerCase())
   );
 
-  const openAccountDialog = (chatter: ChatterProfile) => {
-    setAccountTarget(chatter);
-    setAccEmail(chatter.account_email || "");
-    setAccPassword(chatter.account_password || "");
-    setAccDomain(chatter.account_domain || "");
-  };
+  const platformAccounts = selectedPlatform
+    ? accounts.filter((a) => a.platform === selectedPlatform)
+    : [];
+  const freeCount = platformAccounts.filter((a) => !a.assigned_to).length;
+  const assignedCount = platformAccounts.filter((a) => a.assigned_to).length;
 
-  const saveAccountData = async () => {
-    if (!accountTarget) return;
-    setAccSaving(true);
-    const { error } = await supabase
-      .from("profiles")
-      .update({
-        account_email: accEmail.trim(),
-        account_password: accPassword.trim(),
-        account_domain: accDomain.trim(),
-      })
-      .eq("user_id", accountTarget.user_id);
-    if (error) {
-      toast.error("Fehler beim Speichern");
-    } else {
-      toast.success("Account-Daten gespeichert!");
-      setAccountTarget(null);
-      loadChatters();
-    }
-    setAccSaving(false);
+  // Find chatter name by user_id
+  const getChatterName = (userId: string | null) => {
+    if (!userId) return null;
+    const c = chatters.find((ch) => ch.user_id === userId);
+    return c?.group_name || c?.telegram_id || userId.slice(0, 8);
   };
 
   return (
@@ -206,6 +231,67 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        {/* Platform Account Pools */}
+        <section className="glass-card rounded-xl p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Package className="h-4 w-4 text-accent" />
+              <h2 className="text-sm font-semibold text-foreground">Account-Pools</h2>
+            </div>
+            <Dialog>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const name = prompt("Plattform-Name eingeben (z.B. Brezzels):");
+                  if (name?.trim()) {
+                    setSelectedPlatform(name.trim());
+                    setAccountPoolOpen(true);
+                  }
+                }}
+              >
+                <Plus className="h-3.5 w-3.5 mr-1.5" />
+                Neue Plattform
+              </Button>
+            </Dialog>
+          </div>
+
+          {platforms.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">
+              Noch keine Plattformen angelegt. Erstelle eine neue Plattform oben.
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {platforms.map((p) => {
+                const pAccounts = accounts.filter((a) => a.platform === p);
+                const free = pAccounts.filter((a) => !a.assigned_to).length;
+                const assigned = pAccounts.filter((a) => a.assigned_to).length;
+                return (
+                  <button
+                    key={p}
+                    onClick={() => {
+                      setSelectedPlatform(p);
+                      setAccountPoolOpen(true);
+                    }}
+                    className="glass-card-subtle rounded-xl p-4 text-left hover:bg-secondary/30 transition-colors"
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-semibold text-foreground">{p}</span>
+                      <Badge variant="secondary" className="text-[10px]">
+                        {pAccounts.length} Accounts
+                      </Badge>
+                    </div>
+                    <div className="flex gap-3 text-[10px] text-muted-foreground">
+                      <span className="text-green-500">{free} frei</span>
+                      <span>{assigned} vergeben</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </section>
+
         {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -234,50 +320,134 @@ export default function AdminDashboard() {
             </div>
           ) : (
             <div className="divide-y divide-border">
-              {filtered.map((chatter) => (
-                <div
-                  key={chatter.user_id}
-                  className="px-4 py-3 flex items-center gap-3 hover:bg-secondary/30 transition-colors"
-                >
-                  <div className="h-9 w-9 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
-                    <span className="text-xs font-bold text-accent">
-                      {(chatter.group_name || "?")[0].toUpperCase()}
-                    </span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">
-                      {chatter.group_name || "Kein Gruppenname"}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground">
-                      Telegram: {chatter.telegram_id || "—"} · Seit{" "}
-                      {new Date(chatter.created_at).toLocaleDateString("de-DE")}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-1 shrink-0">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => openAccountDialog(chatter)}
-                      className="text-primary hover:text-primary/80"
-                      title="Account-Daten"
-                    >
-                      <KeyRound className="h-3.5 w-3.5" />
-                    </Button>
+              {filtered.map((chatter) => {
+                const hasAccount = !!(chatter.account_email);
+                return (
+                  <div
+                    key={chatter.user_id}
+                    className="px-4 py-3 flex items-center gap-3 hover:bg-secondary/30 transition-colors"
+                  >
+                    <div className="h-9 w-9 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
+                      <span className="text-xs font-bold text-accent">
+                        {(chatter.group_name || "?")[0].toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {chatter.group_name || "Kein Gruppenname"}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">
+                        Telegram: {chatter.telegram_id || "—"} · Seit{" "}
+                        {new Date(chatter.created_at).toLocaleDateString("de-DE")}
+                      </p>
+                    </div>
+                    {hasAccount && (
+                      <Badge variant="secondary" className="text-[10px] shrink-0">
+                        <KeyRound className="h-3 w-3 mr-1" />
+                        Account
+                      </Badge>
+                    )}
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => setPushTarget(chatter)}
-                      className="text-accent hover:text-accent/80"
+                      className="text-accent hover:text-accent/80 shrink-0"
                     >
                       <Send className="h-3.5 w-3.5" />
                     </Button>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </section>
       </main>
+
+      {/* Account Pool Dialog */}
+      <Dialog open={accountPoolOpen} onOpenChange={setAccountPoolOpen}>
+        <DialogContent className="glass-card border-border sm:max-w-lg max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-foreground flex items-center gap-2">
+              <Package className="h-5 w-5" />
+              {selectedPlatform} – Accounts
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Add new account */}
+            <div className="space-y-2 border border-border rounded-xl p-3">
+              <p className="text-xs font-semibold text-foreground">Neuen Account hinzufügen</p>
+              <Input
+                value={newAccEmail}
+                onChange={(e) => setNewAccEmail(e.target.value)}
+                placeholder="E-Mail"
+                type="email"
+              />
+              <Input
+                value={newAccPassword}
+                onChange={(e) => setNewAccPassword(e.target.value)}
+                placeholder="Passwort"
+              />
+              <Input
+                value={newAccDomain}
+                onChange={(e) => setNewAccDomain(e.target.value)}
+                placeholder="Domain (z.B. brezzels.com)"
+              />
+              <Button
+                onClick={addAccount}
+                disabled={addingAccount || !newAccEmail.trim() || !newAccDomain.trim()}
+                className="w-full"
+                size="sm"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                {addingAccount ? "Wird hinzugefügt..." : "Account hinzufügen"}
+              </Button>
+            </div>
+
+            {/* Stats */}
+            <div className="flex gap-3 text-xs">
+              <span className="text-muted-foreground">
+                Gesamt: <span className="text-foreground font-semibold">{platformAccounts.length}</span>
+              </span>
+              <span className="text-green-500">
+                Frei: <span className="font-semibold">{freeCount}</span>
+              </span>
+              <span className="text-muted-foreground">
+                Vergeben: <span className="font-semibold">{assignedCount}</span>
+              </span>
+            </div>
+
+            {/* Account list */}
+            <div className="divide-y divide-border rounded-xl border border-border overflow-hidden">
+              {platformAccounts.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-6">
+                  Noch keine Accounts für {selectedPlatform}.
+                </p>
+              ) : (
+                platformAccounts.map((acc) => (
+                  <div key={acc.id} className="p-3 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-foreground truncate">{acc.account_email}</span>
+                      {acc.assigned_to ? (
+                        <Badge className="text-[10px] bg-secondary text-secondary-foreground">
+                          Vergeben an {getChatterName(acc.assigned_to)}
+                        </Badge>
+                      ) : (
+                        <Badge className="text-[10px] bg-green-500/20 text-green-400">
+                          Frei
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">
+                      Domain: {acc.account_domain} · PW: {acc.account_password}
+                    </p>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Individual Push Dialog */}
       <Dialog open={!!pushTarget} onOpenChange={(o) => { if (!o) setPushTarget(null); }}>
@@ -288,24 +458,9 @@ export default function AdminDashboard() {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            <Input
-              value={pushTitle}
-              onChange={(e) => setPushTitle(e.target.value)}
-              placeholder="Titel"
-              maxLength={100}
-            />
-            <Textarea
-              value={pushBody}
-              onChange={(e) => setPushBody(e.target.value)}
-              placeholder="Nachricht..."
-              maxLength={500}
-              className="min-h-[80px]"
-            />
-            <Button
-              onClick={sendIndividualPush}
-              disabled={sending || !pushTitle.trim() || !pushBody.trim()}
-              className="w-full"
-            >
+            <Input value={pushTitle} onChange={(e) => setPushTitle(e.target.value)} placeholder="Titel" maxLength={100} />
+            <Textarea value={pushBody} onChange={(e) => setPushBody(e.target.value)} placeholder="Nachricht..." maxLength={500} className="min-h-[80px]" />
+            <Button onClick={sendIndividualPush} disabled={sending || !pushTitle.trim() || !pushBody.trim()} className="w-full">
               <Send className="h-4 w-4 mr-2" />
               {sending ? "Wird gesendet..." : "Push senden"}
             </Button>
@@ -320,72 +475,11 @@ export default function AdminDashboard() {
             <DialogTitle className="text-foreground">An alle Chatter senden</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            <Input
-              value={broadcastTitle}
-              onChange={(e) => setBroadcastTitle(e.target.value)}
-              placeholder="Titel"
-              maxLength={100}
-            />
-            <Textarea
-              value={broadcastBody}
-              onChange={(e) => setBroadcastBody(e.target.value)}
-              placeholder="Nachricht..."
-              maxLength={500}
-              className="min-h-[80px]"
-            />
-            <Button
-              onClick={sendBroadcast}
-              disabled={broadcastSending || !broadcastTitle.trim() || !broadcastBody.trim()}
-              className="w-full"
-            >
+            <Input value={broadcastTitle} onChange={(e) => setBroadcastTitle(e.target.value)} placeholder="Titel" maxLength={100} />
+            <Textarea value={broadcastBody} onChange={(e) => setBroadcastBody(e.target.value)} placeholder="Nachricht..." maxLength={500} className="min-h-[80px]" />
+            <Button onClick={sendBroadcast} disabled={broadcastSending || !broadcastTitle.trim() || !broadcastBody.trim()} className="w-full">
               <Bell className="h-4 w-4 mr-2" />
               {broadcastSending ? "Wird gesendet..." : "An alle senden"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Account Data Dialog */}
-      <Dialog open={!!accountTarget} onOpenChange={(o) => { if (!o) setAccountTarget(null); }}>
-        <DialogContent className="glass-card border-border sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-foreground">
-              Account-Daten für {accountTarget?.group_name || "Chatter"}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div>
-              <label className="text-xs text-muted-foreground mb-1 block">E-Mail</label>
-              <Input
-                value={accEmail}
-                onChange={(e) => setAccEmail(e.target.value)}
-                placeholder="account@example.com"
-                type="email"
-              />
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground mb-1 block">Passwort</label>
-              <Input
-                value={accPassword}
-                onChange={(e) => setAccPassword(e.target.value)}
-                placeholder="Passwort"
-              />
-            </div>
-            <div>
-              <label className="text-xs text-muted-foreground mb-1 block">Domain</label>
-              <Input
-                value={accDomain}
-                onChange={(e) => setAccDomain(e.target.value)}
-                placeholder="brezzels.com"
-              />
-            </div>
-            <Button
-              onClick={saveAccountData}
-              disabled={accSaving}
-              className="w-full"
-            >
-              <KeyRound className="h-4 w-4 mr-2" />
-              {accSaving ? "Wird gespeichert..." : "Account-Daten speichern"}
             </Button>
           </div>
         </DialogContent>
