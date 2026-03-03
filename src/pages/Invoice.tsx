@@ -186,6 +186,9 @@ const Invoice = () => {
           </h1>
         </div>
 
+        {/* Countdown section */}
+        <BillingCountdown />
+
         {/* Sender */}
         <Card className="glass-card border-border">
           <CardHeader className="pb-3">
@@ -316,8 +319,6 @@ const Invoice = () => {
           Rechnung als PDF herunterladen
         </Button>
 
-        {/* Countdown section */}
-        <BillingCountdown />
 
         <p className="text-[10px] text-muted-foreground text-center pb-4">
           Die Rechnung wird lokal erstellt – keine Daten werden gespeichert.
