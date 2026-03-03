@@ -1,8 +1,9 @@
-import { useState, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
@@ -27,6 +28,7 @@ const Invoice = () => {
   const { toast } = useToast();
 
   const [senderName, setSenderName] = useState("");
+  const [billingUnlocked, setBillingUnlocked] = useState(false);
   const [senderAddress, setSenderAddress] = useState("");
   const [senderCity, setSenderCity] = useState("");
   const [taxId, setTaxId] = useState("");
@@ -187,138 +189,152 @@ const Invoice = () => {
         </div>
 
         {/* Countdown section */}
-        <BillingCountdown />
+        <BillingCountdown onUnlock={setBillingUnlocked} />
 
-        {/* Sender */}
-        <Card className="glass-card border-border">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm text-foreground">Deine Daten (Rechnungssteller)</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Name / Firma *</Label>
-                <Input value={senderName} onChange={(e) => setSenderName(e.target.value)} placeholder="Max Mustermann" className="h-9 text-sm bg-secondary border-border" />
+        {!billingUnlocked && (
+          <Card className="glass-card-subtle border-border">
+            <CardContent className="p-4 text-center space-y-2">
+              <p className="text-sm text-muted-foreground">
+                Das Rechnungsformular wird freigeschaltet, sobald dein Abrechnungszeitraum erreicht ist.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Du kannst jetzt eine E-Mail an <a href="mailto:support@basedbuilders.com" className="text-accent hover:underline font-medium">support@basedbuilders.com</a> schreiben und nach deiner Abrechnung fragen.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        <div className={!billingUnlocked ? "opacity-40 pointer-events-none select-none space-y-6" : "space-y-6"}>
+          {/* Sender */}
+          <Card className="glass-card border-border">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm text-foreground">Deine Daten (Rechnungssteller)</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Name / Firma *</Label>
+                  <Input value={senderName} onChange={(e) => setSenderName(e.target.value)} placeholder="Max Mustermann" className="h-9 text-sm bg-secondary border-border" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Steuernr. / USt-IdNr.</Label>
+                  <Input value={taxId} onChange={(e) => setTaxId(e.target.value)} placeholder="DE123456789" className="h-9 text-sm bg-secondary border-border" />
+                </div>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Steuernr. / USt-IdNr.</Label>
-                <Input value={taxId} onChange={(e) => setTaxId(e.target.value)} placeholder="DE123456789" className="h-9 text-sm bg-secondary border-border" />
-              </div>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Straße + Hausnummer</Label>
-              <Input value={senderAddress} onChange={(e) => setSenderAddress(e.target.value)} placeholder="Musterstraße 1" className="h-9 text-sm bg-secondary border-border" />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">PLZ + Ort</Label>
-              <Input value={senderCity} onChange={(e) => setSenderCity(e.target.value)} placeholder="12345 Musterstadt" className="h-9 text-sm bg-secondary border-border" />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Recipient (read-only) */}
-        <Card className="glass-card-subtle border-border">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm text-muted-foreground">Rechnungsempfänger (vorausgefüllt)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-sm text-foreground space-y-0.5">
-              <p className="font-semibold">{RECIPIENT.company}</p>
-              <p className="text-muted-foreground text-xs">{RECIPIENT.line1}</p>
-              <p className="text-muted-foreground text-xs">{RECIPIENT.line2}</p>
-              <p className="text-muted-foreground text-xs">{RECIPIENT.line3}</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Invoice details */}
-        <Card className="glass-card border-border">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm text-foreground">Rechnungsdetails</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Rechnungsnummer *</Label>
-                <Input value={invoiceNumber} onChange={(e) => setInvoiceNumber(e.target.value)} placeholder="2025-001" className="h-9 text-sm bg-secondary border-border" />
+                <Label className="text-xs text-muted-foreground">Straße + Hausnummer</Label>
+                <Input value={senderAddress} onChange={(e) => setSenderAddress(e.target.value)} placeholder="Musterstraße 1" className="h-9 text-sm bg-secondary border-border" />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Rechnungsdatum *</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className={cn("h-9 w-full justify-start text-left text-sm font-normal bg-secondary border-border", !invoiceDate && "text-muted-foreground")}>
-                      <CalendarIcon className="mr-2 h-3.5 w-3.5" />
-                      {invoiceDate ? format(invoiceDate, "dd.MM.yyyy") : "Datum"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar mode="single" selected={invoiceDate} onSelect={setInvoiceDate} locale={de} initialFocus className="p-3 pointer-events-auto" />
-                  </PopoverContent>
-                </Popover>
+                <Label className="text-xs text-muted-foreground">PLZ + Ort</Label>
+                <Input value={senderCity} onChange={(e) => setSenderCity(e.target.value)} placeholder="12345 Musterstadt" className="h-9 text-sm bg-secondary border-border" />
               </div>
-            </div>
+            </CardContent>
+          </Card>
 
-            <div className="grid grid-cols-2 gap-3">
+          {/* Recipient (read-only) */}
+          <Card className="glass-card-subtle border-border">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm text-muted-foreground">Rechnungsempfänger (vorausgefüllt)</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-sm text-foreground space-y-0.5">
+                <p className="font-semibold">{RECIPIENT.company}</p>
+                <p className="text-muted-foreground text-xs">{RECIPIENT.line1}</p>
+                <p className="text-muted-foreground text-xs">{RECIPIENT.line2}</p>
+                <p className="text-muted-foreground text-xs">{RECIPIENT.line3}</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Invoice details */}
+          <Card className="glass-card border-border">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm text-foreground">Rechnungsdetails</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Rechnungsnummer *</Label>
+                  <Input value={invoiceNumber} onChange={(e) => setInvoiceNumber(e.target.value)} placeholder="2025-001" className="h-9 text-sm bg-secondary border-border" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Rechnungsdatum *</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className={cn("h-9 w-full justify-start text-left text-sm font-normal bg-secondary border-border", !invoiceDate && "text-muted-foreground")}>
+                        <CalendarIcon className="mr-2 h-3.5 w-3.5" />
+                        {invoiceDate ? format(invoiceDate, "dd.MM.yyyy") : "Datum"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar mode="single" selected={invoiceDate} onSelect={setInvoiceDate} locale={de} initialFocus className="p-3 pointer-events-auto" />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Leistungszeitraum von</Label>
+                  <Input value={periodFrom} onChange={(e) => setPeriodFrom(e.target.value)} placeholder="01.07.2025" className="h-9 text-sm bg-secondary border-border" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Leistungszeitraum bis</Label>
+                  <Input value={periodTo} onChange={(e) => setPeriodTo(e.target.value)} placeholder="31.07.2025" className="h-9 text-sm bg-secondary border-border" />
+                </div>
+              </div>
+
               <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Leistungszeitraum von</Label>
-                <Input value={periodFrom} onChange={(e) => setPeriodFrom(e.target.value)} placeholder="01.07.2025" className="h-9 text-sm bg-secondary border-border" />
+                <Label className="text-xs text-muted-foreground">Leistungsbeschreibung</Label>
+                <Input value={description} onChange={(e) => setDescription(e.target.value)} className="h-9 text-sm bg-secondary border-border" />
               </div>
+
               <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Leistungszeitraum bis</Label>
-                <Input value={periodTo} onChange={(e) => setPeriodTo(e.target.value)} placeholder="31.07.2025" className="h-9 text-sm bg-secondary border-border" />
+                <Label className="text-xs text-muted-foreground">Betrag (€) *</Label>
+                <Input value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="1.500,00" className="h-9 text-sm bg-secondary border-border" />
               </div>
-            </div>
 
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Leistungsbeschreibung</Label>
-              <Input value={description} onChange={(e) => setDescription(e.target.value)} className="h-9 text-sm bg-secondary border-border" />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Betrag (€) *</Label>
-              <Input value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="1.500,00" className="h-9 text-sm bg-secondary border-border" />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Mehrwertsteuer-Vermerk</Label>
-              <Input value={vatNote} onChange={(e) => setVatNote(e.target.value)} className="h-9 text-sm bg-secondary border-border text-xs" />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Bank details */}
-        <Card className="glass-card border-border">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm text-foreground">Bankverbindung</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Bank</Label>
-              <Input value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="Sparkasse Musterstadt" className="h-9 text-sm bg-secondary border-border" />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">IBAN</Label>
-                <Input value={iban} onChange={(e) => setIban(e.target.value)} placeholder="DE89 3704 0044 0532 0130 00" className="h-9 text-sm bg-secondary border-border" />
+                <Label className="text-xs text-muted-foreground">Mehrwertsteuer-Vermerk</Label>
+                <Input value={vatNote} onChange={(e) => setVatNote(e.target.value)} className="h-9 text-sm bg-secondary border-border text-xs" />
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Bank details */}
+          <Card className="glass-card border-border">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm text-foreground">Bankverbindung</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
               <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">BIC</Label>
-                <Input value={bic} onChange={(e) => setBic(e.target.value)} placeholder="COBADEFFXXX" className="h-9 text-sm bg-secondary border-border" />
+                <Label className="text-xs text-muted-foreground">Bank</Label>
+                <Input value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="Sparkasse Musterstadt" className="h-9 text-sm bg-secondary border-border" />
               </div>
-            </div>
-          </CardContent>
-        </Card>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">IBAN</Label>
+                  <Input value={iban} onChange={(e) => setIban(e.target.value)} placeholder="DE89 3704 0044 0532 0130 00" className="h-9 text-sm bg-secondary border-border" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">BIC</Label>
+                  <Input value={bic} onChange={(e) => setBic(e.target.value)} placeholder="COBADEFFXXX" className="h-9 text-sm bg-secondary border-border" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Generate button */}
-        <Button
-          onClick={generatePDF}
-          className="w-full h-12 text-base font-bold gold-glow"
-          size="lg"
-        >
-          <FileDown className="mr-2 h-5 w-5" />
-          Rechnung als PDF herunterladen
-        </Button>
-
+          {/* Generate button */}
+          <Button
+            onClick={generatePDF}
+            className="w-full h-12 text-base font-bold gold-glow"
+            size="lg"
+          >
+            <FileDown className="mr-2 h-5 w-5" />
+            Rechnung als PDF herunterladen
+          </Button>
+        </div>
 
         <p className="text-[10px] text-muted-foreground text-center pb-4">
           Die Rechnung wird lokal erstellt – keine Daten werden gespeichert.
@@ -328,14 +344,21 @@ const Invoice = () => {
   );
 };
 
-function BillingCountdown() {
+function BillingCountdown({ onUnlock }: { onUnlock: (v: boolean) => void }) {
   const now = new Date();
   const deadline = endOfMonth(addMonths(now, 1));
   const totalDays = differenceInDays(deadline, new Date(now.getFullYear(), now.getMonth(), 1));
   const daysLeft = differenceInDays(deadline, now);
   const progressPct = Math.round(((totalDays - daysLeft) / totalDays) * 100);
+  const isUnlocked = daysLeft <= 0;
 
-  // Start of current billing period = 1st of current month
+  // DEMO: set to true to simulate unlocked state
+  const DEMO_UNLOCK = true;
+  const unlocked = DEMO_UNLOCK || isUnlocked;
+
+  // Notify parent
+  useEffect(() => { onUnlock(unlocked); }, [unlocked, onUnlock]);
+
   const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
 
   return (
@@ -344,6 +367,11 @@ function BillingCountdown() {
         <div className="flex items-center gap-2">
           <Clock className="h-4 w-4 text-accent" />
           <span className="text-sm font-semibold text-foreground">Abrechnungszeitraum</span>
+          {unlocked && (
+            <Badge className="ml-auto bg-accent text-accent-foreground text-[10px]">
+              Abrechnung möglich ✓
+            </Badge>
+          )}
         </div>
 
         <div className="grid grid-cols-2 gap-3">
@@ -357,18 +385,20 @@ function BillingCountdown() {
           </div>
         </div>
 
-        <div className="space-y-1.5">
-          <div className="flex justify-between text-[10px] text-muted-foreground">
-            <span>Noch {daysLeft} Tage bis zur Abrechnung</span>
-            <span>{format(deadline, "dd.MM.yyyy")}</span>
+        {!unlocked && (
+          <div className="space-y-1.5">
+            <div className="flex justify-between text-[10px] text-muted-foreground">
+              <span>Noch {daysLeft} Tage bis zur Abrechnung</span>
+              <span>{format(deadline, "dd.MM.yyyy")}</span>
+            </div>
+            <div className="w-full h-2 rounded-full bg-secondary overflow-hidden">
+              <div
+                className="h-full rounded-full bg-accent transition-all"
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
           </div>
-          <div className="w-full h-2 rounded-full bg-secondary overflow-hidden">
-            <div
-              className="h-full rounded-full bg-accent transition-all"
-              style={{ width: `${progressPct}%` }}
-            />
-          </div>
-        </div>
+        )}
       </CardContent>
     </Card>
   );
