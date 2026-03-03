@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Save, CheckCircle2, TrendingUp, Award, Zap } from "lucide-react";
+import { Save, CheckCircle2, TrendingUp, Award, Zap, HelpCircle, X } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
@@ -99,6 +100,28 @@ export default function Dashboard() {
                 <Save className="h-4 w-4 mr-1" /> Speichern
               </Button>
             </div>
+            <Dialog>
+              <DialogTrigger asChild>
+                <button className="flex items-center gap-1 text-xs text-accent hover:text-accent/80 transition-colors">
+                  <HelpCircle className="h-3.5 w-3.5" />
+                  Wo finde ich meine Telegram-ID?
+                </button>
+              </DialogTrigger>
+              <DialogContent className="glass-card border-border sm:max-w-lg">
+                <DialogHeader>
+                  <DialogTitle className="text-foreground">Wo finde ich meine Telegram-ID?</DialogTitle>
+                </DialogHeader>
+                <div className="aspect-video w-full rounded-lg overflow-hidden">
+                  <iframe
+                    src="https://www.loom.com/embed/DEINE_LOOM_VIDEO_ID"
+                    frameBorder="0"
+                    allowFullScreen
+                    className="w-full h-full"
+                    title="Telegram ID finden"
+                  />
+                </div>
+              </DialogContent>
+            </Dialog>
           </section>
 
           {/* Umsatz Input */}
