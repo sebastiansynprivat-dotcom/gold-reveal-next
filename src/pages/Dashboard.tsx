@@ -369,20 +369,23 @@ function DashboardBillingInfo({ onNavigate }: { onNavigate: () => void }) {
             <Clock className="h-4 w-4 text-accent" />
             <span className="text-xs font-semibold text-foreground">Abrechnungszeitraum</span>
           </div>
-          <Popover>
-            <PopoverTrigger asChild>
+          <Dialog>
+            <DialogTrigger asChild>
               <button className="flex items-center gap-1 text-[10px] text-accent hover:text-accent/80 transition-colors">
                 <HelpCircle className="h-3 w-3" />
                 Warum dauert das so lange?
               </button>
-            </PopoverTrigger>
-            <PopoverContent className="w-72 space-y-3">
-              <p className="text-xs font-semibold text-foreground">Hier erkläre ich dir warum:</p>
+            </DialogTrigger>
+            <DialogContent className="glass-card border-border sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle className="text-foreground text-sm">Warum dauert das so lange?</DialogTitle>
+                <DialogDescription className="text-muted-foreground text-xs">Hier erkläre ich es dir kurz per Sprachmemo.</DialogDescription>
+              </DialogHeader>
               <audio controls className="w-full" preload="none">
                 <source src="/audio/billing-info.mp3" type="audio/mpeg" />
               </audio>
-            </PopoverContent>
-          </Popover>
+            </DialogContent>
+          </Dialog>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-0.5">
