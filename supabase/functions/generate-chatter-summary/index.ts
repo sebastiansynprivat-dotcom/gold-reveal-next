@@ -20,6 +20,7 @@ Formuliere eine kurze, nette Nachricht (max. 2-3 Sätze), die du direkt an den C
 - NUR wenn die Performance wirklich schlecht ist, darf ein strenger Unterton mitschwingen – aber immer respektvoll.
 - Wenn die Performance gut ist: Lob und Motivation!
 - Schreibe die Nachricht so, als würdest du den Chatter direkt ansprechen (Du-Form).
+- Verwende NIEMALS den Namen des Chatters in der Nachricht. Sprich ihn einfach mit "Du" an, ohne seinen Namen zu nennen.
 - Nutze gerne ein passendes Emoji.
 
 FORMAT (halte dich EXAKT daran):
