@@ -23,3 +23,6 @@ verify_jwt = false
 
 [functions.admin-manage]
 verify_jwt = false
+
+[functions.generate-chatter-summary]
+verify_jwt = false

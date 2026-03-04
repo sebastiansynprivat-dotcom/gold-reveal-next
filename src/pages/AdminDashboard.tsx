@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Users, Send, Bell, BellOff, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, CalendarDays, CalendarRange, Filter, MessageSquare, Star, AlertTriangle, Bot, Save, Power, Copy, Smartphone, Percent, ChevronRight, Shield, UserPlus, UserMinus, Check, XCircle } from "lucide-react";
+import { Users, Send, Bell, BellOff, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, CalendarDays, CalendarRange, Filter, MessageSquare, Star, AlertTriangle, Bot, Save, Power, Copy, Smartphone, Percent, ChevronRight, Shield, UserPlus, UserMinus, Check, XCircle, Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -174,6 +174,8 @@ export default function AdminDashboard() {
   const [newAdminEmail, setNewAdminEmail] = useState("");
   const [addingAdmin, setAddingAdmin] = useState(false);
   const [removeAdminConfirm, setRemoveAdminConfirm] = useState<string | null>(null);
+  const [chatterSummaries, setChatterSummaries] = useState<Record<string, { summary: string; date: string }>>({});
+  const [summaryLoading, setSummaryLoading] = useState<Record<string, boolean>>({});
   const allRevenueData = useMemo(() => generateFakeRevenueData(), []);
 
   const filteredRevenueData = useMemo(() => {
@@ -242,6 +244,46 @@ export default function AdminDashboard() {
     loadPushUsers();
     loadRevenueUsers();
   }, []);
+
+  // Load cached AI summaries
+  const loadChatterSummaries = async () => {
+    const today = new Date().toISOString().split("T")[0];
+    const { data } = await supabase
+      .from("chatter_summaries")
+      .select("user_id, summary, summary_date")
+      .eq("summary_date", today);
+    if (data) {
+      const map: Record<string, { summary: string; date: string }> = {};
+      data.forEach((s: any) => { map[s.user_id] = { summary: s.summary, date: s.summary_date }; });
+      setChatterSummaries(map);
+    }
+  };
+
+  // Generate summary for a single chatter
+  const generateSummary = async (userId: string) => {
+    setSummaryLoading(prev => ({ ...prev, [userId]: true }));
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-chatter-summary", {
+        body: { user_id: userId },
+      });
+      if (error) throw error;
+      // Reload summaries
+      await loadChatterSummaries();
+      toast.success("AI-Zusammenfassung generiert!");
+    } catch (err: any) {
+      console.error("Summary generation error:", err);
+      toast.error("Fehler beim Generieren der Zusammenfassung");
+    } finally {
+      setSummaryLoading(prev => ({ ...prev, [userId]: false }));
+    }
+  };
+
+  // Load summaries when chatter tab is active
+  useEffect(() => {
+    if (activeTab === "chatter") {
+      loadChatterSummaries();
+    }
+  }, [activeTab]);
 
   const loadAdmins = async () => {
     setAdminListLoading(true);
@@ -1748,6 +1790,38 @@ export default function AdminDashboard() {
                           /* No accounts: just stats */
                           <ChatterStatsCard userId={chatter.user_id} name={chatter.group_name || "Chatter"} />
                         )}
+
+                        {/* AI Summary */}
+                        <div className="mt-3 glass-card-subtle rounded-xl p-3.5" style={{ borderLeft: "3px solid hsl(var(--accent))" }}>
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-1.5">
+                              <Sparkles className="h-3.5 w-3.5 text-accent" />
+                              <span className="text-[11px] font-semibold text-accent">AI-Analyse</span>
+                            </div>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); generateSummary(chatter.user_id); }}
+                              disabled={summaryLoading[chatter.user_id]}
+                              className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-accent transition-colors disabled:opacity-50"
+                            >
+                              {summaryLoading[chatter.user_id] ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <RefreshCw className="h-3 w-3" />
+                              )}
+                              {chatterSummaries[chatter.user_id] ? "Neu generieren" : "Generieren"}
+                            </button>
+                          </div>
+                          {summaryLoading[chatter.user_id] ? (
+                            <div className="flex items-center gap-2 py-2">
+                              <Loader2 className="h-3.5 w-3.5 animate-spin text-accent" />
+                              <span className="text-xs text-muted-foreground">Analysiere Performance...</span>
+                            </div>
+                          ) : chatterSummaries[chatter.user_id] ? (
+                            <p className="text-xs text-foreground/90 leading-relaxed">{chatterSummaries[chatter.user_id].summary}</p>
+                          ) : (
+                            <p className="text-xs text-muted-foreground italic">Noch keine Analyse vorhanden. Klicke auf "Generieren".</p>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
