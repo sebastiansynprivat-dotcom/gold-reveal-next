@@ -247,14 +247,16 @@ export default function AdminDashboard() {
 
   // Load cached AI summaries
   const loadChatterSummaries = async () => {
+    // Load today's or most recent summaries
     const today = new Date().toISOString().split("T")[0];
     const { data } = await supabase
       .from("chatter_summaries")
       .select("user_id, summary, summary_date")
-      .eq("summary_date", today);
+      .order("summary_date", { ascending: false });
     if (data) {
       const map: Record<string, { summary: string; date: string }> = {};
-      data.forEach((s: any) => { map[s.user_id] = { summary: s.summary, date: s.summary_date }; });
+      // Keep only the latest summary per user
+      data.forEach((s: any) => { if (!map[s.user_id]) map[s.user_id] = { summary: s.summary, date: s.summary_date }; });
       setChatterSummaries(map);
     }
   };
@@ -1796,7 +1798,7 @@ export default function AdminDashboard() {
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-1.5">
                               <Sparkles className="h-3.5 w-3.5 text-accent" />
-                              <span className="text-[11px] font-semibold text-accent">AI-Analyse</span>
+                              <span className="text-[11px] font-semibold text-accent">AI-Analyse (gestern)</span>
                             </div>
                             <button
                               onClick={(e) => { e.stopPropagation(); generateSummary(chatter.user_id); }}
