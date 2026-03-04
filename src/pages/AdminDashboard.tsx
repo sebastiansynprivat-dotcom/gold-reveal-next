@@ -1215,6 +1215,59 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                     {expandedChatter === chatter.user_id && (
+                      <div className="px-4 pb-4 space-y-3 animate-in fade-in duration-200">
+                        {/* Account Login Cards */}
+                        {(chatter.assigned_accounts?.length || 0) > 0 && (
+                          <div className={cn(
+                            "grid gap-2",
+                            (chatter.assigned_accounts?.length || 0) >= 2 ? "grid-cols-2" : "grid-cols-1"
+                          )}>
+                            {chatter.assigned_accounts!.map((acc) => (
+                              <div key={acc.id} className="glass-card-subtle rounded-lg p-3 space-y-2">
+                                <div className="flex items-center justify-between">
+                                  <Badge variant="secondary" className="text-[9px]">{acc.platform}</Badge>
+                                  {acc.account_domain && (
+                                    <a
+                                      href={acc.account_domain.startsWith("http") ? acc.account_domain : `https://${acc.account_domain}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="text-[9px] text-accent hover:underline truncate max-w-[120px]"
+                                    >
+                                      {acc.account_domain}
+                                    </a>
+                                  )}
+                                </div>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigator.clipboard.writeText(acc.account_email);
+                                    toast.success("E-Mail kopiert!");
+                                  }}
+                                  className="w-full text-left glass-card-subtle rounded-md px-2.5 py-1.5 hover:bg-secondary/50 transition-colors cursor-copy group"
+                                >
+                                  <p className="text-[9px] text-muted-foreground">E-Mail</p>
+                                  <p className="text-[11px] font-medium text-foreground truncate group-active:scale-95 transition-transform">{acc.account_email}</p>
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigator.clipboard.writeText(acc.account_password);
+                                    toast.success("Passwort kopiert!");
+                                  }}
+                                  className="w-full text-left glass-card-subtle rounded-md px-2.5 py-1.5 hover:bg-secondary/50 transition-colors cursor-copy group"
+                                >
+                                  <p className="text-[9px] text-muted-foreground">Passwort</p>
+                                  <p className="text-[11px] font-medium text-foreground truncate group-active:scale-95 transition-transform">{acc.account_password}</p>
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {/* Stats below */}
+                      </div>
+                    )}
+                    {expandedChatter === chatter.user_id && (
                       <ChatterStatsCard userId={chatter.user_id} name={chatter.group_name || "Chatter"} />
                     )}
                   </div>
