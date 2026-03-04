@@ -58,13 +58,17 @@ export default function PushNotificationDialog() {
         onEscapeKeyDown={(e) => e.preventDefault()}
         onInteractOutside={(e) => e.preventDefault()}
       >
-        {/* Outer glow wrapper */}
-        <div className="relative rounded-2xl overflow-hidden gold-glow-strong">
+        {/* Glow backdrop */}
+        <div className="absolute -inset-4 rounded-3xl opacity-40 blur-2xl pointer-events-none"
+          style={{ background: "radial-gradient(ellipse at center, hsl(43 76% 50% / 0.5), hsl(43 56% 40% / 0.2), transparent 70%)" }}
+        />
+        
+        <div className="relative rounded-2xl overflow-hidden">
           {/* Gold gradient top edge */}
-          <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-accent to-transparent" />
+          <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-accent to-transparent z-10" />
           
           {/* Glass background */}
-          <div className="glass-card rounded-2xl border border-accent/15">
+          <div className="glass-card rounded-2xl border border-accent/20" style={{ boxShadow: "0 0 40px hsl(43 56% 52% / 0.15), 0 0 80px hsl(43 56% 52% / 0.08)" }}>
             {/* Top section with icon */}
             <div className="pt-8 pb-4 px-6 text-center">
               {/* Animated bell icon */}
