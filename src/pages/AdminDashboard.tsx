@@ -258,6 +258,7 @@ export default function AdminDashboard() {
   };
 
 
+  const deletePool = async () => {
     if (!selectedPlatform) return;
     setDeletingPool(true);
     try {
