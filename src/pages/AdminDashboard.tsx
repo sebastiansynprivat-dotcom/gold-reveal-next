@@ -251,6 +251,16 @@ export default function AdminDashboard() {
     return accounts.filter((a) => a.assigned_to);
   }, [accounts]);
 
+  const filteredBotAccounts = useMemo(() => {
+    if (botFilter === "missing") {
+      return allAssignedAccounts.filter((acc) => {
+        const saved = savedBotState[acc.id];
+        return !saved || (!saved.message.trim() && !saved.followUp.trim());
+      });
+    }
+    return allAssignedAccounts;
+  }, [allAssignedAccounts, botFilter, savedBotState]);
+
   const saveBotMessage = async (accountId: string) => {
     const entry = botMessages[accountId];
     if (!entry) return;
@@ -1048,13 +1058,37 @@ export default function AdminDashboard() {
                 </Badge>
               </div>
 
-              {allAssignedAccounts.length === 0 ? (
+              {/* Filter */}
+              <div className="px-3 pt-3 flex gap-2">
+                <button
+                  onClick={() => setBotFilter("alle")}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium transition-colors",
+                    botFilter === "alle" ? "bg-accent text-accent-foreground" : "bg-secondary/50 text-muted-foreground hover:bg-secondary"
+                  )}
+                >
+                  <Bot className="h-3 w-3" />
+                  Alle
+                </button>
+                <button
+                  onClick={() => setBotFilter("missing")}
+                  className={cn(
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium transition-colors",
+                    botFilter === "missing" ? "bg-accent text-accent-foreground" : "bg-secondary/50 text-muted-foreground hover:bg-secondary"
+                  )}
+                >
+                  <AlertTriangle className="h-3 w-3" />
+                  Bot-DM fehlt
+                </button>
+              </div>
+
+              {filteredBotAccounts.length === 0 ? (
                 <div className="p-8 text-center text-sm text-muted-foreground">
-                  Keine zugewiesenen Accounts vorhanden.
+                  {botFilter === "missing" ? "Alle Models haben Bot-DMs hinterlegt." : "Keine zugewiesenen Accounts vorhanden."}
                 </div>
               ) : (
                 <div className="p-3 space-y-2">
-                  {allAssignedAccounts.map((acc) => {
+                  {filteredBotAccounts.map((acc) => {
                     const entry = botMessages[acc.id] || { message: "", followUp: "", isActive: false, saving: false };
                     const saved = savedBotState[acc.id];
                     const hasChanges = !saved || entry.message !== saved.message || entry.followUp !== saved.followUp || entry.isActive !== saved.isActive;
