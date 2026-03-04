@@ -13,25 +13,28 @@ import { useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
-// Platform colors
+// Platform colors – premium aesthetic matching gold/dark theme
 const PLATFORM_COLORS = {
-  maloum: "#f472b6",   // pink
-  brezzels: "#60a5fa",  // blue
-  "4based": "#a78bfa",  // purple
+  maloum: "#d4af37",    // gold
+  brezzels: "#3b82f6",  // brand blue
+  "4based": "#22d3ee",  // cyan
 };
 
-// Generate 30 days of fictional revenue data per platform
+// Generate 30 days of fictional revenue data with upward trend
 const generateFakeRevenueData = () => {
   const data = [];
   const now = new Date();
   for (let i = 29; i >= 0; i--) {
     const date = new Date(now);
     date.setDate(date.getDate() - i);
+    const day = 29 - i;
+    // Base grows over time + small random noise
+    const trend = day * 35;
     data.push({
       date: date.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" }),
-      maloum: Math.floor(Math.random() * 1000) + 2000,
-      brezzels: Math.floor(Math.random() * 800) + 2000,
-      "4based": Math.floor(Math.random() * 900) + 2100,
+      maloum: 1800 + trend + Math.floor(Math.random() * 300 - 150),
+      brezzels: 1500 + trend + Math.floor(Math.random() * 250 - 125),
+      "4based": 1600 + trend + Math.floor(Math.random() * 280 - 140),
     });
   }
   return data;
