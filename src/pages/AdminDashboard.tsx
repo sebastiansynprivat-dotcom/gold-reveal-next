@@ -1055,8 +1055,17 @@ export default function AdminDashboard() {
                           </span>
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate">
+                          <p
+                            className="text-sm font-medium text-foreground truncate cursor-copy active:scale-95 transition-transform"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigator.clipboard.writeText(chatter.group_name || "");
+                              toast.success("Name kopiert!");
+                            }}
+                            title="Klicken zum Kopieren"
+                          >
                             {chatter.group_name || "Kein Gruppenname"}
+                          </p>
                           </p>
                           <p className="text-[10px] text-muted-foreground">
                             Telegram: {chatter.telegram_id || "—"} · Seit{" "}
