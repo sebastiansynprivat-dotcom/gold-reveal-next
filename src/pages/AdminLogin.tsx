@@ -22,13 +22,11 @@ const AdminLogin = () => {
   const [setupData, setSetupData] = useState<{ secret: string; otpauth_url: string } | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [totpVerified, setTotpVerified] = useState(false);
+  const [loginCompleted, setLoginCompleted] = useState(false);
 
-  // Check admin status when user logs in
+  // Only check admin status AFTER explicit login on this page
   useEffect(() => {
-    if (!user) {
-      setIsAdmin(null);
-      return;
-    }
+    if (!user || !loginCompleted) return;
     
     const checkAdmin = async () => {
       const { data } = await supabase.rpc("is_admin");
@@ -49,14 +47,13 @@ const AdminLogin = () => {
       if (totpData && (totpData as any).is_verified) {
         setStep("totp");
       } else {
-        // Need to set up TOTP
         setStep("setup");
         await initTotpSetup();
       }
     };
 
     checkAdmin();
-  }, [user]);
+  }, [user, loginCompleted]);
 
   // If admin verified TOTP, redirect
   useEffect(() => {
@@ -102,6 +99,8 @@ const AdminLogin = () => {
           ? "E-Mail oder Passwort ist falsch."
           : error.message
       );
+    } else {
+      setLoginCompleted(true);
     }
     setSubmitting(false);
   };
@@ -144,7 +143,7 @@ const AdminLogin = () => {
   }
 
   // If user is logged in but not admin, show error
-  if (user && isAdmin === false) {
+  if (loginCompleted && user && isAdmin === false) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-background">
         <Shield className="h-16 w-16 text-destructive mb-4" />
@@ -179,7 +178,7 @@ const AdminLogin = () => {
         </div>
 
         {/* Step 1: Login */}
-        {step === "login" && !user && (
+        {step === "login" && (
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="relative">
               <Input
@@ -332,7 +331,7 @@ const AdminLogin = () => {
         )}
 
         {/* Loading state while checking admin */}
-        {user && isAdmin === null && (
+        {loginCompleted && user && isAdmin === null && (
           <div className="flex justify-center py-8">
             <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
           </div>
