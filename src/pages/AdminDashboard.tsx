@@ -282,6 +282,25 @@ export default function AdminDashboard() {
     }
   };
 
+  // Generate all summaries
+  const generateAllSummaries = async () => {
+    setGeneratingAll(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-chatter-summary", {
+        body: {},
+      });
+      if (error) throw error;
+      await loadChatterSummaries();
+      toast.success(`AI-Analysen für alle Chatter generiert!`);
+      setShowAiSummaries(true);
+    } catch (err: any) {
+      console.error("Generate all error:", err);
+      toast.error("Fehler beim Generieren der Zusammenfassungen");
+    } finally {
+      setGeneratingAll(false);
+    }
+  };
+
   // Load summaries when chatter tab is active
   useEffect(() => {
     if (activeTab === "chatter") {
