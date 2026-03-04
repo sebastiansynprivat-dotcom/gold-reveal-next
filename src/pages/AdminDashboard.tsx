@@ -853,7 +853,32 @@ export default function AdminDashboard() {
           />
         </div>
 
-        {/* Chatter List */}
+        {/* Chatter Filters */}
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+          {([
+            { key: "alle", label: "Alle", icon: Users },
+            { key: "open_2d", label: "> 2 Tage offen", icon: MessageSquare },
+            { key: "top_tag", label: "Top Tag", icon: Star },
+            { key: "top_woche", label: "Top Woche", icon: TrendingUp },
+            { key: "top_monat", label: "Top Monat", icon: DollarSign },
+            { key: "no_telegram", label: "Telegram fehlt", icon: AlertTriangle },
+          ] as const).map(({ key, label, icon: Icon }) => (
+            <button
+              key={key}
+              onClick={() => setChatterFilter(key)}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap transition-colors shrink-0",
+                chatterFilter === key
+                  ? "bg-accent text-accent-foreground"
+                  : "bg-secondary/50 text-muted-foreground hover:bg-secondary"
+              )}
+            >
+              <Icon className="h-3 w-3" />
+              {label}
+            </button>
+          ))}
+        </div>
+
         <section className="glass-card rounded-xl overflow-hidden">
           <div className="px-4 py-3 border-b border-border flex items-center gap-2">
             <Users className="h-4 w-4 text-accent" />
