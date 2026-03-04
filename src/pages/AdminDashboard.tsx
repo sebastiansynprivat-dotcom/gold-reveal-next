@@ -716,7 +716,7 @@ export default function AdminDashboard() {
       }
     }
     return result;
-  }, [chatters, search, chatterFilter, pushUsers]);
+  }, [chatters, search, chatterFilter, pushUsers, revenueUsers]);
 
   const openGoalEditor = async (chatter: ChatterProfile) => {
     setGoalTarget(chatter);
