@@ -973,13 +973,13 @@ export default function AdminDashboard() {
               onClick={() => { setNewPlatformName(""); setNewPlatformOpen(true); }}
             >
               <Plus className="h-3.5 w-3.5 mr-1.5" />
-              Neue Plattform
+              Neuer Pool
             </Button>
           </div>
 
           {platforms.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">
-              Noch keine Plattformen angelegt. Erstelle eine neue Plattform oben.
+              Noch keine Pools angelegt. Erstelle einen neuen Pool oben.
             </p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -1857,7 +1857,7 @@ export default function AdminDashboard() {
           <DialogHeader>
             <DialogTitle className="text-foreground flex items-center gap-2">
               <Package className="h-5 w-5 text-accent" />
-              Neue Plattform erstellen
+              Neuen Pool erstellen
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
