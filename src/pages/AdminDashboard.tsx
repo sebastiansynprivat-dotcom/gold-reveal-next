@@ -20,17 +20,17 @@ const PLATFORM_COLORS = {
   "4based": "#22d3ee",  // cyan
 };
 
-// Generate 30 days of fictional revenue data with upward trend
+// Generate 90 days of fictional revenue data with upward trend
 const generateFakeRevenueData = () => {
   const data = [];
   const now = new Date();
-  for (let i = 29; i >= 0; i--) {
+  for (let i = 89; i >= 0; i--) {
     const date = new Date(now);
     date.setDate(date.getDate() - i);
-    const day = 29 - i;
-    // Base grows over time + small random noise
-    const trend = day * 35;
+    const day = 89 - i;
+    const trend = day * 12;
     data.push({
+      dateObj: new Date(date),
       date: date.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" }),
       maloum: 1800 + trend + Math.floor(Math.random() * 300 - 150),
       brezzels: 1500 + trend + Math.floor(Math.random() * 250 - 125),
@@ -39,6 +39,8 @@ const generateFakeRevenueData = () => {
   }
   return data;
 };
+
+type TimeFilter = "heute" | "gestern" | "7" | "30" | "90" | "custom";
 
 interface ChatterProfile {
   user_id: string;
@@ -98,13 +100,55 @@ export default function AdminDashboard() {
   const [goalAmount, setGoalAmount] = useState("");
   const [goalSaving, setGoalSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<"einnahmen" | "chatter">("einnahmen");
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>("30");
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
 
-  const revenueData = useMemo(() => generateFakeRevenueData(), []);
+  const allRevenueData = useMemo(() => generateFakeRevenueData(), []);
+
+  const filteredRevenueData = useMemo(() => {
+    const now = new Date();
+    const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const today = startOfDay(now);
+
+    if (timeFilter === "custom" && customFrom && customTo) {
+      const from = new Date(customFrom);
+      const to = new Date(customTo);
+      to.setHours(23, 59, 59);
+      return allRevenueData.filter((d) => d.dateObj >= from && d.dateObj <= to);
+    }
+
+    let daysBack = 30;
+    if (timeFilter === "heute") daysBack = 0;
+    else if (timeFilter === "gestern") daysBack = 1;
+    else if (timeFilter === "7") daysBack = 7;
+    else if (timeFilter === "90") daysBack = 90;
+
+    if (timeFilter === "heute") {
+      return allRevenueData.filter((d) => startOfDay(d.dateObj).getTime() === today.getTime());
+    }
+    if (timeFilter === "gestern") {
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      return allRevenueData.filter((d) => startOfDay(d.dateObj).getTime() === yesterday.getTime());
+    }
+
+    const cutoff = new Date(today);
+    cutoff.setDate(cutoff.getDate() - daysBack);
+    return allRevenueData.filter((d) => d.dateObj >= cutoff);
+  }, [allRevenueData, timeFilter, customFrom, customTo]);
+
   const platformTotals = useMemo(() => ({
-    maloum: revenueData.reduce((s, d) => s + d.maloum, 0),
-    brezzels: revenueData.reduce((s, d) => s + d.brezzels, 0),
-    "4based": revenueData.reduce((s, d) => s + d["4based"], 0),
-  }), [revenueData]);
+    maloum: filteredRevenueData.reduce((s, d) => s + d.maloum, 0),
+    brezzels: filteredRevenueData.reduce((s, d) => s + d.brezzels, 0),
+    "4based": filteredRevenueData.reduce((s, d) => s + d["4based"], 0),
+  }), [filteredRevenueData]);
+
+  const grandTotal = platformTotals.maloum + platformTotals.brezzels + platformTotals["4based"];
+
+  const filterLabels: Record<TimeFilter, string> = {
+    heute: "Heute", gestern: "Gestern", "7": "7 Tage", "30": "30 Tage", "90": "90 Tage", custom: "Zeitraum",
+  };
 
   useEffect(() => {
     loadChatters();
@@ -548,9 +592,54 @@ export default function AdminDashboard() {
 
         {activeTab === "einnahmen" && (
           <div className="space-y-4">
+            {/* Time Filter */}
+            <div className="glass-card rounded-xl p-3 space-y-3">
+              <div className="flex flex-wrap gap-1.5">
+                {(["heute", "gestern", "7", "30", "90"] as TimeFilter[]).map((f) => (
+                  <Button
+                    key={f}
+                    variant={timeFilter === f ? "default" : "outline"}
+                    size="sm"
+                    className="text-xs h-7 px-2.5"
+                    onClick={() => setTimeFilter(f)}
+                  >
+                    {filterLabels[f]}
+                  </Button>
+                ))}
+                <Button
+                  variant={timeFilter === "custom" ? "default" : "outline"}
+                  size="sm"
+                  className="text-xs h-7 px-2.5"
+                  onClick={() => setTimeFilter("custom")}
+                >
+                  <Calendar className="h-3 w-3 mr-1" />
+                  Zeitraum
+                </Button>
+              </div>
+              {timeFilter === "custom" && (
+                <div className="flex gap-2 items-center">
+                  <Input
+                    type="date"
+                    value={customFrom}
+                    onChange={(e) => setCustomFrom(e.target.value)}
+                    className="h-8 text-xs flex-1"
+                  />
+                  <span className="text-xs text-muted-foreground">bis</span>
+                  <Input
+                    type="date"
+                    value={customTo}
+                    onChange={(e) => setCustomTo(e.target.value)}
+                    className="h-8 text-xs flex-1"
+                  />
+                </div>
+              )}
+            </div>
+
             {/* Revenue Chart */}
             <div className="glass-card rounded-xl p-4">
-              <h2 className="text-sm font-semibold text-foreground mb-1">Umsatz – letzte 30 Tage</h2>
+              <h2 className="text-sm font-semibold text-foreground mb-1">
+                Umsatz – {filterLabels[timeFilter]}
+              </h2>
               <div className="flex gap-3 mb-3">
                 {Object.entries(PLATFORM_COLORS).map(([key, color]) => (
                   <div key={key} className="flex items-center gap-1.5">
@@ -561,14 +650,14 @@ export default function AdminDashboard() {
               </div>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={revenueData}>
+                  <LineChart data={filteredRevenueData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                     <XAxis
                       dataKey="date"
                       tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
                       tickLine={false}
                       axisLine={false}
-                      interval={4}
+                      interval={Math.max(0, Math.floor(filteredRevenueData.length / 7))}
                     />
                     <YAxis
                       tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
@@ -598,18 +687,22 @@ export default function AdminDashboard() {
               <div className="glass-card-subtle rounded-xl p-4 text-center" style={{ borderTop: `3px solid ${PLATFORM_COLORS.maloum}` }}>
                 <p className="text-[10px] text-muted-foreground mb-1">Maloum</p>
                 <p className="text-xl font-bold text-foreground">{platformTotals.maloum.toLocaleString("de-DE")}€</p>
-                <p className="text-[9px] text-muted-foreground mt-0.5">30 Tage gesamt</p>
               </div>
               <div className="glass-card-subtle rounded-xl p-4 text-center" style={{ borderTop: `3px solid ${PLATFORM_COLORS.brezzels}` }}>
                 <p className="text-[10px] text-muted-foreground mb-1">Brezzels</p>
                 <p className="text-xl font-bold text-foreground">{platformTotals.brezzels.toLocaleString("de-DE")}€</p>
-                <p className="text-[9px] text-muted-foreground mt-0.5">30 Tage gesamt</p>
               </div>
               <div className="glass-card-subtle rounded-xl p-4 text-center" style={{ borderTop: `3px solid ${PLATFORM_COLORS["4based"]}` }}>
                 <p className="text-[10px] text-muted-foreground mb-1">4Based</p>
                 <p className="text-xl font-bold text-foreground">{platformTotals["4based"].toLocaleString("de-DE")}€</p>
-                <p className="text-[9px] text-muted-foreground mt-0.5">30 Tage gesamt</p>
               </div>
+            </div>
+
+            {/* Gesamtumsatz Tile */}
+            <div className="glass-card-subtle rounded-xl p-4 text-center" style={{ borderTop: "3px solid hsl(var(--accent))" }}>
+              <p className="text-[10px] text-muted-foreground mb-1">Gesamtumsatz</p>
+              <p className="text-2xl font-bold text-gold-gradient">{grandTotal.toLocaleString("de-DE")}€</p>
+              <p className="text-[9px] text-muted-foreground mt-0.5">{filterLabels[timeFilter]}</p>
             </div>
           </div>
         )}
