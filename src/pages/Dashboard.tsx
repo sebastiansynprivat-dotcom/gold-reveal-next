@@ -45,6 +45,20 @@ export default function Dashboard() {
   const [assignedAccounts, setAssignedAccounts] = useState<{ account_email: string; account_password: string; account_domain: string; platform: string }[]>([]);
   const [accountsOpen, setAccountsOpen] = useState(true);
   const [driveDone, setDriveDone] = useState(() => localStorage.getItem("drive_done") === "true");
+  const [driveHidden, setDriveHidden] = useState(() => localStorage.getItem("drive_hidden") === "true");
+
+  // Reset drive hidden state when new accounts are added
+  useEffect(() => {
+    if (assignedAccounts.length === 0) return;
+    const prevCount = Number(localStorage.getItem("drive_account_count") || "0");
+    if (assignedAccounts.length > prevCount && prevCount > 0) {
+      setDriveHidden(false);
+      setDriveDone(false);
+      localStorage.setItem("drive_hidden", "false");
+      localStorage.setItem("drive_done", "false");
+    }
+    localStorage.setItem("drive_account_count", String(assignedAccounts.length));
+  }, [assignedAccounts.length]);
 
   // Load profile data
   useEffect(() => {
