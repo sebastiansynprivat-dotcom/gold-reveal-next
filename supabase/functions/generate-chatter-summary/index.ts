@@ -7,19 +7,25 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SYSTEM_PROMPT = `Du bist ein extrem strenger Performance-Coach für eine Social-Media-Agentur. Du zeigst keine Gefühle und arbeitest ausschließlich mit Fakten.
+const SYSTEM_PROMPT = `Du bist ein direkter, faktenbasierter Performance-Coach für eine Social-Media-Agentur. Du bist ehrlich und klar, aber fair.
 
-Deine Aufgabe: Analysiere die Daten eines Chatters und gib eine kurze, knallharte Handlungsempfehlung (max. 2-3 Sätze) auf Deutsch.
+Deine Aufgabe: Analysiere die Daten eines Chatters und gib eine kurze Handlungsempfehlung (max. 2-3 Sätze) auf Deutsch.
+
+REGELN:
+- Wenn ein Chatter sein Tagesziel regelmäßig erreicht oder übertrifft: Erkenne das positiv an! Das ist eine starke Leistung.
+- Wenn der Umsatz stabil oder steigend ist: Sag das. Motivation ist wichtig.
+- Wenn etwas schlecht läuft: Sag es klar und konkret, aber ohne den Chatter niederzumachen.
+- Nenne immer konkrete Zahlen.
 
 PRIORITÄT (in dieser Reihenfolge):
-1. UMSATZ ist das Wichtigste! Analysiere Umsatz gestern, letzte 7 Tage und letzte 30 Tage. Nenne die konkreten Zahlen.
+1. UMSATZ ist das Wichtigste! Analysiere Umsatz gestern, letzte 7 Tage und letzte 30 Tage im Verhältnis zum Tagesziel.
 2. Wenn der Chatter mehrere Accounts hat: prüfe ob ein Account deutlich weniger Umsatz macht und vernachlässigt wird.
 3. Mass-DMs: Wie viele wurden geschickt? Zu wenig = zu wenig Akquise.
 4. Bot-DM Status: Ist die Bot-DM eingerichtet und aktiv?
 
 UNWICHTIG: Login-Häufigkeit ist NICHT relevant. Erwähne Logins NICHT in deiner Analyse.
 
-Sei direkt, konkret und nenne Zahlen. Kein Lob ohne Grund. Wenn etwas schlecht läuft, sag es klar.`;
+Sei direkt und nenne Zahlen. Lob wo verdient, Kritik wo nötig.`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -113,29 +119,33 @@ serve(async (req) => {
           .select("account_id, is_active, message")
           .eq("user_id", profile.user_id);
 
+        // Daily goal
+        const { data: goalData } = await supabase
+          .from("daily_goals")
+          .select("target_amount")
+          .eq("user_id", profile.user_id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        const dailyGoal = goalData?.target_amount || 30;
+
         // Build data summary for AI
         const accountInfo = accounts?.map(acc => {
           const bot = botMessages?.find(b => b.account_id === acc.id);
           return `- ${acc.platform} (${acc.account_email}): Bot-DM ${bot?.is_active ? "aktiv" : bot?.message ? "inaktiv" : "nicht eingerichtet"}`;
         }).join("\n") || "Keine Accounts zugewiesen";
 
-        const daysSinceLogin = lastLogin
-          ? Math.floor((now.getTime() - new Date(lastLogin).getTime()) / (1000 * 60 * 60 * 24))
-          : null;
+        // Count days where goal was reached in last 7 days
+        const revenueByDay = revenue?.filter(r => r.date >= sevenDaysAgoStr) || [];
+        const daysGoalReached = revenueByDay.filter(r => Number(r.amount) >= dailyGoal).length;
 
         const dataPrompt = `
 Chatter: ${profile.group_name || "Unbekannt"}
-Telegram: ${profile.telegram_id || "nicht hinterlegt"}
 
-UMSATZ:
-- Gestern: ${revYesterday}€
-- Letzte 7 Tage: ${rev7d}€
+TAGESZIEL: ${dailyGoal}€/Tag
+- Gestern: ${revYesterday}€ ${revYesterday >= dailyGoal ? "(✅ Ziel erreicht)" : "(❌ Ziel verfehlt)"}
+- Letzte 7 Tage: ${rev7d}€ (Tagesziel an ${daysGoalReached}/7 Tagen erreicht)
 - Letzte 30 Tage: ${rev30d}€
-
-LOGIN-AKTIVITÄT:
-- Letzter Login: ${lastLogin ? `vor ${daysSinceLogin} Tag(en)` : "nie eingeloggt"}
-- Logins letzte 7 Tage: ${loginCount7d}
-- Logins letzte 30 Tage: ${loginCount30d}
 
 ACCOUNTS (${accounts?.length || 0}):
 ${accountInfo}
