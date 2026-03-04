@@ -38,10 +38,9 @@ REGELN:
 PRIORITÄT (in dieser Reihenfolge):
 1. UMSATZ ist das Wichtigste! Analysiere Umsatz gestern, letzte 7 Tage und letzte 30 Tage im Verhältnis zum Tagesziel.
 2. Wenn der Chatter mehrere Accounts hat: prüfe ob ein Account deutlich weniger Umsatz macht und vernachlässigt wird.
-3. Mass-DMs: Wie viele wurden geschickt? Zu wenig = zu wenig Akquise.
-4. Bot-DM Status: Ist die Bot-DM eingerichtet und aktiv?
+3. Mass-DMs: Chatter sollen bis zu 6 Mass-DMs pro Tag senden. Weniger = zu wenig Akquise. Mass-DMs haben NICHTS mit Bot-DMs zu tun!
 
-UNWICHTIG: Login-Häufigkeit ist NICHT relevant. Erwähne Logins NICHT.
+UNWICHTIG: Login-Häufigkeit und Bot-DM-Status sind NICHT relevant. Erwähne diese NICHT.
 
 Sei direkt und nenne Zahlen. Lob wo verdient, Kritik wo nötig.`;
 
@@ -113,29 +112,11 @@ serve(async (req) => {
         const rev7d = revenue?.filter(r => r.date >= sevenDaysAgoStr).reduce((s, r) => s + Number(r.amount), 0) || 0;
         const rev30d = revenue?.reduce((s, r) => s + Number(r.amount), 0) || 0;
 
-        // Login activity
-        const { data: logins } = await supabase
-          .from("login_events")
-          .select("logged_in_at")
-          .eq("user_id", profile.user_id)
-          .order("logged_in_at", { ascending: false })
-          .limit(30);
-
-        const lastLogin = logins?.[0]?.logged_in_at || null;
-        const loginCount7d = logins?.filter(l => new Date(l.logged_in_at) >= sevenDaysAgo).length || 0;
-        const loginCount30d = logins?.length || 0;
-
         // Assigned accounts
         const { data: accounts } = await supabase
           .from("accounts")
           .select("id, platform, account_email")
           .eq("assigned_to", profile.user_id);
-
-        // Bot messages status
-        const { data: botMessages } = await supabase
-          .from("bot_messages")
-          .select("account_id, is_active, message")
-          .eq("user_id", profile.user_id);
 
         // Daily goal
         const { data: goalData } = await supabase
@@ -149,8 +130,7 @@ serve(async (req) => {
 
         // Build data summary for AI
         const accountInfo = accounts?.map(acc => {
-          const bot = botMessages?.find(b => b.account_id === acc.id);
-          return `- ${acc.platform} (${acc.account_email}): Bot-DM ${bot?.is_active ? "aktiv" : bot?.message ? "inaktiv" : "nicht eingerichtet"}`;
+          return `- ${acc.platform} (${acc.account_email})`;
         }).join("\n") || "Keine Accounts zugewiesen";
 
         // Count days where goal was reached in last 7 days
