@@ -42,17 +42,17 @@ export default function Dashboard() {
   const [editingGroupName, setEditingGroupName] = useState(false);
 
   const [offer, setOffer] = useState("");
-  const [assignedAccounts, setAssignedAccounts] = useState<{ id: string; account_email: string; account_password: string; account_domain: string; platform: string }[]>([]);
+  const [assignedAccounts, setAssignedAccounts] = useState<{ id: string; account_email: string; account_password: string; account_domain: string; platform: string; assigned_at: string | null }[]>([]);
   const [accountsOpen, setAccountsOpen] = useState(true);
 
-  // Per-account drive done/hidden state stored in localStorage as JSON objects keyed by account id
+  // Per-account drive done/hidden state stored in localStorage, keyed by account id + assigned_at
   const getDriveState = (accountId: string) => {
     try {
       const stored = JSON.parse(localStorage.getItem("drive_states") || "{}");
-      return stored[accountId] || { done: false, hidden: false };
-    } catch { return { done: false, hidden: false }; }
+      return stored[accountId] || { done: false, hidden: false, assignedAt: null };
+    } catch { return { done: false, hidden: false, assignedAt: null }; }
   };
-  const setDriveState = (accountId: string, update: { done?: boolean; hidden?: boolean }) => {
+  const setDriveState = (accountId: string, update: { done?: boolean; hidden?: boolean; assignedAt?: string | null }) => {
     try {
       const stored = JSON.parse(localStorage.getItem("drive_states") || "{}");
       stored[accountId] = { ...getDriveState(accountId), ...update };
@@ -86,11 +86,22 @@ export default function Dashboard() {
     // Load all assigned accounts
     supabase
       .from("accounts")
-      .select("id, account_email, account_password, account_domain, platform")
+      .select("id, account_email, account_password, account_domain, platform, assigned_at")
       .eq("assigned_to", user.id)
       .order("created_at", { ascending: true })
       .then(({ data }) => {
         if (data && data.length > 0) {
+          // Reset drive state for re-assigned accounts (assigned_at changed)
+          data.forEach((acc) => {
+            const ds = getDriveState(acc.id);
+            if (ds.assignedAt && ds.assignedAt !== acc.assigned_at) {
+              // Account was re-assigned – reset to unchecked
+              setDriveState(acc.id, { done: false, hidden: false, assignedAt: acc.assigned_at });
+            } else if (!ds.assignedAt) {
+              // First time seeing this account – store assigned_at
+              setDriveState(acc.id, { assignedAt: acc.assigned_at });
+            }
+          });
           setAssignedAccounts(data);
         }
       });
