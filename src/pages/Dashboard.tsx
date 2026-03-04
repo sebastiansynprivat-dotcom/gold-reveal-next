@@ -62,6 +62,7 @@ export default function Dashboard() {
   };
   // Force re-render when drive state changes
   const [driveVersion, setDriveVersion] = useState(0);
+  const [isFirstLogin, setIsFirstLogin] = useState(false);
 
   // Load profile data
   useEffect(() => {
