@@ -83,7 +83,18 @@ export default function AdminDashboard() {
       setLoading(false);
       return;
     }
-    setChatters(data || []);
+    // Enrich chatters with their assigned accounts
+    const { data: allAccounts } = await supabase
+      .from("accounts")
+      .select("*")
+      .order("created_at", { ascending: true });
+    setAccounts(allAccounts || []);
+    
+    const enriched = (data || []).map((c) => ({
+      ...c,
+      assigned_accounts: (allAccounts || []).filter((a) => a.assigned_to === c.user_id),
+    }));
+    setChatters(enriched);
     setLoading(false);
   };
 
