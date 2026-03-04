@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Smartphone, Apple, MonitorSmartphone, ExternalLink, AlertTriangle } from "lucide-react";
+import { Smartphone, Apple, MonitorSmartphone, Play, AlertTriangle } from "lucide-react";
 
 const TUTORIAL_KEY = "homescreen_tutorial_seen";
 
