@@ -945,7 +945,7 @@ export default function AdminDashboard() {
 
         {activeTab === "chatter" && (<>
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div className="glass-card-subtle rounded-xl p-4 text-center">
             <p className="text-[10px] text-muted-foreground mb-0.5">Chatter gesamt</p>
             <p className="text-2xl font-bold text-gold-gradient">{chatters.length}</p>
@@ -957,9 +957,15 @@ export default function AdminDashboard() {
             </p>
           </div>
           <div className="glass-card-subtle rounded-xl p-4 text-center">
-            <p className="text-[10px] text-muted-foreground mb-0.5">Mit Benachrichtigungen</p>
+            <p className="text-[10px] text-muted-foreground mb-0.5">Push aktiv</p>
             <p className="text-2xl font-bold text-gold-gradient">
               {chatters.filter((c) => pushUsers.has(c.user_id)).length}
+            </p>
+          </div>
+          <div className="glass-card-subtle rounded-xl p-4 text-center">
+            <p className="text-[10px] text-muted-foreground mb-0.5">App installiert</p>
+            <p className="text-2xl font-bold text-gold-gradient">
+              {pwaUsers.size}
             </p>
           </div>
         </div>
