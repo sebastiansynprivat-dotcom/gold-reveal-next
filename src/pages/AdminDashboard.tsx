@@ -1588,6 +1588,28 @@ export default function AdminDashboard() {
           <div className="px-4 py-3 border-b border-border flex items-center gap-2">
             <Users className="h-4 w-4 text-accent" />
             <h2 className="text-sm font-semibold text-foreground">Alle Chatter</h2>
+            <div className="ml-auto flex items-center gap-2">
+              <button
+                onClick={generateAllSummaries}
+                disabled={generatingAll}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-medium bg-accent/10 text-accent hover:bg-accent/20 transition-colors disabled:opacity-50"
+              >
+                {generatingAll ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                {generatingAll ? "Generiere..." : "Alle AI-Analysen"}
+              </button>
+              {Object.keys(chatterSummaries).length > 0 && (
+                <button
+                  onClick={() => setShowAiSummaries(!showAiSummaries)}
+                  className={cn(
+                    "flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium transition-colors",
+                    showAiSummaries ? "bg-accent text-accent-foreground" : "bg-secondary/50 text-muted-foreground hover:bg-secondary"
+                  )}
+                >
+                  <Sparkles className="h-3 w-3" />
+                  {showAiSummaries ? "Analysen ▾" : "Analysen ▸"}
+                </button>
+              )}
+            </div>
           </div>
 
           {loading ? (
