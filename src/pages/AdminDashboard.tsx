@@ -65,6 +65,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     loadChatters();
     loadAccounts();
+    loadOffers();
   }, []);
 
   const loadChatters = async () => {
