@@ -891,7 +891,7 @@ export default function AdminDashboard() {
             </div>
           ) : filtered.length === 0 ? (
             <div className="p-8 text-center text-sm text-muted-foreground">
-              {search ? "Kein Chatter gefunden." : "Noch keine Chatter registriert."}
+              {search ? "Kein Chatter gefunden." : chatterFilter === "no_telegram" ? "Alle Chatter haben Telegram hinterlegt." : chatterFilter === "open_2d" ? "Keine Chats länger als 3 Tage offen." : "Noch keine Chatter registriert."}
             </div>
           ) : (
             <div className="divide-y divide-border">
