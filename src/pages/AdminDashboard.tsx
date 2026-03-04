@@ -97,9 +97,11 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<"einnahmen" | "chatter">("einnahmen");
 
   const revenueData = useMemo(() => generateFakeRevenueData(), []);
-  const totalRevenue = useMemo(() => revenueData.reduce((s, d) => s + d.amount, 0), [revenueData]);
-  const avgRevenue = useMemo(() => Math.round(totalRevenue / revenueData.length), [totalRevenue, revenueData]);
-  const todayRevenue = revenueData[revenueData.length - 1]?.amount || 0;
+  const platformTotals = useMemo(() => ({
+    maloum: revenueData.reduce((s, d) => s + d.maloum, 0),
+    brezzels: revenueData.reduce((s, d) => s + d.brezzels, 0),
+    "4based": revenueData.reduce((s, d) => s + d["4based"], 0),
+  }), [revenueData]);
 
   useEffect(() => {
     loadChatters();
