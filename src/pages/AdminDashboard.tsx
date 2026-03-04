@@ -1066,7 +1066,6 @@ export default function AdminDashboard() {
                           >
                             {chatter.group_name || "Kein Gruppenname"}
                           </p>
-                          </p>
                           <p className="text-[10px] text-muted-foreground">
                             Telegram: {chatter.telegram_id || "—"} · Seit{" "}
                             {new Date(chatter.created_at).toLocaleDateString("de-DE")}
