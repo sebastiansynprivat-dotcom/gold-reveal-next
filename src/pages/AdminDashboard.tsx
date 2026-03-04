@@ -199,12 +199,20 @@ export default function AdminDashboard() {
     }
   };
 
+  const loadRevenueUsers = async () => {
+    const { data } = await supabase.from("daily_revenue").select("user_id").gt("amount", 0);
+    if (data) {
+      setRevenueUsers(new Set(data.map((d) => d.user_id)));
+    }
+  };
+
   useEffect(() => {
     loadChatters();
     loadAccounts();
     loadOffers();
     loadLoginStats();
     loadPushUsers();
+    loadRevenueUsers();
   }, []);
 
   const loadChatters = async () => {
