@@ -52,10 +52,10 @@ export default function Dashboard() {
   const getDriveState = (accountId: string) => {
     try {
       const stored = JSON.parse(localStorage.getItem("drive_states") || "{}");
-      return stored[accountId] || { done: false, hidden: false, assignedAt: null };
-    } catch { return { done: false, hidden: false, assignedAt: null }; }
+      return stored[accountId] || { done: false, hidden: false, memoSeen: false, assignedAt: null };
+    } catch { return { done: false, hidden: false, memoSeen: false, assignedAt: null }; }
   };
-  const setDriveState = (accountId: string, update: { done?: boolean; hidden?: boolean; assignedAt?: string | null }) => {
+  const setDriveState = (accountId: string, update: { done?: boolean; hidden?: boolean; memoSeen?: boolean; assignedAt?: string | null }) => {
     try {
       const stored = JSON.parse(localStorage.getItem("drive_states") || "{}");
       stored[accountId] = { ...getDriveState(accountId), ...update };
