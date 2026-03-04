@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Users, Send, Bell, BellOff, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, CalendarDays, CalendarRange, Filter, MessageSquare, Star, AlertTriangle, Bot, Save, Power, Copy, Smartphone, Percent, ChevronRight, Shield, UserPlus, UserMinus } from "lucide-react";
+import { Users, Send, Bell, BellOff, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, CalendarDays, CalendarRange, Filter, MessageSquare, Star, AlertTriangle, Bot, Save, Power, Copy, Smartphone, Percent, ChevronRight, Shield, UserPlus, UserMinus, Check, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -154,8 +154,9 @@ export default function AdminDashboard() {
   const [botMessagesLoaded, setBotMessagesLoaded] = useState(false);
   const [expandedBot, setExpandedBot] = useState<string | null>(null);
   const [savedBotState, setSavedBotState] = useState<Record<string, { message: string; followUp: string; isActive: boolean }>>({});
-  const [botFilter, setBotFilter] = useState<"alle" | "missing">("alle");
+  const [botFilter, setBotFilter] = useState<"alle" | "missing" | "active" | "inactive">("alle");
   const [botPlatformFilter, setBotPlatformFilter] = useState<string>("alle");
+  const [botSearch, setBotSearch] = useState("");
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("30");
   const [newPlatformOpen, setNewPlatformOpen] = useState(false);
   const [newPlatformName, setNewPlatformName] = useState("");
@@ -422,9 +423,23 @@ export default function AdminDashboard() {
         const saved = savedBotState[acc.id];
         return !saved || (!saved.message.trim() && !saved.followUp.trim());
       });
+    } else if (botFilter === "active") {
+      result = result.filter((acc) => {
+        const saved = savedBotState[acc.id];
+        return saved && saved.isActive;
+      });
+    } else if (botFilter === "inactive") {
+      result = result.filter((acc) => {
+        const saved = savedBotState[acc.id];
+        return saved && !saved.isActive;
+      });
+    }
+    if (botSearch.trim()) {
+      const q = botSearch.toLowerCase();
+      result = result.filter((acc) => acc.account_email.toLowerCase().includes(q));
     }
     return result;
-  }, [allAssignedAccounts, botFilter, botPlatformFilter, savedBotState]);
+  }, [allAssignedAccounts, botFilter, botPlatformFilter, savedBotState, botSearch]);
 
   const saveBotMessage = async (accountId: string) => {
     const entry = botMessages[accountId];
@@ -1759,27 +1774,17 @@ export default function AdminDashboard() {
                 </Badge>
               </div>
 
-              {/* Filters */}
+              {/* Platform filters row */}
               <div className="px-3 pt-3 flex gap-2 overflow-x-auto scrollbar-none pb-1">
                 <button
                   onClick={() => { setBotFilter("alle"); setBotPlatformFilter("alle"); }}
                   className={cn(
                     "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium transition-colors shrink-0",
-                    botFilter === "alle" && botPlatformFilter === "alle" ? "bg-accent text-accent-foreground" : "bg-secondary/50 text-muted-foreground hover:bg-secondary"
+                    botPlatformFilter === "alle" ? "bg-accent text-accent-foreground" : "bg-secondary/50 text-muted-foreground hover:bg-secondary"
                   )}
                 >
                   <Bot className="h-3 w-3" />
                   Alle
-                </button>
-                <button
-                  onClick={() => setBotFilter("missing")}
-                  className={cn(
-                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium transition-colors shrink-0",
-                    botFilter === "missing" ? "bg-accent text-accent-foreground" : "bg-secondary/50 text-muted-foreground hover:bg-secondary"
-                  )}
-                >
-                  <AlertTriangle className="h-3 w-3" />
-                  Bot-DM fehlt
                 </button>
                 {botPlatforms.map((p) => (
                   <button
@@ -1794,6 +1799,41 @@ export default function AdminDashboard() {
                     {p}
                   </button>
                 ))}
+              </div>
+
+              {/* Status filters row */}
+              <div className="px-3 pt-1 flex gap-2 overflow-x-auto scrollbar-none pb-1">
+                {([
+                  { key: "missing" as const, label: "Bot-DM fehlt", icon: AlertTriangle },
+                  { key: "active" as const, label: "Bot aktiv", icon: Check },
+                  { key: "inactive" as const, label: "Bot inaktiv", icon: XCircle },
+                ] as const).map(({ key, label, icon: Icon }) => (
+                  <button
+                    key={key}
+                    onClick={() => setBotFilter(botFilter === key ? "alle" : key)}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium transition-colors shrink-0",
+                      botFilter === key ? "bg-accent text-accent-foreground" : "bg-secondary/50 text-muted-foreground hover:bg-secondary"
+                    )}
+                  >
+                    <Icon className="h-3 w-3" />
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Search */}
+              <div className="px-3 pt-1 pb-2">
+                <div className="relative">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                  <input
+                    type="text"
+                    value={botSearch}
+                    onChange={(e) => setBotSearch(e.target.value)}
+                    placeholder="Account suchen..."
+                    className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg bg-secondary/50 border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+                  />
+                </div>
               </div>
 
               {filteredBotAccounts.length === 0 ? (
