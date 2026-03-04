@@ -44,6 +44,7 @@ export default function Dashboard() {
   const [offer, setOffer] = useState("");
   const [assignedAccounts, setAssignedAccounts] = useState<{ account_email: string; account_password: string; account_domain: string; platform: string }[]>([]);
   const [accountsOpen, setAccountsOpen] = useState(true);
+  const [driveDone, setDriveDone] = useState(() => localStorage.getItem("drive_done") === "true");
 
   // Load profile data
   useEffect(() => {
@@ -446,7 +447,7 @@ export default function Dashboard() {
             <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${accountsOpen ? "rotate-180" : ""}`} />
           </button>
           {accountsOpen && (
-            <div className="px-4 pb-4 lg:px-6 lg:pb-6">
+            <div className="px-4 pb-4 lg:px-6 lg:pb-6 space-y-4">
               {assignedAccounts.length === 0 ? (
                 <p className="text-xs text-muted-foreground">Noch keine Accounts zugewiesen.</p>
               ) : (
@@ -506,86 +507,45 @@ export default function Dashboard() {
                   ))}
                 </div>
               )}
+
+              {/* Google Drive To-Do – verschwindet wenn abgehakt */}
+              {!driveDone && (
+                <div className="border-t border-border/50 pt-4 space-y-2">
+                  <div className="flex items-start gap-3">
+                    <Checkbox
+                      checked={driveDone}
+                      onCheckedChange={(v) => {
+                        const checked = !!v;
+                        setDriveDone(checked);
+                        localStorage.setItem("drive_done", String(checked));
+                      }}
+                      className="mt-0.5 shrink-0 border-accent data-[state=checked]:bg-accent data-[state=checked]:text-accent-foreground"
+                    />
+                    <div className="flex-1 min-w-0 space-y-2">
+                      <p className="text-sm font-semibold text-foreground">📂 To-Do: Google Drive Zugang</p>
+                      <p className="text-xs text-muted-foreground">
+                        Melde dich in der WhatsApp-Gruppe und schick diese Nachricht:
+                      </p>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(`Hey, könnt ihr mich bitte zum Google Drive hinzufügen? Meine E-Mail: ${user?.email || "[DEINE E-MAIL]"} – Danke! 🙏`);
+                          toast.success("Nachricht kopiert!");
+                        }}
+                        className="flex items-center gap-2 w-full rounded-lg border border-border/50 bg-secondary/40 px-3 py-2.5 hover:border-accent/50 hover:bg-secondary/60 active:scale-[0.98] transition-all cursor-pointer group text-left"
+                        title="Klicken zum Kopieren"
+                      >
+                        <p className="text-xs text-foreground leading-relaxed flex-1 min-w-0">
+                          Hey, könnt ihr mich bitte zum Google Drive hinzufügen? Meine E-Mail: <span className="font-semibold text-accent">{user?.email || "[DEINE E-MAIL]"}</span> – Danke! 🙏
+                        </p>
+                        <Copy className="h-3.5 w-3.5 text-accent shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </section>
-
-        {/* Google Drive To-Do */}
-        {(() => {
-          const [driveDone, setDriveDone] = useState(() => localStorage.getItem("drive_done") === "true");
-          const [driveHidden, setDriveHidden] = useState(() => localStorage.getItem("drive_hidden") === "true");
-          const toggleDrive = (checked: boolean) => {
-            setDriveDone(checked);
-            localStorage.setItem("drive_done", String(checked));
-            if (!checked) {
-              setDriveHidden(false);
-              localStorage.setItem("drive_hidden", "false");
-            }
-          };
-          const hideDrive = () => {
-            setDriveHidden(true);
-            localStorage.setItem("drive_hidden", "true");
-          };
-
-          if (driveDone && driveHidden) {
-            return (
-              <button
-                onClick={() => { setDriveHidden(false); localStorage.setItem("drive_hidden", "false"); }}
-                className="text-[10px] text-muted-foreground hover:text-foreground transition-colors text-left"
-              >
-                📂 Drive-To-Do wieder einblenden
-              </button>
-            );
-          }
-
-          return (
-            <section className={cn("glass-card-subtle rounded-xl border border-accent/30 transition-opacity", driveDone && "opacity-60")}>
-              <div className="p-4 lg:p-6 space-y-2">
-                <div className="flex items-start gap-3">
-                  <Checkbox
-                    checked={driveDone}
-                    onCheckedChange={(v) => toggleDrive(!!v)}
-                    className="mt-1 shrink-0 border-accent data-[state=checked]:bg-accent data-[state=checked]:text-accent-foreground"
-                  />
-                  <div className="space-y-1.5 flex-1">
-                    <div className="flex items-center justify-between">
-                      <p className={cn("text-sm font-semibold text-foreground", driveDone && "line-through text-muted-foreground")}>
-                        📂 To-Do: Google Drive Zugang
-                      </p>
-                      {driveDone && (
-                        <button onClick={hideDrive} className="text-[10px] text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap ml-2">
-                          Ausblenden
-                        </button>
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Bitte melde dich in der WhatsApp-Gruppe und schreibe, dass du zum Google Drive hinzugefügt werden musst. Du kannst die Nachricht unten kopieren und nur noch deine E-Mail einfügen.
-                    </p>
-                    {!driveDone && (
-                      <div className="mt-2 relative">
-                        <div className="rounded-lg bg-secondary/50 border border-border/50 p-3 text-xs text-foreground leading-relaxed">
-                          Hey, könnt ihr mich bitte zum Google Drive hinzufügen? Meine E-Mail: {user?.email || "[DEINE E-MAIL]"} – Danke! 🙏
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="absolute top-1.5 right-1.5 h-7 w-7 p-0 text-accent hover:text-accent/80"
-                          onClick={() => {
-                            navigator.clipboard.writeText(`Hey, könnt ihr mich bitte zum Google Drive hinzufügen? Meine E-Mail: ${user?.email || "[DEINE E-MAIL]"} – Danke! 🙏`);
-                            toast.success("Nachricht kopiert!");
-                          }}
-                          title="Nachricht kopieren"
-                        >
-                          <Copy className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </section>
-          );
-        })()}
 
         {/* Tägliche Aufgaben */}
         <DailyChecklist />
