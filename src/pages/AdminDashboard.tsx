@@ -116,7 +116,7 @@ export default function AdminDashboard() {
     const today = startOfDay(now);
 
     if (timeFilter === "custom" && customFrom && customTo) {
-      const from = new Date(customFrom);
+      const from = startOfDay(customFrom);
       const to = new Date(customTo);
       to.setHours(23, 59, 59);
       return allRevenueData.filter((d) => d.dateObj >= from && d.dateObj <= to);
