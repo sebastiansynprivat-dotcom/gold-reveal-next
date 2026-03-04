@@ -42,23 +42,25 @@ export default function Dashboard() {
   const [editingGroupName, setEditingGroupName] = useState(false);
 
   const [offer, setOffer] = useState("");
-  const [assignedAccounts, setAssignedAccounts] = useState<{ account_email: string; account_password: string; account_domain: string; platform: string }[]>([]);
+  const [assignedAccounts, setAssignedAccounts] = useState<{ id: string; account_email: string; account_password: string; account_domain: string; platform: string }[]>([]);
   const [accountsOpen, setAccountsOpen] = useState(true);
-  const [driveDone, setDriveDone] = useState(() => localStorage.getItem("drive_done") === "true");
-  const [driveHidden, setDriveHidden] = useState(() => localStorage.getItem("drive_hidden") === "true");
 
-  // Reset drive hidden state when new accounts are added
-  useEffect(() => {
-    if (assignedAccounts.length === 0) return;
-    const prevCount = Number(localStorage.getItem("drive_account_count") || "0");
-    if (assignedAccounts.length > prevCount && prevCount > 0) {
-      setDriveHidden(false);
-      setDriveDone(false);
-      localStorage.setItem("drive_hidden", "false");
-      localStorage.setItem("drive_done", "false");
-    }
-    localStorage.setItem("drive_account_count", String(assignedAccounts.length));
-  }, [assignedAccounts.length]);
+  // Per-account drive done/hidden state stored in localStorage as JSON objects keyed by account id
+  const getDriveState = (accountId: string) => {
+    try {
+      const stored = JSON.parse(localStorage.getItem("drive_states") || "{}");
+      return stored[accountId] || { done: false, hidden: false };
+    } catch { return { done: false, hidden: false }; }
+  };
+  const setDriveState = (accountId: string, update: { done?: boolean; hidden?: boolean }) => {
+    try {
+      const stored = JSON.parse(localStorage.getItem("drive_states") || "{}");
+      stored[accountId] = { ...getDriveState(accountId), ...update };
+      localStorage.setItem("drive_states", JSON.stringify(stored));
+    } catch {}
+  };
+  // Force re-render when drive state changes
+  const [driveVersion, setDriveVersion] = useState(0);
 
   // Load profile data
   useEffect(() => {
