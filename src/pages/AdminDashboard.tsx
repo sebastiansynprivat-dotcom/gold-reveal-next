@@ -953,7 +953,7 @@ export default function AdminDashboard() {
             </p>
           </div>
           <div className="glass-card-subtle rounded-xl p-4 text-center">
-            <p className="text-[10px] text-muted-foreground mb-0.5">Mit Push</p>
+            <p className="text-[10px] text-muted-foreground mb-0.5">Mit Benachrichtigungen</p>
             <p className="text-2xl font-bold text-gold-gradient">
               {chatters.filter((c) => pushUsers.has(c.user_id)).length}
             </p>
