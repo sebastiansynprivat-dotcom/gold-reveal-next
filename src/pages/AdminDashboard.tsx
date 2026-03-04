@@ -86,6 +86,13 @@ export default function AdminDashboard() {
   const [goalTarget, setGoalTarget] = useState<ChatterProfile | null>(null);
   const [goalAmount, setGoalAmount] = useState("");
   const [goalSaving, setGoalSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState<"einnahmen" | "chatter">("einnahmen");
+
+  const revenueData = useMemo(() => generateFakeRevenueData(), []);
+  const totalRevenue = useMemo(() => revenueData.reduce((s, d) => s + d.amount, 0), [revenueData]);
+  const avgRevenue = useMemo(() => Math.round(totalRevenue / revenueData.length), [totalRevenue, revenueData]);
+  const todayRevenue = revenueData[revenueData.length - 1]?.amount || 0;
+
   useEffect(() => {
     loadChatters();
     loadAccounts();
