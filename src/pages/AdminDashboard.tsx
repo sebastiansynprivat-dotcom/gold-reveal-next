@@ -992,7 +992,79 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Platform Account Pools */}
+        {/* Offer-Verteilung */}
+        <section className="glass-card rounded-xl p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <Percent className="h-4 w-4 text-accent" />
+            <h2 className="text-sm font-semibold text-foreground">Offer-Verteilung</h2>
+          </div>
+          {quizRoutes.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">Keine Offers konfiguriert.</p>
+          ) : (
+            <>
+              <div className="space-y-4">
+                {quizRoutes.map((route) => {
+                  const totalWeight = Object.values(routeWeights).reduce((s, w) => s + w, 0) || 1;
+                  const pct = Math.round(((routeWeights[route.id] || 0) / totalWeight) * 100);
+                  return (
+                    <div key={route.id} className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-foreground">{route.name}</span>
+                        <span className="text-xs font-bold text-accent">{pct}%</span>
+                      </div>
+                      <Slider
+                        value={[routeWeights[route.id] || 0]}
+                        onValueChange={([v]) => setRouteWeights(prev => ({ ...prev, [route.id]: v }))}
+                        min={0}
+                        max={100}
+                        step={1}
+                        className="w-full"
+                      />
+                      <p className="text-[10px] text-muted-foreground">{route.target_path} · Gewicht: {routeWeights[route.id] || 0}</p>
+                    </div>
+                  );
+                })}
+              </div>
+              {/* Live preview bar */}
+              <div className="flex rounded-full overflow-hidden h-3 bg-secondary/50">
+                {quizRoutes.map((route, i) => {
+                  const totalWeight = Object.values(routeWeights).reduce((s, w) => s + w, 0) || 1;
+                  const pct = ((routeWeights[route.id] || 0) / totalWeight) * 100;
+                  const colors = ["hsl(var(--accent))", "#3b82f6", "#22d3ee", "#a855f7"];
+                  return (
+                    <div
+                      key={route.id}
+                      style={{ width: `${pct}%`, backgroundColor: colors[i % colors.length] }}
+                      className="transition-all duration-300"
+                      title={`${route.name}: ${Math.round(pct)}%`}
+                    />
+                  );
+                })}
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                {quizRoutes.map((route, i) => {
+                  const colors = ["hsl(var(--accent))", "#3b82f6", "#22d3ee", "#a855f7"];
+                  return (
+                    <div key={route.id} className="flex items-center gap-1.5">
+                      <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: colors[i % colors.length] }} />
+                      <span className="text-[10px] text-muted-foreground">{route.name}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              <Button
+                onClick={saveRouteWeights}
+                disabled={savingWeights}
+                size="sm"
+                className="w-full"
+              >
+                <Save className="h-3.5 w-3.5 mr-1.5" />
+                {savingWeights ? "Wird gespeichert..." : "Verteilung speichern"}
+              </Button>
+            </>
+          )}
+        </section>
+
         <section className="glass-card rounded-xl p-4 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -1592,34 +1664,18 @@ export default function AdminDashboard() {
           </DialogHeader>
 
           <div className="space-y-4">
-            {/* Offer zuordnen + Pool löschen */}
-            <div className="flex items-center gap-3">
-              <div className="flex-1 space-y-1.5">
-                <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Verknüpftes Offer</label>
-                <select
-                  value={selectedPlatform}
-                  onChange={(e) => updatePoolOffer(e.target.value)}
-                  className="w-full rounded-lg border border-border bg-secondary/50 text-foreground text-xs px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-accent/50 transition-colors appearance-none cursor-pointer"
-                >
-                  <option value={selectedPlatform}>{selectedPlatform}</option>
-                  {offers
-                    .filter((o) => o.name !== selectedPlatform && !platforms.includes(o.name))
-                    .map((o) => (
-                      <option key={o.name} value={o.name}>{o.name} ({o.target_path})</option>
-                    ))}
-                </select>
-              </div>
-              <div className="pt-5">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setDeletePoolConfirm(true)}
-                  className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                >
-                  <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-                  Löschen
-                </Button>
-              </div>
+            {/* Pool löschen */}
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">Pool: <span className="font-semibold text-foreground">{selectedPlatform}</span></p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setDeletePoolConfirm(true)}
+                className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+              >
+                <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                Löschen
+              </Button>
             </div>
 
             {/* Pool Domain */}
@@ -1631,7 +1687,7 @@ export default function AdminDashboard() {
                 placeholder="Domain (z.B. brezzels.com)"
                 className="text-xs"
               />
-              <p className="text-[10px] text-muted-foreground">Wird automatisch für alle neuen Accounts & Chatter verwendet.</p>
+              <p className="text-[10px] text-muted-foreground">Wird automatisch für alle neuen Accounts verwendet.</p>
             </div>
 
             {/* Add new account */}
