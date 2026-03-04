@@ -428,7 +428,7 @@ export default function AdminDashboard() {
     loadAccounts();
   };
 
-  const platforms = [...new Set(accounts.map((a) => a.platform).filter(Boolean))];
+  const platforms = [...new Set(accounts.filter(a => !a.is_manual).map((a) => a.platform).filter(Boolean))];
 
   const addAccount = async () => {
     if (!newAccEmail.trim() || !newAccDomain.trim() || !selectedPlatform) return;
