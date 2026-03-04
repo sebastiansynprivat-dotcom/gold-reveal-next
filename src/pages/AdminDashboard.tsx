@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
-import { Users, Send, Bell, Search, KeyRound, Plus, Package } from "lucide-react";
+import { Users, Send, Bell, Search, KeyRound, Plus, Package, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -57,6 +58,8 @@ export default function AdminDashboard() {
   const [newAccDomain, setNewAccDomain] = useState("");
   const [addingAccount, setAddingAccount] = useState(false);
   const [assigning, setAssigning] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<ChatterProfile | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     loadChatters();
@@ -139,6 +142,46 @@ export default function AdminDashboard() {
       toast.error("Fehler: " + err.message);
     }
     setAssigning(false);
+  };
+
+  const deleteChatter = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      // Unassign any accounts assigned to this user
+      await supabase
+        .from("accounts")
+        .update({ assigned_to: null, assigned_at: null })
+        .eq("assigned_to", deleteTarget.user_id);
+
+      // Delete profile
+      const { error } = await supabase
+        .from("profiles")
+        .delete()
+        .eq("user_id", deleteTarget.user_id);
+
+      if (error) throw error;
+
+      // Delete user progress
+      await supabase
+        .from("user_progress")
+        .delete()
+        .eq("user_id", deleteTarget.user_id);
+
+      // Delete push subscriptions
+      await supabase
+        .from("push_subscriptions")
+        .delete()
+        .eq("user_id", deleteTarget.user_id);
+
+      toast.success(`${deleteTarget.group_name || "Chatter"} wurde gelöscht`);
+      setDeleteTarget(null);
+      loadChatters();
+      loadAccounts();
+    } catch (err: any) {
+      toast.error("Fehler beim Löschen: " + err.message);
+    }
+    setDeleting(false);
   };
 
   const sendIndividualPush = async () => {
@@ -383,6 +426,14 @@ export default function AdminDashboard() {
                     <Button
                       variant="ghost"
                       size="sm"
+                      onClick={() => setDeleteTarget(chatter)}
+                      className="text-destructive hover:text-destructive/80 shrink-0"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => setPushTarget(chatter)}
                       className="text-accent hover:text-accent/80 shrink-0"
                     >
@@ -524,6 +575,23 @@ export default function AdminDashboard() {
           </div>
         </DialogContent>
       </Dialog>
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(o) => { if (!o) setDeleteTarget(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Chatter löschen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {deleteTarget?.group_name || "Dieser Chatter"} wird unwiderruflich gelöscht. Zugewiesene Accounts werden wieder freigegeben.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Abbrechen</AlertDialogCancel>
+            <AlertDialogAction onClick={deleteChatter} disabled={deleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {deleting ? "Wird gelöscht..." : "Endgültig löschen"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
