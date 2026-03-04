@@ -142,6 +142,24 @@ export type Database = {
         }
         Relationships: []
       }
+      login_events: {
+        Row: {
+          id: string
+          logged_in_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          logged_in_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          logged_in_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           body: string
