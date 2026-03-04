@@ -1,8 +1,12 @@
 import { useState, useEffect, useMemo } from "react";
-import { Users, Send, Bell, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar } from "lucide-react";
+import { Users, Send, Bell, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
@@ -101,8 +105,8 @@ export default function AdminDashboard() {
   const [goalSaving, setGoalSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<"einnahmen" | "chatter">("einnahmen");
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("30");
-  const [customFrom, setCustomFrom] = useState("");
-  const [customTo, setCustomTo] = useState("");
+  const [customFrom, setCustomFrom] = useState<Date | undefined>(undefined);
+  const [customTo, setCustomTo] = useState<Date | undefined>(undefined);
 
   const allRevenueData = useMemo(() => generateFakeRevenueData(), []);
 
@@ -112,7 +116,7 @@ export default function AdminDashboard() {
     const today = startOfDay(now);
 
     if (timeFilter === "custom" && customFrom && customTo) {
-      const from = new Date(customFrom);
+      const from = startOfDay(customFrom);
       const to = new Date(customTo);
       to.setHours(23, 59, 59);
       return allRevenueData.filter((d) => d.dateObj >= from && d.dateObj <= to);
@@ -612,25 +616,35 @@ export default function AdminDashboard() {
                   className="text-xs h-7 px-2.5"
                   onClick={() => setTimeFilter("custom")}
                 >
-                  <Calendar className="h-3 w-3 mr-1" />
+                  <CalendarIcon className="h-3 w-3 mr-1" />
                   Zeitraum
                 </Button>
               </div>
               {timeFilter === "custom" && (
                 <div className="flex gap-2 items-center">
-                  <Input
-                    type="date"
-                    value={customFrom}
-                    onChange={(e) => setCustomFrom(e.target.value)}
-                    className="h-8 text-xs flex-1"
-                  />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className={cn("h-8 text-xs flex-1 justify-start", !customFrom && "text-muted-foreground")}>
+                        <CalendarIcon className="h-3 w-3 mr-1.5" />
+                        {customFrom ? format(customFrom, "dd.MM.yyyy") : "Von"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar mode="single" selected={customFrom} onSelect={setCustomFrom} initialFocus className="p-3 pointer-events-auto" />
+                    </PopoverContent>
+                  </Popover>
                   <span className="text-xs text-muted-foreground">bis</span>
-                  <Input
-                    type="date"
-                    value={customTo}
-                    onChange={(e) => setCustomTo(e.target.value)}
-                    className="h-8 text-xs flex-1"
-                  />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className={cn("h-8 text-xs flex-1 justify-start", !customTo && "text-muted-foreground")}>
+                        <CalendarIcon className="h-3 w-3 mr-1.5" />
+                        {customTo ? format(customTo, "dd.MM.yyyy") : "Bis"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="end">
+                      <Calendar mode="single" selected={customTo} onSelect={setCustomTo} initialFocus className="p-3 pointer-events-auto" />
+                    </PopoverContent>
+                  </Popover>
                 </div>
               )}
             </div>
