@@ -589,10 +589,10 @@ export default function AdminDashboard() {
                         {new Date(chatter.created_at).toLocaleDateString("de-DE")}
                       </p>
                     </div>
-                    {hasAccount && (
+                    {(chatter.assigned_accounts?.length || 0) > 0 && (
                       <Badge variant="secondary" className="text-[10px] shrink-0">
                         <KeyRound className="h-3 w-3 mr-1" />
-                        Account
+                        {chatter.assigned_accounts!.length} Account{chatter.assigned_accounts!.length > 1 ? "s" : ""}
                       </Badge>
                     )}
                     <Button
@@ -600,7 +600,7 @@ export default function AdminDashboard() {
                       size="sm"
                       onClick={() => setReassignTarget(chatter)}
                       className="text-foreground hover:text-foreground/80 shrink-0"
-                      title="Account ändern"
+                      title="Accounts verwalten"
                     >
                       <RefreshCw className="h-3.5 w-3.5" />
                     </Button>
