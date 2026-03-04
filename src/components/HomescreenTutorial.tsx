@@ -38,6 +38,10 @@ export default function HomescreenTutorial({ isFirstLogin }: HomescreenTutorialP
 
   useEffect(() => {
     if (!isFirstLogin) return;
+    // Don't show if already running as installed PWA
+    const isStandalone = window.matchMedia("(display-mode: standalone)").matches
+      || (window.navigator as any).standalone === true;
+    if (isStandalone) return;
     const seen = localStorage.getItem(TUTORIAL_KEY);
     if (!seen) {
       const timer = setTimeout(() => setOpen(true), 1200);

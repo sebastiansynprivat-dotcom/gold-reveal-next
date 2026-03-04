@@ -118,6 +118,17 @@ export default function Dashboard() {
           setIsFirstLogin(true);
         }
       });
+
+    // Track PWA install status
+    const isStandalone = window.matchMedia("(display-mode: standalone)").matches
+      || (window.navigator as any).standalone === true;
+    if (isStandalone) {
+      supabase
+        .from("profiles")
+        .update({ pwa_installed: true } as any)
+        .eq("user_id", user.id)
+        .then();
+    }
   }, [user]);
   const saveTelegram = async () => {
     if (!user) return;
