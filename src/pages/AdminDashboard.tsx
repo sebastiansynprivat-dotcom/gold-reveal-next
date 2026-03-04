@@ -692,7 +692,7 @@ export default function AdminDashboard() {
         break;
     }
     return result;
-  }, [chatters, search, chatterFilter]);
+  }, [chatters, search, chatterFilter, pushUsers]);
 
   const openGoalEditor = async (chatter: ChatterProfile) => {
     setGoalTarget(chatter);
@@ -1034,7 +1034,7 @@ export default function AdminDashboard() {
             </div>
           ) : filtered.length === 0 ? (
             <div className="p-8 text-center text-sm text-muted-foreground">
-              {search ? "Kein Chatter gefunden." : chatterFilter === "no_telegram" ? "Nichts weiter zu sehen." : chatterFilter === "open_2d" ? "Keine Chats länger als 3 Tage offen." : "Noch keine Chatter registriert."}
+              {search ? "Kein Chatter gefunden." : chatterFilter === "no_telegram" ? "Nichts weiter zu sehen." : chatterFilter === "no_push" ? "Alle Chatter haben Push aktiviert." : chatterFilter === "open_2d" ? "Keine Chats länger als 3 Tage offen." : "Noch keine Chatter registriert."}
             </div>
           ) : (
             <div className="divide-y divide-border">
