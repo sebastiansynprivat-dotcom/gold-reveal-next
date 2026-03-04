@@ -624,6 +624,15 @@ export default function AdminDashboard() {
                     <Button
                       variant="ghost"
                       size="sm"
+                      onClick={() => openGoalEditor(chatter)}
+                      className="text-accent hover:text-accent/80 shrink-0"
+                      title="Tagesziel bearbeiten"
+                    >
+                      <Target className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => setReassignTarget(chatter)}
                       className="text-foreground hover:text-foreground/80 shrink-0"
                       title="Accounts verwalten"
