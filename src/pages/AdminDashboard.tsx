@@ -1217,17 +1217,7 @@ export default function AdminDashboard() {
                 Accounts für manuelle Zuweisung – nicht Teil der automatischen Verteilung.
               </p>
 
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">{manualPlatforms.length} Plattform{manualPlatforms.length !== 1 ? "en" : ""}</span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => { setNewManualPlatformName(""); setNewManualPlatformOpen(true); }}
-                >
-                  <Plus className="h-3.5 w-3.5 mr-1.5" />
-                  Neue Plattform
-                </Button>
-              </div>
+              <span className="text-xs text-muted-foreground">{manualPlatforms.length} Plattform{manualPlatforms.length !== 1 ? "en" : ""}</span>
 
               {manualPlatforms.length === 0 ? (
                 <p className="text-xs text-muted-foreground text-center py-4 italic">
