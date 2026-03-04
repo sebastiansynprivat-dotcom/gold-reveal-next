@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Save, CheckCircle2, Award, Zap, HelpCircle, FileText, Clock, Users, Pencil, ChevronDown, Copy } from "lucide-react";
+import { Save, CheckCircle2, Award, Zap, HelpCircle, FileText, Clock, Users, Pencil, ChevronDown, Copy, Smartphone } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,6 +63,18 @@ export default function Dashboard() {
   // Force re-render when drive state changes
   const [driveVersion, setDriveVersion] = useState(0);
   const [isFirstLogin, setIsFirstLogin] = useState(false);
+  const [isPwaInstalled, setIsPwaInstalled] = useState(() => {
+    return window.matchMedia("(display-mode: standalone)").matches
+      || (window.navigator as any).standalone === true;
+  });
+
+  // Listen for PWA install changes (e.g. user adds to homescreen while page is open)
+  useEffect(() => {
+    const mql = window.matchMedia("(display-mode: standalone)");
+    const onChange = () => setIsPwaInstalled(mql.matches);
+    mql.addEventListener("change", onChange);
+    return () => mql.removeEventListener("change", onChange);
+  }, []);
 
   // Load profile data
   useEffect(() => {
