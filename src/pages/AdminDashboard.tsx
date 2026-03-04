@@ -13,17 +13,25 @@ import { useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
-// Generate 30 days of fictional revenue data
+// Platform colors
+const PLATFORM_COLORS = {
+  maloum: "#f472b6",   // pink
+  brezzels: "#60a5fa",  // blue
+  "4based": "#a78bfa",  // purple
+};
+
+// Generate 30 days of fictional revenue data per platform
 const generateFakeRevenueData = () => {
   const data = [];
   const now = new Date();
   for (let i = 29; i >= 0; i--) {
     const date = new Date(now);
     date.setDate(date.getDate() - i);
-    const amount = Math.floor(Math.random() * 1000) + 2000; // 2000-3000€
     data.push({
       date: date.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" }),
-      amount,
+      maloum: Math.floor(Math.random() * 1000) + 2000,
+      brezzels: Math.floor(Math.random() * 800) + 2000,
+      "4based": Math.floor(Math.random() * 900) + 2100,
     });
   }
   return data;
