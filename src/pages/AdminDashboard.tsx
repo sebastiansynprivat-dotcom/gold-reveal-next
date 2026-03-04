@@ -66,6 +66,9 @@ export default function AdminDashboard() {
   const [deletingPool, setDeletingPool] = useState(false);
   const [deletePoolConfirm, setDeletePoolConfirm] = useState(false);
   const [offers, setOffers] = useState<{ name: string; target_path: string }[]>([]);
+  const [goalTarget, setGoalTarget] = useState<ChatterProfile | null>(null);
+  const [goalAmount, setGoalAmount] = useState("");
+  const [goalSaving, setGoalSaving] = useState(false);
   useEffect(() => {
     loadChatters();
     loadAccounts();
