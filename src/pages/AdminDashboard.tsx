@@ -60,7 +60,8 @@ export default function AdminDashboard() {
   const [assigning, setAssigning] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<ChatterProfile | null>(null);
   const [deleting, setDeleting] = useState(false);
-
+  const [reassignTarget, setReassignTarget] = useState<ChatterProfile | null>(null);
+  const [reassigning, setReassigning] = useState(false);
   useEffect(() => {
     loadChatters();
     loadAccounts();
