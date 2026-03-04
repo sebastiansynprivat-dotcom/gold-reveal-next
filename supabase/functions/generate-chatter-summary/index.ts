@@ -38,10 +38,9 @@ REGELN:
 PRIORITÄT (in dieser Reihenfolge):
 1. UMSATZ ist das Wichtigste! Analysiere Umsatz gestern, letzte 7 Tage und letzte 30 Tage im Verhältnis zum Tagesziel.
 2. Wenn der Chatter mehrere Accounts hat: prüfe ob ein Account deutlich weniger Umsatz macht und vernachlässigt wird.
-3. Mass-DMs: Wie viele wurden geschickt? Zu wenig = zu wenig Akquise.
-4. Bot-DM Status: Ist die Bot-DM eingerichtet und aktiv?
+3. Mass-DMs: Chatter sollen bis zu 6 Mass-DMs pro Tag senden. Weniger = zu wenig Akquise. Mass-DMs haben NICHTS mit Bot-DMs zu tun!
 
-UNWICHTIG: Login-Häufigkeit ist NICHT relevant. Erwähne Logins NICHT.
+UNWICHTIG: Login-Häufigkeit und Bot-DM-Status sind NICHT relevant. Erwähne diese NICHT.
 
 Sei direkt und nenne Zahlen. Lob wo verdient, Kritik wo nötig.`;
 
