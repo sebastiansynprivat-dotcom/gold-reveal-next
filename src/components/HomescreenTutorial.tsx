@@ -31,14 +31,15 @@ const tutorials = [
 
 interface HomescreenTutorialProps {
   isFirstLogin: boolean;
+  manualOpen?: boolean;
+  onManualClose?: () => void;
 }
 
-export default function HomescreenTutorial({ isFirstLogin }: HomescreenTutorialProps) {
+export default function HomescreenTutorial({ isFirstLogin, manualOpen, onManualClose }: HomescreenTutorialProps) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
     if (!isFirstLogin) return;
-    // Don't show if already running as installed PWA
     const isStandalone = window.matchMedia("(display-mode: standalone)").matches
       || (window.navigator as any).standalone === true;
     if (isStandalone) return;
@@ -49,9 +50,14 @@ export default function HomescreenTutorial({ isFirstLogin }: HomescreenTutorialP
     }
   }, [isFirstLogin]);
 
+  useEffect(() => {
+    if (manualOpen) setOpen(true);
+  }, [manualOpen]);
+
   const handleClose = () => {
     localStorage.setItem(TUTORIAL_KEY, "true");
     setOpen(false);
+    onManualClose?.();
   };
 
   return (
