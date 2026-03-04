@@ -1156,6 +1156,9 @@ export default function AdminDashboard() {
                         ) : (
                           <span className="shrink-0" aria-label="Push nicht aktiviert"><BellOff className="h-4 w-4 text-muted-foreground/50" /></span>
                         )}
+                        <span className="shrink-0" aria-label={pwaUsers.has(chatter.user_id) ? "App installiert" : "App nicht installiert"}>
+                          <Smartphone className={cn("h-4 w-4", pwaUsers.has(chatter.user_id) ? "text-accent" : "text-muted-foreground/50")} />
+                        </span>
                       </div>
                       {/* Row 2: Action Buttons */}
                       <div className="flex justify-end gap-1 -mt-1">
