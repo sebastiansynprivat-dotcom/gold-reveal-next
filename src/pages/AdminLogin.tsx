@@ -22,13 +22,11 @@ const AdminLogin = () => {
   const [setupData, setSetupData] = useState<{ secret: string; otpauth_url: string } | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [totpVerified, setTotpVerified] = useState(false);
+  const [loginCompleted, setLoginCompleted] = useState(false);
 
-  // Check admin status when user logs in
+  // Only check admin status AFTER explicit login on this page
   useEffect(() => {
-    if (!user) {
-      setIsAdmin(null);
-      return;
-    }
+    if (!user || !loginCompleted) return;
     
     const checkAdmin = async () => {
       const { data } = await supabase.rpc("is_admin");
@@ -49,14 +47,13 @@ const AdminLogin = () => {
       if (totpData && (totpData as any).is_verified) {
         setStep("totp");
       } else {
-        // Need to set up TOTP
         setStep("setup");
         await initTotpSetup();
       }
     };
 
     checkAdmin();
-  }, [user]);
+  }, [user, loginCompleted]);
 
   // If admin verified TOTP, redirect
   useEffect(() => {
