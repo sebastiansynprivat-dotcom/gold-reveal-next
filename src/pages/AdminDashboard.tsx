@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { Users, Send, Bell, BellOff, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, CalendarDays, CalendarRange, Filter, MessageSquare, Star, AlertTriangle, Bot, Save, Power, Copy, Smartphone, Percent, ChevronRight, Shield, UserPlus, UserMinus, Check, XCircle, Sparkles, Loader2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -178,6 +179,29 @@ export default function AdminDashboard() {
   const [summaryLoading, setSummaryLoading] = useState<Record<string, boolean>>({});
   const [showAiSummaries, setShowAiSummaries] = useState(false);
   const [generatingAll, setGeneratingAll] = useState(false);
+
+  // Chatter checklist state (persisted in localStorage)
+  const [checkedChatters, setCheckedChatters] = useState<Set<string>>(() => {
+    try {
+      const saved = localStorage.getItem("admin_checked_chatters");
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    } catch { return new Set(); }
+  });
+
+  const toggleChatterCheck = useCallback((userId: string) => {
+    setCheckedChatters(prev => {
+      const next = new Set(prev);
+      if (next.has(userId)) next.delete(userId); else next.add(userId);
+      localStorage.setItem("admin_checked_chatters", JSON.stringify([...next]));
+      return next;
+    });
+  }, []);
+
+  const resetCheckedChatters = useCallback(() => {
+    setCheckedChatters(new Set());
+    localStorage.removeItem("admin_checked_chatters");
+    toast.success("Alle Häkchen zurückgesetzt!");
+  }, []);
   const allRevenueData = useMemo(() => generateFakeRevenueData(), []);
 
   const filteredRevenueData = useMemo(() => {
@@ -1597,6 +1621,15 @@ export default function AdminDashboard() {
                 {generatingAll ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
                 {generatingAll ? "Generiere..." : "Alle AI-Analysen"}
               </button>
+              {checkedChatters.size > 0 && (
+                <button
+                  onClick={resetCheckedChatters}
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
+                >
+                  <XCircle className="h-3 w-3" />
+                  Reset ({checkedChatters.size})
+                </button>
+              )}
               {Object.keys(chatterSummaries).length > 0 && (
                 <button
                   onClick={() => setShowAiSummaries(!showAiSummaries)}
@@ -1635,6 +1668,12 @@ export default function AdminDashboard() {
                     >
                       {/* Row 1: Avatar + Name + Badge */}
                       <div className="flex items-center gap-3">
+                        <Checkbox
+                          checked={checkedChatters.has(chatter.user_id)}
+                          onCheckedChange={() => toggleChatterCheck(chatter.user_id)}
+                          onClick={(e) => e.stopPropagation()}
+                          className="shrink-0 border-border data-[state=checked]:bg-accent data-[state=checked]:border-accent"
+                        />
                         <div className="h-9 w-9 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
                           <span className="text-xs font-bold text-accent">
                             {(chatter.group_name || "?")[0].toUpperCase()}
