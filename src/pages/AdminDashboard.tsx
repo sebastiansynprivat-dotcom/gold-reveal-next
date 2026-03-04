@@ -259,6 +259,7 @@ export default function AdminDashboard() {
     setLoginStats(statsMap);
   };
 
+  const loadBotMessages = async () => {
     const { data } = await supabase
       .from("bot_messages" as any)
       .select("account_id, message, follow_up_message, is_active");
