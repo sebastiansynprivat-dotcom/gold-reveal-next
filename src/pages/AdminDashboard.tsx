@@ -938,6 +938,36 @@ export default function AdminDashboard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Daily Goal Dialog */}
+      <Dialog open={!!goalTarget} onOpenChange={(o) => { if (!o) setGoalTarget(null); }}>
+        <DialogContent className="glass-card border-border sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-foreground flex items-center gap-2">
+              <Target className="h-5 w-5 text-accent" />
+              Tagesziel für {goalTarget?.group_name || "Chatter"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-xs text-muted-foreground">Tagesziel in €</label>
+              <Input
+                type="number"
+                min={0}
+                step={5}
+                value={goalAmount}
+                onChange={(e) => setGoalAmount(e.target.value)}
+                placeholder="30"
+                className="text-lg font-semibold"
+              />
+            </div>
+            <Button onClick={saveGoal} disabled={goalSaving} className="w-full">
+              <Target className="h-4 w-4 mr-2" />
+              {goalSaving ? "Wird gespeichert..." : "Tagesziel speichern"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
