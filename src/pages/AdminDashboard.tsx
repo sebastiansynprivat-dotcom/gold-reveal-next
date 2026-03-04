@@ -1168,7 +1168,30 @@ export default function AdminDashboard() {
                           <div className="px-4 pb-4 space-y-4 animate-in slide-in-from-top-2 fade-in duration-200">
                             <div className="h-px bg-border" />
 
-                            {/* Active Toggle */}
+                            {/* Credentials */}
+                            <div className="grid grid-cols-2 gap-2">
+                              <button
+                                onClick={() => { navigator.clipboard.writeText(acc.account_email); toast.success("E-Mail kopiert"); }}
+                                className="glass-card-subtle rounded-lg px-3 py-2 text-left hover:bg-accent/5 transition-colors group"
+                              >
+                                <p className="text-[10px] text-muted-foreground mb-0.5">E-Mail</p>
+                                <div className="flex items-center gap-1.5">
+                                  <p className="text-xs font-medium text-foreground truncate flex-1">{acc.account_email}</p>
+                                  <Copy className="h-3 w-3 text-muted-foreground group-hover:text-accent shrink-0" />
+                                </div>
+                              </button>
+                              <button
+                                onClick={() => { navigator.clipboard.writeText(acc.account_password); toast.success("Passwort kopiert"); }}
+                                className="glass-card-subtle rounded-lg px-3 py-2 text-left hover:bg-accent/5 transition-colors group"
+                              >
+                                <p className="text-[10px] text-muted-foreground mb-0.5">Passwort</p>
+                                <div className="flex items-center gap-1.5">
+                                  <p className="text-xs font-medium text-foreground truncate flex-1">••••••••</p>
+                                  <Copy className="h-3 w-3 text-muted-foreground group-hover:text-accent shrink-0" />
+                                </div>
+                              </button>
+                            </div>
+
                             <div className="flex items-center justify-between glass-card-subtle rounded-lg px-3 py-2.5">
                               <div className="flex items-center gap-2">
                                 <Power className={cn("h-3.5 w-3.5", entry.isActive ? "text-accent" : "text-muted-foreground")} />
