@@ -176,6 +176,8 @@ export default function AdminDashboard() {
   const [removeAdminConfirm, setRemoveAdminConfirm] = useState<string | null>(null);
   const [chatterSummaries, setChatterSummaries] = useState<Record<string, { summary: string; date: string }>>({});
   const [summaryLoading, setSummaryLoading] = useState<Record<string, boolean>>({});
+  const [showAiSummaries, setShowAiSummaries] = useState(false);
+  const [generatingAll, setGeneratingAll] = useState(false);
   const allRevenueData = useMemo(() => generateFakeRevenueData(), []);
 
   const filteredRevenueData = useMemo(() => {
