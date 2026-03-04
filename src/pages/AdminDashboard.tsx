@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Users, Send, Bell, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon } from "lucide-react";
+import { Users, Send, Bell, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, Filter, MessageSquare, Star, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -46,6 +46,23 @@ const generateFakeRevenueData = () => {
 };
 
 type TimeFilter = "heute" | "gestern" | "7" | "30" | "90" | "custom";
+type ChatterFilter = "alle" | "open_2d" | "top_tag" | "top_woche" | "top_monat" | "no_telegram";
+
+// Reuse hash function from ChatterStatsCard for consistent fake stats
+const hashCodeAdmin = (s: string) => {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
+  return Math.abs(h);
+};
+
+const getChatterFakeStats = (userId: string) => {
+  const h = hashCodeAdmin(userId);
+  const today = 80 + (h % 200);
+  const week = today * 5 + (h % 500);
+  const month = week * 3.5 + (h % 2000);
+  const avgOpenDays = 1 + (h % 5);
+  return { today, week: Math.round(week), month: Math.round(month), avgOpenDays };
+};
 
 interface ChatterProfile {
   user_id: string;
@@ -106,6 +123,7 @@ export default function AdminDashboard() {
   const [goalSaving, setGoalSaving] = useState(false);
   const [expandedChatter, setExpandedChatter] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"einnahmen" | "chatter">("einnahmen");
+  const [chatterFilter, setChatterFilter] = useState<ChatterFilter>("alle");
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("30");
   const [customFrom, setCustomFrom] = useState<Date | undefined>(undefined);
   const [customTo, setCustomTo] = useState<Date | undefined>(undefined);
@@ -507,11 +525,32 @@ export default function AdminDashboard() {
     setBroadcastSending(false);
   };
 
-  const filtered = chatters.filter(
-    (c) =>
-      c.group_name?.toLowerCase().includes(search.toLowerCase()) ||
-      c.telegram_id?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = useMemo(() => {
+    let result = chatters.filter(
+      (c) =>
+        c.group_name?.toLowerCase().includes(search.toLowerCase()) ||
+        c.telegram_id?.toLowerCase().includes(search.toLowerCase())
+    );
+
+    switch (chatterFilter) {
+      case "no_telegram":
+        result = result.filter((c) => !c.telegram_id || c.telegram_id.trim() === "");
+        break;
+      case "open_2d":
+        result = result.filter((c) => getChatterFakeStats(c.user_id).avgOpenDays >= 2);
+        break;
+      case "top_tag":
+        result = [...result].sort((a, b) => getChatterFakeStats(b.user_id).today - getChatterFakeStats(a.user_id).today);
+        break;
+      case "top_woche":
+        result = [...result].sort((a, b) => getChatterFakeStats(b.user_id).week - getChatterFakeStats(a.user_id).week);
+        break;
+      case "top_monat":
+        result = [...result].sort((a, b) => getChatterFakeStats(b.user_id).month - getChatterFakeStats(a.user_id).month);
+        break;
+    }
+    return result;
+  }, [chatters, search, chatterFilter]);
 
   const openGoalEditor = async (chatter: ChatterProfile) => {
     setGoalTarget(chatter);
@@ -814,7 +853,32 @@ export default function AdminDashboard() {
           />
         </div>
 
-        {/* Chatter List */}
+        {/* Chatter Filters */}
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+          {([
+            { key: "alle", label: "Alle", icon: Users },
+            { key: "open_2d", label: "> 2 Tage offen", icon: MessageSquare },
+            { key: "top_tag", label: "Top Tag", icon: Star },
+            { key: "top_woche", label: "Top Woche", icon: TrendingUp },
+            { key: "top_monat", label: "Top Monat", icon: DollarSign },
+            { key: "no_telegram", label: "Telegram fehlt", icon: AlertTriangle },
+          ] as const).map(({ key, label, icon: Icon }) => (
+            <button
+              key={key}
+              onClick={() => setChatterFilter(key)}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap transition-colors shrink-0",
+                chatterFilter === key
+                  ? "bg-accent text-accent-foreground"
+                  : "bg-secondary/50 text-muted-foreground hover:bg-secondary"
+              )}
+            >
+              <Icon className="h-3 w-3" />
+              {label}
+            </button>
+          ))}
+        </div>
+
         <section className="glass-card rounded-xl overflow-hidden">
           <div className="px-4 py-3 border-b border-border flex items-center gap-2">
             <Users className="h-4 w-4 text-accent" />
