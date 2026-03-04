@@ -468,40 +468,24 @@ export default function Dashboard() {
                 <p className="text-xs text-muted-foreground">Noch keine Accounts zugewiesen.</p>
               ) : (
                 <div className="space-y-3">
-                  {assignedAccounts.map((acc, i) => (
-                    <div key={i} className={assignedAccounts.length > 1 ? "p-3 rounded-lg border border-border/50 bg-secondary/20" : ""}>
+                  {assignedAccounts.map((acc) => {
+                    const ds = getDriveState(acc.id);
+                    return (
+                    <div key={acc.id} className={assignedAccounts.length > 1 ? "p-3 rounded-lg border border-border/50 bg-secondary/20" : ""}>
                       {assignedAccounts.length > 1 && (
                         <p className="text-[10px] text-muted-foreground font-medium mb-2">{acc.platform}</p>
                       )}
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
                           <p className="text-[10px] text-muted-foreground mb-1">E-Mail</p>
-                          <button
-                            onClick={() => {
-                              if (acc.account_email) {
-                                navigator.clipboard.writeText(acc.account_email);
-                                toast.success("E-Mail kopiert!");
-                              }
-                            }}
-                            className="flex items-center gap-2 w-full rounded-lg border border-border/50 bg-secondary/40 px-3 py-2 hover:border-accent/50 hover:bg-secondary/60 active:scale-[0.98] transition-all cursor-pointer group"
-                            title="Klicken zum Kopieren"
-                          >
+                          <button onClick={() => { if (acc.account_email) { navigator.clipboard.writeText(acc.account_email); toast.success("E-Mail kopiert!"); } }} className="flex items-center gap-2 w-full rounded-lg border border-border/50 bg-secondary/40 px-3 py-2 hover:border-accent/50 hover:bg-secondary/60 active:scale-[0.98] transition-all cursor-pointer group" title="Klicken zum Kopieren">
                             <p className="text-xs lg:text-sm font-medium text-foreground truncate flex-1 text-left">{acc.account_email || "–"}</p>
                             {acc.account_email && <Copy className="h-3.5 w-3.5 text-accent shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />}
                           </button>
                         </div>
                         <div>
                           <p className="text-[10px] text-muted-foreground mb-1">Passwort</p>
-                          <button
-                            onClick={() => {
-                              if (acc.account_password) {
-                                navigator.clipboard.writeText(acc.account_password);
-                                toast.success("Passwort kopiert!");
-                              }
-                            }}
-                            className="flex items-center gap-2 w-full rounded-lg border border-border/50 bg-secondary/40 px-3 py-2 hover:border-accent/50 hover:bg-secondary/60 active:scale-[0.98] transition-all cursor-pointer group"
-                            title="Klicken zum Kopieren"
-                          >
+                          <button onClick={() => { if (acc.account_password) { navigator.clipboard.writeText(acc.account_password); toast.success("Passwort kopiert!"); } }} className="flex items-center gap-2 w-full rounded-lg border border-border/50 bg-secondary/40 px-3 py-2 hover:border-accent/50 hover:bg-secondary/60 active:scale-[0.98] transition-all cursor-pointer group" title="Klicken zum Kopieren">
                             <p className="text-xs lg:text-sm font-medium text-foreground truncate flex-1 text-left">{acc.account_password || "–"}</p>
                             {acc.account_password && <Copy className="h-3.5 w-3.5 text-accent shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />}
                           </button>
@@ -509,18 +493,34 @@ export default function Dashboard() {
                         <div>
                           <p className="text-[10px] text-muted-foreground mb-1">Domain</p>
                           {acc.account_domain ? (
-                            <a href={`https://${acc.account_domain.replace(/^https?:\/\//, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center rounded-lg border border-border/50 bg-secondary/40 px-3 py-2 text-xs lg:text-sm font-medium text-primary underline underline-offset-2 hover:border-accent/50 hover:bg-secondary/60 transition-all truncate">
-                              {acc.account_domain}
-                            </a>
+                            <a href={`https://${acc.account_domain.replace(/^https?:\/\//, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center rounded-lg border border-border/50 bg-secondary/40 px-3 py-2 text-xs lg:text-sm font-medium text-primary underline underline-offset-2 hover:border-accent/50 hover:bg-secondary/60 transition-all truncate">{acc.account_domain}</a>
                           ) : (
-                            <div className="flex items-center rounded-lg border border-border/50 bg-secondary/40 px-3 py-2">
-                              <p className="text-xs lg:text-sm font-medium text-foreground truncate">–</p>
-                            </div>
+                            <div className="flex items-center rounded-lg border border-border/50 bg-secondary/40 px-3 py-2"><p className="text-xs lg:text-sm font-medium text-foreground truncate">–</p></div>
                           )}
                         </div>
                       </div>
+                      {!ds.hidden && (
+                        <div className="mt-3 border-t border-border/30 pt-3">
+                          <div className="flex items-start gap-3">
+                            <Checkbox checked={ds.done} onCheckedChange={(v) => { setDriveState(acc.id, { done: !!v }); setDriveVersion(p => p + 1); }} className="mt-0.5 shrink-0 border-accent data-[state=checked]:bg-accent data-[state=checked]:text-accent-foreground" />
+                            <div className="flex-1 min-w-0 space-y-2">
+                              <div className="flex items-center justify-between gap-2">
+                                <p className={cn("text-xs font-semibold text-foreground", ds.done && "line-through text-muted-foreground")}>📂 Google Drive Zugang anfordern</p>
+                                {ds.done && (<button onClick={() => { setDriveState(acc.id, { hidden: true }); setDriveVersion(p => p + 1); }} className="text-[10px] text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap">Ausblenden</button>)}
+                              </div>
+                              {!ds.done && (
+                                <button onClick={() => { navigator.clipboard.writeText(`Hey, könnt ihr mich bitte zum Google Drive hinzufügen? Meine E-Mail: ${user?.email || "[DEINE E-MAIL]"} – Danke! 🙏`); toast.success("Nachricht kopiert!"); }} className="flex items-center gap-2 w-full rounded-lg border border-border/50 bg-secondary/40 px-3 py-2 hover:border-accent/50 hover:bg-secondary/60 active:scale-[0.98] transition-all cursor-pointer group text-left" title="Klicken zum Kopieren">
+                                  <p className="text-[11px] text-foreground leading-relaxed flex-1 min-w-0">Hey, könnt ihr mich bitte zum Google Drive hinzufügen? Meine E-Mail: <span className="font-semibold text-accent">{user?.email || "[DEINE E-MAIL]"}</span> – Danke! 🙏</p>
+                                  <Copy className="h-3.5 w-3.5 text-accent shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
 
