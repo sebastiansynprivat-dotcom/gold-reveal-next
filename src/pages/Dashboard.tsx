@@ -42,23 +42,25 @@ export default function Dashboard() {
   const [editingGroupName, setEditingGroupName] = useState(false);
 
   const [offer, setOffer] = useState("");
-  const [assignedAccounts, setAssignedAccounts] = useState<{ account_email: string; account_password: string; account_domain: string; platform: string }[]>([]);
+  const [assignedAccounts, setAssignedAccounts] = useState<{ id: string; account_email: string; account_password: string; account_domain: string; platform: string }[]>([]);
   const [accountsOpen, setAccountsOpen] = useState(true);
-  const [driveDone, setDriveDone] = useState(() => localStorage.getItem("drive_done") === "true");
-  const [driveHidden, setDriveHidden] = useState(() => localStorage.getItem("drive_hidden") === "true");
 
-  // Reset drive hidden state when new accounts are added
-  useEffect(() => {
-    if (assignedAccounts.length === 0) return;
-    const prevCount = Number(localStorage.getItem("drive_account_count") || "0");
-    if (assignedAccounts.length > prevCount && prevCount > 0) {
-      setDriveHidden(false);
-      setDriveDone(false);
-      localStorage.setItem("drive_hidden", "false");
-      localStorage.setItem("drive_done", "false");
-    }
-    localStorage.setItem("drive_account_count", String(assignedAccounts.length));
-  }, [assignedAccounts.length]);
+  // Per-account drive done/hidden state stored in localStorage as JSON objects keyed by account id
+  const getDriveState = (accountId: string) => {
+    try {
+      const stored = JSON.parse(localStorage.getItem("drive_states") || "{}");
+      return stored[accountId] || { done: false, hidden: false };
+    } catch { return { done: false, hidden: false }; }
+  };
+  const setDriveState = (accountId: string, update: { done?: boolean; hidden?: boolean }) => {
+    try {
+      const stored = JSON.parse(localStorage.getItem("drive_states") || "{}");
+      stored[accountId] = { ...getDriveState(accountId), ...update };
+      localStorage.setItem("drive_states", JSON.stringify(stored));
+    } catch {}
+  };
+  // Force re-render when drive state changes
+  const [driveVersion, setDriveVersion] = useState(0);
 
   // Load profile data
   useEffect(() => {
@@ -84,7 +86,7 @@ export default function Dashboard() {
     // Load all assigned accounts
     supabase
       .from("accounts")
-      .select("account_email, account_password, account_domain, platform")
+      .select("id, account_email, account_password, account_domain, platform")
       .eq("assigned_to", user.id)
       .order("created_at", { ascending: true })
       .then(({ data }) => {
@@ -466,40 +468,24 @@ export default function Dashboard() {
                 <p className="text-xs text-muted-foreground">Noch keine Accounts zugewiesen.</p>
               ) : (
                 <div className="space-y-3">
-                  {assignedAccounts.map((acc, i) => (
-                    <div key={i} className={assignedAccounts.length > 1 ? "p-3 rounded-lg border border-border/50 bg-secondary/20" : ""}>
+                  {assignedAccounts.map((acc) => {
+                    const ds = getDriveState(acc.id);
+                    return (
+                    <div key={acc.id} className={assignedAccounts.length > 1 ? "p-3 rounded-lg border border-border/50 bg-secondary/20" : ""}>
                       {assignedAccounts.length > 1 && (
                         <p className="text-[10px] text-muted-foreground font-medium mb-2">{acc.platform}</p>
                       )}
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
                           <p className="text-[10px] text-muted-foreground mb-1">E-Mail</p>
-                          <button
-                            onClick={() => {
-                              if (acc.account_email) {
-                                navigator.clipboard.writeText(acc.account_email);
-                                toast.success("E-Mail kopiert!");
-                              }
-                            }}
-                            className="flex items-center gap-2 w-full rounded-lg border border-border/50 bg-secondary/40 px-3 py-2 hover:border-accent/50 hover:bg-secondary/60 active:scale-[0.98] transition-all cursor-pointer group"
-                            title="Klicken zum Kopieren"
-                          >
+                          <button onClick={() => { if (acc.account_email) { navigator.clipboard.writeText(acc.account_email); toast.success("E-Mail kopiert!"); } }} className="flex items-center gap-2 w-full rounded-lg border border-border/50 bg-secondary/40 px-3 py-2 hover:border-accent/50 hover:bg-secondary/60 active:scale-[0.98] transition-all cursor-pointer group" title="Klicken zum Kopieren">
                             <p className="text-xs lg:text-sm font-medium text-foreground truncate flex-1 text-left">{acc.account_email || "–"}</p>
                             {acc.account_email && <Copy className="h-3.5 w-3.5 text-accent shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />}
                           </button>
                         </div>
                         <div>
                           <p className="text-[10px] text-muted-foreground mb-1">Passwort</p>
-                          <button
-                            onClick={() => {
-                              if (acc.account_password) {
-                                navigator.clipboard.writeText(acc.account_password);
-                                toast.success("Passwort kopiert!");
-                              }
-                            }}
-                            className="flex items-center gap-2 w-full rounded-lg border border-border/50 bg-secondary/40 px-3 py-2 hover:border-accent/50 hover:bg-secondary/60 active:scale-[0.98] transition-all cursor-pointer group"
-                            title="Klicken zum Kopieren"
-                          >
+                          <button onClick={() => { if (acc.account_password) { navigator.clipboard.writeText(acc.account_password); toast.success("Passwort kopiert!"); } }} className="flex items-center gap-2 w-full rounded-lg border border-border/50 bg-secondary/40 px-3 py-2 hover:border-accent/50 hover:bg-secondary/60 active:scale-[0.98] transition-all cursor-pointer group" title="Klicken zum Kopieren">
                             <p className="text-xs lg:text-sm font-medium text-foreground truncate flex-1 text-left">{acc.account_password || "–"}</p>
                             {acc.account_password && <Copy className="h-3.5 w-3.5 text-accent shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />}
                           </button>
@@ -507,73 +493,34 @@ export default function Dashboard() {
                         <div>
                           <p className="text-[10px] text-muted-foreground mb-1">Domain</p>
                           {acc.account_domain ? (
-                            <a href={`https://${acc.account_domain.replace(/^https?:\/\//, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center rounded-lg border border-border/50 bg-secondary/40 px-3 py-2 text-xs lg:text-sm font-medium text-primary underline underline-offset-2 hover:border-accent/50 hover:bg-secondary/60 transition-all truncate">
-                              {acc.account_domain}
-                            </a>
+                            <a href={`https://${acc.account_domain.replace(/^https?:\/\//, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center rounded-lg border border-border/50 bg-secondary/40 px-3 py-2 text-xs lg:text-sm font-medium text-primary underline underline-offset-2 hover:border-accent/50 hover:bg-secondary/60 transition-all truncate">{acc.account_domain}</a>
                           ) : (
-                            <div className="flex items-center rounded-lg border border-border/50 bg-secondary/40 px-3 py-2">
-                              <p className="text-xs lg:text-sm font-medium text-foreground truncate">–</p>
-                            </div>
+                            <div className="flex items-center rounded-lg border border-border/50 bg-secondary/40 px-3 py-2"><p className="text-xs lg:text-sm font-medium text-foreground truncate">–</p></div>
                           )}
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Google Drive To-Do */}
-              {!driveHidden && (
-                <div className="border-t border-border/50 pt-4 space-y-2">
-                  <div className="flex items-start gap-3">
-                    <Checkbox
-                      checked={driveDone}
-                      onCheckedChange={(v) => {
-                        const checked = !!v;
-                        setDriveDone(checked);
-                        localStorage.setItem("drive_done", String(checked));
-                      }}
-                      className="mt-0.5 shrink-0 border-accent data-[state=checked]:bg-accent data-[state=checked]:text-accent-foreground"
-                    />
-                    <div className="flex-1 min-w-0 space-y-2">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className={cn("text-sm font-semibold text-foreground", driveDone && "line-through text-muted-foreground")}>
-                          📂 To-Do: Google Drive Zugang
-                        </p>
-                        {driveDone && (
-                          <button
-                            onClick={() => {
-                              setDriveHidden(true);
-                              localStorage.setItem("drive_hidden", "true");
-                            }}
-                            className="text-[10px] text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
-                          >
-                            Ausblenden
-                          </button>
-                        )}
-                      </div>
-                      {!driveDone && (
-                        <>
-                          <p className="text-xs text-muted-foreground">
-                            Melde dich in der WhatsApp-Gruppe und schick diese Nachricht:
-                          </p>
-                          <button
-                            onClick={() => {
-                              navigator.clipboard.writeText(`Hey, könnt ihr mich bitte zum Google Drive hinzufügen? Meine E-Mail: ${user?.email || "[DEINE E-MAIL]"} – Danke! 🙏`);
-                              toast.success("Nachricht kopiert!");
-                            }}
-                            className="flex items-center gap-2 w-full rounded-lg border border-border/50 bg-secondary/40 px-3 py-2.5 hover:border-accent/50 hover:bg-secondary/60 active:scale-[0.98] transition-all cursor-pointer group text-left"
-                            title="Klicken zum Kopieren"
-                          >
-                            <p className="text-xs text-foreground leading-relaxed flex-1 min-w-0">
-                              Hey, könnt ihr mich bitte zum Google Drive hinzufügen? Meine E-Mail: <span className="font-semibold text-accent">{user?.email || "[DEINE E-MAIL]"}</span> – Danke! 🙏
-                            </p>
-                            <Copy className="h-3.5 w-3.5 text-accent shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
-                          </button>
-                        </>
+                      {!ds.hidden && (
+                        <div className="mt-3 border-t border-border/30 pt-3">
+                          <div className="flex items-start gap-3">
+                            <Checkbox checked={ds.done} onCheckedChange={(v) => { setDriveState(acc.id, { done: !!v }); setDriveVersion(p => p + 1); }} className="mt-0.5 shrink-0 border-accent data-[state=checked]:bg-accent data-[state=checked]:text-accent-foreground" />
+                            <div className="flex-1 min-w-0 space-y-2">
+                              <div className="flex items-center justify-between gap-2">
+                                <p className={cn("text-xs font-semibold text-foreground", ds.done && "line-through text-muted-foreground")}>📂 Google Drive Zugang anfordern</p>
+                                {ds.done && (<button onClick={() => { setDriveState(acc.id, { hidden: true }); setDriveVersion(p => p + 1); }} className="text-[10px] text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap">Ausblenden</button>)}
+                              </div>
+                              {!ds.done && (
+                                <button onClick={() => { navigator.clipboard.writeText(`Hey, könnt ihr mich bitte zum Google Drive hinzufügen? Meine E-Mail: ${user?.email || "[DEINE E-MAIL]"} – Danke! 🙏`); toast.success("Nachricht kopiert!"); }} className="flex items-center gap-2 w-full rounded-lg border border-border/50 bg-secondary/40 px-3 py-2 hover:border-accent/50 hover:bg-secondary/60 active:scale-[0.98] transition-all cursor-pointer group text-left" title="Klicken zum Kopieren">
+                                  <p className="text-[11px] text-foreground leading-relaxed flex-1 min-w-0">Hey, könnt ihr mich bitte zum Google Drive hinzufügen? Meine E-Mail: <span className="font-semibold text-accent">{user?.email || "[DEINE E-MAIL]"}</span> – Danke! 🙏</p>
+                                  <Copy className="h-3.5 w-3.5 text-accent shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
                       )}
                     </div>
-                  </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
