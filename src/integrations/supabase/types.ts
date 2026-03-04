@@ -196,6 +196,7 @@ export type Database = {
           group_name: string
           id: string
           offer: string | null
+          pwa_installed: boolean
           telegram_id: string | null
           updated_at: string
           user_id: string
@@ -208,6 +209,7 @@ export type Database = {
           group_name?: string
           id?: string
           offer?: string | null
+          pwa_installed?: boolean
           telegram_id?: string | null
           updated_at?: string
           user_id: string
@@ -220,6 +222,7 @@ export type Database = {
           group_name?: string
           id?: string
           offer?: string | null
+          pwa_installed?: boolean
           telegram_id?: string | null
           updated_at?: string
           user_id?: string

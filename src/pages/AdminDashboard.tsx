@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Users, Send, Bell, BellOff, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, CalendarDays, CalendarRange, Filter, MessageSquare, Star, AlertTriangle, Bot, Save, Power, Copy } from "lucide-react";
+import { Users, Send, Bell, BellOff, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, CalendarDays, CalendarRange, Filter, MessageSquare, Star, AlertTriangle, Bot, Save, Power, Copy, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -146,6 +146,7 @@ export default function AdminDashboard() {
   const [loginStats, setLoginStats] = useState<Record<string, LoginStats>>({});
   const [pushUsers, setPushUsers] = useState<Set<string>>(new Set());
   const [revenueUsers, setRevenueUsers] = useState<Set<string>>(new Set());
+  const [pwaUsers, setPwaUsers] = useState<Set<string>>(new Set());
 
   const allRevenueData = useMemo(() => generateFakeRevenueData(), []);
 
@@ -220,7 +221,7 @@ export default function AdminDashboard() {
     setLoading(true);
     const { data, error } = await supabase
       .from("profiles")
-      .select("user_id, group_name, telegram_id, created_at, account_email, account_password, account_domain")
+      .select("user_id, group_name, telegram_id, created_at, account_email, account_password, account_domain, pwa_installed")
       .order("created_at", { ascending: false });
     if (error) {
       toast.error("Fehler beim Laden der Chatter");
@@ -239,6 +240,9 @@ export default function AdminDashboard() {
       assigned_accounts: (allAccounts || []).filter((a) => a.assigned_to === c.user_id),
     }));
     setChatters(enriched);
+    // Track PWA installed users
+    const pwaSet = new Set((data || []).filter((c: any) => c.pwa_installed).map((c: any) => c.user_id));
+    setPwaUsers(pwaSet);
     setLoading(false);
   };
 
@@ -941,7 +945,7 @@ export default function AdminDashboard() {
 
         {activeTab === "chatter" && (<>
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div className="glass-card-subtle rounded-xl p-4 text-center">
             <p className="text-[10px] text-muted-foreground mb-0.5">Chatter gesamt</p>
             <p className="text-2xl font-bold text-gold-gradient">{chatters.length}</p>
@@ -953,9 +957,15 @@ export default function AdminDashboard() {
             </p>
           </div>
           <div className="glass-card-subtle rounded-xl p-4 text-center">
-            <p className="text-[10px] text-muted-foreground mb-0.5">Mit Benachrichtigungen</p>
+            <p className="text-[10px] text-muted-foreground mb-0.5">Push aktiv</p>
             <p className="text-2xl font-bold text-gold-gradient">
               {chatters.filter((c) => pushUsers.has(c.user_id)).length}
+            </p>
+          </div>
+          <div className="glass-card-subtle rounded-xl p-4 text-center">
+            <p className="text-[10px] text-muted-foreground mb-0.5">App installiert</p>
+            <p className="text-2xl font-bold text-gold-gradient">
+              {pwaUsers.size}
             </p>
           </div>
         </div>
@@ -1146,6 +1156,9 @@ export default function AdminDashboard() {
                         ) : (
                           <span className="shrink-0" aria-label="Push nicht aktiviert"><BellOff className="h-4 w-4 text-muted-foreground/50" /></span>
                         )}
+                        <span className="shrink-0" aria-label={pwaUsers.has(chatter.user_id) ? "App installiert" : "App nicht installiert"}>
+                          <Smartphone className={cn("h-4 w-4", pwaUsers.has(chatter.user_id) ? "text-accent" : "text-muted-foreground/50")} />
+                        </span>
                       </div>
                       {/* Row 2: Action Buttons */}
                       <div className="flex justify-end gap-1 -mt-1">
