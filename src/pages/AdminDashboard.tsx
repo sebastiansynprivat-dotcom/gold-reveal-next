@@ -245,6 +245,46 @@ export default function AdminDashboard() {
     loadRevenueUsers();
   }, []);
 
+  // Load cached AI summaries
+  const loadChatterSummaries = async () => {
+    const today = new Date().toISOString().split("T")[0];
+    const { data } = await supabase
+      .from("chatter_summaries")
+      .select("user_id, summary, summary_date")
+      .eq("summary_date", today);
+    if (data) {
+      const map: Record<string, { summary: string; date: string }> = {};
+      data.forEach((s: any) => { map[s.user_id] = { summary: s.summary, date: s.summary_date }; });
+      setChatterSummaries(map);
+    }
+  };
+
+  // Generate summary for a single chatter
+  const generateSummary = async (userId: string) => {
+    setSummaryLoading(prev => ({ ...prev, [userId]: true }));
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-chatter-summary", {
+        body: { user_id: userId },
+      });
+      if (error) throw error;
+      // Reload summaries
+      await loadChatterSummaries();
+      toast.success("AI-Zusammenfassung generiert!");
+    } catch (err: any) {
+      console.error("Summary generation error:", err);
+      toast.error("Fehler beim Generieren der Zusammenfassung");
+    } finally {
+      setSummaryLoading(prev => ({ ...prev, [userId]: false }));
+    }
+  };
+
+  // Load summaries when chatter tab is active
+  useEffect(() => {
+    if (activeTab === "chatter") {
+      loadChatterSummaries();
+    }
+  }, [activeTab]);
+
   const loadAdmins = async () => {
     setAdminListLoading(true);
     try {
