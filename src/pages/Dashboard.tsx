@@ -559,8 +559,27 @@ export default function Dashboard() {
                       )}
                     </div>
                     <p className="text-xs text-muted-foreground">
-                      Bitte melde dich in der WhatsApp-Gruppe und schreibe, dass du zum Google Drive hinzugefügt werden musst – zusammen mit deiner E-Mail-Adresse.
+                      Bitte melde dich in der WhatsApp-Gruppe und schreibe, dass du zum Google Drive hinzugefügt werden musst. Du kannst die Nachricht unten kopieren und nur noch deine E-Mail einfügen.
                     </p>
+                    {!driveDone && (
+                      <div className="mt-2 relative">
+                        <div className="rounded-lg bg-secondary/50 border border-border/50 p-3 text-xs text-foreground leading-relaxed">
+                          Hey, könnt ihr mich bitte zum Google Drive hinzufügen? Meine E-Mail: [DEINE E-MAIL HIER EINFÜGEN] – Danke! 🙏
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="absolute top-1.5 right-1.5 h-7 w-7 p-0 text-accent hover:text-accent/80"
+                          onClick={() => {
+                            navigator.clipboard.writeText("Hey, könnt ihr mich bitte zum Google Drive hinzufügen? Meine E-Mail: [DEINE E-MAIL HIER EINFÜGEN] – Danke! 🙏");
+                            toast.success("Nachricht kopiert!");
+                          }}
+                          title="Nachricht kopieren"
+                        >
+                          <Copy className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
