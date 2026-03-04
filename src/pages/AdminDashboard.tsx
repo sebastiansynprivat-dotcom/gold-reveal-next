@@ -1838,7 +1838,7 @@ export default function AdminDashboard() {
                       </div>
                     )}
                     {/* AI Summary – below chatter row, visible when toggle is on */}
-                    {showAiSummaries && (chatterSummaries[chatter.user_id] || summaryLoading[chatter.user_id]) && (
+                    {showAiSummaries && chatter.assigned_accounts && chatter.assigned_accounts.length > 0 && (chatterSummaries[chatter.user_id] || summaryLoading[chatter.user_id]) && (
                       <div className="px-4 pb-3 pt-1 border-t border-border/30 bg-accent/5">
                         <div className="flex items-center justify-between mb-1.5">
                           <div className="flex items-center gap-1.5">
