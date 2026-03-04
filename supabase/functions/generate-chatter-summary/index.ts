@@ -112,29 +112,11 @@ serve(async (req) => {
         const rev7d = revenue?.filter(r => r.date >= sevenDaysAgoStr).reduce((s, r) => s + Number(r.amount), 0) || 0;
         const rev30d = revenue?.reduce((s, r) => s + Number(r.amount), 0) || 0;
 
-        // Login activity
-        const { data: logins } = await supabase
-          .from("login_events")
-          .select("logged_in_at")
-          .eq("user_id", profile.user_id)
-          .order("logged_in_at", { ascending: false })
-          .limit(30);
-
-        const lastLogin = logins?.[0]?.logged_in_at || null;
-        const loginCount7d = logins?.filter(l => new Date(l.logged_in_at) >= sevenDaysAgo).length || 0;
-        const loginCount30d = logins?.length || 0;
-
         // Assigned accounts
         const { data: accounts } = await supabase
           .from("accounts")
           .select("id, platform, account_email")
           .eq("assigned_to", profile.user_id);
-
-        // Bot messages status
-        const { data: botMessages } = await supabase
-          .from("bot_messages")
-          .select("account_id, is_active, message")
-          .eq("user_id", profile.user_id);
 
         // Daily goal
         const { data: goalData } = await supabase
@@ -148,8 +130,7 @@ serve(async (req) => {
 
         // Build data summary for AI
         const accountInfo = accounts?.map(acc => {
-          const bot = botMessages?.find(b => b.account_id === acc.id);
-          return `- ${acc.platform} (${acc.account_email}): Bot-DM ${bot?.is_active ? "aktiv" : bot?.message ? "inaktiv" : "nicht eingerichtet"}`;
+          return `- ${acc.platform} (${acc.account_email})`;
         }).join("\n") || "Keine Accounts zugewiesen";
 
         // Count days where goal was reached in last 7 days
