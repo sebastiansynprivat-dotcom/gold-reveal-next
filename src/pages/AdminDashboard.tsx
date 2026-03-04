@@ -132,6 +132,8 @@ export default function AdminDashboard() {
   const [botFilter, setBotFilter] = useState<"alle" | "missing">("alle");
   const [botPlatformFilter, setBotPlatformFilter] = useState<string>("alle");
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("30");
+  const [newPlatformOpen, setNewPlatformOpen] = useState(false);
+  const [newPlatformName, setNewPlatformName] = useState("");
   const [customFrom, setCustomFrom] = useState<Date | undefined>(undefined);
   const [customTo, setCustomTo] = useState<Date | undefined>(undefined);
 
@@ -867,22 +869,14 @@ export default function AdminDashboard() {
               <Package className="h-4 w-4 text-accent" />
               <h2 className="text-sm font-semibold text-foreground">Account-Pools</h2>
             </div>
-            <Dialog>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const name = prompt("Plattform-Name eingeben (z.B. Brezzels):");
-                  if (name?.trim()) {
-                    setSelectedPlatform(name.trim());
-                    setAccountPoolOpen(true);
-                  }
-                }}
-              >
-                <Plus className="h-3.5 w-3.5 mr-1.5" />
-                Neue Plattform
-              </Button>
-            </Dialog>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => { setNewPlatformName(""); setNewPlatformOpen(true); }}
+            >
+              <Plus className="h-3.5 w-3.5 mr-1.5" />
+              Neue Plattform
+            </Button>
           </div>
 
           {platforms.length === 0 ? (
