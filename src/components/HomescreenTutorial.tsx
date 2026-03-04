@@ -59,6 +59,7 @@ export default function HomescreenTutorial({ isFirstLogin, manualOpen, onManualC
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); else setOpen(true); }}>
       <DialogContent className="glass-card border-border max-w-md mx-auto max-h-[90vh] overflow-y-auto">
         <DialogHeader>
