@@ -23,6 +23,7 @@ export type Database = {
           assigned_to: string | null
           created_at: string
           id: string
+          is_manual: boolean
           platform: string
         }
         Insert: {
@@ -33,6 +34,7 @@ export type Database = {
           assigned_to?: string | null
           created_at?: string
           id?: string
+          is_manual?: boolean
           platform?: string
         }
         Update: {
@@ -43,6 +45,7 @@ export type Database = {
           assigned_to?: string | null
           created_at?: string
           id?: string
+          is_manual?: boolean
           platform?: string
         }
         Relationships: []

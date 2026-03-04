@@ -92,6 +92,7 @@ interface AccountEntry {
   assigned_to: string | null;
   assigned_at: string | null;
   created_at: string;
+  is_manual?: boolean;
 }
 
 export default function AdminDashboard() {
@@ -130,6 +131,13 @@ export default function AdminDashboard() {
   const [routeWeights, setRouteWeights] = useState<Record<string, number>>({});
   const [savingWeights, setSavingWeights] = useState(false);
   const [offerVerteilungOpen, setOfferVerteilungOpen] = useState(false);
+  const [manualOpen, setManualOpen] = useState(false);
+  const [manualAccEmail, setManualAccEmail] = useState("");
+  const [manualAccPassword, setManualAccPassword] = useState("");
+  const [manualAccDomain, setManualAccDomain] = useState("");
+  const [manualAccPlatform, setManualAccPlatform] = useState("");
+  const [addingManual, setAddingManual] = useState(false);
+  const [manualSectionOpen, setManualSectionOpen] = useState(false);
   const [goalTarget, setGoalTarget] = useState<ChatterProfile | null>(null);
   const [goalAmount, setGoalAmount] = useState("");
   const [goalSaving, setGoalSaving] = useState(false);
@@ -420,7 +428,7 @@ export default function AdminDashboard() {
     loadAccounts();
   };
 
-  const platforms = [...new Set(accounts.map((a) => a.platform).filter(Boolean))];
+  const platforms = [...new Set(accounts.filter(a => !a.is_manual).map((a) => a.platform).filter(Boolean))];
 
   const addAccount = async () => {
     if (!newAccEmail.trim() || !newAccDomain.trim() || !selectedPlatform) return;
@@ -1159,7 +1167,179 @@ export default function AdminDashboard() {
           )}
         </section>
 
-        {/* Search */}
+        {/* Manuelle Accounts */}
+        <section className="glass-card rounded-xl overflow-hidden">
+          <button
+            onClick={() => setManualSectionOpen(!manualSectionOpen)}
+            className="w-full p-4 flex items-center justify-between hover:bg-secondary/30 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <KeyRound className="h-4 w-4 text-accent" />
+              <h2 className="text-sm font-semibold text-foreground">Freie Accounts</h2>
+              {!manualSectionOpen && (
+                <Badge variant="secondary" className="text-[10px] ml-1">
+                  {accounts.filter(a => a.is_manual).length} gesamt
+                </Badge>
+              )}
+            </div>
+            <svg
+              className={cn("h-4 w-4 text-muted-foreground transition-transform duration-200", manualSectionOpen && "rotate-180")}
+              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          {manualSectionOpen && (
+            <div className="px-4 pb-4 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
+              <p className="text-[11px] text-muted-foreground">
+                Accounts die nicht automatisch zugewiesen werden – für manuelle Zuweisung an einzelne Chatter.
+              </p>
+
+              {/* Add manual account */}
+              <div className="space-y-2 border border-border rounded-xl p-3">
+                <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                  <Plus className="h-3.5 w-3.5 text-accent" />
+                  Account hinzufügen
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <Input
+                    value={manualAccPlatform}
+                    onChange={(e) => setManualAccPlatform(e.target.value)}
+                    placeholder="Plattform (z.B. OF)"
+                    className="text-xs"
+                  />
+                  <Input
+                    value={manualAccDomain}
+                    onChange={(e) => setManualAccDomain(e.target.value)}
+                    placeholder="Domain"
+                    className="text-xs"
+                  />
+                </div>
+                <Input
+                  value={manualAccEmail}
+                  onChange={(e) => setManualAccEmail(e.target.value)}
+                  placeholder="E-Mail / Username"
+                  className="text-xs"
+                />
+                <Input
+                  value={manualAccPassword}
+                  onChange={(e) => setManualAccPassword(e.target.value)}
+                  placeholder="Passwort"
+                  className="text-xs"
+                />
+                <Button
+                  onClick={async () => {
+                    if (!manualAccEmail.trim()) return;
+                    setAddingManual(true);
+                    const { error } = await supabase.from("accounts").insert({
+                      platform: manualAccPlatform.trim() || "Manual",
+                      account_email: manualAccEmail.trim(),
+                      account_password: manualAccPassword.trim(),
+                      account_domain: manualAccDomain.trim(),
+                      is_manual: true,
+                    } as any);
+                    if (error) {
+                      toast.error("Fehler beim Hinzufügen");
+                    } else {
+                      toast.success("Account hinzugefügt!");
+                      setManualAccEmail("");
+                      setManualAccPassword("");
+                      setManualAccDomain("");
+                      setManualAccPlatform("");
+                      loadAccounts();
+                      loadChatters();
+                    }
+                    setAddingManual(false);
+                  }}
+                  disabled={addingManual || !manualAccEmail.trim()}
+                  className="w-full"
+                  size="sm"
+                >
+                  <Plus className="h-3.5 w-3.5 mr-1.5" />
+                  {addingManual ? "Wird hinzugefügt..." : "Hinzufügen"}
+                </Button>
+              </div>
+
+              {/* Manual accounts list */}
+              {(() => {
+                const manualAccounts = accounts.filter(a => a.is_manual);
+                if (manualAccounts.length === 0) return (
+                  <p className="text-xs text-muted-foreground text-center py-4 italic">Noch keine manuellen Accounts.</p>
+                );
+                return (
+                  <div className="divide-y divide-border rounded-xl border border-border overflow-hidden">
+                    {manualAccounts.map((acc) => (
+                      <div key={acc.id} className="p-3 flex items-center gap-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-[9px] shrink-0">{acc.platform}</Badge>
+                            <span className="text-xs font-medium text-foreground truncate">{acc.account_email}</span>
+                            {acc.assigned_to ? (
+                              <Badge className="text-[10px] bg-secondary text-secondary-foreground shrink-0">
+                                → {getChatterName(acc.assigned_to)}
+                              </Badge>
+                            ) : (
+                              <Badge className="text-[10px] bg-accent/20 text-accent shrink-0">
+                                Frei
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            {acc.account_domain && (
+                              <a
+                                href={acc.account_domain.startsWith("http") ? acc.account_domain : `https://${acc.account_domain}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[10px] text-accent hover:underline"
+                              >
+                                ↗ {acc.account_domain}
+                              </a>
+                            )}
+                            <button
+                              onClick={() => { navigator.clipboard.writeText(acc.account_password); toast.success("Passwort kopiert"); }}
+                              className="text-[10px] text-muted-foreground hover:text-foreground cursor-copy"
+                            >
+                              PW: ••••••
+                            </button>
+                          </div>
+                        </div>
+                        {acc.assigned_to && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive shrink-0"
+                            title="Account freigeben"
+                            onClick={async () => {
+                              await supabase.from("accounts").update({ assigned_to: null, assigned_at: null }).eq("id", acc.id);
+                              toast.success("Account freigegeben");
+                              loadAccounts();
+                              loadChatters();
+                            }}
+                          >
+                            <RefreshCw className="h-3 w-3" />
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive shrink-0"
+                          title="Account löschen"
+                          onClick={async () => {
+                            await supabase.from("accounts").delete().eq("id", acc.id);
+                            toast.success("Account gelöscht");
+                            loadAccounts();
+                          }}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+            </div>
+          )}
+        </section>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
