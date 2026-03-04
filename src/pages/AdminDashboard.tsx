@@ -1021,6 +1021,35 @@ export default function AdminDashboard() {
           />
         </div>
 
+        {/* Platform Filters (independent, combinable) */}
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+          {[
+            { key: "maloum", label: "Maloum" },
+            { key: "brezzels", label: "Brezzels" },
+          ].map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => {
+                setPlatformFilters((prev) => {
+                  const next = new Set(prev);
+                  if (next.has(key)) next.delete(key);
+                  else next.add(key);
+                  return next;
+                });
+              }}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap transition-colors shrink-0 border",
+                platformFilters.has(key)
+                  ? "bg-accent text-accent-foreground border-accent"
+                  : "bg-secondary/50 text-muted-foreground hover:bg-secondary border-transparent"
+              )}
+            >
+              <Filter className="h-3 w-3" />
+              {label}
+            </button>
+          ))}
+        </div>
+
         {/* Chatter Filters */}
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
           {([
@@ -1031,8 +1060,6 @@ export default function AdminDashboard() {
             { key: "top_monat", label: "Top Monat", icon: DollarSign },
             { key: "no_telegram", label: "Telegram fehlt", icon: AlertTriangle },
             { key: "no_push", label: "Push fehlt", icon: BellOff },
-            { key: "plat_maloum", label: "Maloum", icon: Filter },
-            { key: "plat_brezzels", label: "Brezzels", icon: Filter },
             { key: "no_revenue_7d", label: "7d+ ohne Umsatz", icon: AlertTriangle },
           ] as const).map(({ key, label, icon: Icon }) => (
             <button
