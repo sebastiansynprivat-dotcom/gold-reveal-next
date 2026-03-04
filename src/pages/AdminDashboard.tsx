@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Users, Send, Bell, BellOff, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, CalendarDays, CalendarRange, Filter, MessageSquare, Star, AlertTriangle, Bot, Save, Power, Copy, Smartphone, Percent, ChevronRight, Shield, UserPlus, UserMinus, Check, XCircle, Sparkles, Loader2 } from "lucide-react";
+import { Users, Send, Bell, BellOff, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, CalendarDays, CalendarRange, Filter, MessageSquare, Star, AlertTriangle, Bot, Save, Power, Copy, Smartphone, Percent, ChevronRight, Shield, UserPlus, UserMinus, Check, XCircle, Sparkles, Loader2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -1876,13 +1876,25 @@ export default function AdminDashboard() {
                                 <div className="bg-secondary/40 rounded-lg p-2 border border-border/50">
                                   <div className="flex items-center justify-between mb-1">
                                     <span className="text-[9px] font-medium text-muted-foreground">Nachricht:</span>
-                                    <button
-                                      onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(nachricht); toast.success("Nachricht kopiert!"); }}
-                                      className="flex items-center gap-1 text-[9px] text-accent hover:text-accent/80 transition-colors"
-                                    >
-                                      <Copy className="h-2.5 w-2.5" />
-                                      Kopieren
-                                    </button>
+                                    <div className="flex items-center gap-2">
+                                      <button
+                                        onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(nachricht); toast.success("Nachricht kopiert!"); }}
+                                        className="flex items-center gap-1 text-[9px] text-accent hover:text-accent/80 transition-colors"
+                                      >
+                                        <Copy className="h-2.5 w-2.5" />
+                                        Kopieren
+                                      </button>
+                                      <a
+                                        href={`https://wa.me/?text=${encodeURIComponent(nachricht)}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="flex items-center gap-1 text-[9px] text-green-500 hover:text-green-400 transition-colors"
+                                      >
+                                        <ExternalLink className="h-2.5 w-2.5" />
+                                        WhatsApp
+                                      </a>
+                                    </div>
                                   </div>
                                   <p className="text-[11px] text-foreground/80 leading-relaxed">{nachricht}</p>
                                 </div>
