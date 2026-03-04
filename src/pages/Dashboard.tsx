@@ -21,6 +21,7 @@ import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo.png";
 import { format, endOfMonth, addMonths, differenceInDays } from "date-fns";
 import { de } from "date-fns/locale";
+import HomescreenTutorial from "@/components/HomescreenTutorial";
 
 const GOLD_THRESHOLD = 3000;
 const STARTER_RATE = 0.2;
@@ -61,6 +62,7 @@ export default function Dashboard() {
   };
   // Force re-render when drive state changes
   const [driveVersion, setDriveVersion] = useState(0);
+  const [isFirstLogin, setIsFirstLogin] = useState(false);
 
   // Load profile data
   useEffect(() => {
@@ -105,8 +107,18 @@ export default function Dashboard() {
           setAssignedAccounts(data);
         }
       });
-  }, [user]);
 
+    // Check if first login
+    supabase
+      .from("login_events")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .then(({ count }) => {
+        if (count !== null && count <= 1) {
+          setIsFirstLogin(true);
+        }
+      });
+  }, [user]);
   const saveTelegram = async () => {
     if (!user) return;
     const { error } = await supabase
@@ -244,6 +256,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
+      <HomescreenTutorial isFirstLogin={isFirstLogin} />
       {/* Header with Telegram + Umsatz inline */}
       <header className="border-b border-border">
         <div className="container max-w-5xl mx-auto px-4 py-3 lg:px-8">
