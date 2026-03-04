@@ -57,6 +57,8 @@ export default function AdminDashboard() {
   const [newAccDomain, setNewAccDomain] = useState("");
   const [addingAccount, setAddingAccount] = useState(false);
   const [assigning, setAssigning] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<ChatterProfile | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     loadChatters();
