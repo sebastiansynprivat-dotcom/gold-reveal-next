@@ -1818,9 +1818,33 @@ export default function AdminDashboard() {
                               <Loader2 className="h-3.5 w-3.5 animate-spin text-accent" />
                               <span className="text-xs text-muted-foreground">Analysiere Performance...</span>
                             </div>
-                          ) : chatterSummaries[chatter.user_id] ? (
-                            <p className="text-xs text-foreground/90 leading-relaxed">{chatterSummaries[chatter.user_id].summary}</p>
-                          ) : (
+                          ) : chatterSummaries[chatter.user_id] ? (() => {
+                            const raw = chatterSummaries[chatter.user_id].summary;
+                            const analyseMatch = raw.match(/\[ANALYSE\]\s*([\s\S]*?)(?:\[NACHRICHT\]|$)/);
+                            const nachrichtMatch = raw.match(/\[NACHRICHT\]\s*([\s\S]*?)$/);
+                            const analyse = analyseMatch?.[1]?.trim() || raw;
+                            const nachricht = nachrichtMatch?.[1]?.trim() || null;
+                            return (
+                              <div className="space-y-2.5">
+                                <p className="text-xs text-foreground/90 leading-relaxed">{analyse}</p>
+                                {nachricht && (
+                                  <div className="bg-secondary/40 rounded-lg p-2.5 border border-border/50">
+                                    <div className="flex items-center justify-between mb-1.5">
+                                      <span className="text-[10px] font-medium text-muted-foreground">Nachricht zum Weiterleiten:</span>
+                                      <button
+                                        onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(nachricht); toast.success("Nachricht kopiert!"); }}
+                                        className="flex items-center gap-1 text-[10px] text-accent hover:text-accent/80 transition-colors"
+                                      >
+                                        <Copy className="h-3 w-3" />
+                                        Kopieren
+                                      </button>
+                                    </div>
+                                    <p className="text-xs text-foreground/80 leading-relaxed italic">"{nachricht}"</p>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })() : (
                             <p className="text-xs text-muted-foreground italic">Noch keine Analyse vorhanden. Klicke auf "Generieren".</p>
                           )}
                         </div>
