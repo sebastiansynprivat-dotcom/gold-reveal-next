@@ -47,7 +47,7 @@ const generateFakeRevenueData = () => {
 };
 
 type TimeFilter = "heute" | "gestern" | "7" | "30" | "90" | "custom";
-type ChatterFilter = "alle" | "open_2d" | "top_tag" | "top_woche" | "top_monat" | "no_telegram" | "no_push";
+type ChatterFilter = "alle" | "open_2d" | "top_tag" | "top_woche" | "top_monat" | "no_telegram" | "no_push" | "plat_maloum" | "plat_brezzels" | "no_revenue_7d";
 
 // Reuse hash function from ChatterStatsCard for consistent fake stats
 const hashCodeAdmin = (s: string) => {
@@ -144,6 +144,7 @@ export default function AdminDashboard() {
   const [customTo, setCustomTo] = useState<Date | undefined>(undefined);
   const [loginStats, setLoginStats] = useState<Record<string, LoginStats>>({});
   const [pushUsers, setPushUsers] = useState<Set<string>>(new Set());
+  const [revenueUsers, setRevenueUsers] = useState<Set<string>>(new Set());
 
   const allRevenueData = useMemo(() => generateFakeRevenueData(), []);
 
@@ -198,12 +199,20 @@ export default function AdminDashboard() {
     }
   };
 
+  const loadRevenueUsers = async () => {
+    const { data } = await supabase.from("daily_revenue").select("user_id").gt("amount", 0);
+    if (data) {
+      setRevenueUsers(new Set(data.map((d) => d.user_id)));
+    }
+  };
+
   useEffect(() => {
     loadChatters();
     loadAccounts();
     loadOffers();
     loadLoginStats();
     loadPushUsers();
+    loadRevenueUsers();
   }, []);
 
   const loadChatters = async () => {
@@ -690,9 +699,24 @@ export default function AdminDashboard() {
       case "top_monat":
         result = [...result].sort((a, b) => getChatterFakeStats(b.user_id).month - getChatterFakeStats(a.user_id).month);
         break;
+      case "plat_maloum":
+        result = result.filter((c) => c.assigned_accounts?.some((a) => a.platform.toLowerCase() === "maloum"));
+        break;
+      case "plat_brezzels":
+        result = result.filter((c) => c.assigned_accounts?.some((a) => a.platform.toLowerCase() === "brezzels"));
+        break;
+      case "no_revenue_7d": {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+        result = result.filter((c) => {
+          const regDate = new Date(c.created_at);
+          return regDate <= sevenDaysAgo && !revenueUsers.has(c.user_id);
+        });
+        break;
+      }
     }
     return result;
-  }, [chatters, search, chatterFilter, pushUsers]);
+  }, [chatters, search, chatterFilter, pushUsers, revenueUsers]);
 
   const openGoalEditor = async (chatter: ChatterProfile) => {
     setGoalTarget(chatter);
@@ -1005,6 +1029,9 @@ export default function AdminDashboard() {
             { key: "top_monat", label: "Top Monat", icon: DollarSign },
             { key: "no_telegram", label: "Telegram fehlt", icon: AlertTriangle },
             { key: "no_push", label: "Push fehlt", icon: BellOff },
+            { key: "plat_maloum", label: "Maloum", icon: Filter },
+            { key: "plat_brezzels", label: "Brezzels", icon: Filter },
+            { key: "no_revenue_7d", label: "7d+ ohne Umsatz", icon: AlertTriangle },
           ] as const).map(({ key, label, icon: Icon }) => (
             <button
               key={key}
