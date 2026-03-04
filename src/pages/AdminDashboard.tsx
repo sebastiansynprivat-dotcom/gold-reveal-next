@@ -513,6 +513,98 @@ export default function AdminDashboard() {
       </header>
 
       <main className="container max-w-4xl mx-auto p-4 space-y-4">
+        {/* Tab Navigation */}
+        <div className="flex gap-2">
+          <Button
+            variant={activeTab === "einnahmen" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setActiveTab("einnahmen")}
+          >
+            <TrendingUp className="h-3.5 w-3.5 mr-1.5" />
+            Einnahmen
+          </Button>
+          <Button
+            variant={activeTab === "chatter" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setActiveTab("chatter")}
+          >
+            <Users className="h-3.5 w-3.5 mr-1.5" />
+            Chatter
+          </Button>
+        </div>
+
+        {activeTab === "einnahmen" && (
+          <div className="space-y-4">
+            {/* Revenue Chart */}
+            <div className="glass-card rounded-xl p-4">
+              <h2 className="text-sm font-semibold text-foreground mb-4">Umsatz – letzte 30 Tage</h2>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={revenueData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                      tickLine={false}
+                      axisLine={false}
+                      interval={4}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(v) => `${v}€`}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        background: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "8px",
+                        fontSize: "12px",
+                      }}
+                      formatter={(value: number) => [`${value.toLocaleString("de-DE")}€`, "Umsatz"]}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="amount"
+                      stroke="hsl(var(--accent))"
+                      strokeWidth={2.5}
+                      dot={false}
+                      activeDot={{ r: 4, fill: "hsl(var(--accent))" }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Revenue Stat Tiles */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="glass-card-subtle rounded-xl p-4 text-center">
+                <div className="flex items-center justify-center mb-1">
+                  <DollarSign className="h-3.5 w-3.5 text-accent mr-1" />
+                  <p className="text-[10px] text-muted-foreground">Heute</p>
+                </div>
+                <p className="text-xl font-bold text-gold-gradient">{todayRevenue.toLocaleString("de-DE")}€</p>
+              </div>
+              <div className="glass-card-subtle rounded-xl p-4 text-center">
+                <div className="flex items-center justify-center mb-1">
+                  <Calendar className="h-3.5 w-3.5 text-accent mr-1" />
+                  <p className="text-[10px] text-muted-foreground">Ø pro Tag</p>
+                </div>
+                <p className="text-xl font-bold text-gold-gradient">{avgRevenue.toLocaleString("de-DE")}€</p>
+              </div>
+              <div className="glass-card-subtle rounded-xl p-4 text-center">
+                <div className="flex items-center justify-center mb-1">
+                  <TrendingUp className="h-3.5 w-3.5 text-accent mr-1" />
+                  <p className="text-[10px] text-muted-foreground">Gesamt (30T)</p>
+                </div>
+                <p className="text-xl font-bold text-gold-gradient">{totalRevenue.toLocaleString("de-DE")}€</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "chatter" && (<>
         {/* Stats */}
         <div className="grid grid-cols-2 gap-3">
           <div className="glass-card-subtle rounded-xl p-4 text-center">
