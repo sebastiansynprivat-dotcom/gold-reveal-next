@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Users, Send, Bell, BellOff, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, CalendarDays, CalendarRange, Filter, MessageSquare, Star, AlertTriangle, Bot, Save, Power, Copy, Smartphone } from "lucide-react";
+import { Users, Send, Bell, BellOff, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, CalendarDays, CalendarRange, Filter, MessageSquare, Star, AlertTriangle, Bot, Save, Power, Copy, Smartphone, Percent } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -125,6 +126,9 @@ export default function AdminDashboard() {
   const [deletingPool, setDeletingPool] = useState(false);
   const [deletePoolConfirm, setDeletePoolConfirm] = useState(false);
   const [offers, setOffers] = useState<{ name: string; target_path: string }[]>([]);
+  const [quizRoutes, setQuizRoutes] = useState<{ id: string; name: string; target_path: string; weight: number; is_active: boolean }[]>([]);
+  const [routeWeights, setRouteWeights] = useState<Record<string, number>>({});
+  const [savingWeights, setSavingWeights] = useState(false);
   const [goalTarget, setGoalTarget] = useState<ChatterProfile | null>(null);
   const [goalAmount, setGoalAmount] = useState("");
   const [goalSaving, setGoalSaving] = useState(false);
@@ -257,9 +261,27 @@ export default function AdminDashboard() {
   const loadOffers = async () => {
     const { data } = await supabase
       .from("quiz_routes")
-      .select("name, target_path")
+      .select("id, name, target_path, weight, is_active")
       .eq("is_active", true);
-    setOffers(data || []);
+    setOffers((data || []).map(d => ({ name: d.name, target_path: d.target_path })));
+    setQuizRoutes(data || []);
+    const weights: Record<string, number> = {};
+    (data || []).forEach(r => { weights[r.id] = r.weight; });
+    setRouteWeights(weights);
+  };
+
+  const saveRouteWeights = async () => {
+    setSavingWeights(true);
+    try {
+      for (const [id, weight] of Object.entries(routeWeights)) {
+        await supabase.from("quiz_routes").update({ weight }).eq("id", id);
+      }
+      toast.success("Offer-Verteilung gespeichert!");
+      loadOffers();
+    } catch (err: any) {
+      toast.error("Fehler: " + err.message);
+    }
+    setSavingWeights(false);
   };
 
   const loadLoginStats = async () => {
@@ -970,7 +992,79 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Platform Account Pools */}
+        {/* Offer-Verteilung */}
+        <section className="glass-card rounded-xl p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <Percent className="h-4 w-4 text-accent" />
+            <h2 className="text-sm font-semibold text-foreground">Offer-Verteilung</h2>
+          </div>
+          {quizRoutes.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-4">Keine Offers konfiguriert.</p>
+          ) : (
+            <>
+              <div className="space-y-4">
+                {quizRoutes.map((route) => {
+                  const totalWeight = Object.values(routeWeights).reduce((s, w) => s + w, 0) || 1;
+                  const pct = Math.round(((routeWeights[route.id] || 0) / totalWeight) * 100);
+                  return (
+                    <div key={route.id} className="space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-foreground">{route.name}</span>
+                        <span className="text-xs font-bold text-accent">{pct}%</span>
+                      </div>
+                      <Slider
+                        value={[routeWeights[route.id] || 0]}
+                        onValueChange={([v]) => setRouteWeights(prev => ({ ...prev, [route.id]: v }))}
+                        min={0}
+                        max={100}
+                        step={1}
+                        className="w-full"
+                      />
+                      <p className="text-[10px] text-muted-foreground">{route.target_path} · Gewicht: {routeWeights[route.id] || 0}</p>
+                    </div>
+                  );
+                })}
+              </div>
+              {/* Live preview bar */}
+              <div className="flex rounded-full overflow-hidden h-3 bg-secondary/50">
+                {quizRoutes.map((route, i) => {
+                  const totalWeight = Object.values(routeWeights).reduce((s, w) => s + w, 0) || 1;
+                  const pct = ((routeWeights[route.id] || 0) / totalWeight) * 100;
+                  const colors = ["hsl(var(--accent))", "#3b82f6", "#22d3ee", "#a855f7"];
+                  return (
+                    <div
+                      key={route.id}
+                      style={{ width: `${pct}%`, backgroundColor: colors[i % colors.length] }}
+                      className="transition-all duration-300"
+                      title={`${route.name}: ${Math.round(pct)}%`}
+                    />
+                  );
+                })}
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                {quizRoutes.map((route, i) => {
+                  const colors = ["hsl(var(--accent))", "#3b82f6", "#22d3ee", "#a855f7"];
+                  return (
+                    <div key={route.id} className="flex items-center gap-1.5">
+                      <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: colors[i % colors.length] }} />
+                      <span className="text-[10px] text-muted-foreground">{route.name}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              <Button
+                onClick={saveRouteWeights}
+                disabled={savingWeights}
+                size="sm"
+                className="w-full"
+              >
+                <Save className="h-3.5 w-3.5 mr-1.5" />
+                {savingWeights ? "Wird gespeichert..." : "Verteilung speichern"}
+              </Button>
+            </>
+          )}
+        </section>
+
         <section className="glass-card rounded-xl p-4 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -1570,34 +1664,18 @@ export default function AdminDashboard() {
           </DialogHeader>
 
           <div className="space-y-4">
-            {/* Offer zuordnen + Pool löschen */}
-            <div className="flex items-center gap-3">
-              <div className="flex-1 space-y-1.5">
-                <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Verknüpftes Offer</label>
-                <select
-                  value={selectedPlatform}
-                  onChange={(e) => updatePoolOffer(e.target.value)}
-                  className="w-full rounded-lg border border-border bg-secondary/50 text-foreground text-xs px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-accent/50 transition-colors appearance-none cursor-pointer"
-                >
-                  <option value={selectedPlatform}>{selectedPlatform}</option>
-                  {offers
-                    .filter((o) => o.name !== selectedPlatform && !platforms.includes(o.name))
-                    .map((o) => (
-                      <option key={o.name} value={o.name}>{o.name} ({o.target_path})</option>
-                    ))}
-                </select>
-              </div>
-              <div className="pt-5">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setDeletePoolConfirm(true)}
-                  className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                >
-                  <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-                  Löschen
-                </Button>
-              </div>
+            {/* Pool löschen */}
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">Pool: <span className="font-semibold text-foreground">{selectedPlatform}</span></p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setDeletePoolConfirm(true)}
+                className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+              >
+                <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                Löschen
+              </Button>
             </div>
 
             {/* Pool Domain */}
@@ -1609,7 +1687,7 @@ export default function AdminDashboard() {
                 placeholder="Domain (z.B. brezzels.com)"
                 className="text-xs"
               />
-              <p className="text-[10px] text-muted-foreground">Wird automatisch für alle neuen Accounts & Chatter verwendet.</p>
+              <p className="text-[10px] text-muted-foreground">Wird automatisch für alle neuen Accounts verwendet.</p>
             </div>
 
             {/* Add new account */}
@@ -1637,17 +1715,30 @@ export default function AdminDashboard() {
               </Button>
             </div>
 
-            {/* Stats */}
-            <div className="flex gap-3 text-xs">
-              <span className="text-muted-foreground">
-                Gesamt: <span className="text-foreground font-semibold">{platformAccounts.length}</span>
-              </span>
-              <span className="text-accent">
-                Frei: <span className="font-semibold">{freeCount}</span>
-              </span>
-              <span className="text-muted-foreground">
-                Vergeben: <span className="font-semibold">{assignedCount}</span>
-              </span>
+            {/* Stats + Bulk Assign */}
+            <div className="flex items-center justify-between">
+              <div className="flex gap-3 text-xs">
+                <span className="text-muted-foreground">
+                  Gesamt: <span className="text-foreground font-semibold">{platformAccounts.length}</span>
+                </span>
+                <span className="text-accent">
+                  Frei: <span className="font-semibold">{freeCount}</span>
+                </span>
+                <span className="text-muted-foreground">
+                  Vergeben: <span className="font-semibold">{assignedCount}</span>
+                </span>
+              </div>
+              {freeCount > 0 && (
+                <Button
+                  onClick={assignAccounts}
+                  disabled={assigning}
+                  size="sm"
+                  variant="default"
+                >
+                  <RefreshCw className={cn("h-3.5 w-3.5 mr-1.5", assigning && "animate-spin")} />
+                  {assigning ? "Zuweisen..." : "Auto-Zuweisen"}
+                </Button>
+              )}
             </div>
 
             {/* Account list */}
@@ -1658,22 +1749,53 @@ export default function AdminDashboard() {
                 </p>
               ) : (
                 platformAccounts.map((acc) => (
-                  <div key={acc.id} className="p-3 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-foreground truncate">{acc.account_email}</span>
-                      {acc.assigned_to ? (
-                        <Badge className="text-[10px] bg-secondary text-secondary-foreground">
-                          Vergeben an {getChatterName(acc.assigned_to)}
-                        </Badge>
-                      ) : (
-                        <Badge className="text-[10px] bg-green-500/20 text-green-400">
-                          Frei
-                        </Badge>
-                      )}
+                  <div key={acc.id} className="p-3 flex items-center gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium text-foreground truncate">{acc.account_email}</span>
+                        {acc.assigned_to ? (
+                          <Badge className="text-[10px] bg-secondary text-secondary-foreground shrink-0">
+                            → {getChatterName(acc.assigned_to)}
+                          </Badge>
+                        ) : (
+                          <Badge className="text-[10px] bg-accent/20 text-accent shrink-0">
+                            Frei
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-muted-foreground truncate">
+                        PW: {acc.account_password}
+                      </p>
                     </div>
-                    <p className="text-[10px] text-muted-foreground">
-                      Domain: {acc.account_domain} · PW: {acc.account_password}
-                    </p>
+                    {acc.assigned_to && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive shrink-0"
+                        title="Account freigeben"
+                        onClick={async () => {
+                          await supabase.from("accounts").update({ assigned_to: null, assigned_at: null }).eq("id", acc.id);
+                          toast.success("Account freigegeben");
+                          loadAccounts();
+                          loadChatters();
+                        }}
+                      >
+                        <RefreshCw className="h-3 w-3" />
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive shrink-0"
+                      title="Account löschen"
+                      onClick={async () => {
+                        await supabase.from("accounts").delete().eq("id", acc.id);
+                        toast.success("Account gelöscht");
+                        loadAccounts();
+                      }}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
                   </div>
                 ))
               )}
