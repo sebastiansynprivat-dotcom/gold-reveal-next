@@ -1217,72 +1217,69 @@ export default function AdminDashboard() {
                     {expandedChatter === chatter.user_id && (
                       <div className="px-4 pb-4 animate-in fade-in duration-200">
                         {(chatter.assigned_accounts?.length || 0) >= 2 ? (
-                          /* Multi-account: side by side with stats per account */
-                          <div className="grid grid-cols-2 gap-2">
-                            {chatter.assigned_accounts!.map((acc, idx) => {
+                          /* Multi-account: stacked cards, each with login + stats */
+                          <div className="space-y-3">
+                            {chatter.assigned_accounts!.map((acc) => {
                               const h = hashCodeAdmin(chatter.user_id + acc.id);
                               const todayRev = 80 + (h % 200);
                               const weekRev = todayRev * 5 + (h % 500);
                               const monthRev = Math.round(weekRev * 3.5 + (h % 2000));
                               const massDMs = 120 + (h % 380);
                               const openChats = 3 + (h % 18);
+                              const platformColor = (PLATFORM_COLORS as Record<string, string>)[acc.platform.toLowerCase()] || "hsl(var(--accent))";
                               return (
-                                <div key={acc.id} className="glass-card-subtle rounded-lg p-3 space-y-2">
-                                  {/* Header */}
-                                  <div className="flex items-center justify-between">
-                                    <Badge variant="secondary" className="text-[9px]">{acc.platform}</Badge>
-                                    {acc.account_domain && (
-                                      <a
-                                        href={acc.account_domain.startsWith("http") ? acc.account_domain : `https://${acc.account_domain}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        onClick={(e) => e.stopPropagation()}
-                                        className="text-[9px] text-accent hover:underline truncate max-w-[100px]"
-                                      >
-                                        {acc.account_domain}
-                                      </a>
-                                    )}
-                                  </div>
-                                  {/* Login */}
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(acc.account_email); toast.success("E-Mail kopiert!"); }}
-                                    className="w-full text-left glass-card-subtle rounded-md px-2 py-1 hover:bg-secondary/50 transition-colors cursor-copy group"
-                                  >
-                                    <p className="text-[8px] text-muted-foreground">E-Mail</p>
-                                    <p className="text-[10px] font-medium text-foreground truncate group-active:scale-95 transition-transform">{acc.account_email}</p>
-                                  </button>
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(acc.account_password); toast.success("Passwort kopiert!"); }}
-                                    className="w-full text-left glass-card-subtle rounded-md px-2 py-1 hover:bg-secondary/50 transition-colors cursor-copy group"
-                                  >
-                                    <p className="text-[8px] text-muted-foreground">Passwort</p>
-                                    <p className="text-[10px] font-medium text-foreground truncate group-active:scale-95 transition-transform">{acc.account_password}</p>
-                                  </button>
-                                  {/* Mini Stats */}
-                                  <div className="border-t border-border pt-2 space-y-1.5">
-                                    <div className="grid grid-cols-3 gap-1">
-                                      <div className="text-center">
-                                        <p className="text-[7px] text-muted-foreground">Heute</p>
-                                        <p className="text-[10px] font-bold text-foreground">{todayRev}€</p>
-                                      </div>
-                                      <div className="text-center">
-                                        <p className="text-[7px] text-muted-foreground">Woche</p>
-                                        <p className="text-[10px] font-bold text-foreground">{weekRev}€</p>
-                                      </div>
-                                      <div className="text-center">
-                                        <p className="text-[7px] text-muted-foreground">Monat</p>
-                                        <p className="text-[10px] font-bold text-foreground">{monthRev.toLocaleString("de-DE")}€</p>
-                                      </div>
+                                <div key={acc.id} className="glass-card-subtle rounded-xl overflow-hidden" style={{ borderLeft: `3px solid ${platformColor}` }}>
+                                  {/* Account Header */}
+                                  <div className="px-3.5 py-2.5 flex items-center justify-between border-b border-border/50">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-xs font-bold text-foreground">{acc.platform}</span>
+                                      {acc.account_domain && (
+                                        <a
+                                          href={acc.account_domain.startsWith("http") ? acc.account_domain : `https://${acc.account_domain}`}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          onClick={(e) => e.stopPropagation()}
+                                          className="text-[10px] text-accent hover:underline truncate max-w-[140px]"
+                                        >
+                                          ↗ {acc.account_domain}
+                                        </a>
+                                      )}
                                     </div>
-                                    <div className="grid grid-cols-2 gap-1">
-                                      <div className="text-center">
-                                        <p className="text-[7px] text-muted-foreground">Mass-DMs</p>
-                                        <p className="text-[10px] font-bold text-foreground">{massDMs}</p>
-                                      </div>
-                                      <div className="text-center">
-                                        <p className="text-[7px] text-muted-foreground">Offene Chats</p>
-                                        <p className="text-[10px] font-bold text-foreground">{openChats}</p>
-                                      </div>
+                                  </div>
+
+                                  {/* Login Row */}
+                                  <div className="px-3.5 py-2 flex gap-2">
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(acc.account_email); toast.success("E-Mail kopiert!"); }}
+                                      className="flex-1 text-left bg-secondary/30 rounded-lg px-3 py-2 hover:bg-secondary/50 transition-colors cursor-copy group"
+                                    >
+                                      <p className="text-[9px] text-muted-foreground mb-0.5">E-Mail</p>
+                                      <p className="text-xs font-medium text-foreground truncate group-active:scale-95 transition-transform">{acc.account_email}</p>
+                                    </button>
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(acc.account_password); toast.success("Passwort kopiert!"); }}
+                                      className="flex-1 text-left bg-secondary/30 rounded-lg px-3 py-2 hover:bg-secondary/50 transition-colors cursor-copy group"
+                                    >
+                                      <p className="text-[9px] text-muted-foreground mb-0.5">Passwort</p>
+                                      <p className="text-xs font-medium text-foreground truncate group-active:scale-95 transition-transform">{acc.account_password}</p>
+                                    </button>
+                                  </div>
+
+                                  {/* Stats Row */}
+                                  <div className="px-3.5 pb-3 pt-1">
+                                    <div className="grid grid-cols-5 gap-1.5">
+                                      {[
+                                        { label: "Heute", value: `${todayRev}€` },
+                                        { label: "Woche", value: `${weekRev}€` },
+                                        { label: "Monat", value: `${monthRev.toLocaleString("de-DE")}€` },
+                                        { label: "DMs", value: String(massDMs) },
+                                        { label: "Chats", value: String(openChats) },
+                                      ].map((s) => (
+                                        <div key={s.label} className="text-center bg-secondary/20 rounded-md py-1.5">
+                                          <p className="text-[8px] text-muted-foreground">{s.label}</p>
+                                          <p className="text-[11px] font-bold text-foreground">{s.value}</p>
+                                        </div>
+                                      ))}
                                     </div>
                                   </div>
                                 </div>
