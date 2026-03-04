@@ -261,24 +261,44 @@ export default function AdminDashboard() {
     setDeleting(false);
   };
 
-  const removeAccount = async () => {
+  const removeAccount = async (accountId?: string) => {
     if (!reassignTarget) return;
     setReassigning(true);
     try {
-      await supabase
+      if (accountId) {
+        // Remove specific account
+        await supabase
+          .from("accounts")
+          .update({ assigned_to: null, assigned_at: null })
+          .eq("id", accountId);
+      } else {
+        // Remove all accounts (legacy)
+        await supabase
+          .from("accounts")
+          .update({ assigned_to: null, assigned_at: null })
+          .eq("assigned_to", reassignTarget.user_id);
+      }
+
+      // Sync profile with remaining accounts
+      const { data: remaining } = await supabase
         .from("accounts")
-        .update({ assigned_to: null, assigned_at: null })
-        .eq("assigned_to", reassignTarget.user_id);
+        .select("account_email, account_password, account_domain")
+        .eq("assigned_to", reassignTarget.user_id)
+        .limit(1)
+        .maybeSingle();
 
       await supabase
         .from("profiles")
-        .update({ account_email: null, account_password: null, account_domain: null })
+        .update({
+          account_email: remaining?.account_email || null,
+          account_password: remaining?.account_password || null,
+          account_domain: remaining?.account_domain || null,
+        })
         .eq("user_id", reassignTarget.user_id);
 
-      toast.success(`Account von ${reassignTarget.group_name || "Chatter"} entfernt`);
+      toast.success(`Account entfernt`);
       setReassignTarget(null);
       loadChatters();
-      loadAccounts();
     } catch (err: any) {
       toast.error("Fehler: " + err.message);
     }
@@ -289,11 +309,20 @@ export default function AdminDashboard() {
     if (!reassignTarget) return;
     setReassigning(true);
     try {
-      // Free old account if any
-      await supabase
-        .from("accounts")
-        .update({ assigned_to: null, assigned_at: null })
-        .eq("assigned_to", reassignTarget.user_id);
+      // Get the new account's platform
+      const newAccInfo = accounts.find((a) => a.id === newAccountId);
+      if (!newAccInfo) throw new Error("Account nicht gefunden");
+
+      // Free any existing account on the SAME platform for this user
+      const existingOnPlatform = accounts.find(
+        (a) => a.assigned_to === reassignTarget.user_id && a.platform === newAccInfo.platform
+      );
+      if (existingOnPlatform) {
+        await supabase
+          .from("accounts")
+          .update({ assigned_to: null, assigned_at: null })
+          .eq("id", existingOnPlatform.id);
+      }
 
       // Assign new account
       const { data: newAcc } = await supabase
@@ -304,6 +333,7 @@ export default function AdminDashboard() {
         .single();
 
       if (newAcc) {
+        // Update profile with first assigned account's data (for backward compat)
         await supabase
           .from("profiles")
           .update({
@@ -314,10 +344,9 @@ export default function AdminDashboard() {
           .eq("user_id", reassignTarget.user_id);
       }
 
-      toast.success(`Account für ${reassignTarget.group_name || "Chatter"} geändert!`);
+      toast.success(`Account für ${reassignTarget.group_name || "Chatter"} zugewiesen!`);
       setReassignTarget(null);
       loadChatters();
-      loadAccounts();
     } catch (err: any) {
       toast.error("Fehler: " + err.message);
     }
