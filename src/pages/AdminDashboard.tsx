@@ -1097,8 +1097,10 @@ export default function AdminDashboard() {
               {filtered.map((chatter) => {
                 const cStats = loginStats[chatter.user_id];
                 const activeToday = (cStats?.today || 0) > 0;
+                const fakeStats = getChatterFakeStats(chatter.user_id);
+                const chatsOverdue = fakeStats.avgOpenDays > 3;
                 return (
-                  <div key={chatter.user_id}>
+                  <div key={chatter.user_id} className={chatsOverdue ? "bg-destructive/10 border-l-4 border-destructive" : ""}>
                     <div
                       className="px-4 py-3 flex flex-col gap-2 hover:bg-secondary/30 transition-colors cursor-pointer"
                       onClick={() => setExpandedChatter(expandedChatter === chatter.user_id ? null : chatter.user_id)}
