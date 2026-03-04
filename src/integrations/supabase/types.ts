@@ -47,6 +47,33 @@ export type Database = {
         }
         Relationships: []
       }
+      bot_messages: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          message: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          message?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          message?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       daily_goals: {
         Row: {
           created_at: string
