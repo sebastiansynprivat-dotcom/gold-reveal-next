@@ -99,13 +99,19 @@ export default function HomescreenTutorial({ isFirstLogin, manualOpen, onManualC
                   href={t.videoUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 text-xs font-medium text-accent hover:underline mt-1"
-                  onClick={(e) => {
+                  className="inline-flex items-center gap-2 text-xs font-medium text-accent hover:underline mt-1"
+                  onClickCapture={(e) => {
                     e.stopPropagation();
-                    window.open(t.videoUrl, "_blank", "noopener,noreferrer");
-                    e.preventDefault();
                   }}
-                  onPointerDown={(e) => e.stopPropagation()}
+                  onPointerDownCapture={(e) => {
+                    e.stopPropagation();
+                  }}
+                  onMouseDownCapture={(e) => {
+                    e.stopPropagation();
+                  }}
+                  onTouchStartCapture={(e) => {
+                    e.stopPropagation();
+                  }}
                 >
                   <ExternalLink className="h-3.5 w-3.5" />
                   Video-Anleitung ansehen
