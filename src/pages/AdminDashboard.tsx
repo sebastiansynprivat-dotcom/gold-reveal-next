@@ -426,6 +426,14 @@ export default function AdminDashboard() {
                     <Button
                       variant="ghost"
                       size="sm"
+                      onClick={() => setDeleteTarget(chatter)}
+                      className="text-destructive hover:text-destructive/80 shrink-0"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => setPushTarget(chatter)}
                       className="text-accent hover:text-accent/80 shrink-0"
                     >
