@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
+import ChatterStatsCard from "@/components/ChatterStatsCard";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 // Platform colors – premium aesthetic matching gold/dark theme
