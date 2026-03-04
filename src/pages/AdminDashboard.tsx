@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Users, Send, Bell, Search, KeyRound, Plus, Package, Trash2 } from "lucide-react";
+import { Users, Send, Bell, Search, KeyRound, Plus, Package, Trash2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -60,7 +60,8 @@ export default function AdminDashboard() {
   const [assigning, setAssigning] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<ChatterProfile | null>(null);
   const [deleting, setDeleting] = useState(false);
-
+  const [reassignTarget, setReassignTarget] = useState<ChatterProfile | null>(null);
+  const [reassigning, setReassigning] = useState(false);
   useEffect(() => {
     loadChatters();
     loadAccounts();
@@ -168,6 +169,45 @@ export default function AdminDashboard() {
       toast.error("Fehler: " + err.message);
     }
     setDeleting(false);
+  };
+
+  const reassignAccount = async (newAccountId: string) => {
+    if (!reassignTarget) return;
+    setReassigning(true);
+    try {
+      // Free old account if any
+      await supabase
+        .from("accounts")
+        .update({ assigned_to: null, assigned_at: null })
+        .eq("assigned_to", reassignTarget.user_id);
+
+      // Assign new account
+      const { data: newAcc } = await supabase
+        .from("accounts")
+        .update({ assigned_to: reassignTarget.user_id, assigned_at: new Date().toISOString() })
+        .eq("id", newAccountId)
+        .select()
+        .single();
+
+      if (newAcc) {
+        await supabase
+          .from("profiles")
+          .update({
+            account_email: newAcc.account_email,
+            account_password: newAcc.account_password,
+            account_domain: newAcc.account_domain,
+          })
+          .eq("user_id", reassignTarget.user_id);
+      }
+
+      toast.success(`Account für ${reassignTarget.group_name || "Chatter"} geändert!`);
+      setReassignTarget(null);
+      loadChatters();
+      loadAccounts();
+    } catch (err: any) {
+      toast.error("Fehler: " + err.message);
+    }
+    setReassigning(false);
   };
 
   const sendIndividualPush = async () => {
@@ -412,8 +452,18 @@ export default function AdminDashboard() {
                     <Button
                       variant="ghost"
                       size="sm"
+                      onClick={() => setReassignTarget(chatter)}
+                      className="text-foreground hover:text-foreground/80 shrink-0"
+                      title="Account ändern"
+                    >
+                      <RefreshCw className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => setDeleteTarget(chatter)}
                       className="text-destructive hover:text-destructive/80 shrink-0"
+                      title="Account entfernen"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
@@ -578,6 +628,53 @@ export default function AdminDashboard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Reassign Account Dialog */}
+      <Dialog open={!!reassignTarget} onOpenChange={(o) => { if (!o) setReassignTarget(null); }}>
+        <DialogContent className="glass-card border-border sm:max-w-md max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">
+              Account ändern für {reassignTarget?.group_name || "Chatter"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            {reassignTarget?.account_email && (
+              <p className="text-xs text-muted-foreground">
+                Aktuell: <span className="text-foreground font-medium">{reassignTarget.account_email}</span>
+              </p>
+            )}
+            <p className="text-xs text-muted-foreground">Wähle einen freien Account aus:</p>
+            {(() => {
+              const freeAccs = accounts.filter((a) => !a.assigned_to);
+              if (freeAccs.length === 0) {
+                return (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Keine freien Accounts verfügbar.
+                  </p>
+                );
+              }
+              return (
+                <div className="divide-y divide-border rounded-xl border border-border overflow-hidden">
+                  {freeAccs.map((acc) => (
+                    <button
+                      key={acc.id}
+                      onClick={() => reassignAccount(acc.id)}
+                      disabled={reassigning}
+                      className="w-full p-3 text-left hover:bg-secondary/30 transition-colors disabled:opacity-50"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-foreground">{acc.account_email}</span>
+                        <Badge variant="secondary" className="text-[10px]">{acc.platform}</Badge>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">Domain: {acc.account_domain}</p>
+                    </button>
+                  ))}
+                </div>
+              );
+            })()}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
