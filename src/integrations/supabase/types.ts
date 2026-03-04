@@ -115,6 +115,30 @@ export type Database = {
           },
         ]
       }
+      chatter_summaries: {
+        Row: {
+          created_at: string
+          id: string
+          summary: string
+          summary_date: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          summary?: string
+          summary_date?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          summary?: string
+          summary_date?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       daily_goals: {
         Row: {
           created_at: string
