@@ -62,9 +62,13 @@ export default function AdminDashboard() {
   const [deleting, setDeleting] = useState(false);
   const [reassignTarget, setReassignTarget] = useState<ChatterProfile | null>(null);
   const [reassigning, setReassigning] = useState(false);
+  const [deletingPool, setDeletingPool] = useState(false);
+  const [deletePoolConfirm, setDeletePoolConfirm] = useState(false);
+  const [offers, setOffers] = useState<{ name: string; target_path: string }[]>([]);
   useEffect(() => {
     loadChatters();
     loadAccounts();
+    loadOffers();
   }, []);
 
   const loadChatters = async () => {
@@ -88,6 +92,62 @@ export default function AdminDashboard() {
       .select("*")
       .order("created_at", { ascending: true });
     setAccounts(data || []);
+  };
+
+  const loadOffers = async () => {
+    const { data } = await supabase
+      .from("quiz_routes")
+      .select("name, target_path")
+      .eq("is_active", true);
+    setOffers(data || []);
+  };
+
+  const deletePool = async () => {
+    if (!selectedPlatform) return;
+    setDeletingPool(true);
+    try {
+      // Unassign all accounts for this platform from profiles
+      const platformAccs = accounts.filter((a) => a.platform === selectedPlatform);
+      for (const acc of platformAccs) {
+        if (acc.assigned_to) {
+          await supabase
+            .from("profiles")
+            .update({ account_email: null, account_password: null, account_domain: null })
+            .eq("user_id", acc.assigned_to);
+        }
+      }
+      // Delete all accounts for this platform
+      await supabase
+        .from("accounts")
+        .delete()
+        .eq("platform", selectedPlatform);
+
+      toast.success(`Pool "${selectedPlatform}" gelöscht!`);
+      setDeletePoolConfirm(false);
+      setAccountPoolOpen(false);
+      setSelectedPlatform("");
+      loadAccounts();
+      loadChatters();
+    } catch (err: any) {
+      toast.error("Fehler: " + err.message);
+    }
+    setDeletingPool(false);
+  };
+
+  const updatePoolOffer = async (offerName: string) => {
+    if (!selectedPlatform) return;
+    // Rename all accounts from old platform name to new offer name
+    const { error } = await supabase
+      .from("accounts")
+      .update({ platform: offerName })
+      .eq("platform", selectedPlatform);
+    if (error) {
+      toast.error("Fehler beim Ändern");
+      return;
+    }
+    toast.success(`Pool umbenannt zu "${offerName}"`);
+    setSelectedPlatform(offerName);
+    loadAccounts();
   };
 
   const platforms = [...new Set(accounts.map((a) => a.platform).filter(Boolean))];
@@ -494,6 +554,35 @@ export default function AdminDashboard() {
           </DialogHeader>
 
           <div className="space-y-4">
+            {/* Offer zuordnen + Pool löschen */}
+            <div className="flex items-center gap-2">
+              <div className="flex-1">
+                <label className="text-[10px] text-muted-foreground mb-1 block">Verknüpftes Offer</label>
+                <select
+                  value={selectedPlatform}
+                  onChange={(e) => updatePoolOffer(e.target.value)}
+                  className="w-full rounded-md border border-border bg-background text-foreground text-xs px-3 py-2"
+                >
+                  <option value={selectedPlatform}>{selectedPlatform}</option>
+                  {offers
+                    .filter((o) => o.name !== selectedPlatform && !platforms.includes(o.name))
+                    .map((o) => (
+                      <option key={o.name} value={o.name}>{o.name} ({o.target_path})</option>
+                    ))}
+                </select>
+              </div>
+              <div className="pt-4">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setDeletePoolConfirm(true)}
+                >
+                  <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                  Pool löschen
+                </Button>
+              </div>
+            </div>
+
             {/* Add new account */}
             <div className="space-y-2 border border-border rounded-xl p-3">
               <p className="text-xs font-semibold text-foreground">Neuen Account hinzufügen</p>
@@ -675,6 +764,24 @@ export default function AdminDashboard() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Pool Confirmation */}
+      <AlertDialog open={deletePoolConfirm} onOpenChange={setDeletePoolConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Pool "{selectedPlatform}" löschen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Alle Accounts in diesem Pool werden gelöscht und zugewiesene Account-Daten bei Chattern entfernt. Diese Aktion kann nicht rückgängig gemacht werden.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletingPool}>Abbrechen</AlertDialogCancel>
+            <AlertDialogAction onClick={deletePool} disabled={deletingPool} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {deletingPool ? "Wird gelöscht..." : "Pool löschen"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
