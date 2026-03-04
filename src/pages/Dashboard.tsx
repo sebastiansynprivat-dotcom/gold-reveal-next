@@ -63,6 +63,7 @@ export default function Dashboard() {
   // Force re-render when drive state changes
   const [driveVersion, setDriveVersion] = useState(0);
   const [isFirstLogin, setIsFirstLogin] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(false);
   const [isPwaInstalled, setIsPwaInstalled] = useState(() => {
     return window.matchMedia("(display-mode: standalone)").matches
       || (window.navigator as any).standalone === true;
@@ -277,7 +278,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <HomescreenTutorial isFirstLogin={isFirstLogin} />
+      <HomescreenTutorial isFirstLogin={isFirstLogin} manualOpen={showTutorial} onManualClose={() => setShowTutorial(false)} />
       {/* Header with Telegram + Umsatz inline */}
       <header className="border-b border-border">
         <div className="container max-w-5xl mx-auto px-4 py-3 lg:px-8">
@@ -496,15 +497,18 @@ export default function Dashboard() {
 
         {/* PWA Install To-Do – between Status and Account, non-dismissable, auto-hides when installed */}
         {!isPwaInstalled && (
-          <div className="flex items-center gap-3 glass-card-subtle rounded-xl p-3 lg:p-4 border border-accent/30 bg-accent/5">
+          <button
+            onClick={() => setShowTutorial(true)}
+            className="w-full flex items-center gap-3 glass-card-subtle rounded-xl p-3 lg:p-4 border border-accent/30 bg-accent/5 text-left cursor-pointer hover:bg-accent/10 transition-colors"
+          >
             <Smartphone className="h-5 w-5 text-accent shrink-0" />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-foreground">Deine Aufgabe bevor du startest: App zum Homescreen hinzufügen</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Damit du Push-Benachrichtigungen bekommst und die App wie gewohnt nutzen kannst.
+              <p className="text-xs text-accent mt-0.5 hover:underline">
+                Wie geht das?
               </p>
             </div>
-          </div>
+          </button>
         )}
 
         {/* Account-Daten */}
