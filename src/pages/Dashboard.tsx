@@ -335,7 +335,9 @@ export default function Dashboard() {
 
         {/* Account-Daten */}
         <section className="glass-card-subtle rounded-xl p-4 lg:p-6">
-          <h2 className="text-sm lg:text-base font-semibold text-foreground mb-3">Deine Account-Daten</h2>
+          <h2 className="text-sm lg:text-base font-semibold text-foreground mb-3">
+            {assignedAccounts.length > 1 ? "Deine Accounts" : "Dein Account"}
+          </h2>
           {assignedAccounts.length === 0 ? (
             <p className="text-xs text-muted-foreground">Noch keine Accounts zugewiesen.</p>
           ) : (
