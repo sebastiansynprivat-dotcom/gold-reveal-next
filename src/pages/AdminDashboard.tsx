@@ -941,15 +941,21 @@ export default function AdminDashboard() {
 
         {activeTab === "chatter" && (<>
         {/* Stats */}
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-3">
           <div className="glass-card-subtle rounded-xl p-4 text-center">
             <p className="text-[10px] text-muted-foreground mb-0.5">Chatter gesamt</p>
             <p className="text-2xl font-bold text-gold-gradient">{chatters.length}</p>
           </div>
           <div className="glass-card-subtle rounded-xl p-4 text-center">
-            <p className="text-[10px] text-muted-foreground mb-0.5">Mit Telegram-ID</p>
+            <p className="text-[10px] text-muted-foreground mb-0.5">Mit Telegram</p>
             <p className="text-2xl font-bold text-gold-gradient">
               {chatters.filter((c) => c.telegram_id).length}
+            </p>
+          </div>
+          <div className="glass-card-subtle rounded-xl p-4 text-center">
+            <p className="text-[10px] text-muted-foreground mb-0.5">Mit Push</p>
+            <p className="text-2xl font-bold text-gold-gradient">
+              {chatters.filter((c) => pushUsers.has(c.user_id)).length}
             </p>
           </div>
         </div>
