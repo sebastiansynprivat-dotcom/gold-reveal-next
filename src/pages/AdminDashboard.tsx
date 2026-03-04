@@ -525,11 +525,32 @@ export default function AdminDashboard() {
     setBroadcastSending(false);
   };
 
-  const filtered = chatters.filter(
-    (c) =>
-      c.group_name?.toLowerCase().includes(search.toLowerCase()) ||
-      c.telegram_id?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = useMemo(() => {
+    let result = chatters.filter(
+      (c) =>
+        c.group_name?.toLowerCase().includes(search.toLowerCase()) ||
+        c.telegram_id?.toLowerCase().includes(search.toLowerCase())
+    );
+
+    switch (chatterFilter) {
+      case "no_telegram":
+        result = result.filter((c) => !c.telegram_id || c.telegram_id.trim() === "");
+        break;
+      case "open_2d":
+        result = result.filter((c) => getChatterFakeStats(c.user_id).avgOpenDays >= 2);
+        break;
+      case "top_tag":
+        result = [...result].sort((a, b) => getChatterFakeStats(b.user_id).today - getChatterFakeStats(a.user_id).today);
+        break;
+      case "top_woche":
+        result = [...result].sort((a, b) => getChatterFakeStats(b.user_id).week - getChatterFakeStats(a.user_id).week);
+        break;
+      case "top_monat":
+        result = [...result].sort((a, b) => getChatterFakeStats(b.user_id).month - getChatterFakeStats(a.user_id).month);
+        break;
+    }
+    return result;
+  }, [chatters, search, chatterFilter]);
 
   const openGoalEditor = async (chatter: ChatterProfile) => {
     setGoalTarget(chatter);
