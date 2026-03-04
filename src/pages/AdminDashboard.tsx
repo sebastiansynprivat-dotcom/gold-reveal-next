@@ -124,8 +124,9 @@ export default function AdminDashboard() {
   const [expandedChatter, setExpandedChatter] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"einnahmen" | "chatter" | "botdms">("einnahmen");
   const [chatterFilter, setChatterFilter] = useState<ChatterFilter>("alle");
-  const [botMessages, setBotMessages] = useState<Record<string, { message: string; isActive: boolean; saving: boolean }>>({});
+  const [botMessages, setBotMessages] = useState<Record<string, { message: string; followUp: string; isActive: boolean; saving: boolean }>>({});
   const [botMessagesLoaded, setBotMessagesLoaded] = useState(false);
+  const [expandedBot, setExpandedBot] = useState<string | null>(null);
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("30");
   const [customFrom, setCustomFrom] = useState<Date | undefined>(undefined);
   const [customTo, setCustomTo] = useState<Date | undefined>(undefined);
@@ -227,35 +228,45 @@ export default function AdminDashboard() {
   const loadBotMessages = async () => {
     const { data } = await supabase
       .from("bot_messages" as any)
-      .select("user_id, message, is_active");
+      .select("account_id, message, follow_up_message, is_active");
     if (data) {
-      const map: Record<string, { message: string; isActive: boolean; saving: boolean }> = {};
-      data.forEach((d: any) => {
-        map[d.user_id] = { message: d.message || "", isActive: d.is_active, saving: false };
+      const map: Record<string, { message: string; followUp: string; isActive: boolean; saving: boolean }> = {};
+      (data as any[]).forEach((d) => {
+        if (d.account_id) {
+          map[d.account_id] = { message: d.message || "", followUp: d.follow_up_message || "", isActive: d.is_active, saving: false };
+        }
       });
       setBotMessages(map);
     }
     setBotMessagesLoaded(true);
   };
 
-  const modsWithAccounts = useMemo(() => {
-    return chatters.filter((c) => (c.assigned_accounts?.length || 0) > 0);
-  }, [chatters]);
+  const allAssignedAccounts = useMemo(() => {
+    return accounts.filter((a) => a.assigned_to);
+  }, [accounts]);
 
-  const saveBotMessage = async (userId: string) => {
-    const entry = botMessages[userId];
+  const saveBotMessage = async (accountId: string) => {
+    const entry = botMessages[accountId];
     if (!entry) return;
-    setBotMessages((prev) => ({ ...prev, [userId]: { ...prev[userId], saving: true } }));
+    const account = accounts.find((a) => a.id === accountId);
+    setBotMessages((prev) => ({ ...prev, [accountId]: { ...prev[accountId], saving: true } }));
     const { error } = await supabase
       .from("bot_messages" as any)
-      .upsert({ user_id: userId, message: entry.message, is_active: entry.isActive } as any, { onConflict: "user_id" });
-    setBotMessages((prev) => ({ ...prev, [userId]: { ...prev[userId], saving: false } }));
+      .upsert({
+        account_id: accountId,
+        user_id: account?.assigned_to,
+        message: entry.message,
+        follow_up_message: entry.followUp,
+        is_active: entry.isActive,
+      } as any, { onConflict: "account_id" });
+    setBotMessages((prev) => ({ ...prev, [accountId]: { ...prev[accountId], saving: false } }));
     if (error) {
       toast.error("Fehler beim Speichern");
     } else {
       toast.success("Bot-Nachricht gespeichert");
     }
   };
+
 
 
   const deletePool = async () => {
