@@ -191,11 +191,19 @@ export default function AdminDashboard() {
     heute: "Heute", gestern: "Gestern", "7": "7 Tage", "30": "30 Tage", "90": "90 Tage", custom: "Zeitraum",
   };
 
+  const loadPushUsers = async () => {
+    const { data } = await supabase.from("push_subscriptions").select("user_id");
+    if (data) {
+      setPushUsers(new Set(data.map((d) => d.user_id).filter(Boolean) as string[]));
+    }
+  };
+
   useEffect(() => {
     loadChatters();
     loadAccounts();
     loadOffers();
     loadLoginStats();
+    loadPushUsers();
   }, []);
 
   const loadChatters = async () => {
