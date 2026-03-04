@@ -269,7 +269,7 @@ export default function AdminDashboard() {
       .from("accounts")
       .select("*")
       .order("created_at", { ascending: true });
-    setAccounts(data || []);
+    setAccounts((data as any[] || []) as AccountEntry[]);
   };
 
   const loadOffers = async () => {
