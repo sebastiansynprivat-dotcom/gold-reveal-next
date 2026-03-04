@@ -47,7 +47,7 @@ const generateFakeRevenueData = () => {
 };
 
 type TimeFilter = "heute" | "gestern" | "7" | "30" | "90" | "custom";
-type ChatterFilter = "alle" | "open_2d" | "top_tag" | "top_woche" | "top_monat" | "no_telegram";
+type ChatterFilter = "alle" | "open_2d" | "top_tag" | "top_woche" | "top_monat" | "no_telegram" | "no_push";
 
 // Reuse hash function from ChatterStatsCard for consistent fake stats
 const hashCodeAdmin = (s: string) => {
@@ -675,6 +675,9 @@ export default function AdminDashboard() {
       case "no_telegram":
         result = result.filter((c) => !c.telegram_id || c.telegram_id.trim() === "");
         break;
+      case "no_push":
+        result = result.filter((c) => !pushUsers.has(c.user_id));
+        break;
       case "open_2d":
         result = result.filter((c) => getChatterFakeStats(c.user_id).avgOpenDays >= 3);
         break;
@@ -1001,6 +1004,7 @@ export default function AdminDashboard() {
             { key: "top_woche", label: "Top Woche", icon: TrendingUp },
             { key: "top_monat", label: "Top Monat", icon: DollarSign },
             { key: "no_telegram", label: "Telegram fehlt", icon: AlertTriangle },
+            { key: "no_push", label: "Push fehlt", icon: BellOff },
           ] as const).map(({ key, label, icon: Icon }) => (
             <button
               key={key}
