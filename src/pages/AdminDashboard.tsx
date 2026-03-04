@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Users, Send, Bell, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, CalendarDays, CalendarRange, Filter, MessageSquare, Star, AlertTriangle, Bot, Save, Power, Copy } from "lucide-react";
+import { Users, Send, Bell, BellOff, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, CalendarDays, CalendarRange, Filter, MessageSquare, Star, AlertTriangle, Bot, Save, Power, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -143,6 +143,7 @@ export default function AdminDashboard() {
   const [customFrom, setCustomFrom] = useState<Date | undefined>(undefined);
   const [customTo, setCustomTo] = useState<Date | undefined>(undefined);
   const [loginStats, setLoginStats] = useState<Record<string, LoginStats>>({});
+  const [pushUsers, setPushUsers] = useState<Set<string>>(new Set());
 
   const allRevenueData = useMemo(() => generateFakeRevenueData(), []);
 
@@ -190,11 +191,19 @@ export default function AdminDashboard() {
     heute: "Heute", gestern: "Gestern", "7": "7 Tage", "30": "30 Tage", "90": "90 Tage", custom: "Zeitraum",
   };
 
+  const loadPushUsers = async () => {
+    const { data } = await supabase.from("push_subscriptions").select("user_id");
+    if (data) {
+      setPushUsers(new Set(data.map((d) => d.user_id).filter(Boolean) as string[]));
+    }
+  };
+
   useEffect(() => {
     loadChatters();
     loadAccounts();
     loadOffers();
     loadLoginStats();
+    loadPushUsers();
   }, []);
 
   const loadChatters = async () => {
@@ -1029,6 +1038,11 @@ export default function AdminDashboard() {
                             <KeyRound className="h-3 w-3 mr-1" />
                             {chatter.assigned_accounts!.length} Account{chatter.assigned_accounts!.length > 1 ? "s" : ""}
                           </Badge>
+                        )}
+                        {pushUsers.has(chatter.user_id) ? (
+                          <span className="shrink-0" aria-label="Push aktiviert"><Bell className="h-4 w-4 text-accent" /></span>
+                        ) : (
+                          <span className="shrink-0" aria-label="Push nicht aktiviert"><BellOff className="h-4 w-4 text-muted-foreground/50" /></span>
                         )}
                       </div>
                       {/* Row 2: Action Buttons */}
