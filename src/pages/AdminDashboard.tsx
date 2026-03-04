@@ -547,7 +547,15 @@ export default function AdminDashboard() {
           <div className="space-y-4">
             {/* Revenue Chart */}
             <div className="glass-card rounded-xl p-4">
-              <h2 className="text-sm font-semibold text-foreground mb-4">Umsatz – letzte 30 Tage</h2>
+              <h2 className="text-sm font-semibold text-foreground mb-1">Umsatz – letzte 30 Tage</h2>
+              <div className="flex gap-3 mb-3">
+                {Object.entries(PLATFORM_COLORS).map(([key, color]) => (
+                  <div key={key} className="flex items-center gap-1.5">
+                    <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
+                    <span className="text-[10px] text-muted-foreground capitalize">{key}</span>
+                  </div>
+                ))}
+              </div>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={revenueData}>
@@ -572,43 +580,32 @@ export default function AdminDashboard() {
                         borderRadius: "8px",
                         fontSize: "12px",
                       }}
-                      formatter={(value: number) => [`${value.toLocaleString("de-DE")}€`, "Umsatz"]}
+                      formatter={(value: number, name: string) => [`${value.toLocaleString("de-DE")}€`, name]}
                     />
-                    <Line
-                      type="monotone"
-                      dataKey="amount"
-                      stroke="hsl(var(--accent))"
-                      strokeWidth={2.5}
-                      dot={false}
-                      activeDot={{ r: 4, fill: "hsl(var(--accent))" }}
-                    />
+                    <Line type="monotone" dataKey="maloum" stroke={PLATFORM_COLORS.maloum} strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
+                    <Line type="monotone" dataKey="brezzels" stroke={PLATFORM_COLORS.brezzels} strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
+                    <Line type="monotone" dataKey="4based" stroke={PLATFORM_COLORS["4based"]} strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
             </div>
 
-            {/* Revenue Stat Tiles */}
+            {/* Platform Stat Tiles */}
             <div className="grid grid-cols-3 gap-3">
-              <div className="glass-card-subtle rounded-xl p-4 text-center">
-                <div className="flex items-center justify-center mb-1">
-                  <DollarSign className="h-3.5 w-3.5 text-accent mr-1" />
-                  <p className="text-[10px] text-muted-foreground">Heute</p>
-                </div>
-                <p className="text-xl font-bold text-gold-gradient">{todayRevenue.toLocaleString("de-DE")}€</p>
+              <div className="glass-card-subtle rounded-xl p-4 text-center" style={{ borderTop: `3px solid ${PLATFORM_COLORS.maloum}` }}>
+                <p className="text-[10px] text-muted-foreground mb-1">Maloum</p>
+                <p className="text-xl font-bold text-foreground">{platformTotals.maloum.toLocaleString("de-DE")}€</p>
+                <p className="text-[9px] text-muted-foreground mt-0.5">30 Tage gesamt</p>
               </div>
-              <div className="glass-card-subtle rounded-xl p-4 text-center">
-                <div className="flex items-center justify-center mb-1">
-                  <Calendar className="h-3.5 w-3.5 text-accent mr-1" />
-                  <p className="text-[10px] text-muted-foreground">Ø pro Tag</p>
-                </div>
-                <p className="text-xl font-bold text-gold-gradient">{avgRevenue.toLocaleString("de-DE")}€</p>
+              <div className="glass-card-subtle rounded-xl p-4 text-center" style={{ borderTop: `3px solid ${PLATFORM_COLORS.brezzels}` }}>
+                <p className="text-[10px] text-muted-foreground mb-1">Brezzels</p>
+                <p className="text-xl font-bold text-foreground">{platformTotals.brezzels.toLocaleString("de-DE")}€</p>
+                <p className="text-[9px] text-muted-foreground mt-0.5">30 Tage gesamt</p>
               </div>
-              <div className="glass-card-subtle rounded-xl p-4 text-center">
-                <div className="flex items-center justify-center mb-1">
-                  <TrendingUp className="h-3.5 w-3.5 text-accent mr-1" />
-                  <p className="text-[10px] text-muted-foreground">Gesamt (30T)</p>
-                </div>
-                <p className="text-xl font-bold text-gold-gradient">{totalRevenue.toLocaleString("de-DE")}€</p>
+              <div className="glass-card-subtle rounded-xl p-4 text-center" style={{ borderTop: `3px solid ${PLATFORM_COLORS["4based"]}` }}>
+                <p className="text-[10px] text-muted-foreground mb-1">4Based</p>
+                <p className="text-xl font-bold text-foreground">{platformTotals["4based"].toLocaleString("de-DE")}€</p>
+                <p className="text-[9px] text-muted-foreground mt-0.5">30 Tage gesamt</p>
               </div>
             </div>
           </div>
