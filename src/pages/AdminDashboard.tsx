@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Users, Send, Bell, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, Filter, MessageSquare, Star, AlertTriangle, Bot, Save, Power, Copy } from "lucide-react";
+import { Users, Send, Bell, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, CalendarDays, CalendarRange, Filter, MessageSquare, Star, AlertTriangle, Bot, Save, Power, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -64,6 +64,12 @@ const getChatterFakeStats = (userId: string) => {
   const avgOpenDays = 1 + (h % 5);
   return { today, week: Math.round(week), month: Math.round(month), avgOpenDays };
 };
+
+interface LoginStats {
+  today: number;
+  week: number;
+  month: number;
+}
 
 interface ChatterProfile {
   user_id: string;
@@ -136,6 +142,7 @@ export default function AdminDashboard() {
   const [newPlatformName, setNewPlatformName] = useState("");
   const [customFrom, setCustomFrom] = useState<Date | undefined>(undefined);
   const [customTo, setCustomTo] = useState<Date | undefined>(undefined);
+  const [loginStats, setLoginStats] = useState<Record<string, LoginStats>>({});
 
   const allRevenueData = useMemo(() => generateFakeRevenueData(), []);
 
@@ -187,6 +194,7 @@ export default function AdminDashboard() {
     loadChatters();
     loadAccounts();
     loadOffers();
+    loadLoginStats();
   }, []);
 
   const loadChatters = async () => {
@@ -229,6 +237,26 @@ export default function AdminDashboard() {
       .select("name, target_path")
       .eq("is_active", true);
     setOffers(data || []);
+  };
+
+  const loadLoginStats = async () => {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+    const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7).toISOString();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
+    const { data } = await supabase.from("login_events").select("user_id, logged_in_at");
+    if (!data) return;
+
+    const statsMap: Record<string, LoginStats> = {};
+    data.forEach((evt: any) => {
+      if (!statsMap[evt.user_id]) statsMap[evt.user_id] = { today: 0, week: 0, month: 0 };
+      const t = new Date(evt.logged_in_at).toISOString();
+      if (t >= todayStart) statsMap[evt.user_id].today++;
+      if (t >= weekStart) statsMap[evt.user_id].week++;
+      if (t >= monthStart) statsMap[evt.user_id].month++;
+    });
+    setLoginStats(statsMap);
   };
 
   const loadBotMessages = async () => {
@@ -972,6 +1000,8 @@ export default function AdminDashboard() {
           ) : (
             <div className="divide-y divide-border">
               {filtered.map((chatter) => {
+                const cStats = loginStats[chatter.user_id];
+                const activeToday = (cStats?.today || 0) > 0;
                 return (
                   <div key={chatter.user_id}>
                     <div
@@ -980,10 +1010,43 @@ export default function AdminDashboard() {
                     >
                       {/* Row 1: Avatar + Name + Badge */}
                       <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
+                        <div className="h-9 w-9 rounded-full bg-accent/10 flex items-center justify-center shrink-0 relative">
                           <span className="text-xs font-bold text-accent">
                             {(chatter.group_name || "?")[0].toUpperCase()}
                           </span>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <button
+                                onClick={(e) => e.stopPropagation()}
+                                className="absolute -top-0.5 -right-0.5 z-10 flex items-center justify-center w-4 h-4 rounded-full cursor-pointer focus:outline-none"
+                                aria-label="Login-Statistik"
+                              >
+                                <span className={cn(
+                                  "block w-2.5 h-2.5 rounded-full",
+                                  activeToday
+                                    ? "bg-green-500 shadow-[0_0_6px_1px_rgba(34,197,94,0.5)] animate-pulse"
+                                    : "bg-muted-foreground/40"
+                                )} />
+                              </button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-48 p-3 glass-card border-border" side="right" align="start" onClick={(e) => e.stopPropagation()}>
+                              <p className="text-[11px] font-semibold text-foreground mb-2">Login-Aktivität</p>
+                              <div className="space-y-1.5">
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="flex items-center gap-1.5 text-muted-foreground"><CalendarDays className="w-3.5 h-3.5" /> Heute</span>
+                                  <span className="font-semibold text-foreground">{cStats?.today || 0}×</span>
+                                </div>
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="flex items-center gap-1.5 text-muted-foreground"><CalendarRange className="w-3.5 h-3.5" /> Woche</span>
+                                  <span className="font-semibold text-foreground">{cStats?.week || 0}×</span>
+                                </div>
+                                <div className="flex items-center justify-between text-xs">
+                                  <span className="flex items-center gap-1.5 text-muted-foreground"><CalendarIcon className="w-3.5 h-3.5" /> Monat</span>
+                                  <span className="font-semibold text-foreground">{cStats?.month || 0}×</span>
+                                </div>
+                              </div>
+                            </PopoverContent>
+                          </Popover>
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-foreground truncate">
