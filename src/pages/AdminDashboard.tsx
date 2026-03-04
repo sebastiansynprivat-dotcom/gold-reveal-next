@@ -1091,37 +1091,32 @@ export default function AdminDashboard() {
         </div>
 
         {/* Offer-Verteilung (collapsible) */}
-        <section className="glass-card rounded-xl overflow-hidden">
-          <button
-            onClick={() => setOfferVerteilungOpen(!offerVerteilungOpen)}
-            className="w-full p-4 flex items-center justify-between hover:bg-secondary/30 transition-colors"
-          >
-            <div className="flex items-center gap-2">
+        <section className="glass-card rounded-xl p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => setOfferVerteilungOpen(!offerVerteilungOpen)}
+              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+            >
+              <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${offerVerteilungOpen ? "rotate-90" : ""}`} />
               <Percent className="h-4 w-4 text-accent" />
               <h2 className="text-sm font-semibold text-foreground">Offer-Verteilung</h2>
               {!offerVerteilungOpen && quizRoutes.length > 0 && (
-                <div className="flex gap-1.5 ml-2">
+                <div className="flex gap-1.5 ml-1">
                   {quizRoutes.map((route, i) => {
                     const colors = ["hsl(var(--accent))", "#3b82f6", "#22d3ee", "#a855f7"];
                     return (
-                      <span key={route.id} className="text-[10px] text-muted-foreground">
+                      <Badge key={route.id} variant="secondary" className="text-[10px]">
                         <span className="inline-block h-2 w-2 rounded-full mr-0.5" style={{ backgroundColor: colors[i % colors.length] }} />
                         {routeWeights[route.id] || 0}%
-                      </span>
+                      </Badge>
                     );
                   })}
                 </div>
               )}
-            </div>
-            <svg
-              className={cn("h-4 w-4 text-muted-foreground transition-transform duration-200", offerVerteilungOpen && "rotate-180")}
-              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
+            </button>
+          </div>
           {offerVerteilungOpen && (
-            <div className="px-4 pb-4 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
               {quizRoutes.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-4">Keine Offers konfiguriert.</p>
               ) : (
