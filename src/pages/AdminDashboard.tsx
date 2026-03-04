@@ -554,6 +554,35 @@ export default function AdminDashboard() {
           </DialogHeader>
 
           <div className="space-y-4">
+            {/* Offer zuordnen + Pool löschen */}
+            <div className="flex items-center gap-2">
+              <div className="flex-1">
+                <label className="text-[10px] text-muted-foreground mb-1 block">Verknüpftes Offer</label>
+                <select
+                  value={selectedPlatform}
+                  onChange={(e) => updatePoolOffer(e.target.value)}
+                  className="w-full rounded-md border border-border bg-background text-foreground text-xs px-3 py-2"
+                >
+                  <option value={selectedPlatform}>{selectedPlatform}</option>
+                  {offers
+                    .filter((o) => o.name !== selectedPlatform && !platforms.includes(o.name))
+                    .map((o) => (
+                      <option key={o.name} value={o.name}>{o.name} ({o.target_path})</option>
+                    ))}
+                </select>
+              </div>
+              <div className="pt-4">
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => setDeletePoolConfirm(true)}
+                >
+                  <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                  Pool löschen
+                </Button>
+              </div>
+            </div>
+
             {/* Add new account */}
             <div className="space-y-2 border border-border rounded-xl p-3">
               <p className="text-xs font-semibold text-foreground">Neuen Account hinzufügen</p>
