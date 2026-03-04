@@ -514,6 +514,19 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* PWA Install To-Do – between Status and Account, non-dismissable, auto-hides when installed */}
+        {!isPwaInstalled && (
+          <div className="flex items-center gap-3 glass-card-subtle rounded-xl p-3 lg:p-4 border border-accent/30 bg-accent/5">
+            <Smartphone className="h-5 w-5 text-accent shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-foreground">App zum Homescreen hinzufügen</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Damit du Push-Benachrichtigungen bekommst und die App wie gewohnt nutzen kannst.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Account-Daten */}
         <section className="glass-card-subtle rounded-xl overflow-hidden">
           <button
