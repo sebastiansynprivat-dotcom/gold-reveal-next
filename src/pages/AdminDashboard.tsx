@@ -92,6 +92,7 @@ interface AccountEntry {
   assigned_to: string | null;
   assigned_at: string | null;
   created_at: string;
+  is_manual?: boolean;
 }
 
 export default function AdminDashboard() {
