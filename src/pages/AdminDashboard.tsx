@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Users, Send, Bell, BellOff, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, CalendarDays, CalendarRange, Filter, MessageSquare, Star, AlertTriangle, Bot, Save, Power, Copy } from "lucide-react";
+import { Users, Send, Bell, BellOff, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, CalendarDays, CalendarRange, Filter, MessageSquare, Star, AlertTriangle, Bot, Save, Power, Copy, Smartphone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -146,6 +146,7 @@ export default function AdminDashboard() {
   const [loginStats, setLoginStats] = useState<Record<string, LoginStats>>({});
   const [pushUsers, setPushUsers] = useState<Set<string>>(new Set());
   const [revenueUsers, setRevenueUsers] = useState<Set<string>>(new Set());
+  const [pwaUsers, setPwaUsers] = useState<Set<string>>(new Set());
 
   const allRevenueData = useMemo(() => generateFakeRevenueData(), []);
 
@@ -220,7 +221,7 @@ export default function AdminDashboard() {
     setLoading(true);
     const { data, error } = await supabase
       .from("profiles")
-      .select("user_id, group_name, telegram_id, created_at, account_email, account_password, account_domain")
+      .select("user_id, group_name, telegram_id, created_at, account_email, account_password, account_domain, pwa_installed")
       .order("created_at", { ascending: false });
     if (error) {
       toast.error("Fehler beim Laden der Chatter");
