@@ -459,7 +459,7 @@ export default function AdminDashboard() {
     setGoalSaving(false);
   };
 
-  const platformAccounts2 = selectedPlatform
+  const platformAccounts = selectedPlatform
     ? accounts.filter((a) => a.platform === selectedPlatform)
     : [];
   const freeCount = platformAccounts.filter((a) => !a.assigned_to).length;
