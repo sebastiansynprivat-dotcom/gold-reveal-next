@@ -47,7 +47,7 @@ const generateFakeRevenueData = () => {
 };
 
 type TimeFilter = "heute" | "gestern" | "7" | "30" | "90" | "custom";
-type ChatterFilter = "alle" | "open_2d" | "top_tag" | "top_woche" | "top_monat" | "no_telegram" | "no_push" | "plat_maloum" | "plat_brezzels" | "no_revenue_7d";
+type ChatterFilter = "alle" | "open_2d" | "top_tag" | "top_woche" | "top_monat" | "no_telegram" | "no_push" | "no_revenue_7d";
 
 // Reuse hash function from ChatterStatsCard for consistent fake stats
 const hashCodeAdmin = (s: string) => {
@@ -131,6 +131,7 @@ export default function AdminDashboard() {
   const [expandedChatter, setExpandedChatter] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"einnahmen" | "chatter" | "botdms">("einnahmen");
   const [chatterFilter, setChatterFilter] = useState<ChatterFilter>("alle");
+  const [platformFilters, setPlatformFilters] = useState<Set<string>>(new Set());
   const [botMessages, setBotMessages] = useState<Record<string, { message: string; followUp: string; isActive: boolean; saving: boolean }>>({});
   const [botMessagesLoaded, setBotMessagesLoaded] = useState(false);
   const [expandedBot, setExpandedBot] = useState<string | null>(null);
@@ -680,6 +681,13 @@ export default function AdminDashboard() {
         c.telegram_id?.toLowerCase().includes(search.toLowerCase())
     );
 
+    // Platform filter (independent, combinable)
+    if (platformFilters.size > 0) {
+      result = result.filter((c) =>
+        c.assigned_accounts?.some((a) => platformFilters.has(a.platform.toLowerCase()))
+      );
+    }
+
     switch (chatterFilter) {
       case "no_telegram":
         result = result.filter((c) => !c.telegram_id || c.telegram_id.trim() === "");
@@ -699,12 +707,6 @@ export default function AdminDashboard() {
       case "top_monat":
         result = [...result].sort((a, b) => getChatterFakeStats(b.user_id).month - getChatterFakeStats(a.user_id).month);
         break;
-      case "plat_maloum":
-        result = result.filter((c) => c.assigned_accounts?.some((a) => a.platform.toLowerCase() === "maloum"));
-        break;
-      case "plat_brezzels":
-        result = result.filter((c) => c.assigned_accounts?.some((a) => a.platform.toLowerCase() === "brezzels"));
-        break;
       case "no_revenue_7d": {
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -716,7 +718,7 @@ export default function AdminDashboard() {
       }
     }
     return result;
-  }, [chatters, search, chatterFilter, pushUsers, revenueUsers]);
+  }, [chatters, search, chatterFilter, pushUsers, revenueUsers, platformFilters]);
 
   const openGoalEditor = async (chatter: ChatterProfile) => {
     setGoalTarget(chatter);
