@@ -20,6 +20,7 @@ interface ChatterProfile {
   account_email?: string;
   account_password?: string;
   account_domain?: string;
+  assigned_accounts?: AccountEntry[];
 }
 
 interface AccountEntry {
