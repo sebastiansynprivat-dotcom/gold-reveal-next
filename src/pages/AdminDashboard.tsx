@@ -433,6 +433,9 @@ export default function AdminDashboard() {
                     key={p}
                     onClick={() => {
                       setSelectedPlatform(p);
+                      // Auto-fill domain from existing accounts
+                      const existingDomain = accounts.find((a) => a.platform === p)?.account_domain;
+                      setNewAccDomain(existingDomain || "");
                       setAccountPoolOpen(true);
                     }}
                     className="glass-card-subtle rounded-xl p-4 text-left hover:bg-secondary/30 transition-colors"
@@ -584,6 +587,18 @@ export default function AdminDashboard() {
               </div>
             </div>
 
+            {/* Pool Domain */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Pool-Domain</label>
+              <Input
+                value={newAccDomain}
+                onChange={(e) => setNewAccDomain(e.target.value)}
+                placeholder="Domain (z.B. brezzels.com)"
+                className="text-xs"
+              />
+              <p className="text-[10px] text-muted-foreground">Wird automatisch für alle neuen Accounts & Chatter verwendet.</p>
+            </div>
+
             {/* Add new account */}
             <div className="space-y-2 border border-border rounded-xl p-3">
               <p className="text-xs font-semibold text-foreground">Neuen Account hinzufügen</p>
@@ -597,11 +612,6 @@ export default function AdminDashboard() {
                 value={newAccPassword}
                 onChange={(e) => setNewAccPassword(e.target.value)}
                 placeholder="Passwort"
-              />
-              <Input
-                value={newAccDomain}
-                onChange={(e) => setNewAccDomain(e.target.value)}
-                placeholder="Domain (z.B. brezzels.com)"
               />
               <Button
                 onClick={addAccount}
