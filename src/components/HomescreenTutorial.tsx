@@ -40,7 +40,6 @@ export default function HomescreenTutorial({ isFirstLogin }: HomescreenTutorialP
     if (!isFirstLogin) return;
     const seen = localStorage.getItem(TUTORIAL_KEY);
     if (!seen) {
-      // Small delay so the dashboard loads first
       const timer = setTimeout(() => setOpen(true), 1200);
       return () => clearTimeout(timer);
     }
