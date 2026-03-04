@@ -142,6 +142,7 @@ export default function AdminDashboard() {
   const [addingManual, setAddingManual] = useState(false);
   const [deleteManualPoolConfirm, setDeleteManualPoolConfirm] = useState(false);
   const [deletingManualPool, setDeletingManualPool] = useState(false);
+  const [accountPoolSectionOpen, setAccountPoolSectionOpen] = useState(false);
   const [goalTarget, setGoalTarget] = useState<ChatterProfile | null>(null);
   const [goalAmount, setGoalAmount] = useState("");
   const [goalSaving, setGoalSaving] = useState(false);
