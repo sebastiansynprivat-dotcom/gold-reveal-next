@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Users, Send, Bell, BellOff, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, CalendarDays, CalendarRange, Filter, MessageSquare, Star, AlertTriangle, Bot, Save, Power, Copy, Smartphone, Percent, ChevronRight, Shield, UserPlus, UserMinus, Check, XCircle } from "lucide-react";
+import { Users, Send, Bell, BellOff, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, CalendarDays, CalendarRange, Filter, MessageSquare, Star, AlertTriangle, Bot, Save, Power, Copy, Smartphone, Percent, ChevronRight, Shield, UserPlus, UserMinus, Check, XCircle, Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -174,6 +174,8 @@ export default function AdminDashboard() {
   const [newAdminEmail, setNewAdminEmail] = useState("");
   const [addingAdmin, setAddingAdmin] = useState(false);
   const [removeAdminConfirm, setRemoveAdminConfirm] = useState<string | null>(null);
+  const [chatterSummaries, setChatterSummaries] = useState<Record<string, { summary: string; date: string }>>({});
+  const [summaryLoading, setSummaryLoading] = useState<Record<string, boolean>>({});
   const allRevenueData = useMemo(() => generateFakeRevenueData(), []);
 
   const filteredRevenueData = useMemo(() => {
