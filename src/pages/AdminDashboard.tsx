@@ -835,64 +835,70 @@ export default function AdminDashboard() {
                 return (
                   <div key={chatter.user_id}>
                     <div
-                      className="px-4 py-3 flex items-center gap-3 hover:bg-secondary/30 transition-colors cursor-pointer"
+                      className="px-4 py-3 flex flex-col gap-2 hover:bg-secondary/30 transition-colors cursor-pointer"
                       onClick={() => setExpandedChatter(expandedChatter === chatter.user_id ? null : chatter.user_id)}
                     >
-                      <div className="h-9 w-9 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
-                        <span className="text-xs font-bold text-accent">
-                          {(chatter.group_name || "?")[0].toUpperCase()}
-                        </span>
+                      {/* Row 1: Avatar + Name + Badge */}
+                      <div className="flex items-center gap-3">
+                        <div className="h-9 w-9 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
+                          <span className="text-xs font-bold text-accent">
+                            {(chatter.group_name || "?")[0].toUpperCase()}
+                          </span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">
+                            {chatter.group_name || "Kein Gruppenname"}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">
+                            Telegram: {chatter.telegram_id || "—"} · Seit{" "}
+                            {new Date(chatter.created_at).toLocaleDateString("de-DE")}
+                          </p>
+                        </div>
+                        {(chatter.assigned_accounts?.length || 0) > 0 && (
+                          <Badge variant="secondary" className="text-[10px] shrink-0">
+                            <KeyRound className="h-3 w-3 mr-1" />
+                            {chatter.assigned_accounts!.length} Account{chatter.assigned_accounts!.length > 1 ? "s" : ""}
+                          </Badge>
+                        )}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">
-                          {chatter.group_name || "Kein Gruppenname"}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground">
-                          Telegram: {chatter.telegram_id || "—"} · Seit{" "}
-                          {new Date(chatter.created_at).toLocaleDateString("de-DE")}
-                        </p>
+                      {/* Row 2: Action Buttons */}
+                      <div className="flex justify-end gap-1 -mt-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => { e.stopPropagation(); openGoalEditor(chatter); }}
+                          className="text-accent hover:text-accent/80 h-7 w-7 p-0"
+                          title="Tagesziel bearbeiten"
+                        >
+                          <Target className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => { e.stopPropagation(); setReassignTarget(chatter); }}
+                          className="text-foreground hover:text-foreground/80 h-7 w-7 p-0"
+                          title="Accounts verwalten"
+                        >
+                          <RefreshCw className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => { e.stopPropagation(); setDeleteTarget(chatter); }}
+                          className="text-destructive hover:text-destructive/80 h-7 w-7 p-0"
+                          title="Account entfernen"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => { e.stopPropagation(); setPushTarget(chatter); }}
+                          className="text-accent hover:text-accent/80 h-7 w-7 p-0"
+                        >
+                          <Send className="h-3.5 w-3.5" />
+                        </Button>
                       </div>
-                      {(chatter.assigned_accounts?.length || 0) > 0 && (
-                        <Badge variant="secondary" className="text-[10px] shrink-0">
-                          <KeyRound className="h-3 w-3 mr-1" />
-                          {chatter.assigned_accounts!.length} Account{chatter.assigned_accounts!.length > 1 ? "s" : ""}
-                        </Badge>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => { e.stopPropagation(); openGoalEditor(chatter); }}
-                        className="text-accent hover:text-accent/80 shrink-0"
-                        title="Tagesziel bearbeiten"
-                      >
-                        <Target className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => { e.stopPropagation(); setReassignTarget(chatter); }}
-                        className="text-foreground hover:text-foreground/80 shrink-0"
-                        title="Accounts verwalten"
-                      >
-                        <RefreshCw className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => { e.stopPropagation(); setDeleteTarget(chatter); }}
-                        className="text-destructive hover:text-destructive/80 shrink-0"
-                        title="Account entfernen"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => { e.stopPropagation(); setPushTarget(chatter); }}
-                        className="text-accent hover:text-accent/80 shrink-0"
-                      >
-                        <Send className="h-3.5 w-3.5" />
-                      </Button>
                     </div>
                     {expandedChatter === chatter.user_id && (
                       <ChatterStatsCard userId={chatter.user_id} name={chatter.group_name || "Chatter"} />
