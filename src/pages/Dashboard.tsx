@@ -21,6 +21,7 @@ import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo.png";
 import { format, endOfMonth, addMonths, differenceInDays } from "date-fns";
 import { de } from "date-fns/locale";
+import HomescreenTutorial from "@/components/HomescreenTutorial";
 
 const GOLD_THRESHOLD = 3000;
 const STARTER_RATE = 0.2;
