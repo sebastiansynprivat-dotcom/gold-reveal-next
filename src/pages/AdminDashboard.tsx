@@ -124,8 +124,9 @@ export default function AdminDashboard() {
   const [expandedChatter, setExpandedChatter] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"einnahmen" | "chatter" | "botdms">("einnahmen");
   const [chatterFilter, setChatterFilter] = useState<ChatterFilter>("alle");
-  const [botMessages, setBotMessages] = useState<Record<string, { message: string; isActive: boolean; saving: boolean }>>({});
+  const [botMessages, setBotMessages] = useState<Record<string, { message: string; followUp: string; isActive: boolean; saving: boolean }>>({});
   const [botMessagesLoaded, setBotMessagesLoaded] = useState(false);
+  const [expandedBot, setExpandedBot] = useState<string | null>(null);
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("30");
   const [customFrom, setCustomFrom] = useState<Date | undefined>(undefined);
   const [customTo, setCustomTo] = useState<Date | undefined>(undefined);
@@ -227,35 +228,45 @@ export default function AdminDashboard() {
   const loadBotMessages = async () => {
     const { data } = await supabase
       .from("bot_messages" as any)
-      .select("user_id, message, is_active");
+      .select("account_id, message, follow_up_message, is_active");
     if (data) {
-      const map: Record<string, { message: string; isActive: boolean; saving: boolean }> = {};
-      data.forEach((d: any) => {
-        map[d.user_id] = { message: d.message || "", isActive: d.is_active, saving: false };
+      const map: Record<string, { message: string; followUp: string; isActive: boolean; saving: boolean }> = {};
+      (data as any[]).forEach((d) => {
+        if (d.account_id) {
+          map[d.account_id] = { message: d.message || "", followUp: d.follow_up_message || "", isActive: d.is_active, saving: false };
+        }
       });
       setBotMessages(map);
     }
     setBotMessagesLoaded(true);
   };
 
-  const modsWithAccounts = useMemo(() => {
-    return chatters.filter((c) => (c.assigned_accounts?.length || 0) > 0);
-  }, [chatters]);
+  const allAssignedAccounts = useMemo(() => {
+    return accounts.filter((a) => a.assigned_to);
+  }, [accounts]);
 
-  const saveBotMessage = async (userId: string) => {
-    const entry = botMessages[userId];
+  const saveBotMessage = async (accountId: string) => {
+    const entry = botMessages[accountId];
     if (!entry) return;
-    setBotMessages((prev) => ({ ...prev, [userId]: { ...prev[userId], saving: true } }));
+    const account = accounts.find((a) => a.id === accountId);
+    setBotMessages((prev) => ({ ...prev, [accountId]: { ...prev[accountId], saving: true } }));
     const { error } = await supabase
       .from("bot_messages" as any)
-      .upsert({ user_id: userId, message: entry.message, is_active: entry.isActive } as any, { onConflict: "user_id" });
-    setBotMessages((prev) => ({ ...prev, [userId]: { ...prev[userId], saving: false } }));
+      .upsert({
+        account_id: accountId,
+        user_id: account?.assigned_to,
+        message: entry.message,
+        follow_up_message: entry.followUp,
+        is_active: entry.isActive,
+      } as any, { onConflict: "account_id" });
+    setBotMessages((prev) => ({ ...prev, [accountId]: { ...prev[accountId], saving: false } }));
     if (error) {
       toast.error("Fehler beim Speichern");
     } else {
       toast.success("Bot-Nachricht gespeichert");
     }
   };
+
 
 
   const deletePool = async () => {
@@ -1025,69 +1036,99 @@ export default function AdminDashboard() {
               <div className="px-4 py-3 border-b border-border flex items-center gap-2">
                 <Bot className="h-4 w-4 text-accent" />
                 <h2 className="text-sm font-semibold text-foreground">Bot DMs</h2>
-                <Badge variant="secondary" className="text-[10px] ml-auto">{modsWithAccounts.length} Mods</Badge>
+                <Badge variant="secondary" className="text-[10px] ml-auto">{allAssignedAccounts.length} Models</Badge>
               </div>
 
-              {modsWithAccounts.length === 0 ? (
+              {allAssignedAccounts.length === 0 ? (
                 <div className="p-8 text-center text-sm text-muted-foreground">
-                  Keine Mods mit zugewiesenen Accounts.
+                  Keine zugewiesenen Accounts vorhanden.
                 </div>
               ) : (
                 <div className="divide-y divide-border">
-                  {modsWithAccounts.map((mod) => {
-                    const entry = botMessages[mod.user_id] || { message: "", isActive: true, saving: false };
+                  {allAssignedAccounts.map((acc) => {
+                    const entry = botMessages[acc.id] || { message: "", followUp: "", isActive: false, saving: false };
+                    const isExpanded = expandedBot === acc.id;
                     return (
-                      <div key={mod.user_id} className="px-4 py-3 space-y-2">
-                        <div className="flex items-center gap-3">
+                      <div key={acc.id}>
+                        <button
+                          className="w-full px-4 py-3 flex items-center gap-3 hover:bg-secondary/30 transition-colors text-left"
+                          onClick={() => setExpandedBot(isExpanded ? null : acc.id)}
+                        >
                           <div className="h-8 w-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
-                            <span className="text-xs font-bold text-accent">
-                              {(mod.group_name || "?")[0].toUpperCase()}
-                            </span>
+                            <Bot className="h-3.5 w-3.5 text-accent" />
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate">{mod.group_name || "Kein Name"}</p>
-                            <p className="text-[10px] text-muted-foreground">
-                              {mod.assigned_accounts!.length} Account{mod.assigned_accounts!.length > 1 ? "s" : ""}
-                            </p>
+                          <p className="text-sm font-medium text-foreground truncate flex-1">{acc.account_email}</p>
+                          {entry.isActive && (
+                            <Badge variant="default" className="text-[9px] shrink-0">Aktiv</Badge>
+                          )}
+                        </button>
+                        {isExpanded && (
+                          <div className="px-4 pb-4 space-y-3 animate-in fade-in duration-200">
+                            {/* Active Toggle */}
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs text-muted-foreground">Bot aktiv</span>
+                              <button
+                                onClick={() =>
+                                  setBotMessages((prev) => ({
+                                    ...prev,
+                                    [acc.id]: { ...entry, isActive: !entry.isActive },
+                                  }))
+                                }
+                                className={cn(
+                                  "relative inline-flex h-5 w-9 items-center rounded-full transition-colors",
+                                  entry.isActive ? "bg-accent" : "bg-secondary"
+                                )}
+                              >
+                                <span className={cn(
+                                  "inline-block h-3.5 w-3.5 rounded-full bg-background transition-transform",
+                                  entry.isActive ? "translate-x-4.5" : "translate-x-0.5"
+                                )} />
+                              </button>
+                            </div>
+                            {/* Bot Message */}
+                            <div className="space-y-1">
+                              <label className="text-xs font-medium text-muted-foreground">Bot-Nachricht</label>
+                              <Textarea
+                                value={entry.message}
+                                onChange={(e) =>
+                                  setBotMessages((prev) => ({
+                                    ...prev,
+                                    [acc.id]: { ...entry, message: e.target.value },
+                                  }))
+                                }
+                                placeholder="Erste Nachricht eingeben..."
+                                className="text-sm min-h-[60px] resize-none"
+                              />
+                            </div>
+                            {/* Follow-up Message */}
+                            <div className="space-y-1">
+                              <label className="text-xs font-medium text-muted-foreground">Follow-up Nachricht</label>
+                              <Textarea
+                                value={entry.followUp}
+                                onChange={(e) =>
+                                  setBotMessages((prev) => ({
+                                    ...prev,
+                                    [acc.id]: { ...entry, followUp: e.target.value },
+                                  }))
+                                }
+                                placeholder="Follow-up Nachricht eingeben..."
+                                className="text-sm min-h-[60px] resize-none"
+                              />
+                            </div>
+                            {/* Save */}
+                            <div className="flex justify-end">
+                              <Button
+                                size="sm"
+                                onClick={() => saveBotMessage(acc.id)}
+                                disabled={entry.saving}
+                                className="text-xs"
+                              >
+                                <Save className="h-3 w-3 mr-1" />
+                                {entry.saving ? "Speichert..." : "Speichern"}
+                              </Button>
+                            </div>
                           </div>
-                          <button
-                            onClick={() =>
-                              setBotMessages((prev) => ({
-                                ...prev,
-                                [mod.user_id]: { ...entry, isActive: !entry.isActive },
-                              }))
-                            }
-                            className={cn(
-                              "p-1.5 rounded-md transition-colors",
-                              entry.isActive ? "text-accent hover:bg-accent/10" : "text-muted-foreground hover:bg-secondary"
-                            )}
-                            title={entry.isActive ? "Aktiv" : "Inaktiv"}
-                          >
-                            <Power className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                        <Textarea
-                          value={entry.message}
-                          onChange={(e) =>
-                            setBotMessages((prev) => ({
-                              ...prev,
-                              [mod.user_id]: { ...entry, message: e.target.value },
-                            }))
-                          }
-                          placeholder="Bot-Nachricht eingeben..."
-                          className="text-sm min-h-[60px] resize-none"
-                        />
-                        <div className="flex justify-end">
-                          <Button
-                            size="sm"
-                            onClick={() => saveBotMessage(mod.user_id)}
-                            disabled={entry.saving}
-                            className="text-xs"
-                          >
-                            <Save className="h-3 w-3 mr-1" />
-                            {entry.saving ? "Speichert..." : "Speichern"}
-                          </Button>
-                        </div>
+                        )}
                       </div>
                     );
                   })}

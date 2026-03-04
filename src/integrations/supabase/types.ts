@@ -49,7 +49,9 @@ export type Database = {
       }
       bot_messages: {
         Row: {
+          account_id: string | null
           created_at: string
+          follow_up_message: string
           id: string
           is_active: boolean
           message: string
@@ -57,7 +59,9 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          account_id?: string | null
           created_at?: string
+          follow_up_message?: string
           id?: string
           is_active?: boolean
           message?: string
@@ -65,14 +69,24 @@ export type Database = {
           user_id: string
         }
         Update: {
+          account_id?: string | null
           created_at?: string
+          follow_up_message?: string
           id?: string
           is_active?: boolean
           message?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "bot_messages_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: true
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       daily_goals: {
         Row: {
