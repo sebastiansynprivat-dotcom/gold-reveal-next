@@ -52,7 +52,7 @@ export default function Dashboard() {
       return stored[accountId] || { done: false, hidden: false, assignedAt: null };
     } catch { return { done: false, hidden: false, assignedAt: null }; }
   };
-  const setDriveState = (accountId: string, update: { done?: boolean; hidden?: boolean }) => {
+  const setDriveState = (accountId: string, update: { done?: boolean; hidden?: boolean; assignedAt?: string | null }) => {
     try {
       const stored = JSON.parse(localStorage.getItem("drive_states") || "{}");
       stored[accountId] = { ...getDriveState(accountId), ...update };
