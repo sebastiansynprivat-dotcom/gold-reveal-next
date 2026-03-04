@@ -1036,7 +1036,9 @@ export default function AdminDashboard() {
               <div className="px-4 py-3 border-b border-border flex items-center gap-2">
                 <Bot className="h-4 w-4 text-accent" />
                 <h2 className="text-sm font-semibold text-foreground">Bot DMs</h2>
-                <Badge variant="secondary" className="text-[10px] ml-auto">{allAssignedAccounts.length} Models</Badge>
+                <Badge variant="secondary" className="text-[10px] ml-auto">
+                  {allAssignedAccounts.length} Model{allAssignedAccounts.length !== 1 ? "s" : ""}
+                </Badge>
               </div>
 
               {allAssignedAccounts.length === 0 ? (
@@ -1044,29 +1046,68 @@ export default function AdminDashboard() {
                   Keine zugewiesenen Accounts vorhanden.
                 </div>
               ) : (
-                <div className="divide-y divide-border">
+                <div className="p-3 space-y-2">
                   {allAssignedAccounts.map((acc) => {
                     const entry = botMessages[acc.id] || { message: "", followUp: "", isActive: false, saving: false };
                     const isExpanded = expandedBot === acc.id;
                     return (
-                      <div key={acc.id}>
+                      <div
+                        key={acc.id}
+                        className={cn(
+                          "glass-card-subtle rounded-xl overflow-hidden transition-all duration-200",
+                          isExpanded && "ring-1 ring-accent/30"
+                        )}
+                      >
+                        {/* Header Row */}
                         <button
-                          className="w-full px-4 py-3 flex items-center gap-3 hover:bg-secondary/30 transition-colors text-left"
+                          className="w-full px-4 py-3 flex items-center gap-3 hover:bg-accent/5 transition-colors text-left"
                           onClick={() => setExpandedBot(isExpanded ? null : acc.id)}
                         >
-                          <div className="h-8 w-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
-                            <Bot className="h-3.5 w-3.5 text-accent" />
+                          <div className={cn(
+                            "h-9 w-9 rounded-lg flex items-center justify-center shrink-0 transition-colors",
+                            entry.isActive ? "bg-accent/15" : "bg-secondary/50"
+                          )}>
+                            <Bot className={cn(
+                              "h-4 w-4 transition-colors",
+                              entry.isActive ? "text-accent" : "text-muted-foreground"
+                            )} />
                           </div>
-                          <p className="text-sm font-medium text-foreground truncate flex-1">{acc.account_email}</p>
-                          {entry.isActive && (
-                            <Badge variant="default" className="text-[9px] shrink-0">Aktiv</Badge>
-                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">{acc.account_email}</p>
+                            <p className="text-[10px] text-muted-foreground">{acc.platform}</p>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0">
+                            {entry.isActive ? (
+                              <span className="flex items-center gap-1">
+                                <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
+                                <span className="text-[10px] font-medium text-accent">Aktiv</span>
+                              </span>
+                            ) : (
+                              <span className="text-[10px] text-muted-foreground">Inaktiv</span>
+                            )}
+                            <svg
+                              className={cn(
+                                "h-3.5 w-3.5 text-muted-foreground transition-transform duration-200",
+                                isExpanded && "rotate-180"
+                              )}
+                              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </div>
                         </button>
+
+                        {/* Expanded Content */}
                         {isExpanded && (
-                          <div className="px-4 pb-4 space-y-3 animate-in fade-in duration-200">
+                          <div className="px-4 pb-4 space-y-4 animate-in slide-in-from-top-2 fade-in duration-200">
+                            <div className="h-px bg-border" />
+
                             {/* Active Toggle */}
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs text-muted-foreground">Bot aktiv</span>
+                            <div className="flex items-center justify-between glass-card-subtle rounded-lg px-3 py-2.5">
+                              <div className="flex items-center gap-2">
+                                <Power className={cn("h-3.5 w-3.5", entry.isActive ? "text-accent" : "text-muted-foreground")} />
+                                <span className="text-xs font-medium text-foreground">Bot aktivieren</span>
+                              </div>
                               <button
                                 onClick={() =>
                                   setBotMessages((prev) => ({
@@ -1075,19 +1116,22 @@ export default function AdminDashboard() {
                                   }))
                                 }
                                 className={cn(
-                                  "relative inline-flex h-5 w-9 items-center rounded-full transition-colors",
+                                  "relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200",
                                   entry.isActive ? "bg-accent" : "bg-secondary"
                                 )}
                               >
                                 <span className={cn(
-                                  "inline-block h-3.5 w-3.5 rounded-full bg-background transition-transform",
-                                  entry.isActive ? "translate-x-4.5" : "translate-x-0.5"
+                                  "inline-block h-4 w-4 rounded-full bg-background shadow-sm transition-transform duration-200",
+                                  entry.isActive ? "translate-x-5.5" : "translate-x-0.5"
                                 )} />
                               </button>
                             </div>
+
                             {/* Bot Message */}
-                            <div className="space-y-1">
-                              <label className="text-xs font-medium text-muted-foreground">Bot-Nachricht</label>
+                            <div className="space-y-1.5">
+                              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                                Bot-Nachricht
+                              </label>
                               <Textarea
                                 value={entry.message}
                                 onChange={(e) =>
@@ -1096,13 +1140,16 @@ export default function AdminDashboard() {
                                     [acc.id]: { ...entry, message: e.target.value },
                                   }))
                                 }
-                                placeholder="Erste Nachricht eingeben..."
-                                className="text-sm min-h-[60px] resize-none"
+                                placeholder="Hey! Schreib mir gerne eine Nachricht 💋"
+                                className="text-sm min-h-[70px] resize-none bg-background/50 border-border/50 focus:border-accent/50"
                               />
                             </div>
+
                             {/* Follow-up Message */}
-                            <div className="space-y-1">
-                              <label className="text-xs font-medium text-muted-foreground">Follow-up Nachricht</label>
+                            <div className="space-y-1.5">
+                              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+                                Follow-up Nachricht
+                              </label>
                               <Textarea
                                 value={entry.followUp}
                                 onChange={(e) =>
@@ -1111,22 +1158,21 @@ export default function AdminDashboard() {
                                     [acc.id]: { ...entry, followUp: e.target.value },
                                   }))
                                 }
-                                placeholder="Follow-up Nachricht eingeben..."
-                                className="text-sm min-h-[60px] resize-none"
+                                placeholder="Na, hast du meine letzte Nachricht gelesen? 😏"
+                                className="text-sm min-h-[70px] resize-none bg-background/50 border-border/50 focus:border-accent/50"
                               />
                             </div>
-                            {/* Save */}
-                            <div className="flex justify-end">
-                              <Button
-                                size="sm"
-                                onClick={() => saveBotMessage(acc.id)}
-                                disabled={entry.saving}
-                                className="text-xs"
-                              >
-                                <Save className="h-3 w-3 mr-1" />
-                                {entry.saving ? "Speichert..." : "Speichern"}
-                              </Button>
-                            </div>
+
+                            {/* Save Button */}
+                            <Button
+                              onClick={() => saveBotMessage(acc.id)}
+                              disabled={entry.saving}
+                              className="w-full"
+                              size="sm"
+                            >
+                              <Save className="h-3.5 w-3.5 mr-1.5" />
+                              {entry.saving ? "Wird gespeichert..." : "Speichern"}
+                            </Button>
                           </div>
                         )}
                       </div>
