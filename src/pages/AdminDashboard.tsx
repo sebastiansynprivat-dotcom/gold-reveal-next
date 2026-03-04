@@ -1873,28 +1873,21 @@ export default function AdminDashboard() {
                             <div className="space-y-2">
                               <p className="text-[11px] text-foreground/90 leading-relaxed">{analyse}</p>
                               {nachricht && (
-                                <div className="bg-secondary/40 rounded-lg p-2 border border-border/50">
+                                <div
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigator.clipboard.writeText(nachricht);
+                                    toast.success("Nachricht kopiert!");
+                                    window.open(`https://wa.me/?text=${encodeURIComponent(nachricht)}`, '_blank');
+                                  }}
+                                  className="bg-secondary/40 rounded-lg p-2 border border-border/50 cursor-pointer hover:bg-secondary/60 active:bg-secondary/80 transition-colors"
+                                >
                                   <div className="flex items-center justify-between mb-1">
                                     <span className="text-[9px] font-medium text-muted-foreground">Nachricht:</span>
-                                    <div className="flex items-center gap-2">
-                                      <button
-                                        onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(nachricht); toast.success("Nachricht kopiert!"); }}
-                                        className="flex items-center gap-1 text-[9px] text-accent hover:text-accent/80 transition-colors"
-                                      >
-                                        <Copy className="h-2.5 w-2.5" />
-                                        Kopieren
-                                      </button>
-                                      <a
-                                        href={`https://wa.me/?text=${encodeURIComponent(nachricht)}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        onClick={(e) => e.stopPropagation()}
-                                        className="flex items-center gap-1 text-[9px] text-green-500 hover:text-green-400 transition-colors"
-                                      >
-                                        <ExternalLink className="h-2.5 w-2.5" />
-                                        WhatsApp
-                                      </a>
-                                    </div>
+                                    <span className="flex items-center gap-1 text-[9px] text-green-500">
+                                      <Copy className="h-2.5 w-2.5" />
+                                      Kopieren & WhatsApp
+                                    </span>
                                   </div>
                                   <p className="text-[11px] text-foreground/80 leading-relaxed">{nachricht}</p>
                                 </div>
