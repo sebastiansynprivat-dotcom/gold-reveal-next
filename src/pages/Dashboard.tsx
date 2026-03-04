@@ -107,8 +107,18 @@ export default function Dashboard() {
           setAssignedAccounts(data);
         }
       });
-  }, [user]);
 
+    // Check if first login
+    supabase
+      .from("login_events")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .then(({ count }) => {
+        if (count !== null && count <= 1) {
+          setIsFirstLogin(true);
+        }
+      });
+  }, [user]);
   const saveTelegram = async () => {
     if (!user) return;
     const { error } = await supabase
