@@ -22,6 +22,7 @@ import logo from "@/assets/logo.png";
 import { format, endOfMonth, addMonths, differenceInDays } from "date-fns";
 import { de } from "date-fns/locale";
 import HomescreenTutorial from "@/components/HomescreenTutorial";
+import PushNotificationDialog from "@/components/PushNotificationDialog";
 
 const GOLD_THRESHOLD = 3000;
 const STARTER_RATE = 0.2;
@@ -279,6 +280,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background pb-24">
       <HomescreenTutorial isFirstLogin={isFirstLogin} manualOpen={showTutorial} onManualClose={() => setShowTutorial(false)} />
+      <PushNotificationDialog />
       {/* Header with Telegram + Umsatz inline */}
       <header className="border-b border-border">
         <div className="container max-w-5xl mx-auto px-4 py-3 lg:px-8">
