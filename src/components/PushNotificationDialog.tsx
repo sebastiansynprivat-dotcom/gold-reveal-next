@@ -45,8 +45,8 @@ export default function PushNotificationDialog() {
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); }}>
-      <DialogContent className="glass-card gold-border-glow max-w-sm mx-auto p-0 overflow-hidden gap-0">
+    <Dialog open={open} onOpenChange={() => {}} modal>
+      <DialogContent className="glass-card gold-border-glow max-w-sm mx-auto p-0 overflow-hidden gap-0 [&>button]:hidden" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()} onInteractOutside={(e) => e.preventDefault()}>
         {/* Gold accent bar */}
         <div className="h-1 w-full bg-gradient-to-r from-transparent via-accent to-transparent opacity-60" />
 
@@ -77,12 +77,6 @@ export default function PushNotificationDialog() {
           >
             <Bell className="h-4 w-4" />
             {loading ? "Wird aktiviert..." : "Jetzt aktivieren"}
-          </button>
-          <button
-            onClick={handleClose}
-            className="w-full text-[11px] text-muted-foreground hover:text-foreground text-center transition-colors py-1"
-          >
-            Später
           </button>
         </div>
       </DialogContent>
