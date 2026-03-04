@@ -668,6 +668,14 @@ export default function AdminDashboard() {
             <Users className="h-3.5 w-3.5 mr-1.5" />
             Chatter
           </Button>
+          <Button
+            variant={activeTab === "botdms" ? "default" : "outline"}
+            size="sm"
+            onClick={() => { setActiveTab("botdms"); if (!botMessagesLoaded) loadBotMessages(); }}
+          >
+            <Bot className="h-3.5 w-3.5 mr-1.5" />
+            Bot DMs
+          </Button>
         </div>
 
         {activeTab === "einnahmen" && (
@@ -1009,6 +1017,84 @@ export default function AdminDashboard() {
           )}
         </section>
         </>)}
+
+        {activeTab === "botdms" && (
+          <div className="space-y-4">
+            <section className="glass-card rounded-xl overflow-hidden">
+              <div className="px-4 py-3 border-b border-border flex items-center gap-2">
+                <Bot className="h-4 w-4 text-accent" />
+                <h2 className="text-sm font-semibold text-foreground">Bot DMs</h2>
+                <Badge variant="secondary" className="text-[10px] ml-auto">{modsWithAccounts.length} Mods</Badge>
+              </div>
+
+              {modsWithAccounts.length === 0 ? (
+                <div className="p-8 text-center text-sm text-muted-foreground">
+                  Keine Mods mit zugewiesenen Accounts.
+                </div>
+              ) : (
+                <div className="divide-y divide-border">
+                  {modsWithAccounts.map((mod) => {
+                    const entry = botMessages[mod.user_id] || { message: "", isActive: true, saving: false };
+                    return (
+                      <div key={mod.user_id} className="px-4 py-3 space-y-2">
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0">
+                            <span className="text-xs font-bold text-accent">
+                              {(mod.group_name || "?")[0].toUpperCase()}
+                            </span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">{mod.group_name || "Kein Name"}</p>
+                            <p className="text-[10px] text-muted-foreground">
+                              {mod.assigned_accounts!.length} Account{mod.assigned_accounts!.length > 1 ? "s" : ""}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() =>
+                              setBotMessages((prev) => ({
+                                ...prev,
+                                [mod.user_id]: { ...entry, isActive: !entry.isActive },
+                              }))
+                            }
+                            className={cn(
+                              "p-1.5 rounded-md transition-colors",
+                              entry.isActive ? "text-accent hover:bg-accent/10" : "text-muted-foreground hover:bg-secondary"
+                            )}
+                            title={entry.isActive ? "Aktiv" : "Inaktiv"}
+                          >
+                            <Power className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                        <Textarea
+                          value={entry.message}
+                          onChange={(e) =>
+                            setBotMessages((prev) => ({
+                              ...prev,
+                              [mod.user_id]: { ...entry, message: e.target.value },
+                            }))
+                          }
+                          placeholder="Bot-Nachricht eingeben..."
+                          className="text-sm min-h-[60px] resize-none"
+                        />
+                        <div className="flex justify-end">
+                          <Button
+                            size="sm"
+                            onClick={() => saveBotMessage(mod.user_id)}
+                            disabled={entry.saving}
+                            className="text-xs"
+                          >
+                            <Save className="h-3 w-3 mr-1" />
+                            {entry.saving ? "Speichert..." : "Speichern"}
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
+          </div>
+        )}
       </main>
 
       {/* Account Pool Dialog */}
