@@ -433,6 +433,7 @@ export default function AdminDashboard() {
   };
 
   const platforms = [...new Set(accounts.filter(a => !a.is_manual).map((a) => a.platform).filter(Boolean))];
+  const manualPlatforms = [...new Set(accounts.filter(a => a.is_manual).map(a => a.platform).filter(Boolean))];
 
   const addAccount = async () => {
     if (!newAccEmail.trim() || !newAccDomain.trim() || !selectedPlatform) return;
