@@ -503,7 +503,7 @@ export default function Dashboard() {
           >
             <Smartphone className="h-5 w-5 text-accent shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-foreground">Deine Aufgabe bevor du startest: App zum Homescreen hinzufügen</p>
+              <p className="text-sm font-semibold text-foreground">Füge die App auf deinem Handy zum Homescreen hinzu</p>
               <p className="text-xs text-accent mt-0.5 hover:underline">
                 Wie geht das?
               </p>
