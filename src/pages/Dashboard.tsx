@@ -362,11 +362,35 @@ export default function Dashboard() {
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
                           <p className="text-[10px] text-muted-foreground mb-0.5">E-Mail</p>
-                          <p className="text-xs lg:text-sm font-medium text-foreground truncate">{acc.account_email || "–"}</p>
+                          <button
+                            onClick={() => {
+                              if (acc.account_email) {
+                                navigator.clipboard.writeText(acc.account_email);
+                                toast.success("E-Mail kopiert!");
+                              }
+                            }}
+                            className="flex items-center gap-1.5 group cursor-pointer"
+                            title="Klicken zum Kopieren"
+                          >
+                            <p className="text-xs lg:text-sm font-medium text-foreground truncate">{acc.account_email || "–"}</p>
+                            {acc.account_email && <Copy className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />}
+                          </button>
                         </div>
                         <div>
                           <p className="text-[10px] text-muted-foreground mb-0.5">Passwort</p>
-                          <p className="text-xs lg:text-sm font-medium text-foreground truncate">{acc.account_password || "–"}</p>
+                          <button
+                            onClick={() => {
+                              if (acc.account_password) {
+                                navigator.clipboard.writeText(acc.account_password);
+                                toast.success("Passwort kopiert!");
+                              }
+                            }}
+                            className="flex items-center gap-1.5 group cursor-pointer"
+                            title="Klicken zum Kopieren"
+                          >
+                            <p className="text-xs lg:text-sm font-medium text-foreground truncate">{acc.account_password || "–"}</p>
+                            {acc.account_password && <Copy className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />}
+                          </button>
                         </div>
                         <div>
                           <p className="text-[10px] text-muted-foreground mb-0.5">Domain</p>
