@@ -1609,10 +1609,12 @@ export default function AdminDashboard() {
         </div>
 
         <section className="glass-card rounded-xl overflow-hidden">
-          <div className="px-4 py-3 border-b border-border flex items-center gap-2">
-            <Users className="h-4 w-4 text-accent" />
-            <h2 className="text-sm font-semibold text-foreground">Alle Chatter</h2>
-            <div className="ml-auto flex items-center gap-2">
+          <div className="px-4 py-3 border-b border-border space-y-2">
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-accent shrink-0" />
+              <h2 className="text-sm font-semibold text-foreground">Alle Chatter</h2>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
               <button
                 onClick={generateAllSummaries}
                 disabled={generatingAll}
