@@ -28,8 +28,8 @@ export default defineConfig(({ mode }) => ({
         navigateFallbackDenylist: [/^\/~oauth/],
       },
       manifest: {
-        name: "SheX Coaching",
-        short_name: "SheX",
+        name: "SheX 💛",
+        short_name: "SheX 💛",
         description: "Dein Chatter Dashboard",
         theme_color: "#0a0a0a",
         background_color: "#0a0a0a",
