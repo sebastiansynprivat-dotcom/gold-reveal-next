@@ -426,7 +426,40 @@ export default function AdminDashboard() {
       c.telegram_id?.toLowerCase().includes(search.toLowerCase())
   );
 
-  const platformAccounts = selectedPlatform
+  const openGoalEditor = async (chatter: ChatterProfile) => {
+    setGoalTarget(chatter);
+    // Load current goal
+    const { data } = await supabase
+      .from("daily_goals")
+      .select("target_amount")
+      .eq("user_id", chatter.user_id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    setGoalAmount(data?.target_amount != null ? String(data.target_amount) : "30");
+  };
+
+  const saveGoal = async () => {
+    if (!goalTarget) return;
+    setGoalSaving(true);
+    const amount = Number(goalAmount) || 30;
+    // Upsert: delete old, insert new
+    await supabase.from("daily_goals").delete().eq("user_id", goalTarget.user_id);
+    const { error } = await supabase.from("daily_goals").insert({
+      user_id: goalTarget.user_id,
+      goal_text: `${amount}€ Tagesziel`,
+      target_amount: amount,
+    });
+    if (error) {
+      toast.error("Fehler beim Speichern");
+    } else {
+      toast.success(`Tagesziel für ${goalTarget.group_name || "Chatter"} auf ${amount}€ gesetzt!`);
+      setGoalTarget(null);
+    }
+    setGoalSaving(false);
+  };
+
+  const platformAccounts2 = selectedPlatform
     ? accounts.filter((a) => a.platform === selectedPlatform)
     : [];
   const freeCount = platformAccounts.filter((a) => !a.assigned_to).length;
