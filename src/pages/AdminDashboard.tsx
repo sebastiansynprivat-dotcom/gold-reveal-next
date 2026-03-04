@@ -240,6 +240,9 @@ export default function AdminDashboard() {
       assigned_accounts: (allAccounts || []).filter((a) => a.assigned_to === c.user_id),
     }));
     setChatters(enriched);
+    // Track PWA installed users
+    const pwaSet = new Set((data || []).filter((c: any) => c.pwa_installed).map((c: any) => c.user_id));
+    setPwaUsers(pwaSet);
     setLoading(false);
   };
 
