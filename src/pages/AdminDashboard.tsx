@@ -877,7 +877,9 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-background">
       <header className="border-b border-border">
         <div className="container max-w-4xl mx-auto px-4 py-3 flex items-center gap-3">
-          <img src={logo} alt="Logo" className="h-9 w-9 rounded-full shrink-0" />
+          <button onClick={() => { setAdminSectionOpen(true); if (adminList.length === 0) loadAdmins(); }} className="shrink-0 hover:opacity-80 transition-opacity">
+            <img src={logo} alt="Logo" className="h-9 w-9 rounded-full" />
+          </button>
           <div className="flex-1">
             <h1 className="text-base font-bold text-foreground">Admin Dashboard</h1>
             <p className="text-[10px] text-muted-foreground">Chatter verwalten & Benachrichtigungen</p>
