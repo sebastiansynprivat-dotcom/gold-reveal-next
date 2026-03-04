@@ -387,7 +387,7 @@ export default function Dashboard() {
             <p className="text-xl font-bold text-gold-gradient">{totalRevenue.toLocaleString("de-DE")}€</p>
           </div>
           <div className="glass-card-subtle rounded-xl p-3 text-center">
-            <p className="text-[10px] text-muted-foreground mb-0.5">Verdienst</p>
+            <p className="text-[10px] text-muted-foreground mb-0.5">Verdienst diesen Monat</p>
             <p className="text-xl font-bold text-gold-gradient">{verdienst.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€</p>
           </div>
           <div className="glass-card-subtle rounded-xl p-3 text-center">
@@ -415,7 +415,7 @@ export default function Dashboard() {
             <p className="text-2xl font-bold text-gold-gradient">{totalRevenue.toLocaleString("de-DE")}€</p>
           </div>
           <div className="glass-card-subtle rounded-xl p-5 text-center">
-            <p className="text-xs text-muted-foreground mb-0.5">Verdienst</p>
+            <p className="text-xs text-muted-foreground mb-0.5">Verdienst diesen Monat</p>
             <p className="text-2xl font-bold text-gold-gradient">{verdienst.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€</p>
           </div>
           <div className="glass-card-subtle rounded-xl p-5 text-center">
