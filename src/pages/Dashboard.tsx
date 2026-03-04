@@ -283,6 +283,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-background pb-24">
       <HomescreenTutorial isFirstLogin={isFirstLogin} manualOpen={showTutorial} onManualClose={() => setShowTutorial(false)} />
       <PushNotificationDialog />
+      <AccountMemoDialog open={showMemo} onOpenChange={setShowMemo} />
       {/* Header with Telegram + Umsatz inline */}
       <header className="border-b border-border">
         <div className="container max-w-5xl mx-auto px-4 py-3 lg:px-8">
