@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Users, Send, Bell, BellOff, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, CalendarDays, CalendarRange, Filter, MessageSquare, Star, AlertTriangle, Bot, Save, Power, Copy, Smartphone, Percent, ChevronRight } from "lucide-react";
+import { Users, Send, Bell, BellOff, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, CalendarDays, CalendarRange, Filter, MessageSquare, Star, AlertTriangle, Bot, Save, Power, Copy, Smartphone, Percent, ChevronRight, Shield, UserPlus, UserMinus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -166,6 +166,13 @@ export default function AdminDashboard() {
   const [revenueUsers, setRevenueUsers] = useState<Set<string>>(new Set());
   const [pwaUsers, setPwaUsers] = useState<Set<string>>(new Set());
 
+  // Admin management state
+  const [adminSectionOpen, setAdminSectionOpen] = useState(false);
+  const [adminList, setAdminList] = useState<{ user_id: string; email: string; has_totp: boolean }[]>([]);
+  const [adminListLoading, setAdminListLoading] = useState(false);
+  const [newAdminEmail, setNewAdminEmail] = useState("");
+  const [addingAdmin, setAddingAdmin] = useState(false);
+  const [removeAdminConfirm, setRemoveAdminConfirm] = useState<string | null>(null);
   const allRevenueData = useMemo(() => generateFakeRevenueData(), []);
 
   const filteredRevenueData = useMemo(() => {
@@ -234,6 +241,65 @@ export default function AdminDashboard() {
     loadPushUsers();
     loadRevenueUsers();
   }, []);
+
+  const loadAdmins = async () => {
+    setAdminListLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const res = await supabase.functions.invoke("admin-manage", {
+        body: { action: "list" },
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (res.data?.admins) setAdminList(res.data.admins);
+    } catch (err) {
+      toast.error("Fehler beim Laden der Admins");
+    }
+    setAdminListLoading(false);
+  };
+
+  const addAdmin = async () => {
+    if (!newAdminEmail.trim()) return;
+    setAddingAdmin(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const res = await supabase.functions.invoke("admin-manage", {
+        body: { action: "add", email: newAdminEmail.trim() },
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (res.data?.error) {
+        toast.error(res.data.error);
+      } else {
+        toast.success("Admin hinzugefügt!");
+        setNewAdminEmail("");
+        loadAdmins();
+      }
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+    setAddingAdmin(false);
+  };
+
+  const removeAdmin = async (targetUserId: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const res = await supabase.functions.invoke("admin-manage", {
+        body: { action: "remove", target_user_id: targetUserId },
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (res.data?.error) {
+        toast.error(res.data.error);
+      } else {
+        toast.success("Admin entfernt");
+        loadAdmins();
+      }
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+    setRemoveAdminConfirm(null);
+  };
 
   const loadChatters = async () => {
     setLoading(true);
@@ -1258,6 +1324,117 @@ export default function AdminDashboard() {
             </div>
           )}
         </section>
+
+        {/* Admin-Verwaltung */}
+        <section className="glass-card rounded-xl p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => {
+                setAdminSectionOpen(!adminSectionOpen);
+                if (!adminSectionOpen && adminList.length === 0) loadAdmins();
+              }}
+              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+            >
+              <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${adminSectionOpen ? "rotate-90" : ""}`} />
+              <Shield className="h-4 w-4 text-accent" />
+              <h2 className="text-sm font-semibold text-foreground">Admin-Verwaltung</h2>
+              {!adminSectionOpen && (
+                <Badge variant="secondary" className="text-[10px] ml-1">
+                  {adminList.length} Admin{adminList.length !== 1 ? "s" : ""}
+                </Badge>
+              )}
+            </button>
+          </div>
+
+          {adminSectionOpen && (
+            <div className="space-y-4 mt-2">
+              {/* Add new admin */}
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <UserPlus className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input
+                    value={newAdminEmail}
+                    onChange={(e) => setNewAdminEmail(e.target.value)}
+                    placeholder="E-Mail des neuen Admins..."
+                    className="pl-9 text-sm"
+                    onKeyDown={(e) => e.key === "Enter" && addAdmin()}
+                  />
+                </div>
+                <Button
+                  onClick={addAdmin}
+                  disabled={!newAdminEmail.trim() || addingAdmin}
+                  size="sm"
+                >
+                  {addingAdmin ? "..." : "Hinzufügen"}
+                </Button>
+              </div>
+
+              {/* Admin list */}
+              {adminListLoading ? (
+                <div className="flex justify-center py-4">
+                  <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                </div>
+              ) : adminList.length === 0 ? (
+                <p className="text-xs text-muted-foreground text-center py-4">Keine Admins gefunden.</p>
+              ) : (
+                <div className="space-y-2">
+                  {adminList.map((admin) => (
+                    <div
+                      key={admin.user_id}
+                      className="flex items-center justify-between glass-card-subtle rounded-lg px-3 py-2.5"
+                    >
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Shield className="h-3.5 w-3.5 text-accent shrink-0" />
+                        <span className="text-sm text-foreground truncate">{admin.email}</span>
+                        {admin.has_totp && (
+                          <Badge variant="secondary" className="text-[9px] shrink-0">2FA ✓</Badge>
+                        )}
+                        {!admin.has_totp && (
+                          <Badge variant="outline" className="text-[9px] text-destructive shrink-0">Kein 2FA</Badge>
+                        )}
+                        {admin.user_id === user?.id && (
+                          <Badge className="text-[9px] shrink-0">Du</Badge>
+                        )}
+                      </div>
+                      {admin.user_id !== user?.id && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 text-destructive hover:text-destructive"
+                          onClick={() => setRemoveAdminConfirm(admin.user_id)}
+                        >
+                          <UserMinus className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </section>
+
+        {/* Remove Admin Confirm Dialog */}
+        <AlertDialog open={!!removeAdminConfirm} onOpenChange={() => setRemoveAdminConfirm(null)}>
+          <AlertDialogContent className="glass-card border-border">
+            <AlertDialogHeader>
+              <AlertDialogTitle className="text-foreground">Admin entfernen?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Dieser Benutzer verliert den Admin-Zugang und sein 2FA wird zurückgesetzt.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => removeAdminConfirm && removeAdmin(removeAdminConfirm)}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                Entfernen
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input

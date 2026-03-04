@@ -1,0 +1,195 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+};
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+
+    const userClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+
+    const { data: { user }, error: userError } = await userClient.auth.getUser();
+    if (userError || !user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const serviceClient = createClient(supabaseUrl, serviceKey);
+
+    // Check caller is admin
+    const { data: callerRole } = await serviceClient
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin")
+      .maybeSingle();
+
+    if (!callerRole) {
+      return new Response(JSON.stringify({ error: "Not an admin" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { action, email, target_user_id } = await req.json();
+
+    if (action === "list") {
+      // List all admins with their emails
+      const { data: roles } = await serviceClient
+        .from("user_roles")
+        .select("user_id, role")
+        .eq("role", "admin");
+
+      if (!roles || roles.length === 0) {
+        return new Response(JSON.stringify({ admins: [] }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Get emails from auth.users
+      const admins = [];
+      for (const role of roles) {
+        const { data: { user: adminUser } } = await serviceClient.auth.admin.getUserById(role.user_id);
+        if (adminUser) {
+          admins.push({
+            user_id: role.user_id,
+            email: adminUser.email,
+            has_totp: false,
+          });
+        }
+      }
+
+      // Check TOTP status
+      const { data: totpData } = await serviceClient
+        .from("admin_totp_secrets")
+        .select("user_id, is_verified")
+        .in("user_id", admins.map(a => a.user_id));
+
+      for (const admin of admins) {
+        const totp = totpData?.find(t => t.user_id === admin.user_id);
+        admin.has_totp = totp?.is_verified ?? false;
+      }
+
+      return new Response(JSON.stringify({ admins }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (action === "add") {
+      if (!email) {
+        return new Response(JSON.stringify({ error: "E-Mail erforderlich" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Find user by email
+      const { data: { users } } = await serviceClient.auth.admin.listUsers();
+      const targetUser = users?.find(u => u.email === email);
+
+      if (!targetUser) {
+        return new Response(
+          JSON.stringify({ error: "Kein Benutzer mit dieser E-Mail gefunden. Der Benutzer muss sich zuerst registrieren." }),
+          {
+            status: 404,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+
+      // Check if already admin
+      const { data: existing } = await serviceClient
+        .from("user_roles")
+        .select("id")
+        .eq("user_id", targetUser.id)
+        .eq("role", "admin")
+        .maybeSingle();
+
+      if (existing) {
+        return new Response(
+          JSON.stringify({ error: "Dieser Benutzer ist bereits Admin." }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+
+      await serviceClient
+        .from("user_roles")
+        .insert({ user_id: targetUser.id, role: "admin" });
+
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (action === "remove") {
+      if (!target_user_id) {
+        return new Response(JSON.stringify({ error: "User ID erforderlich" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Can't remove yourself
+      if (target_user_id === user.id) {
+        return new Response(
+          JSON.stringify({ error: "Du kannst dich nicht selbst als Admin entfernen." }),
+          {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          }
+        );
+      }
+
+      await serviceClient
+        .from("user_roles")
+        .delete()
+        .eq("user_id", target_user_id)
+        .eq("role", "admin");
+
+      // Also remove TOTP secret
+      await serviceClient
+        .from("admin_totp_secrets")
+        .delete()
+        .eq("user_id", target_user_id);
+
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    return new Response(JSON.stringify({ error: "Invalid action" }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  } catch (err) {
+    return new Response(JSON.stringify({ error: err.message }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+});
