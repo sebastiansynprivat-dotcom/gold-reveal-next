@@ -1071,10 +1071,10 @@ export default function AdminDashboard() {
               {/* Filters */}
               <div className="px-3 pt-3 flex gap-2 overflow-x-auto scrollbar-none pb-1">
                 <button
-                  onClick={() => setBotFilter("alle")}
+                  onClick={() => { setBotFilter("alle"); setBotPlatformFilter("alle"); }}
                   className={cn(
                     "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium transition-colors shrink-0",
-                    botFilter === "alle" ? "bg-accent text-accent-foreground" : "bg-secondary/50 text-muted-foreground hover:bg-secondary"
+                    botFilter === "alle" && botPlatformFilter === "alle" ? "bg-accent text-accent-foreground" : "bg-secondary/50 text-muted-foreground hover:bg-secondary"
                   )}
                 >
                   <Bot className="h-3 w-3" />
