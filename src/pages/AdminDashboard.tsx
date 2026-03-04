@@ -622,19 +622,29 @@ export default function AdminDashboard() {
               </div>
               {timeFilter === "custom" && (
                 <div className="flex gap-2 items-center">
-                  <Input
-                    type="date"
-                    value={customFrom}
-                    onChange={(e) => setCustomFrom(e.target.value)}
-                    className="h-8 text-xs flex-1"
-                  />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className={cn("h-8 text-xs flex-1 justify-start", !customFrom && "text-muted-foreground")}>
+                        <CalendarIcon className="h-3 w-3 mr-1.5" />
+                        {customFrom ? format(customFrom, "dd.MM.yyyy") : "Von"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar mode="single" selected={customFrom} onSelect={setCustomFrom} initialFocus className="p-3 pointer-events-auto" />
+                    </PopoverContent>
+                  </Popover>
                   <span className="text-xs text-muted-foreground">bis</span>
-                  <Input
-                    type="date"
-                    value={customTo}
-                    onChange={(e) => setCustomTo(e.target.value)}
-                    className="h-8 text-xs flex-1"
-                  />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className={cn("h-8 text-xs flex-1 justify-start", !customTo && "text-muted-foreground")}>
+                        <CalendarIcon className="h-3 w-3 mr-1.5" />
+                        {customTo ? format(customTo, "dd.MM.yyyy") : "Bis"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="end">
+                      <Calendar mode="single" selected={customTo} onSelect={setCustomTo} initialFocus className="p-3 pointer-events-auto" />
+                    </PopoverContent>
+                  </Popover>
                 </div>
               )}
             </div>
