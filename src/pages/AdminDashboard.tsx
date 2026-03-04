@@ -194,6 +194,7 @@ export default function AdminDashboard() {
     loadChatters();
     loadAccounts();
     loadOffers();
+    loadLoginStats();
   }, []);
 
   const loadChatters = async () => {
