@@ -239,6 +239,9 @@ export default function AdminDashboard() {
         }
       });
       setBotMessages(map);
+      const savedMap: Record<string, { message: string; followUp: string; isActive: boolean }> = {};
+      Object.entries(map).forEach(([k, v]) => { savedMap[k] = { message: v.message, followUp: v.followUp, isActive: v.isActive }; });
+      setSavedBotState(savedMap);
     }
     setBotMessagesLoaded(true);
   };
@@ -266,6 +269,7 @@ export default function AdminDashboard() {
       toast.error("Fehler beim Speichern");
     } else {
       toast.success("Bot-Nachricht gespeichert");
+      setSavedBotState((prev) => ({ ...prev, [accountId]: { message: entry.message, followUp: entry.followUp, isActive: entry.isActive } }));
     }
   };
 
