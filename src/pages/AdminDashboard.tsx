@@ -555,13 +555,13 @@ export default function AdminDashboard() {
 
           <div className="space-y-4">
             {/* Offer zuordnen + Pool löschen */}
-            <div className="flex items-center gap-2">
-              <div className="flex-1">
-                <label className="text-[10px] text-muted-foreground mb-1 block">Verknüpftes Offer</label>
+            <div className="flex items-center gap-3">
+              <div className="flex-1 space-y-1.5">
+                <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Verknüpftes Offer</label>
                 <select
                   value={selectedPlatform}
                   onChange={(e) => updatePoolOffer(e.target.value)}
-                  className="w-full rounded-md border border-border bg-background text-foreground text-xs px-3 py-2"
+                  className="w-full rounded-lg border border-border bg-secondary/50 text-foreground text-xs px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-accent/50 transition-colors appearance-none cursor-pointer"
                 >
                   <option value={selectedPlatform}>{selectedPlatform}</option>
                   {offers
@@ -571,14 +571,15 @@ export default function AdminDashboard() {
                     ))}
                 </select>
               </div>
-              <div className="pt-4">
+              <div className="pt-5">
                 <Button
-                  variant="destructive"
+                  variant="outline"
                   size="sm"
                   onClick={() => setDeletePoolConfirm(true)}
+                  className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
                 >
                   <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-                  Pool löschen
+                  Löschen
                 </Button>
               </div>
             </div>
