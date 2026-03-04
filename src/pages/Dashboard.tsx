@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Save, CheckCircle2, Award, Zap, HelpCircle, FileText, Clock, Users, Pencil, ChevronDown, Copy, Smartphone } from "lucide-react";
+import { Save, CheckCircle2, Award, Zap, HelpCircle, FileText, Clock, Users, Pencil, ChevronDown, Copy, Smartphone, Mic } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,7 @@ import { format, endOfMonth, addMonths, differenceInDays } from "date-fns";
 import { de } from "date-fns/locale";
 import HomescreenTutorial from "@/components/HomescreenTutorial";
 import PushNotificationDialog from "@/components/PushNotificationDialog";
+import AccountMemoDialog from "@/components/AccountMemoDialog";
 
 const GOLD_THRESHOLD = 3000;
 const STARTER_RATE = 0.2;
@@ -65,6 +66,7 @@ export default function Dashboard() {
   const [driveVersion, setDriveVersion] = useState(0);
   const [isFirstLogin, setIsFirstLogin] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [showMemo, setShowMemo] = useState(false);
   const [isPwaInstalled, setIsPwaInstalled] = useState(() => {
     return window.matchMedia("(display-mode: standalone)").matches
       || (window.navigator as any).standalone === true;
@@ -281,6 +283,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-background pb-24">
       <HomescreenTutorial isFirstLogin={isFirstLogin} manualOpen={showTutorial} onManualClose={() => setShowTutorial(false)} />
       <PushNotificationDialog />
+      <AccountMemoDialog open={showMemo} onOpenChange={setShowMemo} />
       {/* Header with Telegram + Umsatz inline */}
       <header className="border-b border-border">
         <div className="container max-w-5xl mx-auto px-4 py-3 lg:px-8">
@@ -564,6 +567,17 @@ export default function Dashboard() {
                           )}
                         </div>
                       </div>
+                      {/* Memo button */}
+                      <button
+                        onClick={() => setShowMemo(true)}
+                        className="mt-3 flex items-center gap-2.5 w-full rounded-xl border border-accent/20 bg-accent/5 px-3.5 py-2.5 hover:bg-accent/10 active:scale-[0.98] transition-all cursor-pointer group"
+                      >
+                        <div className="w-8 h-8 rounded-full bg-accent/15 border border-accent/25 flex items-center justify-center shrink-0">
+                          <Mic className="h-3.5 w-3.5 text-accent" />
+                        </div>
+                        <span className="text-xs font-medium text-foreground">Kann ich direkt starten?</span>
+                        <span className="ml-auto text-[10px] text-accent opacity-70 group-hover:opacity-100 transition-opacity">Anhören</span>
+                      </button>
                       {!ds.hidden && (
                         <div className="mt-3 border-t border-border/30 pt-3">
                           <div className="flex items-start gap-3">
