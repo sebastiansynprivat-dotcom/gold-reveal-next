@@ -224,7 +224,40 @@ export default function AdminDashboard() {
     setOffers(data || []);
   };
 
-  const deletePool = async () => {
+  const loadBotMessages = async () => {
+    const { data } = await supabase
+      .from("bot_messages")
+      .select("user_id, message, is_active");
+    if (data) {
+      const map: Record<string, { message: string; isActive: boolean; saving: boolean }> = {};
+      data.forEach((d: any) => {
+        map[d.user_id] = { message: d.message || "", isActive: d.is_active, saving: false };
+      });
+      setBotMessages(map);
+    }
+    setBotMessagesLoaded(true);
+  };
+
+  const modsWithAccounts = useMemo(() => {
+    return chatters.filter((c) => (c.assigned_accounts?.length || 0) > 0);
+  }, [chatters]);
+
+  const saveBotMessage = async (userId: string) => {
+    const entry = botMessages[userId];
+    if (!entry) return;
+    setBotMessages((prev) => ({ ...prev, [userId]: { ...prev[userId], saving: true } }));
+    const { error } = await supabase
+      .from("bot_messages")
+      .upsert({ user_id: userId, message: entry.message, is_active: entry.isActive }, { onConflict: "user_id" });
+    setBotMessages((prev) => ({ ...prev, [userId]: { ...prev[userId], saving: false } }));
+    if (error) {
+      toast.error("Fehler beim Speichern");
+    } else {
+      toast.success("Bot-Nachricht gespeichert");
+    }
+  };
+
+
     if (!selectedPlatform) return;
     setDeletingPool(true);
     try {
