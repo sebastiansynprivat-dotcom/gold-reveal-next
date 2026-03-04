@@ -1532,8 +1532,9 @@ export default function AdminDashboard() {
             <DialogTitle className="text-foreground">An alle Chatter senden</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
+            <Input value={broadcastTitle} onChange={(e) => setBroadcastTitle(e.target.value)} placeholder="Titel" maxLength={100} />
             <Textarea value={broadcastBody} onChange={(e) => setBroadcastBody(e.target.value)} placeholder="Nachricht..." maxLength={500} className="min-h-[80px]" />
-            <Button onClick={sendBroadcast} disabled={broadcastSending || !broadcastBody.trim()} className="w-full">
+            <Button onClick={sendBroadcast} disabled={broadcastSending || !broadcastTitle.trim() || !broadcastBody.trim()} className="w-full">
               <Bell className="h-4 w-4 mr-2" />
               {broadcastSending ? "Wird gesendet..." : "An alle senden"}
             </Button>
