@@ -178,7 +178,7 @@ const AdminLogin = () => {
         </div>
 
         {/* Step 1: Login */}
-        {step === "login" && !user && (
+        {step === "login" && (
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="relative">
               <Input
