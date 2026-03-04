@@ -1196,9 +1196,14 @@ export default function AdminDashboard() {
               <Package className="h-4 w-4 text-accent" />
               <h2 className="text-sm font-semibold text-foreground">Account-Pools</h2>
               {!accountPoolSectionOpen && (
-                <Badge variant="secondary" className="text-[10px] ml-1">
-                  {accounts.filter(a => !a.is_manual).length} gesamt
-                </Badge>
+                <>
+                  <Badge variant="secondary" className="text-[10px] ml-1">
+                    {accounts.filter(a => !a.is_manual).length} gesamt
+                  </Badge>
+                  <Badge variant="secondary" className="text-[10px]">
+                    {accounts.filter(a => !a.is_manual && !a.assigned_to).length} frei
+                  </Badge>
+                </>
               )}
             </button>
             {accountPoolSectionOpen && (
@@ -1263,9 +1268,14 @@ export default function AdminDashboard() {
               <KeyRound className="h-4 w-4 text-accent" />
               <h2 className="text-sm font-semibold text-foreground">Freie Accounts</h2>
               {!manualSectionOpen && (
-                <Badge variant="secondary" className="text-[10px] ml-1">
-                  {accounts.filter(a => a.is_manual).length} gesamt
-                </Badge>
+                <>
+                  <Badge variant="secondary" className="text-[10px] ml-1">
+                    {accounts.filter(a => a.is_manual).length} gesamt
+                  </Badge>
+                  <Badge variant="secondary" className="text-[10px]">
+                    {accounts.filter(a => a.is_manual && !a.assigned_to).length} frei
+                  </Badge>
+                </>
               )}
             </button>
             {manualSectionOpen && (
