@@ -992,76 +992,114 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Offer-Verteilung */}
-        <section className="glass-card rounded-xl p-4 space-y-3">
-          <div className="flex items-center gap-2">
-            <Percent className="h-4 w-4 text-accent" />
-            <h2 className="text-sm font-semibold text-foreground">Offer-Verteilung</h2>
-          </div>
-          {quizRoutes.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">Keine Offers konfiguriert.</p>
-          ) : (
-            <>
-              <div className="space-y-4">
-                {quizRoutes.map((route) => {
-                  const totalWeight = Object.values(routeWeights).reduce((s, w) => s + w, 0) || 1;
-                  const pct = Math.round(((routeWeights[route.id] || 0) / totalWeight) * 100);
-                  return (
-                    <div key={route.id} className="space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-foreground">{route.name}</span>
-                        <span className="text-xs font-bold text-accent">{pct}%</span>
+        {/* Offer-Verteilung (collapsible) */}
+        <section className="glass-card rounded-xl overflow-hidden">
+          <button
+            onClick={() => setOfferVerteilungOpen(!offerVerteilungOpen)}
+            className="w-full p-4 flex items-center justify-between hover:bg-secondary/30 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <Percent className="h-4 w-4 text-accent" />
+              <h2 className="text-sm font-semibold text-foreground">Offer-Verteilung</h2>
+              {!offerVerteilungOpen && quizRoutes.length > 0 && (
+                <div className="flex gap-1.5 ml-2">
+                  {quizRoutes.map((route, i) => {
+                    const colors = ["hsl(var(--accent))", "#3b82f6", "#22d3ee", "#a855f7"];
+                    return (
+                      <span key={route.id} className="text-[10px] text-muted-foreground">
+                        <span className="inline-block h-2 w-2 rounded-full mr-0.5" style={{ backgroundColor: colors[i % colors.length] }} />
+                        {routeWeights[route.id] || 0}%
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+            <svg
+              className={cn("h-4 w-4 text-muted-foreground transition-transform duration-200", offerVerteilungOpen && "rotate-180")}
+              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          {offerVerteilungOpen && (
+            <div className="px-4 pb-4 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
+              {quizRoutes.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-4">Keine Offers konfiguriert.</p>
+              ) : (
+                <>
+                  <div className="space-y-4">
+                    {quizRoutes.map((route) => (
+                      <div key={route.id} className="space-y-1.5">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-medium text-foreground">{route.name}</span>
+                          <span className="text-xs font-bold text-accent">{routeWeights[route.id] || 0}%</span>
+                        </div>
+                        <Slider
+                          value={[routeWeights[route.id] || 0]}
+                          onValueChange={([v]) => {
+                            setRouteWeights(prev => {
+                              const otherIds = quizRoutes.filter(r => r.id !== route.id).map(r => r.id);
+                              const remaining = 100 - v;
+                              const otherTotal = otherIds.reduce((s, id) => s + (prev[id] || 0), 0) || 1;
+                              const next: Record<string, number> = { ...prev, [route.id]: v };
+                              otherIds.forEach(id => {
+                                next[id] = Math.round(((prev[id] || 0) / otherTotal) * remaining);
+                              });
+                              // Fix rounding to exactly 100
+                              const sum = Object.values(next).reduce((s, w) => s + w, 0);
+                              if (sum !== 100 && otherIds.length > 0) {
+                                next[otherIds[0]] += 100 - sum;
+                              }
+                              return next;
+                            });
+                          }}
+                          min={0}
+                          max={100}
+                          step={1}
+                          className="w-full"
+                        />
+                        <p className="text-[10px] text-muted-foreground">{route.target_path}</p>
                       </div>
-                      <Slider
-                        value={[routeWeights[route.id] || 0]}
-                        onValueChange={([v]) => setRouteWeights(prev => ({ ...prev, [route.id]: v }))}
-                        min={0}
-                        max={100}
-                        step={1}
-                        className="w-full"
-                      />
-                      <p className="text-[10px] text-muted-foreground">{route.target_path} · Gewicht: {routeWeights[route.id] || 0}</p>
-                    </div>
-                  );
-                })}
-              </div>
-              {/* Live preview bar */}
-              <div className="flex rounded-full overflow-hidden h-3 bg-secondary/50">
-                {quizRoutes.map((route, i) => {
-                  const totalWeight = Object.values(routeWeights).reduce((s, w) => s + w, 0) || 1;
-                  const pct = ((routeWeights[route.id] || 0) / totalWeight) * 100;
-                  const colors = ["hsl(var(--accent))", "#3b82f6", "#22d3ee", "#a855f7"];
-                  return (
-                    <div
-                      key={route.id}
-                      style={{ width: `${pct}%`, backgroundColor: colors[i % colors.length] }}
-                      className="transition-all duration-300"
-                      title={`${route.name}: ${Math.round(pct)}%`}
-                    />
-                  );
-                })}
-              </div>
-              <div className="flex gap-2 flex-wrap">
-                {quizRoutes.map((route, i) => {
-                  const colors = ["hsl(var(--accent))", "#3b82f6", "#22d3ee", "#a855f7"];
-                  return (
-                    <div key={route.id} className="flex items-center gap-1.5">
-                      <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: colors[i % colors.length] }} />
-                      <span className="text-[10px] text-muted-foreground">{route.name}</span>
-                    </div>
-                  );
-                })}
-              </div>
-              <Button
-                onClick={saveRouteWeights}
-                disabled={savingWeights}
-                size="sm"
-                className="w-full"
-              >
-                <Save className="h-3.5 w-3.5 mr-1.5" />
-                {savingWeights ? "Wird gespeichert..." : "Verteilung speichern"}
-              </Button>
-            </>
+                    ))}
+                  </div>
+                  {/* Live preview bar */}
+                  <div className="flex rounded-full overflow-hidden h-3 bg-secondary/50">
+                    {quizRoutes.map((route, i) => {
+                      const colors = ["hsl(var(--accent))", "#3b82f6", "#22d3ee", "#a855f7"];
+                      return (
+                        <div
+                          key={route.id}
+                          style={{ width: `${routeWeights[route.id] || 0}%`, backgroundColor: colors[i % colors.length] }}
+                          className="transition-all duration-300"
+                          title={`${route.name}: ${routeWeights[route.id] || 0}%`}
+                        />
+                      );
+                    })}
+                  </div>
+                  <div className="flex gap-2 flex-wrap">
+                    {quizRoutes.map((route, i) => {
+                      const colors = ["hsl(var(--accent))", "#3b82f6", "#22d3ee", "#a855f7"];
+                      return (
+                        <div key={route.id} className="flex items-center gap-1.5">
+                          <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: colors[i % colors.length] }} />
+                          <span className="text-[10px] text-muted-foreground">{route.name}: {routeWeights[route.id] || 0}%</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <Button
+                    onClick={saveRouteWeights}
+                    disabled={savingWeights}
+                    size="sm"
+                    className="w-full"
+                  >
+                    <Save className="h-3.5 w-3.5 mr-1.5" />
+                    {savingWeights ? "Wird gespeichert..." : "Verteilung speichern"}
+                  </Button>
+                </>
+              )}
+            </div>
           )}
         </section>
 
