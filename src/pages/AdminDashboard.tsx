@@ -176,6 +176,8 @@ export default function AdminDashboard() {
   const [removeAdminConfirm, setRemoveAdminConfirm] = useState<string | null>(null);
   const [chatterSummaries, setChatterSummaries] = useState<Record<string, { summary: string; date: string }>>({});
   const [summaryLoading, setSummaryLoading] = useState<Record<string, boolean>>({});
+  const [showAiSummaries, setShowAiSummaries] = useState(false);
+  const [generatingAll, setGeneratingAll] = useState(false);
   const allRevenueData = useMemo(() => generateFakeRevenueData(), []);
 
   const filteredRevenueData = useMemo(() => {
@@ -277,6 +279,25 @@ export default function AdminDashboard() {
       toast.error("Fehler beim Generieren der Zusammenfassung");
     } finally {
       setSummaryLoading(prev => ({ ...prev, [userId]: false }));
+    }
+  };
+
+  // Generate all summaries
+  const generateAllSummaries = async () => {
+    setGeneratingAll(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-chatter-summary", {
+        body: {},
+      });
+      if (error) throw error;
+      await loadChatterSummaries();
+      toast.success(`AI-Analysen für alle Chatter generiert!`);
+      setShowAiSummaries(true);
+    } catch (err: any) {
+      console.error("Generate all error:", err);
+      toast.error("Fehler beim Generieren der Zusammenfassungen");
+    } finally {
+      setGeneratingAll(false);
     }
   };
 
@@ -1567,6 +1588,28 @@ export default function AdminDashboard() {
           <div className="px-4 py-3 border-b border-border flex items-center gap-2">
             <Users className="h-4 w-4 text-accent" />
             <h2 className="text-sm font-semibold text-foreground">Alle Chatter</h2>
+            <div className="ml-auto flex items-center gap-2">
+              <button
+                onClick={generateAllSummaries}
+                disabled={generatingAll}
+                className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-medium bg-accent/10 text-accent hover:bg-accent/20 transition-colors disabled:opacity-50"
+              >
+                {generatingAll ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                {generatingAll ? "Generiere..." : "Alle AI-Analysen"}
+              </button>
+              {Object.keys(chatterSummaries).length > 0 && (
+                <button
+                  onClick={() => setShowAiSummaries(!showAiSummaries)}
+                  className={cn(
+                    "flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium transition-colors",
+                    showAiSummaries ? "bg-accent text-accent-foreground" : "bg-secondary/50 text-muted-foreground hover:bg-secondary"
+                  )}
+                >
+                  <Sparkles className="h-3 w-3" />
+                  {showAiSummaries ? "Analysen ▾" : "Analysen ▸"}
+                </button>
+              )}
+            </div>
           </div>
 
           {loading ? (
@@ -1792,62 +1835,61 @@ export default function AdminDashboard() {
                           /* No accounts: just stats */
                           <ChatterStatsCard userId={chatter.user_id} name={chatter.group_name || "Chatter"} />
                         )}
-
-                        {/* AI Summary */}
-                        <div className="mt-3 glass-card-subtle rounded-xl p-3.5" style={{ borderLeft: "3px solid hsl(var(--accent))" }}>
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-1.5">
-                              <Sparkles className="h-3.5 w-3.5 text-accent" />
-                              <span className="text-[11px] font-semibold text-accent">AI-Analyse (gestern)</span>
-                            </div>
-                            <button
-                              onClick={(e) => { e.stopPropagation(); generateSummary(chatter.user_id); }}
-                              disabled={summaryLoading[chatter.user_id]}
-                              className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-accent transition-colors disabled:opacity-50"
-                            >
-                              {summaryLoading[chatter.user_id] ? (
-                                <Loader2 className="h-3 w-3 animate-spin" />
-                              ) : (
-                                <RefreshCw className="h-3 w-3" />
-                              )}
-                              {chatterSummaries[chatter.user_id] ? "Neu generieren" : "Generieren"}
-                            </button>
+                      </div>
+                    )}
+                    {/* AI Summary – below chatter row, visible when toggle is on */}
+                    {showAiSummaries && (chatterSummaries[chatter.user_id] || summaryLoading[chatter.user_id]) && (
+                      <div className="px-4 pb-3 pt-1 border-t border-border/30 bg-accent/5">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <div className="flex items-center gap-1.5">
+                            <Sparkles className="h-3 w-3 text-accent" />
+                            <span className="text-[10px] font-semibold text-accent">AI-Analyse</span>
                           </div>
-                          {summaryLoading[chatter.user_id] ? (
-                            <div className="flex items-center gap-2 py-2">
-                              <Loader2 className="h-3.5 w-3.5 animate-spin text-accent" />
-                              <span className="text-xs text-muted-foreground">Analysiere Performance...</span>
-                            </div>
-                          ) : chatterSummaries[chatter.user_id] ? (() => {
-                            const raw = chatterSummaries[chatter.user_id].summary;
-                            const analyseMatch = raw.match(/\[ANALYSE\]\s*([\s\S]*?)(?:\[NACHRICHT\]|$)/);
-                            const nachrichtMatch = raw.match(/\[NACHRICHT\]\s*([\s\S]*?)$/);
-                            const analyse = analyseMatch?.[1]?.trim() || raw;
-                            const nachricht = nachrichtMatch?.[1]?.trim() || null;
-                            return (
-                              <div className="space-y-2.5">
-                                <p className="text-xs text-foreground/90 leading-relaxed">{analyse}</p>
-                                {nachricht && (
-                                  <div className="bg-secondary/40 rounded-lg p-2.5 border border-border/50">
-                                    <div className="flex items-center justify-between mb-1.5">
-                                      <span className="text-[10px] font-medium text-muted-foreground">Nachricht zum Weiterleiten:</span>
-                                      <button
-                                        onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(nachricht); toast.success("Nachricht kopiert!"); }}
-                                        className="flex items-center gap-1 text-[10px] text-accent hover:text-accent/80 transition-colors"
-                                      >
-                                        <Copy className="h-3 w-3" />
-                                        Kopieren
-                                      </button>
-                                    </div>
-                                    <p className="text-xs text-foreground/80 leading-relaxed italic">"{nachricht}"</p>
-                                  </div>
-                                )}
-                              </div>
-                            );
-                          })() : (
-                            <p className="text-xs text-muted-foreground italic">Noch keine Analyse vorhanden. Klicke auf "Generieren".</p>
-                          )}
+                          <button
+                            onClick={(e) => { e.stopPropagation(); generateSummary(chatter.user_id); }}
+                            disabled={summaryLoading[chatter.user_id]}
+                            className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-accent transition-colors disabled:opacity-50"
+                          >
+                            {summaryLoading[chatter.user_id] ? (
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                            ) : (
+                              <RefreshCw className="h-3 w-3" />
+                            )}
+                            Neu
+                          </button>
                         </div>
+                        {summaryLoading[chatter.user_id] ? (
+                          <div className="flex items-center gap-2 py-1">
+                            <Loader2 className="h-3 w-3 animate-spin text-accent" />
+                            <span className="text-[11px] text-muted-foreground">Analysiere...</span>
+                          </div>
+                        ) : chatterSummaries[chatter.user_id] ? (() => {
+                          const raw = chatterSummaries[chatter.user_id].summary;
+                          const analyseMatch = raw.match(/\[ANALYSE\]\s*([\s\S]*?)(?:\[NACHRICHT\]|$)/);
+                          const nachrichtMatch = raw.match(/\[NACHRICHT\]\s*([\s\S]*?)$/);
+                          const analyse = analyseMatch?.[1]?.trim() || raw;
+                          const nachricht = nachrichtMatch?.[1]?.trim() || null;
+                          return (
+                            <div className="space-y-2">
+                              <p className="text-[11px] text-foreground/90 leading-relaxed">{analyse}</p>
+                              {nachricht && (
+                                <div className="bg-secondary/40 rounded-lg p-2 border border-border/50">
+                                  <div className="flex items-center justify-between mb-1">
+                                    <span className="text-[9px] font-medium text-muted-foreground">Nachricht:</span>
+                                    <button
+                                      onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(nachricht); toast.success("Nachricht kopiert!"); }}
+                                      className="flex items-center gap-1 text-[9px] text-accent hover:text-accent/80 transition-colors"
+                                    >
+                                      <Copy className="h-2.5 w-2.5" />
+                                      Kopieren
+                                    </button>
+                                  </div>
+                                  <p className="text-[11px] text-foreground/80 leading-relaxed italic">"{nachricht}"</p>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })() : null}
                       </div>
                     )}
                   </div>
