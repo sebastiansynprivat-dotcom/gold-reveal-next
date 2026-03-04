@@ -592,7 +592,7 @@ export default function AdminDashboard() {
   };
 
   const sendIndividualPush = async () => {
-    if (!pushTarget || !pushBody.trim()) return;
+    if (!pushTarget || !pushTitle.trim() || !pushBody.trim()) return;
     setSending(true);
     try {
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
@@ -607,7 +607,7 @@ export default function AdminDashboard() {
             Authorization: `Bearer ${session.data.session?.access_token}`,
           },
           body: JSON.stringify({
-            title: "SheX 💛",
+            title: pushTitle.trim(),
             body: pushBody.trim(),
             target_user_id: pushTarget.user_id,
           }),
@@ -617,6 +617,7 @@ export default function AdminDashboard() {
       if (res.ok) {
         toast.success(`Push an ${pushTarget.group_name || "Chatter"} gesendet!`);
         setPushTarget(null);
+        setPushTitle("");
         setPushBody("");
       } else {
         toast.error(result.error || "Fehler beim Senden");
@@ -628,7 +629,7 @@ export default function AdminDashboard() {
   };
 
   const sendBroadcast = async () => {
-    if (!broadcastBody.trim()) return;
+    if (!broadcastTitle.trim() || !broadcastBody.trim()) return;
     setBroadcastSending(true);
     try {
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
@@ -643,7 +644,7 @@ export default function AdminDashboard() {
             Authorization: `Bearer ${session.data.session?.access_token}`,
           },
           body: JSON.stringify({
-            title: "SheX 💛",
+            title: broadcastTitle.trim(),
             body: broadcastBody.trim(),
           }),
         }
@@ -652,6 +653,7 @@ export default function AdminDashboard() {
       if (res.ok) {
         toast.success(`Gesendet an ${result.sent} Empfänger!`);
         setBroadcastOpen(false);
+        setBroadcastTitle("");
         setBroadcastBody("");
       } else {
         toast.error(result.error || "Fehler beim Senden");
@@ -1513,8 +1515,9 @@ export default function AdminDashboard() {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
+            <Input value={pushTitle} onChange={(e) => setPushTitle(e.target.value)} placeholder="Titel" maxLength={100} />
             <Textarea value={pushBody} onChange={(e) => setPushBody(e.target.value)} placeholder="Nachricht..." maxLength={500} className="min-h-[80px]" />
-            <Button onClick={sendIndividualPush} disabled={sending || !pushBody.trim()} className="w-full">
+            <Button onClick={sendIndividualPush} disabled={sending || !pushTitle.trim() || !pushBody.trim()} className="w-full">
               <Send className="h-4 w-4 mr-2" />
               {sending ? "Wird gesendet..." : "Push senden"}
             </Button>
@@ -1529,8 +1532,9 @@ export default function AdminDashboard() {
             <DialogTitle className="text-foreground">An alle Chatter senden</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
+            <Input value={broadcastTitle} onChange={(e) => setBroadcastTitle(e.target.value)} placeholder="Titel" maxLength={100} />
             <Textarea value={broadcastBody} onChange={(e) => setBroadcastBody(e.target.value)} placeholder="Nachricht..." maxLength={500} className="min-h-[80px]" />
-            <Button onClick={sendBroadcast} disabled={broadcastSending || !broadcastBody.trim()} className="w-full">
+            <Button onClick={sendBroadcast} disabled={broadcastSending || !broadcastTitle.trim() || !broadcastBody.trim()} className="w-full">
               <Bell className="h-4 w-4 mr-2" />
               {broadcastSending ? "Wird gesendet..." : "An alle senden"}
             </Button>
