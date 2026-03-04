@@ -567,17 +567,19 @@ export default function Dashboard() {
                           )}
                         </div>
                       </div>
-                      {/* Memo button */}
-                      <button
-                        onClick={() => setShowMemo(true)}
-                        className="mt-3 flex items-center gap-2.5 w-full rounded-xl border border-accent/20 bg-accent/5 px-3.5 py-2.5 hover:bg-accent/10 active:scale-[0.98] transition-all cursor-pointer group"
-                      >
-                        <div className="w-8 h-8 rounded-full bg-accent/15 border border-accent/25 flex items-center justify-center shrink-0">
-                          <Mic className="h-3.5 w-3.5 text-accent" />
-                        </div>
-                        <span className="text-xs font-medium text-foreground">Kann ich direkt starten?</span>
-                        <span className="ml-auto text-[10px] text-accent opacity-70 group-hover:opacity-100 transition-opacity">Anhören</span>
-                      </button>
+                      {/* Memo button – only on first assignment */}
+                      {!ds.memoSeen && (
+                        <button
+                          onClick={() => { setShowMemo(true); setDriveState(acc.id, { memoSeen: true }); setDriveVersion(p => p + 1); }}
+                          className="mt-3 flex items-center gap-2.5 w-full rounded-xl border border-accent/20 bg-accent/5 px-3.5 py-2.5 hover:bg-accent/10 active:scale-[0.98] transition-all cursor-pointer group"
+                        >
+                          <div className="w-8 h-8 rounded-full bg-accent/15 border border-accent/25 flex items-center justify-center shrink-0">
+                            <Mic className="h-3.5 w-3.5 text-accent" />
+                          </div>
+                          <span className="text-xs font-medium text-foreground">Kann ich direkt starten?</span>
+                          <span className="ml-auto text-[10px] text-accent opacity-70 group-hover:opacity-100 transition-opacity">Anhören</span>
+                        </button>
+                      )}
                       {!ds.hidden && (
                         <div className="mt-3 border-t border-border/30 pt-3">
                           <div className="flex items-start gap-3">
