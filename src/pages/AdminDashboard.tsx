@@ -62,6 +62,9 @@ export default function AdminDashboard() {
   const [deleting, setDeleting] = useState(false);
   const [reassignTarget, setReassignTarget] = useState<ChatterProfile | null>(null);
   const [reassigning, setReassigning] = useState(false);
+  const [deletingPool, setDeletingPool] = useState(false);
+  const [deletePoolConfirm, setDeletePoolConfirm] = useState(false);
+  const [offers, setOffers] = useState<{ name: string; target_path: string }[]>([]);
   useEffect(() => {
     loadChatters();
     loadAccounts();
