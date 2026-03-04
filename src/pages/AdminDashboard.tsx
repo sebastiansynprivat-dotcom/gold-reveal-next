@@ -129,6 +129,7 @@ export default function AdminDashboard() {
   const [quizRoutes, setQuizRoutes] = useState<{ id: string; name: string; target_path: string; weight: number; is_active: boolean }[]>([]);
   const [routeWeights, setRouteWeights] = useState<Record<string, number>>({});
   const [savingWeights, setSavingWeights] = useState(false);
+  const [offerVerteilungOpen, setOfferVerteilungOpen] = useState(false);
   const [goalTarget, setGoalTarget] = useState<ChatterProfile | null>(null);
   const [goalAmount, setGoalAmount] = useState("");
   const [goalSaving, setGoalSaving] = useState(false);
