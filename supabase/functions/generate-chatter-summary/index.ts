@@ -119,29 +119,33 @@ serve(async (req) => {
           .select("account_id, is_active, message")
           .eq("user_id", profile.user_id);
 
+        // Daily goal
+        const { data: goalData } = await supabase
+          .from("daily_goals")
+          .select("target_amount")
+          .eq("user_id", profile.user_id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        const dailyGoal = goalData?.target_amount || 30;
+
         // Build data summary for AI
         const accountInfo = accounts?.map(acc => {
           const bot = botMessages?.find(b => b.account_id === acc.id);
           return `- ${acc.platform} (${acc.account_email}): Bot-DM ${bot?.is_active ? "aktiv" : bot?.message ? "inaktiv" : "nicht eingerichtet"}`;
         }).join("\n") || "Keine Accounts zugewiesen";
 
-        const daysSinceLogin = lastLogin
-          ? Math.floor((now.getTime() - new Date(lastLogin).getTime()) / (1000 * 60 * 60 * 24))
-          : null;
+        // Count days where goal was reached in last 7 days
+        const revenueByDay = revenue?.filter(r => r.date >= sevenDaysAgoStr) || [];
+        const daysGoalReached = revenueByDay.filter(r => Number(r.amount) >= dailyGoal).length;
 
         const dataPrompt = `
 Chatter: ${profile.group_name || "Unbekannt"}
-Telegram: ${profile.telegram_id || "nicht hinterlegt"}
 
-UMSATZ:
-- Gestern: ${revYesterday}€
-- Letzte 7 Tage: ${rev7d}€
+TAGESZIEL: ${dailyGoal}€/Tag
+- Gestern: ${revYesterday}€ ${revYesterday >= dailyGoal ? "(✅ Ziel erreicht)" : "(❌ Ziel verfehlt)"}
+- Letzte 7 Tage: ${rev7d}€ (Tagesziel an ${daysGoalReached}/7 Tagen erreicht)
 - Letzte 30 Tage: ${rev30d}€
-
-LOGIN-AKTIVITÄT:
-- Letzter Login: ${lastLogin ? `vor ${daysSinceLogin} Tag(en)` : "nie eingeloggt"}
-- Logins letzte 7 Tage: ${loginCount7d}
-- Logins letzte 30 Tage: ${loginCount30d}
 
 ACCOUNTS (${accounts?.length || 0}):
 ${accountInfo}
