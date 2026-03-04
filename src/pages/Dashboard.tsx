@@ -335,41 +335,54 @@ export default function Dashboard() {
         </div>
 
         {/* Account-Daten */}
-        <section className="glass-card-subtle rounded-xl p-4 lg:p-6">
-          <h2 className="text-sm lg:text-base font-semibold text-foreground mb-3">
-            {assignedAccounts.length > 1 ? "Deine Accounts" : "Dein Account"}
-          </h2>
-          {assignedAccounts.length === 0 ? (
-            <p className="text-xs text-muted-foreground">Noch keine Accounts zugewiesen.</p>
-          ) : (
-            <div className="space-y-3">
-              {assignedAccounts.map((acc, i) => (
-                <div key={i} className={assignedAccounts.length > 1 ? "p-3 rounded-lg border border-border/50 bg-secondary/20" : ""}>
-                  {assignedAccounts.length > 1 && (
-                    <p className="text-[10px] text-muted-foreground font-medium mb-2">{acc.platform}</p>
-                  )}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div>
-                      <p className="text-[10px] text-muted-foreground mb-0.5">E-Mail</p>
-                      <p className="text-xs lg:text-sm font-medium text-foreground truncate">{acc.account_email || "–"}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-muted-foreground mb-0.5">Passwort</p>
-                      <p className="text-xs lg:text-sm font-medium text-foreground truncate">{acc.account_password || "–"}</p>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-muted-foreground mb-0.5">Domain</p>
-                      {acc.account_domain ? (
-                        <a href={`https://${acc.account_domain.replace(/^https?:\/\//, '')}`} target="_blank" rel="noopener noreferrer" className="text-xs lg:text-sm font-medium text-primary underline underline-offset-2 hover:text-primary/80 transition-colors truncate block">
-                          {acc.account_domain}
-                        </a>
-                      ) : (
-                        <p className="text-xs lg:text-sm font-medium text-foreground truncate">–</p>
+        <section className="glass-card-subtle rounded-xl overflow-hidden">
+          <button
+            onClick={() => setAccountsOpen(!accountsOpen)}
+            className="w-full flex items-center justify-between p-4 lg:p-6 text-left"
+          >
+            <h2 className="text-sm lg:text-base font-semibold text-foreground">
+              {assignedAccounts.length > 1 ? "Deine Accounts" : "Dein Account"}
+              {assignedAccounts.length > 0 && (
+                <span className="ml-2 text-[10px] font-normal text-muted-foreground">({assignedAccounts.length})</span>
+              )}
+            </h2>
+            <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${accountsOpen ? "rotate-180" : ""}`} />
+          </button>
+          {accountsOpen && (
+            <div className="px-4 pb-4 lg:px-6 lg:pb-6">
+              {assignedAccounts.length === 0 ? (
+                <p className="text-xs text-muted-foreground">Noch keine Accounts zugewiesen.</p>
+              ) : (
+                <div className="space-y-3">
+                  {assignedAccounts.map((acc, i) => (
+                    <div key={i} className={assignedAccounts.length > 1 ? "p-3 rounded-lg border border-border/50 bg-secondary/20" : ""}>
+                      {assignedAccounts.length > 1 && (
+                        <p className="text-[10px] text-muted-foreground font-medium mb-2">{acc.platform}</p>
                       )}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                          <p className="text-[10px] text-muted-foreground mb-0.5">E-Mail</p>
+                          <p className="text-xs lg:text-sm font-medium text-foreground truncate">{acc.account_email || "–"}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-muted-foreground mb-0.5">Passwort</p>
+                          <p className="text-xs lg:text-sm font-medium text-foreground truncate">{acc.account_password || "–"}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-muted-foreground mb-0.5">Domain</p>
+                          {acc.account_domain ? (
+                            <a href={`https://${acc.account_domain.replace(/^https?:\/\//, '')}`} target="_blank" rel="noopener noreferrer" className="text-xs lg:text-sm font-medium text-primary underline underline-offset-2 hover:text-primary/80 transition-colors truncate block">
+                              {acc.account_domain}
+                            </a>
+                          ) : (
+                            <p className="text-xs lg:text-sm font-medium text-foreground truncate">–</p>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
           )}
         </section>
