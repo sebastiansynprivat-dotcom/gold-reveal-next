@@ -252,15 +252,24 @@ export default function AdminDashboard() {
     return accounts.filter((a) => a.assigned_to);
   }, [accounts]);
 
+  const botPlatforms = useMemo(() => {
+    const set = new Set(allAssignedAccounts.map((a) => a.platform));
+    return Array.from(set);
+  }, [allAssignedAccounts]);
+
   const filteredBotAccounts = useMemo(() => {
+    let result = allAssignedAccounts;
+    if (botPlatformFilter !== "alle") {
+      result = result.filter((a) => a.platform === botPlatformFilter);
+    }
     if (botFilter === "missing") {
-      return allAssignedAccounts.filter((acc) => {
+      result = result.filter((acc) => {
         const saved = savedBotState[acc.id];
         return !saved || (!saved.message.trim() && !saved.followUp.trim());
       });
     }
-    return allAssignedAccounts;
-  }, [allAssignedAccounts, botFilter, savedBotState]);
+    return result;
+  }, [allAssignedAccounts, botFilter, botPlatformFilter, savedBotState]);
 
   const saveBotMessage = async (accountId: string) => {
     const entry = botMessages[accountId];
