@@ -41,6 +41,7 @@ export default function Dashboard() {
 
   const [offer, setOffer] = useState("");
   const [assignedAccounts, setAssignedAccounts] = useState<{ account_email: string; account_password: string; account_domain: string; platform: string }[]>([]);
+  const [accountsOpen, setAccountsOpen] = useState(true);
 
   // Load profile data
   useEffect(() => {
