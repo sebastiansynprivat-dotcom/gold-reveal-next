@@ -39,10 +39,11 @@ export default function PushNotificationDialog() {
     setLoading(false);
     if (ok) {
       toast.success("Benachrichtigungen aktiviert! 🔔");
-      handleClose();
     } else {
       toast.error("Benachrichtigungen konnten nicht aktiviert werden.");
     }
+    // Close popup regardless of result (accepted or denied)
+    handleClose();
   };
 
   const handleClose = () => {
