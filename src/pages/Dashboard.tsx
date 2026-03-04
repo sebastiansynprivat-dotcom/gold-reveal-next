@@ -361,7 +361,7 @@ export default function Dashboard() {
                       )}
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div>
-                          <p className="text-[10px] text-muted-foreground mb-0.5">E-Mail</p>
+                          <p className="text-[10px] text-muted-foreground mb-1">E-Mail</p>
                           <button
                             onClick={() => {
                               if (acc.account_email) {
@@ -369,15 +369,15 @@ export default function Dashboard() {
                                 toast.success("E-Mail kopiert!");
                               }
                             }}
-                            className="flex items-center gap-1.5 group cursor-pointer"
+                            className="flex items-center gap-2 w-full rounded-lg border border-border/50 bg-secondary/40 px-3 py-2 hover:border-accent/50 hover:bg-secondary/60 active:scale-[0.98] transition-all cursor-pointer group"
                             title="Klicken zum Kopieren"
                           >
-                            <p className="text-xs lg:text-sm font-medium text-foreground truncate">{acc.account_email || "–"}</p>
-                            {acc.account_email && <Copy className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />}
+                            <p className="text-xs lg:text-sm font-medium text-foreground truncate flex-1 text-left">{acc.account_email || "–"}</p>
+                            {acc.account_email && <Copy className="h-3.5 w-3.5 text-accent shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />}
                           </button>
                         </div>
                         <div>
-                          <p className="text-[10px] text-muted-foreground mb-0.5">Passwort</p>
+                          <p className="text-[10px] text-muted-foreground mb-1">Passwort</p>
                           <button
                             onClick={() => {
                               if (acc.account_password) {
@@ -385,21 +385,23 @@ export default function Dashboard() {
                                 toast.success("Passwort kopiert!");
                               }
                             }}
-                            className="flex items-center gap-1.5 group cursor-pointer"
+                            className="flex items-center gap-2 w-full rounded-lg border border-border/50 bg-secondary/40 px-3 py-2 hover:border-accent/50 hover:bg-secondary/60 active:scale-[0.98] transition-all cursor-pointer group"
                             title="Klicken zum Kopieren"
                           >
-                            <p className="text-xs lg:text-sm font-medium text-foreground truncate">{acc.account_password || "–"}</p>
-                            {acc.account_password && <Copy className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />}
+                            <p className="text-xs lg:text-sm font-medium text-foreground truncate flex-1 text-left">{acc.account_password || "–"}</p>
+                            {acc.account_password && <Copy className="h-3.5 w-3.5 text-accent shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />}
                           </button>
                         </div>
                         <div>
-                          <p className="text-[10px] text-muted-foreground mb-0.5">Domain</p>
+                          <p className="text-[10px] text-muted-foreground mb-1">Domain</p>
                           {acc.account_domain ? (
-                            <a href={`https://${acc.account_domain.replace(/^https?:\/\//, '')}`} target="_blank" rel="noopener noreferrer" className="text-xs lg:text-sm font-medium text-primary underline underline-offset-2 hover:text-primary/80 transition-colors truncate block">
+                            <a href={`https://${acc.account_domain.replace(/^https?:\/\//, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center rounded-lg border border-border/50 bg-secondary/40 px-3 py-2 text-xs lg:text-sm font-medium text-primary underline underline-offset-2 hover:border-accent/50 hover:bg-secondary/60 transition-all truncate">
                               {acc.account_domain}
                             </a>
                           ) : (
-                            <p className="text-xs lg:text-sm font-medium text-foreground truncate">–</p>
+                            <div className="flex items-center rounded-lg border border-border/50 bg-secondary/40 px-3 py-2">
+                              <p className="text-xs lg:text-sm font-medium text-foreground truncate">–</p>
+                            </div>
                           )}
                         </div>
                       </div>
