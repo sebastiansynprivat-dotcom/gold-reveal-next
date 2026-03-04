@@ -154,32 +154,18 @@ export default function AdminDashboard() {
         .update({ assigned_to: null, assigned_at: null })
         .eq("assigned_to", deleteTarget.user_id);
 
-      // Delete profile
-      const { error } = await supabase
+      // Clear account data from profile
+      await supabase
         .from("profiles")
-        .delete()
+        .update({ account_email: null, account_password: null, account_domain: null })
         .eq("user_id", deleteTarget.user_id);
 
-      if (error) throw error;
-
-      // Delete user progress
-      await supabase
-        .from("user_progress")
-        .delete()
-        .eq("user_id", deleteTarget.user_id);
-
-      // Delete push subscriptions
-      await supabase
-        .from("push_subscriptions")
-        .delete()
-        .eq("user_id", deleteTarget.user_id);
-
-      toast.success(`${deleteTarget.group_name || "Chatter"} wurde gelöscht`);
+      toast.success(`Account-Daten von ${deleteTarget.group_name || "Chatter"} wurden entfernt`);
       setDeleteTarget(null);
       loadChatters();
       loadAccounts();
     } catch (err: any) {
-      toast.error("Fehler beim Löschen: " + err.message);
+      toast.error("Fehler: " + err.message);
     }
     setDeleting(false);
   };
@@ -579,15 +565,15 @@ export default function AdminDashboard() {
       <AlertDialog open={!!deleteTarget} onOpenChange={(o) => { if (!o) setDeleteTarget(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Chatter löschen?</AlertDialogTitle>
+            <AlertDialogTitle>Account-Daten entfernen?</AlertDialogTitle>
             <AlertDialogDescription>
-              {deleteTarget?.group_name || "Dieser Chatter"} wird unwiderruflich gelöscht. Zugewiesene Accounts werden wieder freigegeben.
+              Die zugewiesenen Account-Daten von {deleteTarget?.group_name || "diesem Chatter"} werden entfernt und der Account wird wieder freigegeben.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deleting}>Abbrechen</AlertDialogCancel>
             <AlertDialogAction onClick={deleteChatter} disabled={deleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              {deleting ? "Wird gelöscht..." : "Endgültig löschen"}
+              {deleting ? "Wird entfernt..." : "Account entfernen"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
