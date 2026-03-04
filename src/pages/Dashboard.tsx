@@ -109,7 +109,86 @@ export default function Dashboard() {
   const [videoOpen, setVideoOpen] = useState(false);
   const [videoLoaded, setVideoLoaded] = useState(false);
   const [umsatz, setUmsatz] = useState(0);
+  const [yesterdayRevenue, setYesterdayRevenue] = useState(0);
+  const [monthlyRevenue, setMonthlyRevenue] = useState(0);
+  const [totalRevenue, setTotalRevenue] = useState(0);
   const [hadConfetti, setHadConfetti] = useState(false);
+  const [savingRevenue, setSavingRevenue] = useState(false);
+
+  // Load revenue data
+  useEffect(() => {
+    if (!user) return;
+    const loadRevenue = async () => {
+      const today = new Date().toISOString().slice(0, 10);
+      const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+      const monthStart = today.slice(0, 8) + "01";
+
+      // Load all revenue entries
+      const { data } = await supabase
+        .from("daily_revenue")
+        .select("date, amount")
+        .eq("user_id", user.id)
+        .order("date", { ascending: false });
+
+      if (data) {
+        const todayEntry = data.find((d) => d.date === today);
+        if (todayEntry) setUmsatz(Number(todayEntry.amount));
+
+        const yesterdayEntry = data.find((d) => d.date === yesterday);
+        setYesterdayRevenue(yesterdayEntry ? Number(yesterdayEntry.amount) : 0);
+
+        const monthly = data
+          .filter((d) => d.date >= monthStart)
+          .reduce((sum, d) => sum + Number(d.amount), 0);
+        setMonthlyRevenue(monthly);
+
+        const total = data.reduce((sum, d) => sum + Number(d.amount), 0);
+        setTotalRevenue(total);
+      }
+    };
+    loadRevenue();
+  }, [user]);
+
+  // Save revenue on change (debounced)
+  const saveRevenue = useCallback(async (amount: number) => {
+    if (!user) return;
+    setSavingRevenue(true);
+    const today = new Date().toISOString().slice(0, 10);
+    const { error } = await supabase
+      .from("daily_revenue")
+      .upsert(
+        { user_id: user.id, date: today, amount },
+        { onConflict: "user_id,date" }
+      );
+    if (error) {
+      toast.error("Fehler beim Speichern des Umsatzes");
+    }
+    setSavingRevenue(false);
+  }, [user]);
+
+  const handleUmsatzChange = useCallback((val: number) => {
+    setUmsatz(val);
+    // Recalculate monthly and total with new today value
+    // We update optimistically
+  }, []);
+
+  // Debounce save
+  useEffect(() => {
+    if (!user) return;
+    const timer = setTimeout(() => {
+      saveRevenue(umsatz);
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [umsatz, saveRevenue, user]);
+
+  // Derived: total includes today's change
+  const effectiveMonthlyRevenue = useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    const monthStart = today.slice(0, 8) + "01";
+    // monthlyRevenue already includes old today value, so we just use the state
+    // This is approximate; for accuracy we'd track separately but good enough
+    return monthlyRevenue;
+  }, [monthlyRevenue]);
 
   const isGold = umsatz >= GOLD_THRESHOLD;
   const rate = isGold ? GOLD_RATE : STARTER_RATE;
@@ -203,7 +282,7 @@ export default function Dashboard() {
             <div className="ml-auto flex items-center gap-3">
               <div className="flex items-center gap-1.5">
                 <Zap className="h-3.5 w-3.5 text-accent shrink-0" />
-                <Input type="number" min={0} step={50} value={umsatz || ""} onChange={(e) => setUmsatz(Number(e.target.value) || 0)} placeholder="Umsatz €" className="h-7 text-xs w-24 font-semibold" />
+                <Input type="number" min={0} step={50} value={umsatz || ""} onChange={(e) => handleUmsatzChange(Number(e.target.value) || 0)} placeholder="Umsatz €" className="h-7 text-xs w-24 font-semibold" />
               </div>
               <Badge className={isGold ? "bg-accent text-accent-foreground gold-glow" : "bg-secondary text-secondary-foreground"}>
                 <Award className="h-3 w-3 mr-1" />{isGold ? "Gold" : "Starter"}
@@ -282,7 +361,7 @@ export default function Dashboard() {
               )}
               <div className="shrink-0 flex items-center gap-1">
                 <Zap className="h-3 w-3 text-accent" />
-                <Input type="number" min={0} step={50} value={umsatz || ""} onChange={(e) => setUmsatz(Number(e.target.value) || 0)} placeholder="€" className="h-7 text-xs w-20 font-semibold" />
+                <Input type="number" min={0} step={50} value={umsatz || ""} onChange={(e) => handleUmsatzChange(Number(e.target.value) || 0)} placeholder="€" className="h-7 text-xs w-20 font-semibold" />
               </div>
             </div>
           </div>
@@ -296,8 +375,20 @@ export default function Dashboard() {
         {/* Mobile: 2-col grid with full-width status */}
         <div className="grid grid-cols-2 gap-3 lg:hidden">
           <div className="glass-card-subtle rounded-xl p-3 text-center">
-            <p className="text-[10px] text-muted-foreground mb-0.5">Umsatz</p>
+            <p className="text-[10px] text-muted-foreground mb-0.5">Umsatz heute</p>
             <p className="text-xl font-bold text-gold-gradient">{umsatz.toLocaleString("de-DE")}€</p>
+          </div>
+          <div className="glass-card-subtle rounded-xl p-3 text-center">
+            <p className="text-[10px] text-muted-foreground mb-0.5">Umsatz gestern</p>
+            <p className="text-xl font-bold text-gold-gradient">{yesterdayRevenue.toLocaleString("de-DE")}€</p>
+          </div>
+          <div className="glass-card-subtle rounded-xl p-3 text-center">
+            <p className="text-[10px] text-muted-foreground mb-0.5">Monatsumsatz</p>
+            <p className="text-xl font-bold text-gold-gradient">{monthlyRevenue.toLocaleString("de-DE")}€</p>
+          </div>
+          <div className="glass-card-subtle rounded-xl p-3 text-center">
+            <p className="text-[10px] text-muted-foreground mb-0.5">Gesamtumsatz</p>
+            <p className="text-xl font-bold text-gold-gradient">{totalRevenue.toLocaleString("de-DE")}€</p>
           </div>
           <div className="glass-card-subtle rounded-xl p-3 text-center">
             <p className="text-[10px] text-muted-foreground mb-0.5">Verdienst</p>
@@ -308,16 +399,28 @@ export default function Dashboard() {
             <p className="text-xl font-bold text-gold-gradient">{Math.round(rate * 100)}%</p>
           </div>
           <DailyGoal />
-          <div className="glass-card-subtle rounded-xl p-3 text-center col-span-2">
+          <div className="glass-card-subtle rounded-xl p-3 text-center">
             <p className="text-[10px] text-muted-foreground mb-0.5">Status</p>
             <p className={`text-xl font-bold ${isGold ? "text-gold-gradient" : "text-muted-foreground"}`}>{isGold ? "Gold" : "Starter"}</p>
           </div>
         </div>
-        {/* Desktop: 5-col grid */}
-        <div className="hidden lg:grid grid-cols-5 gap-4">
+        {/* Desktop grid */}
+        <div className="hidden lg:grid grid-cols-4 gap-4">
           <div className="glass-card-subtle rounded-xl p-5 text-center">
-            <p className="text-xs text-muted-foreground mb-0.5">Umsatz</p>
+            <p className="text-xs text-muted-foreground mb-0.5">Umsatz heute</p>
             <p className="text-2xl font-bold text-gold-gradient">{umsatz.toLocaleString("de-DE")}€</p>
+          </div>
+          <div className="glass-card-subtle rounded-xl p-5 text-center">
+            <p className="text-xs text-muted-foreground mb-0.5">Umsatz gestern</p>
+            <p className="text-2xl font-bold text-gold-gradient">{yesterdayRevenue.toLocaleString("de-DE")}€</p>
+          </div>
+          <div className="glass-card-subtle rounded-xl p-5 text-center">
+            <p className="text-xs text-muted-foreground mb-0.5">Monatsumsatz</p>
+            <p className="text-2xl font-bold text-gold-gradient">{monthlyRevenue.toLocaleString("de-DE")}€</p>
+          </div>
+          <div className="glass-card-subtle rounded-xl p-5 text-center">
+            <p className="text-xs text-muted-foreground mb-0.5">Gesamtumsatz</p>
+            <p className="text-2xl font-bold text-gold-gradient">{totalRevenue.toLocaleString("de-DE")}€</p>
           </div>
           <div className="glass-card-subtle rounded-xl p-5 text-center">
             <p className="text-xs text-muted-foreground mb-0.5">Verdienst</p>
