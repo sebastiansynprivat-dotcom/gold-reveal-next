@@ -47,7 +47,7 @@ const generateFakeRevenueData = () => {
 };
 
 type TimeFilter = "heute" | "gestern" | "7" | "30" | "90" | "custom";
-type ChatterFilter = "alle" | "open_2d" | "top_tag" | "top_woche" | "top_monat" | "no_telegram";
+type ChatterFilter = "alle" | "open_2d" | "top_tag" | "top_woche" | "top_monat" | "no_telegram" | "no_push";
 
 // Reuse hash function from ChatterStatsCard for consistent fake stats
 const hashCodeAdmin = (s: string) => {
@@ -675,6 +675,9 @@ export default function AdminDashboard() {
       case "no_telegram":
         result = result.filter((c) => !c.telegram_id || c.telegram_id.trim() === "");
         break;
+      case "no_push":
+        result = result.filter((c) => !pushUsers.has(c.user_id));
+        break;
       case "open_2d":
         result = result.filter((c) => getChatterFakeStats(c.user_id).avgOpenDays >= 3);
         break;
@@ -689,7 +692,7 @@ export default function AdminDashboard() {
         break;
     }
     return result;
-  }, [chatters, search, chatterFilter]);
+  }, [chatters, search, chatterFilter, pushUsers]);
 
   const openGoalEditor = async (chatter: ChatterProfile) => {
     setGoalTarget(chatter);
@@ -1001,6 +1004,7 @@ export default function AdminDashboard() {
             { key: "top_woche", label: "Top Woche", icon: TrendingUp },
             { key: "top_monat", label: "Top Monat", icon: DollarSign },
             { key: "no_telegram", label: "Telegram fehlt", icon: AlertTriangle },
+            { key: "no_push", label: "Push fehlt", icon: BellOff },
           ] as const).map(({ key, label, icon: Icon }) => (
             <button
               key={key}
@@ -1030,7 +1034,7 @@ export default function AdminDashboard() {
             </div>
           ) : filtered.length === 0 ? (
             <div className="p-8 text-center text-sm text-muted-foreground">
-              {search ? "Kein Chatter gefunden." : chatterFilter === "no_telegram" ? "Nichts weiter zu sehen." : chatterFilter === "open_2d" ? "Keine Chats länger als 3 Tage offen." : "Noch keine Chatter registriert."}
+              {search ? "Kein Chatter gefunden." : chatterFilter === "no_telegram" ? "Nichts weiter zu sehen." : chatterFilter === "no_push" ? "Alle Chatter haben Push aktiviert." : chatterFilter === "open_2d" ? "Keine Chats länger als 3 Tage offen." : "Noch keine Chatter registriert."}
             </div>
           ) : (
             <div className="divide-y divide-border">
