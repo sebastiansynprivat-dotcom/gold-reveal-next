@@ -375,10 +375,6 @@ export default function Dashboard() {
         {/* Mobile: 2-col grid with full-width status */}
         <div className="grid grid-cols-2 gap-3 lg:hidden">
           <div className="glass-card-subtle rounded-xl p-3 text-center">
-            <p className="text-[10px] text-muted-foreground mb-0.5">Umsatz heute</p>
-            <p className="text-xl font-bold text-gold-gradient">{umsatz.toLocaleString("de-DE")}€</p>
-          </div>
-          <div className="glass-card-subtle rounded-xl p-3 text-center">
             <p className="text-[10px] text-muted-foreground mb-0.5">Umsatz gestern</p>
             <p className="text-xl font-bold text-gold-gradient">{yesterdayRevenue.toLocaleString("de-DE")}€</p>
           </div>
@@ -399,17 +395,13 @@ export default function Dashboard() {
             <p className="text-xl font-bold text-gold-gradient">{Math.round(rate * 100)}%</p>
           </div>
           <DailyGoal />
-          <div className="glass-card-subtle rounded-xl p-3 text-center">
+          <div className="glass-card-subtle rounded-xl p-3 text-center col-span-2">
             <p className="text-[10px] text-muted-foreground mb-0.5">Status</p>
             <p className={`text-xl font-bold ${isGold ? "text-gold-gradient" : "text-muted-foreground"}`}>{isGold ? "Gold" : "Starter"}</p>
           </div>
         </div>
         {/* Desktop grid */}
-        <div className="hidden lg:grid grid-cols-4 gap-4">
-          <div className="glass-card-subtle rounded-xl p-5 text-center">
-            <p className="text-xs text-muted-foreground mb-0.5">Umsatz heute</p>
-            <p className="text-2xl font-bold text-gold-gradient">{umsatz.toLocaleString("de-DE")}€</p>
-          </div>
+        <div className="hidden lg:grid grid-cols-3 gap-4">
           <div className="glass-card-subtle rounded-xl p-5 text-center">
             <p className="text-xs text-muted-foreground mb-0.5">Umsatz gestern</p>
             <p className="text-2xl font-bold text-gold-gradient">{yesterdayRevenue.toLocaleString("de-DE")}€</p>
@@ -431,7 +423,7 @@ export default function Dashboard() {
             <p className="text-2xl font-bold text-gold-gradient">{Math.round(rate * 100)}%</p>
           </div>
           <DailyGoal />
-          <div className="glass-card-subtle rounded-xl p-5 text-center">
+          <div className="glass-card-subtle rounded-xl p-5 text-center col-span-3">
             <p className="text-xs text-muted-foreground mb-0.5">Status</p>
             <p className={`text-2xl font-bold ${isGold ? "text-gold-gradient" : "text-muted-foreground"}`}>{isGold ? "Gold" : "Starter"}</p>
           </div>
