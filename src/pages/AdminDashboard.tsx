@@ -650,6 +650,30 @@ export default function AdminDashboard() {
             </div>
 
             {/* Revenue Chart */}
+            {/* Gesamtumsatz Tile */}
+            <div className="glass-card-subtle rounded-xl p-4 text-center" style={{ borderTop: "3px solid hsl(var(--accent))" }}>
+              <p className="text-[10px] text-muted-foreground mb-1">Gesamtumsatz</p>
+              <p className="text-2xl font-bold text-gold-gradient">{grandTotal.toLocaleString("de-DE")}€</p>
+              <p className="text-[9px] text-muted-foreground mt-0.5">{filterLabels[timeFilter]}</p>
+            </div>
+
+            {/* Platform Stat Tiles */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="glass-card-subtle rounded-xl p-4 text-center" style={{ borderTop: `3px solid ${PLATFORM_COLORS.maloum}` }}>
+                <p className="text-[10px] text-muted-foreground mb-1">Maloum</p>
+                <p className="text-xl font-bold text-foreground">{platformTotals.maloum.toLocaleString("de-DE")}€</p>
+              </div>
+              <div className="glass-card-subtle rounded-xl p-4 text-center" style={{ borderTop: `3px solid ${PLATFORM_COLORS.brezzels}` }}>
+                <p className="text-[10px] text-muted-foreground mb-1">Brezzels</p>
+                <p className="text-xl font-bold text-foreground">{platformTotals.brezzels.toLocaleString("de-DE")}€</p>
+              </div>
+              <div className="glass-card-subtle rounded-xl p-4 text-center" style={{ borderTop: `3px solid ${PLATFORM_COLORS["4based"]}` }}>
+                <p className="text-[10px] text-muted-foreground mb-1">4Based</p>
+                <p className="text-xl font-bold text-foreground">{platformTotals["4based"].toLocaleString("de-DE")}€</p>
+              </div>
+            </div>
+
+            {/* Revenue Chart */}
             <div className="glass-card rounded-xl p-4">
               <h2 className="text-sm font-semibold text-foreground mb-1">
                 Umsatz – {filterLabels[timeFilter]}
@@ -694,29 +718,6 @@ export default function AdminDashboard() {
                   </LineChart>
                 </ResponsiveContainer>
               </div>
-            </div>
-
-            {/* Platform Stat Tiles */}
-            <div className="grid grid-cols-3 gap-3">
-              <div className="glass-card-subtle rounded-xl p-4 text-center" style={{ borderTop: `3px solid ${PLATFORM_COLORS.maloum}` }}>
-                <p className="text-[10px] text-muted-foreground mb-1">Maloum</p>
-                <p className="text-xl font-bold text-foreground">{platformTotals.maloum.toLocaleString("de-DE")}€</p>
-              </div>
-              <div className="glass-card-subtle rounded-xl p-4 text-center" style={{ borderTop: `3px solid ${PLATFORM_COLORS.brezzels}` }}>
-                <p className="text-[10px] text-muted-foreground mb-1">Brezzels</p>
-                <p className="text-xl font-bold text-foreground">{platformTotals.brezzels.toLocaleString("de-DE")}€</p>
-              </div>
-              <div className="glass-card-subtle rounded-xl p-4 text-center" style={{ borderTop: `3px solid ${PLATFORM_COLORS["4based"]}` }}>
-                <p className="text-[10px] text-muted-foreground mb-1">4Based</p>
-                <p className="text-xl font-bold text-foreground">{platformTotals["4based"].toLocaleString("de-DE")}€</p>
-              </div>
-            </div>
-
-            {/* Gesamtumsatz Tile */}
-            <div className="glass-card-subtle rounded-xl p-4 text-center" style={{ borderTop: "3px solid hsl(var(--accent))" }}>
-              <p className="text-[10px] text-muted-foreground mb-1">Gesamtumsatz</p>
-              <p className="text-2xl font-bold text-gold-gradient">{grandTotal.toLocaleString("de-DE")}€</p>
-              <p className="text-[9px] text-muted-foreground mt-0.5">{filterLabels[timeFilter]}</p>
             </div>
           </div>
         )}
