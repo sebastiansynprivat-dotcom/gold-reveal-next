@@ -239,7 +239,26 @@ export default function AdminDashboard() {
     setOffers(data || []);
   };
 
-  const loadBotMessages = async () => {
+  const loadLoginStats = async () => {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+    const weekStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7).toISOString();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
+    const { data } = await supabase.from("login_events").select("user_id, logged_in_at");
+    if (!data) return;
+
+    const statsMap: Record<string, LoginStats> = {};
+    data.forEach((evt: any) => {
+      if (!statsMap[evt.user_id]) statsMap[evt.user_id] = { today: 0, week: 0, month: 0 };
+      const t = new Date(evt.logged_in_at).toISOString();
+      if (t >= todayStart) statsMap[evt.user_id].today++;
+      if (t >= weekStart) statsMap[evt.user_id].week++;
+      if (t >= monthStart) statsMap[evt.user_id].month++;
+    });
+    setLoginStats(statsMap);
+  };
+
     const { data } = await supabase
       .from("bot_messages" as any)
       .select("account_id, message, follow_up_message, is_active");
