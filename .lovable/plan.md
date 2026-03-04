@@ -1,41 +1,33 @@
 
-# Fortschrittsanzeige und Schritt-Nummerierung fur OfferB
 
-## Was wird gemacht
+## Problem
 
-### 1. Alle Schritte als einheitliche Liste definieren
-Die Videos und Links werden zu einer gemeinsamen Schritt-Liste zusammengefasst:
-- Schritt 1: Plattform Erklärungs Video
-- Schritt 2: Telegram Nachrichten Video
-- Schritt 3: Brezzels Notifications aktivieren
-- Schritt 4: My ID Bot einrichten
-- Schritt 5: Tägliches Feedback
+Die Chatter-Zeile im Admin Dashboard hat auf Mobile zu viele Elemente in einer Reihe: Avatar + Name + Account-Badge + 4 Buttons (Target, Refresh, Trash, Send). Das überlappt auf kleinen Bildschirmen.
 
-### 2. Fortschritts-Bar oben auf der Seite
-Direkt unter dem Hero-Bereich wird eine Progress-Bar eingefügt, die den Gesamtfortschritt anzeigt (z.B. "2 von 5 Schritten erledigt"). Nutzt die vorhandene `Progress`-Komponente im Gold-Styling.
+## Lösung
 
-### 3. Klickbare Checkliste
-Unter der Progress-Bar eine kompakte Checkliste mit allen 5 Schritten. Jeder Schritt hat:
-- Eine Checkbox zum Abhaken
-- Schritt-Nummer ("Schritt 1", "Schritt 2" etc.)
-- Kurzer Titel
+Die Zeile in **zwei Reihen** aufteilen:
+- **Reihe 1**: Avatar + Name/Info + Account-Badge (volle Breite)
+- **Reihe 2**: Die 4 Action-Buttons rechtsbündig, mit etwas weniger Padding
 
-Der Fortschritt wird im `localStorage` gespeichert, damit er beim Neuladen erhalten bleibt.
+So bleibt alles lesbar und nichts überlappt.
 
-### 4. Schritt-Nummern bei den Sektionen
-Jede Video-/Link-/Feedback-Sektion bekommt eine prominente Schritt-Nummer als Badge (z.B. goldener Kreis mit "1" darin) neben dem Titel.
+### Technische Umsetzung
 
-## Technische Details
+**Datei:** `src/pages/AdminDashboard.tsx` (Zeilen ~837-895)
 
-**Datei: `src/pages/OfferB.tsx`**
+Den inneren `div` von einer einzigen Flex-Zeile in ein zweizeiliges Layout umbauen:
 
-- Neue `steps`-Array-Konstante mit id, title, type fur alle 5 Schritte
-- `useState` + `localStorage` fur `completedSteps: Set<number>`
-- Progress-Bar-Sektion nach dem Hero mit `Progress`-Komponente (Wert = `completedSteps.size / steps.length * 100`)
-- Checkliste mit `Checkbox`-Komponenten, gestylt im bestehenden `glass-card-subtle` Look
-- Videos bekommen "Schritt 1" / "Schritt 2" als nummerierte Badge-Kreise
-- Links-Sektion wird zu Schritt 3 und 4 mit individuellen Nummern
-- Feedback wird Schritt 5
-- Erledigte Schritte bekommen eine subtile visuelle Markierung (leicht reduzierte Opazitat / Hakchen)
+```
+┌────────────────────────────────────┐
+│ 🟡 Max Mustermann     🔑 2 Accs   │
+│              🎯  🔄  🗑️  📤      │
+└────────────────────────────────────┘
+```
 
-Keine neuen Abhangigkeiten notwendig -- nutzt vorhandene `Progress`, `Checkbox` und `framer-motion`.
+- Äußerer Container: `flex flex-col` statt `flex items-center`
+- Erste Zeile: Avatar + Name + Badge in einer `flex items-center` Reihe
+- Zweite Zeile: Buttons in `flex justify-end gap-1` mit kleinerem Padding
+
+Auf Desktop (ab `sm:`) kann optional alles wieder in einer Zeile bleiben via `sm:flex-row sm:items-center`.
+
