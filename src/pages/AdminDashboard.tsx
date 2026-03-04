@@ -1030,7 +1030,7 @@ export default function AdminDashboard() {
                               </button>
                             </PopoverTrigger>
                             <PopoverContent className="w-48 p-3 glass-card border-border" side="right" align="start" onClick={(e) => e.stopPropagation()}>
-                              <p className="text-[11px] font-semibold text-foreground mb-2">Login-Aktivität</p>
+                              <p className="text-[11px] font-semibold text-foreground mb-2"><p className="text-[11px] font-semibold text-foreground mb-2">Website-Besuche</p></p>
                               <div className="space-y-1.5">
                                 <div className="flex items-center justify-between text-xs">
                                   <span className="flex items-center gap-1.5 text-muted-foreground"><CalendarDays className="w-3.5 h-3.5" /> Heute</span>
