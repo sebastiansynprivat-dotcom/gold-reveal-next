@@ -100,13 +100,55 @@ export default function AdminDashboard() {
   const [goalAmount, setGoalAmount] = useState("");
   const [goalSaving, setGoalSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<"einnahmen" | "chatter">("einnahmen");
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>("30");
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
 
-  const revenueData = useMemo(() => generateFakeRevenueData(), []);
+  const allRevenueData = useMemo(() => generateFakeRevenueData(), []);
+
+  const filteredRevenueData = useMemo(() => {
+    const now = new Date();
+    const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const today = startOfDay(now);
+
+    if (timeFilter === "custom" && customFrom && customTo) {
+      const from = new Date(customFrom);
+      const to = new Date(customTo);
+      to.setHours(23, 59, 59);
+      return allRevenueData.filter((d) => d.dateObj >= from && d.dateObj <= to);
+    }
+
+    let daysBack = 30;
+    if (timeFilter === "heute") daysBack = 0;
+    else if (timeFilter === "gestern") daysBack = 1;
+    else if (timeFilter === "7") daysBack = 7;
+    else if (timeFilter === "90") daysBack = 90;
+
+    if (timeFilter === "heute") {
+      return allRevenueData.filter((d) => startOfDay(d.dateObj).getTime() === today.getTime());
+    }
+    if (timeFilter === "gestern") {
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      return allRevenueData.filter((d) => startOfDay(d.dateObj).getTime() === yesterday.getTime());
+    }
+
+    const cutoff = new Date(today);
+    cutoff.setDate(cutoff.getDate() - daysBack);
+    return allRevenueData.filter((d) => d.dateObj >= cutoff);
+  }, [allRevenueData, timeFilter, customFrom, customTo]);
+
   const platformTotals = useMemo(() => ({
-    maloum: revenueData.reduce((s, d) => s + d.maloum, 0),
-    brezzels: revenueData.reduce((s, d) => s + d.brezzels, 0),
-    "4based": revenueData.reduce((s, d) => s + d["4based"], 0),
-  }), [revenueData]);
+    maloum: filteredRevenueData.reduce((s, d) => s + d.maloum, 0),
+    brezzels: filteredRevenueData.reduce((s, d) => s + d.brezzels, 0),
+    "4based": filteredRevenueData.reduce((s, d) => s + d["4based"], 0),
+  }), [filteredRevenueData]);
+
+  const grandTotal = platformTotals.maloum + platformTotals.brezzels + platformTotals["4based"];
+
+  const filterLabels: Record<TimeFilter, string> = {
+    heute: "Heute", gestern: "Gestern", "7": "7 Tage", "30": "30 Tage", "90": "90 Tage", custom: "Zeitraum",
+  };
 
   useEffect(() => {
     loadChatters();
