@@ -1273,23 +1273,23 @@ export default function AdminDashboard() {
                                       { label: "Monat", value: `${monthRev.toLocaleString("de-DE")}€` },
                                     ].map((s) => (
                                       <div key={s.label} className="flex items-center justify-between px-1">
-                                        <span className="text-[10px] text-muted-foreground">{s.label}</span>
+                                        <span className="text-xs font-medium text-muted-foreground">{s.label}</span>
                                         <span className="text-sm font-bold text-foreground">{s.value}</span>
                                       </div>
                                     ))}
-                                    <div className="border-t border-border/50 pt-1.5 mt-1 flex gap-3">
-                                      <div className="flex items-center justify-between flex-1 px-1">
-                                        <span className="text-[10px] text-muted-foreground">Mass-DMs</span>
+                                    <div className="border-t border-border/50 pt-1.5 mt-1 space-y-1.5">
+                                      <div className="flex items-center justify-between px-1">
+                                        <span className="text-xs font-medium text-muted-foreground">Mass-DMs</span>
                                         <span className="text-sm font-bold text-foreground">{massDMs}</span>
                                       </div>
-                                      <div className="flex items-center justify-between flex-1 px-1">
-                                        <span className="text-[10px] text-muted-foreground">Offene Chats</span>
+                                      <div className="flex items-center justify-between px-1">
+                                        <span className="text-xs font-medium text-muted-foreground">Offene Chats</span>
                                         <span className="text-sm font-bold text-foreground">{openChats}</span>
                                       </div>
-                                    </div>
-                                    <div className="flex items-center justify-between px-1">
-                                      <span className="text-[10px] text-muted-foreground">Ø Chats offen seit</span>
-                                      <span className="text-sm font-bold text-foreground">{(1 + (h % 5))}d</span>
+                                      <div className="flex items-center justify-between px-1">
+                                        <span className="text-xs font-medium text-muted-foreground">Ø Chats offen seit</span>
+                                        <span className="text-sm font-bold text-foreground">{(1 + (h % 5))}d</span>
+                                      </div>
                                     </div>
                                   </div>
                                 </div>
