@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Users, Send, Bell, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon } from "lucide-react";
+import { Users, Send, Bell, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, Filter, MessageSquare, Star, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -46,6 +46,23 @@ const generateFakeRevenueData = () => {
 };
 
 type TimeFilter = "heute" | "gestern" | "7" | "30" | "90" | "custom";
+type ChatterFilter = "alle" | "open_2d" | "top_tag" | "top_woche" | "top_monat" | "no_telegram";
+
+// Reuse hash function from ChatterStatsCard for consistent fake stats
+const hashCodeAdmin = (s: string) => {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
+  return Math.abs(h);
+};
+
+const getChatterFakeStats = (userId: string) => {
+  const h = hashCodeAdmin(userId);
+  const today = 80 + (h % 200);
+  const week = today * 5 + (h % 500);
+  const month = week * 3.5 + (h % 2000);
+  const avgOpenDays = 1 + (h % 5);
+  return { today, week: Math.round(week), month: Math.round(month), avgOpenDays };
+};
 
 interface ChatterProfile {
   user_id: string;
