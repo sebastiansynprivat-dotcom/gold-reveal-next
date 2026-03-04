@@ -1181,7 +1181,7 @@ export default function AdminDashboard() {
                 );
               })}
             </div>
-          )}
+          ))}
         </section>
 
         {/* Freie Accounts – Plattform-basiert */}
