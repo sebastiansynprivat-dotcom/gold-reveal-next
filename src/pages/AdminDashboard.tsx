@@ -1223,8 +1223,8 @@ export default function AdminDashboard() {
                           <div className="space-y-3">
                             {chatter.assigned_accounts!.map((acc) => {
                               const h = hashCodeAdmin(chatter.user_id + acc.id);
-                              const todayRev = 80 + (h % 200);
-                              const weekRev = todayRev * 5 + (h % 500);
+                              const yesterdayRev = 80 + (h % 200);
+                              const weekRev = yesterdayRev * 5 + (h % 500);
                               const monthRev = Math.round(weekRev * 3.5 + (h % 2000));
                               const allTimeRev = Math.round(monthRev * 4.2 + (h % 8000));
                               const massDMs = 120 + (h % 380);
@@ -1271,7 +1271,7 @@ export default function AdminDashboard() {
                                   {/* Stats */}
                                   <div className="px-3.5 pb-3 pt-1 space-y-1.5">
                                     {[
-                                      { label: "Heute", value: `${todayRev}€` },
+                                      { label: "Gestern", value: `${yesterdayRev}€` },
                                       { label: "Woche", value: `${weekRev.toLocaleString("de-DE")}€` },
                                       { label: "Monat", value: `${monthRev.toLocaleString("de-DE")}€` },
                                       { label: "All-Time", value: `${allTimeRev.toLocaleString("de-DE")}€` },
