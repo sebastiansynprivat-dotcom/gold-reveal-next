@@ -169,14 +169,32 @@ const WeightedRouteButton = () => {
         return;
       }
 
-      // Weighted random selection
+      // Get and increment the global counter for deterministic distribution
+      const { data: counterRow } = await supabase
+        .from("route_counter")
+        .select("id, counter")
+        .limit(1)
+        .single();
+
+      const currentCounter = counterRow?.counter || 0;
+
+      // Increment counter
+      if (counterRow) {
+        await supabase
+          .from("route_counter")
+          .update({ counter: currentCounter + 1 })
+          .eq("id", counterRow.id);
+      }
+
+      // Deterministic: use counter modulo total weight to pick route
       const totalWeight = routes.reduce((sum, r) => sum + r.weight, 0);
-      let random = Math.random() * totalWeight;
+      const position = currentCounter % totalWeight;
+      let accumulated = 0;
       let selectedPath = routes[0].target_path;
 
       for (const route of routes) {
-        random -= route.weight;
-        if (random <= 0) {
+        accumulated += route.weight;
+        if (position < accumulated) {
           selectedPath = route.target_path;
           break;
         }

@@ -283,6 +283,21 @@ export type Database = {
         }
         Relationships: []
       }
+      route_counter: {
+        Row: {
+          counter: number
+          id: string
+        }
+        Insert: {
+          counter?: number
+          id?: string
+        }
+        Update: {
+          counter?: number
+          id?: string
+        }
+        Relationships: []
+      }
       user_progress: {
         Row: {
           assigned_route: string | null
