@@ -877,7 +877,9 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-background">
       <header className="border-b border-border">
         <div className="container max-w-4xl mx-auto px-4 py-3 flex items-center gap-3">
-          <img src={logo} alt="Logo" className="h-9 w-9 rounded-full shrink-0" />
+          <button onClick={() => { setAdminSectionOpen(true); if (adminList.length === 0) loadAdmins(); }} className="shrink-0 hover:opacity-80 transition-opacity">
+            <img src={logo} alt="Logo" className="h-9 w-9 rounded-full" />
+          </button>
           <div className="flex-1">
             <h1 className="text-base font-bold text-foreground">Admin Dashboard</h1>
             <p className="text-[10px] text-muted-foreground">Chatter verwalten & Benachrichtigungen</p>
@@ -1325,29 +1327,16 @@ export default function AdminDashboard() {
           )}
         </section>
 
-        {/* Admin-Verwaltung */}
-        <section className="glass-card rounded-xl p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => {
-                setAdminSectionOpen(!adminSectionOpen);
-                if (!adminSectionOpen && adminList.length === 0) loadAdmins();
-              }}
-              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-            >
-              <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${adminSectionOpen ? "rotate-90" : ""}`} />
-              <Shield className="h-4 w-4 text-accent" />
-              <h2 className="text-sm font-semibold text-foreground">Admin-Verwaltung</h2>
-              {!adminSectionOpen && (
-                <Badge variant="secondary" className="text-[10px] ml-1">
-                  {adminList.length} Admin{adminList.length !== 1 ? "s" : ""}
-                </Badge>
-              )}
-            </button>
-          </div>
-
-          {adminSectionOpen && (
-            <div className="space-y-4 mt-2">
+        {/* Admin-Verwaltung Dialog (opens via logo click) */}
+        <Dialog open={adminSectionOpen} onOpenChange={setAdminSectionOpen}>
+          <DialogContent className="glass-card border-border sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-foreground flex items-center gap-2">
+                <Shield className="h-5 w-5 text-accent" />
+                Admin-Verwaltung
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
               {/* Add new admin */}
               <div className="flex gap-2">
                 <div className="relative flex-1">
@@ -1411,8 +1400,8 @@ export default function AdminDashboard() {
                 </div>
               )}
             </div>
-          )}
-        </section>
+          </DialogContent>
+        </Dialog>
 
         {/* Remove Admin Confirm Dialog */}
         <AlertDialog open={!!removeAdminConfirm} onOpenChange={() => setRemoveAdminConfirm(null)}>
