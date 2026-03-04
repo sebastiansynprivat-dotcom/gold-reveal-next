@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Users, Send, Bell, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, Filter, MessageSquare, Star, AlertTriangle, Bot, Save, Power } from "lucide-react";
+import { Users, Send, Bell, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, Filter, MessageSquare, Star, AlertTriangle, Bot, Save, Power, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -130,6 +130,7 @@ export default function AdminDashboard() {
   const [expandedBot, setExpandedBot] = useState<string | null>(null);
   const [savedBotState, setSavedBotState] = useState<Record<string, { message: string; followUp: string; isActive: boolean }>>({});
   const [botFilter, setBotFilter] = useState<"alle" | "missing">("alle");
+  const [botPlatformFilter, setBotPlatformFilter] = useState<string>("alle");
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("30");
   const [customFrom, setCustomFrom] = useState<Date | undefined>(undefined);
   const [customTo, setCustomTo] = useState<Date | undefined>(undefined);
@@ -251,15 +252,24 @@ export default function AdminDashboard() {
     return accounts.filter((a) => a.assigned_to);
   }, [accounts]);
 
+  const botPlatforms = useMemo(() => {
+    const set = new Set(allAssignedAccounts.map((a) => a.platform));
+    return Array.from(set);
+  }, [allAssignedAccounts]);
+
   const filteredBotAccounts = useMemo(() => {
+    let result = allAssignedAccounts;
+    if (botPlatformFilter !== "alle") {
+      result = result.filter((a) => a.platform === botPlatformFilter);
+    }
     if (botFilter === "missing") {
-      return allAssignedAccounts.filter((acc) => {
+      result = result.filter((acc) => {
         const saved = savedBotState[acc.id];
         return !saved || (!saved.message.trim() && !saved.followUp.trim());
       });
     }
-    return allAssignedAccounts;
-  }, [allAssignedAccounts, botFilter, savedBotState]);
+    return result;
+  }, [allAssignedAccounts, botFilter, botPlatformFilter, savedBotState]);
 
   const saveBotMessage = async (accountId: string) => {
     const entry = botMessages[accountId];
@@ -1058,12 +1068,12 @@ export default function AdminDashboard() {
                 </Badge>
               </div>
 
-              {/* Filter */}
-              <div className="px-3 pt-3 flex gap-2">
+              {/* Filters */}
+              <div className="px-3 pt-3 flex gap-2 overflow-x-auto scrollbar-none pb-1">
                 <button
                   onClick={() => setBotFilter("alle")}
                   className={cn(
-                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium transition-colors",
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium transition-colors shrink-0",
                     botFilter === "alle" ? "bg-accent text-accent-foreground" : "bg-secondary/50 text-muted-foreground hover:bg-secondary"
                   )}
                 >
@@ -1073,18 +1083,31 @@ export default function AdminDashboard() {
                 <button
                   onClick={() => setBotFilter("missing")}
                   className={cn(
-                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium transition-colors",
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium transition-colors shrink-0",
                     botFilter === "missing" ? "bg-accent text-accent-foreground" : "bg-secondary/50 text-muted-foreground hover:bg-secondary"
                   )}
                 >
                   <AlertTriangle className="h-3 w-3" />
                   Bot-DM fehlt
                 </button>
+                {botPlatforms.map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => setBotPlatformFilter(botPlatformFilter === p ? "alle" : p)}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium transition-colors shrink-0",
+                      botPlatformFilter === p ? "bg-accent text-accent-foreground" : "bg-secondary/50 text-muted-foreground hover:bg-secondary"
+                    )}
+                  >
+                    <Package className="h-3 w-3" />
+                    {p}
+                  </button>
+                ))}
               </div>
 
               {filteredBotAccounts.length === 0 ? (
                 <div className="p-8 text-center text-sm text-muted-foreground">
-                  {botFilter === "missing" ? "Alle Models haben Bot-DMs hinterlegt." : "Keine zugewiesenen Accounts vorhanden."}
+                  {botFilter === "missing" ? "Alle Models haben Bot-DMs hinterlegt." : "Keine Accounts gefunden."}
                 </div>
               ) : (
                 <div className="p-3 space-y-2">
@@ -1145,7 +1168,30 @@ export default function AdminDashboard() {
                           <div className="px-4 pb-4 space-y-4 animate-in slide-in-from-top-2 fade-in duration-200">
                             <div className="h-px bg-border" />
 
-                            {/* Active Toggle */}
+                            {/* Credentials */}
+                            <div className="grid grid-cols-2 gap-2">
+                              <button
+                                onClick={() => { navigator.clipboard.writeText(acc.account_email); toast.success("E-Mail kopiert"); }}
+                                className="glass-card-subtle rounded-lg px-3 py-2 text-left hover:bg-accent/5 transition-colors group"
+                              >
+                                <p className="text-[10px] text-muted-foreground mb-0.5">E-Mail</p>
+                                <div className="flex items-center gap-1.5">
+                                  <p className="text-xs font-medium text-foreground truncate flex-1">{acc.account_email}</p>
+                                  <Copy className="h-3 w-3 text-muted-foreground group-hover:text-accent shrink-0" />
+                                </div>
+                              </button>
+                              <button
+                                onClick={() => { navigator.clipboard.writeText(acc.account_password); toast.success("Passwort kopiert"); }}
+                                className="glass-card-subtle rounded-lg px-3 py-2 text-left hover:bg-accent/5 transition-colors group"
+                              >
+                                <p className="text-[10px] text-muted-foreground mb-0.5">Passwort</p>
+                                <div className="flex items-center gap-1.5">
+                                  <p className="text-xs font-medium text-foreground truncate flex-1">••••••••</p>
+                                  <Copy className="h-3 w-3 text-muted-foreground group-hover:text-accent shrink-0" />
+                                </div>
+                              </button>
+                            </div>
+
                             <div className="flex items-center justify-between glass-card-subtle rounded-lg px-3 py-2.5">
                               <div className="flex items-center gap-2">
                                 <Power className={cn("h-3.5 w-3.5", entry.isActive ? "text-accent" : "text-muted-foreground")} />
