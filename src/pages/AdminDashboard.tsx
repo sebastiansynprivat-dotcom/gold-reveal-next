@@ -710,11 +710,8 @@ export default function AdminDashboard() {
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
         result = result.filter((c) => {
           const regDate = new Date(c.created_at);
-          return regDate <= sevenDaysAgo;
+          return regDate <= sevenDaysAgo && !revenueUsers.has(c.user_id);
         });
-        // We filter further by checking daily_revenue — but since we don't have it loaded here,
-        // we use the fake stats as proxy: users with 0 month revenue
-        result = result.filter((c) => getChatterFakeStats(c.user_id).month === 0);
         break;
       }
     }
