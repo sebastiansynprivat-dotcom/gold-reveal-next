@@ -242,6 +242,65 @@ export default function AdminDashboard() {
     loadRevenueUsers();
   }, []);
 
+  const loadAdmins = async () => {
+    setAdminListLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const res = await supabase.functions.invoke("admin-manage", {
+        body: { action: "list" },
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (res.data?.admins) setAdminList(res.data.admins);
+    } catch (err) {
+      toast.error("Fehler beim Laden der Admins");
+    }
+    setAdminListLoading(false);
+  };
+
+  const addAdmin = async () => {
+    if (!newAdminEmail.trim()) return;
+    setAddingAdmin(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const res = await supabase.functions.invoke("admin-manage", {
+        body: { action: "add", email: newAdminEmail.trim() },
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (res.data?.error) {
+        toast.error(res.data.error);
+      } else {
+        toast.success("Admin hinzugefügt!");
+        setNewAdminEmail("");
+        loadAdmins();
+      }
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+    setAddingAdmin(false);
+  };
+
+  const removeAdmin = async (targetUserId: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const res = await supabase.functions.invoke("admin-manage", {
+        body: { action: "remove", target_user_id: targetUserId },
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (res.data?.error) {
+        toast.error(res.data.error);
+      } else {
+        toast.success("Admin entfernt");
+        loadAdmins();
+      }
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+    setRemoveAdminConfirm(null);
+  };
+
   const loadChatters = async () => {
     setLoading(true);
     const { data, error } = await supabase
