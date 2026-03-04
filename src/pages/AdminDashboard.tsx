@@ -251,11 +251,11 @@ export default function AdminDashboard() {
       .from("accounts")
       .select("*")
       .order("created_at", { ascending: true });
-    setAccounts(allAccounts || []);
+    setAccounts((allAccounts as any[] || []) as AccountEntry[]);
     
     const enriched = (data || []).map((c) => ({
       ...c,
-      assigned_accounts: (allAccounts || []).filter((a) => a.assigned_to === c.user_id),
+      assigned_accounts: ((allAccounts as any[] || []) as AccountEntry[]).filter((a) => a.assigned_to === c.user_id),
     }));
     setChatters(enriched);
     // Track PWA installed users
