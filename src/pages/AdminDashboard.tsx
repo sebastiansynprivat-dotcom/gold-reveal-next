@@ -1185,12 +1185,13 @@ export default function AdminDashboard() {
         </section>
 
         {/* Freie Accounts – Plattform-basiert */}
-        <section className="glass-card rounded-xl overflow-hidden">
-          <button
-            onClick={() => setManualSectionOpen(!manualSectionOpen)}
-            className="w-full p-4 flex items-center justify-between hover:bg-secondary/30 transition-colors"
-          >
-            <div className="flex items-center gap-2">
+        <section className="glass-card rounded-xl p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => setManualSectionOpen(!manualSectionOpen)}
+              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+            >
+              <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${manualSectionOpen ? "rotate-90" : ""}`} />
               <KeyRound className="h-4 w-4 text-accent" />
               <h2 className="text-sm font-semibold text-foreground">Freie Accounts</h2>
               {!manualSectionOpen && (
@@ -1198,16 +1199,20 @@ export default function AdminDashboard() {
                   {accounts.filter(a => a.is_manual).length} gesamt
                 </Badge>
               )}
-            </div>
-            <svg
-              className={cn("h-4 w-4 text-muted-foreground transition-transform duration-200", manualSectionOpen && "rotate-180")}
-              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
+            </button>
+            {manualSectionOpen && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => { setNewManualPlatformName(""); setNewManualPlatformOpen(true); }}
+              >
+                <Plus className="h-3.5 w-3.5 mr-1.5" />
+                Neue Plattform
+              </Button>
+            )}
+          </div>
           {manualSectionOpen && (
-            <div className="px-4 pb-4 space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
+            <div className="space-y-3">
               <p className="text-[11px] text-muted-foreground">
                 Accounts für manuelle Zuweisung – nicht Teil der automatischen Verteilung.
               </p>
