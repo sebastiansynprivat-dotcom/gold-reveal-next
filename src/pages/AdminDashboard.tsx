@@ -1581,6 +1581,44 @@ export default function AdminDashboard() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* New Platform Dialog */}
+      <Dialog open={newPlatformOpen} onOpenChange={setNewPlatformOpen}>
+        <DialogContent className="glass-card border-border sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-foreground flex items-center gap-2">
+              <Package className="h-5 w-5 text-accent" />
+              Neue Plattform erstellen
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Plattform-Name</label>
+              <Input
+                value={newPlatformName}
+                onChange={(e) => setNewPlatformName(e.target.value)}
+                placeholder="z.B. Brezzels, Maloum, 4Based..."
+                className="text-sm"
+                autoFocus
+              />
+            </div>
+            <Button
+              onClick={() => {
+                if (newPlatformName.trim()) {
+                  setSelectedPlatform(newPlatformName.trim());
+                  setNewPlatformOpen(false);
+                  setAccountPoolOpen(true);
+                }
+              }}
+              disabled={!newPlatformName.trim()}
+              className="w-full"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Plattform anlegen
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
