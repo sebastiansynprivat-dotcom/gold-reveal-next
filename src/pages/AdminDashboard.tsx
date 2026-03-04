@@ -1200,7 +1200,11 @@ export default function AdminDashboard() {
                   <Badge variant="secondary" className="text-[10px] ml-1">
                     {accounts.filter(a => !a.is_manual).length} gesamt
                   </Badge>
-                  <Badge variant="secondary" className="text-[10px]">
+                  <Badge variant="secondary" className="text-[10px] flex items-center gap-1">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+                    </span>
                     {accounts.filter(a => !a.is_manual && !a.assigned_to).length} frei
                   </Badge>
                 </>
@@ -1272,7 +1276,11 @@ export default function AdminDashboard() {
                   <Badge variant="secondary" className="text-[10px] ml-1">
                     {accounts.filter(a => a.is_manual).length} gesamt
                   </Badge>
-                  <Badge variant="secondary" className="text-[10px]">
+                  <Badge variant="secondary" className="text-[10px] flex items-center gap-1">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+                    </span>
                     {accounts.filter(a => a.is_manual && !a.assigned_to).length} frei
                   </Badge>
                 </>
