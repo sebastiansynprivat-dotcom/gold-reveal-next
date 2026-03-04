@@ -1265,21 +1265,31 @@ export default function AdminDashboard() {
                                     </button>
                                   </div>
 
-                                  {/* Stats Row */}
-                                  <div className="px-3.5 pb-3 pt-1">
-                                    <div className="grid grid-cols-5 gap-1.5">
-                                      {[
-                                        { label: "Heute", value: `${todayRev}€` },
-                                        { label: "Woche", value: `${weekRev}€` },
-                                        { label: "Monat", value: `${monthRev.toLocaleString("de-DE")}€` },
-                                        { label: "DMs", value: String(massDMs) },
-                                        { label: "Chats", value: String(openChats) },
-                                      ].map((s) => (
-                                        <div key={s.label} className="text-center bg-secondary/20 rounded-md py-1.5">
-                                          <p className="text-[8px] text-muted-foreground">{s.label}</p>
-                                          <p className="text-[11px] font-bold text-foreground">{s.value}</p>
-                                        </div>
-                                      ))}
+                                  {/* Stats */}
+                                  <div className="px-3.5 pb-3 pt-1 space-y-1.5">
+                                    {[
+                                      { label: "Heute", value: `${todayRev}€` },
+                                      { label: "Woche", value: `${weekRev.toLocaleString("de-DE")}€` },
+                                      { label: "Monat", value: `${monthRev.toLocaleString("de-DE")}€` },
+                                    ].map((s) => (
+                                      <div key={s.label} className="flex items-center justify-between px-1">
+                                        <span className="text-[10px] text-muted-foreground">{s.label}</span>
+                                        <span className="text-sm font-bold text-foreground">{s.value}</span>
+                                      </div>
+                                    ))}
+                                    <div className="border-t border-border/50 pt-1.5 mt-1 flex gap-3">
+                                      <div className="flex items-center justify-between flex-1 px-1">
+                                        <span className="text-[10px] text-muted-foreground">Mass-DMs</span>
+                                        <span className="text-sm font-bold text-foreground">{massDMs}</span>
+                                      </div>
+                                      <div className="flex items-center justify-between flex-1 px-1">
+                                        <span className="text-[10px] text-muted-foreground">Offene Chats</span>
+                                        <span className="text-sm font-bold text-foreground">{openChats}</span>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center justify-between px-1">
+                                      <span className="text-[10px] text-muted-foreground">Ø Chats offen seit</span>
+                                      <span className="text-sm font-bold text-foreground">{(1 + (h % 5))}d</span>
                                     </div>
                                   </div>
                                 </div>
