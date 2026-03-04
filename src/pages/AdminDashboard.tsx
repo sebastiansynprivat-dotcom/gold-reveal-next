@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Users, Send, Bell, BellOff, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, CalendarDays, CalendarRange, Filter, MessageSquare, Star, AlertTriangle, Bot, Save, Power, Copy, Smartphone, Percent } from "lucide-react";
+import { Users, Send, Bell, BellOff, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, CalendarDays, CalendarRange, Filter, MessageSquare, Star, AlertTriangle, Bot, Save, Power, Copy, Smartphone, Percent, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -1120,21 +1120,32 @@ export default function AdminDashboard() {
 
         <section className="glass-card rounded-xl p-4 space-y-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+            <button
+              onClick={() => setAccountPoolSectionOpen(!accountPoolSectionOpen)}
+              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+            >
+              <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${accountPoolSectionOpen ? "rotate-90" : ""}`} />
               <Package className="h-4 w-4 text-accent" />
               <h2 className="text-sm font-semibold text-foreground">Account-Pools</h2>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => { setNewPlatformName(""); setNewPlatformOpen(true); }}
-            >
-              <Plus className="h-3.5 w-3.5 mr-1.5" />
-              Neuer Pool
-            </Button>
+              {!accountPoolSectionOpen && (
+                <Badge variant="secondary" className="text-[10px] ml-1">
+                  {accounts.filter(a => !a.is_manual).length} gesamt
+                </Badge>
+              )}
+            </button>
+            {accountPoolSectionOpen && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => { setNewPlatformName(""); setNewPlatformOpen(true); }}
+              >
+                <Plus className="h-3.5 w-3.5 mr-1.5" />
+                Neuer Pool
+              </Button>
+            )}
           </div>
 
-          {platforms.length === 0 ? (
+          {accountPoolSectionOpen && (platforms.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-4">
               Noch keine Pools angelegt. Erstelle einen neuen Pool oben.
             </p>
@@ -1170,7 +1181,7 @@ export default function AdminDashboard() {
                 );
               })}
             </div>
-          )}
+          ))}
         </section>
 
         {/* Freie Accounts – Plattform-basiert */}
