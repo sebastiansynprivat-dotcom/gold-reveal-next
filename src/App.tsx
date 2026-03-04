@@ -13,6 +13,7 @@ import OfferC from "./pages/OfferC";
 import Dashboard from "./pages/Dashboard";
 import AdminNotifications from "./pages/AdminNotifications";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminLogin from "./pages/AdminLogin";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import Invoice from "./pages/Invoice";
