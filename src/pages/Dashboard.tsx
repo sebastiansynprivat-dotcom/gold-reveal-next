@@ -522,8 +522,8 @@ export default function Dashboard() {
                 </div>
               )}
 
-              {/* Google Drive To-Do – verschwindet wenn abgehakt */}
-              {!driveDone && (
+              {/* Google Drive To-Do */}
+              {!driveHidden && (
                 <div className="border-t border-border/50 pt-4 space-y-2">
                   <div className="flex items-start gap-3">
                     <Checkbox
@@ -536,30 +536,46 @@ export default function Dashboard() {
                       className="mt-0.5 shrink-0 border-accent data-[state=checked]:bg-accent data-[state=checked]:text-accent-foreground"
                     />
                     <div className="flex-1 min-w-0 space-y-2">
-                      <p className="text-sm font-semibold text-foreground">📂 To-Do: Google Drive Zugang</p>
-                      <p className="text-xs text-muted-foreground">
-                        Melde dich in der WhatsApp-Gruppe und schick diese Nachricht:
-                      </p>
-                      <button
-                        onClick={() => {
-                          navigator.clipboard.writeText(`Hey, könnt ihr mich bitte zum Google Drive hinzufügen? Meine E-Mail: ${user?.email || "[DEINE E-MAIL]"} – Danke! 🙏`);
-                          toast.success("Nachricht kopiert!");
-                        }}
-                        className="flex items-center gap-2 w-full rounded-lg border border-border/50 bg-secondary/40 px-3 py-2.5 hover:border-accent/50 hover:bg-secondary/60 active:scale-[0.98] transition-all cursor-pointer group text-left"
-                        title="Klicken zum Kopieren"
-                      >
-                        <p className="text-xs text-foreground leading-relaxed flex-1 min-w-0">
-                          Hey, könnt ihr mich bitte zum Google Drive hinzufügen? Meine E-Mail: <span className="font-semibold text-accent">{user?.email || "[DEINE E-MAIL]"}</span> – Danke! 🙏
+                      <div className="flex items-center justify-between gap-2">
+                        <p className={cn("text-sm font-semibold text-foreground", driveDone && "line-through text-muted-foreground")}>
+                          📂 To-Do: Google Drive Zugang
                         </p>
-                        <Copy className="h-3.5 w-3.5 text-accent shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
-                      </button>
+                        {driveDone && (
+                          <button
+                            onClick={() => {
+                              setDriveHidden(true);
+                              localStorage.setItem("drive_hidden", "true");
+                            }}
+                            className="text-[10px] text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
+                          >
+                            Ausblenden
+                          </button>
+                        )}
+                      </div>
+                      {!driveDone && (
+                        <>
+                          <p className="text-xs text-muted-foreground">
+                            Melde dich in der WhatsApp-Gruppe und schick diese Nachricht:
+                          </p>
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(`Hey, könnt ihr mich bitte zum Google Drive hinzufügen? Meine E-Mail: ${user?.email || "[DEINE E-MAIL]"} – Danke! 🙏`);
+                              toast.success("Nachricht kopiert!");
+                            }}
+                            className="flex items-center gap-2 w-full rounded-lg border border-border/50 bg-secondary/40 px-3 py-2.5 hover:border-accent/50 hover:bg-secondary/60 active:scale-[0.98] transition-all cursor-pointer group text-left"
+                            title="Klicken zum Kopieren"
+                          >
+                            <p className="text-xs text-foreground leading-relaxed flex-1 min-w-0">
+                              Hey, könnt ihr mich bitte zum Google Drive hinzufügen? Meine E-Mail: <span className="font-semibold text-accent">{user?.email || "[DEINE E-MAIL]"}</span> – Danke! 🙏
+                            </p>
+                            <Copy className="h-3.5 w-3.5 text-accent shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
               )}
-            </div>
-          )}
-        </section>
 
         {/* Tägliche Aufgaben */}
         <DailyChecklist />
