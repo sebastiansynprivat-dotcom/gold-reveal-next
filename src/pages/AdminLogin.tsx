@@ -99,6 +99,8 @@ const AdminLogin = () => {
           ? "E-Mail oder Passwort ist falsch."
           : error.message
       );
+    } else {
+      setLoginCompleted(true);
     }
     setSubmitting(false);
   };
