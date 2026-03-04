@@ -1215,60 +1215,125 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                     {expandedChatter === chatter.user_id && (
-                      <div className="px-4 pb-4 space-y-3 animate-in fade-in duration-200">
-                        {/* Account Login Cards */}
-                        {(chatter.assigned_accounts?.length || 0) > 0 && (
-                          <div className={cn(
-                            "grid gap-2",
-                            (chatter.assigned_accounts?.length || 0) >= 2 ? "grid-cols-2" : "grid-cols-1"
-                          )}>
-                            {chatter.assigned_accounts!.map((acc) => (
-                              <div key={acc.id} className="glass-card-subtle rounded-lg p-3 space-y-2">
-                                <div className="flex items-center justify-between">
-                                  <Badge variant="secondary" className="text-[9px]">{acc.platform}</Badge>
-                                  {acc.account_domain && (
-                                    <a
-                                      href={acc.account_domain.startsWith("http") ? acc.account_domain : `https://${acc.account_domain}`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      onClick={(e) => e.stopPropagation()}
-                                      className="text-[9px] text-accent hover:underline truncate max-w-[120px]"
-                                    >
-                                      {acc.account_domain}
-                                    </a>
-                                  )}
+                      <div className="px-4 pb-4 animate-in fade-in duration-200">
+                        {(chatter.assigned_accounts?.length || 0) >= 2 ? (
+                          /* Multi-account: side by side with stats per account */
+                          <div className="grid grid-cols-2 gap-2">
+                            {chatter.assigned_accounts!.map((acc, idx) => {
+                              const h = hashCodeAdmin(chatter.user_id + acc.id);
+                              const todayRev = 80 + (h % 200);
+                              const weekRev = todayRev * 5 + (h % 500);
+                              const monthRev = Math.round(weekRev * 3.5 + (h % 2000));
+                              const massDMs = 120 + (h % 380);
+                              const openChats = 3 + (h % 18);
+                              return (
+                                <div key={acc.id} className="glass-card-subtle rounded-lg p-3 space-y-2">
+                                  {/* Header */}
+                                  <div className="flex items-center justify-between">
+                                    <Badge variant="secondary" className="text-[9px]">{acc.platform}</Badge>
+                                    {acc.account_domain && (
+                                      <a
+                                        href={acc.account_domain.startsWith("http") ? acc.account_domain : `https://${acc.account_domain}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="text-[9px] text-accent hover:underline truncate max-w-[100px]"
+                                      >
+                                        {acc.account_domain}
+                                      </a>
+                                    )}
+                                  </div>
+                                  {/* Login */}
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(acc.account_email); toast.success("E-Mail kopiert!"); }}
+                                    className="w-full text-left glass-card-subtle rounded-md px-2 py-1 hover:bg-secondary/50 transition-colors cursor-copy group"
+                                  >
+                                    <p className="text-[8px] text-muted-foreground">E-Mail</p>
+                                    <p className="text-[10px] font-medium text-foreground truncate group-active:scale-95 transition-transform">{acc.account_email}</p>
+                                  </button>
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(acc.account_password); toast.success("Passwort kopiert!"); }}
+                                    className="w-full text-left glass-card-subtle rounded-md px-2 py-1 hover:bg-secondary/50 transition-colors cursor-copy group"
+                                  >
+                                    <p className="text-[8px] text-muted-foreground">Passwort</p>
+                                    <p className="text-[10px] font-medium text-foreground truncate group-active:scale-95 transition-transform">{acc.account_password}</p>
+                                  </button>
+                                  {/* Mini Stats */}
+                                  <div className="border-t border-border pt-2 space-y-1.5">
+                                    <div className="grid grid-cols-3 gap-1">
+                                      <div className="text-center">
+                                        <p className="text-[7px] text-muted-foreground">Heute</p>
+                                        <p className="text-[10px] font-bold text-foreground">{todayRev}€</p>
+                                      </div>
+                                      <div className="text-center">
+                                        <p className="text-[7px] text-muted-foreground">Woche</p>
+                                        <p className="text-[10px] font-bold text-foreground">{weekRev}€</p>
+                                      </div>
+                                      <div className="text-center">
+                                        <p className="text-[7px] text-muted-foreground">Monat</p>
+                                        <p className="text-[10px] font-bold text-foreground">{monthRev.toLocaleString("de-DE")}€</p>
+                                      </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-1">
+                                      <div className="text-center">
+                                        <p className="text-[7px] text-muted-foreground">Mass-DMs</p>
+                                        <p className="text-[10px] font-bold text-foreground">{massDMs}</p>
+                                      </div>
+                                      <div className="text-center">
+                                        <p className="text-[7px] text-muted-foreground">Offene Chats</p>
+                                        <p className="text-[10px] font-bold text-foreground">{openChats}</p>
+                                      </div>
+                                    </div>
+                                  </div>
                                 </div>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    navigator.clipboard.writeText(acc.account_email);
-                                    toast.success("E-Mail kopiert!");
-                                  }}
-                                  className="w-full text-left glass-card-subtle rounded-md px-2.5 py-1.5 hover:bg-secondary/50 transition-colors cursor-copy group"
-                                >
-                                  <p className="text-[9px] text-muted-foreground">E-Mail</p>
-                                  <p className="text-[11px] font-medium text-foreground truncate group-active:scale-95 transition-transform">{acc.account_email}</p>
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    navigator.clipboard.writeText(acc.account_password);
-                                    toast.success("Passwort kopiert!");
-                                  }}
-                                  className="w-full text-left glass-card-subtle rounded-md px-2.5 py-1.5 hover:bg-secondary/50 transition-colors cursor-copy group"
-                                >
-                                  <p className="text-[9px] text-muted-foreground">Passwort</p>
-                                  <p className="text-[11px] font-medium text-foreground truncate group-active:scale-95 transition-transform">{acc.account_password}</p>
-                                </button>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
+                        ) : (chatter.assigned_accounts?.length || 0) === 1 ? (
+                          /* Single account: login card + full stats */
+                          <div className="space-y-3">
+                            {(() => {
+                              const acc = chatter.assigned_accounts![0];
+                              return (
+                                <div className="glass-card-subtle rounded-lg p-3 space-y-2">
+                                  <div className="flex items-center justify-between">
+                                    <Badge variant="secondary" className="text-[9px]">{acc.platform}</Badge>
+                                    {acc.account_domain && (
+                                      <a
+                                        href={acc.account_domain.startsWith("http") ? acc.account_domain : `https://${acc.account_domain}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        onClick={(e) => e.stopPropagation()}
+                                        className="text-[9px] text-accent hover:underline truncate max-w-[120px]"
+                                      >
+                                        {acc.account_domain}
+                                      </a>
+                                    )}
+                                  </div>
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(acc.account_email); toast.success("E-Mail kopiert!"); }}
+                                    className="w-full text-left glass-card-subtle rounded-md px-2.5 py-1.5 hover:bg-secondary/50 transition-colors cursor-copy group"
+                                  >
+                                    <p className="text-[9px] text-muted-foreground">E-Mail</p>
+                                    <p className="text-[11px] font-medium text-foreground truncate group-active:scale-95 transition-transform">{acc.account_email}</p>
+                                  </button>
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(acc.account_password); toast.success("Passwort kopiert!"); }}
+                                    className="w-full text-left glass-card-subtle rounded-md px-2.5 py-1.5 hover:bg-secondary/50 transition-colors cursor-copy group"
+                                  >
+                                    <p className="text-[9px] text-muted-foreground">Passwort</p>
+                                    <p className="text-[11px] font-medium text-foreground truncate group-active:scale-95 transition-transform">{acc.account_password}</p>
+                                  </button>
+                                </div>
+                              );
+                            })()}
+                            <ChatterStatsCard userId={chatter.user_id} name={chatter.group_name || "Chatter"} />
+                          </div>
+                        ) : (
+                          /* No accounts: just stats */
+                          <ChatterStatsCard userId={chatter.user_id} name={chatter.group_name || "Chatter"} />
                         )}
-                        {/* Stats below */}
                       </div>
-                    )}
-                    {expandedChatter === chatter.user_id && (
-                      <ChatterStatsCard userId={chatter.user_id} name={chatter.group_name || "Chatter"} />
                     )}
                   </div>
                 );
