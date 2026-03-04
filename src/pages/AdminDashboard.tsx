@@ -105,8 +105,8 @@ export default function AdminDashboard() {
   const [goalSaving, setGoalSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<"einnahmen" | "chatter">("einnahmen");
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("30");
-  const [customFrom, setCustomFrom] = useState("");
-  const [customTo, setCustomTo] = useState("");
+  const [customFrom, setCustomFrom] = useState<Date | undefined>(undefined);
+  const [customTo, setCustomTo] = useState<Date | undefined>(undefined);
 
   const allRevenueData = useMemo(() => generateFakeRevenueData(), []);
 
