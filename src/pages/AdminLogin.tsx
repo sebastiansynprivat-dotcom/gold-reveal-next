@@ -143,7 +143,7 @@ const AdminLogin = () => {
   }
 
   // If user is logged in but not admin, show error
-  if (user && isAdmin === false) {
+  if (loginCompleted && user && isAdmin === false) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-background">
         <Shield className="h-16 w-16 text-destructive mb-4" />
@@ -331,7 +331,7 @@ const AdminLogin = () => {
         )}
 
         {/* Loading state while checking admin */}
-        {user && isAdmin === null && (
+        {loginCompleted && user && isAdmin === null && (
           <div className="flex justify-center py-8">
             <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
           </div>
