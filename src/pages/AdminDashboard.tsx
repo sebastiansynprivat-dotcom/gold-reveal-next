@@ -1884,7 +1884,7 @@ export default function AdminDashboard() {
                                       Kopieren
                                     </button>
                                   </div>
-                                  <p className="text-[11px] text-foreground/80 leading-relaxed italic">"{nachricht}"</p>
+                                  <p className="text-[11px] text-foreground/80 leading-relaxed">{nachricht}</p>
                                 </div>
                               )}
                             </div>
