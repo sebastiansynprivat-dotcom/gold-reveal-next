@@ -570,7 +570,7 @@ export default function AdminDashboard() {
                   Authorization: `Bearer ${session.data.session?.access_token}`,
                 },
                 body: JSON.stringify({
-                  title: "SheX",
+                  title: "SheX 💛",
                   body: "Du hast einen neuen Account bekommen! 🚀 Öffne die App für die Log-In Details 👀",
                   target_user_id: reassignTarget.user_id,
                 }),
@@ -607,7 +607,7 @@ export default function AdminDashboard() {
             Authorization: `Bearer ${session.data.session?.access_token}`,
           },
           body: JSON.stringify({
-            title: "SheX",
+            title: "SheX 💛",
             body: pushBody.trim(),
             target_user_id: pushTarget.user_id,
           }),
@@ -643,7 +643,7 @@ export default function AdminDashboard() {
             Authorization: `Bearer ${session.data.session?.access_token}`,
           },
           body: JSON.stringify({
-            title: "SheX",
+            title: "SheX 💛",
             body: broadcastBody.trim(),
           }),
         }
