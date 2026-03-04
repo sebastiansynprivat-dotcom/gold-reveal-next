@@ -40,16 +40,14 @@ export default function Dashboard() {
   const [editingGroupName, setEditingGroupName] = useState(false);
 
   const [offer, setOffer] = useState("");
-  const [accountEmail, setAccountEmail] = useState("");
-  const [accountPassword, setAccountPassword] = useState("");
-  const [accountDomain, setAccountDomain] = useState("");
+  const [assignedAccounts, setAssignedAccounts] = useState<{ account_email: string; account_password: string; account_domain: string; platform: string }[]>([]);
 
   // Load profile data
   useEffect(() => {
     if (!user) return;
     supabase
       .from("profiles")
-      .select("telegram_id, group_name, offer, account_email, account_password, account_domain")
+      .select("telegram_id, group_name, offer")
       .eq("user_id", user.id)
       .maybeSingle()
       .then(({ data }) => {
@@ -62,23 +60,18 @@ export default function Dashboard() {
           setGroupNameSaved(true);
         }
         if (data?.offer) setOffer(data.offer);
-        if (data?.account_email) setAccountEmail(data.account_email);
-        if (data?.account_password) setAccountPassword(data.account_password);
-        if (data?.account_domain) setAccountDomain(data.account_domain);
         setTelegramLoading(false);
       });
 
-    // Also check accounts table for assigned account
+    // Load all assigned accounts
     supabase
       .from("accounts")
-      .select("account_email, account_password, account_domain")
+      .select("account_email, account_password, account_domain, platform")
       .eq("assigned_to", user.id)
-      .maybeSingle()
+      .order("created_at", { ascending: true })
       .then(({ data }) => {
-        if (data?.account_email) {
-          setAccountEmail(data.account_email);
-          setAccountPassword(data.account_password || "");
-          setAccountDomain(data.account_domain || "");
+        if (data && data.length > 0) {
+          setAssignedAccounts(data);
         }
       });
   }, [user]);
