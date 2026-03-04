@@ -313,16 +313,7 @@ export default function AdminDashboard() {
       const newAccInfo = accounts.find((a) => a.id === newAccountId);
       if (!newAccInfo) throw new Error("Account nicht gefunden");
 
-      // Free any existing account on the SAME platform for this user
-      const existingOnPlatform = accounts.find(
-        (a) => a.assigned_to === reassignTarget.user_id && a.platform === newAccInfo.platform
-      );
-      if (existingOnPlatform) {
-        await supabase
-          .from("accounts")
-          .update({ assigned_to: null, assigned_at: null })
-          .eq("id", existingOnPlatform.id);
-      }
+      // No longer replace existing accounts on same platform - allow multiple
 
       // Assign new account
       const { data: newAcc } = await supabase
