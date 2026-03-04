@@ -1218,14 +1218,15 @@ export default function AdminDashboard() {
                     </div>
                     {expandedChatter === chatter.user_id && (
                       <div className="px-4 pb-4 animate-in fade-in duration-200">
-                        {(chatter.assigned_accounts?.length || 0) >= 2 ? (
-                          /* Multi-account: stacked cards, each with login + stats */
+                        {(chatter.assigned_accounts?.length || 0) >= 1 ? (
+                          /* Account cards – same format for 1 or many */
                           <div className="space-y-3">
                             {chatter.assigned_accounts!.map((acc) => {
                               const h = hashCodeAdmin(chatter.user_id + acc.id);
                               const todayRev = 80 + (h % 200);
                               const weekRev = todayRev * 5 + (h % 500);
                               const monthRev = Math.round(weekRev * 3.5 + (h % 2000));
+                              const allTimeRev = Math.round(monthRev * 4.2 + (h % 8000));
                               const massDMs = 120 + (h % 380);
                               const openChats = 3 + (h % 18);
                               const platformColor = (PLATFORM_COLORS as Record<string, string>)[acc.platform.toLowerCase()] || "hsl(var(--accent))";
@@ -1273,6 +1274,7 @@ export default function AdminDashboard() {
                                       { label: "Heute", value: `${todayRev}€` },
                                       { label: "Woche", value: `${weekRev.toLocaleString("de-DE")}€` },
                                       { label: "Monat", value: `${monthRev.toLocaleString("de-DE")}€` },
+                                      { label: "All-Time", value: `${allTimeRev.toLocaleString("de-DE")}€` },
                                     ].map((s) => (
                                       <div key={s.label} className="flex items-center justify-between px-1">
                                         <span className="text-xs font-medium text-muted-foreground">{s.label}</span>
@@ -1297,46 +1299,6 @@ export default function AdminDashboard() {
                                 </div>
                               );
                             })}
-                          </div>
-                        ) : (chatter.assigned_accounts?.length || 0) === 1 ? (
-                          /* Single account: login card + full stats */
-                          <div className="space-y-3">
-                            {(() => {
-                              const acc = chatter.assigned_accounts![0];
-                              return (
-                                <div className="glass-card-subtle rounded-lg p-3 space-y-2">
-                                  <div className="flex items-center justify-between">
-                                    <Badge variant="secondary" className="text-[9px]">{acc.platform}</Badge>
-                                    {acc.account_domain && (
-                                      <a
-                                        href={acc.account_domain.startsWith("http") ? acc.account_domain : `https://${acc.account_domain}`}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        onClick={(e) => e.stopPropagation()}
-                                        className="text-[9px] text-accent hover:underline truncate max-w-[120px]"
-                                      >
-                                        {acc.account_domain}
-                                      </a>
-                                    )}
-                                  </div>
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(acc.account_email); toast.success("E-Mail kopiert!"); }}
-                                    className="w-full text-left glass-card-subtle rounded-md px-2.5 py-1.5 hover:bg-secondary/50 transition-colors cursor-copy group"
-                                  >
-                                    <p className="text-[9px] text-muted-foreground">E-Mail</p>
-                                    <p className="text-[11px] font-medium text-foreground truncate group-active:scale-95 transition-transform">{acc.account_email}</p>
-                                  </button>
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(acc.account_password); toast.success("Passwort kopiert!"); }}
-                                    className="w-full text-left glass-card-subtle rounded-md px-2.5 py-1.5 hover:bg-secondary/50 transition-colors cursor-copy group"
-                                  >
-                                    <p className="text-[9px] text-muted-foreground">Passwort</p>
-                                    <p className="text-[11px] font-medium text-foreground truncate group-active:scale-95 transition-transform">{acc.account_password}</p>
-                                  </button>
-                                </div>
-                              );
-                            })()}
-                            <ChatterStatsCard userId={chatter.user_id} name={chatter.group_name || "Chatter"} />
                           </div>
                         ) : (
                           /* No accounts: just stats */
