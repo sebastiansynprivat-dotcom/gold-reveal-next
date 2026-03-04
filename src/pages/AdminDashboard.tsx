@@ -1000,6 +1000,8 @@ export default function AdminDashboard() {
           ) : (
             <div className="divide-y divide-border">
               {filtered.map((chatter) => {
+                const cStats = loginStats[chatter.user_id];
+                const activeToday = (cStats?.today || 0) > 0;
                 return (
                   <div key={chatter.user_id}>
                     <div
