@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Users, Send, Bell, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Users, Send, Bell, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,6 +11,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+
+// Generate 30 days of fictional revenue data
+const generateFakeRevenueData = () => {
+  const data = [];
+  const now = new Date();
+  for (let i = 29; i >= 0; i--) {
+    const date = new Date(now);
+    date.setDate(date.getDate() - i);
+    const amount = Math.floor(Math.random() * 1000) + 2000; // 2000-3000€
+    data.push({
+      date: date.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" }),
+      amount,
+    });
+  }
+  return data;
+};
 
 interface ChatterProfile {
   user_id: string;
