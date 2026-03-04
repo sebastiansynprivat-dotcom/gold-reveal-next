@@ -215,20 +215,62 @@ export default function AdminDashboard() {
         .update({ assigned_to: null, assigned_at: null })
         .eq("assigned_to", deleteTarget.user_id);
 
-      // Clear account data from profile
+      // Delete push subscriptions
+      await supabase
+        .from("push_subscriptions")
+        .delete()
+        .eq("user_id", deleteTarget.user_id);
+
+      // Delete user progress
+      await supabase
+        .from("user_progress")
+        .delete()
+        .eq("user_id", deleteTarget.user_id);
+
+      // Delete daily goals
+      await supabase
+        .from("daily_goals")
+        .delete()
+        .eq("user_id", deleteTarget.user_id);
+
+      // Delete profile
+      await supabase
+        .from("profiles")
+        .delete()
+        .eq("user_id", deleteTarget.user_id);
+
+      toast.success(`${deleteTarget.group_name || "Chatter"} wurde komplett gelöscht`);
+      setDeleteTarget(null);
+      loadChatters();
+      loadAccounts();
+    } catch (err: any) {
+      toast.error("Fehler beim Löschen: " + err.message);
+    }
+    setDeleting(false);
+  };
+
+  const removeAccount = async () => {
+    if (!reassignTarget) return;
+    setReassigning(true);
+    try {
+      await supabase
+        .from("accounts")
+        .update({ assigned_to: null, assigned_at: null })
+        .eq("assigned_to", reassignTarget.user_id);
+
       await supabase
         .from("profiles")
         .update({ account_email: null, account_password: null, account_domain: null })
-        .eq("user_id", deleteTarget.user_id);
+        .eq("user_id", reassignTarget.user_id);
 
-      toast.success(`Account-Daten von ${deleteTarget.group_name || "Chatter"} wurden entfernt`);
-      setDeleteTarget(null);
+      toast.success(`Account von ${reassignTarget.group_name || "Chatter"} entfernt`);
+      setReassignTarget(null);
       loadChatters();
       loadAccounts();
     } catch (err: any) {
       toast.error("Fehler: " + err.message);
     }
-    setDeleting(false);
+    setReassigning(false);
   };
 
   const reassignAccount = async (newAccountId: string) => {
@@ -708,15 +750,15 @@ export default function AdminDashboard() {
       <AlertDialog open={!!deleteTarget} onOpenChange={(o) => { if (!o) setDeleteTarget(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Account-Daten entfernen?</AlertDialogTitle>
+            <AlertDialogTitle>Chatter komplett löschen?</AlertDialogTitle>
             <AlertDialogDescription>
-              Die zugewiesenen Account-Daten von {deleteTarget?.group_name || "diesem Chatter"} werden entfernt und der Account wird wieder freigegeben.
+              {deleteTarget?.group_name || "Dieser Chatter"} wird mit allen Daten (Profil, Fortschritt, Push-Abos) unwiderruflich gelöscht. Zugewiesene Accounts werden freigegeben.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deleting}>Abbrechen</AlertDialogCancel>
             <AlertDialogAction onClick={deleteChatter} disabled={deleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              {deleting ? "Wird entfernt..." : "Account entfernen"}
+              {deleting ? "Wird gelöscht..." : "Endgültig löschen"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -730,11 +772,24 @@ export default function AdminDashboard() {
               Account ändern für {reassignTarget?.group_name || "Chatter"}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-2">
+          <div className="space-y-3">
             {reassignTarget?.account_email && (
-              <p className="text-xs text-muted-foreground">
-                Aktuell: <span className="text-foreground font-medium">{reassignTarget.account_email}</span>
-              </p>
+              <div className="flex items-center justify-between p-3 rounded-xl border border-border bg-secondary/30">
+                <div>
+                  <p className="text-[10px] text-muted-foreground">Aktueller Account</p>
+                  <p className="text-xs font-medium text-foreground">{reassignTarget.account_email}</p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={removeAccount}
+                  disabled={reassigning}
+                  className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                >
+                  <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                  Rausnehmen
+                </Button>
+              </div>
             )}
             <p className="text-xs text-muted-foreground">Wähle einen freien Account aus:</p>
             {(() => {
