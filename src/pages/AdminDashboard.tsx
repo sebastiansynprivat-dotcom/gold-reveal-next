@@ -1715,17 +1715,30 @@ export default function AdminDashboard() {
               </Button>
             </div>
 
-            {/* Stats */}
-            <div className="flex gap-3 text-xs">
-              <span className="text-muted-foreground">
-                Gesamt: <span className="text-foreground font-semibold">{platformAccounts.length}</span>
-              </span>
-              <span className="text-accent">
-                Frei: <span className="font-semibold">{freeCount}</span>
-              </span>
-              <span className="text-muted-foreground">
-                Vergeben: <span className="font-semibold">{assignedCount}</span>
-              </span>
+            {/* Stats + Bulk Assign */}
+            <div className="flex items-center justify-between">
+              <div className="flex gap-3 text-xs">
+                <span className="text-muted-foreground">
+                  Gesamt: <span className="text-foreground font-semibold">{platformAccounts.length}</span>
+                </span>
+                <span className="text-accent">
+                  Frei: <span className="font-semibold">{freeCount}</span>
+                </span>
+                <span className="text-muted-foreground">
+                  Vergeben: <span className="font-semibold">{assignedCount}</span>
+                </span>
+              </div>
+              {freeCount > 0 && (
+                <Button
+                  onClick={assignAccounts}
+                  disabled={assigning}
+                  size="sm"
+                  variant="default"
+                >
+                  <RefreshCw className={cn("h-3.5 w-3.5 mr-1.5", assigning && "animate-spin")} />
+                  {assigning ? "Zuweisen..." : "Auto-Zuweisen"}
+                </Button>
+              )}
             </div>
 
             {/* Account list */}
@@ -1736,28 +1749,57 @@ export default function AdminDashboard() {
                 </p>
               ) : (
                 platformAccounts.map((acc) => (
-                  <div key={acc.id} className="p-3 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-foreground truncate">{acc.account_email}</span>
-                      {acc.assigned_to ? (
-                        <Badge className="text-[10px] bg-secondary text-secondary-foreground">
-                          Vergeben an {getChatterName(acc.assigned_to)}
-                        </Badge>
-                      ) : (
-                        <Badge className="text-[10px] bg-green-500/20 text-green-400">
-                          Frei
-                        </Badge>
-                      )}
+                  <div key={acc.id} className="p-3 flex items-center gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium text-foreground truncate">{acc.account_email}</span>
+                        {acc.assigned_to ? (
+                          <Badge className="text-[10px] bg-secondary text-secondary-foreground shrink-0">
+                            → {getChatterName(acc.assigned_to)}
+                          </Badge>
+                        ) : (
+                          <Badge className="text-[10px] bg-accent/20 text-accent shrink-0">
+                            Frei
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-muted-foreground truncate">
+                        PW: {acc.account_password}
+                      </p>
                     </div>
-                    <p className="text-[10px] text-muted-foreground">
-                      Domain: {acc.account_domain} · PW: {acc.account_password}
-                    </p>
+                    {acc.assigned_to && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive shrink-0"
+                        title="Account freigeben"
+                        onClick={async () => {
+                          await supabase.from("accounts").update({ assigned_to: null, assigned_at: null }).eq("id", acc.id);
+                          toast.success("Account freigegeben");
+                          loadAccounts();
+                          loadChatters();
+                        }}
+                      >
+                        <RefreshCw className="h-3 w-3" />
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive shrink-0"
+                      title="Account löschen"
+                      onClick={async () => {
+                        await supabase.from("accounts").delete().eq("id", acc.id);
+                        toast.success("Account gelöscht");
+                        loadAccounts();
+                      }}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
                   </div>
                 ))
               )}
             </div>
-          </div>
-        </DialogContent>
       </Dialog>
 
       {/* Individual Push Dialog */}
