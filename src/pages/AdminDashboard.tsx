@@ -123,6 +123,7 @@ export default function AdminDashboard() {
   const [goalSaving, setGoalSaving] = useState(false);
   const [expandedChatter, setExpandedChatter] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"einnahmen" | "chatter">("einnahmen");
+  const [chatterFilter, setChatterFilter] = useState<ChatterFilter>("alle");
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("30");
   const [customFrom, setCustomFrom] = useState<Date | undefined>(undefined);
   const [customTo, setCustomTo] = useState<Date | undefined>(undefined);
