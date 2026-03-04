@@ -171,6 +171,45 @@ export default function AdminDashboard() {
     setDeleting(false);
   };
 
+  const reassignAccount = async (newAccountId: string) => {
+    if (!reassignTarget) return;
+    setReassigning(true);
+    try {
+      // Free old account if any
+      await supabase
+        .from("accounts")
+        .update({ assigned_to: null, assigned_at: null })
+        .eq("assigned_to", reassignTarget.user_id);
+
+      // Assign new account
+      const { data: newAcc } = await supabase
+        .from("accounts")
+        .update({ assigned_to: reassignTarget.user_id, assigned_at: new Date().toISOString() })
+        .eq("id", newAccountId)
+        .select()
+        .single();
+
+      if (newAcc) {
+        await supabase
+          .from("profiles")
+          .update({
+            account_email: newAcc.account_email,
+            account_password: newAcc.account_password,
+            account_domain: newAcc.account_domain,
+          })
+          .eq("user_id", reassignTarget.user_id);
+      }
+
+      toast.success(`Account für ${reassignTarget.group_name || "Chatter"} geändert!`);
+      setReassignTarget(null);
+      loadChatters();
+      loadAccounts();
+    } catch (err: any) {
+      toast.error("Fehler: " + err.message);
+    }
+    setReassigning(false);
+  };
+
   const sendIndividualPush = async () => {
     if (!pushTarget || !pushTitle.trim() || !pushBody.trim()) return;
     setSending(true);
@@ -413,8 +452,18 @@ export default function AdminDashboard() {
                     <Button
                       variant="ghost"
                       size="sm"
+                      onClick={() => setReassignTarget(chatter)}
+                      className="text-foreground hover:text-foreground/80 shrink-0"
+                      title="Account ändern"
+                    >
+                      <RefreshCw className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       onClick={() => setDeleteTarget(chatter)}
                       className="text-destructive hover:text-destructive/80 shrink-0"
+                      title="Account entfernen"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
