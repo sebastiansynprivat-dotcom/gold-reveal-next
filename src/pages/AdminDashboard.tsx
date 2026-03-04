@@ -1515,8 +1515,9 @@ export default function AdminDashboard() {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
+            <Input value={pushTitle} onChange={(e) => setPushTitle(e.target.value)} placeholder="Titel" maxLength={100} />
             <Textarea value={pushBody} onChange={(e) => setPushBody(e.target.value)} placeholder="Nachricht..." maxLength={500} className="min-h-[80px]" />
-            <Button onClick={sendIndividualPush} disabled={sending || !pushBody.trim()} className="w-full">
+            <Button onClick={sendIndividualPush} disabled={sending || !pushTitle.trim() || !pushBody.trim()} className="w-full">
               <Send className="h-4 w-4 mr-2" />
               {sending ? "Wird gesendet..." : "Push senden"}
             </Button>
