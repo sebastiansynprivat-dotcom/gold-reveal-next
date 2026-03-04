@@ -1800,6 +1800,8 @@ export default function AdminDashboard() {
                 ))
               )}
             </div>
+          </div>
+        </DialogContent>
       </Dialog>
 
       {/* Individual Push Dialog */}
