@@ -537,7 +537,7 @@ export default function AdminDashboard() {
         result = result.filter((c) => !c.telegram_id || c.telegram_id.trim() === "");
         break;
       case "open_2d":
-        result = result.filter((c) => getChatterFakeStats(c.user_id).avgOpenDays >= 2);
+        result = result.filter((c) => getChatterFakeStats(c.user_id).avgOpenDays >= 3);
         break;
       case "top_tag":
         result = [...result].sort((a, b) => getChatterFakeStats(b.user_id).today - getChatterFakeStats(a.user_id).today);
@@ -857,7 +857,7 @@ export default function AdminDashboard() {
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
           {([
             { key: "alle", label: "Alle", icon: Users },
-            { key: "open_2d", label: "> 2 Tage offen", icon: MessageSquare },
+            { key: "open_2d", label: "> 3 Tage offen", icon: MessageSquare },
             { key: "top_tag", label: "Top Tag", icon: Star },
             { key: "top_woche", label: "Top Woche", icon: TrendingUp },
             { key: "top_monat", label: "Top Monat", icon: DollarSign },
