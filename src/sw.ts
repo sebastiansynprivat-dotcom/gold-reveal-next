@@ -6,7 +6,7 @@ declare let self: ServiceWorkerGlobalScope;
 precacheAndRoute(self.__WB_MANIFEST);
 
 self.addEventListener("push", (event) => {
-  const data = event.data?.json() ?? { title: "SheX Coaching", body: "Neue Nachricht!" };
+  const data = event.data?.json() ?? { title: "SheX 💛", body: "Neue Nachricht!" };
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
