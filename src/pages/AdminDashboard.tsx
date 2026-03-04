@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Users, Send, Bell, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { Users, Send, Bell, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,6 +11,23 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+
+// Generate 30 days of fictional revenue data
+const generateFakeRevenueData = () => {
+  const data = [];
+  const now = new Date();
+  for (let i = 29; i >= 0; i--) {
+    const date = new Date(now);
+    date.setDate(date.getDate() - i);
+    const amount = Math.floor(Math.random() * 1000) + 2000; // 2000-3000€
+    data.push({
+      date: date.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" }),
+      amount,
+    });
+  }
+  return data;
+};
 
 interface ChatterProfile {
   user_id: string;
@@ -69,6 +86,13 @@ export default function AdminDashboard() {
   const [goalTarget, setGoalTarget] = useState<ChatterProfile | null>(null);
   const [goalAmount, setGoalAmount] = useState("");
   const [goalSaving, setGoalSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState<"einnahmen" | "chatter">("einnahmen");
+
+  const revenueData = useMemo(() => generateFakeRevenueData(), []);
+  const totalRevenue = useMemo(() => revenueData.reduce((s, d) => s + d.amount, 0), [revenueData]);
+  const avgRevenue = useMemo(() => Math.round(totalRevenue / revenueData.length), [totalRevenue, revenueData]);
+  const todayRevenue = revenueData[revenueData.length - 1]?.amount || 0;
+
   useEffect(() => {
     loadChatters();
     loadAccounts();
@@ -489,6 +513,98 @@ export default function AdminDashboard() {
       </header>
 
       <main className="container max-w-4xl mx-auto p-4 space-y-4">
+        {/* Tab Navigation */}
+        <div className="flex gap-2">
+          <Button
+            variant={activeTab === "einnahmen" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setActiveTab("einnahmen")}
+          >
+            <TrendingUp className="h-3.5 w-3.5 mr-1.5" />
+            Einnahmen
+          </Button>
+          <Button
+            variant={activeTab === "chatter" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setActiveTab("chatter")}
+          >
+            <Users className="h-3.5 w-3.5 mr-1.5" />
+            Chatter
+          </Button>
+        </div>
+
+        {activeTab === "einnahmen" && (
+          <div className="space-y-4">
+            {/* Revenue Chart */}
+            <div className="glass-card rounded-xl p-4">
+              <h2 className="text-sm font-semibold text-foreground mb-4">Umsatz – letzte 30 Tage</h2>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={revenueData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis
+                      dataKey="date"
+                      tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                      tickLine={false}
+                      axisLine={false}
+                      interval={4}
+                    />
+                    <YAxis
+                      tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                      tickLine={false}
+                      axisLine={false}
+                      tickFormatter={(v) => `${v}€`}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        background: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "8px",
+                        fontSize: "12px",
+                      }}
+                      formatter={(value: number) => [`${value.toLocaleString("de-DE")}€`, "Umsatz"]}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="amount"
+                      stroke="hsl(var(--accent))"
+                      strokeWidth={2.5}
+                      dot={false}
+                      activeDot={{ r: 4, fill: "hsl(var(--accent))" }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Revenue Stat Tiles */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="glass-card-subtle rounded-xl p-4 text-center">
+                <div className="flex items-center justify-center mb-1">
+                  <DollarSign className="h-3.5 w-3.5 text-accent mr-1" />
+                  <p className="text-[10px] text-muted-foreground">Heute</p>
+                </div>
+                <p className="text-xl font-bold text-gold-gradient">{todayRevenue.toLocaleString("de-DE")}€</p>
+              </div>
+              <div className="glass-card-subtle rounded-xl p-4 text-center">
+                <div className="flex items-center justify-center mb-1">
+                  <Calendar className="h-3.5 w-3.5 text-accent mr-1" />
+                  <p className="text-[10px] text-muted-foreground">Ø pro Tag</p>
+                </div>
+                <p className="text-xl font-bold text-gold-gradient">{avgRevenue.toLocaleString("de-DE")}€</p>
+              </div>
+              <div className="glass-card-subtle rounded-xl p-4 text-center">
+                <div className="flex items-center justify-center mb-1">
+                  <TrendingUp className="h-3.5 w-3.5 text-accent mr-1" />
+                  <p className="text-[10px] text-muted-foreground">Gesamt (30T)</p>
+                </div>
+                <p className="text-xl font-bold text-gold-gradient">{totalRevenue.toLocaleString("de-DE")}€</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "chatter" && (<>
         {/* Stats */}
         <div className="grid grid-cols-2 gap-3">
           <div className="glass-card-subtle rounded-xl p-4 text-center">
@@ -662,6 +778,7 @@ export default function AdminDashboard() {
             </div>
           )}
         </section>
+        </>)}
       </main>
 
       {/* Account Pool Dialog */}
