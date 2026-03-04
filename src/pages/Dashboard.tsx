@@ -354,7 +354,13 @@ export default function Dashboard() {
             </div>
             <div>
               <p className="text-[10px] text-muted-foreground mb-0.5">Domain</p>
-              <p className="text-xs lg:text-sm font-medium text-foreground truncate">{accountDomain || "–"}</p>
+              {accountDomain ? (
+                <a href={`https://${accountDomain.replace(/^https?:\/\//, '')}`} target="_blank" rel="noopener noreferrer" className="text-xs lg:text-sm font-medium text-primary underline underline-offset-2 hover:text-primary/80 transition-colors truncate block">
+                  {accountDomain}
+                </a>
+              ) : (
+                <p className="text-xs lg:text-sm font-medium text-foreground truncate">–</p>
+              )}
             </div>
           </div>
         </section>
