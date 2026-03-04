@@ -143,6 +143,7 @@ export default function AdminDashboard() {
   const [customFrom, setCustomFrom] = useState<Date | undefined>(undefined);
   const [customTo, setCustomTo] = useState<Date | undefined>(undefined);
   const [loginStats, setLoginStats] = useState<Record<string, LoginStats>>({});
+  const [pushUsers, setPushUsers] = useState<Set<string>>(new Set());
 
   const allRevenueData = useMemo(() => generateFakeRevenueData(), []);
 
