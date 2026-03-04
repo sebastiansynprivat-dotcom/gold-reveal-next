@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
+import webpush from "npm:web-push@3.6.7";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -104,6 +104,38 @@ Deno.serve(async (req) => {
           account_domain: freeAccount.account_domain,
         })
         .eq("user_id", profile.user_id);
+
+      // Send push notification to the assigned user
+      try {
+        const vapidPublic = Deno.env.get("VAPID_PUBLIC_KEY");
+        const vapidPrivate = Deno.env.get("VAPID_PRIVATE_KEY");
+        if (vapidPublic && vapidPrivate) {
+          webpush.setVapidDetails("mailto:admin@shex.agency", vapidPublic, vapidPrivate);
+          const { data: subs } = await supabase
+            .from("push_subscriptions")
+            .select("*")
+            .eq("user_id", profile.user_id);
+          const payload = JSON.stringify({
+            title: "Gute Nachrichten 🥳",
+            body: "Dir wurde ein neuer Account zugewiesen! Schau jetzt in dein Dashboard.",
+            url: "/dashboard",
+          });
+          for (const sub of subs || []) {
+            try {
+              await webpush.sendNotification(
+                { endpoint: sub.endpoint, keys: { p256dh: sub.keys_p256dh, auth: sub.keys_auth } },
+                payload
+              );
+            } catch (pushErr: any) {
+              if (pushErr.statusCode === 410 || pushErr.statusCode === 404) {
+                await supabase.from("push_subscriptions").delete().eq("id", sub.id);
+              }
+            }
+          }
+        }
+      } catch (notifErr) {
+        console.error("Push notification failed for user:", profile.user_id, notifErr);
+      }
 
       assigned++;
     }
