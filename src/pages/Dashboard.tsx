@@ -361,7 +361,7 @@ export default function Dashboard() {
               )}
               <div className="shrink-0 flex items-center gap-1">
                 <Zap className="h-3 w-3 text-accent" />
-                <Input type="number" min={0} step={50} value={umsatz || ""} onChange={(e) => setUmsatz(Number(e.target.value) || 0)} placeholder="€" className="h-7 text-xs w-20 font-semibold" />
+                <Input type="number" min={0} step={50} value={umsatz || ""} onChange={(e) => handleUmsatzChange(Number(e.target.value) || 0)} placeholder="€" className="h-7 text-xs w-20 font-semibold" />
               </div>
             </div>
           </div>
