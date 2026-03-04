@@ -80,16 +80,7 @@ serve(async (req) => {
 
     for (const profile of profiles) {
       try {
-        // Check if summary already exists for today
-        if (!singleUserId) {
-          const { data: existing } = await supabase
-            .from("chatter_summaries")
-            .select("id")
-            .eq("user_id", profile.user_id)
-            .eq("summary_date", today)
-            .maybeSingle();
-          if (existing) continue; // Skip if already generated today
-        }
+        // Always regenerate with latest data
 
         // Gather revenue data
         const now = new Date();
