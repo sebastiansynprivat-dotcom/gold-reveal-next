@@ -778,6 +778,7 @@ export default function AdminDashboard() {
             </div>
           )}
         </section>
+        </>)}
       </main>
 
       {/* Account Pool Dialog */}
