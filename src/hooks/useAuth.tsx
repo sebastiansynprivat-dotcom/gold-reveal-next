@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useRef, ReactNode } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -17,6 +17,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const visitTracked = useRef(false);
+
+  const trackVisit = (userId: string) => {
+    if (visitTracked.current) return;
+    visitTracked.current = true;
+    supabase.from('login_events').insert({ user_id: userId }).then();
+  };
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
@@ -24,11 +31,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setUser(session?.user ?? null);
       setLoading(false);
 
-      if (event === 'SIGNED_IN' && session?.user) {
-        supabase
-          .from('login_events')
-          .insert({ user_id: session.user.id })
-          .then();
+      if (session?.user) {
+        trackVisit(session.user.id);
       }
     });
 
@@ -36,6 +40,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+
+      if (session?.user) {
+        trackVisit(session.user.id);
+      }
     });
 
     return () => subscription.unsubscribe();
