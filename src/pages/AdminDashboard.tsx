@@ -20,17 +20,17 @@ const PLATFORM_COLORS = {
   "4based": "#22d3ee",  // cyan
 };
 
-// Generate 30 days of fictional revenue data with upward trend
+// Generate 90 days of fictional revenue data with upward trend
 const generateFakeRevenueData = () => {
   const data = [];
   const now = new Date();
-  for (let i = 29; i >= 0; i--) {
+  for (let i = 89; i >= 0; i--) {
     const date = new Date(now);
     date.setDate(date.getDate() - i);
-    const day = 29 - i;
-    // Base grows over time + small random noise
-    const trend = day * 35;
+    const day = 89 - i;
+    const trend = day * 12;
     data.push({
+      dateObj: new Date(date),
       date: date.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" }),
       maloum: 1800 + trend + Math.floor(Math.random() * 300 - 150),
       brezzels: 1500 + trend + Math.floor(Math.random() * 250 - 125),
@@ -39,6 +39,8 @@ const generateFakeRevenueData = () => {
   }
   return data;
 };
+
+type TimeFilter = "heute" | "gestern" | "7" | "30" | "90" | "custom";
 
 interface ChatterProfile {
   user_id: string;
