@@ -118,6 +118,9 @@ serve(async (req) => {
           .select("id, platform, account_email")
           .eq("assigned_to", profile.user_id);
 
+        // Skip users without any assigned accounts
+        if (!accounts || accounts.length === 0) continue;
+
         // Daily goal
         const { data: goalData } = await supabase
           .from("daily_goals")
