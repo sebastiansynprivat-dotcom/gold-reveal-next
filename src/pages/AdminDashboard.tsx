@@ -616,7 +616,7 @@ export default function AdminDashboard() {
                   className="text-xs h-7 px-2.5"
                   onClick={() => setTimeFilter("custom")}
                 >
-                  <Calendar className="h-3 w-3 mr-1" />
+                  <CalendarIcon className="h-3 w-3 mr-1" />
                   Zeitraum
                 </Button>
               </div>
