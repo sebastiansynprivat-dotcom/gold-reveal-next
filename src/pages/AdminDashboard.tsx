@@ -130,6 +130,7 @@ export default function AdminDashboard() {
   const [expandedBot, setExpandedBot] = useState<string | null>(null);
   const [savedBotState, setSavedBotState] = useState<Record<string, { message: string; followUp: string; isActive: boolean }>>({});
   const [botFilter, setBotFilter] = useState<"alle" | "missing">("alle");
+  const [botPlatformFilter, setBotPlatformFilter] = useState<string>("alle");
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("30");
   const [customFrom, setCustomFrom] = useState<Date | undefined>(undefined);
   const [customTo, setCustomTo] = useState<Date | undefined>(undefined);
