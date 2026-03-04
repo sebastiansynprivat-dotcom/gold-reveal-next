@@ -1040,9 +1040,9 @@ export default function AdminDashboard() {
                           </Badge>
                         )}
                         {pushUsers.has(chatter.user_id) ? (
-                          <Bell className="h-4 w-4 text-accent shrink-0" title="Push aktiviert" />
+                          <span className="shrink-0" aria-label="Push aktiviert"><Bell className="h-4 w-4 text-accent" /></span>
                         ) : (
-                          <BellOff className="h-4 w-4 text-muted-foreground/50 shrink-0" title="Push nicht aktiviert" />
+                          <span className="shrink-0" aria-label="Push nicht aktiviert"><BellOff className="h-4 w-4 text-muted-foreground/50" /></span>
                         )}
                       </div>
                       {/* Row 2: Action Buttons */}
