@@ -520,7 +520,7 @@ export default function AdminDashboard() {
     } else if (botFilter === "inactive") {
       result = result.filter((acc) => {
         const saved = savedBotState[acc.id];
-        return saved && !saved.isActive;
+        return !saved || !saved.isActive;
       });
     }
     if (botSearch.trim()) {
