@@ -567,10 +567,10 @@ export default function Dashboard() {
                           )}
                         </div>
                       </div>
-                      {/* Memo button – only on first assignment */}
-                      {!ds.memoSeen && (
+                      {/* Memo button – only if never seen globally */}
+                      {!localStorage.getItem("account_memo_seen") && (
                         <button
-                          onClick={() => { setShowMemo(true); setDriveState(acc.id, { memoSeen: true }); setDriveVersion(p => p + 1); }}
+                          onClick={() => { setShowMemo(true); localStorage.setItem("account_memo_seen", "true"); setDriveVersion(p => p + 1); }}
                           className="mt-3 flex items-center gap-2.5 w-full rounded-xl border border-accent/20 bg-accent/5 px-3.5 py-2.5 hover:bg-accent/10 active:scale-[0.98] transition-all cursor-pointer group"
                         >
                           <div className="w-8 h-8 rounded-full bg-accent/15 border border-accent/25 flex items-center justify-center shrink-0">
