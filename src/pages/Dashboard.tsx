@@ -86,7 +86,7 @@ export default function Dashboard() {
     // Load all assigned accounts
     supabase
       .from("accounts")
-      .select("account_email, account_password, account_domain, platform")
+      .select("id, account_email, account_password, account_domain, platform")
       .eq("assigned_to", user.id)
       .order("created_at", { ascending: true })
       .then(({ data }) => {
