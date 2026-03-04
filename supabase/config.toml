@@ -14,3 +14,9 @@ verify_jwt = false
 
 [functions.chat]
 verify_jwt = false
+
+[functions.admin-totp-setup]
+verify_jwt = false
+
+[functions.admin-totp-verify]
+verify_jwt = false
