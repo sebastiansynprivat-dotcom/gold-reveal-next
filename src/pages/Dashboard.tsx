@@ -66,6 +66,7 @@ export default function Dashboard() {
   const [driveVersion, setDriveVersion] = useState(0);
   const [isFirstLogin, setIsFirstLogin] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [showMemo, setShowMemo] = useState(false);
   const [isPwaInstalled, setIsPwaInstalled] = useState(() => {
     return window.matchMedia("(display-mode: standalone)").matches
       || (window.navigator as any).standalone === true;
