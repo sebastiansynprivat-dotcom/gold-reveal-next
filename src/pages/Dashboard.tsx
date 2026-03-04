@@ -40,16 +40,14 @@ export default function Dashboard() {
   const [editingGroupName, setEditingGroupName] = useState(false);
 
   const [offer, setOffer] = useState("");
-  const [accountEmail, setAccountEmail] = useState("");
-  const [accountPassword, setAccountPassword] = useState("");
-  const [accountDomain, setAccountDomain] = useState("");
+  const [assignedAccounts, setAssignedAccounts] = useState<{ account_email: string; account_password: string; account_domain: string; platform: string }[]>([]);
 
   // Load profile data
   useEffect(() => {
     if (!user) return;
     supabase
       .from("profiles")
-      .select("telegram_id, group_name, offer, account_email, account_password, account_domain")
+      .select("telegram_id, group_name, offer")
       .eq("user_id", user.id)
       .maybeSingle()
       .then(({ data }) => {
@@ -62,23 +60,18 @@ export default function Dashboard() {
           setGroupNameSaved(true);
         }
         if (data?.offer) setOffer(data.offer);
-        if (data?.account_email) setAccountEmail(data.account_email);
-        if (data?.account_password) setAccountPassword(data.account_password);
-        if (data?.account_domain) setAccountDomain(data.account_domain);
         setTelegramLoading(false);
       });
 
-    // Also check accounts table for assigned account
+    // Load all assigned accounts
     supabase
       .from("accounts")
-      .select("account_email, account_password, account_domain")
+      .select("account_email, account_password, account_domain, platform")
       .eq("assigned_to", user.id)
-      .maybeSingle()
+      .order("created_at", { ascending: true })
       .then(({ data }) => {
-        if (data?.account_email) {
-          setAccountEmail(data.account_email);
-          setAccountPassword(data.account_password || "");
-          setAccountDomain(data.account_domain || "");
+        if (data && data.length > 0) {
+          setAssignedAccounts(data);
         }
       });
   }, [user]);
@@ -343,26 +336,39 @@ export default function Dashboard() {
         {/* Account-Daten */}
         <section className="glass-card-subtle rounded-xl p-4 lg:p-6">
           <h2 className="text-sm lg:text-base font-semibold text-foreground mb-3">Deine Account-Daten</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div>
-              <p className="text-[10px] text-muted-foreground mb-0.5">E-Mail</p>
-              <p className="text-xs lg:text-sm font-medium text-foreground truncate">{accountEmail || "–"}</p>
+          {assignedAccounts.length === 0 ? (
+            <p className="text-xs text-muted-foreground">Noch keine Accounts zugewiesen.</p>
+          ) : (
+            <div className="space-y-3">
+              {assignedAccounts.map((acc, i) => (
+                <div key={i} className={assignedAccounts.length > 1 ? "p-3 rounded-lg border border-border/50 bg-secondary/20" : ""}>
+                  {assignedAccounts.length > 1 && (
+                    <p className="text-[10px] text-muted-foreground font-medium mb-2">{acc.platform}</p>
+                  )}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                      <p className="text-[10px] text-muted-foreground mb-0.5">E-Mail</p>
+                      <p className="text-xs lg:text-sm font-medium text-foreground truncate">{acc.account_email || "–"}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-muted-foreground mb-0.5">Passwort</p>
+                      <p className="text-xs lg:text-sm font-medium text-foreground truncate">{acc.account_password || "–"}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-muted-foreground mb-0.5">Domain</p>
+                      {acc.account_domain ? (
+                        <a href={`https://${acc.account_domain.replace(/^https?:\/\//, '')}`} target="_blank" rel="noopener noreferrer" className="text-xs lg:text-sm font-medium text-primary underline underline-offset-2 hover:text-primary/80 transition-colors truncate block">
+                          {acc.account_domain}
+                        </a>
+                      ) : (
+                        <p className="text-xs lg:text-sm font-medium text-foreground truncate">–</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
-            <div>
-              <p className="text-[10px] text-muted-foreground mb-0.5">Passwort</p>
-              <p className="text-xs lg:text-sm font-medium text-foreground truncate">{accountPassword || "–"}</p>
-            </div>
-            <div>
-              <p className="text-[10px] text-muted-foreground mb-0.5">Domain</p>
-              {accountDomain ? (
-                <a href={`https://${accountDomain.replace(/^https?:\/\//, '')}`} target="_blank" rel="noopener noreferrer" className="text-xs lg:text-sm font-medium text-primary underline underline-offset-2 hover:text-primary/80 transition-colors truncate block">
-                  {accountDomain}
-                </a>
-              ) : (
-                <p className="text-xs lg:text-sm font-medium text-foreground truncate">–</p>
-              )}
-            </div>
-          </div>
+          )}
         </section>
 
         {/* Tägliche Aufgaben */}

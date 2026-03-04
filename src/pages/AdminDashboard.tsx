@@ -20,6 +20,7 @@ interface ChatterProfile {
   account_email?: string;
   account_password?: string;
   account_domain?: string;
+  assigned_accounts?: AccountEntry[];
 }
 
 interface AccountEntry {
@@ -82,7 +83,18 @@ export default function AdminDashboard() {
       setLoading(false);
       return;
     }
-    setChatters(data || []);
+    // Enrich chatters with their assigned accounts
+    const { data: allAccounts } = await supabase
+      .from("accounts")
+      .select("*")
+      .order("created_at", { ascending: true });
+    setAccounts(allAccounts || []);
+    
+    const enriched = (data || []).map((c) => ({
+      ...c,
+      assigned_accounts: (allAccounts || []).filter((a) => a.assigned_to === c.user_id),
+    }));
+    setChatters(enriched);
     setLoading(false);
   };
 
@@ -249,24 +261,44 @@ export default function AdminDashboard() {
     setDeleting(false);
   };
 
-  const removeAccount = async () => {
+  const removeAccount = async (accountId?: string) => {
     if (!reassignTarget) return;
     setReassigning(true);
     try {
-      await supabase
+      if (accountId) {
+        // Remove specific account
+        await supabase
+          .from("accounts")
+          .update({ assigned_to: null, assigned_at: null })
+          .eq("id", accountId);
+      } else {
+        // Remove all accounts (legacy)
+        await supabase
+          .from("accounts")
+          .update({ assigned_to: null, assigned_at: null })
+          .eq("assigned_to", reassignTarget.user_id);
+      }
+
+      // Sync profile with remaining accounts
+      const { data: remaining } = await supabase
         .from("accounts")
-        .update({ assigned_to: null, assigned_at: null })
-        .eq("assigned_to", reassignTarget.user_id);
+        .select("account_email, account_password, account_domain")
+        .eq("assigned_to", reassignTarget.user_id)
+        .limit(1)
+        .maybeSingle();
 
       await supabase
         .from("profiles")
-        .update({ account_email: null, account_password: null, account_domain: null })
+        .update({
+          account_email: remaining?.account_email || null,
+          account_password: remaining?.account_password || null,
+          account_domain: remaining?.account_domain || null,
+        })
         .eq("user_id", reassignTarget.user_id);
 
-      toast.success(`Account von ${reassignTarget.group_name || "Chatter"} entfernt`);
+      toast.success(`Account entfernt`);
       setReassignTarget(null);
       loadChatters();
-      loadAccounts();
     } catch (err: any) {
       toast.error("Fehler: " + err.message);
     }
@@ -277,11 +309,20 @@ export default function AdminDashboard() {
     if (!reassignTarget) return;
     setReassigning(true);
     try {
-      // Free old account if any
-      await supabase
-        .from("accounts")
-        .update({ assigned_to: null, assigned_at: null })
-        .eq("assigned_to", reassignTarget.user_id);
+      // Get the new account's platform
+      const newAccInfo = accounts.find((a) => a.id === newAccountId);
+      if (!newAccInfo) throw new Error("Account nicht gefunden");
+
+      // Free any existing account on the SAME platform for this user
+      const existingOnPlatform = accounts.find(
+        (a) => a.assigned_to === reassignTarget.user_id && a.platform === newAccInfo.platform
+      );
+      if (existingOnPlatform) {
+        await supabase
+          .from("accounts")
+          .update({ assigned_to: null, assigned_at: null })
+          .eq("id", existingOnPlatform.id);
+      }
 
       // Assign new account
       const { data: newAcc } = await supabase
@@ -292,6 +333,7 @@ export default function AdminDashboard() {
         .single();
 
       if (newAcc) {
+        // Update profile with first assigned account's data (for backward compat)
         await supabase
           .from("profiles")
           .update({
@@ -302,10 +344,9 @@ export default function AdminDashboard() {
           .eq("user_id", reassignTarget.user_id);
       }
 
-      toast.success(`Account für ${reassignTarget.group_name || "Chatter"} geändert!`);
+      toast.success(`Account für ${reassignTarget.group_name || "Chatter"} zugewiesen!`);
       setReassignTarget(null);
       loadChatters();
-      loadAccounts();
     } catch (err: any) {
       toast.error("Fehler: " + err.message);
     }
@@ -528,7 +569,6 @@ export default function AdminDashboard() {
           ) : (
             <div className="divide-y divide-border">
               {filtered.map((chatter) => {
-                const hasAccount = !!(chatter.account_email);
                 return (
                   <div
                     key={chatter.user_id}
@@ -548,10 +588,10 @@ export default function AdminDashboard() {
                         {new Date(chatter.created_at).toLocaleDateString("de-DE")}
                       </p>
                     </div>
-                    {hasAccount && (
+                    {(chatter.assigned_accounts?.length || 0) > 0 && (
                       <Badge variant="secondary" className="text-[10px] shrink-0">
                         <KeyRound className="h-3 w-3 mr-1" />
-                        Account
+                        {chatter.assigned_accounts!.length} Account{chatter.assigned_accounts!.length > 1 ? "s" : ""}
                       </Badge>
                     )}
                     <Button
@@ -559,7 +599,7 @@ export default function AdminDashboard() {
                       size="sm"
                       onClick={() => setReassignTarget(chatter)}
                       className="text-foreground hover:text-foreground/80 shrink-0"
-                      title="Account ändern"
+                      title="Accounts verwalten"
                     >
                       <RefreshCw className="h-3.5 w-3.5" />
                     </Button>
@@ -773,25 +813,38 @@ export default function AdminDashboard() {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            {reassignTarget?.account_email && (
-              <div className="flex items-center justify-between p-3 rounded-xl border border-border bg-secondary/30">
-                <div>
-                  <p className="text-[10px] text-muted-foreground">Aktueller Account</p>
-                  <p className="text-xs font-medium text-foreground">{reassignTarget.account_email}</p>
+            {/* Show currently assigned accounts */}
+            {(() => {
+              const assigned = reassignTarget?.assigned_accounts || [];
+              if (assigned.length === 0) return (
+                <p className="text-xs text-muted-foreground italic">Keine Accounts zugewiesen.</p>
+              );
+              return (
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground font-medium">Zugewiesene Accounts:</p>
+                  {assigned.map((acc) => (
+                    <div key={acc.id} className="flex items-center justify-between p-3 rounded-xl border border-border bg-secondary/30">
+                      <div>
+                        <Badge variant="secondary" className="text-[10px] mb-1">{acc.platform}</Badge>
+                        <p className="text-xs font-medium text-foreground">{acc.account_email}</p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removeAccount(acc.id)}
+                        disabled={reassigning}
+                        className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                      >
+                        <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                        Rausnehmen
+                      </Button>
+                    </div>
+                  ))}
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={removeAccount}
-                  disabled={reassigning}
-                  className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                >
-                  <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-                  Rausnehmen
-                </Button>
-              </div>
-            )}
-            <p className="text-xs text-muted-foreground">Wähle einen freien Account aus:</p>
+              );
+            })()}
+            
+            <p className="text-xs text-muted-foreground font-medium pt-2">Freien Account zuweisen:</p>
             {(() => {
               const freeAccs = accounts.filter((a) => !a.assigned_to);
               if (freeAccs.length === 0) {
@@ -801,21 +854,29 @@ export default function AdminDashboard() {
                   </p>
                 );
               }
+              // Group by platform
+              const platforms = [...new Set(freeAccs.map((a) => a.platform))];
               return (
-                <div className="divide-y divide-border rounded-xl border border-border overflow-hidden">
-                  {freeAccs.map((acc) => (
-                    <button
-                      key={acc.id}
-                      onClick={() => reassignAccount(acc.id)}
-                      disabled={reassigning}
-                      className="w-full p-3 text-left hover:bg-secondary/30 transition-colors disabled:opacity-50"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-foreground">{acc.account_email}</span>
-                        <Badge variant="secondary" className="text-[10px]">{acc.platform}</Badge>
+                <div className="space-y-3">
+                  {platforms.map((p) => (
+                    <div key={p}>
+                      <p className="text-[10px] text-muted-foreground mb-1">{p}</p>
+                      <div className="divide-y divide-border rounded-xl border border-border overflow-hidden">
+                        {freeAccs.filter((a) => a.platform === p).map((acc) => (
+                          <button
+                            key={acc.id}
+                            onClick={() => reassignAccount(acc.id)}
+                            disabled={reassigning}
+                            className="w-full p-3 text-left hover:bg-secondary/30 transition-colors disabled:opacity-50"
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-medium text-foreground">{acc.account_email}</span>
+                            </div>
+                            <p className="text-[10px] text-muted-foreground">Domain: {acc.account_domain}</p>
+                          </button>
+                        ))}
                       </div>
-                      <p className="text-[10px] text-muted-foreground">Domain: {acc.account_domain}</p>
-                    </button>
+                    </div>
                   ))}
                 </div>
               );
