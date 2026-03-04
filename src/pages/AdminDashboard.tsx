@@ -2153,6 +2153,234 @@ export default function AdminDashboard() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Manual Platform Dialog */}
+      <Dialog open={manualPoolOpen} onOpenChange={setManualPoolOpen}>
+        <DialogContent className="glass-card border-border sm:max-w-lg max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-foreground flex items-center gap-2">
+              <KeyRound className="h-5 w-5" />
+              {selectedManualPlatform} – Freie Accounts
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Delete platform */}
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">Plattform: <span className="font-semibold text-foreground">{selectedManualPlatform}</span></p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setDeleteManualPoolConfirm(true)}
+                className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+              >
+                <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                Löschen
+              </Button>
+            </div>
+
+            {/* Domain */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Domain</label>
+              <Input
+                value={manualAccDomain}
+                onChange={(e) => setManualAccDomain(e.target.value)}
+                placeholder="Domain (z.B. onlyfans.com)"
+                className="text-xs"
+              />
+              <p className="text-[10px] text-muted-foreground">Wird automatisch für neue Accounts verwendet.</p>
+            </div>
+
+            {/* Add account */}
+            <div className="space-y-2 border border-border rounded-xl p-3">
+              <p className="text-xs font-semibold text-foreground">Neuen Account hinzufügen</p>
+              <Input
+                value={manualAccEmail}
+                onChange={(e) => setManualAccEmail(e.target.value)}
+                placeholder="E-Mail / Username"
+              />
+              <Input
+                value={manualAccPassword}
+                onChange={(e) => setManualAccPassword(e.target.value)}
+                placeholder="Passwort"
+              />
+              <Button
+                onClick={async () => {
+                  if (!manualAccEmail.trim() || !selectedManualPlatform) return;
+                  setAddingManual(true);
+                  const { error } = await supabase.from("accounts").insert({
+                    platform: selectedManualPlatform,
+                    account_email: manualAccEmail.trim(),
+                    account_password: manualAccPassword.trim(),
+                    account_domain: manualAccDomain.trim(),
+                    is_manual: true,
+                  } as any);
+                  if (error) {
+                    toast.error("Fehler beim Hinzufügen");
+                  } else {
+                    toast.success("Account hinzugefügt!");
+                    setManualAccEmail("");
+                    setManualAccPassword("");
+                    loadAccounts();
+                    loadChatters();
+                  }
+                  setAddingManual(false);
+                }}
+                disabled={addingManual || !manualAccEmail.trim()}
+                className="w-full"
+                size="sm"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                {addingManual ? "Wird hinzugefügt..." : "Account hinzufügen"}
+              </Button>
+            </div>
+
+            {/* Stats */}
+            {(() => {
+              const manualPlatformAccounts = accounts.filter(a => a.is_manual && a.platform === selectedManualPlatform);
+              const mFree = manualPlatformAccounts.filter(a => !a.assigned_to).length;
+              const mAssigned = manualPlatformAccounts.filter(a => a.assigned_to).length;
+              return (
+                <>
+                  <div className="flex gap-3 text-xs">
+                    <span className="text-muted-foreground">Gesamt: <span className="text-foreground font-semibold">{manualPlatformAccounts.length}</span></span>
+                    <span className="text-accent">Frei: <span className="font-semibold">{mFree}</span></span>
+                    <span className="text-muted-foreground">Vergeben: <span className="font-semibold">{mAssigned}</span></span>
+                  </div>
+
+                  <div className="divide-y divide-border rounded-xl border border-border overflow-hidden">
+                    {manualPlatformAccounts.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-6">
+                        Noch keine Accounts für {selectedManualPlatform}.
+                      </p>
+                    ) : (
+                      manualPlatformAccounts.map((acc) => (
+                        <div key={acc.id} className="p-3 flex items-center gap-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-medium text-foreground truncate">{acc.account_email}</span>
+                              {acc.assigned_to ? (
+                                <Badge className="text-[10px] bg-secondary text-secondary-foreground shrink-0">
+                                  → {getChatterName(acc.assigned_to)}
+                                </Badge>
+                              ) : (
+                                <Badge className="text-[10px] bg-accent/20 text-accent shrink-0">
+                                  Frei
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-muted-foreground truncate">PW: {acc.account_password}</p>
+                          </div>
+                          {acc.assigned_to && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive shrink-0"
+                              title="Account freigeben"
+                              onClick={async () => {
+                                await supabase.from("accounts").update({ assigned_to: null, assigned_at: null }).eq("id", acc.id);
+                                toast.success("Account freigegeben");
+                                loadAccounts();
+                                loadChatters();
+                              }}
+                            >
+                              <RefreshCw className="h-3 w-3" />
+                            </Button>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive shrink-0"
+                            title="Account löschen"
+                            onClick={async () => {
+                              await supabase.from("accounts").delete().eq("id", acc.id);
+                              toast.success("Account gelöscht");
+                              loadAccounts();
+                            }}
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Manual Platform Confirmation */}
+      <AlertDialog open={deleteManualPoolConfirm} onOpenChange={setDeleteManualPoolConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Plattform "{selectedManualPlatform}" löschen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Alle Accounts dieser Plattform werden gelöscht. Diese Aktion kann nicht rückgängig gemacht werden.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletingManualPool}>Abbrechen</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                setDeletingManualPool(true);
+                await supabase.from("accounts").delete().eq("platform", selectedManualPlatform).eq("is_manual", true as any);
+                toast.success(`Plattform "${selectedManualPlatform}" gelöscht!`);
+                setDeleteManualPoolConfirm(false);
+                setManualPoolOpen(false);
+                setSelectedManualPlatform("");
+                loadAccounts();
+                loadChatters();
+                setDeletingManualPool(false);
+              }}
+              disabled={deletingManualPool}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deletingManualPool ? "Wird gelöscht..." : "Plattform löschen"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* New Manual Platform Dialog */}
+      <Dialog open={newManualPlatformOpen} onOpenChange={setNewManualPlatformOpen}>
+        <DialogContent className="glass-card border-border sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-foreground flex items-center gap-2">
+              <KeyRound className="h-5 w-5 text-accent" />
+              Neue Plattform erstellen
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Plattform-Name</label>
+              <Input
+                value={newManualPlatformName}
+                onChange={(e) => setNewManualPlatformName(e.target.value)}
+                placeholder="z.B. OnlyFans, Fansly..."
+                className="text-sm"
+                autoFocus
+              />
+            </div>
+            <Button
+              onClick={() => {
+                if (newManualPlatformName.trim()) {
+                  setSelectedManualPlatform(newManualPlatformName.trim());
+                  setNewManualPlatformOpen(false);
+                  setManualAccDomain("");
+                  setManualPoolOpen(true);
+                }
+              }}
+              disabled={!newManualPlatformName.trim()}
+              className="w-full"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Plattform anlegen
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
