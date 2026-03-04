@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Users, Send, Bell, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, Filter, MessageSquare, Star, AlertTriangle, Bot, Save, Power } from "lucide-react";
+import { Users, Send, Bell, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, Filter, MessageSquare, Star, AlertTriangle, Bot, Save, Power, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -1068,12 +1068,12 @@ export default function AdminDashboard() {
                 </Badge>
               </div>
 
-              {/* Filter */}
-              <div className="px-3 pt-3 flex gap-2">
+              {/* Filters */}
+              <div className="px-3 pt-3 flex gap-2 overflow-x-auto scrollbar-none pb-1">
                 <button
                   onClick={() => setBotFilter("alle")}
                   className={cn(
-                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium transition-colors",
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium transition-colors shrink-0",
                     botFilter === "alle" ? "bg-accent text-accent-foreground" : "bg-secondary/50 text-muted-foreground hover:bg-secondary"
                   )}
                 >
@@ -1083,18 +1083,31 @@ export default function AdminDashboard() {
                 <button
                   onClick={() => setBotFilter("missing")}
                   className={cn(
-                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium transition-colors",
+                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium transition-colors shrink-0",
                     botFilter === "missing" ? "bg-accent text-accent-foreground" : "bg-secondary/50 text-muted-foreground hover:bg-secondary"
                   )}
                 >
                   <AlertTriangle className="h-3 w-3" />
                   Bot-DM fehlt
                 </button>
+                {botPlatforms.map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => setBotPlatformFilter(botPlatformFilter === p ? "alle" : p)}
+                    className={cn(
+                      "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium transition-colors shrink-0",
+                      botPlatformFilter === p ? "bg-accent text-accent-foreground" : "bg-secondary/50 text-muted-foreground hover:bg-secondary"
+                    )}
+                  >
+                    <Package className="h-3 w-3" />
+                    {p}
+                  </button>
+                ))}
               </div>
 
               {filteredBotAccounts.length === 0 ? (
                 <div className="p-8 text-center text-sm text-muted-foreground">
-                  {botFilter === "missing" ? "Alle Models haben Bot-DMs hinterlegt." : "Keine zugewiesenen Accounts vorhanden."}
+                  {botFilter === "missing" ? "Alle Models haben Bot-DMs hinterlegt." : "Keine Accounts gefunden."}
                 </div>
               ) : (
                 <div className="p-3 space-y-2">
