@@ -42,7 +42,7 @@ export default function Dashboard() {
   const [editingGroupName, setEditingGroupName] = useState(false);
 
   const [offer, setOffer] = useState("");
-  const [assignedAccounts, setAssignedAccounts] = useState<{ id: string; account_email: string; account_password: string; account_domain: string; platform: string }[]>([]);
+  const [assignedAccounts, setAssignedAccounts] = useState<{ id: string; account_email: string; account_password: string; account_domain: string; platform: string; assigned_at: string | null }[]>([]);
   const [accountsOpen, setAccountsOpen] = useState(true);
 
   // Per-account drive done/hidden state stored in localStorage as JSON objects keyed by account id
