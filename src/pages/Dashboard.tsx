@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Save, CheckCircle2, Award, Zap, HelpCircle, FileText, Clock, Users, Pencil, ChevronDown, Copy } from "lucide-react";
+import { Save, CheckCircle2, Award, Zap, HelpCircle, FileText, Clock, Users, Pencil, ChevronDown, Copy, Smartphone } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,6 +63,18 @@ export default function Dashboard() {
   // Force re-render when drive state changes
   const [driveVersion, setDriveVersion] = useState(0);
   const [isFirstLogin, setIsFirstLogin] = useState(false);
+  const [isPwaInstalled, setIsPwaInstalled] = useState(() => {
+    return window.matchMedia("(display-mode: standalone)").matches
+      || (window.navigator as any).standalone === true;
+  });
+
+  // Listen for PWA install changes (e.g. user adds to homescreen while page is open)
+  useEffect(() => {
+    const mql = window.matchMedia("(display-mode: standalone)");
+    const onChange = () => setIsPwaInstalled(mql.matches);
+    mql.addEventListener("change", onChange);
+    return () => mql.removeEventListener("change", onChange);
+  }, []);
 
   // Load profile data
   useEffect(() => {
@@ -120,16 +132,14 @@ export default function Dashboard() {
       });
 
     // Track PWA install status
-    const isStandalone = window.matchMedia("(display-mode: standalone)").matches
-      || (window.navigator as any).standalone === true;
-    if (isStandalone) {
+    if (isPwaInstalled) {
       supabase
         .from("profiles")
         .update({ pwa_installed: true } as any)
         .eq("user_id", user.id)
         .then();
     }
-  }, [user]);
+  }, [user, isPwaInstalled]);
   const saveTelegram = async () => {
     if (!user) return;
     const { error } = await supabase
@@ -425,6 +435,27 @@ export default function Dashboard() {
       <main className="container max-w-5xl mx-auto p-4 lg:px-8 lg:py-8 space-y-5 lg:space-y-6">
         {/* Notification Banner */}
         <NotificationBanner />
+
+        {/* PWA Install To-Do – persistent, non-dismissable, auto-hides when installed */}
+        {!isPwaInstalled && (
+          <div className="glass-card rounded-xl p-4 border border-accent/30 bg-accent/5">
+            <div className="flex items-start gap-3">
+              <div className="h-8 w-8 rounded-lg bg-accent/15 flex items-center justify-center shrink-0">
+                <Smartphone className="h-4 w-4 text-accent" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-4 rounded border-2 border-accent/40 shrink-0" />
+                  <p className="text-sm font-semibold text-foreground">App zum Homescreen hinzufügen</p>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1 ml-6">
+                  Füge die App zu deinem Homescreen hinzu, damit du Push-Benachrichtigungen bekommst und die App wie gewohnt nutzen kannst.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Stats Cards */}
         {/* Mobile: 2-col grid with full-width status */}
         <div className="grid grid-cols-2 gap-3 lg:hidden">
