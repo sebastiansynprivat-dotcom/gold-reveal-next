@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import DashboardChat from "@/components/DashboardChat";
@@ -507,6 +509,64 @@ export default function Dashboard() {
             </div>
           )}
         </section>
+
+        {/* Google Drive To-Do */}
+        {(() => {
+          const [driveDone, setDriveDone] = useState(() => localStorage.getItem("drive_done") === "true");
+          const [driveHidden, setDriveHidden] = useState(() => localStorage.getItem("drive_hidden") === "true");
+          const toggleDrive = (checked: boolean) => {
+            setDriveDone(checked);
+            localStorage.setItem("drive_done", String(checked));
+            if (!checked) {
+              setDriveHidden(false);
+              localStorage.setItem("drive_hidden", "false");
+            }
+          };
+          const hideDrive = () => {
+            setDriveHidden(true);
+            localStorage.setItem("drive_hidden", "true");
+          };
+
+          if (driveDone && driveHidden) {
+            return (
+              <button
+                onClick={() => { setDriveHidden(false); localStorage.setItem("drive_hidden", "false"); }}
+                className="text-[10px] text-muted-foreground hover:text-foreground transition-colors text-left"
+              >
+                📂 Drive-To-Do wieder einblenden
+              </button>
+            );
+          }
+
+          return (
+            <section className={cn("glass-card-subtle rounded-xl border border-accent/30 transition-opacity", driveDone && "opacity-60")}>
+              <div className="p-4 lg:p-6 space-y-2">
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    checked={driveDone}
+                    onCheckedChange={(v) => toggleDrive(!!v)}
+                    className="mt-1 shrink-0 border-accent data-[state=checked]:bg-accent data-[state=checked]:text-accent-foreground"
+                  />
+                  <div className="space-y-1.5 flex-1">
+                    <div className="flex items-center justify-between">
+                      <p className={cn("text-sm font-semibold text-foreground", driveDone && "line-through text-muted-foreground")}>
+                        📂 To-Do: Google Drive Zugang
+                      </p>
+                      {driveDone && (
+                        <button onClick={hideDrive} className="text-[10px] text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap ml-2">
+                          Ausblenden
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Bitte melde dich in der WhatsApp-Gruppe und schreibe, dass du zum Google Drive hinzugefügt werden musst – zusammen mit deiner E-Mail-Adresse.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </section>
+          );
+        })()}
 
         {/* Tägliche Aufgaben */}
         <DailyChecklist />
