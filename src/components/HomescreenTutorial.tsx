@@ -37,10 +37,10 @@ export default function HomescreenTutorial({ isFirstLogin }: HomescreenTutorialP
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    // DEBUG: temporarily force open for testing
+    if (!isFirstLogin) return;
     const seen = localStorage.getItem(TUTORIAL_KEY);
     if (!seen) {
-      const timer = setTimeout(() => setOpen(true), 800);
+      const timer = setTimeout(() => setOpen(true), 1200);
       return () => clearTimeout(timer);
     }
   }, [isFirstLogin]);
