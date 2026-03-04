@@ -628,6 +628,53 @@ export default function AdminDashboard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Reassign Account Dialog */}
+      <Dialog open={!!reassignTarget} onOpenChange={(o) => { if (!o) setReassignTarget(null); }}>
+        <DialogContent className="glass-card border-border sm:max-w-md max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">
+              Account ändern für {reassignTarget?.group_name || "Chatter"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            {reassignTarget?.account_email && (
+              <p className="text-xs text-muted-foreground">
+                Aktuell: <span className="text-foreground font-medium">{reassignTarget.account_email}</span>
+              </p>
+            )}
+            <p className="text-xs text-muted-foreground">Wähle einen freien Account aus:</p>
+            {(() => {
+              const freeAccs = accounts.filter((a) => !a.assigned_to);
+              if (freeAccs.length === 0) {
+                return (
+                  <p className="text-sm text-muted-foreground text-center py-4">
+                    Keine freien Accounts verfügbar.
+                  </p>
+                );
+              }
+              return (
+                <div className="divide-y divide-border rounded-xl border border-border overflow-hidden">
+                  {freeAccs.map((acc) => (
+                    <button
+                      key={acc.id}
+                      onClick={() => reassignAccount(acc.id)}
+                      disabled={reassigning}
+                      className="w-full p-3 text-left hover:bg-secondary/30 transition-colors disabled:opacity-50"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-foreground">{acc.account_email}</span>
+                        <Badge variant="secondary" className="text-[10px]">{acc.platform}</Badge>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">Domain: {acc.account_domain}</p>
+                    </button>
+                  ))}
+                </div>
+              );
+            })()}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
