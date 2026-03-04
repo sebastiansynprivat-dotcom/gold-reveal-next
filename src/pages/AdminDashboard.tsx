@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Users, Send, Bell, Search, KeyRound, Plus, Package, Trash2, RefreshCw } from "lucide-react";
+import { Users, Send, Bell, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -66,6 +66,9 @@ export default function AdminDashboard() {
   const [deletingPool, setDeletingPool] = useState(false);
   const [deletePoolConfirm, setDeletePoolConfirm] = useState(false);
   const [offers, setOffers] = useState<{ name: string; target_path: string }[]>([]);
+  const [goalTarget, setGoalTarget] = useState<ChatterProfile | null>(null);
+  const [goalAmount, setGoalAmount] = useState("");
+  const [goalSaving, setGoalSaving] = useState(false);
   useEffect(() => {
     loadChatters();
     loadAccounts();
@@ -423,6 +426,39 @@ export default function AdminDashboard() {
       c.telegram_id?.toLowerCase().includes(search.toLowerCase())
   );
 
+  const openGoalEditor = async (chatter: ChatterProfile) => {
+    setGoalTarget(chatter);
+    // Load current goal
+    const { data } = await supabase
+      .from("daily_goals")
+      .select("target_amount")
+      .eq("user_id", chatter.user_id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    setGoalAmount(data?.target_amount != null ? String(data.target_amount) : "30");
+  };
+
+  const saveGoal = async () => {
+    if (!goalTarget) return;
+    setGoalSaving(true);
+    const amount = Number(goalAmount) || 30;
+    // Upsert: delete old, insert new
+    await supabase.from("daily_goals").delete().eq("user_id", goalTarget.user_id);
+    const { error } = await supabase.from("daily_goals").insert({
+      user_id: goalTarget.user_id,
+      goal_text: `${amount}€ Tagesziel`,
+      target_amount: amount,
+    });
+    if (error) {
+      toast.error("Fehler beim Speichern");
+    } else {
+      toast.success(`Tagesziel für ${goalTarget.group_name || "Chatter"} auf ${amount}€ gesetzt!`);
+      setGoalTarget(null);
+    }
+    setGoalSaving(false);
+  };
+
   const platformAccounts = selectedPlatform
     ? accounts.filter((a) => a.platform === selectedPlatform)
     : [];
@@ -585,6 +621,15 @@ export default function AdminDashboard() {
                         {chatter.assigned_accounts!.length} Account{chatter.assigned_accounts!.length > 1 ? "s" : ""}
                       </Badge>
                     )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => openGoalEditor(chatter)}
+                      className="text-accent hover:text-accent/80 shrink-0"
+                      title="Tagesziel bearbeiten"
+                    >
+                      <Target className="h-3.5 w-3.5" />
+                    </Button>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -893,6 +938,36 @@ export default function AdminDashboard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Daily Goal Dialog */}
+      <Dialog open={!!goalTarget} onOpenChange={(o) => { if (!o) setGoalTarget(null); }}>
+        <DialogContent className="glass-card border-border sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-foreground flex items-center gap-2">
+              <Target className="h-5 w-5 text-accent" />
+              Tagesziel für {goalTarget?.group_name || "Chatter"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-xs text-muted-foreground">Tagesziel in €</label>
+              <Input
+                type="number"
+                min={0}
+                step={5}
+                value={goalAmount}
+                onChange={(e) => setGoalAmount(e.target.value)}
+                placeholder="30"
+                className="text-lg font-semibold"
+              />
+            </div>
+            <Button onClick={saveGoal} disabled={goalSaving} className="w-full">
+              <Target className="h-4 w-4 mr-2" />
+              {goalSaving ? "Wird gespeichert..." : "Tagesziel speichern"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
