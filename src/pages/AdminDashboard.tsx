@@ -226,7 +226,7 @@ export default function AdminDashboard() {
 
   const loadBotMessages = async () => {
     const { data } = await supabase
-      .from("bot_messages")
+      .from("bot_messages" as any)
       .select("user_id, message, is_active");
     if (data) {
       const map: Record<string, { message: string; isActive: boolean; saving: boolean }> = {};
@@ -247,8 +247,8 @@ export default function AdminDashboard() {
     if (!entry) return;
     setBotMessages((prev) => ({ ...prev, [userId]: { ...prev[userId], saving: true } }));
     const { error } = await supabase
-      .from("bot_messages")
-      .upsert({ user_id: userId, message: entry.message, is_active: entry.isActive }, { onConflict: "user_id" });
+      .from("bot_messages" as any)
+      .upsert({ user_id: userId, message: entry.message, is_active: entry.isActive } as any, { onConflict: "user_id" });
     setBotMessages((prev) => ({ ...prev, [userId]: { ...prev[userId], saving: false } }));
     if (error) {
       toast.error("Fehler beim Speichern");
