@@ -569,7 +569,6 @@ export default function AdminDashboard() {
           ) : (
             <div className="divide-y divide-border">
               {filtered.map((chatter) => {
-                const hasAccount = !!(chatter.account_email);
                 return (
                   <div
                     key={chatter.user_id}
