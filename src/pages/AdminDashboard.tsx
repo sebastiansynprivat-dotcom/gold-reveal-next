@@ -1039,6 +1039,11 @@ export default function AdminDashboard() {
                             {chatter.assigned_accounts!.length} Account{chatter.assigned_accounts!.length > 1 ? "s" : ""}
                           </Badge>
                         )}
+                        {pushUsers.has(chatter.user_id) ? (
+                          <Bell className="h-4 w-4 text-accent shrink-0" title="Push aktiviert" />
+                        ) : (
+                          <BellOff className="h-4 w-4 text-muted-foreground/50 shrink-0" title="Push nicht aktiviert" />
+                        )}
                       </div>
                       {/* Row 2: Action Buttons */}
                       <div className="flex justify-end gap-1 -mt-1">
