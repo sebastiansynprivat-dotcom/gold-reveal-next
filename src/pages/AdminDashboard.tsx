@@ -1862,7 +1862,7 @@ export default function AdminDashboard() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Plattform-Name</label>
+              <label className="text-xs font-medium text-muted-foreground">Pool-Name</label>
               <Input
                 value={newPlatformName}
                 onChange={(e) => setNewPlatformName(e.target.value)}
