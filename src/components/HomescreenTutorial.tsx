@@ -10,22 +10,19 @@ const tutorials = [
     label: "iPhone / iPad (Safari)",
     icon: Apple,
     description: 'Öffne die App in Safari, tippe auf das Teilen-Symbol und wähle "Zum Home-Bildschirm".',
-    videoUrl: "https://www.youtube.com/watch?v=QpFbExFHXe0",
-    videoTitle: "Website zum iPhone Homescreen hinzufügen",
+    embedId: "QpFbExFHXe0",
   },
   {
     label: "Android (Chrome)",
     icon: Smartphone,
     description: 'Öffne die App in Chrome, tippe auf die drei Punkte oben rechts und wähle "Zum Startbildschirm hinzufügen".',
-    videoUrl: "https://www.youtube.com/watch?v=P_DyI_2wA3I",
-    videoTitle: "Website zum Android Homescreen hinzufügen",
+    embedId: "P_DyI_2wA3I",
   },
   {
     label: "Samsung (Samsung Internet)",
     icon: MonitorSmartphone,
     description: 'Öffne die App im Samsung-Browser, tippe auf das Menü und wähle "Seite zum Startbildschirm hinzufügen".',
-    videoUrl: "https://www.youtube.com/watch?v=LUOSb7UbUyI",
-    videoTitle: "Website zum Startbildschirm hinzufügen (Chrome/Samsung)",
+    embedId: "LUOSb7UbUyI",
   },
 ];
 
@@ -37,6 +34,7 @@ interface HomescreenTutorialProps {
 
 export default function HomescreenTutorial({ isFirstLogin, manualOpen, onManualClose }: HomescreenTutorialProps) {
   const [open, setOpen] = useState(false);
+  const [activeVideo, setActiveVideo] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isFirstLogin) return;
@@ -95,27 +93,14 @@ export default function HomescreenTutorial({ isFirstLogin, manualOpen, onManualC
                   <span className="text-sm font-bold text-foreground">{t.label}</span>
                 </div>
                 <p className="text-xs text-muted-foreground">{t.description}</p>
-                <a
-                  href={t.videoUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                <button
+                  type="button"
+                  onClick={() => setActiveVideo(t.embedId)}
                   className="inline-flex items-center gap-2 text-xs font-medium text-accent hover:underline mt-1"
-                  onClickCapture={(e) => {
-                    e.stopPropagation();
-                  }}
-                  onPointerDownCapture={(e) => {
-                    e.stopPropagation();
-                  }}
-                  onMouseDownCapture={(e) => {
-                    e.stopPropagation();
-                  }}
-                  onTouchStartCapture={(e) => {
-                    e.stopPropagation();
-                  }}
                 >
-                  <ExternalLink className="h-3.5 w-3.5" />
+                  <Play className="h-3.5 w-3.5" />
                   Video-Anleitung ansehen
-                </a>
+                </button>
               </div>
             );
           })}
@@ -126,5 +111,31 @@ export default function HomescreenTutorial({ isFirstLogin, manualOpen, onManualC
         </Button>
       </DialogContent>
     </Dialog>
+
+    {/* Video Player Dialog */}
+    <Dialog open={!!activeVideo} onOpenChange={(v) => { if (!v) setActiveVideo(null); }}>
+      <DialogContent className="glass-card border-border sm:max-w-lg mx-auto p-4">
+        <DialogHeader>
+          <DialogTitle className="text-foreground text-base">Video-Anleitung</DialogTitle>
+          <DialogDescription className="sr-only">YouTube Video-Anleitung zum Homescreen hinzufügen</DialogDescription>
+        </DialogHeader>
+        <div className="aspect-video w-full rounded-lg overflow-hidden bg-secondary">
+          {activeVideo && (
+            <iframe
+              src={`https://www.youtube.com/embed/${activeVideo}?autoplay=1`}
+              frameBorder="0"
+              allowFullScreen
+              allow="autoplay; encrypted-media"
+              className="w-full h-full"
+              title="Video-Anleitung"
+            />
+          )}
+        </div>
+        <Button variant="outline" onClick={() => setActiveVideo(null)} className="w-full mt-1">
+          Schließen
+        </Button>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
