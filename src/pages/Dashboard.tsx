@@ -195,6 +195,23 @@ export default function Dashboard() {
   const verdienst = umsatz * rate;
   const progressPct = Math.min((umsatz / GOLD_THRESHOLD) * 100, 100);
 
+  const fireConfetti = useCallback(() => {
+    confetti({
+      particleCount: 150,
+      spread: 80,
+      origin: { y: 0.6 },
+      colors: ["#c4973b", "#e8c96b", "#a07c2a", "#f5d98a"],
+    });
+  }, []);
+
+  useEffect(() => {
+    if (isGold && !hadConfetti) {
+      setHadConfetti(true);
+      fireConfetti();
+    }
+    if (!isGold) setHadConfetti(false);
+  }, [isGold, hadConfetti, fireConfetti]);
+
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header with Telegram + Umsatz inline */}
