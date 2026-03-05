@@ -66,7 +66,6 @@ const OfferA = () => {
               <span className="text-4xl mb-4">👋</span>
               <h2
                 className="gold-gradient-text text-xl md:text-2xl font-bold mb-2"
-                style={{ fontFamily: "'Playfair Display', serif" }}
               >
                 Eine kleine Nachricht von Sebastian an dich
               </h2>
@@ -101,7 +100,6 @@ const OfferA = () => {
         <img src={logo} alt="SHE Logo" className="w-16 h-16 mb-6 opacity-80" />
         <h1
           className="text-3xl md:text-5xl font-bold tracking-tight leading-tight mb-3"
-          style={{ fontFamily: "'Playfair Display', serif" }}
         >
           <span className="text-foreground">Kurze Anleitung für deinen Start mit </span>
           <span className="text-[hsl(14,100%,50%)]">Maloum</span>
@@ -122,7 +120,6 @@ const OfferA = () => {
           >
             <h2
               className="gold-gradient-text text-xl md:text-2xl font-bold mb-4 text-center"
-              style={{ fontFamily: "'Playfair Display', serif" }}
             >
               {video.title}
             </h2>
@@ -150,9 +147,7 @@ const OfferA = () => {
       >
         <h2
           className="gold-gradient-text text-xl md:text-2xl font-bold mb-6 text-center"
-          style={{ fontFamily: "'Playfair Display', serif" }}
         >
-          Wichtige Links
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {links.map((link) => (
