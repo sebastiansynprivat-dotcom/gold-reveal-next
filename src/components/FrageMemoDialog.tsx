@@ -132,37 +132,40 @@ export default function FrageMemoDialog({ open, onOpenChange }: FrageMemoDialogP
             <div className="h-px w-full bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
           </div>
 
-          {/* Smooth animated arrow to chat button */}
+          {/* Animated arrow to chat button */}
           <div className="flex justify-end mr-5 mt-1">
-            <svg width="40" height="56" viewBox="0 0 40 56" fill="none" className="overflow-visible">
+            <div
+              className="flex flex-col items-center"
+              style={{ animation: "arrowSlideIn 0.6s ease-out 0.5s both" }}
+            >
               {/* Curved line */}
-              <path
-                d="M20 0 Q20 22, 24 36 Q28 50, 20 54"
-                stroke="hsl(var(--accent))"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                fill="none"
-                strokeDasharray="90"
-                strokeDashoffset="90"
-                opacity="0.6"
-                style={{
-                  animation: "smoothDraw 1.2s cubic-bezier(0.25, 0.1, 0.25, 1) 0.4s forwards",
-                }}
-              />
-              {/* Arrowhead */}
-              <path
-                d="M14 46 L20 56 L26 46"
-                stroke="hsl(var(--accent))"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                fill="none"
-                opacity="0"
-                style={{
-                  animation: "smoothFadeIn 0.5s ease-out 1.4s forwards",
-                }}
-              />
-            </svg>
+              <svg width="32" height="40" viewBox="0 0 32 40" fill="none">
+                <path
+                  d="M16 0 C16 16, 20 28, 16 40"
+                  stroke="hsl(var(--accent))"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  fill="none"
+                  opacity="0.5"
+                />
+              </svg>
+              {/* Arrowhead chevron */}
+              <svg
+                width="20" height="12" viewBox="0 0 20 12" fill="none"
+                className="-mt-1"
+                style={{ animation: "arrowBob 1.8s ease-in-out 1.2s infinite" }}
+              >
+                <path
+                  d="M3 2 L10 10 L17 2"
+                  stroke="hsl(var(--accent))"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                  opacity="0.6"
+                />
+              </svg>
+            </div>
           </div>
         </div>
       </div>
@@ -172,12 +175,13 @@ export default function FrageMemoDialog({ open, onOpenChange }: FrageMemoDialogP
           0%, 100% { transform: scaleY(0.4); }
           50% { transform: scaleY(1); }
         }
-        @keyframes smoothDraw {
-          to { stroke-dashoffset: 0; }
+        @keyframes arrowSlideIn {
+          0% { opacity: 0; transform: translateY(-12px); }
+          100% { opacity: 1; transform: translateY(0); }
         }
-        @keyframes smoothFadeIn {
-          0% { opacity: 0; transform: translateY(-6px); }
-          100% { opacity: 0.6; transform: translateY(0); }
+        @keyframes arrowBob {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(5px); }
         }
       `}</style>
     </>
