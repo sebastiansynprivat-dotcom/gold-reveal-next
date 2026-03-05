@@ -1621,7 +1621,7 @@ export default function AdminDashboard() {
                 className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-medium bg-accent/10 text-accent hover:bg-accent/20 transition-colors disabled:opacity-50"
               >
                 {generatingAll ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
-                {generatingAll ? "Generiere..." : "Alle AI-Analysen"}
+                {generatingAll ? "Generiere..." : "Alle Mastermind Analysen"}
               </button>
               {checkedChatters.size > 0 && (
                 <button
@@ -1884,7 +1884,7 @@ export default function AdminDashboard() {
                         <div className="flex items-center justify-between mb-1.5">
                           <div className="flex items-center gap-1.5">
                             <Sparkles className="h-3 w-3 text-accent" />
-                            <span className="text-[10px] font-semibold text-accent">AI-Analyse</span>
+                            <span className="text-[10px] font-semibold text-accent">Sebastian's Mastermind KI</span>
                           </div>
                           <button
                             onClick={(e) => { e.stopPropagation(); generateSummary(chatter.user_id); }}
