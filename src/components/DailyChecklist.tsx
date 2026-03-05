@@ -168,6 +168,16 @@ export default function DailyChecklist() {
                   </button>
                 </div>
               )}
+              {(task as any).massDmPopup && (
+                <div className="ml-10 mt-0.5 mb-1">
+                  <button
+                    onClick={() => setMassDmPopupOpen(true)}
+                    className="text-xs text-primary/70 hover:text-primary transition-colors underline underline-offset-2"
+                  >
+                    {(task as any).massDmPopupLabel}
+                  </button>
+                </div>
+              )}
             </div>
           );
         })}
