@@ -91,13 +91,13 @@ export default function DailyChecklist() {
               {task.audioHint && (
                 <div className="ml-10 mt-0.5 mb-1">
                   <button
-                    onClick={handleAudioToggle}
+                    onClick={() => handleAudioToggle(task.id)}
                     className="text-xs text-primary/70 hover:text-primary transition-colors underline underline-offset-2"
                   >
-                    Wieso ist das wichtig?
+                    {task.audioLabel}
                   </button>
                   <AnimatePresence>
-                    {showAudio && (
+                    {openAudioId === task.id && (
                       <motion.div
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
@@ -106,7 +106,7 @@ export default function DailyChecklist() {
                         className="overflow-hidden"
                       >
                         <div className="mt-2 rounded-lg bg-primary/5 border border-primary/10 p-2.5">
-                          <audio ref={audioRef} controls className="w-full h-8" src="/audio/massdm-info.mp3" />
+                          <audio ref={audioRef} controls autoPlay className="w-full h-8" src={task.audioHint} />
                         </div>
                       </motion.div>
                     )}
