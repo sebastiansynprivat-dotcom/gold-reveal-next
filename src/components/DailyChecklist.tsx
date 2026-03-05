@@ -54,7 +54,7 @@ function FeedbackTemplate() {
     </div>
   );
 }
-
+function getTodayKey() {
   return `daily_checklist_${new Date().toISOString().slice(0, 10)}`;
 }
 
