@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { Users, Send, Bell, BellOff, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, CalendarDays, CalendarRange, Filter, MessageSquare, Star, AlertTriangle, Bot, Save, Power, Copy, Smartphone, Percent, ChevronRight, Shield, UserPlus, UserMinus, Check, XCircle, Sparkles, Loader2, ExternalLink, Brain } from "lucide-react";
+import { Users, Send, Bell, BellOff, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, CalendarDays, CalendarRange, Filter, MessageSquare, Star, AlertTriangle, Bot, Save, Power, Copy, Smartphone, Percent, ChevronRight, ChevronDown, Shield, UserPlus, UserMinus, Check, XCircle, Sparkles, Loader2, ExternalLink, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -180,13 +180,23 @@ export default function AdminDashboard() {
   const [showAiSummaries, setShowAiSummaries] = useState(false);
   const [generatingAll, setGeneratingAll] = useState(false);
 
-  // KI Prompt state
+  // KI Prompt state (Dashboard Chat)
   const [kiPrompt, setKiPrompt] = useState("");
   const [kiPromptLoading, setKiPromptLoading] = useState(false);
   const [kiPromptSaving, setKiPromptSaving] = useState(false);
   const [kiPromptLoaded, setKiPromptLoaded] = useState(false);
   const [kiPromptSaved, setKiPromptSaved] = useState(true);
   const [kiPromptOriginal, setKiPromptOriginal] = useState("");
+
+  // KI Prompt state (Chat-Analysen)
+  const [analysisPrompt, setAnalysisPrompt] = useState("");
+  const [analysisPromptLoading, setAnalysisPromptLoading] = useState(false);
+  const [analysisPromptSaving, setAnalysisPromptSaving] = useState(false);
+  const [analysisPromptOriginal, setAnalysisPromptOriginal] = useState("");
+
+  // Collapsible state for prompt sections
+  const [chatPromptOpen, setChatPromptOpen] = useState(true);
+  const [analysisPromptOpen, setAnalysisPromptOpen] = useState(false);
 
   // Chatter checklist state (persisted in localStorage)
   const [checkedChatters, setCheckedChatters] = useState<Set<string>>(() => {
@@ -342,17 +352,23 @@ export default function AdminDashboard() {
 
   const loadKiPrompt = async () => {
     setKiPromptLoading(true);
+    setAnalysisPromptLoading(true);
     try {
       const { data } = await supabase
         .from("ai_prompts")
-        .select("prompt_text")
-        .eq("prompt_key", "system_prompt")
-        .single();
-      if (data) { setKiPrompt(data.prompt_text); setKiPromptOriginal(data.prompt_text); }
+        .select("prompt_key, prompt_text")
+        .in("prompt_key", ["system_prompt", "analysis_prompt"]);
+      if (data) {
+        const sys = data.find((d: any) => d.prompt_key === "system_prompt");
+        const ana = data.find((d: any) => d.prompt_key === "analysis_prompt");
+        if (sys) { setKiPrompt(sys.prompt_text); setKiPromptOriginal(sys.prompt_text); }
+        if (ana) { setAnalysisPrompt(ana.prompt_text); setAnalysisPromptOriginal(ana.prompt_text); }
+      }
     } catch {
-      toast.error("Fehler beim Laden des KI-Prompts");
+      toast.error("Fehler beim Laden der KI-Prompts");
     }
     setKiPromptLoading(false);
+    setAnalysisPromptLoading(false);
     setKiPromptLoaded(true);
   };
 
@@ -364,13 +380,29 @@ export default function AdminDashboard() {
         .update({ prompt_text: kiPrompt, updated_at: new Date().toISOString(), updated_by: user?.id })
         .eq("prompt_key", "system_prompt");
       if (error) throw error;
-      toast.success("KI-Prompt gespeichert!");
+      toast.success("Dashboard-Chat Prompt gespeichert!");
       setKiPromptSaved(true);
       setKiPromptOriginal(kiPrompt);
     } catch {
       toast.error("Fehler beim Speichern des KI-Prompts");
     }
     setKiPromptSaving(false);
+  };
+
+  const saveAnalysisPrompt = async () => {
+    setAnalysisPromptSaving(true);
+    try {
+      const { error } = await supabase
+        .from("ai_prompts")
+        .update({ prompt_text: analysisPrompt, updated_at: new Date().toISOString(), updated_by: user?.id })
+        .eq("prompt_key", "analysis_prompt");
+      if (error) throw error;
+      toast.success("Chat-Analysen Prompt gespeichert!");
+      setAnalysisPromptOriginal(analysisPrompt);
+    } catch {
+      toast.error("Fehler beim Speichern des Analyse-Prompts");
+    }
+    setAnalysisPromptSaving(false);
   };
 
   const loadAdmins = async () => {
@@ -2247,59 +2279,118 @@ export default function AdminDashboard() {
 
         {activeTab === "kiprompt" && (
           <div className="space-y-4">
+            {/* Dashboard Chat Prompt */}
             <section className="glass-card rounded-xl overflow-hidden">
-              <div className="px-4 py-3 border-b border-border flex items-center gap-2">
-                <Brain className="h-4 w-4 text-accent" />
-                <h2 className="text-sm font-semibold text-foreground">KI System-Prompt</h2>
-              </div>
-              <div className="p-4 space-y-4">
-                <p className="text-xs text-muted-foreground">
-                  Hier kannst du den System-Prompt der KI bearbeiten. Dieser wird bei jeder Chat-Anfrage als Anweisung an die KI gesendet.
-                </p>
-                {kiPromptLoading ? (
-                  <div className="flex items-center justify-center py-12">
-                    <Loader2 className="h-6 w-6 animate-spin text-accent" />
-                  </div>
-                ) : (
-                  <>
-                    <Textarea
-                      value={kiPrompt}
-                      onChange={(e) => { setKiPrompt(e.target.value); setKiPromptSaved(false); }}
-                      className="min-h-[400px] text-sm resize-y bg-background/50 border-border/50 focus:border-accent/50 leading-relaxed"
-                      placeholder="System-Prompt eingeben..."
-                    />
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] text-muted-foreground">
-                        {kiPrompt.length} Zeichen
-                      </span>
-                      {kiPrompt !== kiPromptOriginal ? (
-                        <Button
-                          onClick={saveKiPrompt}
-                          disabled={kiPromptSaving}
-                          size="sm"
-                        >
-                          {kiPromptSaving ? (
-                            <>
-                              <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                              Wird gespeichert...
-                            </>
-                          ) : (
-                            <>
-                              <Save className="h-3.5 w-3.5 mr-1.5" />
-                              Prompt speichern
-                            </>
-                          )}
-                        </Button>
-                      ) : (
-                        <span className="text-[11px] text-accent flex items-center gap-1">
-                          <Check className="h-3 w-3" />
-                          Prompt gespeichert
-                        </span>
-                      )}
+              <button
+                onClick={() => setChatPromptOpen(!chatPromptOpen)}
+                className="w-full px-4 py-3 border-b border-border flex items-center justify-between hover:bg-secondary/30 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4 text-accent" />
+                  <h2 className="text-sm font-semibold text-foreground">Dashboard Chat-Prompt</h2>
+                  {kiPrompt !== kiPromptOriginal && (
+                    <Badge className="text-[10px] bg-accent/20 text-accent">Ungespeichert</Badge>
+                  )}
+                </div>
+                <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${chatPromptOpen ? "rotate-180" : ""}`} />
+              </button>
+              {chatPromptOpen && (
+                <div className="p-4 space-y-4">
+                  <p className="text-xs text-muted-foreground">
+                    Dieser Prompt wird im Dashboard-Chatfenster als Anweisung an die KI gesendet.
+                  </p>
+                  {kiPromptLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <Loader2 className="h-6 w-6 animate-spin text-accent" />
                     </div>
-                  </>
-                )}
-              </div>
+                  ) : (
+                    <>
+                      <Textarea
+                        value={kiPrompt}
+                        onChange={(e) => { setKiPrompt(e.target.value); setKiPromptSaved(false); }}
+                        className="min-h-[300px] text-sm resize-y bg-background/50 border-border/50 focus:border-accent/50 leading-relaxed"
+                        placeholder="System-Prompt eingeben..."
+                      />
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] text-muted-foreground">
+                          {kiPrompt.length} Zeichen
+                        </span>
+                        {kiPrompt !== kiPromptOriginal ? (
+                          <Button onClick={saveKiPrompt} disabled={kiPromptSaving} size="sm">
+                            {kiPromptSaving ? (
+                              <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />Wird gespeichert...</>
+                            ) : (
+                              <><Save className="h-3.5 w-3.5 mr-1.5" />Prompt speichern</>
+                            )}
+                          </Button>
+                        ) : (
+                          <span className="text-[11px] text-accent flex items-center gap-1">
+                            <Check className="h-3 w-3" />
+                            Prompt gespeichert
+                          </span>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+            </section>
+
+            {/* Chat-Analysen Prompt */}
+            <section className="glass-card rounded-xl overflow-hidden">
+              <button
+                onClick={() => setAnalysisPromptOpen(!analysisPromptOpen)}
+                className="w-full px-4 py-3 border-b border-border flex items-center justify-between hover:bg-secondary/30 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-accent" />
+                  <h2 className="text-sm font-semibold text-foreground">Chat-Analysen Prompt</h2>
+                  {analysisPrompt !== analysisPromptOriginal && (
+                    <Badge className="text-[10px] bg-accent/20 text-accent">Ungespeichert</Badge>
+                  )}
+                </div>
+                <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${analysisPromptOpen ? "rotate-180" : ""}`} />
+              </button>
+              {analysisPromptOpen && (
+                <div className="p-4 space-y-4">
+                  <p className="text-xs text-muted-foreground">
+                    Dieser Prompt wird für die KI-gestützten Chat-Analysen der Chatter verwendet.
+                  </p>
+                  {analysisPromptLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <Loader2 className="h-6 w-6 animate-spin text-accent" />
+                    </div>
+                  ) : (
+                    <>
+                      <Textarea
+                        value={analysisPrompt}
+                        onChange={(e) => setAnalysisPrompt(e.target.value)}
+                        className="min-h-[300px] text-sm resize-y bg-background/50 border-border/50 focus:border-accent/50 leading-relaxed"
+                        placeholder="Analyse-Prompt eingeben..."
+                      />
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] text-muted-foreground">
+                          {analysisPrompt.length} Zeichen
+                        </span>
+                        {analysisPrompt !== analysisPromptOriginal ? (
+                          <Button onClick={saveAnalysisPrompt} disabled={analysisPromptSaving} size="sm">
+                            {analysisPromptSaving ? (
+                              <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />Wird gespeichert...</>
+                            ) : (
+                              <><Save className="h-3.5 w-3.5 mr-1.5" />Prompt speichern</>
+                            )}
+                          </Button>
+                        ) : (
+                          <span className="text-[11px] text-accent flex items-center gap-1">
+                            <Check className="h-3 w-3" />
+                            Prompt gespeichert
+                          </span>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
             </section>
           </div>
         )}
