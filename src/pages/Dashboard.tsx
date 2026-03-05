@@ -679,7 +679,7 @@ export default function Dashboard() {
                   </div>
                   <div>
                     <p className={`font-bold text-sm lg:text-base ${!isGold ? "text-foreground" : "text-muted-foreground/50"}`}>Starter</p>
-                    <p className="text-[10px] lg:text-xs text-muted-foreground">0€ – 1.999€ Umsatz</p>
+                    <p className="text-[10px] lg:text-xs text-muted-foreground">0€ – 2.999€ Umsatz</p>
                   </div>
                 </div>
                 <div className="text-right">
