@@ -7,7 +7,7 @@ import { ClipboardCheck, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 
 const TASKS = [
-  { id: 1, label: "Hast du bis zu 6 MassDM's gemacht?", audioHint: "/audio/massdm-info.mp3", audioLabel: "Wieso ist das wichtig?" },
+  { id: 1, label: "Hast du bis zu 6 MassDM's gemacht?", audioHint: "/audio/massdm-info.mp3", audioLabel: "Wieso ist das wichtig?", massDmPopup: true, massDmPopupLabel: "Muss ich 6 MassDMs machen?" },
   { id: 2, label: "Deine alte MassDM gelöscht bevor eine neue gesendet wird?" },
   { id: 3, label: "Feedback gegeben, wie der heutige Tag lief?", popupHint: true, popupLabel: "Wie mache ich das?" },
   { id: 4, label: "Geschaut ob wir für dich gepostet haben? (Falls nicht, gib uns bitte eine Info in der Gruppe)" },
