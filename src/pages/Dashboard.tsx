@@ -296,9 +296,6 @@ export default function Dashboard() {
             <img src={logo} alt="Logo" className="h-9 w-9 rounded-full shrink-0" />
             <div className="shrink-0">
               <h1 className="text-base lg:text-lg font-bold text-foreground leading-tight">Chatter Dashboard</h1>
-              <p className="text-[10px] text-muted-foreground">
-                Aktiv auf: <span className="text-gold-gradient font-semibold">{platform}</span>
-              </p>
             </div>
             <div className="h-8 w-px bg-border shrink-0" />
             <div className="flex items-center gap-2">
@@ -371,9 +368,6 @@ export default function Dashboard() {
               <img src={logo} alt="Logo" className="h-8 w-8 rounded-full shrink-0" />
               <div className="flex-1 min-w-0">
                 <h1 className="text-sm font-bold text-foreground leading-tight">Chatter Dashboard</h1>
-                <p className="text-[10px] text-muted-foreground">
-                  Aktiv auf: <span className="text-gold-gradient font-semibold">{platform}</span>
-                </p>
               </div>
               <Badge className={`shrink-0 text-[10px] ${isGold ? "bg-accent text-accent-foreground gold-glow" : "bg-secondary text-secondary-foreground"}`}>
                 <Award className="h-3 w-3 mr-1" />{isGold ? "Gold" : "Starter"}
