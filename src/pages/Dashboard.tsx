@@ -710,6 +710,8 @@ export default function Dashboard() {
 
           <p className="text-[10px] lg:text-xs text-muted-foreground">
             Ab 3.000€ Monatsumsatz gilt die 25%-Rate für diesen Monat auf den <strong className="text-foreground">gesamten Betrag</strong>.
+          </p>
+          <p className="text-[10px] lg:text-xs text-muted-foreground">
             7 Tage in Folge mind. 30€ = <strong className="text-foreground">Upgrade auf besseren Account</strong>.
           </p>
         </section>
