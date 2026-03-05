@@ -46,14 +46,6 @@ const links = [
   },
 ];
 
-const feedbackTemplate = `Feedback zum heutigen Tag:
-
-Umsatz:
-MassDMs gesendet:
-Was lief gut?:
-Was lief schlecht?:
-Offene Fragen (optional)`;
-
 const STORAGE_KEY = "offerb-completed-steps";
 
 const loadCompleted = (): Set<number> => {
@@ -90,8 +82,7 @@ const OfferB = () => {
     });
   };
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(feedbackTemplate);
+  const handleCopy = () => {};
   };
 
   return (
@@ -217,40 +208,6 @@ const OfferB = () => {
         </div>
       </motion.div>
 
-      {/* Feedback Section – Schritt 5 */}
-      <motion.div
-        className={`max-w-3xl mx-auto transition-opacity duration-300 ${completedSteps.has(5) ? "opacity-60" : ""}`}
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.9, duration: 0.8, ease }}
-      >
-        <div className="flex items-center justify-center gap-3 mb-2">
-          <StepBadge step={5} completed={completedSteps.has(5)} />
-          <h2
-            className="gold-gradient-text text-xl md:text-2xl font-bold"
-            style={{ fontFamily: "'Playfair Display', serif" }}
-          >
-            Tägliches Feedback
-          </h2>
-        </div>
-        <p className="text-muted-foreground text-sm text-center mb-6 max-w-md mx-auto">
-          Damit wir dich optimal unterstützen können, gib uns bitte 1x am Ende des Tages ein Feedback in folgendem Format:
-        </p>
-        <div className="glass-card-subtle rounded-xl p-6 relative">
-          <pre className="text-foreground/90 text-sm whitespace-pre-wrap leading-relaxed font-sans">
-            {feedbackTemplate}
-          </pre>
-          <button
-            onClick={handleCopy}
-            className="absolute top-4 right-4 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors"
-          >
-            Kopieren
-          </button>
-        </div>
-        <p className="text-muted-foreground/60 text-xs text-center mt-3">
-          Kopiere einfach die Vorlage und fülle sie einmal am Tag aus
-        </p>
-      </motion.div>
     </div>
   );
 };
