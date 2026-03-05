@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 export default function MassDmGenerator() {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
+  const [previousMessages, setPreviousMessages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -16,13 +17,16 @@ export default function MassDmGenerator() {
     setMessage("");
     setCopied(false);
     try {
-      const { data, error } = await supabase.functions.invoke("generate-massdm");
+      const { data, error } = await supabase.functions.invoke("generate-massdm", {
+        body: { previousMessages }
+      });
       if (error) throw error;
       if (data?.error) {
         toast.error(data.error);
         return;
       }
       setMessage(data.message);
+      setPreviousMessages(prev => [...prev.slice(-5), data.message]);
     } catch (e) {
       console.error(e);
       toast.error("Fehler beim Generieren der MassDM");
