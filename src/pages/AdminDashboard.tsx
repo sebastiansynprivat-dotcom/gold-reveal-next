@@ -185,6 +185,7 @@ export default function AdminDashboard() {
   const [kiPromptLoading, setKiPromptLoading] = useState(false);
   const [kiPromptSaving, setKiPromptSaving] = useState(false);
   const [kiPromptLoaded, setKiPromptLoaded] = useState(false);
+  const [kiPromptSaved, setKiPromptSaved] = useState(false);
 
   // Chatter checklist state (persisted in localStorage)
   const [checkedChatters, setCheckedChatters] = useState<Set<string>>(() => {
@@ -363,6 +364,7 @@ export default function AdminDashboard() {
         .eq("prompt_key", "system_prompt");
       if (error) throw error;
       toast.success("KI-Prompt gespeichert!");
+      setKiPromptSaved(true);
     } catch {
       toast.error("Fehler beim Speichern des KI-Prompts");
     }
@@ -2260,7 +2262,7 @@ export default function AdminDashboard() {
                   <>
                     <Textarea
                       value={kiPrompt}
-                      onChange={(e) => setKiPrompt(e.target.value)}
+                      onChange={(e) => { setKiPrompt(e.target.value); setKiPromptSaved(false); }}
                       className="min-h-[400px] text-sm resize-y bg-background/50 border-border/50 focus:border-accent/50 leading-relaxed"
                       placeholder="System-Prompt eingeben..."
                     />
@@ -2277,6 +2279,11 @@ export default function AdminDashboard() {
                           <>
                             <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
                             Wird gespeichert...
+                          </>
+                        ) : kiPromptSaved ? (
+                          <>
+                            <Check className="h-3.5 w-3.5 mr-1.5" />
+                            Prompt gespeichert
                           </>
                         ) : (
                           <>
