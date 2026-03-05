@@ -1110,10 +1110,6 @@ export default function AdminDashboard() {
             <h1 className="text-base font-bold text-foreground">Admin Dashboard</h1>
             <p className="text-[10px] text-muted-foreground">Chatter verwalten & Benachrichtigungen</p>
           </div>
-          <Button variant="outline" size="sm" onClick={() => { setActiveTab("notifications"); if (!notifHistoryLoaded) loadNotifHistory(); }}>
-            <Bell className="h-3.5 w-3.5 mr-1.5" />
-            Benachrichtigen
-          </Button>
         </div>
       </header>
 
