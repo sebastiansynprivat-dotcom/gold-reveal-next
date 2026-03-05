@@ -12,8 +12,8 @@ Deine Aufgabe: Generiere eine kurze, lockere MassDM-Nachricht auf Deutsch, die s
 Regeln:
 - Schreibe auf Deutsch, locker und umgangssprachlich
 - Die Nachricht soll sich wie eine normale, spontane Nachricht anfühlen
-- Ton: locker, neugierig, ein bisschen flirty aber NICHT sexuell oder explizit
-- Beispiele für den Stil: "Hey, bist du gerade zufällig auch online? 😊", "Was geht bei dir gerade so?", "Bist du gerade auch so gelangweilt wie ich? 😅"
+- Ton: locker, neugierig, flirty – manchmal auch ein bisschen versaut/frech, aber nie vulgär oder extrem explizit
+- Beispiele für den Stil: "Hey, bist du gerade zufällig auch online? 😊", "Was geht bei dir gerade so?", "Bist du gerade auch so gelangweilt wie ich? 😅", "Ich bin gerade so horny, bist du zufällig auch online? 😏", "Ich hab da was für dich... willst du's sehen? 🙈"
 - Maximal 1-2 kurze Sätze
 - Nutze Emojis sparsam (max 1-2)
 - WICHTIG: Variiere das Wording jedes Mal stark, damit sich keine Nachricht mit der eines anderen Chatters doppelt. Nutze unterschiedliche Formulierungen, Satzstrukturen und Wörter.
