@@ -13,6 +13,7 @@ import confetti from "canvas-confetti";
 import DashboardChat from "@/components/DashboardChat";
 import BillingAudioDialog from "@/components/BillingAudioDialog";
 import DailyChecklist from "@/components/DailyChecklist";
+import MassDmGenerator from "@/components/MassDmGenerator";
 import DailyGoal from "@/components/DailyGoal";
 import StreakTracker from "@/components/StreakTracker";
 import NotificationBanner from "@/components/NotificationBanner";
@@ -620,6 +621,9 @@ export default function Dashboard() {
             </div>
           }
         </section>
+
+        {/* MassDM Generator */}
+        <MassDmGenerator />
 
         {/* Tägliche Aufgaben */}
         <DailyChecklist />
