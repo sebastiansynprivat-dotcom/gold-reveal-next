@@ -24,7 +24,7 @@ export default function DailyChecklist() {
       return new Set();
     }
   });
-  const [showAudio, setShowAudio] = useState(false);
+  const [openAudioId, setOpenAudioId] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
@@ -39,14 +39,13 @@ export default function DailyChecklist() {
     });
   };
 
-  const handleAudioToggle = () => {
-    setShowAudio((prev) => {
-      if (!prev) {
-        setTimeout(() => audioRef.current?.play(), 100);
-      } else {
+  const handleAudioToggle = (id: number) => {
+    setOpenAudioId((prev) => {
+      if (prev === id) {
         audioRef.current?.pause();
+        return null;
       }
-      return !prev;
+      return id;
     });
   };
 
