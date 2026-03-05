@@ -1884,7 +1884,7 @@ export default function AdminDashboard() {
                         <div className="flex items-center justify-between mb-1.5">
                           <div className="flex items-center gap-1.5">
                             <Sparkles className="h-3 w-3 text-accent" />
-                            <span className="text-[10px] font-semibold text-accent">AI-Analyse</span>
+                            <span className="text-[10px] font-semibold text-accent">Sebastian's Mastermind KI</span>
                           </div>
                           <button
                             onClick={(e) => { e.stopPropagation(); generateSummary(chatter.user_id); }}
