@@ -134,30 +134,32 @@ export default function FrageMemoDialog({ open, onOpenChange }: FrageMemoDialogP
 
           {/* Smooth animated arrow to chat button */}
           <div className="flex justify-end mr-5 mt-1">
-            <svg width="40" height="48" viewBox="0 0 40 48" fill="none" className="overflow-visible">
+            <svg width="40" height="56" viewBox="0 0 40 56" fill="none" className="overflow-visible">
               {/* Curved line */}
               <path
-                d="M20 0 Q20 20, 24 32 Q28 44, 20 46"
+                d="M20 0 Q20 22, 24 36 Q28 50, 20 54"
                 stroke="hsl(var(--accent))"
-                strokeWidth="1.5"
+                strokeWidth="2.5"
                 strokeLinecap="round"
                 fill="none"
-                opacity="0"
+                strokeDasharray="90"
+                strokeDashoffset="90"
+                opacity="0.6"
                 style={{
-                  animation: "smoothDraw 0.8s ease-out 0.4s forwards",
+                  animation: "smoothDraw 1.2s cubic-bezier(0.25, 0.1, 0.25, 1) 0.4s forwards",
                 }}
               />
               {/* Arrowhead */}
               <path
-                d="M15 40 L20 48 L25 40"
+                d="M14 46 L20 56 L26 46"
                 stroke="hsl(var(--accent))"
-                strokeWidth="1.5"
+                strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 fill="none"
                 opacity="0"
                 style={{
-                  animation: "smoothFadeIn 0.4s ease-out 1s forwards",
+                  animation: "smoothFadeIn 0.5s ease-out 1.4s forwards",
                 }}
               />
             </svg>
@@ -171,12 +173,11 @@ export default function FrageMemoDialog({ open, onOpenChange }: FrageMemoDialogP
           50% { transform: scaleY(1); }
         }
         @keyframes smoothDraw {
-          0% { opacity: 0; stroke-dasharray: 80; stroke-dashoffset: 80; }
-          100% { opacity: 0.5; stroke-dasharray: 80; stroke-dashoffset: 0; }
+          to { stroke-dashoffset: 0; }
         }
         @keyframes smoothFadeIn {
-          0% { opacity: 0; transform: translateY(-4px); }
-          100% { opacity: 0.5; transform: translateY(0); }
+          0% { opacity: 0; transform: translateY(-6px); }
+          100% { opacity: 0.6; transform: translateY(0); }
         }
       `}</style>
     </>
