@@ -185,7 +185,8 @@ export default function AdminDashboard() {
   const [kiPromptLoading, setKiPromptLoading] = useState(false);
   const [kiPromptSaving, setKiPromptSaving] = useState(false);
   const [kiPromptLoaded, setKiPromptLoaded] = useState(false);
-  const [kiPromptSaved, setKiPromptSaved] = useState(false);
+  const [kiPromptSaved, setKiPromptSaved] = useState(true);
+  const [kiPromptOriginal, setKiPromptOriginal] = useState("");
 
   // Chatter checklist state (persisted in localStorage)
   const [checkedChatters, setCheckedChatters] = useState<Set<string>>(() => {
@@ -347,7 +348,7 @@ export default function AdminDashboard() {
         .select("prompt_text")
         .eq("prompt_key", "system_prompt")
         .single();
-      if (data) setKiPrompt(data.prompt_text);
+      if (data) { setKiPrompt(data.prompt_text); setKiPromptOriginal(data.prompt_text); }
     } catch {
       toast.error("Fehler beim Laden des KI-Prompts");
     }
@@ -365,6 +366,7 @@ export default function AdminDashboard() {
       if (error) throw error;
       toast.success("KI-Prompt gespeichert!");
       setKiPromptSaved(true);
+      setKiPromptOriginal(kiPrompt);
     } catch {
       toast.error("Fehler beim Speichern des KI-Prompts");
     }
@@ -2270,16 +2272,10 @@ export default function AdminDashboard() {
                       <span className="text-[11px] text-muted-foreground">
                         {kiPrompt.length} Zeichen
                       </span>
-                      <div className="flex items-center gap-3">
-                        {kiPromptSaved && (
-                          <span className="text-[11px] text-accent flex items-center gap-1">
-                            <Check className="h-3 w-3" />
-                            Prompt gespeichert
-                          </span>
-                        )}
+                      {kiPrompt !== kiPromptOriginal ? (
                         <Button
                           onClick={saveKiPrompt}
-                          disabled={kiPromptSaving || kiPromptSaved}
+                          disabled={kiPromptSaving}
                           size="sm"
                         >
                           {kiPromptSaving ? (
@@ -2294,7 +2290,12 @@ export default function AdminDashboard() {
                             </>
                           )}
                         </Button>
-                      </div>
+                      ) : (
+                        <span className="text-[11px] text-accent flex items-center gap-1">
+                          <Check className="h-3 w-3" />
+                          Prompt gespeichert
+                        </span>
+                      )}
                     </div>
                   </>
                 )}
