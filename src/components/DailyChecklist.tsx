@@ -98,101 +98,120 @@ export default function DailyChecklist() {
   const progress = (completed.size / TASKS.length) * 100;
   const allDone = completed.size === TASKS.length;
 
+  const [isOpen, setIsOpen] = useState(true);
+
   return (
     <motion.section
-      className="glass-card-subtle rounded-xl p-4 lg:p-6 space-y-4"
+      className="glass-card-subtle rounded-xl p-4 lg:p-6"
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
     >
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <ClipboardCheck className="h-4 w-4 text-accent" />
-          <h2 className="text-sm lg:text-base font-semibold text-foreground">Tägliche Aufgaben</h2>
-        </div>
-        <span className="text-xs text-muted-foreground">
-          {completed.size}/{TASKS.length} erledigt
-        </span>
-      </div>
-
-      <Progress value={progress} className="h-2 [&>div]:bg-accent" />
-
-      <div className="space-y-1">
-        {TASKS.map((task) => {
-          const done = completed.has(task.id);
-          return (
-            <div key={task.id}>
-              <label
-                className={`flex items-start gap-3 p-2.5 rounded-lg cursor-pointer transition-all hover:bg-accent/5 ${done ? "opacity-50" : ""}`}
-              >
-                <Checkbox
-                  checked={done}
-                  onCheckedChange={() => toggle(task.id)}
-                  className="mt-0.5 border-accent/40 data-[state=checked]:bg-accent data-[state=checked]:border-accent"
-                />
-                <span className={`text-sm leading-snug transition-all ${done ? "line-through text-muted-foreground" : "text-foreground"}`}>
-                  {task.label}
-                </span>
-              </label>
-              {task.audioHint && (
-                <div className="ml-10 mt-0.5 mb-1">
-                  <button
-                    onClick={() => handleAudioToggle(task.id)}
-                    className="text-xs text-primary/70 hover:text-primary transition-colors underline underline-offset-2"
-                  >
-                    {task.audioLabel}
-                  </button>
-                  <AnimatePresence>
-                    {openAudioId === task.id && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.3 }}
-                        className="overflow-hidden"
-                      >
-                        <div className="mt-2 rounded-lg bg-primary/5 border border-primary/10 p-2.5">
-                          <audio ref={audioRef} controls autoPlay className="w-full h-8" src={task.audioHint} />
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              )}
-              {(task as any).popupHint && (
-                <div className="ml-10 mt-0.5 mb-1">
-                  <button
-                    onClick={() => setFeedbackPopupOpen(true)}
-                    className="text-xs text-primary/70 hover:text-primary transition-colors underline underline-offset-2"
-                  >
-                    {(task as any).popupLabel}
-                  </button>
-                </div>
-              )}
-              {(task as any).massDmPopup && (
-                <div className="ml-10 mt-0.5 mb-1">
-                  <button
-                    onClick={() => setMassDmPopupOpen(true)}
-                    className="text-xs text-primary/70 hover:text-primary transition-colors underline underline-offset-2"
-                  >
-                    {(task as any).massDmPopupLabel}
-                  </button>
-                </div>
-              )}
+      <Collapsible open={isOpen} onOpenChange={setIsOpen}>
+        <CollapsibleTrigger className="w-full">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ClipboardCheck className="h-4 w-4 text-accent" />
+              <h2 className="text-sm lg:text-base font-semibold text-foreground">Tägliche Aufgaben</h2>
             </div>
-          );
-        })}
-      </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">
+                {completed.size}/{TASKS.length} erledigt
+              </span>
+              <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
+            </div>
+          </div>
 
-      {allDone && (
-        <motion.p
-          className="text-center text-accent font-semibold text-sm"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-        >
-          🎉 Alle Aufgaben erledigt – weiter so!
-        </motion.p>
-      )}
+          {!isOpen && (
+            <div className="mt-3">
+              <Progress value={progress} className="h-2 [&>div]:bg-accent" />
+            </div>
+          )}
+        </CollapsibleTrigger>
+
+        <CollapsibleContent>
+          <div className="mt-4 space-y-4">
+            <Progress value={progress} className="h-2 [&>div]:bg-accent" />
+
+            <div className="space-y-1">
+              {TASKS.map((task) => {
+                const done = completed.has(task.id);
+                return (
+                  <div key={task.id}>
+                    <label
+                      className={`flex items-start gap-3 p-2.5 rounded-lg cursor-pointer transition-all hover:bg-accent/5 ${done ? "opacity-50" : ""}`}
+                    >
+                      <Checkbox
+                        checked={done}
+                        onCheckedChange={() => toggle(task.id)}
+                        className="mt-0.5 border-accent/40 data-[state=checked]:bg-accent data-[state=checked]:border-accent"
+                      />
+                      <span className={`text-sm leading-snug transition-all ${done ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                        {task.label}
+                      </span>
+                    </label>
+                    {task.audioHint && (
+                      <div className="ml-10 mt-0.5 mb-1">
+                        <button
+                          onClick={() => handleAudioToggle(task.id)}
+                          className="text-xs text-primary/70 hover:text-primary transition-colors underline underline-offset-2"
+                        >
+                          {task.audioLabel}
+                        </button>
+                        <AnimatePresence>
+                          {openAudioId === task.id && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.3 }}
+                              className="overflow-hidden"
+                            >
+                              <div className="mt-2 rounded-lg bg-primary/5 border border-primary/10 p-2.5">
+                                <audio ref={audioRef} controls autoPlay className="w-full h-8" src={task.audioHint} />
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    )}
+                    {(task as any).popupHint && (
+                      <div className="ml-10 mt-0.5 mb-1">
+                        <button
+                          onClick={() => setFeedbackPopupOpen(true)}
+                          className="text-xs text-primary/70 hover:text-primary transition-colors underline underline-offset-2"
+                        >
+                          {(task as any).popupLabel}
+                        </button>
+                      </div>
+                    )}
+                    {(task as any).massDmPopup && (
+                      <div className="ml-10 mt-0.5 mb-1">
+                        <button
+                          onClick={() => setMassDmPopupOpen(true)}
+                          className="text-xs text-primary/70 hover:text-primary transition-colors underline underline-offset-2"
+                        >
+                          {(task as any).massDmPopupLabel}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {allDone && (
+              <motion.p
+                className="text-center text-accent font-semibold text-sm"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+              >
+                🎉 Alle Aufgaben erledigt – weiter so!
+              </motion.p>
+            )}
+          </div>
+        </CollapsibleContent>
+      </Collapsible>
 
       {/* Feedback Popup */}
       <Dialog open={feedbackPopupOpen} onOpenChange={setFeedbackPopupOpen}>
