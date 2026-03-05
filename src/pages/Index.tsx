@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useProgress } from "@/hooks/useProgress";
 import { motion, AnimatePresence } from "framer-motion";
 
-const ATTENTION_CHECK_SECONDS = 20 * 60; // 20 minutes
+const ATTENTION_CHECK_SECONDS = 10; // TEST: 10 seconds (change back to 20 * 60 for production)
 
 const Index = () => {
   const { updateProgress } = useProgress();
