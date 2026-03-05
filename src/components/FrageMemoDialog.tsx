@@ -17,7 +17,10 @@ export default function FrageMemoDialog({ open, onOpenChange }: FrageMemoDialogP
       setPlaying(false);
       setProgress(0);
       setTimeout(() => {
-        audioRef.current?.play().then(() => setPlaying(true)).catch(() => {});
+        if (audioRef.current) {
+          audioRef.current.playbackRate = 1.5;
+          audioRef.current.play().then(() => setPlaying(true)).catch(() => {});
+        }
       }, 300);
     } else {
       audioRef.current?.pause();
