@@ -1,14 +1,25 @@
-import { useState, useEffect } from "react";
-import { Flame, Check, Trophy } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Flame, Check, Trophy, Copy, Send, Play } from "lucide-react";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 const STREAK_GOAL = 7;
 const DAILY_TARGET = 30;
 const STORAGE_KEY = "streak_data";
 
+const WHATSAPP_TEXT =
+  "Hey, ich habe die 7-Tage-Challenge geschafft! 🔥 Ich möchte gerne mein Account-Upgrade erhalten.";
+
 interface StreakData {
-  dates: string[]; // ISO date strings of completed days
+  dates: string[];
   lastCheckedDate: string | null;
 }
 
@@ -33,33 +44,51 @@ function getConsecutiveDays(dates: string[]): number {
   const sorted = [...new Set(dates)].sort().reverse();
   const today = getToday();
   const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
-
-  // Streak must include today or yesterday
   if (sorted[0] !== today && sorted[0] !== yesterday) return 0;
-
   let count = 1;
   for (let i = 0; i < sorted.length - 1; i++) {
     const curr = new Date(sorted[i]);
     const prev = new Date(sorted[i + 1]);
     const diff = (curr.getTime() - prev.getTime()) / 86400000;
-    if (diff === 1) {
-      count++;
-    } else {
-      break;
-    }
+    if (diff === 1) count++;
+    else break;
   }
   return count;
 }
 
+function buildDemoStreak(): StreakData {
+  const dates: string[] = [];
+  for (let i = 0; i < STREAK_GOAL; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    dates.push(d.toISOString().split("T")[0]);
+  }
+  return { dates, lastCheckedDate: getToday() };
+}
+
+function fireConfetti() {
+  confetti({
+    particleCount: 200,
+    spread: 100,
+    origin: { y: 0.5 },
+    colors: ["#c4973b", "#e8c96b", "#a07c2a", "#f5d98a"],
+  });
+}
+
 export default function StreakTracker({ dailyRevenue }: { dailyRevenue: number }) {
   const [streak, setStreak] = useState<StreakData>(loadStreak);
+  const [showStreakDialog, setShowStreakDialog] = useState(false);
+  const [demoMode, setDemoMode] = useState(false);
+  const [copied, setCopied] = useState(false);
+
   const today = getToday();
-  const todayCompleted = streak.dates.includes(today);
-  const consecutiveDays = getConsecutiveDays(streak.dates);
+  const displayStreak = demoMode ? buildDemoStreak() : streak;
+  const todayCompleted = displayStreak.dates.includes(today);
+  const consecutiveDays = getConsecutiveDays(displayStreak.dates);
   const streakComplete = consecutiveDays >= STREAK_GOAL;
 
   useEffect(() => {
-    if (dailyRevenue >= DAILY_TARGET && !todayCompleted) {
+    if (dailyRevenue >= DAILY_TARGET && !streak.dates.includes(today)) {
       const updated = { ...streak, dates: [...streak.dates, today], lastCheckedDate: today };
       setStreak(updated);
       saveStreak(updated);
@@ -67,19 +96,43 @@ export default function StreakTracker({ dailyRevenue }: { dailyRevenue: number }
 
       const newConsecutive = getConsecutiveDays(updated.dates);
       if (newConsecutive >= STREAK_GOAL) {
-        confetti({ particleCount: 200, spread: 100, origin: { y: 0.5 }, colors: ["#c4973b", "#e8c96b", "#a07c2a", "#f5d98a"] });
-        toast.success("🏆 7 Tage Streak! Account-Upgrade freigeschaltet!");
+        setShowStreakDialog(true);
       }
     }
   }, [dailyRevenue]);
 
-  // Build last 7 days for visual display
+  const handleDialogOpen = useCallback((open: boolean) => {
+    setShowStreakDialog(open);
+    if (!open && demoMode) {
+      setDemoMode(false);
+    }
+  }, [demoMode]);
+
+  // Fire confetti when dialog opens
+  useEffect(() => {
+    if (showStreakDialog) {
+      setTimeout(fireConfetti, 300);
+    }
+  }, [showStreakDialog]);
+
+  const startDemo = () => {
+    setDemoMode(true);
+    setShowStreakDialog(true);
+  };
+
+  const copyText = async () => {
+    await navigator.clipboard.writeText(WHATSAPP_TEXT);
+    setCopied(true);
+    toast.success("Text kopiert!");
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   const last7Days = Array.from({ length: STREAK_GOAL }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() - (STREAK_GOAL - 1 - i));
     const dateStr = d.toISOString().split("T")[0];
     const dayLabel = d.toLocaleDateString("de-DE", { weekday: "short" }).slice(0, 2);
-    const completed = streak.dates.includes(dateStr);
+    const completed = displayStreak.dates.includes(dateStr);
     const isToday = dateStr === today;
     return { dateStr, dayLabel, completed, isToday };
   });
@@ -91,7 +144,15 @@ export default function StreakTracker({ dailyRevenue }: { dailyRevenue: number }
           <Flame className="h-4 w-4 text-accent" />
           Account Upgrade – 7-Tage-Challenge
         </h2>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={startDemo}
+            className="text-[10px] text-muted-foreground hover:text-accent transition-colors flex items-center gap-1 opacity-50 hover:opacity-100"
+            title="Demo starten"
+          >
+            <Play className="h-3 w-3" />
+            Demo
+          </button>
           <span className="text-2xl font-bold text-gold-gradient">{consecutiveDays}</span>
           <span className="text-xs text-muted-foreground">/ {STREAK_GOAL} Tage</span>
         </div>
@@ -138,6 +199,60 @@ export default function StreakTracker({ dailyRevenue }: { dailyRevenue: number }
           </span>
         )}
       </div>
+
+      {/* Streak Completion Dialog */}
+      <Dialog open={showStreakDialog} onOpenChange={handleDialogOpen}>
+        <DialogContent className="sm:max-w-md border-accent/30 bg-card">
+          <DialogHeader className="text-center items-center">
+            <div className="mx-auto mb-2 h-16 w-16 rounded-full bg-accent/20 flex items-center justify-center">
+              <Trophy className="h-8 w-8 text-accent" />
+            </div>
+            <DialogTitle className="text-xl text-gold-gradient">
+              🎉 7-Tage-Challenge geschafft!
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground text-sm pt-2">
+              Du hast 7 Tage in Folge dein Tagesziel von {DAILY_TARGET}€ erreicht!
+              Du bekommst jetzt einen besseren Account. Melde dich bitte in deiner WhatsApp-Gruppe.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 pt-2">
+            {/* Copy text */}
+            <div className="rounded-lg bg-secondary p-3 text-sm text-foreground">
+              <p className="italic">"{WHATSAPP_TEXT}"</p>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full"
+                onClick={copyText}
+              >
+                {copied ? (
+                  <><Check className="h-4 w-4 mr-1.5" /> Kopiert!</>
+                ) : (
+                  <><Copy className="h-4 w-4 mr-1.5" /> Text kopieren</>
+                )}
+              </Button>
+
+              <Button
+                className="w-full bg-[hsl(142,70%,40%)] hover:bg-[hsl(142,70%,35%)] text-white"
+                asChild
+              >
+                <a
+                  href={`https://wa.me/?text=${encodeURIComponent(WHATSAPP_TEXT)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Send className="h-4 w-4 mr-1.5" />
+                  Nachricht senden via WhatsApp
+                </a>
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

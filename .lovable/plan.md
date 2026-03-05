@@ -1,32 +1,41 @@
 
+# Fortschrittsanzeige und Schritt-Nummerierung fur OfferB
 
-## Plan: Streak-Completion Pop-Up mit Konfetti, WhatsApp-Weiterleitung und Demo-Modus
+## Was wird gemacht
 
-### Aktueller Stand
-Der `StreakTracker` erkennt bereits, wenn 7 Tage in Folge 30 € erreicht wurden, zeigt einen Toast und feuert Konfetti. Es fehlt aber ein richtiges Pop-Up-Dialog mit Nachricht und WhatsApp-Link. Außerdem gibt es keinen Demo-Button.
+### 1. Alle Schritte als einheitliche Liste definieren
+Die Videos und Links werden zu einer gemeinsamen Schritt-Liste zusammengefasst:
+- Schritt 1: Plattform Erklärungs Video
+- Schritt 2: Telegram Nachrichten Video
+- Schritt 3: Brezzels Notifications aktivieren
+- Schritt 4: My ID Bot einrichten
+- Schritt 5: Tägliches Feedback
 
-### Änderungen
+### 2. Fortschritts-Bar oben auf der Seite
+Direkt unter dem Hero-Bereich wird eine Progress-Bar eingefügt, die den Gesamtfortschritt anzeigt (z.B. "2 von 5 Schritten erledigt"). Nutzt die vorhandene `Progress`-Komponente im Gold-Styling.
 
-**1. StreakTracker.tsx — Pop-Up Dialog bei 7-Tage-Streak**
-- State `showStreakDialog` hinzufügen, der bei Streak-Completion auf `true` gesetzt wird
-- Dialog mit:
-  - Konfetti-Animation beim Öffnen
-  - Glückwunsch-Nachricht ("7 Tage in Folge geschafft! Du bekommst jetzt einen besseren Account.")
-  - Hinweis: "Melde dich bitte in deiner WhatsApp-Gruppe"
-  - Vorbereiteter Standardtext zum Kopieren, z.B.: *"Hey, ich habe die 7-Tage-Challenge geschafft! 🔥 Ich möchte gerne mein Account-Upgrade erhalten."*
-  - Button "Nachricht senden" → öffnet `https://wa.me/?text=...` (WhatsApp Web/App "Senden an"-Ansicht mit vorausgefülltem Text)
-  - Kopier-Button für den Text
+### 3. Klickbare Checkliste
+Unter der Progress-Bar eine kompakte Checkliste mit allen 5 Schritten. Jeder Schritt hat:
+- Eine Checkbox zum Abhaken
+- Schritt-Nummer ("Schritt 1", "Schritt 2" etc.)
+- Kurzer Titel
 
-**2. Demo-Button**
-- Kleiner "Demo"-Button (nur visuell, z.B. unter dem Streak-Tracker oder als kleines Icon)
-- Klick simuliert einen vollen 7-Tage-Streak: setzt temporär alle 7 Tage auf "completed", zeigt den Dialog mit Konfetti
-- Nach Schließen des Dialogs wird der Streak wieder auf den echten Stand zurückgesetzt
+Der Fortschritt wird im `localStorage` gespeichert, damit er beim Neuladen erhalten bleibt.
 
-### Technische Details
+### 4. Schritt-Nummern bei den Sektionen
+Jede Video-/Link-/Feedback-Sektion bekommt eine prominente Schritt-Nummer als Badge (z.B. goldener Kreis mit "1" darin) neben dem Titel.
 
-- Dialog verwendet bestehende `Dialog`/`DialogContent` Komponenten aus `@/components/ui/dialog`
-- WhatsApp-Link: `https://wa.me/?text=${encodeURIComponent(text)}` — öffnet die "Senden an"-Ansicht
-- Konfetti wird über `canvas-confetti` gefeuert (bereits importiert)
-- Demo-State: `demoMode` boolean, bei `true` werden die letzten 7 Tage als completed angezeigt und Dialog geöffnet
-- Kein Datenbankzugriff nötig, alles client-side in `StreakTracker.tsx`
+## Technische Details
 
+**Datei: `src/pages/OfferB.tsx`**
+
+- Neue `steps`-Array-Konstante mit id, title, type fur alle 5 Schritte
+- `useState` + `localStorage` fur `completedSteps: Set<number>`
+- Progress-Bar-Sektion nach dem Hero mit `Progress`-Komponente (Wert = `completedSteps.size / steps.length * 100`)
+- Checkliste mit `Checkbox`-Komponenten, gestylt im bestehenden `glass-card-subtle` Look
+- Videos bekommen "Schritt 1" / "Schritt 2" als nummerierte Badge-Kreise
+- Links-Sektion wird zu Schritt 3 und 4 mit individuellen Nummern
+- Feedback wird Schritt 5
+- Erledigte Schritte bekommen eine subtile visuelle Markierung (leicht reduzierte Opazitat / Hakchen)
+
+Keine neuen Abhangigkeiten notwendig -- nutzt vorhandene `Progress`, `Checkbox` und `framer-motion`.
