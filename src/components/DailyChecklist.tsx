@@ -5,10 +5,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ClipboardCheck } from "lucide-react";
 
 const TASKS = [
-  { id: 1, label: "Hast du bis zu 6 MassDM's gemacht?", audioHint: true },
+  { id: 1, label: "Hast du bis zu 6 MassDM's gemacht?", audioHint: "/audio/massdm-info.mp3", audioLabel: "Wieso ist das wichtig?" },
   { id: 2, label: "Deine alte MassDM gelöscht bevor eine neue gesendet wird?" },
   { id: 3, label: "Geschaut ob wir für dich gepostet haben? (Falls nicht, gib uns bitte eine Info in der Gruppe)" },
-  { id: 4, label: "Auf alle Nachrichten geantwortet die in deinem Account offen sind?" },
+  { id: 4, label: "Auf alle Nachrichten geantwortet die in deinem Account offen sind?", audioHint: "/audio/open-chats-info.mp3", audioLabel: "Wie kann ich sicherstellen, dass ich alles beantwortet habe?" },
 ];
 
 function getTodayKey() {
@@ -24,7 +24,7 @@ export default function DailyChecklist() {
       return new Set();
     }
   });
-  const [showAudio, setShowAudio] = useState(false);
+  const [openAudioId, setOpenAudioId] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
@@ -39,14 +39,13 @@ export default function DailyChecklist() {
     });
   };
 
-  const handleAudioToggle = () => {
-    setShowAudio((prev) => {
-      if (!prev) {
-        setTimeout(() => audioRef.current?.play(), 100);
-      } else {
+  const handleAudioToggle = (id: number) => {
+    setOpenAudioId((prev) => {
+      if (prev === id) {
         audioRef.current?.pause();
+        return null;
       }
-      return !prev;
+      return id;
     });
   };
 
@@ -92,13 +91,13 @@ export default function DailyChecklist() {
               {task.audioHint && (
                 <div className="ml-10 mt-0.5 mb-1">
                   <button
-                    onClick={handleAudioToggle}
+                    onClick={() => handleAudioToggle(task.id)}
                     className="text-xs text-primary/70 hover:text-primary transition-colors underline underline-offset-2"
                   >
-                    Wieso ist das wichtig?
+                    {task.audioLabel}
                   </button>
                   <AnimatePresence>
-                    {showAudio && (
+                    {openAudioId === task.id && (
                       <motion.div
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: "auto", opacity: 1 }}
@@ -107,7 +106,7 @@ export default function DailyChecklist() {
                         className="overflow-hidden"
                       >
                         <div className="mt-2 rounded-lg bg-primary/5 border border-primary/10 p-2.5">
-                          <audio ref={audioRef} controls className="w-full h-8" src="/audio/massdm-info.mp3" />
+                          <audio ref={audioRef} controls autoPlay className="w-full h-8" src={task.audioHint} />
                         </div>
                       </motion.div>
                     )}
