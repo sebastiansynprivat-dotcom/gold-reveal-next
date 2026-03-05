@@ -2262,7 +2262,7 @@ export default function AdminDashboard() {
                   <>
                     <Textarea
                       value={kiPrompt}
-                      onChange={(e) => setKiPrompt(e.target.value)}
+                      onChange={(e) => { setKiPrompt(e.target.value); setKiPromptSaved(false); }}
                       className="min-h-[400px] text-sm resize-y bg-background/50 border-border/50 focus:border-accent/50 leading-relaxed"
                       placeholder="System-Prompt eingeben..."
                     />
@@ -2279,6 +2279,11 @@ export default function AdminDashboard() {
                           <>
                             <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
                             Wird gespeichert...
+                          </>
+                        ) : kiPromptSaved ? (
+                          <>
+                            <Check className="h-3.5 w-3.5 mr-1.5" />
+                            Prompt gespeichert
                           </>
                         ) : (
                           <>
