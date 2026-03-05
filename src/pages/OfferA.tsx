@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import logo from "@/assets/logo.png";
+import GoldenAudioPlayer from "@/components/GoldenAudioPlayer";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -88,14 +89,7 @@ const OfferA = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4, duration: 0.6, ease }}
               >
-                <div className="relative rounded-xl bg-primary/5 border border-primary/20 p-3 shadow-[0_0_20px_hsl(var(--primary)/0.15)]">
-                  <div className="absolute -inset-[1px] rounded-xl bg-gradient-to-r from-primary/20 via-primary/5 to-primary/20 animate-pulse opacity-50 pointer-events-none" />
-                  <audio
-                    controls
-                    className="w-full relative z-10"
-                    src="/audio/welcome-message.mp3"
-                  />
-                </div>
+                <GoldenAudioPlayer src="/audio/welcome-message.mp3" autoPlay />
               </motion.div>
               <button
                 onClick={() => setShowPopup(false)}

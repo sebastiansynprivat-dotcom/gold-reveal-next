@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { ArrowDown } from "lucide-react";
+import GoldenAudioPlayer from "@/components/GoldenAudioPlayer";
 
 interface FrageMemoDialogProps {
   open: boolean;
