@@ -667,8 +667,7 @@ export default function AdminDashboard() {
     setSchedDeleteConfirm(null);
     toast.success("Geplante Benachrichtigung gelöscht");
   };
-
-
+  const loadBotMessages = async () => {
     const { data } = await supabase
       .from("bot_messages" as any)
       .select("account_id, message, follow_up_message, is_active");
