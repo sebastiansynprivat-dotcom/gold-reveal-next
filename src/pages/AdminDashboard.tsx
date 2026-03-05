@@ -338,6 +338,37 @@ export default function AdminDashboard() {
     }
   }, [activeTab]);
 
+  const loadKiPrompt = async () => {
+    setKiPromptLoading(true);
+    try {
+      const { data } = await supabase
+        .from("ai_prompts")
+        .select("prompt_text")
+        .eq("prompt_key", "system_prompt")
+        .single();
+      if (data) setKiPrompt(data.prompt_text);
+    } catch {
+      toast.error("Fehler beim Laden des KI-Prompts");
+    }
+    setKiPromptLoading(false);
+    setKiPromptLoaded(true);
+  };
+
+  const saveKiPrompt = async () => {
+    setKiPromptSaving(true);
+    try {
+      const { error } = await supabase
+        .from("ai_prompts")
+        .update({ prompt_text: kiPrompt, updated_at: new Date().toISOString(), updated_by: user?.id })
+        .eq("prompt_key", "system_prompt");
+      if (error) throw error;
+      toast.success("KI-Prompt gespeichert!");
+    } catch {
+      toast.error("Fehler beim Speichern des KI-Prompts");
+    }
+    setKiPromptSaving(false);
+  };
+
   const loadAdmins = async () => {
     setAdminListLoading(true);
     try {
