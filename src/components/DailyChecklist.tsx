@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { ClipboardCheck } from "lucide-react";
+import { ClipboardCheck, Copy, Check } from "lucide-react";
+import { toast } from "sonner";
 
 const TASKS = [
   { id: 1, label: "Hast du bis zu 6 MassDM's gemacht?", audioHint: "/audio/massdm-info.mp3", audioLabel: "Wieso ist das wichtig?" },
@@ -141,18 +142,16 @@ export default function DailyChecklist() {
         </motion.p>
       )}
 
-      {/* Feedback Popup (Platzhalter) */}
+      {/* Feedback Popup */}
       <Dialog open={feedbackPopupOpen} onOpenChange={setFeedbackPopupOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Feedback geben</DialogTitle>
+            <DialogTitle>Tägliches Feedback</DialogTitle>
             <DialogDescription>
-              Dieser Bereich wird noch eingerichtet. Hier kannst du bald dein tägliches Feedback abgeben.
+              Bitte diese Vorlage einmal pro Tag aus und schick sie in deine WhatsApp-Gruppe.
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4 text-center text-muted-foreground text-sm">
-            🚧 Platzhalter – kommt bald!
-          </div>
+          <FeedbackTemplate />
         </DialogContent>
       </Dialog>
     </motion.section>
