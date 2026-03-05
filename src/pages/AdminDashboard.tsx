@@ -2516,7 +2516,7 @@ export default function AdminDashboard() {
 
                   {/* Time */}
                   <div className="space-y-2">
-                    <label className="text-xs font-medium text-muted-foreground">Uhrzeit (UTC)</label>
+                    <label className="text-xs font-medium text-muted-foreground">Uhrzeit (deutsche Zeit)</label>
                     <Input
                       type="time"
                       value={schedTime}
