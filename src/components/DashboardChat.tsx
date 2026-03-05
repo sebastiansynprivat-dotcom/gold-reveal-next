@@ -149,7 +149,7 @@ export default function DashboardChat({ externalOpen, onExternalOpenChange }: Da
       <div className="flex items-center justify-between p-4 border-b border-border">
         <div>
           <span className="text-sm font-semibold text-foreground"><span className="grayscale-0 sepia saturate-[5] hue-rotate-[10deg] brightness-110 inline-block">🧠</span> Sebastian's Mastermind KI</span>
-          <p className="text-[10px] text-muted-foreground mt-0.5">Diese KI wurde persönlich von Sebastian trainiert und hilft dir bei den meisten Fragen direkt weiter.</p>
+          <p className="text-[11px] text-muted-foreground/80 mt-1 leading-relaxed">Diese KI wurde persönlich von Sebastian trainiert und hilft dir bei den meisten Fragen direkt weiter.</p>
         </div>
         <button onClick={() => setOpen(false)} className="text-muted-foreground hover:text-foreground shrink-0 ml-2">
           <X className="h-5 w-5" />
