@@ -14,7 +14,47 @@ const TASKS = [
   { id: 5, label: "Auf alle Nachrichten geantwortet die in deinem Account offen sind?", audioHint: "/audio/open-chats-info.mp3", audioLabel: "Wie weiß ich das alles beantwortet ist?" },
 ];
 
-function getTodayKey() {
+const FEEDBACK_TEMPLATE = `Feedback zum heutigen Tag:
+
+Umsatz:
+
+MassDMs gesendet:
+
+Was lief gut?:
+
+Was lief schlecht?:
+
+Offene Fragen (optional):`;
+
+function FeedbackTemplate() {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(FEEDBACK_TEMPLATE);
+      setCopied(true);
+      toast.success("Vorlage kopiert! 📋");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Kopieren fehlgeschlagen");
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="rounded-lg bg-secondary/50 border border-border/40 p-3">
+        <pre className="text-xs text-foreground whitespace-pre-wrap font-sans leading-relaxed">{FEEDBACK_TEMPLATE}</pre>
+      </div>
+      <button
+        onClick={handleCopy}
+        className="w-full h-10 rounded-lg bg-accent text-accent-foreground font-semibold text-xs transition-all hover:brightness-110 active:scale-[0.98] flex items-center justify-center gap-2"
+      >
+        {copied ? <><Check className="h-4 w-4" /> Kopiert!</> : <><Copy className="h-4 w-4" /> Vorlage kopieren</>}
+      </button>
+    </div>
+  );
+}
+
   return `daily_checklist_${new Date().toISOString().slice(0, 10)}`;
 }
 
