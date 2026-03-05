@@ -242,7 +242,6 @@ const OfferC = () => {
               <h3
                 className="gold-gradient-text text-lg font-bold"
               >
-              >
                 🤖 Deine Telegram ID
               </h3>
               <p className="text-muted-foreground text-sm">
@@ -302,7 +301,6 @@ const OfferC = () => {
           <h2
             className="gold-gradient-text text-xl md:text-2xl font-bold"
             >
-          >
             Tägliches Feedback
           </h2>
         </div>
