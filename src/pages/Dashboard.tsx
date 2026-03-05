@@ -287,6 +287,7 @@ export default function Dashboard() {
       <HomescreenTutorial isFirstLogin={isFirstLogin} manualOpen={showTutorial} onManualClose={() => setShowTutorial(false)} />
       <PushNotificationDialog />
       <AccountMemoDialog open={showMemo} onOpenChange={setShowMemo} />
+      <FrageMemoDialog open={showFrageMemo} onOpenChange={setShowFrageMemo} />
       {/* Header with Telegram + Umsatz inline */}
       <header className="border-b border-border">
         <div className="container max-w-5xl mx-auto px-4 py-3 lg:px-8">
