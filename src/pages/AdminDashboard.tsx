@@ -1059,6 +1059,14 @@ export default function AdminDashboard() {
             <Bot className="h-3.5 w-3.5 mr-1.5" />
             Bot DMs
           </Button>
+          <Button
+            variant={activeTab === "kiprompt" ? "default" : "outline"}
+            size="sm"
+            onClick={() => { setActiveTab("kiprompt"); if (!kiPromptLoaded) loadKiPrompt(); }}
+          >
+            <Brain className="h-3.5 w-3.5 mr-1.5" />
+            KI Prompt
+          </Button>
         </div>
 
         {activeTab === "einnahmen" && (
@@ -2229,6 +2237,58 @@ export default function AdminDashboard() {
                   })}
                 </div>
               )}
+            </section>
+          </div>
+        )}
+
+        {activeTab === "kiprompt" && (
+          <div className="space-y-4">
+            <section className="glass-card rounded-xl overflow-hidden">
+              <div className="px-4 py-3 border-b border-border flex items-center gap-2">
+                <Brain className="h-4 w-4 text-accent" />
+                <h2 className="text-sm font-semibold text-foreground">KI System-Prompt</h2>
+              </div>
+              <div className="p-4 space-y-4">
+                <p className="text-xs text-muted-foreground">
+                  Hier kannst du den System-Prompt der KI bearbeiten. Dieser wird bei jeder Chat-Anfrage als Anweisung an die KI gesendet.
+                </p>
+                {kiPromptLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-6 w-6 animate-spin text-accent" />
+                  </div>
+                ) : (
+                  <>
+                    <Textarea
+                      value={kiPrompt}
+                      onChange={(e) => setKiPrompt(e.target.value)}
+                      className="min-h-[400px] text-sm font-mono resize-y bg-background/50 border-border/50 focus:border-accent/50"
+                      placeholder="System-Prompt eingeben..."
+                    />
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] text-muted-foreground">
+                        {kiPrompt.length} Zeichen
+                      </span>
+                      <Button
+                        onClick={saveKiPrompt}
+                        disabled={kiPromptSaving}
+                        size="sm"
+                      >
+                        {kiPromptSaving ? (
+                          <>
+                            <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                            Wird gespeichert...
+                          </>
+                        ) : (
+                          <>
+                            <Save className="h-3.5 w-3.5 mr-1.5" />
+                            Prompt speichern
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </div>
             </section>
           </div>
         )}
