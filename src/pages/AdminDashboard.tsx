@@ -2581,59 +2581,59 @@ export default function AdminDashboard() {
               </div>
 
               {/* Collapsible scheduled list */}
-              {schedules.length > 0 && (
-                <>
-                  <button
-                    onClick={() => setSchedListOpen(!schedListOpen)}
-                    className="w-full px-5 py-3 border-t border-border flex items-center justify-between hover:bg-secondary/30 transition-colors"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Repeat className="h-4 w-4 text-accent" />
-                      <span className="text-sm font-semibold text-foreground">Geplante Benachrichtigungen</span>
-                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{schedules.length}</Badge>
-                    </div>
-                    <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${schedListOpen ? "rotate-180" : ""}`} />
-                  </button>
-                  {schedListOpen && (
-                    <div className="px-5 pb-5 space-y-2">
-                      {schedules.map((s: any) => (
-                        <div key={s.id} className="p-3 rounded-lg bg-secondary/30 space-y-2">
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-foreground truncate">{s.title}</p>
-                              <p className="text-xs text-muted-foreground truncate">{s.body}</p>
-                            </div>
-                            <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                              <button
-                                onClick={() => toggleScheduleActive(s.id, s.is_active)}
-                                className="p-1.5 rounded-lg hover:bg-secondary/50 transition-colors"
-                                title={s.is_active ? "Pausieren" : "Aktivieren"}
-                              >
-                                {s.is_active ? <Pause className="h-3.5 w-3.5 text-accent" /> : <Play className="h-3.5 w-3.5 text-muted-foreground" />}
-                              </button>
-                              <button
-                                onClick={() => setSchedDeleteConfirm(s.id)}
-                                className="p-1.5 rounded-lg hover:bg-destructive/20 transition-colors"
-                              >
-                                <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                              </button>
-                            </div>
+              <button
+                onClick={() => setSchedListOpen(!schedListOpen)}
+                className="w-full px-5 py-3 border-t border-border flex items-center justify-between hover:bg-secondary/30 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <Repeat className="h-4 w-4 text-accent" />
+                  <span className="text-sm font-semibold text-foreground">Geplante Benachrichtigungen</span>
+                  {schedules.length > 0 && <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{schedules.length}</Badge>}
+                </div>
+                <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${schedListOpen ? "rotate-180" : ""}`} />
+              </button>
+              {schedListOpen && (
+                <div className="px-5 pb-5 space-y-2">
+                  {schedules.length === 0 ? (
+                    <p className="text-xs text-muted-foreground text-center py-3">Noch keine geplanten Benachrichtigungen.</p>
+                  ) : (
+                    schedules.map((s: any) => (
+                      <div key={s.id} className="p-3 rounded-lg bg-secondary/30 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">{s.title}</p>
+                            <p className="text-xs text-muted-foreground truncate">{s.body}</p>
                           </div>
-                          <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                            <Badge variant={s.is_active ? "default" : "secondary"} className="text-[10px] px-1.5 py-0">
-                              {s.is_active ? "Aktiv" : "Pausiert"}
-                            </Badge>
-                            <span>
-                              {s.frequency === "daily" ? "Täglich" : s.frequency === "weekly" ? `Wöchentlich (${["So","Mo","Di","Mi","Do","Fr","Sa"][s.weekday ?? 1]})` : `Monatlich (${s.day_of_month ?? 1}.)`}
-                            </span>
-                            <span>um {(() => { const [h,m] = (s.send_time || "09:00").split(":").map(Number); const d = new Date(Date.UTC(2025,0,1,h,m)); return d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Berlin" }); })()} Uhr</span>
-                            {s.last_sent_at && <span>· Zuletzt: {new Date(s.last_sent_at).toLocaleString("de-DE")}</span>}
+                          <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                            <button
+                              onClick={() => toggleScheduleActive(s.id, s.is_active)}
+                              className="p-1.5 rounded-lg hover:bg-secondary/50 transition-colors"
+                              title={s.is_active ? "Pausieren" : "Aktivieren"}
+                            >
+                              {s.is_active ? <Pause className="h-3.5 w-3.5 text-accent" /> : <Play className="h-3.5 w-3.5 text-muted-foreground" />}
+                            </button>
+                            <button
+                              onClick={() => setSchedDeleteConfirm(s.id)}
+                              className="p-1.5 rounded-lg hover:bg-destructive/20 transition-colors"
+                            >
+                              <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                            </button>
                           </div>
                         </div>
-                      ))}
-                    </div>
+                        <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                          <Badge variant={s.is_active ? "default" : "secondary"} className="text-[10px] px-1.5 py-0">
+                            {s.is_active ? "Aktiv" : "Pausiert"}
+                          </Badge>
+                          <span>
+                            {s.frequency === "daily" ? "Täglich" : s.frequency === "weekly" ? `Wöchentlich (${["So","Mo","Di","Mi","Do","Fr","Sa"][s.weekday ?? 1]})` : `Monatlich (${s.day_of_month ?? 1}.)`}
+                          </span>
+                          <span>um {(() => { const [h,m] = (s.send_time || "09:00").split(":").map(Number); const d = new Date(Date.UTC(2025,0,1,h,m)); return d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Berlin" }); })()} Uhr</span>
+                          {s.last_sent_at && <span>· Zuletzt: {new Date(s.last_sent_at).toLocaleString("de-DE")}</span>}
+                        </div>
+                      </div>
+                    ))
                   )}
-                </>
+                </div>
               )}
             </section>
           </div>
