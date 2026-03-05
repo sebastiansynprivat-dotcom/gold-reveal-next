@@ -1,5 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { HelpCircle } from "lucide-react";
+import GoldenAudioPlayer from "@/components/GoldenAudioPlayer";
 
 const reviews = [
   { name: "Mark", date: "Jan 2026", title: "Sehr positiver Einstieg und tolles Arbeitsumfeld", text: "Ich wurde von Anfang an sehr herzlich aufgenommen und umfassend eingearbeitet. Der Einstieg verlief reibungslos. Das gesamte Team ist ausgesprochen freundlich, hilfsbereit und gut organisiert. Auch die Bezahlung verläuft zuverlässig und problemlos.", stars: 5 },
@@ -42,9 +43,7 @@ export default function BillingAudioDialog() {
           <DialogTitle className="text-foreground text-sm">Warum dauert das so lange?</DialogTitle>
           <DialogDescription className="text-muted-foreground text-xs">Hier erkläre ich es dir kurz per Sprachmemo.</DialogDescription>
         </DialogHeader>
-        <audio controls className="w-full" preload="none">
-          <source src="/audio/billing-info.mp3" type="audio/mpeg" />
-        </audio>
+        <GoldenAudioPlayer src="/audio/billing-info.mp3" />
         <div className="space-y-3 pt-2">
           <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Was andere sagen</p>
           {reviews.map((review, i) => (
