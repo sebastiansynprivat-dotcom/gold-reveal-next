@@ -24,7 +24,7 @@ const QuizStart = ({ onStart }: QuizStartProps) => {
       />
 
       <motion.h1
-        className="text-[clamp(1.75rem,6vw,3rem)] font-serif text-gold-gradient mb-4 whitespace-nowrap"
+        className="text-[clamp(1.75rem,6vw,3rem)] font-bold gold-gradient-text mb-4 whitespace-nowrap"
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15, duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
