@@ -1,33 +1,19 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useProgress } from "@/hooks/useProgress";
-import { motion, AnimatePresence } from "framer-motion";
-
-const ATTENTION_CHECK_SECONDS = 10; // TEST: 10 seconds (change back to 20 * 60 for production)
 
 const Index = () => {
   const { updateProgress } = useProgress();
   const [showButton, setShowButton] = useState(false);
-  const [showAttentionPopup, setShowAttentionPopup] = useState(false);
-  const attentionShownRef = useRef(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const playerReadyRef = useRef(false);
-
-  // Exit fullscreen when attention popup triggers
-  const exitFullscreen = useCallback(() => {
-    if (document.fullscreenElement) {
-      document.exitFullscreen().catch(() => {});
-    }
-  }, []);
 
   const handleMessage = useCallback((event: MessageEvent) => {
     if (!event.origin.includes("loom.com")) return;
     try {
       const data = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
-      console.log("[Loom debug]", JSON.stringify(data).slice(0, 300));
 
       if (data?.context === "player.js" && data?.event === "ready" && !playerReadyRef.current) {
         playerReadyRef.current = true;
-        console.log("[Loom] player ready – registering listeners");
         iframeRef.current?.contentWindow?.postMessage(
           JSON.stringify({ context: "player.js", method: "addEventListener", value: "timeupdate" }), "*"
         );
@@ -43,14 +29,6 @@ const Index = () => {
 
       if (data?.context === "player.js" && data?.event === "timeupdate" && data?.value) {
         const { seconds, duration } = data.value;
-        console.log("[Loom] timeupdate", seconds, "/", duration);
-
-        if (seconds >= ATTENTION_CHECK_SECONDS && !attentionShownRef.current) {
-          attentionShownRef.current = true;
-          exitFullscreen();
-          setShowAttentionPopup(true);
-        }
-
         if (duration > 0 && seconds / duration >= 0.9) {
           setShowButton(true);
           updateProgress({ video_completed: true, current_step: "quiz" });
@@ -59,7 +37,7 @@ const Index = () => {
     } catch {
       // Ignore non-JSON messages
     }
-  }, [updateProgress, exitFullscreen]);
+  }, [updateProgress]);
 
   useEffect(() => {
     window.addEventListener("message", handleMessage);
@@ -127,60 +105,6 @@ const Index = () => {
           Bitte schau das Video vollständig an. Erst danach erscheint der Button, der dich zum nächsten Schritt führt.
         </p>
       )}
-
-      {/* Attention Check Popup */}
-      <AnimatePresence>
-        {showAttentionPopup && (
-          <motion.div
-            initial={{ opacity: 0, y: 40, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed inset-0 z-50 flex items-center justify-center px-4"
-          >
-            <div
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-              onClick={() => setShowAttentionPopup(false)}
-            />
-            <motion.div
-              className="relative gold-border-glow rounded-2xl p-6 md:p-8 max-w-md w-full text-center space-y-4"
-              style={{ background: "hsl(var(--card))" }}
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 0.1, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            >
-              <div className="text-5xl mb-2">🎯</div>
-              <h3
-                className="gold-gradient-text text-xl md:text-2xl font-bold"
-                style={{ fontFamily: "'Playfair Display', serif" }}
-              >
-                Schaust du aufmerksam zu?
-              </h3>
-              <p className="text-muted-foreground text-sm md:text-base">
-                Sende diesen Emoji in deine WhatsApp-Gruppe, damit wir wissen, dass du dabei bist:
-              </p>
-              <div className="text-6xl py-2">
-                🎯
-              </div>
-              <button
-                onClick={async () => {
-                  try { await navigator.clipboard.writeText("🎯"); } catch {}
-                  window.open("https://wa.me/?text=%F0%9F%8E%AF", "_blank");
-                }}
-                className="mt-2 px-8 py-3 rounded-lg bg-[#25D366] text-white font-semibold text-sm hover:bg-[#1fb855] hover:scale-105 transition-all duration-300 flex items-center gap-2 mx-auto"
-              >
-                🎯 In WhatsApp senden
-              </button>
-              <button
-                onClick={() => setShowAttentionPopup(false)}
-                className="mt-1 px-6 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Weiter schauen →
-              </button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       <div className={`transition-all duration-1000 ease-out md:mt-0 -mt-4 ${showButton ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}>
         <a
