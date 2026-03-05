@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { Users, Send, Bell, BellOff, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, CalendarDays, CalendarRange, Filter, MessageSquare, Star, AlertTriangle, Bot, Save, Power, Copy, Smartphone, Percent, ChevronRight, ChevronDown, Shield, UserPlus, UserMinus, Check, XCircle, Sparkles, Loader2, ExternalLink, Brain, CheckCircle2 } from "lucide-react";
+import { Users, Send, Bell, BellOff, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, CalendarDays, CalendarRange, Filter, MessageSquare, Star, AlertTriangle, Bot, Save, Power, Copy, Smartphone, Percent, ChevronRight, ChevronDown, Shield, UserPlus, UserMinus, Check, XCircle, Sparkles, Loader2, ExternalLink, Brain, CheckCircle2, Clock, Repeat, Pause, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -155,6 +155,18 @@ export default function AdminDashboard() {
   const [notifHistory, setNotifHistory] = useState<any[]>([]);
   const [notifHistoryLoaded, setNotifHistoryLoaded] = useState(false);
   const [notifHistoryOpen, setNotifHistoryOpen] = useState(false);
+
+  // Scheduled notifications state
+  const [schedules, setSchedules] = useState<any[]>([]);
+  const [schedulesLoaded, setSchedulesLoaded] = useState(false);
+  const [schedTitle, setSchedTitle] = useState("");
+  const [schedBody, setSchedBody] = useState("");
+  const [schedFrequency, setSchedFrequency] = useState<"daily" | "weekly" | "monthly">("daily");
+  const [schedTime, setSchedTime] = useState("09:00");
+  const [schedWeekday, setSchedWeekday] = useState(1);
+  const [schedDayOfMonth, setSchedDayOfMonth] = useState(1);
+  const [schedSaving, setSchedSaving] = useState(false);
+  const [schedDeleteConfirm, setSchedDeleteConfirm] = useState<string | null>(null);
   const [chatterFilter, setChatterFilter] = useState<ChatterFilter>("alle");
   const [platformFilters, setPlatformFilters] = useState<Set<string>>(new Set());
   const [botMessages, setBotMessages] = useState<Record<string, { message: string; followUp: string; isActive: boolean; saving: boolean }>>({});
