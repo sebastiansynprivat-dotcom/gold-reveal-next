@@ -2,8 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { ClipboardCheck, Copy, Check } from "lucide-react";
+import { ClipboardCheck, Copy, Check, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 
 const TASKS = [
