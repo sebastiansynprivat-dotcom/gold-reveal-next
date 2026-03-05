@@ -2616,7 +2616,7 @@ export default function AdminDashboard() {
                           <span>
                             {s.frequency === "daily" ? "Täglich" : s.frequency === "weekly" ? `Wöchentlich (${["So","Mo","Di","Mi","Do","Fr","Sa"][s.weekday ?? 1]})` : `Monatlich (${s.day_of_month ?? 1}.)`}
                           </span>
-                          <span>um {s.send_time?.slice(0, 5)} Uhr</span>
+                          <span>um {(() => { const [h,m] = (s.send_time || "09:00").split(":").map(Number); const d = new Date(Date.UTC(2025,0,1,h,m)); return d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Berlin" }); })()} Uhr</span>
                           {s.last_sent_at && <span>· Zuletzt: {new Date(s.last_sent_at).toLocaleString("de-DE")}</span>}
                         </div>
                       </div>
