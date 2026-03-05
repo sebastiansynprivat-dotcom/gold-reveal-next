@@ -210,9 +210,16 @@ export default function StreakTracker({ dailyRevenue }: { dailyRevenue: number }
             <DialogTitle className="text-xl text-gold-gradient">
               🎉 7-Tage-Challenge geschafft!
             </DialogTitle>
-          <DialogDescription className="text-muted-foreground text-sm pt-2">
-              Du hast 7 Tage in Folge dein Tagesziel von {DAILY_TARGET}€ erreicht!
-              Du bekommst jetzt einen besseren Account. Bitte sende diesen Text in deine WhatsApp-Gruppe:
+            <DialogDescription className="text-muted-foreground text-center text-sm pt-3 space-y-2" asChild>
+              <div>
+                <p className="text-base font-medium text-foreground">
+                  Du hast <span className="text-accent font-bold">7 Tage in Folge</span> dein Tagesziel von <span className="text-accent font-bold">{DAILY_TARGET}€</span> erreicht! 🔥
+                </p>
+                <p>Du bekommst jetzt einen besseren Account.</p>
+                <p className="text-accent font-semibold pt-1">
+                  Sende diesen Text in deine WhatsApp-Gruppe:
+                </p>
+              </div>
             </DialogDescription>
           </DialogHeader>
 
