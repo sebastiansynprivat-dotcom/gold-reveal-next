@@ -35,13 +35,6 @@ const links = [
   },
 ];
 
-const feedbackTemplate = `Feedback zum heutigen Tag:
-
-Umsatz:
-MassDMs gesendet:
-Was lief gut?:
-Was lief schlecht?:
-Offene Fragen (optional)`;
 
 const OfferA = () => {
   const [showPopup, setShowPopup] = useState(true);
