@@ -7,7 +7,7 @@ import { ClipboardCheck, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 
 const TASKS = [
-  { id: 1, label: "Hast du bis zu 6 MassDM's gemacht?", audioHint: "/audio/massdm-info.mp3", audioLabel: "Wieso ist das wichtig?" },
+  { id: 1, label: "Hast du bis zu 6 MassDM's gemacht?", audioHint: "/audio/massdm-info.mp3", audioLabel: "Wieso ist das wichtig?", massDmPopup: true, massDmPopupLabel: "Muss ich 6 MassDMs machen?" },
   { id: 2, label: "Deine alte MassDM gelöscht bevor eine neue gesendet wird?" },
   { id: 3, label: "Feedback gegeben, wie der heutige Tag lief?", popupHint: true, popupLabel: "Wie mache ich das?" },
   { id: 4, label: "Geschaut ob wir für dich gepostet haben? (Falls nicht, gib uns bitte eine Info in der Gruppe)" },
@@ -69,6 +69,7 @@ export default function DailyChecklist() {
   });
   const [openAudioId, setOpenAudioId] = useState<number | null>(null);
   const [feedbackPopupOpen, setFeedbackPopupOpen] = useState(false);
+  const [massDmPopupOpen, setMassDmPopupOpen] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
@@ -167,6 +168,16 @@ export default function DailyChecklist() {
                   </button>
                 </div>
               )}
+              {(task as any).massDmPopup && (
+                <div className="ml-10 mt-0.5 mb-1">
+                  <button
+                    onClick={() => setMassDmPopupOpen(true)}
+                    className="text-xs text-primary/70 hover:text-primary transition-colors underline underline-offset-2"
+                  >
+                    {(task as any).massDmPopupLabel}
+                  </button>
+                </div>
+              )}
             </div>
           );
         })}
@@ -192,6 +203,18 @@ export default function DailyChecklist() {
             </DialogDescription>
           </DialogHeader>
           <FeedbackTemplate />
+        </DialogContent>
+      </Dialog>
+
+      {/* MassDM Popup */}
+      <Dialog open={massDmPopupOpen} onOpenChange={setMassDmPopupOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Muss ich 6 MassDMs machen?</DialogTitle>
+            <DialogDescription>
+              Du solltest mindestens eine MassDM am Tag machen. Wenn du aber keine Käufer findest, mach bitte mehr. Das ist wichtig, weil es deine Chance erhöht, Käufer zu finden.
+            </DialogDescription>
+          </DialogHeader>
         </DialogContent>
       </Dialog>
     </motion.section>
