@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { ClipboardCheck } from "lucide-react";
+import { ClipboardCheck, Copy, Check } from "lucide-react";
+import { toast } from "sonner";
 
 const TASKS = [
   { id: 1, label: "Hast du bis zu 6 MassDM's gemacht?", audioHint: "/audio/massdm-info.mp3", audioLabel: "Wieso ist das wichtig?" },
@@ -13,6 +14,46 @@ const TASKS = [
   { id: 5, label: "Auf alle Nachrichten geantwortet die in deinem Account offen sind?", audioHint: "/audio/open-chats-info.mp3", audioLabel: "Wie weiß ich das alles beantwortet ist?" },
 ];
 
+const FEEDBACK_TEMPLATE = `Feedback zum heutigen Tag:
+
+Umsatz:
+
+MassDMs gesendet:
+
+Was lief gut?:
+
+Was lief schlecht?:
+
+Offene Fragen (optional):`;
+
+function FeedbackTemplate() {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(FEEDBACK_TEMPLATE);
+      setCopied(true);
+      toast.success("Vorlage kopiert! 📋");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error("Kopieren fehlgeschlagen");
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      <div className="rounded-lg bg-secondary/50 border border-border/40 p-3">
+        <pre className="text-xs text-foreground whitespace-pre-wrap font-sans leading-relaxed">{FEEDBACK_TEMPLATE}</pre>
+      </div>
+      <button
+        onClick={handleCopy}
+        className="w-full h-10 rounded-lg bg-accent text-accent-foreground font-semibold text-xs transition-all hover:brightness-110 active:scale-[0.98] flex items-center justify-center gap-2"
+      >
+        {copied ? <><Check className="h-4 w-4" /> Kopiert!</> : <><Copy className="h-4 w-4" /> Vorlage kopieren</>}
+      </button>
+    </div>
+  );
+}
 function getTodayKey() {
   return `daily_checklist_${new Date().toISOString().slice(0, 10)}`;
 }
@@ -141,18 +182,16 @@ export default function DailyChecklist() {
         </motion.p>
       )}
 
-      {/* Feedback Popup (Platzhalter) */}
+      {/* Feedback Popup */}
       <Dialog open={feedbackPopupOpen} onOpenChange={setFeedbackPopupOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Feedback geben</DialogTitle>
+            <DialogTitle>Tägliches Feedback</DialogTitle>
             <DialogDescription>
-              Dieser Bereich wird noch eingerichtet. Hier kannst du bald dein tägliches Feedback abgeben.
+              Bitte diese Vorlage einmal pro Tag aus und schick sie in deine WhatsApp-Gruppe.
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4 text-center text-muted-foreground text-sm">
-            🚧 Platzhalter – kommt bald!
-          </div>
+          <FeedbackTemplate />
         </DialogContent>
       </Dialog>
     </motion.section>
