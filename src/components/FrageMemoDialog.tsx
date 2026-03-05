@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Mic, Pause, Play } from "lucide-react";
+import { Mic, Pause, Play, ArrowDown } from "lucide-react";
 
 interface FrageMemoDialogProps {
   open: boolean;
@@ -13,12 +12,18 @@ export default function FrageMemoDialog({ open, onOpenChange }: FrageMemoDialogP
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
 
+  // Auto-play when opened
   useEffect(() => {
     if (open) {
       setPlaying(false);
       setProgress(0);
+      // Small delay so DOM is ready
+      setTimeout(() => {
+        audioRef.current?.play().then(() => setPlaying(true)).catch(() => {});
+      }, 200);
     } else {
       audioRef.current?.pause();
+      setPlaying(false);
     }
   }, [open]);
 
@@ -53,49 +58,66 @@ export default function FrageMemoDialog({ open, onOpenChange }: FrageMemoDialogP
     return `${m}:${sec.toString().padStart(2, "0")}`;
   };
 
+  if (!open) return <audio ref={audioRef} src="/audio/frage-info.mp3" preload="metadata" />;
+
   return (
     <>
       <audio ref={audioRef} src="/audio/frage-info.mp3" preload="metadata" />
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="glass-card gold-border-glow max-w-sm mx-auto p-0 overflow-hidden gap-0">
-          <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-accent to-transparent opacity-60" />
-          <div className="px-5 pt-5 pb-5">
-            <DialogHeader className="space-y-2 mb-4">
-              <DialogTitle className="text-center text-base font-bold text-gold-gradient">
-                Ich habe eine Frage
-              </DialogTitle>
-              <DialogDescription className="sr-only">Sprachmemo zum Thema Fragen stellen</DialogDescription>
-            </DialogHeader>
-            <div className="glass-card-subtle rounded-xl p-4 space-y-3">
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={togglePlay}
-                  className="w-11 h-11 rounded-full bg-accent/15 border border-accent/25 flex items-center justify-center shrink-0 hover:bg-accent/25 active:scale-95 transition-all"
-                >
-                  {playing ? <Pause className="h-5 w-5 text-accent" /> : <Play className="h-5 w-5 text-accent ml-0.5" />}
-                </button>
-                <div className="flex-1 min-w-0 space-y-1.5">
-                  <div className="relative h-2 rounded-full bg-secondary overflow-hidden">
-                    <div
-                      className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-accent to-accent/70 transition-all duration-200"
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-[10px] text-muted-foreground">
-                      {audioRef.current ? formatTime(audioRef.current.currentTime) : "0:00"}
-                    </span>
-                    <span className="text-[10px] text-muted-foreground">
-                      {duration ? formatTime(duration) : "–:––"}
-                    </span>
-                  </div>
-                </div>
-                <Mic className="h-4 w-4 text-accent/50 shrink-0" />
+
+      {/* Subtle backdrop */}
+      <div
+        className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm animate-fade-in"
+        onClick={() => onOpenChange(false)}
+      />
+
+      {/* Floating card – positioned above the chat button */}
+      <div className="fixed z-50 bottom-24 right-4 sm:right-6 w-[calc(100%-2rem)] sm:w-[340px] animate-scale-in">
+        <div className="glass-card rounded-2xl border border-accent/20 p-4 space-y-3 shadow-2xl">
+          {/* Title */}
+          <p className="text-sm font-semibold text-foreground text-center">
+            Ich habe eine Frage
+          </p>
+
+          {/* Audio player */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={togglePlay}
+              className="w-10 h-10 rounded-full bg-accent/15 border border-accent/25 flex items-center justify-center shrink-0 hover:bg-accent/25 active:scale-95 transition-all"
+            >
+              {playing ? (
+                <Pause className="h-4 w-4 text-accent" />
+              ) : (
+                <Play className="h-4 w-4 text-accent ml-0.5" />
+              )}
+            </button>
+            <div className="flex-1 min-w-0 space-y-1">
+              <div className="relative h-1.5 rounded-full bg-secondary overflow-hidden">
+                <div
+                  className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-accent to-accent/70 transition-all duration-200"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[9px] text-muted-foreground">
+                  {audioRef.current ? formatTime(audioRef.current.currentTime) : "0:00"}
+                </span>
+                <span className="text-[9px] text-muted-foreground">
+                  {duration ? formatTime(duration) : "–:––"}
+                </span>
               </div>
             </div>
+            <Mic className="h-3.5 w-3.5 text-accent/40 shrink-0" />
           </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+
+        {/* Arrow pointing down to chat button */}
+        <div className="flex justify-end pr-4 sm:pr-5 mt-1">
+          <div className="flex flex-col items-center gap-0.5 animate-bounce">
+            <span className="text-[10px] text-accent font-medium">Chat öffnen</span>
+            <ArrowDown className="h-5 w-5 text-accent" />
+          </div>
+        </div>
+      </div>
     </>
   );
 }
