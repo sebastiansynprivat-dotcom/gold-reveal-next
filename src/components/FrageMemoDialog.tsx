@@ -62,9 +62,9 @@ export default function FrageMemoDialog({ open, onOpenChange }: FrageMemoDialogP
         onClick={() => onOpenChange(false)}
       />
 
-      {/* Center card */}
-      <div className="fixed inset-0 z-50 flex items-center justify-center px-6 pointer-events-none">
-        <div className="pointer-events-auto w-full max-w-xs animate-scale-in">
+      {/* Card positioned above chat button area */}
+      <div className="fixed z-50 bottom-28 right-4 sm:right-6 pointer-events-none">
+        <div className="pointer-events-auto w-72 animate-scale-in">
           {/* Card */}
           <div className="rounded-2xl bg-card/95 backdrop-blur-xl border border-border/60 shadow-[0_8px_60px_-12px_hsl(var(--accent)/0.25)] overflow-hidden">
             {/* Top accent line */}
@@ -132,12 +132,37 @@ export default function FrageMemoDialog({ open, onOpenChange }: FrageMemoDialogP
             <div className="h-px w-full bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
           </div>
 
-          {/* Line + arrow pointing to chat button */}
-          <div className="flex justify-end mr-6 mt-2">
-            <div className="flex flex-col items-center">
-              <div className="w-px h-24 bg-gradient-to-b from-accent/60 to-accent/20" />
-              <ArrowDown className="h-6 w-6 text-accent animate-bounce drop-shadow-[0_0_8px_hsl(var(--accent)/0.5)]" />
-            </div>
+          {/* Curved animated arrow to chat button */}
+          <div className="flex justify-end mr-1 -mb-2">
+            <svg width="60" height="80" viewBox="0 0 60 80" fill="none" className="overflow-visible">
+              <path
+                d="M30 0 C30 30, 45 50, 50 70"
+                stroke="hsl(var(--accent))"
+                strokeWidth="2"
+                strokeLinecap="round"
+                fill="none"
+                strokeDasharray="120"
+                strokeDashoffset="120"
+                style={{ animation: "drawPath 1s ease-out 0.3s forwards" }}
+                opacity="0.6"
+              />
+              {/* Arrowhead */}
+              <polygon
+                points="44,64 50,76 56,64"
+                fill="hsl(var(--accent))"
+                opacity="0"
+                style={{ animation: "arrowAppear 0.3s ease-out 1.2s forwards" }}
+              />
+              {/* Pulsing dot at tip */}
+              <circle
+                cx="50"
+                cy="74"
+                r="3"
+                fill="hsl(var(--accent))"
+                opacity="0"
+                style={{ animation: "arrowAppear 0.3s ease-out 1.2s forwards, pulseGlow 1.5s ease-in-out 1.5s infinite" }}
+              />
+            </svg>
           </div>
         </div>
       </div>
@@ -146,6 +171,16 @@ export default function FrageMemoDialog({ open, onOpenChange }: FrageMemoDialogP
         @keyframes barBounce {
           0%, 100% { transform: scaleY(0.4); }
           50% { transform: scaleY(1); }
+        }
+        @keyframes drawPath {
+          to { stroke-dashoffset: 0; }
+        }
+        @keyframes arrowAppear {
+          to { opacity: 0.7; }
+        }
+        @keyframes pulseGlow {
+          0%, 100% { opacity: 0.7; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.4); }
         }
       `}</style>
     </>
