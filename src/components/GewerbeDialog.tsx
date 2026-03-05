@@ -1,5 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { ExternalLink } from "lucide-react";
+import GoldenAudioPlayer from "@/components/GoldenAudioPlayer";
 
 const GEWERBE_TEXT = `Über Gewerbeanmeldung-Service.de oder Gewerbeanmeldung24.de 🖥️ kannst du dein Gewerbe ganz einfach online anmelden.
 
@@ -34,10 +35,7 @@ export default function GewerbeDialog() {
           {/* Audio */}
           <div className="space-y-2">
             <p className="text-xs font-semibold text-foreground">🎧 Hier erkläre ich dir, wieso du ein Gewerbe brauchst:</p>
-            <audio controls className="w-full" preload="none">
-              <source src="/audio/gewerbe-info.mp3" type="audio/mpeg" />
-              Dein Browser unterstützt kein Audio.
-            </audio>
+            <GoldenAudioPlayer src="/audio/gewerbe-info.mp3" />
           </div>
 
           {/* Text */}
