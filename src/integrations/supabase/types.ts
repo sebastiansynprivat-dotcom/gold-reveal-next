@@ -373,6 +373,48 @@ export type Database = {
         }
         Relationships: []
       }
+      scheduled_notifications: {
+        Row: {
+          body: string
+          created_at: string
+          created_by: string | null
+          day_of_month: number | null
+          frequency: string
+          id: string
+          is_active: boolean
+          last_sent_at: string | null
+          send_time: string
+          title: string
+          weekday: number | null
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          created_by?: string | null
+          day_of_month?: number | null
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          last_sent_at?: string | null
+          send_time?: string
+          title: string
+          weekday?: number | null
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          created_by?: string | null
+          day_of_month?: number | null
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          last_sent_at?: string | null
+          send_time?: string
+          title?: string
+          weekday?: number | null
+        }
+        Relationships: []
+      }
       user_progress: {
         Row: {
           assigned_route: string | null
