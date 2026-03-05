@@ -348,7 +348,7 @@ export default function AdminDashboard() {
         .select("prompt_text")
         .eq("prompt_key", "system_prompt")
         .single();
-      if (data) setKiPrompt(data.prompt_text);
+      if (data) { setKiPrompt(data.prompt_text); setKiPromptOriginal(data.prompt_text); }
     } catch {
       toast.error("Fehler beim Laden des KI-Prompts");
     }
