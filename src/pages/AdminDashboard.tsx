@@ -2270,28 +2270,31 @@ export default function AdminDashboard() {
                       <span className="text-[11px] text-muted-foreground">
                         {kiPrompt.length} Zeichen
                       </span>
-                      <Button
-                        onClick={saveKiPrompt}
-                        disabled={kiPromptSaving}
-                        size="sm"
-                      >
-                        {kiPromptSaving ? (
-                          <>
-                            <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                            Wird gespeichert...
-                          </>
-                        ) : kiPromptSaved ? (
-                          <>
-                            <Check className="h-3.5 w-3.5 mr-1.5" />
+                      <div className="flex items-center gap-3">
+                        {kiPromptSaved && (
+                          <span className="text-[11px] text-accent flex items-center gap-1">
+                            <Check className="h-3 w-3" />
                             Prompt gespeichert
-                          </>
-                        ) : (
-                          <>
-                            <Save className="h-3.5 w-3.5 mr-1.5" />
-                            Prompt speichern
-                          </>
+                          </span>
                         )}
-                      </Button>
+                        <Button
+                          onClick={saveKiPrompt}
+                          disabled={kiPromptSaving || kiPromptSaved}
+                          size="sm"
+                        >
+                          {kiPromptSaving ? (
+                            <>
+                              <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                              Wird gespeichert...
+                            </>
+                          ) : (
+                            <>
+                              <Save className="h-3.5 w-3.5 mr-1.5" />
+                              Prompt speichern
+                            </>
+                          )}
+                        </Button>
+                      </div>
                     </div>
                   </>
                 )}
