@@ -217,39 +217,19 @@ export default function StreakTracker({ dailyRevenue }: { dailyRevenue: number }
           </DialogHeader>
 
           <div className="space-y-4 pt-2">
-            {/* Copy text */}
-            <div className="rounded-lg bg-secondary p-3 text-sm text-foreground">
-              <p>{WHATSAPP_TEXT}</p>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full"
-                onClick={copyText}
-              >
-                {copied ? (
-                  <><Check className="h-4 w-4 mr-1.5" /> Kopiert!</>
-                ) : (
-                  <><Copy className="h-4 w-4 mr-1.5" /> Text kopieren</>
-                )}
-              </Button>
-
-              <Button
-                className="w-full bg-[hsl(142,70%,40%)] hover:bg-[hsl(142,70%,35%)] text-white"
-                asChild
-              >
-                <a
-                  href={`https://wa.me/?text=${encodeURIComponent(WHATSAPP_TEXT)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <Send className="h-4 w-4 mr-1.5" />
-                  Nachricht senden via WhatsApp
-                </a>
-              </Button>
-            </div>
+            {/* Clickable text block - copies & opens WhatsApp */}
+            <button
+              className="w-full rounded-lg bg-secondary p-3 text-sm text-foreground text-left hover:bg-secondary/80 transition-colors cursor-pointer flex items-center gap-2"
+              onClickCapture={async (e) => {
+                e.stopPropagation();
+                await navigator.clipboard.writeText(WHATSAPP_TEXT);
+                toast.success("Text kopiert!");
+                window.open(`https://wa.me/?text=${encodeURIComponent(WHATSAPP_TEXT)}`, "_blank");
+              }}
+            >
+              <p className="flex-1">{WHATSAPP_TEXT}</p>
+              <Copy className="h-4 w-4 text-muted-foreground shrink-0" />
+            </button>
           </div>
         </DialogContent>
       </Dialog>
