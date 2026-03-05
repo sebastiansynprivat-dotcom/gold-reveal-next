@@ -522,7 +522,7 @@ export default function Dashboard() {
 
         {/* Frage stellen */}
         <button
-          onClick={() => setChatOpen(true)}
+          onClick={() => setShowFrageMemo(true)}
           className="w-full flex items-center gap-3 glass-card-subtle rounded-xl p-3 lg:p-4 border border-accent/30 bg-accent/5 text-left cursor-pointer hover:bg-accent/10 transition-colors"
         >
           <HelpCircle className="h-5 w-5 text-accent shrink-0" />
