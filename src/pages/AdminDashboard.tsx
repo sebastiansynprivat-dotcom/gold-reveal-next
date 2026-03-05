@@ -629,7 +629,15 @@ export default function AdminDashboard() {
         title: schedTitle.trim(),
         body: schedBody.trim(),
         frequency: schedFrequency,
-        send_time: schedTime + ":00",
+        send_time: (() => {
+          // Convert German time to UTC
+          const [h, m] = schedTime.split(":").map(Number);
+          const now = new Date();
+          const german = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m);
+          const utcH = german.getUTCHours().toString().padStart(2, "0");
+          const utcM = german.getUTCMinutes().toString().padStart(2, "0");
+          return `${utcH}:${utcM}:00`;
+        })(),
         created_by: user?.id,
       };
       if (schedFrequency === "weekly") payload.weekday = schedWeekday;
@@ -2516,7 +2524,7 @@ export default function AdminDashboard() {
 
                   {/* Time */}
                   <div className="space-y-2">
-                    <label className="text-xs font-medium text-muted-foreground">Uhrzeit (UTC)</label>
+                    <label className="text-xs font-medium text-muted-foreground">Uhrzeit (deutsche Zeit)</label>
                     <Input
                       type="time"
                       value={schedTime}
@@ -2608,7 +2616,7 @@ export default function AdminDashboard() {
                           <span>
                             {s.frequency === "daily" ? "Täglich" : s.frequency === "weekly" ? `Wöchentlich (${["So","Mo","Di","Mi","Do","Fr","Sa"][s.weekday ?? 1]})` : `Monatlich (${s.day_of_month ?? 1}.)`}
                           </span>
-                          <span>um {s.send_time?.slice(0, 5)} UTC</span>
+                          <span>um {(() => { const [h,m] = (s.send_time || "09:00").split(":").map(Number); const d = new Date(Date.UTC(2025,0,1,h,m)); return d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Berlin" }); })()} Uhr</span>
                           {s.last_sent_at && <span>· Zuletzt: {new Date(s.last_sent_at).toLocaleString("de-DE")}</span>}
                         </div>
                       </div>
