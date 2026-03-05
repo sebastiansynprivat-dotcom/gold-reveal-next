@@ -216,7 +216,10 @@ export default function StreakTracker({ dailyRevenue }: { dailyRevenue: number }
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 pt-2">
+          <div className="space-y-3 pt-2">
+            <p className="text-xs text-muted-foreground text-center">
+              👇 Tippe auf die Nachricht – sie wird kopiert & du landest direkt in WhatsApp.
+            </p>
             {/* Clickable text block - copies & opens WhatsApp */}
             <button
               className="w-full rounded-lg bg-secondary p-3 text-sm text-foreground text-left hover:bg-secondary/80 transition-colors cursor-pointer flex items-center gap-2"
