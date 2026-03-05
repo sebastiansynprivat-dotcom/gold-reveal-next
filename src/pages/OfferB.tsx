@@ -13,7 +13,7 @@ const steps = [
   { id: 2, title: "Telegram Nachrichten Video anschauen" },
   { id: 3, title: "Brezzels Notifications aktivieren" },
   { id: 4, title: "My ID Bot einrichten" },
-  { id: 5, title: "Tägliches Feedback einrichten" },
+  
 ];
 
 const videos = [
