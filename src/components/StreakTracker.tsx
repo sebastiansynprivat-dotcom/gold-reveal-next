@@ -215,8 +215,8 @@ export default function StreakTracker({ dailyRevenue }: { dailyRevenue: number }
                 <p className="text-base font-medium text-foreground">
                   Du hast <span className="text-accent font-bold">7 Tage in Folge</span> dein Tagesziel von <span className="text-accent font-bold">{DAILY_TARGET}€</span> erreicht! 🔥
                 </p>
-                <p>Du bekommst jetzt einen besseren Account.</p>
-                <p className="text-accent font-semibold pt-1">
+                <p className="text-accent font-semibold">Du bekommst jetzt einen besseren Account.</p>
+                <p className="text-muted-foreground pt-1">
                   Sende diesen Text in deine WhatsApp-Gruppe:
                 </p>
               </div>
