@@ -157,15 +157,21 @@ const Index = () => {
               <p className="text-muted-foreground text-sm md:text-base">
                 Sende diesen Emoji in deine WhatsApp-Gruppe, damit wir wissen, dass du dabei bist:
               </p>
-              <div className="text-6xl py-2 select-all cursor-pointer hover:scale-110 transition-transform">
+              <div className="text-6xl py-2">
                 🎯
               </div>
-              <p className="text-xs text-muted-foreground">
-                Tippe auf den Emoji um ihn zu kopieren
-              </p>
+              <button
+                onClick={async () => {
+                  try { await navigator.clipboard.writeText("🎯"); } catch {}
+                  window.open("https://wa.me/?text=%F0%9F%8E%AF", "_blank");
+                }}
+                className="mt-2 px-8 py-3 rounded-lg bg-[#25D366] text-white font-semibold text-sm hover:bg-[#1fb855] hover:scale-105 transition-all duration-300 flex items-center gap-2 mx-auto"
+              >
+                🎯 In WhatsApp senden
+              </button>
               <button
                 onClick={() => setShowAttentionPopup(false)}
-                className="mt-2 px-8 py-3 rounded-lg bg-primary text-primary-foreground font-semibold text-sm gold-glow hover:gold-glow-strong hover:scale-105 transition-all duration-300"
+                className="mt-1 px-6 py-2 text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
                 Weiter schauen →
               </button>
