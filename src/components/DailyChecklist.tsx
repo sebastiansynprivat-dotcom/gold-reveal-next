@@ -115,18 +115,15 @@ export default function DailyChecklist() {
               <h2 className="text-sm lg:text-base font-semibold text-foreground">Tägliche Aufgaben</h2>
             </div>
             <div className="flex items-center gap-2">
+              {!isOpen && (
+                <Progress value={progress} className="h-1.5 w-16 [&>div]:bg-accent" />
+              )}
               <span className="text-xs text-muted-foreground">
                 {completed.size}/{TASKS.length} erledigt
               </span>
               <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
             </div>
           </div>
-
-          {!isOpen && (
-            <div className="mt-3">
-              <Progress value={progress} className="h-2 [&>div]:bg-accent" />
-            </div>
-          )}
         </CollapsibleTrigger>
 
         <CollapsibleContent>
