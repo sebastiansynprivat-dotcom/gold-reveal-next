@@ -24,6 +24,7 @@ import { de } from "date-fns/locale";
 import HomescreenTutorial from "@/components/HomescreenTutorial";
 import PushNotificationDialog from "@/components/PushNotificationDialog";
 import AccountMemoDialog from "@/components/AccountMemoDialog";
+import FrageMemoDialog from "@/components/FrageMemoDialog";
 
 const GOLD_THRESHOLD = 3000;
 const STARTER_RATE = 0.2;
@@ -68,6 +69,7 @@ export default function Dashboard() {
   const [chatOpen, setChatOpen] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [showMemo, setShowMemo] = useState(false);
+  const [showFrageMemo, setShowFrageMemo] = useState(false);
   const [isPwaInstalled, setIsPwaInstalled] = useState(() => {
     return window.matchMedia("(display-mode: standalone)").matches ||
     (window.navigator as any).standalone === true;
@@ -285,6 +287,7 @@ export default function Dashboard() {
       <HomescreenTutorial isFirstLogin={isFirstLogin} manualOpen={showTutorial} onManualClose={() => setShowTutorial(false)} />
       <PushNotificationDialog />
       <AccountMemoDialog open={showMemo} onOpenChange={setShowMemo} />
+      <FrageMemoDialog open={showFrageMemo} onOpenChange={setShowFrageMemo} />
       {/* Header with Telegram + Umsatz inline */}
       <header className="border-b border-border">
         <div className="container max-w-5xl mx-auto px-4 py-3 lg:px-8">
@@ -519,7 +522,7 @@ export default function Dashboard() {
 
         {/* Frage stellen */}
         <button
-          onClick={() => setChatOpen(true)}
+          onClick={() => setShowFrageMemo(true)}
           className="w-full flex items-center gap-3 glass-card-subtle rounded-xl p-3 lg:p-4 border border-accent/30 bg-accent/5 text-left cursor-pointer hover:bg-accent/10 transition-colors"
         >
           <HelpCircle className="h-5 w-5 text-accent shrink-0" />
