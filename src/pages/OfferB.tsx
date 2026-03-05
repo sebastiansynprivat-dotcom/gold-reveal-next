@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import logo from "@/assets/logo.png";
-import ProgressChecklist from "@/components/ProgressChecklist";
+
 import StepBadge from "@/components/StepBadge";
 import LoomVideoStep from "@/components/LoomVideoStep";
 
@@ -171,13 +171,6 @@ const OfferB = () => {
           Schau dir alle Videos an und richte alles Schritt für Schritt ein.
         </p>
       </motion.div>
-
-      {/* Progress Checklist */}
-      <ProgressChecklist
-        steps={steps}
-        completedSteps={completedSteps}
-        onToggle={toggleStep}
-      />
 
       {/* Videos */}
       <div className="max-w-3xl mx-auto space-y-14 mb-16">
