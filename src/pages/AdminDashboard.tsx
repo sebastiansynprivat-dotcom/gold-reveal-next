@@ -2261,7 +2261,7 @@ export default function AdminDashboard() {
                     <Textarea
                       value={kiPrompt}
                       onChange={(e) => setKiPrompt(e.target.value)}
-                      className="min-h-[400px] text-sm font-mono resize-y bg-background/50 border-border/50 focus:border-accent/50"
+                      className="min-h-[400px] text-sm resize-y bg-background/50 border-border/50 focus:border-accent/50 leading-relaxed"
                       placeholder="System-Prompt eingeben..."
                     />
                     <div className="flex items-center justify-between">
