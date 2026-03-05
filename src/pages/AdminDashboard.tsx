@@ -148,7 +148,12 @@ export default function AdminDashboard() {
   const [goalAmount, setGoalAmount] = useState("");
   const [goalSaving, setGoalSaving] = useState(false);
   const [expandedChatter, setExpandedChatter] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"einnahmen" | "chatter" | "botdms" | "kiprompt">("einnahmen");
+  const [activeTab, setActiveTab] = useState<"einnahmen" | "chatter" | "botdms" | "notifications" | "kiprompt">("einnahmen");
+  const [notifTitle, setNotifTitle] = useState("");
+  const [notifBody, setNotifBody] = useState("");
+  const [notifSending, setNotifSending] = useState(false);
+  const [notifHistory, setNotifHistory] = useState<any[]>([]);
+  const [notifHistoryLoaded, setNotifHistoryLoaded] = useState(false);
   const [chatterFilter, setChatterFilter] = useState<ChatterFilter>("alle");
   const [platformFilters, setPlatformFilters] = useState<Set<string>>(new Set());
   const [botMessages, setBotMessages] = useState<Record<string, { message: string; followUp: string; isActive: boolean; saving: boolean }>>({});
