@@ -51,7 +51,11 @@ const QuizResult = ({ questions, answers, onRestart }: QuizResultProps) => {
     let correct = 0;
     const wrongCats = new Set<string>();
 
-    questions.forEach((q, i) => {
+    const EXCLUDED_IDS = [3]; // Questions that don't affect score
+    const scoredQuestions = questions.filter((q) => !EXCLUDED_IDS.includes(q.id));
+
+    scoredQuestions.forEach((q) => {
+      const i = questions.indexOf(q);
       if (q.type === "multiple-choice") {
         if (answers[i] === q.correctAnswer) correct++;
         else wrongCats.add(q.category);
