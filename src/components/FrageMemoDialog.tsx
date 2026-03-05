@@ -132,36 +132,24 @@ export default function FrageMemoDialog({ open, onOpenChange }: FrageMemoDialogP
             <div className="h-px w-full bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
           </div>
 
-          {/* Animated arrow to chat button */}
-          <div className="flex justify-end mr-5 mt-1">
+          {/* Clean straight arrow to chat button */}
+          <div className="flex justify-end mr-5 mt-2">
             <div
               className="flex flex-col items-center"
-              style={{ animation: "arrowSlideIn 0.6s ease-out 0.5s both" }}
+              style={{ animation: "arrowSlideIn 0.5s ease-out 0.4s both" }}
             >
-              {/* Curved line */}
-              <svg width="32" height="40" viewBox="0 0 32 40" fill="none">
-                <path
-                  d="M16 0 C16 16, 20 28, 16 40"
-                  stroke="hsl(var(--accent))"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  fill="none"
-                  opacity="0.5"
-                />
-              </svg>
-              {/* Arrowhead chevron */}
+              <div className="w-[2.5px] h-10 rounded-full bg-accent/50" />
               <svg
-                width="20" height="12" viewBox="0 0 20 12" fill="none"
-                className="-mt-1"
-                style={{ animation: "arrowBob 1.8s ease-in-out 1.2s infinite" }}
+                width="16" height="10" viewBox="0 0 16 10" fill="none"
+                className="-mt-px"
+                style={{ animation: "arrowBob 2s ease-in-out 1s infinite" }}
               >
                 <path
-                  d="M3 2 L10 10 L17 2"
+                  d="M2 2 L8 8 L14 2"
                   stroke="hsl(var(--accent))"
                   strokeWidth="2.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  fill="none"
                   opacity="0.6"
                 />
               </svg>
@@ -176,12 +164,12 @@ export default function FrageMemoDialog({ open, onOpenChange }: FrageMemoDialogP
           50% { transform: scaleY(1); }
         }
         @keyframes arrowSlideIn {
-          0% { opacity: 0; transform: translateY(-12px); }
+          0% { opacity: 0; transform: translateY(-10px); }
           100% { opacity: 1; transform: translateY(0); }
         }
         @keyframes arrowBob {
           0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(5px); }
+          50% { transform: translateY(4px); }
         }
       `}</style>
     </>
