@@ -73,7 +73,7 @@ export default function MassDmGenerator() {
                 <div>
                   <DialogTitle className="text-lg font-bold text-foreground">MassDM Generator</DialogTitle>
                   <DialogDescription className="text-xs text-muted-foreground mt-0.5">
-                    Generiere einzigartige MassDM-Nachrichten per KI
+                    Generiere Nachrichten per KI
                   </DialogDescription>
                 </div>
               </div>
@@ -136,9 +136,20 @@ export default function MassDmGenerator() {
                       </>
                     )}
                   </button>
+
+                  <p className="text-[10px] text-muted-foreground/70 text-center leading-relaxed mt-1">
+                    Bitte verändere jede MassDM ein bisschen im Wording, damit sich keine MassDM von einem anderen Chatter und dir doppelt.
+                  </p>
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {/* Disclaimer */}
+            <div className="rounded-lg bg-secondary/30 border border-border/30 px-3 py-2">
+              <p className="text-[10px] text-muted-foreground/60 leading-relaxed">
+                ⚠️ Die Nachrichten werden mit KI generiert und können fehlerhaft sein. Nur weil sie generiert wurde, heißt das nicht, dass sie gut ist. Bitte prüfe immer selber gegen.
+              </p>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

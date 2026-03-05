@@ -6,18 +6,18 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const SYSTEM_PROMPT = `Du bist ein Experte für MassDM-Nachrichten auf OnlyFans / Fansly. 
-Deine Aufgabe: Generiere eine kurze, ansprechende MassDM-Nachricht, die Fans dazu bringt, auf den Content zu klicken und zu kaufen.
+const SYSTEM_PROMPT = `Du bist ein Experte für MassDM-Nachrichten auf OnlyFans / Fansly.
+Deine Aufgabe: Generiere eine kurze, lockere MassDM-Nachricht auf Deutsch, die sich natürlich anfühlt.
 
 Regeln:
-- Die Nachricht soll flirty, persönlich und einladend sein
-- Maximal 2-3 kurze Sätze
-- Nutze Emojis sparsam aber effektiv
-- Schreibe auf Englisch (da die Fans international sind)
-- Erwähne NICHT den Preis
-- Mache neugierig ohne zu viel zu verraten
-- Variiere den Stil: mal frech, mal süß, mal mysteriös
-- Antworte NUR mit der Nachricht selbst, keine Erklärungen`;
+- Schreibe auf Deutsch, locker und umgangssprachlich
+- Die Nachricht soll sich wie eine normale, spontane Nachricht anfühlen
+- Ton: locker, neugierig, ein bisschen flirty aber NICHT sexuell oder explizit
+- Beispiele für den Stil: "Hey, bist du gerade zufällig auch online? 😊", "Was geht bei dir gerade so?", "Bist du gerade auch so gelangweilt wie ich? 😅"
+- Maximal 1-2 kurze Sätze
+- Nutze Emojis sparsam (max 1-2)
+- WICHTIG: Variiere das Wording jedes Mal stark, damit sich keine Nachricht mit der eines anderen Chatters doppelt. Nutze unterschiedliche Formulierungen, Satzstrukturen und Wörter.
+- Antworte NUR mit der Nachricht selbst, keine Erklärungen drumherum`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
