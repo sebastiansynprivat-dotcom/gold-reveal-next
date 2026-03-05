@@ -2,13 +2,15 @@ import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ClipboardCheck } from "lucide-react";
 
 const TASKS = [
   { id: 1, label: "Hast du bis zu 6 MassDM's gemacht?", audioHint: "/audio/massdm-info.mp3", audioLabel: "Wieso ist das wichtig?" },
   { id: 2, label: "Deine alte MassDM gelöscht bevor eine neue gesendet wird?" },
-  { id: 3, label: "Geschaut ob wir für dich gepostet haben? (Falls nicht, gib uns bitte eine Info in der Gruppe)" },
-  { id: 4, label: "Auf alle Nachrichten geantwortet die in deinem Account offen sind?", audioHint: "/audio/open-chats-info.mp3", audioLabel: "Wie weiß ich das alles beantwortet ist?" },
+  { id: 3, label: "Feedback gegeben, wie der heutige Tag lief?", popupHint: true, popupLabel: "Wie mache ich das?" },
+  { id: 4, label: "Geschaut ob wir für dich gepostet haben? (Falls nicht, gib uns bitte eine Info in der Gruppe)" },
+  { id: 5, label: "Auf alle Nachrichten geantwortet die in deinem Account offen sind?", audioHint: "/audio/open-chats-info.mp3", audioLabel: "Wie weiß ich das alles beantwortet ist?" },
 ];
 
 function getTodayKey() {
@@ -25,6 +27,7 @@ export default function DailyChecklist() {
     }
   });
   const [openAudioId, setOpenAudioId] = useState<number | null>(null);
+  const [feedbackPopupOpen, setFeedbackPopupOpen] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
@@ -113,6 +116,16 @@ export default function DailyChecklist() {
                   </AnimatePresence>
                 </div>
               )}
+              {(task as any).popupHint && (
+                <div className="ml-10 mt-0.5 mb-1">
+                  <button
+                    onClick={() => setFeedbackPopupOpen(true)}
+                    className="text-xs text-primary/70 hover:text-primary transition-colors underline underline-offset-2"
+                  >
+                    {(task as any).popupLabel}
+                  </button>
+                </div>
+              )}
             </div>
           );
         })}
@@ -127,6 +140,21 @@ export default function DailyChecklist() {
           🎉 Alle Aufgaben erledigt – weiter so!
         </motion.p>
       )}
+
+      {/* Feedback Popup (Platzhalter) */}
+      <Dialog open={feedbackPopupOpen} onOpenChange={setFeedbackPopupOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Feedback geben</DialogTitle>
+            <DialogDescription>
+              Dieser Bereich wird noch eingerichtet. Hier kannst du bald dein tägliches Feedback abgeben.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 text-center text-muted-foreground text-sm">
+            🚧 Platzhalter – kommt bald!
+          </div>
+        </DialogContent>
+      </Dialog>
     </motion.section>
   );
 }
