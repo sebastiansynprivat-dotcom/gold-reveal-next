@@ -629,7 +629,15 @@ export default function AdminDashboard() {
         title: schedTitle.trim(),
         body: schedBody.trim(),
         frequency: schedFrequency,
-        send_time: schedTime + ":00",
+        send_time: (() => {
+          // Convert German time to UTC
+          const [h, m] = schedTime.split(":").map(Number);
+          const now = new Date();
+          const german = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m);
+          const utcH = german.getUTCHours().toString().padStart(2, "0");
+          const utcM = german.getUTCMinutes().toString().padStart(2, "0");
+          return `${utcH}:${utcM}:00`;
+        })(),
         created_by: user?.id,
       };
       if (schedFrequency === "weekly") payload.weekday = schedWeekday;
