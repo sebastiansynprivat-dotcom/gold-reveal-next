@@ -25,8 +25,30 @@ serve(async (req) => {
   }
 
   try {
+    const { previousMessages = [] } = await req.json().catch(() => ({ previousMessages: [] }));
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+
+    const messages: { role: string; content: string }[] = [
+      { role: "system", content: SYSTEM_PROMPT },
+    ];
+
+    // Add previous messages as context so the AI avoids repeating them
+    if (previousMessages.length > 0) {
+      messages.push({
+        role: "user",
+        content: `Hier sind MassDM-Nachrichten die ich bereits generiert habe. Generiere eine KOMPLETT ANDERE Nachricht die sich deutlich davon unterscheidet:\n\n${previousMessages.map((m: string, i: number) => `${i + 1}. "${m}"`).join("\n")}`,
+      });
+      messages.push({
+        role: "assistant",
+        content: "Verstanden, ich generiere eine komplett andere Nachricht mit anderem Wording und Stil.",
+      });
+    }
+
+    messages.push({
+      role: "user",
+      content: `Generiere jetzt eine neue, einzigartige MassDM-Nachricht. Timestamp: ${Date.now()}`,
+    });
 
     const response = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
@@ -39,14 +61,10 @@ serve(async (req) => {
         body: JSON.stringify({
           model: "google/gemini-3-flash-preview",
           temperature: 1.5,
-          messages: [
-            { role: "system", content: SYSTEM_PROMPT },
-            { role: "user", content: `Generiere eine komplett neue, einzigartige MassDM-Nachricht. Zufallszahl: ${Math.random().toString(36).slice(2, 8)}` },
-          ],
+          messages,
         }),
       }
     );
-
     if (!response.ok) {
       if (response.status === 429) {
         return new Response(
