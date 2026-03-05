@@ -116,10 +116,10 @@ export default function FrageMemoDialog({ open, onOpenChange }: FrageMemoDialogP
                   </div>
                   <div className="flex justify-between">
                     <span className="text-[10px] text-muted-foreground tabular-nums">
-                      {audioRef.current ? fmt(audioRef.current.currentTime) : "0:00"}
+                      {audioRef.current ? fmt(audioRef.current.currentTime / 1.5) : "0:00"}
                     </span>
                     <span className="text-[10px] text-muted-foreground tabular-nums">
-                      {duration ? fmt(duration) : "–:––"}
+                      {duration ? fmt(duration / 1.5) : "–:––"}
                     </span>
                   </div>
                 </div>
