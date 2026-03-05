@@ -292,9 +292,6 @@ export default function Dashboard() {
             <img src={logo} alt="Logo" className="h-9 w-9 rounded-full shrink-0" />
             <div className="shrink-0">
               <h1 className="text-base lg:text-lg font-bold text-foreground leading-tight">Chatter Dashboard</h1>
-              <p className="text-[10px] text-muted-foreground">
-                Aktiv auf: <span className="text-gold-gradient font-semibold">{platform}</span>
-              </p>
             </div>
             <div className="h-8 w-px bg-border shrink-0" />
             <div className="flex items-center gap-2">
