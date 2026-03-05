@@ -154,6 +154,7 @@ export default function AdminDashboard() {
   const [notifSending, setNotifSending] = useState(false);
   const [notifHistory, setNotifHistory] = useState<any[]>([]);
   const [notifHistoryLoaded, setNotifHistoryLoaded] = useState(false);
+  const [notifHistoryOpen, setNotifHistoryOpen] = useState(false);
   const [chatterFilter, setChatterFilter] = useState<ChatterFilter>("alle");
   const [platformFilters, setPlatformFilters] = useState<Set<string>>(new Set());
   const [botMessages, setBotMessages] = useState<Record<string, { message: string; followUp: string; isActive: boolean; saving: boolean }>>({});
@@ -2332,61 +2333,75 @@ export default function AdminDashboard() {
 
         {activeTab === "notifications" && (
           <div className="space-y-4">
-            {/* Send Form */}
-            <section className="glass-card rounded-xl p-5 space-y-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Bell className="h-4 w-4 text-accent" />
-                <h2 className="text-sm font-semibold text-foreground">Neue Benachrichtigung</h2>
-              </div>
-              <div className="space-y-3">
-                <Input
-                  value={notifTitle}
-                  onChange={(e) => setNotifTitle(e.target.value)}
-                  placeholder="Titel der Benachrichtigung"
-                  className="text-sm"
-                  maxLength={100}
-                />
-                <Textarea
-                  value={notifBody}
-                  onChange={(e) => setNotifBody(e.target.value)}
-                  placeholder="Nachricht eingeben..."
-                  className="text-sm min-h-[80px]"
-                  maxLength={500}
-                />
-                <Button
-                  onClick={handleSendNotification}
-                  disabled={notifSending || !notifTitle.trim() || !notifBody.trim()}
-                  className="w-full"
-                >
-                  <Send className="h-4 w-4 mr-2" />
-                  {notifSending ? "Wird gesendet..." : "An alle senden"}
-                </Button>
-              </div>
-            </section>
-
-            {/* History */}
-            {notifHistory.length > 0 && (
-              <section className="glass-card-subtle rounded-xl p-5 space-y-3">
-                <h2 className="text-sm font-semibold text-foreground">Verlauf</h2>
-                <div className="space-y-2">
-                  {notifHistory.map((n: any) => (
-                    <div key={n.id} className="p-3 rounded-lg bg-secondary/30 space-y-1">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium text-foreground">{n.title}</p>
-                        <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                          <CheckCircle2 className="h-3 w-3" />
-                          {n.recipients_count} Empfänger
-                        </div>
-                      </div>
-                      <p className="text-xs text-muted-foreground">{n.body}</p>
-                      <p className="text-[10px] text-muted-foreground">
-                        {new Date(n.sent_at).toLocaleString("de-DE")}
-                      </p>
-                    </div>
-                  ))}
+            <section className="glass-card rounded-xl overflow-hidden">
+              {/* Send Form */}
+              <div className="p-5 space-y-4">
+                <div className="flex items-center gap-2">
+                  <Bell className="h-4 w-4 text-accent" />
+                  <h2 className="text-sm font-semibold text-foreground">Neue Benachrichtigung</h2>
                 </div>
-              </section>
-            )}
+                <div className="space-y-3">
+                  <Input
+                    value={notifTitle}
+                    onChange={(e) => setNotifTitle(e.target.value)}
+                    placeholder="Titel der Benachrichtigung"
+                    className="text-sm"
+                    maxLength={100}
+                  />
+                  <Textarea
+                    value={notifBody}
+                    onChange={(e) => setNotifBody(e.target.value)}
+                    placeholder="Nachricht eingeben..."
+                    className="text-sm min-h-[80px]"
+                    maxLength={500}
+                  />
+                  <Button
+                    onClick={handleSendNotification}
+                    disabled={notifSending || !notifTitle.trim() || !notifBody.trim()}
+                    className="w-full"
+                  >
+                    <Send className="h-4 w-4 mr-2" />
+                    {notifSending ? "Wird gesendet..." : "An alle senden"}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Collapsible History */}
+              {notifHistory.length > 0 && (
+                <>
+                  <button
+                    onClick={() => setNotifHistoryOpen(!notifHistoryOpen)}
+                    className="w-full px-5 py-3 border-t border-border flex items-center justify-between hover:bg-secondary/30 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-accent" />
+                      <span className="text-sm font-semibold text-foreground">Verlauf</span>
+                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{notifHistory.length}</Badge>
+                    </div>
+                    <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${notifHistoryOpen ? "rotate-180" : ""}`} />
+                  </button>
+                  {notifHistoryOpen && (
+                    <div className="px-5 pb-5 space-y-2">
+                      {notifHistory.map((n: any) => (
+                        <div key={n.id} className="p-3 rounded-lg bg-secondary/30 space-y-1">
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm font-medium text-foreground">{n.title}</p>
+                            <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                              <CheckCircle2 className="h-3 w-3" />
+                              {n.recipients_count} Empfänger
+                            </div>
+                          </div>
+                          <p className="text-xs text-muted-foreground">{n.body}</p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {new Date(n.sent_at).toLocaleString("de-DE")}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </section>
           </div>
         )}
 
