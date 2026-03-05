@@ -2608,7 +2608,7 @@ export default function AdminDashboard() {
                           <span>
                             {s.frequency === "daily" ? "Täglich" : s.frequency === "weekly" ? `Wöchentlich (${["So","Mo","Di","Mi","Do","Fr","Sa"][s.weekday ?? 1]})` : `Monatlich (${s.day_of_month ?? 1}.)`}
                           </span>
-                          <span>um {s.send_time?.slice(0, 5)} UTC</span>
+                          <span>um {s.send_time?.slice(0, 5)} Uhr</span>
                           {s.last_sent_at && <span>· Zuletzt: {new Date(s.last_sent_at).toLocaleString("de-DE")}</span>}
                         </div>
                       </div>
