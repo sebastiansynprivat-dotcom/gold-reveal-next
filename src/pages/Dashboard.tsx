@@ -647,7 +647,7 @@ export default function Dashboard() {
                   </div>
                   <div>
                     <p className={`font-bold text-sm lg:text-base ${isGold ? "text-gold-gradient" : "text-muted-foreground"}`}>Gold-Status</p>
-                    <p className="text-[10px] lg:text-xs text-muted-foreground">Ab 3.000€ Umsatz</p>
+                    <p className="text-[10px] lg:text-xs text-muted-foreground">Ab 3.000€ Monatsumsatz</p>
                   </div>
                 </div>
                 <div className="text-right">
