@@ -67,7 +67,7 @@ const QuizResult = ({ questions, answers, onRestart }: QuizResultProps) => {
 
     return {
       correct,
-      total: questions.length,
+      total: scoredQuestions.length,
       percentage: Math.round((correct / questions.length) * 100),
       wrongCategories: Array.from(wrongCats),
     };
