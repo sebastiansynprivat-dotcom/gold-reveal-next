@@ -366,6 +366,7 @@ export default function AdminDashboard() {
       if (error) throw error;
       toast.success("KI-Prompt gespeichert!");
       setKiPromptSaved(true);
+      setKiPromptOriginal(kiPrompt);
     } catch {
       toast.error("Fehler beim Speichern des KI-Prompts");
     }
