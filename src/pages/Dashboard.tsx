@@ -24,6 +24,7 @@ import { de } from "date-fns/locale";
 import HomescreenTutorial from "@/components/HomescreenTutorial";
 import PushNotificationDialog from "@/components/PushNotificationDialog";
 import AccountMemoDialog from "@/components/AccountMemoDialog";
+import FrageMemoDialog from "@/components/FrageMemoDialog";
 
 const GOLD_THRESHOLD = 3000;
 const STARTER_RATE = 0.2;
@@ -68,6 +69,7 @@ export default function Dashboard() {
   const [chatOpen, setChatOpen] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [showMemo, setShowMemo] = useState(false);
+  const [showFrageMemo, setShowFrageMemo] = useState(false);
   const [isPwaInstalled, setIsPwaInstalled] = useState(() => {
     return window.matchMedia("(display-mode: standalone)").matches ||
     (window.navigator as any).standalone === true;
