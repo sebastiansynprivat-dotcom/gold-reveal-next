@@ -132,10 +132,11 @@ export default function FrageMemoDialog({ open, onOpenChange }: FrageMemoDialogP
             <div className="h-px w-full bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
           </div>
 
-          {/* Arrow pointing to chat button */}
-          <div className="flex justify-end mr-2 mt-3">
-            <div className="flex flex-col items-center animate-bounce">
-              <ArrowDown className="h-5 w-5 text-accent drop-shadow-[0_0_6px_hsl(var(--accent)/0.5)]" />
+          {/* Line + arrow pointing to chat button */}
+          <div className="flex justify-end mr-6 mt-2">
+            <div className="flex flex-col items-center">
+              <div className="w-px h-24 bg-gradient-to-b from-accent/60 to-accent/20" />
+              <ArrowDown className="h-6 w-6 text-accent animate-bounce drop-shadow-[0_0_8px_hsl(var(--accent)/0.5)]" />
             </div>
           </div>
         </div>
