@@ -205,6 +205,18 @@ export default function DailyChecklist() {
           <FeedbackTemplate />
         </DialogContent>
       </Dialog>
+
+      {/* MassDM Popup */}
+      <Dialog open={massDmPopupOpen} onOpenChange={setMassDmPopupOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Muss ich 6 MassDMs machen?</DialogTitle>
+            <DialogDescription>
+              Du solltest mindestens eine MassDM am Tag machen. Wenn du aber keine Käufer findest, mach bitte mehr. Das ist wichtig, weil es deine Chance erhöht, Käufer zu finden.
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
     </motion.section>
   );
 }
