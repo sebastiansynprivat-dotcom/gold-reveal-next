@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { Users, Send, Bell, BellOff, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, CalendarDays, CalendarRange, Filter, MessageSquare, Star, AlertTriangle, Bot, Save, Power, Copy, Smartphone, Percent, ChevronRight, Shield, UserPlus, UserMinus, Check, XCircle, Sparkles, Loader2, ExternalLink } from "lucide-react";
+import { Users, Send, Bell, BellOff, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, CalendarDays, CalendarRange, Filter, MessageSquare, Star, AlertTriangle, Bot, Save, Power, Copy, Smartphone, Percent, ChevronRight, Shield, UserPlus, UserMinus, Check, XCircle, Sparkles, Loader2, ExternalLink, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -148,7 +148,7 @@ export default function AdminDashboard() {
   const [goalAmount, setGoalAmount] = useState("");
   const [goalSaving, setGoalSaving] = useState(false);
   const [expandedChatter, setExpandedChatter] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"einnahmen" | "chatter" | "botdms">("einnahmen");
+  const [activeTab, setActiveTab] = useState<"einnahmen" | "chatter" | "botdms" | "kiprompt">("einnahmen");
   const [chatterFilter, setChatterFilter] = useState<ChatterFilter>("alle");
   const [platformFilters, setPlatformFilters] = useState<Set<string>>(new Set());
   const [botMessages, setBotMessages] = useState<Record<string, { message: string; followUp: string; isActive: boolean; saving: boolean }>>({});
@@ -179,6 +179,12 @@ export default function AdminDashboard() {
   const [summaryLoading, setSummaryLoading] = useState<Record<string, boolean>>({});
   const [showAiSummaries, setShowAiSummaries] = useState(false);
   const [generatingAll, setGeneratingAll] = useState(false);
+
+  // KI Prompt state
+  const [kiPrompt, setKiPrompt] = useState("");
+  const [kiPromptLoading, setKiPromptLoading] = useState(false);
+  const [kiPromptSaving, setKiPromptSaving] = useState(false);
+  const [kiPromptLoaded, setKiPromptLoaded] = useState(false);
 
   // Chatter checklist state (persisted in localStorage)
   const [checkedChatters, setCheckedChatters] = useState<Set<string>>(() => {
@@ -331,6 +337,37 @@ export default function AdminDashboard() {
       loadChatterSummaries();
     }
   }, [activeTab]);
+
+  const loadKiPrompt = async () => {
+    setKiPromptLoading(true);
+    try {
+      const { data } = await supabase
+        .from("ai_prompts")
+        .select("prompt_text")
+        .eq("prompt_key", "system_prompt")
+        .single();
+      if (data) setKiPrompt(data.prompt_text);
+    } catch {
+      toast.error("Fehler beim Laden des KI-Prompts");
+    }
+    setKiPromptLoading(false);
+    setKiPromptLoaded(true);
+  };
+
+  const saveKiPrompt = async () => {
+    setKiPromptSaving(true);
+    try {
+      const { error } = await supabase
+        .from("ai_prompts")
+        .update({ prompt_text: kiPrompt, updated_at: new Date().toISOString(), updated_by: user?.id })
+        .eq("prompt_key", "system_prompt");
+      if (error) throw error;
+      toast.success("KI-Prompt gespeichert!");
+    } catch {
+      toast.error("Fehler beim Speichern des KI-Prompts");
+    }
+    setKiPromptSaving(false);
+  };
 
   const loadAdmins = async () => {
     setAdminListLoading(true);
@@ -1021,6 +1058,14 @@ export default function AdminDashboard() {
           >
             <Bot className="h-3.5 w-3.5 mr-1.5" />
             Bot DMs
+          </Button>
+          <Button
+            variant={activeTab === "kiprompt" ? "default" : "outline"}
+            size="sm"
+            onClick={() => { setActiveTab("kiprompt"); if (!kiPromptLoaded) loadKiPrompt(); }}
+          >
+            <Brain className="h-3.5 w-3.5 mr-1.5" />
+            KI Prompt
           </Button>
         </div>
 
@@ -2192,6 +2237,58 @@ export default function AdminDashboard() {
                   })}
                 </div>
               )}
+            </section>
+          </div>
+        )}
+
+        {activeTab === "kiprompt" && (
+          <div className="space-y-4">
+            <section className="glass-card rounded-xl overflow-hidden">
+              <div className="px-4 py-3 border-b border-border flex items-center gap-2">
+                <Brain className="h-4 w-4 text-accent" />
+                <h2 className="text-sm font-semibold text-foreground">KI System-Prompt</h2>
+              </div>
+              <div className="p-4 space-y-4">
+                <p className="text-xs text-muted-foreground">
+                  Hier kannst du den System-Prompt der KI bearbeiten. Dieser wird bei jeder Chat-Anfrage als Anweisung an die KI gesendet.
+                </p>
+                {kiPromptLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-6 w-6 animate-spin text-accent" />
+                  </div>
+                ) : (
+                  <>
+                    <Textarea
+                      value={kiPrompt}
+                      onChange={(e) => setKiPrompt(e.target.value)}
+                      className="min-h-[400px] text-sm font-mono resize-y bg-background/50 border-border/50 focus:border-accent/50"
+                      placeholder="System-Prompt eingeben..."
+                    />
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] text-muted-foreground">
+                        {kiPrompt.length} Zeichen
+                      </span>
+                      <Button
+                        onClick={saveKiPrompt}
+                        disabled={kiPromptSaving}
+                        size="sm"
+                      >
+                        {kiPromptSaving ? (
+                          <>
+                            <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                            Wird gespeichert...
+                          </>
+                        ) : (
+                          <>
+                            <Save className="h-3.5 w-3.5 mr-1.5" />
+                            Prompt speichern
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </div>
             </section>
           </div>
         )}

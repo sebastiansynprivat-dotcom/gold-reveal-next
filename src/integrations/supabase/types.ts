@@ -74,6 +74,30 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_prompts: {
+        Row: {
+          id: string
+          prompt_key: string
+          prompt_text: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          id?: string
+          prompt_key?: string
+          prompt_text: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          id?: string
+          prompt_key?: string
+          prompt_text?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       bot_messages: {
         Row: {
           account_id: string | null
