@@ -148,7 +148,7 @@ export default function AdminDashboard() {
   const [goalAmount, setGoalAmount] = useState("");
   const [goalSaving, setGoalSaving] = useState(false);
   const [expandedChatter, setExpandedChatter] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"einnahmen" | "chatter" | "botdms">("einnahmen");
+  const [activeTab, setActiveTab] = useState<"einnahmen" | "chatter" | "botdms" | "kiprompt">("einnahmen");
   const [chatterFilter, setChatterFilter] = useState<ChatterFilter>("alle");
   const [platformFilters, setPlatformFilters] = useState<Set<string>>(new Set());
   const [botMessages, setBotMessages] = useState<Record<string, { message: string; followUp: string; isActive: boolean; saving: boolean }>>({});
@@ -179,6 +179,12 @@ export default function AdminDashboard() {
   const [summaryLoading, setSummaryLoading] = useState<Record<string, boolean>>({});
   const [showAiSummaries, setShowAiSummaries] = useState(false);
   const [generatingAll, setGeneratingAll] = useState(false);
+
+  // KI Prompt state
+  const [kiPrompt, setKiPrompt] = useState("");
+  const [kiPromptLoading, setKiPromptLoading] = useState(false);
+  const [kiPromptSaving, setKiPromptSaving] = useState(false);
+  const [kiPromptLoaded, setKiPromptLoaded] = useState(false);
 
   // Chatter checklist state (persisted in localStorage)
   const [checkedChatters, setCheckedChatters] = useState<Set<string>>(() => {
