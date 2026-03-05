@@ -174,7 +174,6 @@ const OfferA = () => {
           ))}
         </div>
       </motion.div>
-      </motion.div>
     </div>
   );
 };
