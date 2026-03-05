@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Mic, Pause, Play, ArrowDown } from "lucide-react";
+import { ArrowDown } from "lucide-react";
 
 interface FrageMemoDialogProps {
   open: boolean;
@@ -12,15 +12,13 @@ export default function FrageMemoDialog({ open, onOpenChange }: FrageMemoDialogP
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
 
-  // Auto-play when opened
   useEffect(() => {
     if (open) {
       setPlaying(false);
       setProgress(0);
-      // Small delay so DOM is ready
       setTimeout(() => {
         audioRef.current?.play().then(() => setPlaying(true)).catch(() => {});
-      }, 200);
+      }, 300);
     } else {
       audioRef.current?.pause();
       setPlaying(false);
@@ -30,18 +28,16 @@ export default function FrageMemoDialog({ open, onOpenChange }: FrageMemoDialogP
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    const onTimeUpdate = () => {
-      if (audio.duration) setProgress((audio.currentTime / audio.duration) * 100);
-    };
-    const onLoadedMetadata = () => setDuration(audio.duration);
-    const onEnded = () => { setPlaying(false); setProgress(100); };
-    audio.addEventListener("timeupdate", onTimeUpdate);
-    audio.addEventListener("loadedmetadata", onLoadedMetadata);
-    audio.addEventListener("ended", onEnded);
+    const onTime = () => { if (audio.duration) setProgress((audio.currentTime / audio.duration) * 100); };
+    const onMeta = () => setDuration(audio.duration);
+    const onEnd = () => { setPlaying(false); setProgress(100); };
+    audio.addEventListener("timeupdate", onTime);
+    audio.addEventListener("loadedmetadata", onMeta);
+    audio.addEventListener("ended", onEnd);
     return () => {
-      audio.removeEventListener("timeupdate", onTimeUpdate);
-      audio.removeEventListener("loadedmetadata", onLoadedMetadata);
-      audio.removeEventListener("ended", onEnded);
+      audio.removeEventListener("timeupdate", onTime);
+      audio.removeEventListener("loadedmetadata", onMeta);
+      audio.removeEventListener("ended", onEnd);
     };
   }, []);
 
@@ -52,11 +48,7 @@ export default function FrageMemoDialog({ open, onOpenChange }: FrageMemoDialogP
     setPlaying(!playing);
   };
 
-  const formatTime = (s: number) => {
-    const m = Math.floor(s / 60);
-    const sec = Math.floor(s % 60);
-    return `${m}:${sec.toString().padStart(2, "0")}`;
-  };
+  const fmt = (s: number) => `${Math.floor(s / 60)}:${Math.floor(s % 60).toString().padStart(2, "0")}`;
 
   if (!open) return <audio ref={audioRef} src="/audio/frage-info.mp3" preload="metadata" />;
 
@@ -64,60 +56,97 @@ export default function FrageMemoDialog({ open, onOpenChange }: FrageMemoDialogP
     <>
       <audio ref={audioRef} src="/audio/frage-info.mp3" preload="metadata" />
 
-      {/* Subtle backdrop */}
+      {/* Backdrop */}
       <div
-        className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm animate-fade-in"
+        className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md transition-opacity duration-300"
         onClick={() => onOpenChange(false)}
       />
 
-      {/* Floating card – positioned above the chat button */}
-      <div className="fixed z-50 bottom-24 right-4 sm:right-6 w-[calc(100%-2rem)] sm:w-[340px] animate-scale-in">
-        <div className="glass-card rounded-2xl border border-accent/20 p-4 space-y-3 shadow-2xl">
-          {/* Title */}
-          <p className="text-sm font-semibold text-foreground text-center">
-            Ich habe eine Frage
-          </p>
+      {/* Center card */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center px-6 pointer-events-none">
+        <div className="pointer-events-auto w-full max-w-xs animate-scale-in">
+          {/* Card */}
+          <div className="rounded-2xl bg-card/95 backdrop-blur-xl border border-border/60 shadow-[0_8px_60px_-12px_hsl(var(--accent)/0.25)] overflow-hidden">
+            {/* Top accent line */}
+            <div className="h-px w-full bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
 
-          {/* Audio player */}
-          <div className="flex items-center gap-3">
-            <button
-              onClick={togglePlay}
-              className="w-10 h-10 rounded-full bg-accent/15 border border-accent/25 flex items-center justify-center shrink-0 hover:bg-accent/25 active:scale-95 transition-all"
-            >
-              {playing ? (
-                <Pause className="h-4 w-4 text-accent" />
-              ) : (
-                <Play className="h-4 w-4 text-accent ml-0.5" />
-              )}
-            </button>
-            <div className="flex-1 min-w-0 space-y-1">
-              <div className="relative h-1.5 rounded-full bg-secondary overflow-hidden">
-                <div
-                  className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-accent to-accent/70 transition-all duration-200"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-              <div className="flex justify-between">
-                <span className="text-[9px] text-muted-foreground">
-                  {audioRef.current ? formatTime(audioRef.current.currentTime) : "0:00"}
-                </span>
-                <span className="text-[9px] text-muted-foreground">
-                  {duration ? formatTime(duration) : "–:––"}
-                </span>
-              </div>
+            <div className="p-5 space-y-4">
+              {/* Waveform button */}
+              <button
+                onClick={togglePlay}
+                className="w-full flex items-center gap-3 group"
+              >
+                {/* Animated ring */}
+                <div className="relative shrink-0">
+                  <div className={`w-11 h-11 rounded-full border-2 transition-colors duration-300 flex items-center justify-center ${playing ? "border-accent bg-accent/10" : "border-border bg-secondary/50"}`}>
+                    {playing ? (
+                      <div className="flex items-center gap-[3px]">
+                        {[1, 2, 3].map((i) => (
+                          <div
+                            key={i}
+                            className="w-[3px] rounded-full bg-accent"
+                            style={{
+                              animation: `barBounce 0.8s ease-in-out ${i * 0.15}s infinite`,
+                              height: "12px",
+                            }}
+                          />
+                        ))}
+                      </div>
+                    ) : (
+                      <svg className="w-4 h-4 text-muted-foreground ml-0.5" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    )}
+                  </div>
+                  {playing && (
+                    <div className="absolute inset-0 rounded-full border-2 border-accent/30 animate-ping" />
+                  )}
+                </div>
+
+                {/* Progress + time */}
+                <div className="flex-1 min-w-0 space-y-1.5">
+                  <div className="relative h-1 rounded-full bg-border/80 overflow-hidden">
+                    <div
+                      className="absolute inset-y-0 left-0 rounded-full bg-accent transition-all duration-200"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[10px] text-muted-foreground tabular-nums">
+                      {audioRef.current ? fmt(audioRef.current.currentTime) : "0:00"}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground tabular-nums">
+                      {duration ? fmt(duration) : "–:––"}
+                    </span>
+                  </div>
+                </div>
+              </button>
+
+              {/* Hint text */}
+              <p className="text-[11px] text-muted-foreground text-center leading-relaxed">
+                Tippe auf den Chat-Button unten rechts
+              </p>
             </div>
-            <Mic className="h-3.5 w-3.5 text-accent/40 shrink-0" />
-          </div>
-        </div>
 
-        {/* Arrow pointing down to chat button */}
-        <div className="flex justify-end pr-4 sm:pr-5 mt-1">
-          <div className="flex flex-col items-center gap-0.5 animate-bounce">
-            <span className="text-[10px] text-accent font-medium">Chat öffnen</span>
-            <ArrowDown className="h-5 w-5 text-accent" />
+            {/* Bottom accent line */}
+            <div className="h-px w-full bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
+          </div>
+
+          {/* Arrow pointing to chat button */}
+          <div className="flex justify-end mr-2 mt-3">
+            <div className="flex flex-col items-center animate-bounce">
+              <ArrowDown className="h-5 w-5 text-accent drop-shadow-[0_0_6px_hsl(var(--accent)/0.5)]" />
+            </div>
           </div>
         </div>
       </div>
+
+      <style>{`
+        @keyframes barBounce {
+          0%, 100% { transform: scaleY(0.4); }
+          50% { transform: scaleY(1); }
+        }
+      `}</style>
     </>
   );
 }
