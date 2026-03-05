@@ -15,8 +15,21 @@ const QUICK_QUESTIONS = [
   "Technische Probleme",
 ];
 
-export default function DashboardChat() {
+interface DashboardChatProps {
+  externalOpen?: boolean;
+  onExternalOpenChange?: (open: boolean) => void;
+}
+
+export default function DashboardChat({ externalOpen, onExternalOpenChange }: DashboardChatProps) {
   const [open, setOpen] = useState(false);
+
+  // Sync external open state
+  useEffect(() => {
+    if (externalOpen) {
+      setOpen(true);
+      onExternalOpenChange?.(false);
+    }
+  }, [externalOpen, onExternalOpenChange]);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
