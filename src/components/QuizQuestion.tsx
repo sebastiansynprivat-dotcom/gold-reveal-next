@@ -46,7 +46,6 @@ const QuizQuestion = ({ question, currentIndex, totalQuestions, onAnswer }: Quiz
 
       <h2
         className="text-2xl md:text-3xl text-center mb-12 max-w-md leading-snug tracking-tight"
-        style={{ fontFamily: "'Playfair Display', serif" }}
       >
         {question.question}
       </h2>
@@ -172,7 +171,7 @@ const MatchOptions = ({ labels, descriptions, onComplete }: { labels: string[]; 
       <div className="space-y-2 mb-8">
         {labels.map((label, i) => (
           <motion.button key={label} onClick={() => handleLabelTap(i)} className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-300 text-left ${activeLabel === i ? "glass-card border-primary/50 ring-1 ring-primary/20" : assignments[i] ? "glass-card-subtle border-primary/20" : "glass-card-subtle hover:border-primary/30"}`} whileTap={{ scale: 0.99 }}>
-            <span className="text-primary font-bold min-w-[60px] shrink-0 text-sm" style={{ fontFamily: "'Playfair Display', serif" }}>{label}</span>
+            <span className="text-primary font-bold min-w-[60px] shrink-0 text-sm">{label}</span>
             <span className="text-muted-foreground/30 text-xs">→</span>
             {assignments[i] ? <span className="text-foreground/80 text-sm">{assignments[i]}</span> : <span className="text-muted-foreground/30 text-xs italic">{activeLabel === i ? "Wähle eine Beschreibung…" : "Antippen"}</span>}
           </motion.button>

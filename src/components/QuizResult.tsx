@@ -40,7 +40,7 @@ const CircularProgress = ({ percentage }: { percentage: number }) => {
         </defs>
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-3xl font-bold tracking-tight gold-gradient-text" style={{ fontFamily: "'Playfair Display', serif" }}>{percentage}%</span>
+        <span className="text-3xl font-bold tracking-tight gold-gradient-text">{percentage}%</span>
       </div>
     </div>
   );
@@ -106,7 +106,7 @@ const QuizResult = ({ questions, answers, onRestart }: QuizResultProps) => {
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }} className="flex flex-col items-center min-h-screen px-6 py-20">
       <motion.img src={logo} alt="SHE Logo" className="w-16 h-16 mb-8 opacity-80" initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 0.8 }} transition={{ duration: 0.8, ease }} />
 
-      <motion.h1 className="text-3xl md:text-4xl gold-gradient-text mb-1 tracking-tight" style={{ fontFamily: "'Playfair Display', serif" }} initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.15, duration: 0.8, ease }}>
+      <motion.h1 className="text-3xl md:text-4xl gold-gradient-text mb-1 tracking-tight" initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.15, duration: 0.8, ease }}>
         Dein Ergebnis
       </motion.h1>
 
@@ -120,13 +120,13 @@ const QuizResult = ({ questions, answers, onRestart }: QuizResultProps) => {
 
       {wrongCategories.length > 0 && (
         <motion.div className="w-full max-w-md mt-14" initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.8, duration: 0.8, ease }}>
-          <h2 className="text-lg gold-gradient-text mb-2 text-center" style={{ fontFamily: "'Playfair Display', serif" }}>Du musst noch etwas lernen 🧠</h2>
+          <h2 className="text-lg gold-gradient-text mb-2 text-center">Du musst noch etwas lernen 🧠</h2>
           <p className="text-foreground/90 text-sm leading-relaxed mb-6 text-center">Schau dir die Optimierungen unten an und wiederhole dann das Quiz nochmal. Erst ab 100% richtige Fragen können wir gemeinsam starten.</p>
           <h3 className="text-xs uppercase tracking-[0.2em] text-primary/50 mb-6 text-center font-medium">Optimierungspotenzial</h3>
           <div className="space-y-2.5">
             {wrongCategories.map((cat, i) => (
               <motion.div key={cat} className="p-4 rounded-xl glass-card-subtle" initial={{ x: -16, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 1 + i * 0.1, duration: 0.5, ease }}>
-                <h3 className="text-primary/80 font-semibold mb-1 text-sm" style={{ fontFamily: "'Playfair Display', serif" }}>{cat}</h3>
+                <h3 className="text-primary/80 font-semibold mb-1 text-sm">{cat}</h3>
                 <p className="text-muted-foreground/60 text-xs leading-relaxed mb-3">{coachingTips[cat]?.tip || "Beschäftige dich intensiver mit diesem Thema in deinem nächsten Coaching."}</p>
                 {coachingTips[cat]?.url && (
                   <a href={coachingTips[cat].url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs font-medium text-primary/80 hover:text-primary transition-colors duration-300">
@@ -141,7 +141,7 @@ const QuizResult = ({ questions, answers, onRestart }: QuizResultProps) => {
 
       {wrongCategories.length === 0 && (
         <motion.div className="mt-14 p-6 rounded-xl glass-card max-w-md text-center" initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.8, duration: 0.8, ease }}>
-          <h2 className="text-lg gold-gradient-text mb-2" style={{ fontFamily: "'Playfair Display', serif" }}>Perfektes Ergebnis ✨</h2>
+          <h2 className="text-lg gold-gradient-text mb-2">Perfektes Ergebnis ✨</h2>
           <p className="text-foreground text-base leading-relaxed mb-6 font-medium">Nun folgt der letzte Schritt: Die Einführung in die Plattform auf der du arbeiten wirst.</p>
           <WeightedRouteButton />
         </motion.div>
