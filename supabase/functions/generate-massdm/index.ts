@@ -38,9 +38,10 @@ serve(async (req) => {
         },
         body: JSON.stringify({
           model: "google/gemini-3-flash-preview",
+          temperature: 1.5,
           messages: [
             { role: "system", content: SYSTEM_PROMPT },
-            { role: "user", content: "Generiere eine neue MassDM-Nachricht." },
+            { role: "user", content: `Generiere eine komplett neue, einzigartige MassDM-Nachricht. Zufallszahl: ${Math.random().toString(36).slice(2, 8)}` },
           ],
         }),
       }
