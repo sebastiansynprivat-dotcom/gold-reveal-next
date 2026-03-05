@@ -24,6 +24,8 @@ export default function DailyChecklist() {
       return new Set();
     }
   });
+  const [showAudio, setShowAudio] = useState(false);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
     localStorage.setItem(getTodayKey(), JSON.stringify([...completed]));
@@ -34,6 +36,17 @@ export default function DailyChecklist() {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
       return next;
+    });
+  };
+
+  const handleAudioToggle = () => {
+    setShowAudio((prev) => {
+      if (!prev) {
+        setTimeout(() => audioRef.current?.play(), 100);
+      } else {
+        audioRef.current?.pause();
+      }
+      return !prev;
     });
   };
 
@@ -63,19 +76,45 @@ export default function DailyChecklist() {
         {TASKS.map((task) => {
           const done = completed.has(task.id);
           return (
-            <label
-              key={task.id}
-              className={`flex items-start gap-3 p-2.5 rounded-lg cursor-pointer transition-all hover:bg-accent/5 ${done ? "opacity-50" : ""}`}
-            >
-              <Checkbox
-                checked={done}
-                onCheckedChange={() => toggle(task.id)}
-                className="mt-0.5 border-accent/40 data-[state=checked]:bg-accent data-[state=checked]:border-accent"
-              />
-              <span className={`text-sm leading-snug transition-all ${done ? "line-through text-muted-foreground" : "text-foreground"}`}>
-                {task.label}
-              </span>
-            </label>
+            <div key={task.id}>
+              <label
+                className={`flex items-start gap-3 p-2.5 rounded-lg cursor-pointer transition-all hover:bg-accent/5 ${done ? "opacity-50" : ""}`}
+              >
+                <Checkbox
+                  checked={done}
+                  onCheckedChange={() => toggle(task.id)}
+                  className="mt-0.5 border-accent/40 data-[state=checked]:bg-accent data-[state=checked]:border-accent"
+                />
+                <span className={`text-sm leading-snug transition-all ${done ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                  {task.label}
+                </span>
+              </label>
+              {task.audioHint && (
+                <div className="ml-10 mt-0.5 mb-1">
+                  <button
+                    onClick={handleAudioToggle}
+                    className="text-xs text-primary/70 hover:text-primary transition-colors underline underline-offset-2"
+                  >
+                    Wieso ist das wichtig?
+                  </button>
+                  <AnimatePresence>
+                    {showAudio && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="mt-2 rounded-lg bg-primary/5 border border-primary/10 p-2.5">
+                          <audio ref={audioRef} controls className="w-full h-8" src="/audio/massdm-info.mp3" />
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
+            </div>
           );
         })}
       </div>
