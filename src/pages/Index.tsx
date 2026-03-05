@@ -126,6 +126,54 @@ const Index = () => {
         </p>
       )}
 
+      {/* Attention Check Popup */}
+      <AnimatePresence>
+        {showAttentionPopup && (
+          <motion.div
+            initial={{ opacity: 0, y: 40, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed inset-0 z-50 flex items-center justify-center px-4"
+          >
+            <div
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={() => setShowAttentionPopup(false)}
+            />
+            <motion.div
+              className="relative gold-border-glow rounded-2xl p-6 md:p-8 max-w-md w-full text-center space-y-4"
+              style={{ background: "hsl(var(--card))" }}
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.1, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <div className="text-5xl mb-2">🎯</div>
+              <h3
+                className="gold-gradient-text text-xl md:text-2xl font-bold"
+                style={{ fontFamily: "'Playfair Display', serif" }}
+              >
+                Schaust du aufmerksam zu?
+              </h3>
+              <p className="text-muted-foreground text-sm md:text-base">
+                Sende diesen Emoji in deine WhatsApp-Gruppe, damit wir wissen, dass du dabei bist:
+              </p>
+              <div className="text-6xl py-2 select-all cursor-pointer hover:scale-110 transition-transform">
+                🎯
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Tippe auf den Emoji um ihn zu kopieren
+              </p>
+              <button
+                onClick={() => setShowAttentionPopup(false)}
+                className="mt-2 px-8 py-3 rounded-lg bg-primary text-primary-foreground font-semibold text-sm gold-glow hover:gold-glow-strong hover:scale-105 transition-all duration-300"
+              >
+                Weiter schauen →
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className={`transition-all duration-1000 ease-out md:mt-0 -mt-4 ${showButton ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}>
         <a
           href="/quiz"
