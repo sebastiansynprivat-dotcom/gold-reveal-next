@@ -180,13 +180,23 @@ export default function AdminDashboard() {
   const [showAiSummaries, setShowAiSummaries] = useState(false);
   const [generatingAll, setGeneratingAll] = useState(false);
 
-  // KI Prompt state
+  // KI Prompt state (Dashboard Chat)
   const [kiPrompt, setKiPrompt] = useState("");
   const [kiPromptLoading, setKiPromptLoading] = useState(false);
   const [kiPromptSaving, setKiPromptSaving] = useState(false);
   const [kiPromptLoaded, setKiPromptLoaded] = useState(false);
   const [kiPromptSaved, setKiPromptSaved] = useState(true);
   const [kiPromptOriginal, setKiPromptOriginal] = useState("");
+
+  // KI Prompt state (Chat-Analysen)
+  const [analysisPrompt, setAnalysisPrompt] = useState("");
+  const [analysisPromptLoading, setAnalysisPromptLoading] = useState(false);
+  const [analysisPromptSaving, setAnalysisPromptSaving] = useState(false);
+  const [analysisPromptOriginal, setAnalysisPromptOriginal] = useState("");
+
+  // Collapsible state for prompt sections
+  const [chatPromptOpen, setChatPromptOpen] = useState(true);
+  const [analysisPromptOpen, setAnalysisPromptOpen] = useState(false);
 
   // Chatter checklist state (persisted in localStorage)
   const [checkedChatters, setCheckedChatters] = useState<Set<string>>(() => {
