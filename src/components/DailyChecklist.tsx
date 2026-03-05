@@ -5,10 +5,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ClipboardCheck } from "lucide-react";
 
 const TASKS = [
-  { id: 1, label: "Hast du bis zu 6 MassDM's gemacht?", audioHint: true },
+  { id: 1, label: "Hast du bis zu 6 MassDM's gemacht?", audioHint: "/audio/massdm-info.mp3", audioLabel: "Wieso ist das wichtig?" },
   { id: 2, label: "Deine alte MassDM gelöscht bevor eine neue gesendet wird?" },
   { id: 3, label: "Geschaut ob wir für dich gepostet haben? (Falls nicht, gib uns bitte eine Info in der Gruppe)" },
-  { id: 4, label: "Auf alle Nachrichten geantwortet die in deinem Account offen sind?" },
+  { id: 4, label: "Auf alle Nachrichten geantwortet die in deinem Account offen sind?", audioHint: "/audio/open-chats-info.mp3", audioLabel: "Wie kann ich sicherstellen, dass ich alles beantwortet habe?" },
 ];
 
 function getTodayKey() {
