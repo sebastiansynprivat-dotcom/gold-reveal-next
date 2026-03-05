@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { Users, Send, Bell, BellOff, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, CalendarDays, CalendarRange, Filter, MessageSquare, Star, AlertTriangle, Bot, Save, Power, Copy, Smartphone, Percent, ChevronRight, ChevronDown, Shield, UserPlus, UserMinus, Check, XCircle, Sparkles, Loader2, ExternalLink, Brain, CheckCircle2 } from "lucide-react";
+import { Users, Send, Bell, BellOff, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, CalendarDays, CalendarRange, Filter, MessageSquare, Star, AlertTriangle, Bot, Save, Power, Copy, Smartphone, Percent, ChevronRight, ChevronDown, Shield, UserPlus, UserMinus, Check, XCircle, Sparkles, Loader2, ExternalLink, Brain, CheckCircle2, Clock, Repeat, Pause, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -155,6 +155,18 @@ export default function AdminDashboard() {
   const [notifHistory, setNotifHistory] = useState<any[]>([]);
   const [notifHistoryLoaded, setNotifHistoryLoaded] = useState(false);
   const [notifHistoryOpen, setNotifHistoryOpen] = useState(false);
+
+  // Scheduled notifications state
+  const [schedules, setSchedules] = useState<any[]>([]);
+  const [schedulesLoaded, setSchedulesLoaded] = useState(false);
+  const [schedTitle, setSchedTitle] = useState("");
+  const [schedBody, setSchedBody] = useState("");
+  const [schedFrequency, setSchedFrequency] = useState<"daily" | "weekly" | "monthly">("daily");
+  const [schedTime, setSchedTime] = useState("09:00");
+  const [schedWeekday, setSchedWeekday] = useState(1);
+  const [schedDayOfMonth, setSchedDayOfMonth] = useState(1);
+  const [schedSaving, setSchedSaving] = useState(false);
+  const [schedDeleteConfirm, setSchedDeleteConfirm] = useState<string | null>(null);
   const [chatterFilter, setChatterFilter] = useState<ChatterFilter>("alle");
   const [platformFilters, setPlatformFilters] = useState<Set<string>>(new Set());
   const [botMessages, setBotMessages] = useState<Record<string, { message: string; followUp: string; isActive: boolean; saving: boolean }>>({});
@@ -597,6 +609,64 @@ export default function AdminDashboard() {
     setNotifSending(false);
   };
 
+  const loadSchedules = async () => {
+    const { data } = await supabase
+      .from("scheduled_notifications" as any)
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (data) setSchedules(data as any[]);
+    setSchedulesLoaded(true);
+  };
+
+  const saveSchedule = async () => {
+    if (!schedTitle.trim() || !schedBody.trim()) {
+      toast.error("Titel und Nachricht sind erforderlich");
+      return;
+    }
+    setSchedSaving(true);
+    try {
+      const payload: any = {
+        title: schedTitle.trim(),
+        body: schedBody.trim(),
+        frequency: schedFrequency,
+        send_time: schedTime + ":00",
+        created_by: user?.id,
+      };
+      if (schedFrequency === "weekly") payload.weekday = schedWeekday;
+      if (schedFrequency === "monthly") payload.day_of_month = schedDayOfMonth;
+
+      const { error } = await supabase.from("scheduled_notifications" as any).insert(payload);
+      if (error) throw error;
+      toast.success("Geplante Benachrichtigung erstellt!");
+      setSchedTitle("");
+      setSchedBody("");
+      await loadSchedules();
+    } catch (err: any) {
+      toast.error("Fehler: " + err.message);
+    }
+    setSchedSaving(false);
+  };
+
+  const toggleScheduleActive = async (id: string, currentActive: boolean) => {
+    const { error } = await supabase
+      .from("scheduled_notifications" as any)
+      .update({ is_active: !currentActive })
+      .eq("id", id);
+    if (error) { toast.error("Fehler"); return; }
+    setSchedules(prev => prev.map(s => s.id === id ? { ...s, is_active: !currentActive } : s));
+    toast.success(!currentActive ? "Aktiviert" : "Pausiert");
+  };
+
+  const deleteSchedule = async (id: string) => {
+    const { error } = await supabase
+      .from("scheduled_notifications" as any)
+      .delete()
+      .eq("id", id);
+    if (error) { toast.error("Fehler"); return; }
+    setSchedules(prev => prev.filter(s => s.id !== id));
+    setSchedDeleteConfirm(null);
+    toast.success("Geplante Benachrichtigung gelöscht");
+  };
   const loadBotMessages = async () => {
     const { data } = await supabase
       .from("bot_messages" as any)
@@ -1144,7 +1214,7 @@ export default function AdminDashboard() {
           <Button
             variant={activeTab === "notifications" ? "default" : "outline"}
             size="sm"
-            onClick={() => { setActiveTab("notifications"); if (!notifHistoryLoaded) loadNotifHistory(); }}
+            onClick={() => { setActiveTab("notifications"); if (!notifHistoryLoaded) loadNotifHistory(); if (!schedulesLoaded) loadSchedules(); }}
           >
             <Bell className="h-3.5 w-3.5 mr-1.5" />
             Benachrichtigungen
@@ -2402,8 +2472,167 @@ export default function AdminDashboard() {
                 </>
               )}
             </section>
+
+            {/* Scheduled Notifications Card */}
+            <section className="glass-card rounded-xl overflow-hidden">
+              <div className="p-5 space-y-4">
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-accent" />
+                  <h2 className="text-sm font-semibold text-foreground">Geplante Benachrichtigung</h2>
+                </div>
+                <div className="space-y-3">
+                  <Input
+                    value={schedTitle}
+                    onChange={(e) => setSchedTitle(e.target.value)}
+                    placeholder="Titel"
+                    className="text-sm"
+                    maxLength={100}
+                  />
+                  <Textarea
+                    value={schedBody}
+                    onChange={(e) => setSchedBody(e.target.value)}
+                    placeholder="Nachricht..."
+                    className="text-sm min-h-[60px]"
+                    maxLength={500}
+                  />
+
+                  {/* Frequency */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-muted-foreground">Häufigkeit</label>
+                    <div className="flex gap-1.5">
+                      {(["daily", "weekly", "monthly"] as const).map((f) => (
+                        <Button
+                          key={f}
+                          variant={schedFrequency === f ? "default" : "outline"}
+                          size="sm"
+                          className="text-xs h-7 px-2.5 flex-1"
+                          onClick={() => setSchedFrequency(f)}
+                        >
+                          {f === "daily" ? "Täglich" : f === "weekly" ? "Wöchentlich" : "Monatlich"}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Time */}
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-muted-foreground">Uhrzeit (UTC)</label>
+                    <Input
+                      type="time"
+                      value={schedTime}
+                      onChange={(e) => setSchedTime(e.target.value)}
+                      className="text-sm w-32"
+                    />
+                  </div>
+
+                  {/* Weekday for weekly */}
+                  {schedFrequency === "weekly" && (
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-muted-foreground">Wochentag</label>
+                      <div className="flex gap-1">
+                        {["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"].map((day, i) => (
+                          <Button
+                            key={i}
+                            variant={schedWeekday === i ? "default" : "outline"}
+                            size="sm"
+                            className="text-xs h-7 w-9 px-0"
+                            onClick={() => setSchedWeekday(i)}
+                          >
+                            {day}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Day of month for monthly */}
+                  {schedFrequency === "monthly" && (
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-muted-foreground">Tag im Monat</label>
+                      <Input
+                        type="number"
+                        min={1}
+                        max={28}
+                        value={schedDayOfMonth}
+                        onChange={(e) => setSchedDayOfMonth(Number(e.target.value))}
+                        className="text-sm w-20"
+                      />
+                    </div>
+                  )}
+
+                  <Button
+                    onClick={saveSchedule}
+                    disabled={schedSaving || !schedTitle.trim() || !schedBody.trim()}
+                    className="w-full"
+                  >
+                    <Repeat className="h-4 w-4 mr-2" />
+                    {schedSaving ? "Wird gespeichert..." : "Benachrichtigung planen"}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Existing schedules */}
+              {schedules.length > 0 && (
+                <>
+                  <div className="border-t border-border px-5 py-3">
+                    <span className="text-xs font-semibold text-muted-foreground">Aktive Pläne</span>
+                  </div>
+                  <div className="px-5 pb-5 space-y-2">
+                    {schedules.map((s: any) => (
+                      <div key={s.id} className="p-3 rounded-lg bg-secondary/30 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">{s.title}</p>
+                            <p className="text-xs text-muted-foreground truncate">{s.body}</p>
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                            <button
+                              onClick={() => toggleScheduleActive(s.id, s.is_active)}
+                              className="p-1.5 rounded-lg hover:bg-secondary/50 transition-colors"
+                              title={s.is_active ? "Pausieren" : "Aktivieren"}
+                            >
+                              {s.is_active ? <Pause className="h-3.5 w-3.5 text-accent" /> : <Play className="h-3.5 w-3.5 text-muted-foreground" />}
+                            </button>
+                            <button
+                              onClick={() => setSchedDeleteConfirm(s.id)}
+                              className="p-1.5 rounded-lg hover:bg-destructive/20 transition-colors"
+                            >
+                              <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                            </button>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                          <Badge variant={s.is_active ? "default" : "secondary"} className="text-[10px] px-1.5 py-0">
+                            {s.is_active ? "Aktiv" : "Pausiert"}
+                          </Badge>
+                          <span>
+                            {s.frequency === "daily" ? "Täglich" : s.frequency === "weekly" ? `Wöchentlich (${["So","Mo","Di","Mi","Do","Fr","Sa"][s.weekday ?? 1]})` : `Monatlich (${s.day_of_month ?? 1}.)`}
+                          </span>
+                          <span>um {s.send_time?.slice(0, 5)} UTC</span>
+                          {s.last_sent_at && <span>· Zuletzt: {new Date(s.last_sent_at).toLocaleString("de-DE")}</span>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </section>
           </div>
         )}
+
+        {/* Delete Schedule Confirmation */}
+        <AlertDialog open={!!schedDeleteConfirm} onOpenChange={() => setSchedDeleteConfirm(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Geplante Benachrichtigung löschen?</AlertDialogTitle>
+              <AlertDialogDescription>Diese Aktion kann nicht rückgängig gemacht werden.</AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+              <AlertDialogAction onClick={() => schedDeleteConfirm && deleteSchedule(schedDeleteConfirm)}>Löschen</AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {activeTab === "kiprompt" && (
           <div className="space-y-4">
