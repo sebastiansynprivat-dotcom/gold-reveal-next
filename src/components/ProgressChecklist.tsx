@@ -33,7 +33,6 @@ const ProgressChecklist = ({ steps, completedSteps, onToggle }: ProgressChecklis
           <h2
             className="gold-gradient-text text-lg font-bold"
             >
-          >
             Dein Fortschritt
           </h2>
           <span className="text-muted-foreground text-sm">

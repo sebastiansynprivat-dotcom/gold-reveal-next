@@ -110,7 +110,6 @@ const OfferB = () => {
               <h2
                 className="gold-gradient-text text-xl md:text-2xl font-bold mb-2"
               >
-              >
                 Eine kleine Nachricht von Sebastian an dich
               </h2>
               <p className="text-muted-foreground text-sm mb-6">
@@ -146,7 +145,6 @@ const OfferB = () => {
         <h1
           className="text-3xl md:text-5xl font-bold tracking-tight leading-tight mb-3"
         >
-        >
           <span className="text-foreground">Kurze Anleitung für deinen Start mit </span>
           <span className="text-[hsl(210,100%,50%)]">Brezzels</span>
         </h1>
@@ -180,7 +178,6 @@ const OfferB = () => {
         <h2
           className="gold-gradient-text text-xl md:text-2xl font-bold mb-6 text-center"
           >
-        >
           Wichtige Links
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
