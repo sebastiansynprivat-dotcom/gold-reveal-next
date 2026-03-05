@@ -241,7 +241,7 @@ const OfferC = () => {
               )}
               <h3
                 className="gold-gradient-text text-lg font-bold"
-                style={{ fontFamily: "'Playfair Display', serif" }}
+              >
               >
                 🤖 Deine Telegram ID
               </h3>
@@ -301,7 +301,7 @@ const OfferC = () => {
           <StepBadge step={5} completed={completedSteps.has(5)} />
           <h2
             className="gold-gradient-text text-xl md:text-2xl font-bold"
-            style={{ fontFamily: "'Playfair Display', serif" }}
+            >
           >
             Tägliches Feedback
           </h2>

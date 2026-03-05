@@ -96,7 +96,7 @@ const LoomVideoStep = ({
         <StepBadge step={step} completed={completed} />
         <h2
           className="gold-gradient-text text-xl md:text-2xl font-bold"
-          style={{ fontFamily: "'Playfair Display', serif" }}
+          >
         >
           {title}
         </h2>
