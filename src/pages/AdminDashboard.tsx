@@ -185,7 +185,8 @@ export default function AdminDashboard() {
   const [kiPromptLoading, setKiPromptLoading] = useState(false);
   const [kiPromptSaving, setKiPromptSaving] = useState(false);
   const [kiPromptLoaded, setKiPromptLoaded] = useState(false);
-  const [kiPromptSaved, setKiPromptSaved] = useState(false);
+  const [kiPromptSaved, setKiPromptSaved] = useState(true);
+  const [kiPromptOriginal, setKiPromptOriginal] = useState("");
 
   // Chatter checklist state (persisted in localStorage)
   const [checkedChatters, setCheckedChatters] = useState<Set<string>>(() => {
