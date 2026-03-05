@@ -1,11 +1,23 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useProgress } from "@/hooks/useProgress";
+import { motion, AnimatePresence } from "framer-motion";
+
+const ATTENTION_CHECK_SECONDS = 20 * 60; // 20 minutes
 
 const Index = () => {
   const { updateProgress } = useProgress();
   const [showButton, setShowButton] = useState(false);
+  const [showAttentionPopup, setShowAttentionPopup] = useState(false);
+  const attentionShownRef = useRef(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const playerReadyRef = useRef(false);
+
+  // Exit fullscreen when attention popup triggers
+  const exitFullscreen = useCallback(() => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    }
+  }, []);
 
   const handleMessage = useCallback((event: MessageEvent) => {
     if (!event.origin.includes("loom.com")) return;
@@ -29,6 +41,14 @@ const Index = () => {
 
       if (data?.context === "player.js" && data?.event === "timeupdate" && data?.value) {
         const { seconds, duration } = data.value;
+
+        // Attention check at 20 minutes
+        if (seconds >= ATTENTION_CHECK_SECONDS && !attentionShownRef.current) {
+          attentionShownRef.current = true;
+          exitFullscreen();
+          setShowAttentionPopup(true);
+        }
+
         if (duration > 0 && seconds / duration >= 0.9) {
           setShowButton(true);
           updateProgress({ video_completed: true, current_step: "quiz" });
@@ -37,7 +57,7 @@ const Index = () => {
     } catch {
       // Ignore non-JSON messages
     }
-  }, [updateProgress]);
+  }, [updateProgress, exitFullscreen]);
 
   useEffect(() => {
     window.addEventListener("message", handleMessage);
