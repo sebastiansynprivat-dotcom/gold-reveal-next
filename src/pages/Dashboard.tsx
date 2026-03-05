@@ -65,6 +65,7 @@ export default function Dashboard() {
   // Force re-render when drive state changes
   const [driveVersion, setDriveVersion] = useState(0);
   const [isFirstLogin, setIsFirstLogin] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [showMemo, setShowMemo] = useState(false);
   const [isPwaInstalled, setIsPwaInstalled] = useState(() => {
@@ -611,6 +612,18 @@ export default function Dashboard() {
           }
         </section>
 
+        {/* Frage stellen */}
+        <button
+          onClick={() => setChatOpen(true)}
+          className="w-full flex items-center gap-3 glass-card-subtle rounded-xl p-3 lg:p-4 border border-accent/30 bg-accent/5 text-left cursor-pointer hover:bg-accent/10 transition-colors"
+        >
+          <HelpCircle className="h-5 w-5 text-accent shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-foreground">Ich habe eine Frage</p>
+            <p className="text-xs text-accent mt-0.5">Wo kann ich diese Frage stellen?</p>
+          </div>
+        </button>
+
         {/* Tägliche Aufgaben */}
         <DailyChecklist />
 
@@ -702,7 +715,7 @@ export default function Dashboard() {
         <DashboardBillingInfo onNavigate={() => navigate("/rechnung")} />
       </main>
 
-      <DashboardChat />
+      <DashboardChat externalOpen={chatOpen} onExternalOpenChange={setChatOpen} />
     </div>);}
 
 function DashboardBillingInfo({ onNavigate }: {onNavigate: () => void;}) {
