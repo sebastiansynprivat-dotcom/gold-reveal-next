@@ -140,6 +140,21 @@ export default function DailyChecklist() {
           🎉 Alle Aufgaben erledigt – weiter so!
         </motion.p>
       )}
+
+      {/* Feedback Popup (Platzhalter) */}
+      <Dialog open={feedbackPopupOpen} onOpenChange={setFeedbackPopupOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Feedback geben</DialogTitle>
+            <DialogDescription>
+              Dieser Bereich wird noch eingerichtet. Hier kannst du bald dein tägliches Feedback abgeben.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 text-center text-muted-foreground text-sm">
+            🚧 Platzhalter – kommt bald!
+          </div>
+        </DialogContent>
+      </Dialog>
     </motion.section>
   );
 }
