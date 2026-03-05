@@ -32,7 +32,7 @@ const ProgressChecklist = ({ steps, completedSteps, onToggle }: ProgressChecklis
         <div className="flex items-center justify-between mb-3">
           <h2
             className="gold-gradient-text text-lg font-bold"
-            style={{ fontFamily: "'Playfair Display', serif" }}
+            >
           >
             Dein Fortschritt
           </h2>
