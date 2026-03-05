@@ -352,17 +352,23 @@ export default function AdminDashboard() {
 
   const loadKiPrompt = async () => {
     setKiPromptLoading(true);
+    setAnalysisPromptLoading(true);
     try {
       const { data } = await supabase
         .from("ai_prompts")
-        .select("prompt_text")
-        .eq("prompt_key", "system_prompt")
-        .single();
-      if (data) { setKiPrompt(data.prompt_text); setKiPromptOriginal(data.prompt_text); }
+        .select("prompt_key, prompt_text")
+        .in("prompt_key", ["system_prompt", "analysis_prompt"]);
+      if (data) {
+        const sys = data.find((d: any) => d.prompt_key === "system_prompt");
+        const ana = data.find((d: any) => d.prompt_key === "analysis_prompt");
+        if (sys) { setKiPrompt(sys.prompt_text); setKiPromptOriginal(sys.prompt_text); }
+        if (ana) { setAnalysisPrompt(ana.prompt_text); setAnalysisPromptOriginal(ana.prompt_text); }
+      }
     } catch {
-      toast.error("Fehler beim Laden des KI-Prompts");
+      toast.error("Fehler beim Laden der KI-Prompts");
     }
     setKiPromptLoading(false);
+    setAnalysisPromptLoading(false);
     setKiPromptLoaded(true);
   };
 
@@ -374,13 +380,29 @@ export default function AdminDashboard() {
         .update({ prompt_text: kiPrompt, updated_at: new Date().toISOString(), updated_by: user?.id })
         .eq("prompt_key", "system_prompt");
       if (error) throw error;
-      toast.success("KI-Prompt gespeichert!");
+      toast.success("Dashboard-Chat Prompt gespeichert!");
       setKiPromptSaved(true);
       setKiPromptOriginal(kiPrompt);
     } catch {
       toast.error("Fehler beim Speichern des KI-Prompts");
     }
     setKiPromptSaving(false);
+  };
+
+  const saveAnalysisPrompt = async () => {
+    setAnalysisPromptSaving(true);
+    try {
+      const { error } = await supabase
+        .from("ai_prompts")
+        .update({ prompt_text: analysisPrompt, updated_at: new Date().toISOString(), updated_by: user?.id })
+        .eq("prompt_key", "analysis_prompt");
+      if (error) throw error;
+      toast.success("Chat-Analysen Prompt gespeichert!");
+      setAnalysisPromptOriginal(analysisPrompt);
+    } catch {
+      toast.error("Fehler beim Speichern des Analyse-Prompts");
+    }
+    setAnalysisPromptSaving(false);
   };
 
   const loadAdmins = async () => {
