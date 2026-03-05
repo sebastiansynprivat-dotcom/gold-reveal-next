@@ -609,7 +609,66 @@ export default function AdminDashboard() {
     setNotifSending(false);
   };
 
-  const loadBotMessages = async () => {
+  const loadSchedules = async () => {
+    const { data } = await supabase
+      .from("scheduled_notifications" as any)
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (data) setSchedules(data as any[]);
+    setSchedulesLoaded(true);
+  };
+
+  const saveSchedule = async () => {
+    if (!schedTitle.trim() || !schedBody.trim()) {
+      toast.error("Titel und Nachricht sind erforderlich");
+      return;
+    }
+    setSchedSaving(true);
+    try {
+      const payload: any = {
+        title: schedTitle.trim(),
+        body: schedBody.trim(),
+        frequency: schedFrequency,
+        send_time: schedTime + ":00",
+        created_by: user?.id,
+      };
+      if (schedFrequency === "weekly") payload.weekday = schedWeekday;
+      if (schedFrequency === "monthly") payload.day_of_month = schedDayOfMonth;
+
+      const { error } = await supabase.from("scheduled_notifications" as any).insert(payload);
+      if (error) throw error;
+      toast.success("Geplante Benachrichtigung erstellt!");
+      setSchedTitle("");
+      setSchedBody("");
+      await loadSchedules();
+    } catch (err: any) {
+      toast.error("Fehler: " + err.message);
+    }
+    setSchedSaving(false);
+  };
+
+  const toggleScheduleActive = async (id: string, currentActive: boolean) => {
+    const { error } = await supabase
+      .from("scheduled_notifications" as any)
+      .update({ is_active: !currentActive })
+      .eq("id", id);
+    if (error) { toast.error("Fehler"); return; }
+    setSchedules(prev => prev.map(s => s.id === id ? { ...s, is_active: !currentActive } : s));
+    toast.success(!currentActive ? "Aktiviert" : "Pausiert");
+  };
+
+  const deleteSchedule = async (id: string) => {
+    const { error } = await supabase
+      .from("scheduled_notifications" as any)
+      .delete()
+      .eq("id", id);
+    if (error) { toast.error("Fehler"); return; }
+    setSchedules(prev => prev.filter(s => s.id !== id));
+    setSchedDeleteConfirm(null);
+    toast.success("Geplante Benachrichtigung gelöscht");
+  };
+
+
     const { data } = await supabase
       .from("bot_messages" as any)
       .select("account_id, message, follow_up_message, is_active");
