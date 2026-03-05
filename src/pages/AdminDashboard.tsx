@@ -364,6 +364,7 @@ export default function AdminDashboard() {
         .eq("prompt_key", "system_prompt");
       if (error) throw error;
       toast.success("KI-Prompt gespeichert!");
+      setKiPromptSaved(true);
     } catch {
       toast.error("Fehler beim Speichern des KI-Prompts");
     }
