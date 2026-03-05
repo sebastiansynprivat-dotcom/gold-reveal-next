@@ -23,9 +23,11 @@ const Index = () => {
     if (!event.origin.includes("loom.com")) return;
     try {
       const data = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
+      console.log("[Loom debug]", JSON.stringify(data).slice(0, 300));
 
       if (data?.context === "player.js" && data?.event === "ready" && !playerReadyRef.current) {
         playerReadyRef.current = true;
+        console.log("[Loom] player ready – registering listeners");
         iframeRef.current?.contentWindow?.postMessage(
           JSON.stringify({ context: "player.js", method: "addEventListener", value: "timeupdate" }), "*"
         );
@@ -41,8 +43,8 @@ const Index = () => {
 
       if (data?.context === "player.js" && data?.event === "timeupdate" && data?.value) {
         const { seconds, duration } = data.value;
+        console.log("[Loom] timeupdate", seconds, "/", duration);
 
-        // Attention check at 20 minutes
         if (seconds >= ATTENTION_CHECK_SECONDS && !attentionShownRef.current) {
           attentionShownRef.current = true;
           exitFullscreen();
