@@ -147,7 +147,7 @@ export default function DashboardChat({ externalOpen, onExternalOpenChange }: Da
     <div className="fixed bottom-0 right-0 z-50 w-full sm:bottom-6 sm:right-6 sm:w-[400px] sm:max-h-[600px] flex flex-col glass-card rounded-t-2xl sm:rounded-2xl overflow-hidden border border-border">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-border">
-        <span className="text-sm font-semibold text-foreground">🧠 Sebastian's Mastermind KI</span>
+        <span className="text-sm font-semibold text-foreground"><span className="grayscale-0 sepia saturate-[5] hue-rotate-[10deg] brightness-110 inline-block">🧠</span> Sebastian's Mastermind KI</span>
         <button onClick={() => setOpen(false)} className="text-muted-foreground hover:text-foreground">
           <X className="h-5 w-5" />
         </button>
