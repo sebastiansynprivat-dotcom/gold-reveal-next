@@ -82,8 +82,6 @@ const OfferB = () => {
     });
   };
 
-  const handleCopy = () => {};
-  };
 
   return (
     <div className="min-h-screen px-4 py-12 md:py-20">
