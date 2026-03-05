@@ -684,9 +684,9 @@ export default function Dashboard() {
                 </div>
                 <div className="text-right">
                   <span className={`font-bold text-lg lg:text-xl ${!isGold ? "text-foreground" : "text-muted-foreground/50"}`}>20%</span>
-                  {!isGold && <p className="text-[10px] text-accent">Ab 3.000€ Monatsumsatz gilt die 25%-Rate auf den gesamten Betrag für diesen Monat.
-7 Tage in Folge mind. 30€ = Upgrade auf besseren Account.
-</p>}
+                  {!isGold
+
+                  }
                 </div>
               </div>
             </div>
