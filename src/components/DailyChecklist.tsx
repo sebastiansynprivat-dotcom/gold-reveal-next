@@ -5,7 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ClipboardCheck } from "lucide-react";
 
 const TASKS = [
-  { id: 1, label: "Hast du bis zu 6 MassDM's gemacht?" },
+  { id: 1, label: "Hast du bis zu 6 MassDM's gemacht?", audioHint: true },
   { id: 2, label: "Deine alte MassDM gelöscht bevor eine neue gesendet wird?" },
   { id: 3, label: "Geschaut ob wir für dich gepostet haben? (Falls nicht, gib uns bitte eine Info in der Gruppe)" },
   { id: 4, label: "Auf alle Nachrichten geantwortet die in deinem Account offen sind?" },
