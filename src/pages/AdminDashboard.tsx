@@ -1214,7 +1214,7 @@ export default function AdminDashboard() {
           <Button
             variant={activeTab === "notifications" ? "default" : "outline"}
             size="sm"
-            onClick={() => { setActiveTab("notifications"); if (!notifHistoryLoaded) loadNotifHistory(); }}
+            onClick={() => { setActiveTab("notifications"); if (!notifHistoryLoaded) loadNotifHistory(); if (!schedulesLoaded) loadSchedules(); }}
           >
             <Bell className="h-3.5 w-3.5 mr-1.5" />
             Benachrichtigungen
