@@ -552,6 +552,50 @@ export default function AdminDashboard() {
     setLoginStats(statsMap);
   };
 
+  const loadNotifHistory = async () => {
+    const { data } = await supabase
+      .from("notifications")
+      .select("*")
+      .order("sent_at", { ascending: false })
+      .limit(20);
+    if (data) setNotifHistory(data);
+    setNotifHistoryLoaded(true);
+  };
+
+  const handleSendNotification = async () => {
+    if (!notifTitle.trim() || !notifBody.trim()) {
+      toast.error("Titel und Nachricht sind erforderlich");
+      return;
+    }
+    setNotifSending(true);
+    try {
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const res = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/send-notification`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({ title: notifTitle.trim(), body: notifBody.trim() }),
+        }
+      );
+      const result = await res.json();
+      if (res.ok) {
+        toast.success(`Gesendet an ${result.sent} Empfänger!`);
+        setNotifTitle("");
+        setNotifBody("");
+        await loadNotifHistory();
+      } else {
+        toast.error(result.error || "Fehler beim Senden");
+      }
+    } catch (err: any) {
+      toast.error("Fehler: " + err.message);
+    }
+    setNotifSending(false);
+  };
+
   const loadBotMessages = async () => {
     const { data } = await supabase
       .from("bot_messages" as any)
@@ -1066,9 +1110,9 @@ export default function AdminDashboard() {
             <h1 className="text-base font-bold text-foreground">Admin Dashboard</h1>
             <p className="text-[10px] text-muted-foreground">Chatter verwalten & Benachrichtigungen</p>
           </div>
-          <Button variant="outline" size="sm" onClick={() => setBroadcastOpen(true)}>
+          <Button variant="outline" size="sm" onClick={() => { setActiveTab("notifications"); if (!notifHistoryLoaded) loadNotifHistory(); }}>
             <Bell className="h-3.5 w-3.5 mr-1.5" />
-            An alle senden
+            Benachrichtigen
           </Button>
         </div>
       </header>
@@ -1099,6 +1143,14 @@ export default function AdminDashboard() {
           >
             <Bot className="h-3.5 w-3.5 mr-1.5" />
             Bot DMs
+          </Button>
+          <Button
+            variant={activeTab === "notifications" ? "default" : "outline"}
+            size="sm"
+            onClick={() => { setActiveTab("notifications"); if (!notifHistoryLoaded) loadNotifHistory(); }}
+          >
+            <Bell className="h-3.5 w-3.5 mr-1.5" />
+            Benachrichtigungen
           </Button>
           <Button
             variant={activeTab === "kiprompt" ? "default" : "outline"}
@@ -2279,6 +2331,66 @@ export default function AdminDashboard() {
                 </div>
               )}
             </section>
+          </div>
+        )}
+
+        {activeTab === "notifications" && (
+          <div className="space-y-4">
+            {/* Send Form */}
+            <section className="glass-card rounded-xl p-5 space-y-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Bell className="h-4 w-4 text-accent" />
+                <h2 className="text-sm font-semibold text-foreground">Neue Benachrichtigung</h2>
+              </div>
+              <div className="space-y-3">
+                <Input
+                  value={notifTitle}
+                  onChange={(e) => setNotifTitle(e.target.value)}
+                  placeholder="Titel der Benachrichtigung"
+                  className="text-sm"
+                  maxLength={100}
+                />
+                <Textarea
+                  value={notifBody}
+                  onChange={(e) => setNotifBody(e.target.value)}
+                  placeholder="Nachricht eingeben..."
+                  className="text-sm min-h-[80px]"
+                  maxLength={500}
+                />
+                <Button
+                  onClick={handleSendNotification}
+                  disabled={notifSending || !notifTitle.trim() || !notifBody.trim()}
+                  className="w-full"
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  {notifSending ? "Wird gesendet..." : "An alle senden"}
+                </Button>
+              </div>
+            </section>
+
+            {/* History */}
+            {notifHistory.length > 0 && (
+              <section className="glass-card-subtle rounded-xl p-5 space-y-3">
+                <h2 className="text-sm font-semibold text-foreground">Verlauf</h2>
+                <div className="space-y-2">
+                  {notifHistory.map((n: any) => (
+                    <div key={n.id} className="p-3 rounded-lg bg-secondary/30 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-medium text-foreground">{n.title}</p>
+                        <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                          <CheckCircle2 className="h-3 w-3" />
+                          {n.recipients_count} Empfänger
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{n.body}</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {new Date(n.sent_at).toLocaleString("de-DE")}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
           </div>
         )}
 
