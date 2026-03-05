@@ -2272,16 +2272,10 @@ export default function AdminDashboard() {
                       <span className="text-[11px] text-muted-foreground">
                         {kiPrompt.length} Zeichen
                       </span>
-                      <div className="flex items-center gap-3">
-                        {kiPromptSaved && (
-                          <span className="text-[11px] text-accent flex items-center gap-1">
-                            <Check className="h-3 w-3" />
-                            Prompt gespeichert
-                          </span>
-                        )}
+                      {kiPrompt !== kiPromptOriginal ? (
                         <Button
                           onClick={saveKiPrompt}
-                          disabled={kiPromptSaving || kiPromptSaved}
+                          disabled={kiPromptSaving}
                           size="sm"
                         >
                           {kiPromptSaving ? (
@@ -2296,7 +2290,12 @@ export default function AdminDashboard() {
                             </>
                           )}
                         </Button>
-                      </div>
+                      ) : (
+                        <span className="text-[11px] text-accent flex items-center gap-1">
+                          <Check className="h-3 w-3" />
+                          Prompt gespeichert
+                        </span>
+                      )}
                     </div>
                   </>
                 )}
