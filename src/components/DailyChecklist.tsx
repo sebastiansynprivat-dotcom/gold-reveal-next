@@ -27,6 +27,7 @@ export default function DailyChecklist() {
     }
   });
   const [openAudioId, setOpenAudioId] = useState<number | null>(null);
+  const [feedbackPopupOpen, setFeedbackPopupOpen] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
 
   useEffect(() => {
@@ -113,6 +114,16 @@ export default function DailyChecklist() {
                       </motion.div>
                     )}
                   </AnimatePresence>
+                </div>
+              )}
+              {(task as any).popupHint && (
+                <div className="ml-10 mt-0.5 mb-1">
+                  <button
+                    onClick={() => setFeedbackPopupOpen(true)}
+                    className="text-xs text-primary/70 hover:text-primary transition-colors underline underline-offset-2"
+                  >
+                    {(task as any).popupLabel}
+                  </button>
                 </div>
               )}
             </div>
