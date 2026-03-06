@@ -356,7 +356,9 @@ export default function AdminDashboard() {
           const diff = amount - oldAmount;
           if (diff > 0) {
             setRevenueBoost(prev => prev + diff);
-            toast.success(`+${diff}€ Umsatz eingegangen!`, { duration: 3000 });
+            if (activeTabRef.current === 'einnahmen') {
+              toast.success(`+${diff}€ Umsatz eingegangen!`, { duration: 3000 });
+            }
           }
           loadRevenueUsers();
         }
