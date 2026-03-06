@@ -22,6 +22,13 @@ import logo from "@/assets/logo.png";
 import ChatterStatsCard from "@/components/ChatterStatsCard";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
+// Extract folder ID from a full Google Drive URL or return as-is if already an ID
+const extractDriveFolderId = (input: string): string => {
+  if (!input) return "";
+  const match = input.match(/\/folders\/([a-zA-Z0-9_-]+)/);
+  return match ? match[1] : input;
+};
+
 // Platform colors – premium aesthetic matching gold/dark theme
 const PLATFORM_COLORS = {
   maloum: "#d4af37",    // gold
