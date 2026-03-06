@@ -33,7 +33,7 @@ const Auth = () => {
     );
   }
 
-  // Transfer pending telegram ID and offer after login
+  // Transfer pending telegram ID and offer after login, then trigger Drive sharing
   useEffect(() => {
     if (!user) return;
     const pendingId = localStorage.getItem("pending_telegram_id");
@@ -46,9 +46,44 @@ const Auth = () => {
         .from("profiles")
         .update(updates)
         .eq("user_id", user.id)
-        .then(() => {
+        .then(async () => {
           localStorage.removeItem("pending_telegram_id");
           localStorage.removeItem("pending_offer");
+
+          // After offer update, DB trigger assigns an account.
+          // Wait briefly, then check if assigned account has a drive_folder_id and share it.
+          if (pendingOffer) {
+            await new Promise((r) => setTimeout(r, 2000));
+            const { data: assignedAccounts } = await supabase
+              .from("accounts")
+              .select("id, drive_folder_id")
+              .eq("assigned_to", user.id);
+
+            const withDrive = (assignedAccounts || []).filter((a) => a.drive_folder_id);
+            for (const acc of withDrive) {
+              try {
+                const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+                await fetch(
+                  `https://${projectId}.supabase.co/functions/v1/share-drive`,
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+                      Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+                    },
+                    body: JSON.stringify({
+                      folder_id: acc.drive_folder_id,
+                      email: user.email,
+                    }),
+                  }
+                );
+                console.log("Drive folder auto-shared for", user.email);
+              } catch (err) {
+                console.error("Auto drive share failed:", err);
+              }
+            }
+          }
         });
     }
   }, [user]);
