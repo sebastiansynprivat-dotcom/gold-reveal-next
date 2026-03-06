@@ -52,6 +52,13 @@ export default function Dashboard() {
   const [accountsOpen, setAccountsOpen] = useState(true);
   const [myRequests, setMyRequests] = useState<any[]>([]);
   const [requestsOpen, setRequestsOpen] = useState(false);
+  const [editRequest, setEditRequest] = useState<any>(null);
+  const [seenRequestIds, setSeenRequestIds] = useState<Set<string>>(() => {
+    try {
+      const saved = localStorage.getItem("seen_request_updates");
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    } catch { return new Set(); }
+  });
 
   const loadMyRequests = useCallback(async () => {
     if (!user) return;
