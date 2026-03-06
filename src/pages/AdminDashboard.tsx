@@ -29,6 +29,39 @@ const extractDriveFolderId = (input: string): string => {
   return match ? match[1] : input;
 };
 
+// Revoke Drive access for accounts being unassigned
+const revokeDriveAccess = async (accountIds: string[], userId: string) => {
+  try {
+    const { data: session } = await supabase.auth.getSession();
+    if (!session?.session?.access_token) return;
+
+    // Get accounts with drive_folder_id
+    const { data: accs } = await supabase
+      .from("accounts")
+      .select("id, drive_folder_id")
+      .in("id", accountIds);
+
+    const withDrive = accs?.filter(a => a.drive_folder_id) || [];
+    if (withDrive.length === 0) return;
+
+    // Get user's email
+    const { data: userData } = await supabase.auth.admin?.getUserById?.(userId) || {};
+    // Fallback: get email from profiles or auth via edge function
+    // We'll call the unshare-drive function which handles it server-side
+    for (const acc of withDrive) {
+      try {
+        await supabase.functions.invoke("unshare-drive", {
+          body: { folder_id: acc.drive_folder_id, user_id: userId },
+        });
+      } catch (e) {
+        console.error("Drive unshare failed:", e);
+      }
+    }
+  } catch (e) {
+    console.error("revokeDriveAccess error:", e);
+  }
+};
+
 // Platform colors – premium aesthetic matching gold/dark theme
 const PLATFORM_COLORS = {
   maloum: "#d4af37",    // gold
