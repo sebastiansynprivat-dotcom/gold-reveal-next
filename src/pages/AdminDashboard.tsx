@@ -1542,12 +1542,16 @@ export default function AdminDashboard() {
             labelA: string; valueA: number; labelB: string; valueB: number;
             filterState: boolean | null; onClickA: () => void; onClickB: () => void;
           }) => (
-            <div className="glass-card-subtle rounded-xl overflow-hidden transition-all">
+            <div className={cn(
+              "glass-card-subtle rounded-xl overflow-hidden transition-all",
+              filterState === true && "ring-2 ring-accent shadow-[0_0_12px_-3px_hsl(var(--accent)/0.3)]",
+              filterState === false && "ring-2 ring-destructive/60 shadow-[0_0_12px_-3px_hsl(var(--destructive)/0.2)]"
+            )}>
               <button
                 onClick={onClickA}
                 className={cn(
-                  "w-full px-3 py-2.5 text-center transition-all border-b border-border/30",
-                  filterState === true ? "bg-accent/15 ring-1 ring-inset ring-accent" : "hover:bg-secondary/30"
+                  "w-full px-3 py-2.5 text-center transition-all border-b border-border/20",
+                  filterState === true ? "bg-accent/10" : "hover:bg-secondary/30"
                 )}
               >
                 <p className="text-[9px] text-muted-foreground tracking-wide uppercase">{labelA}</p>
@@ -1557,7 +1561,7 @@ export default function AdminDashboard() {
                 onClick={onClickB}
                 className={cn(
                   "w-full px-3 py-2.5 text-center transition-all",
-                  filterState === false ? "bg-destructive/10 ring-1 ring-inset ring-destructive/50" : "hover:bg-secondary/30"
+                  filterState === false ? "bg-destructive/10" : "hover:bg-secondary/30"
                 )}
               >
                 <p className="text-[9px] text-muted-foreground tracking-wide uppercase">{labelB}</p>
@@ -1571,10 +1575,10 @@ export default function AdminDashboard() {
 
           return (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              {/* Chatter gesamt – simple card */}
-              <div className="glass-card-subtle rounded-xl p-4 text-center">
+              {/* Chatter gesamt – simple card, vertically centered to match dual cards */}
+              <div className="glass-card-subtle rounded-xl p-4 flex flex-col items-center justify-center">
                 <p className="text-[9px] text-muted-foreground mb-1 tracking-wide uppercase">Chatter gesamt</p>
-                <p className="text-2xl font-bold text-gold-gradient">{chatters.length}</p>
+                <p className="text-3xl font-bold text-gold-gradient">{chatters.length}</p>
               </div>
 
               <DualCard
