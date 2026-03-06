@@ -1144,6 +1144,32 @@ export default function AdminDashboard() {
           })
           .eq("user_id", reassignTarget.user_id);
 
+        // Auto-share Google Drive folder if drive_folder_id is set
+        if (newAcc.drive_folder_id) {
+          try {
+            const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+            const session = await supabase.auth.getSession();
+            await fetch(
+              `https://${projectId}.supabase.co/functions/v1/share-drive`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+                  Authorization: `Bearer ${session.data.session?.access_token}`,
+                },
+                body: JSON.stringify({
+                  folder_id: newAcc.drive_folder_id,
+                  user_id: reassignTarget.user_id,
+                }),
+              }
+            );
+            console.log("Drive folder shared for", reassignTarget.user_id);
+          } catch (driveErr) {
+            console.error("Drive share failed:", driveErr);
+          }
+        }
+
         // Auto-send push notification if user has push enabled
         if (pushUsers.has(reassignTarget.user_id)) {
           try {
