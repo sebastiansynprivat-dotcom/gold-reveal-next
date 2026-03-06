@@ -1530,36 +1530,77 @@ export default function AdminDashboard() {
 
         {activeTab === "chatter" && (<div className="space-y-6">
         {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[
-            { label: "Chatter gesamt", value: chatters.length, filterKey: null, active: false },
-            { label: "Mit Telegram", value: chatters.filter((c) => c.telegram_id && c.telegram_id.trim() !== "").length, filterKey: "telegram" as const, active: filterTelegramOnly },
-            { label: "Push aktiv", value: chatters.filter((c) => pushUsers.has(c.user_id)).length, filterKey: "push" as const, active: filterPushOnly },
-            { label: "App installiert", value: pwaUsers.size, filterKey: "pwa" as const, active: filterPwaOnly },
-          ].map((stat, i) => (
-            <button
-              key={i}
-              onClick={() => {
-                if (stat.filterKey === "telegram") setFilterTelegramOnly(p => !p);
-                else if (stat.filterKey === "push") setFilterPushOnly(p => !p);
-                else if (stat.filterKey === "pwa") setFilterPwaOnly(p => !p);
-              }}
-              className={cn(
-                "glass-card-subtle rounded-xl p-4 text-center transition-all",
-                stat.filterKey ? "cursor-pointer hover:scale-[1.02]" : "cursor-default",
-                stat.active && "ring-2 ring-accent bg-accent/10"
-              )}
-            >
-              <p className="text-[10px] text-muted-foreground mb-1 tracking-wide uppercase">{stat.label}</p>
-              <p className="text-2xl font-bold text-gold-gradient">{stat.value}</p>
-              {stat.filterKey && (
-                <p className={cn("text-[9px] mt-1 font-medium", stat.active ? "text-accent" : "text-muted-foreground/50")}>
-                  {stat.active ? "Filter aktiv ✓" : "Klicken zum Filtern"}
-                </p>
-              )}
-            </button>
-          ))}
-        </div>
+        {(() => {
+          const telegramYes = chatters.filter((c) => c.telegram_id && c.telegram_id.trim() !== "").length;
+          const telegramNo = chatters.length - telegramYes;
+          const pushYes = chatters.filter((c) => pushUsers.has(c.user_id)).length;
+          const pushNo = chatters.length - pushYes;
+          const pwaYes = pwaUsers.size;
+          const pwaNo = chatters.length - pwaYes;
+
+          const DualCard = ({ labelA, valueA, labelB, valueB, filterState, onClickA, onClickB }: {
+            labelA: string; valueA: number; labelB: string; valueB: number;
+            filterState: boolean | null; onClickA: () => void; onClickB: () => void;
+          }) => (
+            <div className="glass-card-subtle rounded-xl overflow-hidden transition-all">
+              <button
+                onClick={onClickA}
+                className={cn(
+                  "w-full px-3 py-2.5 text-center transition-all border-b border-border/30",
+                  filterState === true ? "bg-accent/15 ring-1 ring-inset ring-accent" : "hover:bg-secondary/30"
+                )}
+              >
+                <p className="text-[9px] text-muted-foreground tracking-wide uppercase">{labelA}</p>
+                <p className={cn("text-lg font-bold", filterState === true ? "text-accent" : "text-gold-gradient")}>{valueA}</p>
+              </button>
+              <button
+                onClick={onClickB}
+                className={cn(
+                  "w-full px-3 py-2.5 text-center transition-all",
+                  filterState === false ? "bg-destructive/10 ring-1 ring-inset ring-destructive/50" : "hover:bg-secondary/30"
+                )}
+              >
+                <p className="text-[9px] text-muted-foreground tracking-wide uppercase">{labelB}</p>
+                <p className={cn("text-lg font-bold", filterState === false ? "text-destructive" : "text-gold-gradient")}>{valueB}</p>
+              </button>
+            </div>
+          );
+
+          const toggleFilter = (current: boolean | null, target: boolean): boolean | null =>
+            current === target ? null : target;
+
+          return (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {/* Chatter gesamt – simple card */}
+              <div className="glass-card-subtle rounded-xl p-4 text-center">
+                <p className="text-[9px] text-muted-foreground mb-1 tracking-wide uppercase">Chatter gesamt</p>
+                <p className="text-2xl font-bold text-gold-gradient">{chatters.length}</p>
+              </div>
+
+              <DualCard
+                labelA="Mit Telegram" valueA={telegramYes}
+                labelB="Ohne Telegram" valueB={telegramNo}
+                filterState={filterTelegram}
+                onClickA={() => setFilterTelegram(p => toggleFilter(p, true))}
+                onClickB={() => setFilterTelegram(p => toggleFilter(p, false))}
+              />
+              <DualCard
+                labelA="Push aktiv" valueA={pushYes}
+                labelB="Push inaktiv" valueB={pushNo}
+                filterState={filterPush}
+                onClickA={() => setFilterPush(p => toggleFilter(p, true))}
+                onClickB={() => setFilterPush(p => toggleFilter(p, false))}
+              />
+              <DualCard
+                labelA="App installiert" valueA={pwaYes}
+                labelB="App fehlt" valueB={pwaNo}
+                filterState={filterPwa}
+                onClickA={() => setFilterPwa(p => toggleFilter(p, true))}
+                onClickB={() => setFilterPwa(p => toggleFilter(p, false))}
+              />
+            </div>
+          );
+        })()}
 
         {/* Offer-Verteilung (collapsible) */}
         <section className="glass-card rounded-xl p-4 space-y-3">
