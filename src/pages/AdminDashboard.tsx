@@ -1372,7 +1372,7 @@ export default function AdminDashboard() {
                   </div>
                 </div>
                 <p className="text-[10px] text-muted-foreground mb-1.5 tracking-widest uppercase">Gesamtumsatz</p>
-                <p className="text-3xl font-extrabold text-gold-gradient tracking-tight">{grandTotal.toLocaleString("de-DE")}€</p>
+                <p className="text-3xl font-extrabold text-gold-gradient tracking-tight"><AnimatedNumber value={grandTotal} /></p>
                 <p className="text-[10px] text-muted-foreground mt-1.5 font-medium">{filterLabels[timeFilter]}</p>
               </div>
             </div>
