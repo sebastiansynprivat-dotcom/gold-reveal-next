@@ -217,6 +217,7 @@ export default function AdminDashboard() {
   const [creatingFolder, setCreatingFolder] = useState(false);
   const [dragOverFolder, setDragOverFolder] = useState<string | null>(null);
   const [openFolder, setOpenFolder] = useState<string | null>(null);
+  const [customFolders, setCustomFolders] = useState<Record<string, string[]>>({});
   const [addingManual, setAddingManual] = useState(false);
   const [deleteManualPoolConfirm, setDeleteManualPoolConfirm] = useState(false);
   const [deletingManualPool, setDeletingManualPool] = useState(false);
