@@ -2189,6 +2189,72 @@ export default function AdminDashboard() {
         </section>
         </>)}
 
+        {activeTab === "anfragen" && (
+          <div className="space-y-4">
+            <section className="glass-card rounded-xl overflow-hidden">
+              <div className="px-4 py-3 border-b border-border flex items-center gap-2">
+                <Send className="h-4 w-4 text-accent" />
+                <h2 className="text-sm font-semibold text-foreground">Custom Anfragen</h2>
+                <Badge variant="secondary" className="text-[10px] ml-auto">
+                  {modelRequests.length} Anfrage{modelRequests.length !== 1 ? "n" : ""}
+                </Badge>
+              </div>
+
+              {modelRequests.length === 0 ? (
+                <div className="p-6 text-center text-sm text-muted-foreground">Noch keine Anfragen eingegangen.</div>
+              ) : (
+                <div className="divide-y divide-border">
+                  {modelRequests.map((req) => {
+                    const chatter = chatters.find(c => c.user_id === req.user_id);
+                    const chatterName = chatter?.group_name || req.user_id.slice(0, 8);
+                    return (
+                      <div key={req.id} className="px-4 py-3 space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <span className="text-xs font-semibold text-foreground truncate">{chatterName}</span>
+                            <Badge variant="outline" className="text-[10px] shrink-0">
+                              {req.request_type === "individual" ? "Individuell" : "Allgemein"}
+                            </Badge>
+                            {req.request_type === "individual" && req.price != null && (
+                              <span className="text-[10px] text-accent font-semibold">{req.price}€</span>
+                            )}
+                          </div>
+                          <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                            {new Date(req.created_at).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit" })}
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground">Model: <span className="text-foreground font-medium">{req.model_name}</span></p>
+                        <p className="text-xs text-foreground/80 leading-relaxed">{req.description}</p>
+                        <div className="flex items-center gap-2 pt-1">
+                          {req.status === "pending" ? (
+                            <>
+                              <Button size="sm" variant="outline" className="h-7 text-[10px] border-green-500/30 text-green-400 hover:bg-green-500/10" onClick={() => updateRequestStatus(req.id, "accepted")}>
+                                <Check className="h-3 w-3 mr-1" /> Annehmen
+                              </Button>
+                              <Button size="sm" variant="outline" className="h-7 text-[10px] border-red-500/30 text-red-400 hover:bg-red-500/10" onClick={() => updateRequestStatus(req.id, "rejected")}>
+                                <XCircle className="h-3 w-3 mr-1" /> Ablehnen
+                              </Button>
+                            </>
+                          ) : (
+                            <Badge variant={req.status === "accepted" ? "default" : "destructive"} className="text-[10px]">
+                              {req.status === "accepted" ? "✅ Angenommen" : "❌ Abgelehnt"}
+                            </Badge>
+                          )}
+                          {req.status !== "pending" && (
+                            <Button size="sm" variant="ghost" className="h-7 text-[10px] text-muted-foreground" onClick={() => updateRequestStatus(req.id, "pending")}>
+                              <RefreshCw className="h-3 w-3 mr-1" /> Zurücksetzen
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
+          </div>
+        )}
+
         {activeTab === "botdms" && (
           <div className="space-y-4">
             <section className="glass-card rounded-xl overflow-hidden">
