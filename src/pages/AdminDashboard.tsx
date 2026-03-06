@@ -2201,11 +2201,25 @@ export default function AdminDashboard() {
                 </Badge>
               </div>
 
-              {modelRequests.length === 0 ? (
-                <div className="p-6 text-center text-sm text-muted-foreground">Noch keine Anfragen eingegangen.</div>
+              <div className="px-4 py-2 border-b border-border/50 flex items-center gap-1.5 flex-wrap">
+                {([
+                  { key: "all", label: "Alle" },
+                  { key: "pending", label: "Offen" },
+                  { key: "accepted", label: "Angenommen" },
+                  { key: "in_progress", label: "Wird bearbeitet" },
+                  { key: "rejected", label: "Abgelehnt" },
+                ] as const).map((f) => (
+                  <Button key={f.key} size="sm" variant={requestFilter === f.key ? "default" : "outline"} className="h-6 text-[10px] px-2.5" onClick={() => setRequestFilter(f.key)}>
+                    {f.label}
+                  </Button>
+                ))}
+              </div>
+
+              {modelRequests.filter(r => requestFilter === "all" || r.status === requestFilter).length === 0 ? (
+                <div className="p-6 text-center text-sm text-muted-foreground">Keine Anfragen in dieser Kategorie.</div>
               ) : (
                 <div className="divide-y divide-border">
-                  {modelRequests.map((req) => {
+                  {modelRequests.filter(r => requestFilter === "all" || r.status === requestFilter).map((req) => {
                     const chatter = chatters.find(c => c.user_id === req.user_id);
                     const chatterName = chatter?.group_name || req.user_id.slice(0, 8);
                     return (
