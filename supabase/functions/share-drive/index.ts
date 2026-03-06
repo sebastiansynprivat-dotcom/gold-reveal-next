@@ -26,20 +26,23 @@ async function getAccessToken(): Promise<string> {
     throw new Error("Google Service Account credentials not configured.");
   }
 
-  // Extract private key - secret may contain entire JSON key file
+  // Extract private key - secret contains entire JSON key file
   let pemKey: string;
-  const fixedRaw = privateKeyRaw.replace(/\\n/g, "\n");
+  // Handle both literal \n and real newlines
+  const raw1 = privateKeyRaw.replace(/\\n/g, "\n");
   
-  // Try to extract client_email and private_key via regex (more robust than JSON.parse)
-  const emailMatch = fixedRaw.match(/"client_email"\s*:\s*"([^"]+)"/);
-  const keyMatch = fixedRaw.match(/"private_key"\s*:\s*"(-----BEGIN PRIVATE KEY-----[\s\S]+?-----END PRIVATE KEY-----(?:\\n|[\s])*)"/);
-  
-  if (keyMatch) {
-    pemKey = keyMatch[1].replace(/\\n/g, "\n");
-    if (!serviceEmail && emailMatch) serviceEmail = emailMatch[1];
+  // Extract PEM block directly from the raw string
+  const pemMatch = raw1.match(/-----BEGIN PRIVATE KEY-----([\s\S]+?)-----END PRIVATE KEY-----/);
+  if (pemMatch) {
+    pemKey = "-----BEGIN PRIVATE KEY-----" + pemMatch[1] + "-----END PRIVATE KEY-----";
   } else {
-    // Treat as raw PEM key
-    pemKey = fixedRaw;
+    pemKey = raw1;
+  }
+  
+  // Extract client_email if needed
+  if (!serviceEmail) {
+    const em = privateKeyRaw.match(/"client_email"\s*:\s*"([^"]+)"/);
+    if (em) serviceEmail = em[1];
   }
 
   if (!serviceEmail || !pemKey) {

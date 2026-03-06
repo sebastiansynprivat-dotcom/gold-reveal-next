@@ -21,16 +21,16 @@ async function getAccessToken(): Promise<string> {
   }
 
   let pemKey: string;
-  const fixedRaw = privateKeyRaw.replace(/\\n/g, "\n");
-  
-  const emailMatch = fixedRaw.match(/"client_email"\s*:\s*"([^"]+)"/);
-  const keyMatch = fixedRaw.match(/"private_key"\s*:\s*"(-----BEGIN PRIVATE KEY-----[\s\S]+?-----END PRIVATE KEY-----(?:\\n|[\s])*)"/);
-  
-  if (keyMatch) {
-    pemKey = keyMatch[1].replace(/\\n/g, "\n");
-    if (!serviceEmail && emailMatch) serviceEmail = emailMatch[1];
+  const raw1 = privateKeyRaw.replace(/\\n/g, "\n");
+  const pemMatch = raw1.match(/-----BEGIN PRIVATE KEY-----([\s\S]+?)-----END PRIVATE KEY-----/);
+  if (pemMatch) {
+    pemKey = "-----BEGIN PRIVATE KEY-----" + pemMatch[1] + "-----END PRIVATE KEY-----";
   } else {
-    pemKey = fixedRaw;
+    pemKey = raw1;
+  }
+  if (!serviceEmail) {
+    const em = privateKeyRaw.match(/"client_email"\s*:\s*"([^"]+)"/);
+    if (em) serviceEmail = em[1];
   }
 
   if (!serviceEmail || !pemKey) {
