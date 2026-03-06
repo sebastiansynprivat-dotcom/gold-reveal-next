@@ -1522,7 +1522,7 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {activeTab === "chatter" && (<>
+        {activeTab === "chatter" && (<div className="space-y-6">
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
@@ -2318,7 +2318,7 @@ export default function AdminDashboard() {
             </div>
           )}
         </section>
-        </>)}
+        </div>)}
 
         {activeTab === "anfragen" && (
           <div className="space-y-4">
