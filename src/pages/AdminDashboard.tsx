@@ -217,6 +217,7 @@ export default function AdminDashboard() {
   const [pushUsers, setPushUsers] = useState<Set<string>>(new Set());
   const [revenueUsers, setRevenueUsers] = useState<Set<string>>(new Set());
   const [pwaUsers, setPwaUsers] = useState<Set<string>>(new Set());
+  const [revenueBoost, setRevenueBoost] = useState(0);
 
   // Admin management state
   const [adminSectionOpen, setAdminSectionOpen] = useState(false);
