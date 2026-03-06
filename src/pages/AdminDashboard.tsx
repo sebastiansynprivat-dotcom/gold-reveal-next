@@ -1390,7 +1390,7 @@ export default function AdminDashboard() {
                         <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
                         <p className="text-[10px] text-muted-foreground font-medium tracking-wide">{label}</p>
                       </div>
-                      <p className="text-lg font-bold text-foreground">{value.toLocaleString("de-DE")}€</p>
+                      <p className="text-lg font-bold text-foreground"><AnimatedNumber value={value} /></p>
                     </div>
                   </div>
                 ))}
