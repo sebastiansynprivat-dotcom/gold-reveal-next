@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { decode as decodeBase64 } from "https://deno.land/std@0.224.0/encoding/base64.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -64,10 +65,7 @@ async function getAccessToken(): Promise<string> {
     .replace(/-----END PRIVATE KEY-----/g, "")
     .replace(/[\s\r\n]/g, "");
 
-  // Add proper base64 padding if missing
-  const padded = pemContents + "=".repeat((4 - (pemContents.length % 4)) % 4);
-  const rawBinary = atob(padded);
-  const binaryKey = Uint8Array.from(rawBinary, (c) => c.charCodeAt(0));
+  const binaryKey = decodeBase64(pemContents);
 
   const cryptoKey = await crypto.subtle.importKey(
     "pkcs8",
