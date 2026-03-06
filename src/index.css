@@ -148,8 +148,8 @@
 
   .gold-gradient-border-animated {
     position: relative;
-    background: hsl(0 0% 4%);
-    border: none !important;
+    background: hsl(0 0% 6% / 0.8);
+    border: 1px solid hsl(43 30% 25% / 0.4) !important;
   }
   .gold-gradient-border-animated::before {
     content: "";
@@ -159,13 +159,12 @@
     padding: 1px;
     background: linear-gradient(
       135deg,
-      hsl(43 56% 52% / 0.6),
-      hsl(43 76% 46% / 0.3),
-      hsl(43 56% 52% / 0.6),
-      hsl(43 76% 46% / 0.3)
+      hsl(43 56% 52% / 0.25),
+      hsl(43 76% 46% / 0.1),
+      hsl(43 56% 52% / 0.25)
     );
-    background-size: 300% 300%;
-    animation: gradient-rotate 4s ease infinite;
+    background-size: 200% 200%;
+    animation: gradient-rotate 6s ease infinite;
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
@@ -178,17 +177,16 @@
   }
 
   .pulse-glow {
-    animation: pulse-glow-anim 3s ease-in-out infinite;
+    animation: pulse-glow-anim 4s ease-in-out infinite;
   }
 
   @keyframes pulse-glow-anim {
     0%, 100% {
-      box-shadow: 0 0 10px hsl(43 56% 52% / 0.15),
-                  0 0 30px hsl(43 56% 52% / 0.05);
+      box-shadow: 0 0 8px hsl(43 56% 52% / 0.06);
     }
     50% {
-      box-shadow: 0 0 20px hsl(43 56% 52% / 0.3),
-                  0 0 50px hsl(43 56% 52% / 0.1);
+      box-shadow: 0 0 14px hsl(43 56% 52% / 0.14),
+                  0 0 30px hsl(43 56% 52% / 0.04);
     }
   }
 
