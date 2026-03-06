@@ -1234,6 +1234,14 @@ export default function AdminDashboard() {
             Chatter
           </Button>
           <Button
+            variant={activeTab === "anfragen" ? "default" : "outline"}
+            size="sm"
+            onClick={() => { setActiveTab("anfragen"); if (!modelRequestsLoaded) loadModelRequests(); }}
+          >
+            <Send className="h-3.5 w-3.5 mr-1.5" />
+            Custom Anfragen
+          </Button>
+          <Button
             variant={activeTab === "botdms" ? "default" : "outline"}
             size="sm"
             onClick={() => { setActiveTab("botdms"); if (!botMessagesLoaded) loadBotMessages(); }}
