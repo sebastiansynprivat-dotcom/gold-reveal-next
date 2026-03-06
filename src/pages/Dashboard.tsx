@@ -711,7 +711,7 @@ export default function Dashboard() {
                                   {/* Explanation */}
                                   <div className="space-y-2 text-sm text-muted-foreground leading-relaxed">
                                     <p>
-                                      Im Google Drive findest du <span className="text-foreground font-medium">zusätzlichen Content</span>, der nicht in der Cloud verfügbar ist.
+                                      Im Google Drive findest du <span className="text-foreground font-medium">zusätzlichen Content</span>, der zum Teil noch nicht in der Cloud verfügbar ist.
                                     </p>
                                     <p>
                                       Dort wird regelmäßig <span className="text-foreground font-medium">neuer Content hochgeladen</span> – außerdem findest du dort Content aus <span className="text-foreground font-medium">Model-Ansagen</span>, den du selbstständig hochladen kannst.
