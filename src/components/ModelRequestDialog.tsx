@@ -81,7 +81,7 @@ const ModelRequestDialog = () => {
         <div className="space-y-4 pt-2">
           {/* Model Name */}
           <div className="space-y-1.5">
-            <Label className="text-xs text-foreground">Model Name *</Label>
+            <Label className="text-xs text-foreground">Model Name aus dem Profil *</Label>
             <Input
               placeholder="z.B. Anna, Lisa..."
               value={modelName}
