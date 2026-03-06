@@ -691,59 +691,62 @@ export default function Dashboard() {
                       {!ds.hidden &&
                     <div className="mt-3 border-t border-border/30 pt-3">
                           {acc.drive_folder_id ? (
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <button
-                                  className="flex items-center gap-2 w-full rounded-lg border border-accent/30 bg-accent/5 px-3 py-2.5 text-xs font-medium text-accent hover:bg-accent/10 hover:border-accent/50 hover:shadow-[0_0_12px_hsl(43_56%_52%_/_0.15)] transition-all cursor-pointer"
-                                >
-                                  📂 Google Drive öffnen
-                                  <ExternalLink className="h-3 w-3 ml-auto opacity-70" />
-                                </button>
-                              </DialogTrigger>
-                              <DialogContent className="glass-card border-border sm:max-w-md max-h-[85vh] overflow-y-auto">
-                                <DialogHeader>
-                                  <DialogTitle className="text-foreground flex items-center gap-2 text-base">
-                                    📂 Wozu der Google Drive?
-                                  </DialogTitle>
-                                  <DialogDescription className="sr-only">Informationen zum Google Drive Ordner</DialogDescription>
-                                </DialogHeader>
-                                <div className="space-y-4">
-                                  {/* Explanation */}
-                                  <div className="space-y-2 text-sm text-muted-foreground leading-relaxed">
-                                    <p>
-                                      Im Google Drive findest du <span className="text-foreground font-medium">zusätzlichen Content</span>, der zum Teil noch nicht in der Cloud verfügbar ist.
-                                    </p>
-                                    <p>
-                                      Dort wird regelmäßig <span className="text-foreground font-medium">neuer Content hochgeladen</span> – außerdem findest du dort Content aus <span className="text-foreground font-medium">Model-Anfragen</span>, den du selbstständig hochladen kannst.
-                                    </p>
-                                  </div>
-
-                                  {/* Upload Tutorial Section */}
-                                  <div className="space-y-3 border-t border-border/30 pt-4">
-                                    <h3 className="text-sm font-semibold text-foreground">📤 So lädst du Content hoch</h3>
-                                    <div className="rounded-xl border border-border/50 bg-secondary/30 overflow-hidden aspect-video flex items-center justify-center">
-                                      <div className="text-center space-y-2 p-4">
-                                        <div className="w-12 h-12 mx-auto rounded-full bg-accent/10 flex items-center justify-center">
-                                          <span className="text-2xl">🎬</span>
+                            <div className="space-y-2">
+                              <a
+                                href={`https://drive.google.com/drive/folders/${acc.drive_folder_id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 w-full rounded-lg border border-accent/30 bg-accent/5 px-3 py-2.5 text-xs font-medium text-accent hover:bg-accent/10 hover:border-accent/50 hover:shadow-[0_0_12px_hsl(43_56%_52%_/_0.15)] transition-all"
+                              >
+                                📂 Google Drive öffnen
+                                <ExternalLink className="h-3 w-3 ml-auto opacity-70" />
+                              </a>
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <button className="text-[10px] text-muted-foreground hover:text-accent transition-colors cursor-pointer">
+                                    Wozu brauche ich den Google Drive?
+                                  </button>
+                                </DialogTrigger>
+                                <DialogContent className="glass-card border-border sm:max-w-md max-h-[85vh] overflow-y-auto">
+                                  <DialogHeader>
+                                    <DialogTitle className="text-foreground flex items-center gap-2 text-base">
+                                      📂 Wozu der Google Drive?
+                                    </DialogTitle>
+                                    <DialogDescription className="sr-only">Informationen zum Google Drive Ordner</DialogDescription>
+                                  </DialogHeader>
+                                  <div className="space-y-4">
+                                    <div className="space-y-2 text-sm text-muted-foreground leading-relaxed">
+                                      <p>
+                                        Im Google Drive findest du <span className="text-foreground font-medium">zusätzlichen Content</span>, der zum Teil noch nicht in der Cloud verfügbar ist.
+                                      </p>
+                                      <p>
+                                        Dort wird regelmäßig <span className="text-foreground font-medium">neuer Content hochgeladen</span> – außerdem findest du dort Content aus <span className="text-foreground font-medium">Model-Anfragen</span>, den du selbstständig hochladen kannst.
+                                      </p>
+                                    </div>
+                                    <div className="space-y-3 border-t border-border/30 pt-4">
+                                      <h3 className="text-sm font-semibold text-foreground">📤 So lädst du Content hoch</h3>
+                                      <div className="rounded-xl border border-border/50 bg-secondary/30 overflow-hidden aspect-video flex items-center justify-center">
+                                        <div className="text-center space-y-2 p-4">
+                                          <div className="w-12 h-12 mx-auto rounded-full bg-accent/10 flex items-center justify-center">
+                                            <span className="text-2xl">🎬</span>
+                                          </div>
+                                          <p className="text-xs text-muted-foreground">Tutorial-Video kommt bald</p>
                                         </div>
-                                        <p className="text-xs text-muted-foreground">Tutorial-Video kommt bald</p>
                                       </div>
                                     </div>
+                                    <a
+                                      href={`https://drive.google.com/drive/folders/${acc.drive_folder_id}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="flex items-center justify-center gap-2 w-full rounded-xl border border-accent/30 bg-accent/10 px-4 py-3 text-sm font-semibold text-accent hover:bg-accent/20 hover:border-accent/50 hover:shadow-[0_0_16px_hsl(43_56%_52%_/_0.2)] transition-all"
+                                    >
+                                      📂 Google Drive öffnen
+                                      <ExternalLink className="h-4 w-4 opacity-70" />
+                                    </a>
                                   </div>
-
-                                  {/* Drive Button */}
-                                  <a
-                                    href={`https://drive.google.com/drive/folders/${acc.drive_folder_id}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center justify-center gap-2 w-full rounded-xl border border-accent/30 bg-accent/10 px-4 py-3 text-sm font-semibold text-accent hover:bg-accent/20 hover:border-accent/50 hover:shadow-[0_0_16px_hsl(43_56%_52%_/_0.2)] transition-all"
-                                  >
-                                    📂 Google Drive öffnen
-                                    <ExternalLink className="h-4 w-4 opacity-70" />
-                                  </a>
-                                </div>
-                              </DialogContent>
-                            </Dialog>
+                                </DialogContent>
+                              </Dialog>
+                            </div>
                           ) : (
                           <div className="flex items-start gap-3">
                             <Checkbox checked={ds.done} onCheckedChange={(v) => {setDriveState(acc.id, { done: !!v });setDriveVersion((p) => p + 1);}} className="mt-0.5 shrink-0 border-accent data-[state=checked]:bg-accent data-[state=checked]:text-accent-foreground" />
