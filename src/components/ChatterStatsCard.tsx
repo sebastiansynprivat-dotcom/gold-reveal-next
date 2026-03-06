@@ -145,21 +145,9 @@ export default function ChatterStatsCard({ userId, name }: Props) {
       </div>
 
       {/* All-time Revenue */}
-      <div className="relative rounded-lg p-3 text-center overflow-hidden" style={{ background: "hsl(0 0% 6% / 0.8)" }}>
-        <div
-          className="absolute inset-0 rounded-lg"
-          style={{
-            padding: "1.5px",
-            background: "conic-gradient(from 0deg, hsl(43 56% 52% / 0.03), hsl(43 56% 52% / 0.25), hsl(43 76% 46% / 0.5), hsl(43 56% 52% / 0.25), hsl(43 56% 52% / 0.03), hsl(43 30% 20% / 0.15), hsl(43 56% 52% / 0.03), hsl(43 56% 52% / 0.25), hsl(43 76% 46% / 0.5), hsl(43 56% 52% / 0.25), hsl(43 56% 52% / 0.03))",
-            mask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
-            WebkitMask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
-            WebkitMaskComposite: "xor",
-            maskComposite: "exclude",
-            animation: "border-spin 6s linear infinite",
-          }}
-        />
-        <p className="text-[9px] text-muted-foreground mb-0.5 relative z-10">Einnahmen All-Time</p>
-        <p className="text-lg font-bold text-gold-gradient relative z-10">{fmt(stats.allTime)}€</p>
+      <div className="gold-gradient-border-animated pulse-glow rounded-lg p-3 text-center">
+        <p className="text-[9px] text-muted-foreground mb-0.5">Einnahmen All-Time</p>
+        <p className="text-lg font-bold text-gold-gradient">{fmt(stats.allTime)}€</p>
       </div>
     </div>
   );
