@@ -737,6 +737,7 @@ export default function Dashboard() {
                             <ExternalLink className="h-3 w-3 text-accent shrink-0" />
                             <span className="text-[11px] text-accent font-medium">Link zum angefragten Content</span>
                           </a>
+                        )}
                         {/* Bearbeiten Button – nur bei Admin-Kommentar */}
                         {req.admin_comment && req.status !== "rejected" && (
                           <button
