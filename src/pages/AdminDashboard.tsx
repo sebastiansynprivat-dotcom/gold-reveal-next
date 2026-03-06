@@ -2871,66 +2871,85 @@ export default function AdminDashboard() {
 
         {activeTab === "notifications" && (
           <div className="space-y-4">
+            {/* Stats Cards */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="glass-card-subtle rounded-xl p-4 flex flex-col items-center justify-center">
+                <p className="text-[9px] text-muted-foreground mb-1 tracking-wide uppercase">Gesendet</p>
+                <p className="text-3xl font-bold text-gold-gradient">{notifHistory.length}</p>
+              </div>
+              <div className="glass-card-subtle rounded-xl p-4 flex flex-col items-center justify-center">
+                <p className="text-[9px] text-muted-foreground mb-1 tracking-wide uppercase">Geplant</p>
+                <p className="text-3xl font-bold text-gold-gradient">{schedules.filter((s: any) => s.is_active).length}</p>
+              </div>
+              <div className="glass-card-subtle rounded-xl p-4 flex flex-col items-center justify-center">
+                <p className="text-[9px] text-muted-foreground mb-1 tracking-wide uppercase">Pausiert</p>
+                <p className={cn("text-3xl font-bold", schedules.filter((s: any) => !s.is_active).length === 0 ? "text-gold-gradient" : "text-muted-foreground")}>{schedules.filter((s: any) => !s.is_active).length}</p>
+              </div>
+            </div>
+
+            {/* Send Notification */}
             <section className="glass-card rounded-xl overflow-hidden">
-              {/* Send Form */}
-              <div className="p-5 space-y-4">
-                <div className="flex items-center gap-2">
+              <div className="px-5 py-4 border-b border-border/50 flex items-center gap-3">
+                <div className="h-8 w-8 rounded-lg bg-accent/10 flex items-center justify-center">
                   <Bell className="h-4 w-4 text-accent" />
-                  <h2 className="text-sm font-semibold text-foreground">Neue Benachrichtigung</h2>
                 </div>
-                <div className="space-y-3">
-                  <Input
-                    value={notifTitle}
-                    onChange={(e) => setNotifTitle(e.target.value)}
-                    placeholder="Titel der Benachrichtigung"
-                    className="text-sm"
-                    maxLength={100}
-                  />
-                  <Textarea
-                    value={notifBody}
-                    onChange={(e) => setNotifBody(e.target.value)}
-                    placeholder="Nachricht eingeben..."
-                    className="text-sm min-h-[80px]"
-                    maxLength={500}
-                  />
-                  <Button
-                    onClick={handleSendNotification}
-                    disabled={notifSending || !notifTitle.trim() || !notifBody.trim()}
-                    className="w-full"
-                  >
-                    <Send className="h-4 w-4 mr-2" />
-                    {notifSending ? "Wird gesendet..." : "An alle senden"}
-                  </Button>
+                <div>
+                  <h2 className="text-sm font-bold text-foreground">Sofort senden</h2>
+                  <p className="text-[10px] text-muted-foreground">Push an alle Nutzer</p>
                 </div>
               </div>
+              <div className="p-4 space-y-3">
+                <Input
+                  value={notifTitle}
+                  onChange={(e) => setNotifTitle(e.target.value)}
+                  placeholder="Titel der Benachrichtigung"
+                  className="text-sm bg-secondary/30 border-border/30 focus:border-accent/40"
+                  maxLength={100}
+                />
+                <Textarea
+                  value={notifBody}
+                  onChange={(e) => setNotifBody(e.target.value)}
+                  placeholder="Nachricht eingeben..."
+                  className="text-sm min-h-[80px] bg-secondary/30 border-border/30 focus:border-accent/40 resize-none"
+                  maxLength={500}
+                />
+                <Button
+                  onClick={handleSendNotification}
+                  disabled={notifSending || !notifTitle.trim() || !notifBody.trim()}
+                  className="w-full"
+                >
+                  <Send className="h-4 w-4 mr-2" />
+                  {notifSending ? "Wird gesendet..." : "An alle senden"}
+                </Button>
+              </div>
 
-              {/* Collapsible History */}
+              {/* History */}
               {notifHistory.length > 0 && (
                 <>
                   <button
                     onClick={() => setNotifHistoryOpen(!notifHistoryOpen)}
-                    className="w-full px-5 py-3 border-t border-border flex items-center justify-between hover:bg-secondary/30 transition-colors"
+                    className="w-full px-5 py-3 border-t border-border/50 flex items-center justify-between hover:bg-secondary/20 transition-colors"
                   >
                     <div className="flex items-center gap-2">
                       <CheckCircle2 className="h-4 w-4 text-accent" />
                       <span className="text-sm font-semibold text-foreground">Verlauf</span>
                       <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{notifHistory.length}</Badge>
                     </div>
-                    <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${notifHistoryOpen ? "rotate-180" : ""}`} />
+                    <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", notifHistoryOpen && "rotate-180")} />
                   </button>
                   {notifHistoryOpen && (
-                    <div className="px-5 pb-5 space-y-2">
+                    <div className="p-3 space-y-2">
                       {notifHistory.map((n: any) => (
-                        <div key={n.id} className="p-3 rounded-lg bg-secondary/30 space-y-1">
+                        <div key={n.id} className="glass-card-subtle rounded-xl px-4 py-3 space-y-1.5">
                           <div className="flex items-center justify-between">
                             <p className="text-sm font-medium text-foreground">{n.title}</p>
-                            <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                              <CheckCircle2 className="h-3 w-3" />
-                              {n.recipients_count} Empfänger
-                            </div>
+                            <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                              <Users className="h-3 w-3" />
+                              {n.recipients_count}
+                            </span>
                           </div>
-                          <p className="text-xs text-muted-foreground">{n.body}</p>
-                          <p className="text-[10px] text-muted-foreground">
+                          <p className="text-xs text-muted-foreground leading-relaxed">{n.body}</p>
+                          <p className="text-[10px] text-muted-foreground/60">
                             {new Date(n.sent_at).toLocaleString("de-DE")}
                           </p>
                         </div>
@@ -2941,148 +2960,164 @@ export default function AdminDashboard() {
               )}
             </section>
 
-            {/* Scheduled Notifications Card */}
+            {/* Scheduled Notifications */}
             <section className="glass-card rounded-xl overflow-hidden">
-              <div className="p-5 space-y-4">
-                <div className="flex items-center gap-2">
-                  <Clock className="h-4 w-4 text-accent" />
-                  <h2 className="text-sm font-semibold text-foreground">Geplante Benachrichtigung</h2>
+              <div className="px-5 py-4 border-b border-border/50 flex items-center gap-3">
+                <div className="h-8 w-8 rounded-lg bg-accent/10 flex items-center justify-center">
+                  <Repeat className="h-4 w-4 text-accent" />
                 </div>
-                <div className="space-y-3">
-                  <Input
-                    value={schedTitle}
-                    onChange={(e) => setSchedTitle(e.target.value)}
-                    placeholder="Titel"
-                    className="text-sm"
-                    maxLength={100}
-                  />
-                  <Textarea
-                    value={schedBody}
-                    onChange={(e) => setSchedBody(e.target.value)}
-                    placeholder="Nachricht..."
-                    className="text-sm min-h-[60px]"
-                    maxLength={500}
-                  />
+                <div>
+                  <h2 className="text-sm font-bold text-foreground">Geplante Benachrichtigung</h2>
+                  <p className="text-[10px] text-muted-foreground">Wiederkehrende Push-Nachrichten</p>
+                </div>
+              </div>
+              <div className="p-4 space-y-3">
+                <Input
+                  value={schedTitle}
+                  onChange={(e) => setSchedTitle(e.target.value)}
+                  placeholder="Titel"
+                  className="text-sm bg-secondary/30 border-border/30 focus:border-accent/40"
+                  maxLength={100}
+                />
+                <Textarea
+                  value={schedBody}
+                  onChange={(e) => setSchedBody(e.target.value)}
+                  placeholder="Nachricht..."
+                  className="text-sm min-h-[60px] bg-secondary/30 border-border/30 focus:border-accent/40 resize-none"
+                  maxLength={500}
+                />
 
-                  {/* Frequency */}
+                {/* Frequency */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Häufigkeit</label>
+                  <div className="flex gap-1.5">
+                    {(["daily", "weekly", "monthly"] as const).map((f) => (
+                      <button
+                        key={f}
+                        className={cn(
+                          "flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all",
+                          schedFrequency === f
+                            ? "bg-accent/15 text-accent ring-1 ring-accent/30"
+                            : "bg-secondary/30 text-muted-foreground hover:bg-secondary/50"
+                        )}
+                        onClick={() => setSchedFrequency(f)}
+                      >
+                        {f === "daily" ? "Täglich" : f === "weekly" ? "Wöchentlich" : "Monatlich"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Time */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Uhrzeit (deutsche Zeit)</label>
+                  <Input
+                    type="time"
+                    value={schedTime}
+                    onChange={(e) => setSchedTime(e.target.value)}
+                    className="text-sm w-32 bg-secondary/30 border-border/30 focus:border-accent/40"
+                  />
+                </div>
+
+                {/* Weekday for weekly */}
+                {schedFrequency === "weekly" && (
                   <div className="space-y-2">
-                    <label className="text-xs font-medium text-muted-foreground">Häufigkeit</label>
-                    <div className="flex gap-1.5">
-                      {(["daily", "weekly", "monthly"] as const).map((f) => (
-                        <Button
-                          key={f}
-                          variant={schedFrequency === f ? "default" : "outline"}
-                          size="sm"
-                          className="text-xs h-7 px-2.5 flex-1"
-                          onClick={() => setSchedFrequency(f)}
+                    <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Wochentag</label>
+                    <div className="flex gap-1">
+                      {["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"].map((day, i) => (
+                        <button
+                          key={i}
+                          className={cn(
+                            "h-8 w-9 rounded-lg text-xs font-medium transition-all",
+                            schedWeekday === i
+                              ? "bg-accent/15 text-accent ring-1 ring-accent/30"
+                              : "bg-secondary/30 text-muted-foreground hover:bg-secondary/50"
+                          )}
+                          onClick={() => setSchedWeekday(i)}
                         >
-                          {f === "daily" ? "Täglich" : f === "weekly" ? "Wöchentlich" : "Monatlich"}
-                        </Button>
+                          {day}
+                        </button>
                       ))}
                     </div>
                   </div>
+                )}
 
-                  {/* Time */}
+                {/* Day of month for monthly */}
+                {schedFrequency === "monthly" && (
                   <div className="space-y-2">
-                    <label className="text-xs font-medium text-muted-foreground">Uhrzeit (deutsche Zeit)</label>
+                    <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Tag im Monat</label>
                     <Input
-                      type="time"
-                      value={schedTime}
-                      onChange={(e) => setSchedTime(e.target.value)}
-                      className="text-sm w-32"
+                      type="number"
+                      min={1}
+                      max={28}
+                      value={schedDayOfMonth}
+                      onChange={(e) => setSchedDayOfMonth(Number(e.target.value))}
+                      className="text-sm w-20 bg-secondary/30 border-border/30 focus:border-accent/40"
                     />
                   </div>
+                )}
 
-                  {/* Weekday for weekly */}
-                  {schedFrequency === "weekly" && (
-                    <div className="space-y-2">
-                      <label className="text-xs font-medium text-muted-foreground">Wochentag</label>
-                      <div className="flex gap-1">
-                        {["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"].map((day, i) => (
-                          <Button
-                            key={i}
-                            variant={schedWeekday === i ? "default" : "outline"}
-                            size="sm"
-                            className="text-xs h-7 w-9 px-0"
-                            onClick={() => setSchedWeekday(i)}
-                          >
-                            {day}
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Day of month for monthly */}
-                  {schedFrequency === "monthly" && (
-                    <div className="space-y-2">
-                      <label className="text-xs font-medium text-muted-foreground">Tag im Monat</label>
-                      <Input
-                        type="number"
-                        min={1}
-                        max={28}
-                        value={schedDayOfMonth}
-                        onChange={(e) => setSchedDayOfMonth(Number(e.target.value))}
-                        className="text-sm w-20"
-                      />
-                    </div>
-                  )}
-
-                  <Button
-                    onClick={saveSchedule}
-                    disabled={schedSaving || !schedTitle.trim() || !schedBody.trim()}
-                    className="w-full"
-                  >
-                    <Repeat className="h-4 w-4 mr-2" />
-                    {schedSaving ? "Wird gespeichert..." : "Benachrichtigung planen"}
-                  </Button>
-                </div>
+                <Button
+                  onClick={saveSchedule}
+                  disabled={schedSaving || !schedTitle.trim() || !schedBody.trim()}
+                  className="w-full"
+                >
+                  <Repeat className="h-4 w-4 mr-2" />
+                  {schedSaving ? "Wird gespeichert..." : "Benachrichtigung planen"}
+                </Button>
               </div>
 
-              {/* Collapsible scheduled list */}
+              {/* Scheduled list */}
               <button
                 onClick={() => setSchedListOpen(!schedListOpen)}
-                className="w-full px-5 py-3 border-t border-border flex items-center justify-between hover:bg-secondary/30 transition-colors"
+                className="w-full px-5 py-3 border-t border-border/50 flex items-center justify-between hover:bg-secondary/20 transition-colors"
               >
                 <div className="flex items-center gap-2">
                   <Repeat className="h-4 w-4 text-accent" />
                   <span className="text-sm font-semibold text-foreground">Geplante Benachrichtigungen</span>
                   {schedules.length > 0 && <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{schedules.length}</Badge>}
                 </div>
-                <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${schedListOpen ? "rotate-180" : ""}`} />
+                <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", schedListOpen && "rotate-180")} />
               </button>
               {schedListOpen && (
-                <div className="px-5 pb-5 space-y-2">
+                <div className="p-3 space-y-2">
                   {schedules.length === 0 ? (
                     <p className="text-xs text-muted-foreground text-center py-3">Noch keine geplanten Benachrichtigungen.</p>
                   ) : (
                     schedules.map((s: any) => (
-                      <div key={s.id} className="p-3 rounded-lg bg-secondary/30 space-y-2">
+                      <div key={s.id} className="glass-card-subtle rounded-xl px-4 py-3 space-y-2">
                         <div className="flex items-center justify-between">
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-foreground truncate">{s.title}</p>
-                            <p className="text-xs text-muted-foreground truncate">{s.body}</p>
+                            <p className="text-xs text-muted-foreground truncate mt-0.5">{s.body}</p>
                           </div>
                           <div className="flex items-center gap-1.5 shrink-0 ml-2">
                             <button
                               onClick={() => toggleScheduleActive(s.id, s.is_active)}
-                              className="p-1.5 rounded-lg hover:bg-secondary/50 transition-colors"
+                              className={cn(
+                                "p-1.5 rounded-lg transition-colors",
+                                s.is_active ? "hover:bg-accent/10" : "hover:bg-secondary/50"
+                              )}
                               title={s.is_active ? "Pausieren" : "Aktivieren"}
                             >
                               {s.is_active ? <Pause className="h-3.5 w-3.5 text-accent" /> : <Play className="h-3.5 w-3.5 text-muted-foreground" />}
                             </button>
                             <button
                               onClick={() => setSchedDeleteConfirm(s.id)}
-                              className="p-1.5 rounded-lg hover:bg-destructive/20 transition-colors"
+                              className="p-1.5 rounded-lg hover:bg-destructive/10 transition-colors"
                             >
-                              <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                              <Trash2 className="h-3.5 w-3.5 text-destructive/70" />
                             </button>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                          <Badge variant={s.is_active ? "default" : "secondary"} className="text-[10px] px-1.5 py-0">
+                        <div className="flex items-center gap-2 flex-wrap text-[10px] text-muted-foreground">
+                          <span className={cn(
+                            "flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium",
+                            s.is_active ? "bg-accent/10 text-accent" : "bg-secondary/50 text-muted-foreground"
+                          )}>
+                            <span className={cn("h-1.5 w-1.5 rounded-full", s.is_active ? "bg-accent animate-pulse" : "bg-muted-foreground")} />
                             {s.is_active ? "Aktiv" : "Pausiert"}
-                          </Badge>
+                          </span>
                           <span>
                             {s.frequency === "daily" ? "Täglich" : s.frequency === "weekly" ? `Wöchentlich (${["So","Mo","Di","Mi","Do","Fr","Sa"][s.weekday ?? 1]})` : `Monatlich (${s.day_of_month ?? 1}.)`}
                           </span>
