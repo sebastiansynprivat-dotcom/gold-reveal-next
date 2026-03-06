@@ -1,0 +1,1 @@
+CREATE POLICY "Users can update own requests" ON public.model_requests FOR UPDATE TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
