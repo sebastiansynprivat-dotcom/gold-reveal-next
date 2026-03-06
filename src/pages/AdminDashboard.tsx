@@ -2510,7 +2510,7 @@ export default function AdminDashboard() {
                               const priceLine = req.request_type === "individual" && req.price != null
                                 ? `\n\nDer Preis, den der Kunde bereit wäre zu bezahlen: ${req.price}€`
                                 : "";
-                              const fullText = `Hey, eine neue Anfrage des Chatters an dich – ich leite sie dir einmal eins zu eins weiter 🙋🏼‍♂️:\n\n${req.description}${priceLine}\n\nGib mir bitte Feedback, ob du das umsetzen möchtest oder nicht.`;
+                              const fullText = `Hey, eine neue Anfrage des Chatters an dich – ich leite sie dir einmal eins zu eins weiter 🙋🏼‍♂️:\n\n${req.description}${priceLine}\n\nGib mir bitte Feedback, ob du das umsetzen möchtest oder nicht. Danke dir ☺️`;
                               navigator.clipboard.writeText(fullText);
                               toast.success("Beschreibung kopiert!");
                             }}
@@ -2521,7 +2521,7 @@ export default function AdminDashboard() {
                             {req.request_type === "individual" && req.price != null && (
                               <p className="text-xs text-muted-foreground mt-1.5">Der Preis, den der Kunde bereit wäre zu bezahlen: <span className="text-foreground font-medium">{req.price}€</span></p>
                             )}
-                            <p className="text-xs text-muted-foreground italic mt-1.5">Gib mir bitte Feedback, ob du das umsetzen möchtest oder nicht.</p>
+                            <p className="text-xs text-muted-foreground italic mt-1.5">Gib mir bitte Feedback, ob du das umsetzen möchtest oder nicht. Danke dir ☺️</p>
                             <Copy className="h-3 w-3 inline-block ml-1.5 opacity-0 group-hover:opacity-40 transition-opacity" />
                           </button>
 
