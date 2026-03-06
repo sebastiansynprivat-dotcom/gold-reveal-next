@@ -42,8 +42,14 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear }: ModelRequest
       setPrice(editData.price != null ? String(editData.price) : "");
       setDescription(editData.description);
       setOpen(true);
-      // Focus description after dialog opens
-      setTimeout(() => descriptionRef.current?.focus(), 150);
+      // Focus description and place cursor at end after dialog opens
+      setTimeout(() => {
+        const el = descriptionRef.current;
+        if (el) {
+          el.focus();
+          el.setSelectionRange(el.value.length, el.value.length);
+        }
+      }, 150);
     }
   }, [editData]);
 
