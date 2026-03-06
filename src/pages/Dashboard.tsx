@@ -641,8 +641,42 @@ export default function Dashboard() {
 
           {/* Anfrage an das Model – immer sichtbar */}
           <div className="border-t border-border/30">
-            <ModelRequestDialog />
+            <ModelRequestDialog onSubmitted={loadMyRequests} />
           </div>
+
+          {/* Bisherige Anfragen – einklappbar */}
+          {myRequests.length > 0 && (
+            <div className="border-t border-border/30">
+              <button
+                onClick={() => setRequestsOpen(!requestsOpen)}
+                className="w-full flex items-center justify-between px-4 py-3 lg:px-6 hover:bg-secondary/20 transition-colors"
+              >
+                <span className="text-xs font-semibold text-foreground">Deine Anfragen ({myRequests.length})</span>
+                <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 ${requestsOpen ? "rotate-180" : ""}`} />
+              </button>
+              {requestsOpen && (
+                <div className="px-4 pb-4 lg:px-6 lg:pb-6 space-y-2">
+                  {myRequests.map((req) => (
+                    <div key={req.id} className="rounded-lg border border-border/50 bg-secondary/20 p-3 space-y-1.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs font-medium text-foreground">{req.model_name}</span>
+                        <Badge variant={req.status === "accepted" ? "default" : req.status === "rejected" ? "destructive" : "secondary"} className="text-[10px]">
+                          {req.status === "pending" ? "⏳ Ausstehend" : req.status === "accepted" ? "✅ Angenommen" : "❌ Abgelehnt"}
+                        </Badge>
+                      </div>
+                      <p className="text-[10px] text-muted-foreground line-clamp-2">{req.description}</p>
+                      {req.admin_comment && (
+                        <div className="flex items-start gap-1.5 rounded-md bg-accent/10 border border-accent/20 px-2.5 py-2 mt-1">
+                          <MessageSquare className="h-3 w-3 text-accent shrink-0 mt-0.5" />
+                          <p className="text-[11px] text-foreground leading-relaxed">{req.admin_comment}</p>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </section>
 
         {/* MassDM Generator */}
