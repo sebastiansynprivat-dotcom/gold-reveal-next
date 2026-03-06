@@ -1266,128 +1266,174 @@ export default function AdminDashboard() {
           >
 
         {activeTab === "einnahmen" && (
-          <div className="space-y-4">
-            {/* Time Filter */}
-            <div className="glass-card rounded-xl p-3 space-y-3">
-              <div className="flex flex-wrap gap-1.5">
+          <div className="space-y-5">
+            {/* Premium Time Filter */}
+            <div className="overflow-x-auto scrollbar-none -mx-4 px-4">
+              <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-secondary/40 backdrop-blur-sm border border-border/30">
                 {(["heute", "gestern", "7", "30", "90"] as TimeFilter[]).map((f) => (
-                  <Button
+                  <button
                     key={f}
-                    variant={timeFilter === f ? "default" : "outline"}
-                    size="sm"
-                    className="text-xs h-7 px-2.5"
                     onClick={() => setTimeFilter(f)}
+                    className={cn(
+                      "px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap",
+                      timeFilter === f
+                        ? "bg-accent text-accent-foreground shadow-md shadow-accent/20"
+                        : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
+                    )}
                   >
                     {filterLabels[f]}
-                  </Button>
+                  </button>
                 ))}
-                <Button
-                  variant={timeFilter === "custom" ? "default" : "outline"}
-                  size="sm"
-                  className="text-xs h-7 px-2.5"
+                <button
                   onClick={() => setTimeFilter("custom")}
+                  className={cn(
+                    "flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap",
+                    timeFilter === "custom"
+                      ? "bg-accent text-accent-foreground shadow-md shadow-accent/20"
+                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
+                  )}
                 >
-                  <CalendarIcon className="h-3 w-3 mr-1" />
+                  <CalendarIcon className="h-3 w-3" />
                   Zeitraum
-                </Button>
-              </div>
-              {timeFilter === "custom" && (
-                <div className="flex gap-2 items-center">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" size="sm" className={cn("h-8 text-xs flex-1 justify-start", !customFrom && "text-muted-foreground")}>
-                        <CalendarIcon className="h-3 w-3 mr-1.5" />
-                        {customFrom ? format(customFrom, "dd.MM.yyyy") : "Von"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar mode="single" selected={customFrom} onSelect={setCustomFrom} initialFocus className="p-3 pointer-events-auto" />
-                    </PopoverContent>
-                  </Popover>
-                  <span className="text-xs text-muted-foreground">bis</span>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" size="sm" className={cn("h-8 text-xs flex-1 justify-start", !customTo && "text-muted-foreground")}>
-                        <CalendarIcon className="h-3 w-3 mr-1.5" />
-                        {customTo ? format(customTo, "dd.MM.yyyy") : "Bis"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="end">
-                      <Calendar mode="single" selected={customTo} onSelect={setCustomTo} initialFocus className="p-3 pointer-events-auto" />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              )}
-            </div>
-
-            {/* Revenue Chart */}
-            {/* Gesamtumsatz Tile */}
-            <div className="glass-card-subtle rounded-xl p-4 text-center" style={{ borderTop: "3px solid hsl(var(--accent))" }}>
-              <p className="text-[10px] text-muted-foreground mb-1">Gesamtumsatz</p>
-              <p className="text-2xl font-bold text-gold-gradient">{grandTotal.toLocaleString("de-DE")}€</p>
-              <p className="text-[9px] text-muted-foreground mt-0.5">{filterLabels[timeFilter]}</p>
-            </div>
-
-            {/* Platform Stat Tiles */}
-            <div className="grid grid-cols-3 gap-3">
-              <div className="glass-card-subtle rounded-xl p-4 text-center" style={{ borderTop: `3px solid ${PLATFORM_COLORS.maloum}` }}>
-                <p className="text-[10px] text-muted-foreground mb-1">Maloum</p>
-                <p className="text-xl font-bold text-foreground">{platformTotals.maloum.toLocaleString("de-DE")}€</p>
-              </div>
-              <div className="glass-card-subtle rounded-xl p-4 text-center" style={{ borderTop: `3px solid ${PLATFORM_COLORS.brezzels}` }}>
-                <p className="text-[10px] text-muted-foreground mb-1">Brezzels</p>
-                <p className="text-xl font-bold text-foreground">{platformTotals.brezzels.toLocaleString("de-DE")}€</p>
-              </div>
-              <div className="glass-card-subtle rounded-xl p-4 text-center" style={{ borderTop: `3px solid ${PLATFORM_COLORS["4based"]}` }}>
-                <p className="text-[10px] text-muted-foreground mb-1">4Based</p>
-                <p className="text-xl font-bold text-foreground">{platformTotals["4based"].toLocaleString("de-DE")}€</p>
+                </button>
               </div>
             </div>
 
-            {/* Revenue Chart */}
-            <div className="glass-card rounded-xl p-4">
-              <h2 className="text-sm font-semibold text-foreground mb-1">
-                Umsatz – {filterLabels[timeFilter]}
-              </h2>
-              <div className="flex gap-3 mb-3">
-                {Object.entries(PLATFORM_COLORS).map(([key, color]) => (
-                  <div key={key} className="flex items-center gap-1.5">
-                    <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
-                    <span className="text-[10px] text-muted-foreground capitalize">{key}</span>
+            {timeFilter === "custom" && (
+              <div className="flex gap-2 items-center glass-card-subtle rounded-xl p-3">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className={cn("h-8 text-xs flex-1 justify-start", !customFrom && "text-muted-foreground")}>
+                      <CalendarIcon className="h-3 w-3 mr-1.5" />
+                      {customFrom ? format(customFrom, "dd.MM.yyyy") : "Von"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar mode="single" selected={customFrom} onSelect={setCustomFrom} initialFocus className="p-3 pointer-events-auto" />
+                  </PopoverContent>
+                </Popover>
+                <span className="text-xs text-muted-foreground">bis</span>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className={cn("h-8 text-xs flex-1 justify-start", !customTo && "text-muted-foreground")}>
+                      <CalendarIcon className="h-3 w-3 mr-1.5" />
+                      {customTo ? format(customTo, "dd.MM.yyyy") : "Bis"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="end">
+                    <Calendar mode="single" selected={customTo} onSelect={setCustomTo} initialFocus className="p-3 pointer-events-auto" />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            )}
+
+            {/* Hero Gesamtumsatz */}
+            <div className="relative glass-card rounded-2xl p-6 text-center overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-br from-accent/8 via-transparent to-accent/5" />
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
+              <div className="relative">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <div className="h-8 w-8 rounded-lg bg-accent/10 flex items-center justify-center">
+                    <DollarSign className="h-4 w-4 text-accent" />
                   </div>
-                ))}
+                </div>
+                <p className="text-[10px] text-muted-foreground mb-1.5 tracking-widest uppercase">Gesamtumsatz</p>
+                <p className="text-3xl font-extrabold text-gold-gradient tracking-tight">{grandTotal.toLocaleString("de-DE")}€</p>
+                <p className="text-[10px] text-muted-foreground mt-1.5 font-medium">{filterLabels[timeFilter]}</p>
               </div>
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={filteredRevenueData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis
-                      dataKey="date"
-                      tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-                      tickLine={false}
-                      axisLine={false}
-                      interval={Math.max(0, Math.floor(filteredRevenueData.length / 7))}
-                    />
-                    <YAxis
-                      tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-                      tickLine={false}
-                      axisLine={false}
-                      tickFormatter={(v) => `${v}€`}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        background: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: "8px",
-                        fontSize: "12px",
-                      }}
-                      formatter={(value: number, name: string) => [`${value.toLocaleString("de-DE")}€`, name]}
-                    />
-                    <Line type="monotone" dataKey="maloum" stroke={PLATFORM_COLORS.maloum} strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
-                    <Line type="monotone" dataKey="brezzels" stroke={PLATFORM_COLORS.brezzels} strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
-                    <Line type="monotone" dataKey="4based" stroke={PLATFORM_COLORS["4based"]} strokeWidth={2.5} dot={false} activeDot={{ r: 4 }} />
-                  </LineChart>
-                </ResponsiveContainer>
+            </div>
+
+            {/* Platform Cards */}
+            <div className="grid grid-cols-3 gap-3">
+              {([
+                { key: "maloum", label: "Maloum", color: PLATFORM_COLORS.maloum, value: platformTotals.maloum },
+                { key: "brezzels", label: "Brezzels", color: PLATFORM_COLORS.brezzels, value: platformTotals.brezzels },
+                { key: "4based", label: "4Based", color: PLATFORM_COLORS["4based"], value: platformTotals["4based"] },
+              ]).map(({ key, label, color, value }) => {
+                const pct = grandTotal > 0 ? Math.round((value / grandTotal) * 100) : 0;
+                return (
+                  <div key={key} className="glass-card-subtle rounded-xl p-4 text-center relative overflow-hidden hover:scale-[1.02] transition-transform">
+                    <div className="absolute top-0 left-0 right-0 h-1 rounded-t-xl" style={{ backgroundColor: color }} />
+                    <div className="absolute bottom-0 left-0 h-1 rounded-b-xl transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: color, opacity: 0.4 }} />
+                    <div className="relative">
+                      <div className="flex items-center justify-center gap-1.5 mb-2">
+                        <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
+                        <p className="text-[10px] text-muted-foreground font-medium tracking-wide">{label}</p>
+                      </div>
+                      <p className="text-lg font-bold text-foreground">{value.toLocaleString("de-DE")}€</p>
+                      <p className="text-[9px] text-muted-foreground mt-0.5 font-medium">{pct}% Anteil</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Revenue Chart */}
+            <div className="glass-card rounded-2xl overflow-hidden">
+              <div className="px-5 py-4 border-b border-border/50 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-lg bg-accent/10 flex items-center justify-center">
+                    <TrendingUp className="h-4 w-4 text-accent" />
+                  </div>
+                  <div>
+                    <h2 className="text-sm font-bold text-foreground">Umsatzverlauf</h2>
+                    <p className="text-[10px] text-muted-foreground">{filterLabels[timeFilter]}</p>
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  {Object.entries(PLATFORM_COLORS).map(([key, color]) => (
+                    <div key={key} className="flex items-center gap-1.5">
+                      <div className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
+                      <span className="text-[10px] text-muted-foreground capitalize font-medium">{key}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="p-4">
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={filteredRevenueData}>
+                      <defs>
+                        {Object.entries(PLATFORM_COLORS).map(([key, color]) => (
+                          <linearGradient key={key} id={`gradient-${key}`} x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor={color} stopOpacity={0.3} />
+                            <stop offset="100%" stopColor={color} stopOpacity={0} />
+                          </linearGradient>
+                        ))}
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} />
+                      <XAxis
+                        dataKey="date"
+                        tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                        tickLine={false}
+                        axisLine={false}
+                        interval={Math.max(0, Math.floor(filteredRevenueData.length / 7))}
+                      />
+                      <YAxis
+                        tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                        tickLine={false}
+                        axisLine={false}
+                        tickFormatter={(v) => `${v}€`}
+                        width={50}
+                      />
+                      <Tooltip
+                        contentStyle={{
+                          background: "hsl(var(--card))",
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: "12px",
+                          fontSize: "12px",
+                          boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+                          padding: "10px 14px",
+                        }}
+                        formatter={(value: number, name: string) => [`${value.toLocaleString("de-DE")}€`, name]}
+                        labelStyle={{ color: "hsl(var(--muted-foreground))", fontSize: "10px", marginBottom: "4px" }}
+                      />
+                      <Line type="monotone" dataKey="maloum" stroke={PLATFORM_COLORS.maloum} strokeWidth={2.5} dot={false} activeDot={{ r: 5, strokeWidth: 2, stroke: "hsl(var(--background))" }} />
+                      <Line type="monotone" dataKey="brezzels" stroke={PLATFORM_COLORS.brezzels} strokeWidth={2.5} dot={false} activeDot={{ r: 5, strokeWidth: 2, stroke: "hsl(var(--background))" }} />
+                      <Line type="monotone" dataKey="4based" stroke={PLATFORM_COLORS["4based"]} strokeWidth={2.5} dot={false} activeDot={{ r: 5, strokeWidth: 2, stroke: "hsl(var(--background))" }} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
             </div>
           </div>
