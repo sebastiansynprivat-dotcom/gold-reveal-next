@@ -1530,9 +1530,8 @@ export default function AdminDashboard() {
             )}
 
             {/* Hero Gesamtumsatz */}
-            <div className="relative gold-gradient-border-animated pulse-glow rounded-xl p-6 text-center overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-br from-accent/8 via-transparent to-accent/5" />
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
+            <div className="relative gold-gradient-border-animated pulse-glow rounded-xl p-6 text-center">
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-accent/8 via-transparent to-accent/5 pointer-events-none" />
               <div className="relative">
                 <div className="flex items-center justify-center gap-2 mb-2">
                   <div className="h-8 w-8 rounded-lg bg-accent/10 flex items-center justify-center">
