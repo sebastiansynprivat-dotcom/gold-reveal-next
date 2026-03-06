@@ -60,11 +60,11 @@ function useAnimatedCounter(target: number, duration = 1200) {
 const staggerContainer = {
   hidden: {},
   show: { transition: { staggerChildren: 0.08 } },
-};
+} as const;
 const staggerItem = {
   hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: "easeOut" } },
-};
+  show: { opacity: 1, y: 0, transition: { duration: 0.45 } },
+} as const;
 
 function AnimatedValue({ value, suffix = "€", className }: { value: number; suffix?: string; className?: string }) {
   const animated = useAnimatedCounter(value);
