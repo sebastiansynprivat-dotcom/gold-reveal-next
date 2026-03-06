@@ -131,52 +131,62 @@ Deno.serve(async (req) => {
 
   try {
     const authHeader = req.headers.get("Authorization");
-    const isServiceRole = req.headers.get("x-service-role") === "true";
 
-    if (!isServiceRole) {
-      if (!authHeader) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), {
-          status: 401,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      const userClient = createClient(
-        Deno.env.get("SUPABASE_URL")!,
-        Deno.env.get("SUPABASE_ANON_KEY")!,
-        { global: { headers: { Authorization: authHeader } } }
-      );
-
-      const { data: { user } } = await userClient.auth.getUser();
-      if (!user) {
-        return new Response(JSON.stringify({ error: "Unauthorized" }), {
-          status: 401,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      const { data: isAdmin } = await userClient.rpc("is_admin");
-      if (!isAdmin) {
-        return new Response(JSON.stringify({ error: "Forbidden" }), {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    const { folder_id, email } = await req.json();
-    if (!folder_id || !email) {
+    const userClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: authHeader } } }
+    );
+
+    const { data: { user } } = await userClient.auth.getUser();
+    if (!user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { data: isAdmin } = await userClient.rpc("is_admin");
+    if (!isAdmin) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { folder_id, email, user_id } = await req.json();
+
+    let targetEmail = email;
+
+    // If user_id provided instead of email, look up the email
+    if (!targetEmail && user_id) {
+      const serviceClient = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      );
+      const { data: userData } = await serviceClient.auth.admin.getUserById(user_id);
+      targetEmail = userData?.user?.email;
+    }
+
+    if (!folder_id || !targetEmail) {
       return new Response(
-        JSON.stringify({ error: "folder_id and email are required" }),
+        JSON.stringify({ error: "folder_id and (email or user_id) are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const accessToken = await getAccessToken();
-    await revokeDriveAccess(folder_id, email, accessToken);
+    await revokeDriveAccess(folder_id, targetEmail, accessToken);
 
     return new Response(
-      JSON.stringify({ success: true, message: `Access revoked for ${email}` }),
+      JSON.stringify({ success: true, message: `Access revoked for ${targetEmail}` }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
