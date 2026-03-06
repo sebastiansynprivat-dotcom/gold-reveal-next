@@ -726,6 +726,17 @@ export default function Dashboard() {
                             <p className="text-[11px] text-foreground leading-relaxed">{req.admin_comment}</p>
                           </div>
                         )}
+                        {/* Content Link */}
+                        {(req as any).content_link && (req.status === "accepted" || req.status === "in_progress") && (
+                          <a
+                            href={(req as any).content_link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 rounded-md bg-accent/10 border border-accent/20 px-2.5 py-2 mt-1 hover:bg-accent/15 transition-colors"
+                          >
+                            <ExternalLink className="h-3 w-3 text-accent shrink-0" />
+                            <span className="text-[11px] text-accent font-medium">Link zum angefragten Content</span>
+                          </a>
                         {/* Bearbeiten Button – nur bei Admin-Kommentar */}
                         {req.admin_comment && req.status !== "rejected" && (
                           <button
