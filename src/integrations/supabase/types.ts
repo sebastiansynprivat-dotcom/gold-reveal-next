@@ -235,6 +235,39 @@ export type Database = {
         }
         Relationships: []
       }
+      model_requests: {
+        Row: {
+          created_at: string
+          description: string
+          id: string
+          model_name: string
+          price: number | null
+          request_type: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          id?: string
+          model_name: string
+          price?: number | null
+          request_type?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          id?: string
+          model_name?: string
+          price?: number | null
+          request_type?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           body: string
