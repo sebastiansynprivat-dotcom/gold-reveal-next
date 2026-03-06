@@ -1160,7 +1160,6 @@ export default function AdminDashboard() {
                 },
                 body: JSON.stringify({
                   folder_id: newAcc.drive_folder_id,
-                  email: reassignTarget.email || reassignTarget.account_email,
                   user_id: reassignTarget.user_id,
                 }),
               }

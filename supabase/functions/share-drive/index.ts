@@ -158,19 +158,32 @@ Deno.serve(async (req) => {
       }
     }
 
-    const { folder_id, email } = await req.json();
-    if (!folder_id || !email) {
+    const { folder_id, email, user_id } = await req.json();
+    
+    let targetEmail = email;
+    
+    // If no email provided but user_id given, look up the user's login email
+    if (!targetEmail && user_id) {
+      const adminClient = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      );
+      const { data: userData } = await adminClient.auth.admin.getUserById(user_id);
+      targetEmail = userData?.user?.email;
+    }
+    
+    if (!folder_id || !targetEmail) {
       return new Response(
-        JSON.stringify({ error: "folder_id and email are required" }),
+        JSON.stringify({ error: "folder_id and (email or user_id) are required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const accessToken = await getAccessToken();
-    await shareDriveFolder(folder_id, email, accessToken);
+    await shareDriveFolder(folder_id, targetEmail, accessToken);
 
     return new Response(
-      JSON.stringify({ success: true, message: `Folder shared with ${email}` }),
+      JSON.stringify({ success: true, message: `Folder shared with ${targetEmail}` }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
