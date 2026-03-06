@@ -2208,40 +2208,65 @@ export default function AdminDashboard() {
                     const chatter = chatters.find(c => c.user_id === req.user_id);
                     const chatterName = chatter?.group_name || req.user_id.slice(0, 8);
                     return (
-                      <div key={req.id} className="px-4 py-3 space-y-2">
+                      <div key={req.id} className="px-4 py-4 space-y-2.5">
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2 min-w-0">
-                            <span className="text-xs font-semibold text-foreground truncate">{chatterName}</span>
-                            <Badge variant="outline" className="text-[10px] shrink-0">
+                            <span className="text-sm font-semibold text-foreground truncate">{chatterName}</span>
+                            <Badge variant="outline" className="text-xs shrink-0">
                               {req.request_type === "individual" ? "Individuell" : "Allgemein"}
                             </Badge>
                             {req.request_type === "individual" && req.price != null && (
-                              <span className="text-[10px] text-accent font-semibold">{req.price}€</span>
+                              <span className="text-xs text-accent font-semibold">{req.price}€</span>
                             )}
                           </div>
-                          <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                          <span className="text-xs text-muted-foreground whitespace-nowrap">
                             {new Date(req.created_at).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit" })}
                           </span>
                         </div>
-                        <button onClick={() => { navigator.clipboard.writeText(req.model_name); toast.success("Model Name kopiert!"); }} className="text-[10px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer text-left">Model: <span className="text-foreground font-medium underline underline-offset-2 decoration-border">{req.model_name}</span> <Copy className="h-2.5 w-2.5 inline-block ml-0.5 opacity-50" /></button>
-                        <button onClick={() => { navigator.clipboard.writeText(req.description); toast.success("Beschreibung kopiert!"); }} className="text-xs text-foreground/80 leading-relaxed hover:text-foreground transition-colors cursor-pointer text-left">{req.description} <Copy className="h-2.5 w-2.5 inline-block ml-0.5 opacity-50" /></button>
+                        <button onClick={() => { navigator.clipboard.writeText(req.model_name); toast.success("Model Name kopiert!"); }} className="text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer text-left">Model: <span className="text-foreground font-medium underline underline-offset-2 decoration-border">{req.model_name}</span> <Copy className="h-3 w-3 inline-block ml-1 opacity-50" /></button>
+                        <button onClick={() => { navigator.clipboard.writeText(req.description); toast.success("Beschreibung kopiert!"); }} className="text-sm text-foreground/80 leading-relaxed hover:text-foreground transition-colors cursor-pointer text-left">{req.description} <Copy className="h-3 w-3 inline-block ml-1 opacity-50" /></button>
+                        
+                        {/* Admin Kommentar */}
+                        <div className="space-y-1.5 pt-1">
+                          <Textarea
+                            placeholder="Kommentar für den Chatter hinterlassen..."
+                            value={req._localComment ?? req.admin_comment ?? ""}
+                            onChange={(e) => {
+                              setModelRequests(prev => prev.map(r => r.id === req.id ? { ...r, _localComment: e.target.value } : r));
+                            }}
+                            rows={2}
+                            className="text-xs"
+                          />
+                          {(req._localComment != null && req._localComment !== (req.admin_comment ?? "")) && (
+                            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={async () => {
+                              const comment = req._localComment ?? "";
+                              const { error } = await supabase.from("model_requests").update({ admin_comment: comment || null }).eq("id", req.id);
+                              if (error) { toast.error("Fehler beim Speichern"); return; }
+                              toast.success("Kommentar gespeichert!");
+                              setModelRequests(prev => prev.map(r => r.id === req.id ? { ...r, admin_comment: comment || null, _localComment: undefined } : r));
+                            }}>
+                              <Save className="h-3 w-3 mr-1" /> Kommentar speichern
+                            </Button>
+                          )}
+                        </div>
+
                         <div className="flex items-center gap-2 pt-1">
                           {req.status === "pending" ? (
                             <>
-                              <Button size="sm" variant="outline" className="h-7 text-[10px] border-green-500/30 text-green-400 hover:bg-green-500/10" onClick={() => updateRequestStatus(req.id, "accepted")}>
+                              <Button size="sm" variant="outline" className="h-7 text-xs border-green-500/30 text-green-400 hover:bg-green-500/10" onClick={() => updateRequestStatus(req.id, "accepted")}>
                                 <Check className="h-3 w-3 mr-1" /> Annehmen
                               </Button>
-                              <Button size="sm" variant="outline" className="h-7 text-[10px] border-red-500/30 text-red-400 hover:bg-red-500/10" onClick={() => updateRequestStatus(req.id, "rejected")}>
+                              <Button size="sm" variant="outline" className="h-7 text-xs border-red-500/30 text-red-400 hover:bg-red-500/10" onClick={() => updateRequestStatus(req.id, "rejected")}>
                                 <XCircle className="h-3 w-3 mr-1" /> Ablehnen
                               </Button>
                             </>
                           ) : (
-                            <Badge variant={req.status === "accepted" ? "default" : "destructive"} className="text-[10px]">
+                            <Badge variant={req.status === "accepted" ? "default" : "destructive"} className="text-xs">
                               {req.status === "accepted" ? "✅ Angenommen" : "❌ Abgelehnt"}
                             </Badge>
                           )}
                           {req.status !== "pending" && (
-                            <Button size="sm" variant="ghost" className="h-7 text-[10px] text-muted-foreground" onClick={() => updateRequestStatus(req.id, "pending")}>
+                            <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground" onClick={() => updateRequestStatus(req.id, "pending")}>
                               <RefreshCw className="h-3 w-3 mr-1" /> Zurücksetzen
                             </Button>
                           )}
