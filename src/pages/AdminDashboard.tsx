@@ -1201,71 +1201,58 @@ export default function AdminDashboard() {
     return c?.group_name || c?.telegram_id || userId.slice(0, 8);
   };
 
+  const tabItems = [
+    { key: "einnahmen" as const, label: "Einnahmen", icon: TrendingUp, onClick: () => setActiveTab("einnahmen") },
+    { key: "chatter" as const, label: "Chatter", icon: Users, onClick: () => setActiveTab("chatter") },
+    { key: "anfragen" as const, label: "Anfragen", icon: Send, onClick: () => { setActiveTab("anfragen"); if (!modelRequestsLoaded) loadModelRequests(); } },
+    { key: "botdms" as const, label: "Bot DMs", icon: Bot, onClick: () => { setActiveTab("botdms"); if (!botMessagesLoaded) loadBotMessages(); } },
+    { key: "notifications" as const, label: "Benachrichtigungen", icon: Bell, onClick: () => { setActiveTab("notifications"); if (!notifHistoryLoaded) loadNotifHistory(); if (!schedulesLoaded) loadSchedules(); } },
+    { key: "kiprompt" as const, label: "KI Prompt", icon: Brain, onClick: () => { setActiveTab("kiprompt"); if (!kiPromptLoaded) loadKiPrompt(); } },
+  ];
+
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border">
-        <div className="container max-w-4xl mx-auto px-4 py-3 flex items-center gap-3">
-          <button onClick={() => { setAdminSectionOpen(true); if (adminList.length === 0) loadAdmins(); }} className="shrink-0 hover:opacity-80 transition-opacity">
-            <img src={logo} alt="Logo" className="h-9 w-9 rounded-full" />
+      {/* Premium Header */}
+      <header className="relative border-b border-border/50 bg-gradient-to-b from-secondary/30 to-background">
+        <div className="absolute inset-0 bg-gradient-to-r from-accent/5 via-transparent to-accent/5" />
+        <div className="container max-w-4xl mx-auto px-4 py-4 flex items-center gap-3 relative">
+          <button onClick={() => { setAdminSectionOpen(true); if (adminList.length === 0) loadAdmins(); }} className="shrink-0 hover:scale-105 transition-transform">
+            <div className="relative">
+              <img src={logo} alt="Logo" className="h-10 w-10 rounded-full ring-2 ring-accent/20" />
+              <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-accent border-2 border-background" />
+            </div>
           </button>
           <div className="flex-1">
-            <h1 className="text-base font-bold text-foreground">Admin Dashboard</h1>
-            <p className="text-[10px] text-muted-foreground">Chatter verwalten & Benachrichtigungen</p>
+            <h1 className="text-base font-bold text-foreground tracking-tight">Admin Dashboard</h1>
+            <p className="text-[10px] text-muted-foreground tracking-wide">Chatter verwalten & Benachrichtigungen</p>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <Shield className="h-3.5 w-3.5 text-accent/60" />
+            <span className="text-[10px] font-medium text-accent/60">Admin</span>
           </div>
         </div>
       </header>
 
-      <main className="container max-w-4xl mx-auto p-4 space-y-4">
-        {/* Tab Navigation */}
-        <div className="flex gap-2">
-          <Button
-            variant={activeTab === "einnahmen" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setActiveTab("einnahmen")}
-          >
-            <TrendingUp className="h-3.5 w-3.5 mr-1.5" />
-            Einnahmen
-          </Button>
-          <Button
-            variant={activeTab === "chatter" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setActiveTab("chatter")}
-          >
-            <Users className="h-3.5 w-3.5 mr-1.5" />
-            Chatter
-          </Button>
-          <Button
-            variant={activeTab === "anfragen" ? "default" : "outline"}
-            size="sm"
-            onClick={() => { setActiveTab("anfragen"); if (!modelRequestsLoaded) loadModelRequests(); }}
-          >
-            <Send className="h-3.5 w-3.5 mr-1.5" />
-            Custom Anfragen
-          </Button>
-          <Button
-            variant={activeTab === "botdms" ? "default" : "outline"}
-            size="sm"
-            onClick={() => { setActiveTab("botdms"); if (!botMessagesLoaded) loadBotMessages(); }}
-          >
-            <Bot className="h-3.5 w-3.5 mr-1.5" />
-            Bot DMs
-          </Button>
-          <Button
-            variant={activeTab === "notifications" ? "default" : "outline"}
-            size="sm"
-            onClick={() => { setActiveTab("notifications"); if (!notifHistoryLoaded) loadNotifHistory(); if (!schedulesLoaded) loadSchedules(); }}
-          >
-            <Bell className="h-3.5 w-3.5 mr-1.5" />
-            Benachrichtigungen
-          </Button>
-          <Button
-            variant={activeTab === "kiprompt" ? "default" : "outline"}
-            size="sm"
-            onClick={() => { setActiveTab("kiprompt"); if (!kiPromptLoaded) loadKiPrompt(); }}
-          >
-            <Brain className="h-3.5 w-3.5 mr-1.5" />
-            KI Prompt
-          </Button>
+      <main className="container max-w-4xl mx-auto p-4 space-y-5">
+        {/* Premium Tab Navigation */}
+        <div className="overflow-x-auto scrollbar-none -mx-4 px-4">
+          <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-secondary/40 backdrop-blur-sm border border-border/30">
+            {tabItems.map(({ key, label, icon: Icon, onClick }) => (
+              <button
+                key={key}
+                onClick={onClick}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap",
+                  activeTab === key
+                    ? "bg-accent text-accent-foreground shadow-md shadow-accent/20"
+                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
+                )}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {activeTab === "einnahmen" && (
@@ -2192,54 +2179,91 @@ export default function AdminDashboard() {
 
         {activeTab === "anfragen" && (
           <div className="space-y-4">
-            <section className="glass-card rounded-xl overflow-hidden">
-              <div className="px-4 py-3 border-b border-border flex items-center gap-2">
-                <Send className="h-4 w-4 text-accent" />
-                <h2 className="text-sm font-semibold text-foreground">Custom Anfragen</h2>
-                <Badge variant="secondary" className="text-[10px] ml-auto">
-                  {modelRequests.length} Anfrage{modelRequests.length !== 1 ? "n" : ""}
-                </Badge>
-              </div>
+            {/* Request Stats Overview */}
+            <div className="grid grid-cols-4 gap-2">
+              {([
+                { key: "pending", label: "Offen", color: "text-yellow-400", bg: "bg-yellow-500/10", count: modelRequests.filter(r => r.status === "pending").length },
+                { key: "accepted", label: "Angenommen", color: "text-green-400", bg: "bg-green-500/10", count: modelRequests.filter(r => r.status === "accepted").length },
+                { key: "in_progress", label: "In Arbeit", color: "text-blue-400", bg: "bg-blue-500/10", count: modelRequests.filter(r => r.status === "in_progress").length },
+                { key: "rejected", label: "Abgelehnt", color: "text-red-400", bg: "bg-red-500/10", count: modelRequests.filter(r => r.status === "rejected").length },
+              ] as const).map(({ key, label, color, bg, count }) => (
+                <button
+                  key={key}
+                  onClick={() => setRequestFilter(requestFilter === key ? "all" : key)}
+                  className={cn(
+                    "glass-card-subtle rounded-xl p-3 text-center transition-all duration-200 hover:scale-[1.02]",
+                    requestFilter === key && "ring-1 ring-accent/40 shadow-lg shadow-accent/5"
+                  )}
+                >
+                  <p className={cn("text-xl font-bold", color)}>{count}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{label}</p>
+                </button>
+              ))}
+            </div>
 
-              <div className="px-4 py-2 border-b border-border/50 flex items-center gap-1.5 flex-wrap">
-                {([
-                  { key: "all", label: "Alle" },
-                  { key: "pending", label: "Offen" },
-                  { key: "accepted", label: "Angenommen" },
-                  { key: "in_progress", label: "Wird bearbeitet" },
-                  { key: "rejected", label: "Abgelehnt" },
-                ] as const).map((f) => (
-                  <Button key={f.key} size="sm" variant={requestFilter === f.key ? "default" : "outline"} className="h-6 text-[10px] px-2.5" onClick={() => setRequestFilter(f.key)}>
-                    {f.label}
-                  </Button>
-                ))}
+            <section className="glass-card rounded-xl overflow-hidden">
+              <div className="px-5 py-4 border-b border-border/50 flex items-center gap-3">
+                <div className="h-8 w-8 rounded-lg bg-accent/10 flex items-center justify-center">
+                  <Send className="h-4 w-4 text-accent" />
+                </div>
+                <div className="flex-1">
+                  <h2 className="text-sm font-bold text-foreground">Custom Anfragen</h2>
+                  <p className="text-[10px] text-muted-foreground">{modelRequests.length} Anfrage{modelRequests.length !== 1 ? "n" : ""} insgesamt</p>
+                </div>
+                {requestFilter !== "all" && (
+                  <button onClick={() => setRequestFilter("all")} className="text-[10px] text-accent hover:text-accent/80 transition-colors font-medium">
+                    Filter zurücksetzen
+                  </button>
+                )}
               </div>
 
               {modelRequests.filter(r => requestFilter === "all" || r.status === requestFilter).length === 0 ? (
-                <div className="p-6 text-center text-sm text-muted-foreground">Keine Anfragen in dieser Kategorie.</div>
+                <div className="p-12 text-center">
+                  <div className="h-12 w-12 rounded-full bg-secondary/50 flex items-center justify-center mx-auto mb-3">
+                    <Send className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <p className="text-sm text-muted-foreground">Keine Anfragen in dieser Kategorie.</p>
+                </div>
               ) : (
-                <div className="divide-y divide-border">
+                <div className="divide-y divide-border/50">
                   {modelRequests.filter(r => requestFilter === "all" || r.status === requestFilter).map((req) => {
                     const chatter = chatters.find(c => c.user_id === req.user_id);
                     const chatterName = chatter?.group_name || req.user_id.slice(0, 8);
+                    const statusConfig = {
+                      pending: { dot: "bg-yellow-400", bg: "bg-yellow-500/10", text: "text-yellow-400", label: "Offen" },
+                      accepted: { dot: "bg-green-400", bg: "bg-green-500/10", text: "text-green-400", label: "Angenommen" },
+                      in_progress: { dot: "bg-blue-400", bg: "bg-blue-500/10", text: "text-blue-400", label: "In Arbeit" },
+                      rejected: { dot: "bg-red-400", bg: "bg-red-500/10", text: "text-red-400", label: "Abgelehnt" },
+                    }[req.status as string] || { dot: "bg-muted-foreground", bg: "bg-secondary", text: "text-muted-foreground", label: req.status };
                     return (
-                      <div key={req.id} className="px-4 py-4 space-y-2.5">
+                      <div key={req.id} className="px-5 py-4 space-y-3 hover:bg-secondary/20 transition-colors">
                         <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <span className="text-sm font-semibold text-foreground truncate">{chatterName}</span>
-                            <Badge variant="outline" className="text-xs shrink-0">
-                              {req.request_type === "individual" ? "Individuell" : "Allgemein"}
-                            </Badge>
-                            {req.request_type === "individual" && req.price != null && (
-                              <span className="text-xs text-accent font-semibold">{req.price}€</span>
-                            )}
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="h-8 w-8 rounded-full bg-secondary/60 flex items-center justify-center shrink-0">
+                              <span className="text-xs font-bold text-foreground">{chatterName.charAt(0).toUpperCase()}</span>
+                            </div>
+                            <div className="min-w-0">
+                              <span className="text-sm font-semibold text-foreground truncate block">{chatterName}</span>
+                              <div className="flex items-center gap-2">
+                                <span className={cn("flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full", statusConfig.bg, statusConfig.text)}>
+                                  <span className={cn("h-1.5 w-1.5 rounded-full", statusConfig.dot)} />
+                                  {statusConfig.label}
+                                </span>
+                                <Badge variant="outline" className="text-[10px] h-4 px-1.5 border-border/50">
+                                  {req.request_type === "individual" ? "Individuell" : "Allgemein"}
+                                </Badge>
+                                {req.request_type === "individual" && req.price != null && (
+                                  <span className="text-[10px] text-accent font-bold">{req.price}€</span>
+                                )}
+                              </div>
+                            </div>
                           </div>
-                          <span className="text-xs text-muted-foreground whitespace-nowrap">
+                          <span className="text-[10px] text-muted-foreground whitespace-nowrap">
                             {new Date(req.created_at).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit" })}
                           </span>
                         </div>
                         <button onClick={() => { navigator.clipboard.writeText(req.model_name); toast.success("Model Name kopiert!"); }} className="text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer text-left">Model: <span className="text-foreground font-medium underline underline-offset-2 decoration-border">{req.model_name}</span> <Copy className="h-3 w-3 inline-block ml-1 opacity-50" /></button>
-                        <button onClick={() => { navigator.clipboard.writeText(req.description); toast.success("Beschreibung kopiert!"); }} className="text-sm text-foreground/80 leading-relaxed hover:text-foreground transition-colors cursor-pointer text-left">{req.description} <Copy className="h-3 w-3 inline-block ml-1 opacity-50" /></button>
+                        <button onClick={() => { navigator.clipboard.writeText(req.description); toast.success("Beschreibung kopiert!"); }} className="text-sm text-foreground/80 leading-relaxed hover:text-foreground transition-colors cursor-pointer text-left block">{req.description} <Copy className="h-3 w-3 inline-block ml-1 opacity-50" /></button>
                         
                         {/* Admin Kommentar */}
                         <div className="space-y-1.5 pt-1">
@@ -2250,7 +2274,7 @@ export default function AdminDashboard() {
                               setModelRequests(prev => prev.map(r => r.id === req.id ? { ...r, _localComment: e.target.value } : r));
                             }}
                             rows={2}
-                            className="text-xs"
+                            className="text-xs bg-secondary/30 border-border/30 focus:border-accent/40"
                           />
                           {(req._localComment != null && req._localComment !== (req.admin_comment ?? "")) && (
                             <Button size="sm" variant="outline" className="h-7 text-xs" onClick={async () => {
@@ -2269,25 +2293,26 @@ export default function AdminDashboard() {
                           <div className="flex items-center gap-2">
                             {req.status === "pending" ? (
                               <>
-                                <Button size="sm" variant="outline" className="h-7 text-xs border-green-500/30 text-green-400 hover:bg-green-500/10" onClick={() => updateRequestStatus(req.id, "accepted")}>
+                                <Button size="sm" variant="outline" className="h-7 text-xs border-green-500/30 text-green-400 hover:bg-green-500/10 hover:border-green-500/50" onClick={() => updateRequestStatus(req.id, "accepted")}>
                                   <Check className="h-3 w-3 mr-1" /> Angenommen
                                 </Button>
-                                <Button size="sm" variant="outline" className="h-7 text-xs border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10" onClick={() => updateRequestStatus(req.id, "in_progress")}>
+                                <Button size="sm" variant="outline" className="h-7 text-xs border-blue-500/30 text-blue-400 hover:bg-blue-500/10 hover:border-blue-500/50" onClick={() => updateRequestStatus(req.id, "in_progress")}>
                                   <Clock className="h-3 w-3 mr-1" /> Wird bearbeitet
                                 </Button>
-                                <Button size="sm" variant="outline" className="h-7 text-xs border-red-500/30 text-red-400 hover:bg-red-500/10" onClick={() => {
+                                <Button size="sm" variant="outline" className="h-7 text-xs border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-500/50" onClick={() => {
                                   setModelRequests(prev => prev.map(r => r.id === req.id ? { ...r, _showRejectReason: !r._showRejectReason } : r));
                                 }}>
                                   <XCircle className="h-3 w-3 mr-1" /> Ablehnen
                                 </Button>
                               </>
                             ) : (
-                              <Badge variant={req.status === "accepted" ? "default" : req.status === "in_progress" ? "secondary" : "destructive"} className="text-xs">
-                                {req.status === "accepted" ? "✅ Angenommen" : req.status === "in_progress" ? "⏳ Wird bearbeitet" : "❌ Abgelehnt"}
-                              </Badge>
+                              <span className={cn("flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg", statusConfig.bg, statusConfig.text)}>
+                                {req.status === "accepted" ? <CheckCircle2 className="h-3.5 w-3.5" /> : req.status === "in_progress" ? <Clock className="h-3.5 w-3.5" /> : <XCircle className="h-3.5 w-3.5" />}
+                                {statusConfig.label}
+                              </span>
                             )}
                             {req.status !== "pending" && (
-                              <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground" onClick={() => updateRequestStatus(req.id, "pending")}>
+                              <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground hover:text-foreground" onClick={() => updateRequestStatus(req.id, "pending")}>
                                 <RefreshCw className="h-3 w-3 mr-1" /> Zurücksetzen
                               </Button>
                             )}
@@ -2301,7 +2326,7 @@ export default function AdminDashboard() {
                                   setModelRequests(prev => prev.map(r => r.id === req.id ? { ...r, _rejectReason: e.target.value } : r));
                                 }}
                                 rows={2}
-                                className="text-xs"
+                                className="text-xs bg-red-500/5 border-red-500/20 focus:border-red-500/40"
                               />
                               <Button size="sm" variant="outline" className="h-7 text-xs border-red-500/30 text-red-400 hover:bg-red-500/10" onClick={async () => {
                                 const reason = req._rejectReason ?? "";
