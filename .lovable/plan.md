@@ -1,41 +1,38 @@
 
-# Fortschrittsanzeige und Schritt-Nummerierung fur OfferB
 
-## Was wird gemacht
+## "Anfrage an das Model stellen" – Neue Kachel im Dashboard
 
-### 1. Alle Schritte als einheitliche Liste definieren
-Die Videos und Links werden zu einer gemeinsamen Schritt-Liste zusammengefasst:
-- Schritt 1: Plattform Erklärungs Video
-- Schritt 2: Telegram Nachrichten Video
-- Schritt 3: Brezzels Notifications aktivieren
-- Schritt 4: My ID Bot einrichten
-- Schritt 5: Tägliches Feedback
+### Was wird gebaut
+Eine neue Kachel unterhalb der Account-Sektion mit dem Titel **"Anfrage an das Model stellen"**. Beim Klick öffnet sich ein Dialog mit folgendem Ablauf:
 
-### 2. Fortschritts-Bar oben auf der Seite
-Direkt unter dem Hero-Bereich wird eine Progress-Bar eingefügt, die den Gesamtfortschritt anzeigt (z.B. "2 von 5 Schritten erledigt"). Nutzt die vorhandene `Progress`-Komponente im Gold-Styling.
+1. **Model Name** – Textfeld für den Namen des Models
+2. **Art der Anfrage** – Radio-Auswahl: "Individuelle Anfrage" oder "Allgemeine Anfrage"
+3. **Preis** – Nur sichtbar wenn "Individuelle Anfrage" gewählt → Eingabefeld "Was ist der Kunde bereit zu bezahlen? (€)"
+4. **Beschreibung** – Textarea für die Anfrage-Beschreibung
+5. **Absenden-Button** → Speichert in einer neuen DB-Tabelle `model_requests`
 
-### 3. Klickbare Checkliste
-Unter der Progress-Bar eine kompakte Checkliste mit allen 5 Schritten. Jeder Schritt hat:
-- Eine Checkbox zum Abhaken
-- Schritt-Nummer ("Schritt 1", "Schritt 2" etc.)
-- Kurzer Titel
+### Datenbank
+Neue Tabelle `model_requests`:
+- `id` (uuid, PK)
+- `user_id` (uuid, NOT NULL)
+- `model_name` (text, NOT NULL)
+- `request_type` (text, NOT NULL) – "individual" oder "general"
+- `price` (numeric, nullable) – nur bei individueller Anfrage
+- `description` (text, NOT NULL)
+- `status` (text, default 'pending')
+- `created_at` (timestamptz, default now())
 
-Der Fortschritt wird im `localStorage` gespeichert, damit er beim Neuladen erhalten bleibt.
+RLS: Authenticated users können nur eigene Anfragen erstellen und lesen.
 
-### 4. Schritt-Nummern bei den Sektionen
-Jede Video-/Link-/Feedback-Sektion bekommt eine prominente Schritt-Nummer als Badge (z.B. goldener Kreis mit "1" darin) neben dem Titel.
+### UI-Änderungen (Dashboard.tsx)
+- Neue Kachel nach der Account-Sektion (Zeile ~623), gleicher Stil wie "Ich habe eine Frage"-Kachel
+- Icon: `Send` oder `MessageSquare` von lucide-react
+- Dialog mit dem Formular, Radio-Group für Anfragetyp, konditionelles Preisfeld
+- Erfolgs-Toast nach Absenden, Dialog schließt sich
 
-## Technische Details
+### Technische Details
+- Formular-State lokal im Dialog
+- Supabase insert in `model_requests`
+- Radio-Group aus bestehender `@radix-ui/react-radio-group` Komponente
+- Textarea und Input aus bestehenden UI-Komponenten
 
-**Datei: `src/pages/OfferB.tsx`**
-
-- Neue `steps`-Array-Konstante mit id, title, type fur alle 5 Schritte
-- `useState` + `localStorage` fur `completedSteps: Set<number>`
-- Progress-Bar-Sektion nach dem Hero mit `Progress`-Komponente (Wert = `completedSteps.size / steps.length * 100`)
-- Checkliste mit `Checkbox`-Komponenten, gestylt im bestehenden `glass-card-subtle` Look
-- Videos bekommen "Schritt 1" / "Schritt 2" als nummerierte Badge-Kreise
-- Links-Sektion wird zu Schritt 3 und 4 mit individuellen Nummern
-- Feedback wird Schritt 5
-- Erledigte Schritte bekommen eine subtile visuelle Markierung (leicht reduzierte Opazitat / Hakchen)
-
-Keine neuen Abhangigkeiten notwendig -- nutzt vorhandene `Progress`, `Checkbox` und `framer-motion`.
