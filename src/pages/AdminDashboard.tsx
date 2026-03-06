@@ -2377,25 +2377,29 @@ export default function AdminDashboard() {
         {activeTab === "anfragen" && (
           <div className="space-y-4">
             {/* Request Stats Overview */}
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {([
-                { key: "pending", label: "Offen", color: "text-yellow-400", bg: "bg-yellow-500/10", count: modelRequests.filter(r => r.status === "pending").length },
-                { key: "accepted", label: "Angenommen", color: "text-green-400", bg: "bg-green-500/10", count: modelRequests.filter(r => r.status === "accepted").length },
-                { key: "in_progress", label: "In Arbeit", color: "text-blue-400", bg: "bg-blue-500/10", count: modelRequests.filter(r => r.status === "in_progress").length },
-                { key: "rejected", label: "Abgelehnt", color: "text-red-400", bg: "bg-red-500/10", count: modelRequests.filter(r => r.status === "rejected").length },
-              ] as const).map(({ key, label, color, bg, count }) => (
-                <button
-                  key={key}
-                  onClick={() => setRequestFilter(requestFilter === key ? "all" : key)}
-                  className={cn(
-                    "glass-card-subtle rounded-xl p-3 text-center transition-all duration-200 hover:scale-[1.02]",
-                    requestFilter === key && "ring-1 ring-accent/40 shadow-lg shadow-accent/5"
-                  )}
-                >
-                  <p className={cn("text-xl font-bold", color)}>{count}</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">{label}</p>
-                </button>
-              ))}
+                { key: "pending", label: "Offen", icon: Clock, colorClass: "text-yellow-400" },
+                { key: "accepted", label: "Angenommen", icon: CheckCircle2, colorClass: "text-emerald-400" },
+                { key: "in_progress", label: "In Arbeit", icon: Loader2, colorClass: "text-blue-400" },
+                { key: "rejected", label: "Abgelehnt", icon: XCircle, colorClass: "text-destructive" },
+              ] as const).map(({ key, label, icon: Icon, colorClass }) => {
+                const count = modelRequests.filter(r => r.status === key).length;
+                const isActive = requestFilter === key;
+                return (
+                  <button
+                    key={key}
+                    onClick={() => setRequestFilter(requestFilter === key ? "all" : key)}
+                    className={cn(
+                      "glass-card-subtle rounded-xl p-4 flex flex-col items-center justify-center transition-all",
+                      isActive && "ring-2 ring-accent shadow-[0_0_12px_-3px_hsl(var(--accent)/0.3)]"
+                    )}
+                  >
+                    <p className="text-[9px] text-muted-foreground mb-1 tracking-wide uppercase">{label}</p>
+                    <p className={cn("text-3xl font-bold", count === 0 ? "text-gold-gradient" : colorClass)}>{count}</p>
+                  </button>
+                );
+              })}
             </div>
 
             <section className="glass-card rounded-xl overflow-hidden">
@@ -2409,7 +2413,7 @@ export default function AdminDashboard() {
                 </div>
                 {requestFilter !== "all" && (
                   <button onClick={() => setRequestFilter("all")} className="text-[10px] text-accent hover:text-accent/80 transition-colors font-medium">
-                    Filter zurücksetzen
+                    Alle anzeigen
                   </button>
                 )}
               </div>
@@ -2422,120 +2426,151 @@ export default function AdminDashboard() {
                   <p className="text-sm text-muted-foreground">Keine Anfragen in dieser Kategorie.</p>
                 </div>
               ) : (
-                <div className="divide-y divide-border/50">
+                <div className="p-3 space-y-2">
                   {modelRequests.filter(r => requestFilter === "all" || r.status === requestFilter).map((req) => {
                     const chatter = chatters.find(c => c.user_id === req.user_id);
                     const chatterName = chatter?.group_name || req.user_id.slice(0, 8);
                     const statusConfig = {
                       pending: { dot: "bg-yellow-400", bg: "bg-yellow-500/10", text: "text-yellow-400", label: "Offen" },
-                      accepted: { dot: "bg-green-400", bg: "bg-green-500/10", text: "text-green-400", label: "Angenommen" },
+                      accepted: { dot: "bg-emerald-400", bg: "bg-emerald-500/10", text: "text-emerald-400", label: "Angenommen" },
                       in_progress: { dot: "bg-blue-400", bg: "bg-blue-500/10", text: "text-blue-400", label: "In Arbeit" },
                       rejected: { dot: "bg-red-400", bg: "bg-red-500/10", text: "text-red-400", label: "Abgelehnt" },
                     }[req.status as string] || { dot: "bg-muted-foreground", bg: "bg-secondary", text: "text-muted-foreground", label: req.status };
                     return (
-                      <div key={req.id} className="px-5 py-4 space-y-3 hover:bg-secondary/20 transition-colors">
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex items-center gap-2.5 min-w-0">
-                            <div className="h-8 w-8 rounded-full bg-secondary/60 flex items-center justify-center shrink-0">
-                              <span className="text-xs font-bold text-foreground">{chatterName.charAt(0).toUpperCase()}</span>
+                      <div
+                        key={req.id}
+                        className={cn(
+                          "glass-card-subtle rounded-xl overflow-hidden transition-all duration-200",
+                          req.status === "pending" && "ring-1 ring-yellow-500/20"
+                        )}
+                      >
+                        {/* Header */}
+                        <div className="px-4 py-3 flex items-center gap-3">
+                          <div className="h-9 w-9 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
+                            <span className="text-sm font-bold text-accent">{chatterName.charAt(0).toUpperCase()}</span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-semibold text-foreground truncate">{chatterName}</span>
+                              <span className={cn("flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full", statusConfig.bg, statusConfig.text)}>
+                                <span className={cn("h-1.5 w-1.5 rounded-full", statusConfig.dot, req.status === "pending" && "animate-pulse")} />
+                                {statusConfig.label}
+                              </span>
                             </div>
-                            <div className="min-w-0">
-                              <span className="text-sm font-semibold text-foreground truncate block">{chatterName}</span>
-                              <div className="flex items-center gap-2">
-                                <span className={cn("flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full", statusConfig.bg, statusConfig.text)}>
-                                  <span className={cn("h-1.5 w-1.5 rounded-full", statusConfig.dot)} />
-                                  {statusConfig.label}
-                                </span>
-                                <Badge variant="outline" className="text-[10px] h-4 px-1.5 border-border/50">
-                                  {req.request_type === "individual" ? "Individuell" : "Allgemein"}
-                                </Badge>
-                                {req.request_type === "individual" && req.price != null && (
-                                  <span className="text-[10px] text-accent font-bold">{req.price}€</span>
-                                )}
-                              </div>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <Badge variant="outline" className="text-[10px] h-4 px-1.5 border-border/50">
+                                {req.request_type === "individual" ? "Individuell" : "Allgemein"}
+                              </Badge>
+                              {req.request_type === "individual" && req.price != null && (
+                                <span className="text-[10px] text-accent font-bold">{req.price}€</span>
+                              )}
+                              <span className="text-[10px] text-muted-foreground ml-auto">
+                                {new Date(req.created_at).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit" })}
+                              </span>
                             </div>
                           </div>
-                          <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-                            {new Date(req.created_at).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit" })}
-                          </span>
-                        </div>
-                        <button onClick={() => { navigator.clipboard.writeText(req.model_name); toast.success("Model Name kopiert!"); }} className="text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer text-left">Model: <span className="text-foreground font-medium underline underline-offset-2 decoration-border">{req.model_name}</span> <Copy className="h-3 w-3 inline-block ml-1 opacity-50" /></button>
-                        <button onClick={() => { navigator.clipboard.writeText(req.description); toast.success("Beschreibung kopiert!"); }} className="text-sm text-foreground/80 leading-relaxed hover:text-foreground transition-colors cursor-pointer text-left block">{req.description} <Copy className="h-3 w-3 inline-block ml-1 opacity-50" /></button>
-                        
-                        {/* Admin Kommentar */}
-                        <div className="space-y-1.5 pt-1">
-                          <Textarea
-                            placeholder="Kommentar für den Chatter hinterlassen..."
-                            value={req._localComment ?? req.admin_comment ?? ""}
-                            onChange={(e) => {
-                              setModelRequests(prev => prev.map(r => r.id === req.id ? { ...r, _localComment: e.target.value } : r));
-                            }}
-                            rows={2}
-                            className="text-xs bg-secondary/30 border-border/30 focus:border-accent/40"
-                          />
-                          {(req._localComment != null && req._localComment !== (req.admin_comment ?? "")) && (
-                            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={async () => {
-                              const comment = req._localComment ?? "";
-                              const { error } = await supabase.from("model_requests").update({ admin_comment: comment || null }).eq("id", req.id);
-                              if (error) { toast.error("Fehler beim Speichern"); return; }
-                              toast.success("Kommentar gespeichert!");
-                              setModelRequests(prev => prev.map(r => r.id === req.id ? { ...r, admin_comment: comment || null, _localComment: undefined } : r));
-                            }}>
-                              <Save className="h-3 w-3 mr-1" /> Kommentar speichern
-                            </Button>
-                          )}
                         </div>
 
-                        <div className="flex flex-col gap-2 pt-1">
-                          <div className="flex items-center gap-2">
-                            {req.status === "pending" ? (
-                              <>
-                                <Button size="sm" variant="outline" className="h-7 text-xs border-green-500/30 text-green-400 hover:bg-green-500/10 hover:border-green-500/50" onClick={() => updateRequestStatus(req.id, "accepted")}>
-                                  <Check className="h-3 w-3 mr-1" /> Angenommen
+                        {/* Content */}
+                        <div className="px-4 pb-3 space-y-2.5">
+                          <div className="h-px bg-border/30" />
+
+                          {/* Model Name */}
+                          <button
+                            onClick={() => { navigator.clipboard.writeText(req.model_name); toast.success("Model Name kopiert!"); }}
+                            className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors group w-full text-left"
+                          >
+                            <span className="text-muted-foreground">Model:</span>
+                            <span className="text-foreground font-medium">{req.model_name}</span>
+                            <Copy className="h-3 w-3 opacity-0 group-hover:opacity-50 transition-opacity ml-auto shrink-0" />
+                          </button>
+
+                          {/* Description */}
+                          <button
+                            onClick={() => { navigator.clipboard.writeText(req.description); toast.success("Beschreibung kopiert!"); }}
+                            className="glass-card-subtle rounded-lg px-3 py-2.5 text-sm text-foreground/90 leading-relaxed hover:bg-accent/5 transition-colors text-left w-full group"
+                          >
+                            {req.description}
+                            <Copy className="h-3 w-3 inline-block ml-1.5 opacity-0 group-hover:opacity-40 transition-opacity" />
+                          </button>
+
+                          {/* Admin Kommentar */}
+                          <div className="space-y-1.5">
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Kommentar</p>
+                            <Textarea
+                              placeholder="Kommentar für den Chatter..."
+                              value={req._localComment ?? req.admin_comment ?? ""}
+                              onChange={(e) => {
+                                setModelRequests(prev => prev.map(r => r.id === req.id ? { ...r, _localComment: e.target.value } : r));
+                              }}
+                              rows={2}
+                              className="text-xs bg-secondary/30 border-border/30 focus:border-accent/40 resize-none"
+                            />
+                            {(req._localComment != null && req._localComment !== (req.admin_comment ?? "")) && (
+                              <Button size="sm" variant="outline" className="h-7 text-xs" onClick={async () => {
+                                const comment = req._localComment ?? "";
+                                const { error } = await supabase.from("model_requests").update({ admin_comment: comment || null }).eq("id", req.id);
+                                if (error) { toast.error("Fehler beim Speichern"); return; }
+                                toast.success("Kommentar gespeichert!");
+                                setModelRequests(prev => prev.map(r => r.id === req.id ? { ...r, admin_comment: comment || null, _localComment: undefined } : r));
+                              }}>
+                                <Save className="h-3 w-3 mr-1" /> Speichern
+                              </Button>
+                            )}
+                          </div>
+
+                          {/* Action Buttons */}
+                          <div className="flex flex-col gap-2 pt-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {req.status === "pending" ? (
+                                <>
+                                  <Button size="sm" variant="outline" className="h-7 text-xs border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/50" onClick={() => updateRequestStatus(req.id, "accepted")}>
+                                    <Check className="h-3 w-3 mr-1" /> Annehmen
+                                  </Button>
+                                  <Button size="sm" variant="outline" className="h-7 text-xs border-blue-500/30 text-blue-400 hover:bg-blue-500/10 hover:border-blue-500/50" onClick={() => updateRequestStatus(req.id, "in_progress")}>
+                                    <Clock className="h-3 w-3 mr-1" /> In Arbeit
+                                  </Button>
+                                  <Button size="sm" variant="outline" className="h-7 text-xs border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-500/50" onClick={() => {
+                                    setModelRequests(prev => prev.map(r => r.id === req.id ? { ...r, _showRejectReason: !r._showRejectReason } : r));
+                                  }}>
+                                    <XCircle className="h-3 w-3 mr-1" /> Ablehnen
+                                  </Button>
+                                </>
+                              ) : (
+                                <span className={cn("flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg", statusConfig.bg, statusConfig.text)}>
+                                  {req.status === "accepted" ? <CheckCircle2 className="h-3.5 w-3.5" /> : req.status === "in_progress" ? <Clock className="h-3.5 w-3.5" /> : <XCircle className="h-3.5 w-3.5" />}
+                                  {statusConfig.label}
+                                </span>
+                              )}
+                              {req.status !== "pending" && (
+                                <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground hover:text-foreground" onClick={() => updateRequestStatus(req.id, "pending")}>
+                                  <RefreshCw className="h-3 w-3 mr-1" /> Zurücksetzen
                                 </Button>
-                                <Button size="sm" variant="outline" className="h-7 text-xs border-blue-500/30 text-blue-400 hover:bg-blue-500/10 hover:border-blue-500/50" onClick={() => updateRequestStatus(req.id, "in_progress")}>
-                                  <Clock className="h-3 w-3 mr-1" /> Wird bearbeitet
-                                </Button>
-                                <Button size="sm" variant="outline" className="h-7 text-xs border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-500/50" onClick={() => {
-                                  setModelRequests(prev => prev.map(r => r.id === req.id ? { ...r, _showRejectReason: !r._showRejectReason } : r));
+                              )}
+                            </div>
+                            {req._showRejectReason && req.status === "pending" && (
+                              <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200">
+                                <Textarea
+                                  placeholder="Grund für die Ablehnung..."
+                                  value={req._rejectReason ?? ""}
+                                  onChange={(e) => {
+                                    setModelRequests(prev => prev.map(r => r.id === req.id ? { ...r, _rejectReason: e.target.value } : r));
+                                  }}
+                                  rows={2}
+                                  className="text-xs bg-destructive/5 border-destructive/20 focus:border-destructive/40 resize-none"
+                                />
+                                <Button size="sm" variant="outline" className="h-7 text-xs border-red-500/30 text-red-400 hover:bg-red-500/10" onClick={async () => {
+                                  const reason = req._rejectReason ?? "";
+                                  const { error } = await supabase.from("model_requests").update({ status: "rejected", admin_comment: reason || null }).eq("id", req.id);
+                                  if (error) { toast.error("Fehler beim Aktualisieren"); return; }
+                                  toast.success("Anfrage abgelehnt");
+                                  loadModelRequests();
                                 }}>
                                   <XCircle className="h-3 w-3 mr-1" /> Ablehnen
                                 </Button>
-                              </>
-                            ) : (
-                              <span className={cn("flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-lg", statusConfig.bg, statusConfig.text)}>
-                                {req.status === "accepted" ? <CheckCircle2 className="h-3.5 w-3.5" /> : req.status === "in_progress" ? <Clock className="h-3.5 w-3.5" /> : <XCircle className="h-3.5 w-3.5" />}
-                                {statusConfig.label}
-                              </span>
-                            )}
-                            {req.status !== "pending" && (
-                              <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground hover:text-foreground" onClick={() => updateRequestStatus(req.id, "pending")}>
-                                <RefreshCw className="h-3 w-3 mr-1" /> Zurücksetzen
-                              </Button>
+                              </div>
                             )}
                           </div>
-                          {req._showRejectReason && req.status === "pending" && (
-                            <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200">
-                              <Textarea
-                                placeholder="Grund für die Ablehnung angeben..."
-                                value={req._rejectReason ?? ""}
-                                onChange={(e) => {
-                                  setModelRequests(prev => prev.map(r => r.id === req.id ? { ...r, _rejectReason: e.target.value } : r));
-                                }}
-                                rows={2}
-                                className="text-xs bg-red-500/5 border-red-500/20 focus:border-red-500/40"
-                              />
-                              <Button size="sm" variant="outline" className="h-7 text-xs border-red-500/30 text-red-400 hover:bg-red-500/10" onClick={async () => {
-                                const reason = req._rejectReason ?? "";
-                                const { error } = await supabase.from("model_requests").update({ status: "rejected", admin_comment: reason || null }).eq("id", req.id);
-                                if (error) { toast.error("Fehler beim Aktualisieren"); return; }
-                                toast.success("Anfrage abgelehnt");
-                                loadModelRequests();
-                              }}>
-                                <XCircle className="h-3 w-3 mr-1" /> Ablehnen
-                              </Button>
-                            </div>
-                          )}
                         </div>
                       </div>
                     );
