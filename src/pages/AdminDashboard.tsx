@@ -4159,7 +4159,9 @@ export default function AdminDashboard() {
               const manualPlatformAccounts = accounts.filter(a => a.is_manual && a.platform === selectedManualPlatform);
               const mFree = manualPlatformAccounts.filter(a => !a.assigned_to).length;
               const mAssigned = manualPlatformAccounts.filter(a => a.assigned_to).length;
-              const namedFolders = [...new Set(manualPlatformAccounts.map(a => a.folder_name).filter(Boolean))] as string[];
+              const dbFolders = [...new Set(manualPlatformAccounts.map(a => a.folder_name).filter(Boolean))] as string[];
+              const platformCustom = customFolders[selectedManualPlatform || ""] || [];
+              const namedFolders = [...new Set([...dbFolders, ...platformCustom])];
               const ungrouped = manualPlatformAccounts.filter(a => !a.folder_name);
 
               const copyToClipboard = (text: string, label: string) => {
