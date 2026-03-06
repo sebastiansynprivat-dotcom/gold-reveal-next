@@ -26,7 +26,7 @@ import HomescreenTutorial from "@/components/HomescreenTutorial";
 import PushNotificationDialog from "@/components/PushNotificationDialog";
 import AccountMemoDialog from "@/components/AccountMemoDialog";
 import FrageMemoDialog from "@/components/FrageMemoDialog";
-import ModelRequestDialog from "@/components/ModelRequestDialog";
+import ModelRequestDialog, { EditRequestData } from "@/components/ModelRequestDialog";
 
 const GOLD_THRESHOLD = 3000;
 const STARTER_RATE = 0.2;
@@ -52,6 +52,13 @@ export default function Dashboard() {
   const [accountsOpen, setAccountsOpen] = useState(true);
   const [myRequests, setMyRequests] = useState<any[]>([]);
   const [requestsOpen, setRequestsOpen] = useState(false);
+  const [editRequest, setEditRequest] = useState<any>(null);
+  const [seenRequestIds, setSeenRequestIds] = useState<Set<string>>(() => {
+    try {
+      const saved = localStorage.getItem("seen_request_updates");
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    } catch { return new Set(); }
+  });
 
   const loadMyRequests = useCallback(async () => {
     if (!user) return;
@@ -641,42 +648,87 @@ export default function Dashboard() {
 
           {/* Anfrage an das Model – immer sichtbar */}
           <div className="border-t border-border/30">
-            <ModelRequestDialog onSubmitted={loadMyRequests} />
+            <ModelRequestDialog
+              onSubmitted={loadMyRequests}
+              editData={editRequest}
+              onEditClear={() => setEditRequest(null)}
+            />
           </div>
 
           {/* Bisherige Anfragen – einklappbar */}
-          {myRequests.length > 0 && (
-            <div className="border-t border-border/30">
-              <button
-                onClick={() => setRequestsOpen(!requestsOpen)}
-                className="w-full flex items-center justify-between px-4 py-3 lg:px-6 hover:bg-secondary/20 transition-colors"
-              >
-                <span className="text-xs font-semibold text-foreground">Deine Anfragen ({myRequests.length})</span>
-                <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 ${requestsOpen ? "rotate-180" : ""}`} />
-              </button>
-              {requestsOpen && (
-                <div className="px-4 pb-4 lg:px-6 lg:pb-6 space-y-2">
-                  {myRequests.map((req) => (
-                    <div key={req.id} className="rounded-lg border border-border/50 bg-secondary/20 p-3 space-y-1.5">
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs font-medium text-foreground">{req.model_name}</span>
-                        <Badge variant={req.status === "accepted" ? "default" : req.status === "rejected" ? "destructive" : "secondary"} className="text-[10px]">
-                          {req.status === "pending" ? "⏳ Ausstehend" : req.status === "accepted" ? "✅ Angenommen" : "❌ Abgelehnt"}
-                        </Badge>
-                      </div>
-                      <p className="text-[10px] text-muted-foreground line-clamp-2">{req.description}</p>
-                      {req.admin_comment && (
-                        <div className="flex items-start gap-1.5 rounded-md bg-accent/10 border border-accent/20 px-2.5 py-2 mt-1">
-                          <MessageSquare className="h-3 w-3 text-accent shrink-0 mt-0.5" />
-                          <p className="text-[11px] text-foreground leading-relaxed">{req.admin_comment}</p>
+          {myRequests.length > 0 && (() => {
+            // Unseen = requests with status !== pending OR with admin_comment, that user hasn't seen yet
+            const unseenCount = myRequests.filter(r =>
+              (r.status !== "pending" || r.admin_comment) && !seenRequestIds.has(r.id + "_" + r.status + "_" + (r.admin_comment || ""))
+            ).length;
+
+            const markAllSeen = () => {
+              const newSeen = new Set(seenRequestIds);
+              myRequests.forEach(r => {
+                newSeen.add(r.id + "_" + r.status + "_" + (r.admin_comment || ""));
+              });
+              setSeenRequestIds(newSeen);
+              localStorage.setItem("seen_request_updates", JSON.stringify([...newSeen]));
+            };
+
+            return (
+              <div className="border-t border-border/30">
+                <button
+                  onClick={() => {
+                    const newOpen = !requestsOpen;
+                    setRequestsOpen(newOpen);
+                    if (newOpen) markAllSeen();
+                  }}
+                  className="w-full flex items-center justify-between px-4 py-3 lg:px-6 hover:bg-secondary/20 transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold text-foreground">Deine Anfragen ({myRequests.length})</span>
+                    {unseenCount > 0 && (
+                      <span className="h-5 min-w-5 px-1.5 rounded-full bg-accent text-accent-foreground text-[10px] font-bold flex items-center justify-center animate-in zoom-in duration-200">
+                        {unseenCount}
+                      </span>
+                    )}
+                  </div>
+                  <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 ${requestsOpen ? "rotate-180" : ""}`} />
+                </button>
+                {requestsOpen && (
+                  <div className="px-4 pb-4 lg:px-6 lg:pb-6 space-y-2">
+                    {myRequests.map((req) => (
+                      <div key={req.id} className="rounded-lg border border-border/50 bg-secondary/20 p-3 space-y-1.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-medium text-foreground">{req.model_name}</span>
+                          <Badge variant={req.status === "accepted" ? "default" : req.status === "rejected" ? "destructive" : "secondary"} className="text-[10px]">
+                            {req.status === "pending" ? "⏳ Ausstehend" : req.status === "accepted" ? "✅ Angenommen" : "❌ Abgelehnt"}
+                          </Badge>
                         </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+                        <p className="text-[10px] text-muted-foreground line-clamp-2">{req.description}</p>
+                        {req.admin_comment && (
+                          <div className="flex items-start gap-1.5 rounded-md bg-accent/10 border border-accent/20 px-2.5 py-2 mt-1">
+                            <MessageSquare className="h-3 w-3 text-accent shrink-0 mt-0.5" />
+                            <p className="text-[11px] text-foreground leading-relaxed">{req.admin_comment}</p>
+                          </div>
+                        )}
+                        {/* Bearbeiten Button */}
+                        <button
+                          onClick={() => setEditRequest({
+                            id: req.id,
+                            model_name: req.model_name,
+                            request_type: req.request_type as "individual" | "general",
+                            price: req.price,
+                            description: req.description,
+                          })}
+                          className="flex items-center gap-1.5 text-[10px] text-accent hover:text-accent/80 transition-colors mt-1 cursor-pointer"
+                        >
+                          <Pencil className="h-3 w-3" />
+                          Anfrage bearbeiten
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
         </section>
 
         {/* MassDM Generator */}
