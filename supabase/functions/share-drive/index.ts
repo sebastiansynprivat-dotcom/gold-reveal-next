@@ -65,6 +65,11 @@ async function getAccessToken(): Promise<string> {
     .replace(/-----END PRIVATE KEY-----/g, "")
     .replace(/[\s\r\n]/g, "");
 
+  console.log("PEM length:", pemContents.length);
+  console.log("PEM first 20 chars:", pemContents.substring(0, 20));
+  console.log("PEM last 20 chars:", pemContents.substring(pemContents.length - 20));
+  console.log("Raw key first 80 chars:", privateKeyRaw.substring(0, 80));
+
   const binaryKey = decodeBase64(pemContents);
 
   const cryptoKey = await crypto.subtle.importKey(
