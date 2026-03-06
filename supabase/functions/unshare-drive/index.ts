@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { decodeBase64 } from "https://deno.land/std@0.224.0/encoding/base64.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,11 +13,28 @@ const corsHeaders = {
  * Expects JSON body: { folder_id: string, email: string }
  */
 async function getAccessToken(): Promise<string> {
-  const serviceEmail = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_EMAIL");
+  let serviceEmail = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_EMAIL");
   const privateKeyRaw = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY");
 
-  if (!serviceEmail || !privateKeyRaw) {
+  if (!privateKeyRaw) {
     throw new Error("Google Service Account credentials not configured.");
+  }
+
+  let pemKey: string;
+  const raw1 = privateKeyRaw.replace(/\\n/g, "\n");
+  const pemMatch = raw1.match(/-----BEGIN PRIVATE KEY-----([\s\S]+?)-----END PRIVATE KEY-----/);
+  if (pemMatch) {
+    pemKey = "-----BEGIN PRIVATE KEY-----" + pemMatch[1] + "-----END PRIVATE KEY-----";
+  } else {
+    pemKey = raw1;
+  }
+  if (!serviceEmail) {
+    const em = privateKeyRaw.match(/"client_email"\s*:\s*"([^"]+)"/);
+    if (em) serviceEmail = em[1];
+  }
+
+  if (!serviceEmail || !pemKey) {
+    throw new Error("Google Service Account credentials incomplete.");
   }
 
   const header = { alg: "RS256", typ: "JWT" };
@@ -50,15 +68,12 @@ async function getAccessToken(): Promise<string> {
   const claimB64 = encode(claim);
   const unsignedToken = `${headerB64}.${claimB64}`;
 
-  const privateKey = privateKeyRaw.replace(/\\n/g, "\n");
-  const pemContents = privateKey
-    .replace("-----BEGIN PRIVATE KEY-----", "")
-    .replace("-----END PRIVATE KEY-----", "")
-    .replace(/\s/g, "");
+  const pemContents = pemKey
+    .replace(/-----BEGIN PRIVATE KEY-----/g, "")
+    .replace(/-----END PRIVATE KEY-----/g, "")
+    .replace(/[\s\r\n]/g, "");
 
-  const standardB64 = pemContents.replace(/-/g, "+").replace(/_/g, "/");
-  const rawBinary = atob(standardB64);
-  const binaryKey = Uint8Array.from(rawBinary, (c) => c.charCodeAt(0));
+  const binaryKey = decodeBase64(pemContents);
 
   const cryptoKey = await crypto.subtle.importKey(
     "pkcs8",
