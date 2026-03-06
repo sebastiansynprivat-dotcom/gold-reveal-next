@@ -623,8 +623,25 @@ export default function Dashboard() {
           </button>
           {accountsOpen &&
           <div className="px-4 pb-4 lg:px-6 lg:pb-6 space-y-4">
-              {assignedAccounts.length === 0 ?
-            <p className="text-xs text-muted-foreground">Noch keine Accounts zugewiesen.</p> :
+              {assignedAccounts.length === 0 ? (
+            <div className="space-y-3">
+              <p className="text-xs text-muted-foreground">Noch keine Accounts zugewiesen.</p>
+              <button
+                onClick={() => setAssignedAccounts([{
+                  id: "demo-account",
+                  account_email: "demo@example.com",
+                  account_password: "demo-password-123",
+                  account_domain: "demo-platform.com",
+                  platform: "Demo",
+                  assigned_at: new Date().toISOString(),
+                  drive_folder_id: "1ABC_demoFolderId123",
+                }])}
+                className="flex items-center gap-2 w-full rounded-lg border border-dashed border-accent/40 bg-accent/5 px-3 py-2.5 text-xs font-medium text-accent hover:bg-accent/10 hover:border-accent/60 transition-all"
+              >
+                🧪 Demo: Account-Zuweisung simulieren
+              </button>
+            </div>
+            ) :
 
             <div className="space-y-3">
                   {assignedAccounts.map((acc) => {
