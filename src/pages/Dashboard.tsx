@@ -63,7 +63,7 @@ const staggerContainer = {
 };
 const staggerItem = {
   hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] } },
+  show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: "easeOut" } },
 };
 
 function AnimatedValue({ value, suffix = "€", className }: { value: number; suffix?: string; className?: string }) {
