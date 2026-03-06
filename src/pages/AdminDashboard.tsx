@@ -1194,15 +1194,21 @@ export default function AdminDashboard() {
       );
     }
 
-    // Top-level toggle filters
-    if (filterTelegramOnly) {
+    // Top-level toggle filters (tri-state: null=off, true=has, false=missing)
+    if (filterTelegram === true) {
       result = result.filter((c) => c.telegram_id && c.telegram_id.trim() !== "");
+    } else if (filterTelegram === false) {
+      result = result.filter((c) => !c.telegram_id || c.telegram_id.trim() === "");
     }
-    if (filterPushOnly) {
+    if (filterPush === true) {
       result = result.filter((c) => pushUsers.has(c.user_id));
+    } else if (filterPush === false) {
+      result = result.filter((c) => !pushUsers.has(c.user_id));
     }
-    if (filterPwaOnly) {
+    if (filterPwa === true) {
       result = result.filter((c) => pwaUsers.has(c.user_id));
+    } else if (filterPwa === false) {
+      result = result.filter((c) => !pwaUsers.has(c.user_id));
     }
 
     switch (chatterFilter) {
