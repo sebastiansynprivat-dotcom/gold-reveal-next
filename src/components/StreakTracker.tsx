@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { motion } from "framer-motion";
 import { Flame, Check, Trophy, Copy, Send, Play } from "lucide-react";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
@@ -160,25 +161,39 @@ export default function StreakTracker({ dailyRevenue }: { dailyRevenue: number }
 
       {/* Day circles */}
       <div className="flex items-center justify-between gap-1">
-        {last7Days.map((day) => (
-          <div key={day.dateStr} className="flex flex-col items-center gap-1.5">
+        {last7Days.map((day, index) => (
+          <motion.div
+            key={day.dateStr}
+            className="flex flex-col items-center gap-1.5"
+            initial={{ opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: index * 0.08, duration: 0.35, ease: "easeOut" }}
+          >
             <div
               className={`
                 h-9 w-9 lg:h-10 lg:w-10 rounded-full flex items-center justify-center text-xs font-semibold transition-all
                 ${day.completed
                   ? "bg-accent text-accent-foreground gold-glow"
                   : day.isToday
-                    ? "border-2 border-accent/50 text-accent"
+                    ? "border-2 border-accent/50 text-accent streak-circle-pulse"
                     : "bg-secondary text-muted-foreground"
                 }
               `}
             >
-              {day.completed ? <Check className="h-4 w-4" /> : day.dayLabel}
+              {day.completed ? (
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 15 }}
+                >
+                  <Check className="h-4 w-4" />
+                </motion.div>
+              ) : day.dayLabel}
             </div>
             <span className={`text-[10px] ${day.isToday ? "text-accent font-semibold" : "text-muted-foreground"}`}>
               {day.isToday ? "Heute" : day.dayLabel}
             </span>
-          </div>
+          </motion.div>
         ))}
       </div>
 
