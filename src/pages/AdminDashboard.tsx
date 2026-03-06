@@ -210,6 +210,7 @@ export default function AdminDashboard() {
   const [manualAccEmail, setManualAccEmail] = useState("");
   const [manualAccPassword, setManualAccPassword] = useState("");
   const [manualAccDomain, setManualAccDomain] = useState("");
+  const [manualAccDriveFolder, setManualAccDriveFolder] = useState("");
   const [addingManual, setAddingManual] = useState(false);
   const [deleteManualPoolConfirm, setDeleteManualPoolConfirm] = useState(false);
   const [deletingManualPool, setDeletingManualPool] = useState(false);
