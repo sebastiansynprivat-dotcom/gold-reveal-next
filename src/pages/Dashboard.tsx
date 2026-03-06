@@ -76,7 +76,8 @@ function AnimatedDecimalValue({ value, suffix = "€", className }: { value: num
   const display = (animated / 100).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   return <span className={className}>{display}{suffix}</span>;
 }
-  const [searchParams] = useSearchParams();
+
+export default function Dashboard() {
   const navigate = useNavigate();
   const platform = searchParams.get("platform") || "Brezzels";
 
