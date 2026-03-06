@@ -83,7 +83,7 @@ const ModelRequestDialog = () => {
           <div className="space-y-1.5">
             <Label className="text-xs text-foreground">Model Name aus dem Profil *</Label>
             <Input
-              placeholder="z.B. Anna, Lisa..."
+              placeholder="z.B. Deborahsecret, Luisa.loves"
               value={modelName}
               onChange={(e) => setModelName(e.target.value)}
               maxLength={100}
