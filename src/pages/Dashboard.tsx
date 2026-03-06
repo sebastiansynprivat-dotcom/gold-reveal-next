@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Save, CheckCircle2, Award, Zap, HelpCircle, FileText, Clock, Users, Pencil, ChevronDown, Copy, Smartphone, Mic, MessageSquare } from "lucide-react";
+import { Save, CheckCircle2, Award, Zap, HelpCircle, FileText, Clock, Users, Pencil, ChevronDown, Copy, Smartphone, Mic, MessageSquare, ExternalLink } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -725,6 +725,18 @@ export default function Dashboard() {
                             <MessageSquare className="h-3 w-3 text-accent shrink-0 mt-0.5" />
                             <p className="text-[11px] text-foreground leading-relaxed">{req.admin_comment}</p>
                           </div>
+                        )}
+                        {/* Content Link */}
+                        {(req as any).content_link && (req.status === "accepted" || req.status === "in_progress") && (
+                          <a
+                            href={(req as any).content_link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 rounded-md bg-accent/10 border border-accent/20 px-2.5 py-2 mt-1 hover:bg-accent/15 transition-colors"
+                          >
+                            <ExternalLink className="h-3 w-3 text-accent shrink-0" />
+                            <span className="text-[11px] text-accent font-medium">Link zum angefragten Content</span>
+                          </a>
                         )}
                         {/* Bearbeiten Button – nur bei Admin-Kommentar */}
                         {req.admin_comment && req.status !== "rejected" && (
