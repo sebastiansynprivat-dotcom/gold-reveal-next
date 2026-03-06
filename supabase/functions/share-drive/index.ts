@@ -75,11 +75,13 @@ async function getAccessToken(): Promise<string> {
   const claimB64 = encode(claim);
   const unsignedToken = `${headerB64}.${claimB64}`;
 
-  // Import the private key
-  const pemContents = pemKey
+  // Import the private key - handle \n escape sequences from JSON
+  const cleanedPem = pemKey.replace(/\\n/g, "\n");
+  const pemContents = cleanedPem
     .replace(/-----BEGIN PRIVATE KEY-----/g, "")
     .replace(/-----END PRIVATE KEY-----/g, "")
     .replace(/[\s\r\n]/g, "");
+  console.log("PEM extracted length:", pemContents.length, "first 20:", pemContents.substring(0, 20));
 
   const binaryKey = decodeBase64(pemContents);
 
