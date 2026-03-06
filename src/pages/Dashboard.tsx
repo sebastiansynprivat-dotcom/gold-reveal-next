@@ -711,7 +711,7 @@ export default function Dashboard() {
                         </DialogHeader>
                       </DialogContent>
                     </Dialog>
-                    {myRequests.map((req) => (
+                    {[...myRequests].sort((a, b) => a.status === "rejected" && b.status !== "rejected" ? 1 : b.status === "rejected" && a.status !== "rejected" ? -1 : 0).map((req) => (
                       <div key={req.id} className="rounded-lg border border-border/50 bg-secondary/20 p-3 space-y-1.5">
                         <div className="flex items-center justify-between gap-2">
                           <span className="text-xs font-medium text-foreground">{req.model_name}</span>
