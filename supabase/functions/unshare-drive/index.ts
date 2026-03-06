@@ -13,11 +13,24 @@ const corsHeaders = {
  * Expects JSON body: { folder_id: string, email: string }
  */
 async function getAccessToken(): Promise<string> {
-  const serviceEmail = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_EMAIL");
+  let serviceEmail = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_EMAIL");
   const privateKeyRaw = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY");
 
-  if (!serviceEmail || !privateKeyRaw) {
+  if (!privateKeyRaw) {
     throw new Error("Google Service Account credentials not configured.");
+  }
+
+  let pemKey: string;
+  try {
+    const json = JSON.parse(privateKeyRaw);
+    pemKey = json.private_key;
+    if (!serviceEmail) serviceEmail = json.client_email;
+  } catch {
+    pemKey = privateKeyRaw;
+  }
+
+  if (!serviceEmail || !pemKey) {
+    throw new Error("Google Service Account credentials incomplete.");
   }
 
   const header = { alg: "RS256", typ: "JWT" };
@@ -51,8 +64,7 @@ async function getAccessToken(): Promise<string> {
   const claimB64 = encode(claim);
   const unsignedToken = `${headerB64}.${claimB64}`;
 
-  const privateKey = privateKeyRaw.replace(/\\n/g, "\n");
-  const pemContents = privateKey
+  const pemContents = pemKey
     .replace(/-----BEGIN PRIVATE KEY-----/g, "")
     .replace(/-----END PRIVATE KEY-----/g, "")
     .replace(/[\s\r\n]/g, "");
