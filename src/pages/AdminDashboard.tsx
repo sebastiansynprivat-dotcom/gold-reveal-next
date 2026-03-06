@@ -1349,23 +1349,17 @@ export default function AdminDashboard() {
                 { key: "maloum", label: "Maloum", color: PLATFORM_COLORS.maloum, value: platformTotals.maloum },
                 { key: "brezzels", label: "Brezzels", color: PLATFORM_COLORS.brezzels, value: platformTotals.brezzels },
                 { key: "4based", label: "4Based", color: PLATFORM_COLORS["4based"], value: platformTotals["4based"] },
-              ]).map(({ key, label, color, value }) => {
-                const pct = grandTotal > 0 ? Math.round((value / grandTotal) * 100) : 0;
-                return (
+              ]).map(({ key, label, color, value }) => (
                   <div key={key} className="glass-card-subtle rounded-xl p-4 text-center relative overflow-hidden hover:scale-[1.02] transition-transform">
-                    <div className="absolute top-0 left-0 right-0 h-1 rounded-t-xl" style={{ backgroundColor: color }} />
-                    <div className="absolute bottom-0 left-0 h-1 rounded-b-xl transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: color, opacity: 0.4 }} />
                     <div className="relative">
                       <div className="flex items-center justify-center gap-1.5 mb-2">
                         <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
                         <p className="text-[10px] text-muted-foreground font-medium tracking-wide">{label}</p>
                       </div>
                       <p className="text-lg font-bold text-foreground">{value.toLocaleString("de-DE")}€</p>
-                      <p className="text-[9px] text-muted-foreground mt-0.5 font-medium">{pct}% Anteil</p>
                     </div>
                   </div>
-                );
-              })}
+                ))}
             </div>
 
             {/* Revenue Chart */}
