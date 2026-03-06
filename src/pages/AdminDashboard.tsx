@@ -2257,15 +2257,18 @@ export default function AdminDashboard() {
                                 <Button size="sm" variant="outline" className="h-7 text-xs border-green-500/30 text-green-400 hover:bg-green-500/10" onClick={() => updateRequestStatus(req.id, "accepted")}>
                                   <Check className="h-3 w-3 mr-1" /> Angenommen
                                 </Button>
-                                <Button size="sm" variant="outline" className="h-7 text-xs border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10" onClick={() => {
+                                <Button size="sm" variant="outline" className="h-7 text-xs border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10" onClick={() => updateRequestStatus(req.id, "in_progress")}>
+                                  <Clock className="h-3 w-3 mr-1" /> Wird bearbeitet
+                                </Button>
+                                <Button size="sm" variant="outline" className="h-7 text-xs border-red-500/30 text-red-400 hover:bg-red-500/10" onClick={() => {
                                   setModelRequests(prev => prev.map(r => r.id === req.id ? { ...r, _showRejectReason: !r._showRejectReason } : r));
                                 }}>
-                                  <XCircle className="h-3 w-3 mr-1" /> Wird bearbeitet
+                                  <XCircle className="h-3 w-3 mr-1" /> Ablehnen
                                 </Button>
                               </>
                             ) : (
-                              <Badge variant={req.status === "accepted" ? "default" : "destructive"} className="text-xs">
-                                {req.status === "accepted" ? "✅ Angenommen" : "⏳ Wird bearbeitet"}
+                              <Badge variant={req.status === "accepted" ? "default" : req.status === "in_progress" ? "secondary" : "destructive"} className="text-xs">
+                                {req.status === "accepted" ? "✅ Angenommen" : req.status === "in_progress" ? "⏳ Wird bearbeitet" : "❌ Abgelehnt"}
                               </Badge>
                             )}
                             {req.status !== "pending" && (
@@ -2277,7 +2280,7 @@ export default function AdminDashboard() {
                           {req._showRejectReason && req.status === "pending" && (
                             <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200">
                               <Textarea
-                                placeholder="Grund angeben (z.B. Model ist krank, dauert länger...)"
+                                placeholder="Grund für die Ablehnung angeben..."
                                 value={req._rejectReason ?? ""}
                                 onChange={(e) => {
                                   setModelRequests(prev => prev.map(r => r.id === req.id ? { ...r, _rejectReason: e.target.value } : r));
@@ -2285,14 +2288,14 @@ export default function AdminDashboard() {
                                 rows={2}
                                 className="text-xs"
                               />
-                              <Button size="sm" variant="outline" className="h-7 text-xs border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10" onClick={async () => {
+                              <Button size="sm" variant="outline" className="h-7 text-xs border-red-500/30 text-red-400 hover:bg-red-500/10" onClick={async () => {
                                 const reason = req._rejectReason ?? "";
                                 const { error } = await supabase.from("model_requests").update({ status: "rejected", admin_comment: reason || null }).eq("id", req.id);
                                 if (error) { toast.error("Fehler beim Aktualisieren"); return; }
-                                toast.success("Status auf 'Wird bearbeitet' gesetzt");
+                                toast.success("Anfrage abgelehnt");
                                 loadModelRequests();
                               }}>
-                                <Save className="h-3 w-3 mr-1" /> Absenden
+                                <XCircle className="h-3 w-3 mr-1" /> Ablehnen
                               </Button>
                             </div>
                           )}
