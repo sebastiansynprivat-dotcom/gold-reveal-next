@@ -202,6 +202,9 @@ export default function AdminDashboard() {
   const [schedListOpen, setSchedListOpen] = useState(false);
   const [chatterFilter, setChatterFilter] = useState<ChatterFilter>("alle");
   const [platformFilters, setPlatformFilters] = useState<Set<string>>(new Set());
+  const [filterTelegramOnly, setFilterTelegramOnly] = useState(false);
+  const [filterPushOnly, setFilterPushOnly] = useState(false);
+  const [filterPwaOnly, setFilterPwaOnly] = useState(false);
   const [botMessages, setBotMessages] = useState<Record<string, { message: string; followUp: string; isActive: boolean; saving: boolean }>>({});
   const [botMessagesLoaded, setBotMessagesLoaded] = useState(false);
   const [expandedBot, setExpandedBot] = useState<string | null>(null);
@@ -1191,6 +1194,17 @@ export default function AdminDashboard() {
       );
     }
 
+    // Top-level toggle filters
+    if (filterTelegramOnly) {
+      result = result.filter((c) => c.telegram_id && c.telegram_id.trim() !== "");
+    }
+    if (filterPushOnly) {
+      result = result.filter((c) => pushUsers.has(c.user_id));
+    }
+    if (filterPwaOnly) {
+      result = result.filter((c) => pwaUsers.has(c.user_id));
+    }
+
     switch (chatterFilter) {
       case "no_telegram":
         result = result.filter((c) => !c.telegram_id || c.telegram_id.trim() === "");
@@ -1221,7 +1235,7 @@ export default function AdminDashboard() {
       }
     }
     return result;
-  }, [chatters, search, chatterFilter, pushUsers, revenueUsers, platformFilters]);
+  }, [chatters, search, chatterFilter, pushUsers, revenueUsers, platformFilters, filterTelegramOnly, filterPushOnly, filterPwaOnly, pwaUsers]);
 
   const openGoalEditor = async (chatter: ChatterProfile) => {
     setGoalTarget(chatter);
@@ -1512,15 +1526,32 @@ export default function AdminDashboard() {
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: "Chatter gesamt", value: chatters.length },
-            { label: "Mit Telegram", value: chatters.filter((c) => c.telegram_id).length },
-            { label: "Push aktiv", value: chatters.filter((c) => pushUsers.has(c.user_id)).length },
-            { label: "App installiert", value: pwaUsers.size },
+            { label: "Chatter gesamt", value: chatters.length, filterKey: null, active: false },
+            { label: "Mit Telegram", value: chatters.filter((c) => c.telegram_id && c.telegram_id.trim() !== "").length, filterKey: "telegram" as const, active: filterTelegramOnly },
+            { label: "Push aktiv", value: chatters.filter((c) => pushUsers.has(c.user_id)).length, filterKey: "push" as const, active: filterPushOnly },
+            { label: "App installiert", value: pwaUsers.size, filterKey: "pwa" as const, active: filterPwaOnly },
           ].map((stat, i) => (
-            <div key={i} className="glass-card-subtle rounded-xl p-4 text-center hover:scale-[1.02] transition-transform">
+            <button
+              key={i}
+              onClick={() => {
+                if (stat.filterKey === "telegram") setFilterTelegramOnly(p => !p);
+                else if (stat.filterKey === "push") setFilterPushOnly(p => !p);
+                else if (stat.filterKey === "pwa") setFilterPwaOnly(p => !p);
+              }}
+              className={cn(
+                "glass-card-subtle rounded-xl p-4 text-center transition-all",
+                stat.filterKey ? "cursor-pointer hover:scale-[1.02]" : "cursor-default",
+                stat.active && "ring-2 ring-accent bg-accent/10"
+              )}
+            >
               <p className="text-[10px] text-muted-foreground mb-1 tracking-wide uppercase">{stat.label}</p>
               <p className="text-2xl font-bold text-gold-gradient">{stat.value}</p>
-            </div>
+              {stat.filterKey && (
+                <p className={cn("text-[9px] mt-1 font-medium", stat.active ? "text-accent" : "text-muted-foreground/50")}>
+                  {stat.active ? "Filter aktiv ✓" : "Klicken zum Filtern"}
+                </p>
+              )}
+            </button>
           ))}
         </div>
 
@@ -1934,8 +1965,6 @@ export default function AdminDashboard() {
             { key: "top_woche", label: "Top Woche", icon: TrendingUp },
             { key: "top_monat", label: "Top Monat", icon: DollarSign },
             { key: "no_revenue_7d", label: "7d+ ohne Umsatz", icon: AlertTriangle },
-            { key: "no_telegram", label: "Telegram fehlt", icon: AlertTriangle },
-            { key: "no_push", label: "Push fehlt", icon: BellOff },
           ] as const).map(({ key, label, icon: Icon }) => (
             <button
               key={key}
