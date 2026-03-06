@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Send } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Send, MessageSquare } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { Badge } from "@/components/ui/badge";
 
 const ModelRequestDialog = () => {
   const { user } = useAuth();
@@ -18,6 +19,22 @@ const ModelRequestDialog = () => {
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
+  const [myRequests, setMyRequests] = useState<any[]>([]);
+
+  const loadMyRequests = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("model_requests")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(10);
+    if (data) setMyRequests(data);
+  };
+
+  useEffect(() => {
+    if (open && user) loadMyRequests();
+  }, [open, user]);
 
   const resetForm = () => {
     setModelName("");
