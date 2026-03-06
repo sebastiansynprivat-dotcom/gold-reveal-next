@@ -60,13 +60,13 @@ async function getAccessToken(): Promise<string> {
   // Import the private key
   const privateKey = privateKeyRaw.replace(/\\n/g, "\n");
   const pemContents = privateKey
-    .replace("-----BEGIN PRIVATE KEY-----", "")
-    .replace("-----END PRIVATE KEY-----", "")
-    .replace(/\s/g, "");
+    .replace(/-----BEGIN PRIVATE KEY-----/g, "")
+    .replace(/-----END PRIVATE KEY-----/g, "")
+    .replace(/[\s\r\n]/g, "");
 
-  // Decode base64 PEM - handle both standard and URL-safe base64
-  const standardB64 = pemContents.replace(/-/g, "+").replace(/_/g, "/");
-  const rawBinary = atob(standardB64);
+  // Add proper base64 padding if missing
+  const padded = pemContents + "=".repeat((4 - (pemContents.length % 4)) % 4);
+  const rawBinary = atob(padded);
   const binaryKey = Uint8Array.from(rawBinary, (c) => c.charCodeAt(0));
 
   const cryptoKey = await crypto.subtle.importKey(
