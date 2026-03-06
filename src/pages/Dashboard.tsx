@@ -726,17 +726,49 @@ export default function Dashboard() {
                             <p className="text-[11px] text-foreground leading-relaxed">{req.admin_comment}</p>
                           </div>
                         )}
-                        {/* Content Link */}
+                        {/* Content Link with Tutorial Dialog */}
                         {(req as any).content_link && (req.status === "accepted" || req.status === "in_progress") && (
-                          <a
-                            href={(req as any).content_link}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-1.5 rounded-md bg-accent/10 border border-accent/20 px-2.5 py-2 mt-1 hover:bg-accent/15 transition-colors"
-                          >
-                            <ExternalLink className="h-3 w-3 text-accent shrink-0" />
-                            <span className="text-[11px] text-accent font-medium">Link zum angefragten Content</span>
-                          </a>
+                          <Dialog>
+                            <DialogTrigger asChild>
+                              <button className="flex items-center gap-1.5 rounded-md bg-accent/10 border border-accent/20 px-2.5 py-2 mt-1 hover:bg-accent/15 transition-colors w-full text-left">
+                                <ExternalLink className="h-3 w-3 text-accent shrink-0" />
+                                <span className="text-[11px] text-accent font-medium">Link zum angefragten Content</span>
+                              </button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-sm">
+                              <DialogHeader>
+                                <DialogTitle className="text-sm">Content herunterladen & hochladen</DialogTitle>
+                                <DialogDescription className="text-xs text-muted-foreground">
+                                  Schau dir kurz das Tutorial an, wie du den Content runterlädst und dann selbst hochlädst.
+                                </DialogDescription>
+                              </DialogHeader>
+                              <div className="space-y-4">
+                                {/* Tutorial Video */}
+                                <div className="rounded-lg overflow-hidden border border-border/50 aspect-video bg-secondary/30">
+                                  <iframe
+                                    src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+                                    title="Content Tutorial"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowFullScreen
+                                    className="w-full h-full"
+                                  />
+                                </div>
+
+                                {/* Content Link */}
+                                <a
+                                  href={(req as any).content_link}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  onClickCapture={(e) => e.stopPropagation()}
+                                  onPointerDownCapture={(e) => e.stopPropagation()}
+                                  className="flex items-center justify-center gap-2 w-full rounded-lg bg-accent text-accent-foreground px-4 py-2.5 text-sm font-medium hover:bg-accent/90 transition-colors"
+                                >
+                                  <ExternalLink className="h-4 w-4" />
+                                  Content öffnen
+                                </a>
+                              </div>
+                            </DialogContent>
+                          </Dialog>
                         )}
                         {/* Bearbeiten Button – nur bei Admin-Kommentar */}
                         {req.admin_comment && req.status !== "rejected" && (
