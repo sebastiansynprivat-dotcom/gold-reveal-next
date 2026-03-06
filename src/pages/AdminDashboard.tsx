@@ -50,7 +50,7 @@ const generateFakeRevenueData = () => {
 };
 
 type TimeFilter = "heute" | "gestern" | "7" | "30" | "90" | "custom";
-type ChatterFilter = "alle" | "open_2d" | "top_tag" | "top_woche" | "top_monat" | "no_revenue_7d" | "new_2d";
+type ChatterFilter = "alle" | "open_2d" | "top_tag" | "top_woche" | "top_monat" | "no_telegram" | "no_push" | "no_revenue_7d" | "new_2d";
 
 // Reuse hash function from ChatterStatsCard for consistent fake stats
 const hashCodeAdmin = (s: string) => {
