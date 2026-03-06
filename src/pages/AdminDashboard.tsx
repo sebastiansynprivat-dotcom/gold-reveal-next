@@ -2382,13 +2382,18 @@ export default function AdminDashboard() {
                                       { label: "Gestern", value: `${yesterdayRev}€` },
                                       { label: "Woche", value: `${weekRev.toLocaleString("de-DE")}€` },
                                       { label: "Monat", value: `${monthRev.toLocaleString("de-DE")}€` },
-                                      { label: "All-Time", value: `${allTimeRev.toLocaleString("de-DE")}€` },
                                     ].map((s) => (
                                       <div key={s.label} className="flex items-center justify-between px-1">
                                         <span className="text-xs font-medium text-muted-foreground">{s.label}</span>
                                         <span className="text-sm font-bold text-foreground">{s.value}</span>
                                       </div>
                                     ))}
+                                    <div className="gold-gradient-border-animated pulse-glow rounded-lg p-2 mt-1">
+                                      <div className="flex items-center justify-between px-1">
+                                        <span className="text-xs font-medium text-muted-foreground">All-Time</span>
+                                        <span className="text-sm font-bold text-gold-gradient">{allTimeRev.toLocaleString("de-DE")}€</span>
+                                      </div>
+                                    </div>
                                     <div className="border-t border-border/50 pt-1.5 mt-1 space-y-1.5">
                                       <div className="flex items-center justify-between px-1">
                                         <span className="text-xs font-medium text-muted-foreground">Mass-DMs</span>
