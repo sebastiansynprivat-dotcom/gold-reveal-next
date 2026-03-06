@@ -678,6 +678,25 @@ export default function AdminDashboard() {
     setSchedDeleteConfirm(null);
     toast.success("Geplante Benachrichtigung gelöscht");
   };
+  const loadModelRequests = async () => {
+    const { data } = await supabase
+      .from("model_requests")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (data) setModelRequests(data);
+    setModelRequestsLoaded(true);
+  };
+
+  const updateRequestStatus = async (id: string, status: string) => {
+    const { error } = await supabase
+      .from("model_requests")
+      .update({ status })
+      .eq("id", id);
+    if (error) { toast.error("Fehler beim Aktualisieren"); return; }
+    toast.success(`Status auf "${status}" gesetzt`);
+    loadModelRequests();
+  };
+
   const loadBotMessages = async () => {
     const { data } = await supabase
       .from("bot_messages" as any)
