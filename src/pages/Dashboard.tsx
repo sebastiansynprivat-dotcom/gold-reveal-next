@@ -727,7 +727,7 @@ export default function Dashboard() {
                           </div>
                         )}
                         {/* Bearbeiten Button – nur bei Admin-Kommentar */}
-                        {req.admin_comment && (
+                        {req.admin_comment && req.status !== "rejected" && (
                           <button
                             onClick={() => setEditRequest({
                               id: req.id,
