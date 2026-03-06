@@ -4173,6 +4173,8 @@ export default function AdminDashboard() {
                                 📁 Drive-Ordner
                               </a>
                             )}
+                          </div>
+                          {acc.assigned_to && (
                             <Button
                               variant="ghost"
                               size="sm"
