@@ -1256,6 +1256,15 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.2, ease: "easeInOut" }}
+          >
+
         {activeTab === "einnahmen" && (
           <div className="space-y-4">
             {/* Time Filter */}
@@ -2949,6 +2958,9 @@ export default function AdminDashboard() {
             </section>
           </div>
         )}
+
+          </motion.div>
+        </AnimatePresence>
       </main>
 
       {/* Account Pool Dialog */}
