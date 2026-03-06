@@ -4088,6 +4088,12 @@ export default function AdminDashboard() {
                 onChange={(e) => setManualAccPassword(e.target.value)}
                 placeholder="Passwort"
               />
+              <Input
+                value={manualAccDriveFolder}
+                onChange={(e) => setManualAccDriveFolder(e.target.value)}
+                placeholder="Google Drive Link / Folder ID (optional)"
+                className="text-xs"
+              />
               <Button
                 onClick={async () => {
                   if (!manualAccEmail.trim() || !selectedManualPlatform) return;
@@ -4097,6 +4103,7 @@ export default function AdminDashboard() {
                     account_email: manualAccEmail.trim(),
                     account_password: manualAccPassword.trim(),
                     account_domain: manualAccDomain.trim(),
+                    drive_folder_id: extractDriveFolderId(manualAccDriveFolder.trim()),
                     is_manual: true,
                   } as any);
                   if (error) {
@@ -4105,6 +4112,7 @@ export default function AdminDashboard() {
                     toast.success("Account hinzugefügt!");
                     setManualAccEmail("");
                     setManualAccPassword("");
+                    setManualAccDriveFolder("");
                     loadAccounts();
                     loadChatters();
                   }
