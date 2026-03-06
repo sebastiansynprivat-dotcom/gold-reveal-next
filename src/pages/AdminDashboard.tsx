@@ -3872,78 +3872,157 @@ export default function AdminDashboard() {
 
       {/* Reassign Account Dialog */}
       <Dialog open={!!reassignTarget} onOpenChange={(o) => { if (!o) setReassignTarget(null); }}>
-        <DialogContent className="glass-card border-border sm:max-w-md max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-foreground">
-              Account ändern für {reassignTarget?.group_name || "Chatter"}
-            </DialogTitle>
+        <DialogContent className="glass-card border-border sm:max-w-md max-h-[85vh] overflow-hidden flex flex-col">
+          <DialogHeader className="pb-0">
+            <div className="flex items-center gap-3 mb-1">
+              <div className="h-9 w-9 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
+                <KeyRound className="h-4.5 w-4.5 text-accent" />
+              </div>
+              <div>
+                <DialogTitle className="text-foreground text-base">
+                  Accounts verwalten
+                </DialogTitle>
+                <p className="text-[11px] text-muted-foreground mt-0.5">{reassignTarget?.group_name || "Chatter"}</p>
+              </div>
+            </div>
           </DialogHeader>
-          <div className="space-y-3">
-            {/* Show currently assigned accounts */}
+
+          <div className="overflow-y-auto flex-1 space-y-4 pr-1 -mr-1 pt-2">
+            {/* Currently assigned accounts */}
             {(() => {
               const assigned = reassignTarget?.assigned_accounts || [];
               if (assigned.length === 0) return (
-                <p className="text-xs text-muted-foreground italic">Keine Accounts zugewiesen.</p>
+                <div className="glass-card-subtle rounded-xl p-4 text-center">
+                  <Package className="h-5 w-5 text-muted-foreground mx-auto mb-2 opacity-50" />
+                  <p className="text-xs text-muted-foreground">Keine Accounts zugewiesen</p>
+                </div>
               );
               return (
                 <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground font-medium">Zugewiesene Accounts:</p>
+                  <div className="flex items-center gap-2 px-1">
+                    <div className="h-1.5 w-1.5 rounded-full bg-accent" />
+                    <p className="text-[11px] font-semibold text-foreground tracking-wide uppercase">Zugewiesen</p>
+                    <Badge variant="secondary" className="text-[9px] ml-auto">{assigned.length}</Badge>
+                  </div>
                   {assigned.map((acc) => (
-                    <div key={acc.id} className="flex items-center justify-between p-3 rounded-xl border border-border bg-secondary/30">
-                      <div>
-                        <Badge variant="secondary" className="text-[10px] mb-1">{acc.platform}</Badge>
-                        <p className="text-xs font-medium text-foreground">{acc.account_email}</p>
+                    <div key={acc.id} className="flex items-center justify-between p-3 rounded-xl glass-card-subtle group hover:border-accent/30 transition-colors">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <Badge className="text-[9px] px-1.5 py-0 bg-accent/15 text-accent border-accent/20 font-medium">{acc.platform}</Badge>
+                          <span className="text-[9px] text-muted-foreground">
+                            {acc.is_manual ? "Freier Account" : "Account-Pool"}
+                          </span>
+                        </div>
+                        <p className="text-xs font-medium text-foreground truncate">{acc.account_email}</p>
+                        {acc.account_domain && (
+                          <p className="text-[10px] text-muted-foreground truncate">{acc.account_domain}</p>
+                        )}
                       </div>
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
                         onClick={() => removeAccount(acc.id)}
                         disabled={reassigning}
-                        className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                        className="text-destructive/70 hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0 shrink-0 ml-2"
                       >
-                        <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-                        Rausnehmen
+                        <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   ))}
                 </div>
               );
             })()}
+
+            {/* Separator */}
+            <div className="relative py-1">
+              <div className="absolute inset-x-0 top-1/2 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+              <p className="relative text-center text-[10px] text-muted-foreground bg-card px-3 mx-auto w-fit">
+                Account zuweisen
+              </p>
+            </div>
             
-            <p className="text-xs text-muted-foreground font-medium pt-2">Freien Account zuweisen:</p>
+            {/* Free accounts grouped by source */}
             {(() => {
               const freeAccs = accounts.filter((a) => !a.assigned_to);
               if (freeAccs.length === 0) {
                 return (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    Keine freien Accounts verfügbar.
-                  </p>
+                  <div className="glass-card-subtle rounded-xl p-6 text-center">
+                    <Package className="h-5 w-5 text-muted-foreground mx-auto mb-2 opacity-40" />
+                    <p className="text-xs text-muted-foreground">Keine freien Accounts verfügbar</p>
+                  </div>
                 );
               }
-              // Group by platform
-              const platforms = [...new Set(freeAccs.map((a) => a.platform))];
-              return (
-                <div className="space-y-3">
-                  {platforms.map((p) => (
-                    <div key={p}>
-                      <p className="text-[10px] text-muted-foreground mb-1">{p}</p>
-                      <div className="divide-y divide-border rounded-xl border border-border overflow-hidden">
-                        {freeAccs.filter((a) => a.platform === p).map((acc) => (
-                          <button
-                            key={acc.id}
-                            onClick={() => reassignAccount(acc.id)}
-                            disabled={reassigning}
-                            className="w-full p-3 text-left hover:bg-secondary/30 transition-colors disabled:opacity-50"
-                          >
-                            <div className="flex items-center justify-between">
-                              <span className="text-xs font-medium text-foreground">{acc.account_email}</span>
-                            </div>
-                            <p className="text-[10px] text-muted-foreground">Domain: {acc.account_domain}</p>
-                          </button>
-                        ))}
+
+              const poolAccounts = freeAccs.filter((a) => !a.is_manual);
+              const manualAccounts = freeAccs.filter((a) => a.is_manual);
+
+              const poolPlatforms = [...new Set(poolAccounts.map((a) => a.platform))];
+              const manualPlatforms = [...new Set(manualAccounts.map((a) => a.platform))];
+
+              const renderAccountList = (accs: typeof freeAccs, platform: string) => (
+                <div className="divide-y divide-border/50 rounded-lg overflow-hidden border border-border/50">
+                  {accs.filter((a) => a.platform === platform).map((acc) => (
+                    <button
+                      key={acc.id}
+                      onClick={() => reassignAccount(acc.id)}
+                      disabled={reassigning}
+                      className="w-full p-2.5 text-left hover:bg-accent/5 transition-all disabled:opacity-50 group/item"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-medium text-foreground truncate group-hover/item:text-accent transition-colors">{acc.account_email}</p>
+                          {acc.account_domain && (
+                            <p className="text-[10px] text-muted-foreground truncate">{acc.account_domain}</p>
+                          )}
+                        </div>
+                        <Plus className="h-3.5 w-3.5 text-muted-foreground group-hover/item:text-accent shrink-0 transition-colors" />
                       </div>
-                    </div>
+                    </button>
                   ))}
+                </div>
+              );
+
+              return (
+                <div className="space-y-4">
+                  {/* Account-Pools */}
+                  {poolPlatforms.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 px-1">
+                        <div className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                        <p className="text-[11px] font-semibold text-foreground tracking-wide uppercase">Account-Pools</p>
+                        <Badge variant="secondary" className="text-[9px] ml-auto">{poolAccounts.length} frei</Badge>
+                      </div>
+                      {poolPlatforms.map((p) => (
+                        <div key={p} className="space-y-1.5">
+                          <div className="flex items-center gap-1.5 px-1">
+                            <Badge className="text-[9px] px-1.5 py-0 bg-accent/10 text-accent/80 border-accent/15">{p}</Badge>
+                            <span className="text-[9px] text-muted-foreground">{poolAccounts.filter(a => a.platform === p).length} verfügbar</span>
+                          </div>
+                          {renderAccountList(poolAccounts, p)}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Freie Accounts */}
+                  {manualPlatforms.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 px-1">
+                        <div className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                        <p className="text-[11px] font-semibold text-foreground tracking-wide uppercase">Freie Accounts</p>
+                        <Badge variant="secondary" className="text-[9px] ml-auto">{manualAccounts.length} frei</Badge>
+                      </div>
+                      {manualPlatforms.map((p) => (
+                        <div key={p} className="space-y-1.5">
+                          <div className="flex items-center gap-1.5 px-1">
+                            <Badge className="text-[9px] px-1.5 py-0 bg-amber-400/10 text-amber-400/80 border-amber-400/15">{p}</Badge>
+                            <span className="text-[9px] text-muted-foreground">{manualAccounts.filter(a => a.platform === p).length} verfügbar</span>
+                          </div>
+                          {renderAccountList(manualAccounts, p)}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               );
             })()}
