@@ -2506,11 +2506,22 @@ export default function AdminDashboard() {
 
                           {/* Description with Header */}
                           <button
-                            onClick={() => { navigator.clipboard.writeText(req.description); toast.success("Beschreibung kopiert!"); }}
+                            onClick={() => {
+                              const priceLine = req.request_type === "individual" && req.price != null
+                                ? `\n\nDer Preis, den der Kunde bereit wäre zu bezahlen: ${req.price}€`
+                                : "";
+                              const fullText = `Hey, eine neue Anfrage des Chatters an dich – ich leite sie dir einmal eins zu eins weiter 🙋🏼‍♂️:\n\n${req.description}${priceLine}\n\nGib mir bitte Feedback, ob du das umsetzen möchtest oder nicht.`;
+                              navigator.clipboard.writeText(fullText);
+                              toast.success("Beschreibung kopiert!");
+                            }}
                             className="glass-card-subtle rounded-lg px-3 py-2.5 text-sm text-foreground/90 leading-relaxed hover:bg-accent/5 transition-colors text-left w-full group"
                           >
                             <p className="text-xs text-muted-foreground italic mb-1.5">Hey, eine neue Anfrage des Chatters an dich – ich leite sie dir einmal eins zu eins weiter 🙋🏼‍♂️:</p>
                             {req.description}
+                            {req.request_type === "individual" && req.price != null && (
+                              <p className="text-xs text-muted-foreground mt-1.5">Der Preis, den der Kunde bereit wäre zu bezahlen: <span className="text-foreground font-medium">{req.price}€</span></p>
+                            )}
+                            <p className="text-xs text-muted-foreground italic mt-1.5">Gib mir bitte Feedback, ob du das umsetzen möchtest oder nicht.</p>
                             <Copy className="h-3 w-3 inline-block ml-1.5 opacity-0 group-hover:opacity-40 transition-opacity" />
                           </button>
 
