@@ -673,6 +673,17 @@ export default function Dashboard() {
                     }
                       {!ds.hidden &&
                     <div className="mt-3 border-t border-border/30 pt-3">
+                          {acc.drive_folder_id ? (
+                            <a
+                              href={`https://drive.google.com/drive/folders/${acc.drive_folder_id}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 rounded-lg border border-accent/30 bg-accent/5 px-3 py-2.5 text-xs font-medium text-accent hover:bg-accent/10 hover:border-accent/50 hover:shadow-[0_0_12px_hsl(43_56%_52%_/_0.15)] transition-all"
+                            >
+                              📂 Google Drive öffnen
+                              <ExternalLink className="h-3 w-3 ml-auto opacity-70" />
+                            </a>
+                          ) : (
                           <div className="flex items-start gap-3">
                             <Checkbox checked={ds.done} onCheckedChange={(v) => {setDriveState(acc.id, { done: !!v });setDriveVersion((p) => p + 1);}} className="mt-0.5 shrink-0 border-accent data-[state=checked]:bg-accent data-[state=checked]:text-accent-foreground" />
                             <div className="flex-1 min-w-0 space-y-2">
@@ -691,6 +702,7 @@ export default function Dashboard() {
                           }
                             </div>
                           </div>
+                          )}
                         </div>
                     }
                     </div>);
