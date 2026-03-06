@@ -1,0 +1,1 @@
+ALTER TABLE public.model_requests ADD COLUMN content_link text DEFAULT null;
