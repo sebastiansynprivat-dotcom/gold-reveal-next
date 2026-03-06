@@ -1,0 +1,1 @@
+ALTER TABLE public.model_requests ADD COLUMN customer_name text DEFAULT null;
