@@ -272,6 +272,10 @@ export default function AdminDashboard() {
     localStorage.removeItem("admin_checked_chatters");
     toast.success("Alle Häkchen zurückgesetzt!");
   }, []);
+
+  // Keep activeTabRef in sync
+  useEffect(() => { activeTabRef.current = activeTab; }, [activeTab]);
+
   const allRevenueData = useMemo(() => generateFakeRevenueData(), []);
 
   const filteredRevenueData = useMemo(() => {
