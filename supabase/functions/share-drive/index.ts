@@ -123,9 +123,10 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Verify caller is admin or service role
     const authHeader = req.headers.get("Authorization");
     const isServiceRole = req.headers.get("x-service-role") === "true";
+    let callerUserId: string | null = null;
+    let callerIsAdmin = false;
 
     if (!isServiceRole) {
       if (!authHeader) {
@@ -149,16 +150,34 @@ Deno.serve(async (req) => {
         });
       }
 
+      callerUserId = user.id;
       const { data: isAdmin } = await userClient.rpc("is_admin");
-      if (!isAdmin) {
+      callerIsAdmin = !!isAdmin;
+    }
+
+    const { folder_id, email, user_id } = await req.json();
+    
+    // If not admin and not service role, user can only share their own assigned accounts
+    if (!isServiceRole && !callerIsAdmin) {
+      // Verify the folder belongs to an account assigned to this user
+      const adminClient = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+      );
+      const { data: ownAccount } = await adminClient
+        .from("accounts")
+        .select("id")
+        .eq("assigned_to", callerUserId!)
+        .eq("drive_folder_id", folder_id)
+        .maybeSingle();
+
+      if (!ownAccount) {
         return new Response(JSON.stringify({ error: "Forbidden" }), {
           status: 403,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
     }
-
-    const { folder_id, email, user_id } = await req.json();
     
     let targetEmail = email;
     
