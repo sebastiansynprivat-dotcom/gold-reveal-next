@@ -237,6 +237,7 @@ export type Database = {
       }
       model_requests: {
         Row: {
+          admin_comment: string | null
           created_at: string
           description: string
           id: string
@@ -247,6 +248,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          admin_comment?: string | null
           created_at?: string
           description: string
           id?: string
@@ -257,6 +259,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          admin_comment?: string | null
           created_at?: string
           description?: string
           id?: string

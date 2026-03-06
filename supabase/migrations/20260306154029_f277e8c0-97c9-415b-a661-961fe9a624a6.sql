@@ -1,0 +1,1 @@
+ALTER TABLE public.model_requests ADD COLUMN admin_comment text DEFAULT NULL;
