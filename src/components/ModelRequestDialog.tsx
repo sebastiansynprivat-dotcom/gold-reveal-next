@@ -93,14 +93,20 @@ const ModelRequestDialog = () => {
           {/* Request Type */}
           <div className="space-y-2">
             <Label className="text-xs text-foreground">Art der Anfrage *</Label>
-            <RadioGroup value={requestType} onValueChange={(v) => setRequestType(v as "individual" | "general")} className="flex gap-4">
-              <div className="flex items-center gap-2">
-                <RadioGroupItem value="individual" id="individual" />
-                <Label htmlFor="individual" className="text-xs cursor-pointer">Individuelle Anfrage</Label>
+            <RadioGroup value={requestType} onValueChange={(v) => setRequestType(v as "individual" | "general")} className="flex flex-col gap-3">
+              <div className="rounded-lg border border-border/50 bg-secondary/20 p-3 space-y-1">
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem value="individual" id="individual" />
+                  <Label htmlFor="individual" className="text-xs font-semibold cursor-pointer">Individuelle Anfrage</Label>
+                </div>
+                <p className="text-[10px] text-muted-foreground pl-6">ℹ️ Personalisierter Content – z.B. der Name des Kunden wird erwähnt, spezielle Wünsche oder maßgeschneiderte Inhalte.</p>
               </div>
-              <div className="flex items-center gap-2">
-                <RadioGroupItem value="general" id="general" />
-                <Label htmlFor="general" className="text-xs cursor-pointer">Allgemeine Anfrage</Label>
+              <div className="rounded-lg border border-border/50 bg-secondary/20 p-3 space-y-1">
+                <div className="flex items-center gap-2">
+                  <RadioGroupItem value="general" id="general" />
+                  <Label htmlFor="general" className="text-xs font-semibold cursor-pointer">Allgemeine Anfrage</Label>
+                </div>
+                <p className="text-[10px] text-muted-foreground pl-6">ℹ️ Allgemeiner Content – z.B. neue Fotos, Videos oder Posts, die nicht auf einen bestimmten Kunden zugeschnitten sind.</p>
               </div>
             </RadioGroup>
           </div>
