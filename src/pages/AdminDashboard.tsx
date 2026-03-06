@@ -4128,7 +4128,7 @@ export default function AdminDashboard() {
       </Dialog>
 
       {/* Manual Platform Dialog */}
-      <Dialog open={manualPoolOpen} onOpenChange={(o) => { setManualPoolOpen(o); if (!o) { setManualAccFolder(""); setCreatingFolder(false); setNewFolderName(""); } }}>
+      <Dialog open={manualPoolOpen} onOpenChange={(o) => { setManualPoolOpen(o); if (!o) { setManualAccFolder(""); setCreatingFolder(false); setNewFolderName(""); setOpenFolder(null); setDragOverFolder(null); } }}>
         <DialogContent className="glass-card border-border sm:max-w-lg max-h-[85vh] overflow-hidden flex flex-col">
           <DialogHeader className="pb-0">
             <div className="flex items-center justify-between">
@@ -4141,12 +4141,7 @@ export default function AdminDashboard() {
                   <p className="text-[11px] text-muted-foreground font-normal mt-0.5">Freie Accounts</p>
                 </div>
               </DialogTitle>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setDeleteManualPoolConfirm(true)}
-                className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive h-8"
-              >
+              <Button variant="outline" size="sm" onClick={() => setDeleteManualPoolConfirm(true)} className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive h-8">
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
             </div>
@@ -4156,109 +4151,87 @@ export default function AdminDashboard() {
             {/* Domain */}
             <div className="space-y-1.5">
               <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Standard-Domain</label>
-              <Input
-                value={manualAccDomain}
-                onChange={(e) => setManualAccDomain(e.target.value)}
-                placeholder="Domain (z.B. onlyfans.com)"
-                className="text-xs"
-              />
+              <Input value={manualAccDomain} onChange={(e) => setManualAccDomain(e.target.value)} placeholder="Domain (z.B. onlyfans.com)" className="text-xs" />
             </div>
 
-            {/* Stats */}
             {(() => {
               const manualPlatformAccounts = accounts.filter(a => a.is_manual && a.platform === selectedManualPlatform);
               const mFree = manualPlatformAccounts.filter(a => !a.assigned_to).length;
               const mAssigned = manualPlatformAccounts.filter(a => a.assigned_to).length;
-              
-              // Get unique folders
-              const folders = [...new Set(manualPlatformAccounts.map(a => a.folder_name || null))];
-              const namedFolders = folders.filter(f => f !== null) as string[];
+              const namedFolders = [...new Set(manualPlatformAccounts.map(a => a.folder_name).filter(Boolean))] as string[];
               const ungrouped = manualPlatformAccounts.filter(a => !a.folder_name);
 
-              const renderAccountRow = (acc: AccountEntry) => (
-                <div key={acc.id} className="p-2.5 flex items-center gap-2 group/row hover:bg-accent/3 transition-colors">
-                  <span className={`h-2 w-2 rounded-full shrink-0 ${acc.assigned_to ? "bg-muted-foreground/30" : "bg-green-500"}`} />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium text-foreground truncate">{acc.account_email}</span>
+              const copyToClipboard = (text: string, label: string) => {
+                navigator.clipboard.writeText(text);
+                toast.success(`${label} kopiert!`);
+              };
+
+              const handleDrop = async (e: React.DragEvent, targetFolder: string | null) => {
+                e.preventDefault();
+                setDragOverFolder(null);
+                const accId = e.dataTransfer.getData("text/account-id");
+                if (!accId) return;
+                await supabase.from("accounts").update({ folder_name: targetFolder } as any).eq("id", accId);
+                toast.success(targetFolder ? `In "${targetFolder}" verschoben` : "Aus Ordner entfernt");
+                loadAccounts();
+              };
+
+              const handleDragOver = (e: React.DragEvent, folder: string | null) => {
+                e.preventDefault();
+                setDragOverFolder(folder);
+              };
+
+              const renderAccountCard = (acc: AccountEntry) => (
+                <div
+                  key={acc.id}
+                  draggable
+                  onDragStart={(e) => { e.dataTransfer.setData("text/account-id", acc.id); e.dataTransfer.effectAllowed = "move"; }}
+                  className="glass-card-subtle rounded-lg p-3 cursor-grab active:cursor-grabbing hover:border-accent/30 transition-all group/card"
+                >
+                  <div className="flex items-center justify-between mb-1.5">
+                    <div className="flex items-center gap-1.5">
+                      <span className={`h-2 w-2 rounded-full shrink-0 ${acc.assigned_to ? "bg-muted-foreground/30" : "bg-green-500"}`} />
                       {acc.assigned_to ? (
-                        <Badge className="text-[9px] bg-secondary text-secondary-foreground shrink-0">
-                          → {getChatterName(acc.assigned_to)}
-                        </Badge>
+                        <Badge className="text-[9px] bg-secondary text-secondary-foreground">→ {getChatterName(acc.assigned_to)}</Badge>
                       ) : (
-                        <Badge className="text-[9px] bg-accent/20 text-accent shrink-0">Frei</Badge>
+                        <Badge className="text-[9px] bg-accent/15 text-accent border-accent/20">Frei</Badge>
                       )}
                     </div>
-                    <p className="text-[10px] text-muted-foreground truncate">PW: {acc.account_password}</p>
-                    {acc.drive_folder_id && (
-                      <a href={`https://drive.google.com/drive/folders/${acc.drive_folder_id}`} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary hover:underline truncate flex items-center gap-1">
-                        📁 Drive-Ordner
-                      </a>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-0.5 opacity-0 group-hover/row:opacity-100 transition-opacity">
-                    {acc.assigned_to && (
-                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:text-accent shrink-0" title="Account freigeben"
+                    <div className="flex items-center gap-0.5 opacity-0 group-hover/card:opacity-100 transition-opacity">
+                      {acc.assigned_to && (
+                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground hover:text-accent" title="Freigeben"
+                          onClick={async () => {
+                            await revokeDriveAccess([acc.id], acc.assigned_to!);
+                            await supabase.from("accounts").update({ assigned_to: null, assigned_at: null } as any).eq("id", acc.id);
+                            toast.success("Freigegeben"); loadAccounts(); loadChatters();
+                          }}>
+                          <RefreshCw className="h-3 w-3" />
+                        </Button>
+                      )}
+                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive" title="Löschen"
                         onClick={async () => {
-                          await revokeDriveAccess([acc.id], acc.assigned_to!);
-                          await supabase.from("accounts").update({ assigned_to: null, assigned_at: null } as any).eq("id", acc.id);
-                          toast.success("Account freigegeben");
-                          loadAccounts(); loadChatters();
+                          await supabase.from("accounts").delete().eq("id", acc.id);
+                          toast.success("Gelöscht"); loadAccounts();
                         }}>
-                        <RefreshCw className="h-3 w-3" />
+                        <Trash2 className="h-3 w-3" />
                       </Button>
-                    )}
-                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive shrink-0" title="Account löschen"
-                      onClick={async () => {
-                        await supabase.from("accounts").delete().eq("id", acc.id);
-                        toast.success("Account gelöscht");
-                        loadAccounts();
-                      }}>
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
+                    </div>
                   </div>
+                  <button onClick={() => copyToClipboard(acc.account_email, "E-Mail")} className="w-full flex items-center gap-2 p-1.5 -mx-1.5 rounded-md hover:bg-accent/5 transition-colors group/copy text-left">
+                    <Copy className="h-3 w-3 text-muted-foreground group-hover/copy:text-accent shrink-0 transition-colors" />
+                    <span className="text-xs font-medium text-foreground truncate">{acc.account_email}</span>
+                  </button>
+                  <button onClick={() => copyToClipboard(acc.account_password, "Passwort")} className="w-full flex items-center gap-2 p-1.5 -mx-1.5 rounded-md hover:bg-accent/5 transition-colors group/copy text-left">
+                    <Copy className="h-3 w-3 text-muted-foreground group-hover/copy:text-accent shrink-0 transition-colors" />
+                    <span className="text-[11px] text-muted-foreground truncate">PW: {acc.account_password}</span>
+                  </button>
+                  {acc.drive_folder_id && (
+                    <a href={`https://drive.google.com/drive/folders/${acc.drive_folder_id}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-1.5 -mx-1.5 rounded-md hover:bg-accent/5 transition-colors text-[11px] text-primary hover:underline">
+                      <ExternalLink className="h-3 w-3 shrink-0" /> Drive-Ordner
+                    </a>
+                  )}
                 </div>
               );
-
-              const FolderSection = ({ folderName, accs }: { folderName: string | null; accs: AccountEntry[] }) => {
-                const [open, setOpen] = useState(false);
-                const label = folderName || "Ohne Ordner";
-                const freeInFolder = accs.filter(a => !a.assigned_to).length;
-                return (
-                  <div className="glass-card-subtle rounded-xl overflow-hidden">
-                    <button onClick={() => setOpen(!open)} className="w-full flex items-center gap-2 p-3 text-left hover:bg-accent/5 transition-colors">
-                      <ChevronRight className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${open ? "rotate-90" : ""}`} />
-                      <Package className="h-3.5 w-3.5 text-accent/70" />
-                      <span className="text-xs font-semibold text-foreground flex-1">{label}</span>
-                      <div className="flex items-center gap-1.5">
-                        <Badge variant="secondary" className="text-[9px]">{accs.length}</Badge>
-                        <Badge className="text-[9px] bg-accent/15 text-accent border-accent/20">{freeInFolder} frei</Badge>
-                      </div>
-                    </button>
-                    {open && (
-                      <div className="divide-y divide-border/30 border-t border-border/30">
-                        {accs.map(renderAccountRow)}
-                        {folderName && (
-                          <div className="p-2 flex justify-end">
-                            <Button variant="ghost" size="sm" className="text-[10px] text-destructive/70 hover:text-destructive h-6 px-2"
-                              onClick={async () => {
-                                // Move all accounts in this folder to ungrouped
-                                for (const acc of accs) {
-                                  await supabase.from("accounts").update({ folder_name: null } as any).eq("id", acc.id);
-                                }
-                                toast.success(`Ordner "${folderName}" aufgelöst`);
-                                loadAccounts();
-                              }}>
-                              <Trash2 className="h-3 w-3 mr-1" />
-                              Ordner auflösen
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                );
-              };
 
               return (
                 <>
@@ -4268,134 +4241,148 @@ export default function AdminDashboard() {
                     <span className="text-muted-foreground">Vergeben: <span className="font-semibold">{mAssigned}</span></span>
                   </div>
 
-                  {/* Create folder */}
-                  <div className="flex items-center gap-2">
-                    {creatingFolder ? (
-                      <div className="flex items-center gap-2 flex-1">
-                        <Input
-                          value={newFolderName}
-                          onChange={(e) => setNewFolderName(e.target.value)}
-                          placeholder="Ordnername..."
-                          className="text-xs flex-1 h-8"
-                          autoFocus
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter" && newFolderName.trim()) {
-                              // Just set folder name for next account add
-                              setManualAccFolder(newFolderName.trim());
-                              setCreatingFolder(false);
-                              setNewFolderName("");
-                              toast.success(`Ordner "${newFolderName.trim()}" erstellt – füge Accounts hinzu!`);
-                            }
-                          }}
-                        />
-                        <Button size="sm" className="h-8" disabled={!newFolderName.trim()}
-                          onClick={() => {
-                            setManualAccFolder(newFolderName.trim());
-                            setCreatingFolder(false);
-                            setNewFolderName("");
-                            toast.success(`Ordner "${newFolderName.trim()}" erstellt – füge Accounts hinzu!`);
-                          }}>
-                          <Check className="h-3.5 w-3.5" />
+                  {/* Folder strip */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider flex-1">Ordner</p>
+                      {creatingFolder ? (
+                        <div className="flex items-center gap-1.5">
+                          <Input value={newFolderName} onChange={(e) => setNewFolderName(e.target.value)} placeholder="Name..." className="text-xs h-7 w-32" autoFocus
+                            onKeyDown={(e) => { if (e.key === "Enter" && newFolderName.trim()) { setManualAccFolder(newFolderName.trim()); setCreatingFolder(false); setNewFolderName(""); toast.success(`Ordner "${newFolderName.trim()}" erstellt`); } }} />
+                          <Button size="sm" className="h-7 w-7 p-0" disabled={!newFolderName.trim()} onClick={() => { setManualAccFolder(newFolderName.trim()); setCreatingFolder(false); setNewFolderName(""); toast.success(`Ordner erstellt`); }}>
+                            <Check className="h-3 w-3" />
+                          </Button>
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => { setCreatingFolder(false); setNewFolderName(""); }}>
+                            <XCircle className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <Button variant="ghost" size="sm" className="h-7 text-[10px] text-muted-foreground hover:text-accent" onClick={() => setCreatingFolder(true)}>
+                          <Plus className="h-3 w-3 mr-1" /> Neuer Ordner
                         </Button>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={() => { setCreatingFolder(false); setNewFolderName(""); }}>
-                          <XCircle className="h-3.5 w-3.5" />
-                        </Button>
+                      )}
+                    </div>
+
+                    {namedFolders.length > 0 ? (
+                      <div className="grid grid-cols-2 gap-2">
+                        {namedFolders.sort().map((folder) => {
+                          const folderAccs = manualPlatformAccounts.filter(a => a.folder_name === folder);
+                          const folderFree = folderAccs.filter(a => !a.assigned_to).length;
+                          const isOver = dragOverFolder === folder;
+                          const isOpen = openFolder === folder;
+                          return (
+                            <button key={folder} onClick={() => setOpenFolder(isOpen ? null : folder)}
+                              onDragOver={(e) => handleDragOver(e, folder)} onDragLeave={() => setDragOverFolder(null)} onDrop={(e) => handleDrop(e, folder)}
+                              className={`glass-card-subtle rounded-xl p-3 text-left transition-all ${isOver ? "border-accent/50 bg-accent/5 scale-[1.02]" : ""} ${isOpen ? "ring-1 ring-accent/30" : "hover:bg-accent/3"}`}>
+                              <div className="flex items-center gap-2 mb-1">
+                                <Package className="h-3.5 w-3.5 text-accent/70" />
+                                <span className="text-xs font-semibold text-foreground truncate flex-1">{folder}</span>
+                              </div>
+                              <div className="flex items-center gap-1.5">
+                                <Badge variant="secondary" className="text-[9px]">{folderAccs.length}</Badge>
+                                <Badge className="text-[9px] bg-accent/15 text-accent border-accent/20">{folderFree} frei</Badge>
+                              </div>
+                            </button>
+                          );
+                        })}
                       </div>
                     ) : (
-                      <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => setCreatingFolder(true)}>
-                        <Plus className="h-3.5 w-3.5 mr-1.5" />
-                        Neuer Ordner
-                      </Button>
+                      <p className="text-[11px] text-muted-foreground italic text-center py-2">Noch keine Ordner – erstelle einen oben</p>
                     )}
                   </div>
 
-                  {/* Folder list */}
-                  <div className="space-y-2">
-                    {namedFolders.sort().map((folder) => (
-                      <FolderSection key={folder} folderName={folder} accs={manualPlatformAccounts.filter(a => a.folder_name === folder)} />
-                    ))}
-                    {ungrouped.length > 0 && namedFolders.length > 0 && (
-                      <FolderSection folderName={null} accs={ungrouped} />
-                    )}
-                    {ungrouped.length > 0 && namedFolders.length === 0 && (
-                      <div className="divide-y divide-border/30 rounded-xl border border-border/50 overflow-hidden">
-                        {ungrouped.map(renderAccountRow)}
+                  {/* Opened folder content */}
+                  {openFolder && (() => {
+                    const folderAccs = manualPlatformAccounts.filter(a => a.folder_name === openFolder);
+                    return (
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Package className="h-4 w-4 text-accent" />
+                            <span className="text-sm font-semibold text-foreground">{openFolder}</span>
+                            <Badge variant="secondary" className="text-[9px]">{folderAccs.length}</Badge>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Button variant="ghost" size="sm" className="h-7 text-[10px] text-destructive/70 hover:text-destructive"
+                              onClick={async () => {
+                                for (const acc of folderAccs) { await supabase.from("accounts").update({ folder_name: null } as any).eq("id", acc.id); }
+                                toast.success(`Ordner "${openFolder}" aufgelöst`); setOpenFolder(null); loadAccounts();
+                              }}>
+                              <Trash2 className="h-3 w-3 mr-1" /> Auflösen
+                            </Button>
+                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setOpenFolder(null)}>
+                              <XCircle className="h-3.5 w-3.5 text-muted-foreground" />
+                            </Button>
+                          </div>
+                        </div>
+                        {folderAccs.length === 0 ? (
+                          <p className="text-xs text-muted-foreground text-center py-4 italic">Ordner ist leer – ziehe Accounts hierher</p>
+                        ) : (
+                          <div className="space-y-2">{folderAccs.map(renderAccountCard)}</div>
+                        )}
                       </div>
-                    )}
-                    {manualPlatformAccounts.length === 0 && (
-                      <div className="glass-card-subtle rounded-xl p-6 text-center">
-                        <Package className="h-5 w-5 text-muted-foreground mx-auto mb-2 opacity-40" />
-                        <p className="text-xs text-muted-foreground">Noch keine Accounts für {selectedManualPlatform}</p>
-                      </div>
-                    )}
-                  </div>
+                    );
+                  })()}
 
-                  {/* Add account */}
+                  {/* Ungrouped accounts */}
+                  {!openFolder && (
+                    <div
+                      className={`space-y-2 rounded-xl p-2 -mx-2 transition-colors ${dragOverFolder === "__ungrouped__" ? "bg-accent/5 ring-1 ring-accent/20" : ""}`}
+                      onDragOver={(e) => handleDragOver(e, "__ungrouped__")}
+                      onDragLeave={() => setDragOverFolder(null)}
+                      onDrop={(e) => { e.preventDefault(); setDragOverFolder(null); const accId = e.dataTransfer.getData("text/account-id"); if (!accId) return; supabase.from("accounts").update({ folder_name: null } as any).eq("id", accId).then(() => { toast.success("Aus Ordner entfernt"); loadAccounts(); }); }}
+                    >
+                      <div className="flex items-center gap-2 px-2">
+                        <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Accounts</p>
+                        {namedFolders.length > 0 && <span className="text-[9px] text-muted-foreground italic">– ohne Ordner</span>}
+                      </div>
+                      {ungrouped.length === 0 && manualPlatformAccounts.length === 0 ? (
+                        <div className="glass-card-subtle rounded-xl p-6 text-center">
+                          <Package className="h-5 w-5 text-muted-foreground mx-auto mb-2 opacity-40" />
+                          <p className="text-xs text-muted-foreground">Noch keine Accounts</p>
+                        </div>
+                      ) : ungrouped.length === 0 ? (
+                        <p className="text-[11px] text-muted-foreground text-center py-3 italic">Alle Accounts in Ordnern sortiert</p>
+                      ) : (
+                        <div className="space-y-2">{ungrouped.map(renderAccountCard)}</div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Add account form */}
                   <div className="glass-card-subtle rounded-xl p-3 space-y-2">
                     <p className="text-xs font-semibold text-foreground flex items-center gap-2">
-                      <Plus className="h-3.5 w-3.5 text-accent" />
-                      Neuen Account hinzufügen
+                      <Plus className="h-3.5 w-3.5 text-accent" /> Neuen Account hinzufügen
                     </p>
                     <Input value={manualAccEmail} onChange={(e) => setManualAccEmail(e.target.value)} placeholder="E-Mail / Username" className="text-xs" />
                     <Input value={manualAccPassword} onChange={(e) => setManualAccPassword(e.target.value)} placeholder="Passwort" className="text-xs" />
                     <Input value={manualAccDriveFolder} onChange={(e) => setManualAccDriveFolder(e.target.value)} placeholder="Google Drive Link / Folder ID (optional)" className="text-xs" />
-                    {/* Folder selector */}
-                    {(() => {
-                      const existingFolders = namedFolders;
-                      return (
-                        <div className="space-y-1">
-                          <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Ordner (optional)</label>
-                          <div className="flex flex-wrap gap-1.5">
-                            <button
-                              onClick={() => setManualAccFolder("")}
-                              className={`text-[10px] px-2 py-1 rounded-md border transition-colors ${!manualAccFolder ? "bg-accent/15 text-accent border-accent/30" : "bg-secondary/30 text-muted-foreground border-border/50 hover:border-accent/30"}`}
-                            >
-                              Kein Ordner
-                            </button>
-                            {existingFolders.map((f) => (
-                              <button
-                                key={f}
-                                onClick={() => setManualAccFolder(f)}
-                                className={`text-[10px] px-2 py-1 rounded-md border transition-colors ${manualAccFolder === f ? "bg-accent/15 text-accent border-accent/30" : "bg-secondary/30 text-muted-foreground border-border/50 hover:border-accent/30"}`}
-                              >
-                                📁 {f}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })()}
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Ordner</label>
+                      <div className="flex flex-wrap gap-1.5">
+                        <button onClick={() => setManualAccFolder("")}
+                          className={`text-[10px] px-2 py-1 rounded-md border transition-colors ${!manualAccFolder ? "bg-accent/15 text-accent border-accent/30" : "bg-secondary/30 text-muted-foreground border-border/50 hover:border-accent/30"}`}>
+                          Kein Ordner
+                        </button>
+                        {namedFolders.map((f) => (
+                          <button key={f} onClick={() => setManualAccFolder(f)}
+                            className={`text-[10px] px-2 py-1 rounded-md border transition-colors ${manualAccFolder === f ? "bg-accent/15 text-accent border-accent/30" : "bg-secondary/30 text-muted-foreground border-border/50 hover:border-accent/30"}`}>
+                            📁 {f}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                     <Button
                       onClick={async () => {
                         if (!manualAccEmail.trim() || !selectedManualPlatform) return;
                         setAddingManual(true);
-                        const { error } = await supabase.from("accounts").insert({
-                          platform: selectedManualPlatform,
-                          account_email: manualAccEmail.trim(),
-                          account_password: manualAccPassword.trim(),
-                          account_domain: manualAccDomain.trim(),
-                          drive_folder_id: extractDriveFolderId(manualAccDriveFolder.trim()),
-                          is_manual: true,
-                          folder_name: manualAccFolder.trim() || null,
-                        } as any);
-                        if (error) {
-                          toast.error("Fehler beim Hinzufügen");
-                        } else {
-                          toast.success("Account hinzugefügt!");
-                          setManualAccEmail("");
-                          setManualAccPassword("");
-                          setManualAccDriveFolder("");
-                          loadAccounts();
-                          loadChatters();
-                        }
+                        const { error } = await supabase.from("accounts").insert({ platform: selectedManualPlatform, account_email: manualAccEmail.trim(), account_password: manualAccPassword.trim(), account_domain: manualAccDomain.trim(), drive_folder_id: extractDriveFolderId(manualAccDriveFolder.trim()), is_manual: true, folder_name: manualAccFolder.trim() || null } as any);
+                        if (error) { toast.error("Fehler"); } else { toast.success("Hinzugefügt!"); setManualAccEmail(""); setManualAccPassword(""); setManualAccDriveFolder(""); loadAccounts(); loadChatters(); }
                         setAddingManual(false);
                       }}
-                      disabled={addingManual || !manualAccEmail.trim()}
-                      className="w-full"
-                      size="sm"
-                    >
+                      disabled={addingManual || !manualAccEmail.trim()} className="w-full" size="sm">
                       <Plus className="h-4 w-4 mr-2" />
-                      {addingManual ? "Wird hinzugefügt..." : `Account hinzufügen${manualAccFolder ? ` → ${manualAccFolder}` : ""}`}
+                      {addingManual ? "Wird hinzugefügt..." : `Hinzufügen${manualAccFolder ? ` → ${manualAccFolder}` : ""}`}
                     </Button>
                   </div>
                 </>
