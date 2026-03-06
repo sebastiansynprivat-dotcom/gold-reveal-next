@@ -177,6 +177,7 @@ export default function AdminDashboard() {
   const [goalSaving, setGoalSaving] = useState(false);
   const [expandedChatter, setExpandedChatter] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"einnahmen" | "chatter" | "anfragen" | "botdms" | "notifications" | "kiprompt">("einnahmen");
+  const activeTabRef = useRef(activeTab);
   const [modelRequests, setModelRequests] = useState<any[]>([]);
   const [modelRequestsLoaded, setModelRequestsLoaded] = useState(false);
   const [requestFilter, setRequestFilter] = useState<"all" | "pending" | "accepted" | "in_progress" | "rejected">("all");
