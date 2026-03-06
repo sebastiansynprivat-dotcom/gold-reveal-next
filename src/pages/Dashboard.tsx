@@ -33,7 +33,49 @@ const GOLD_THRESHOLD = 3000;
 const STARTER_RATE = 0.2;
 const GOLD_RATE = 0.25;
 
-export default function Dashboard() {
+// Animated counter hook
+function useAnimatedCounter(target: number, duration = 1200) {
+  const [value, setValue] = useState(0);
+  const prevTarget = useRef(0);
+  useEffect(() => {
+    const start = prevTarget.current;
+    prevTarget.current = target;
+    if (start === target) { setValue(target); return; }
+    const startTime = performance.now();
+    let raf: number;
+    const animate = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+      setValue(Math.round(start + (target - start) * eased));
+      if (progress < 1) raf = requestAnimationFrame(animate);
+    };
+    raf = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(raf);
+  }, [target, duration]);
+  return value;
+}
+
+// Stagger container/item variants
+const staggerContainer = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.08 } },
+};
+const staggerItem = {
+  hidden: { opacity: 0, y: 16 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] } },
+};
+
+function AnimatedValue({ value, suffix = "€", className }: { value: number; suffix?: string; className?: string }) {
+  const animated = useAnimatedCounter(value);
+  return <span className={className}>{animated.toLocaleString("de-DE")}{suffix}</span>;
+}
+
+function AnimatedDecimalValue({ value, suffix = "€", className }: { value: number; suffix?: string; className?: string }) {
+  const animated = useAnimatedCounter(Math.round(value * 100));
+  const display = (animated / 100).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return <span className={className}>{display}{suffix}</span>;
+}
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const platform = searchParams.get("platform") || "Brezzels";
