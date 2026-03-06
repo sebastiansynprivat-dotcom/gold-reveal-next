@@ -2501,9 +2501,19 @@ export default function AdminDashboard() {
                             <Copy className="h-3 w-3 inline-block ml-1.5 opacity-0 group-hover:opacity-40 transition-opacity" />
                           </button>
 
-                          {/* Admin Kommentar */}
+                          {/* Saved Admin Comment (read-only display) */}
+                          {req.admin_comment && req._localComment === undefined && (
+                            <div className="glass-card-subtle rounded-lg px-3 py-2.5 space-y-1">
+                              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Letzter Kommentar</p>
+                              <p className="text-xs text-foreground leading-relaxed">{req.admin_comment}</p>
+                            </div>
+                          )}
+
+                          {/* Admin Kommentar – edit */}
                           <div className="space-y-1.5">
-                            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Kommentar</p>
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                              {req.admin_comment ? "Kommentar bearbeiten" : "Kommentar"}
+                            </p>
                             <Textarea
                               placeholder="Kommentar für den Chatter..."
                               value={req._localComment ?? req.admin_comment ?? ""}
@@ -2525,6 +2535,41 @@ export default function AdminDashboard() {
                               </Button>
                             )}
                           </div>
+
+                          {/* Content Link – only for accepted requests */}
+                          {(req.status === "accepted" || req.status === "in_progress") && (
+                            <div className="space-y-1.5">
+                              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Content-Link</p>
+                              <div className="flex gap-2">
+                                <Input
+                                  placeholder="Link zum fertigen Content einfügen..."
+                                  value={req._localContentLink ?? (req as any).content_link ?? ""}
+                                  onChange={(e) => {
+                                    setModelRequests(prev => prev.map(r => r.id === req.id ? { ...r, _localContentLink: e.target.value } : r));
+                                  }}
+                                  className="text-xs bg-secondary/30 border-border/30 focus:border-accent/40 flex-1"
+                                />
+                                {(req as any).content_link && (
+                                  <Button size="sm" variant="outline" className="h-9 px-2" asChild>
+                                    <a href={(req as any).content_link} target="_blank" rel="noopener noreferrer">
+                                      <ExternalLink className="h-3.5 w-3.5" />
+                                    </a>
+                                  </Button>
+                                )}
+                              </div>
+                              {(req._localContentLink != null && req._localContentLink !== ((req as any).content_link ?? "")) && (
+                                <Button size="sm" variant="outline" className="h-7 text-xs" onClick={async () => {
+                                  const link = req._localContentLink ?? "";
+                                  const { error } = await supabase.from("model_requests").update({ content_link: link || null } as any).eq("id", req.id);
+                                  if (error) { toast.error("Fehler beim Speichern"); return; }
+                                  toast.success("Content-Link gespeichert!");
+                                  setModelRequests(prev => prev.map(r => r.id === req.id ? { ...r, content_link: link || null, _localContentLink: undefined } : r));
+                                }}>
+                                  <Save className="h-3 w-3 mr-1" /> Link speichern
+                                </Button>
+                              )}
+                            </div>
+                          )}
 
                           {/* Action Buttons */}
                           <div className="flex flex-col gap-2 pt-1">
