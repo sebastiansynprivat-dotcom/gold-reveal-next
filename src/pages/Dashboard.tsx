@@ -621,11 +621,13 @@ export default function Dashboard() {
             }
             </div>
           }
-        </section>
 
-        {/* Anfrage an das Model */}
-        <section className="glass-card rounded-xl p-4 lg:p-6">
-          <ModelRequestDialog />
+          {/* Anfrage an das Model – immer sichtbar */}
+          <div className="px-4 pb-4 lg:px-6 lg:pb-6 border-t border-border/30">
+            <div className="pt-3">
+              <ModelRequestDialog />
+            </div>
+          </div>
         </section>
 
         {/* MassDM Generator */}
