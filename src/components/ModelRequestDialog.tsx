@@ -188,6 +188,7 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear }: ModelRequest
           <div className="space-y-1.5">
             <Label className="text-xs text-foreground">Beschreibung der Anfrage *</Label>
             <Textarea
+              ref={descriptionRef}
               placeholder="Beschreibe hier die Anfrage an das Model..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
