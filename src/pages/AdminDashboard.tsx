@@ -181,6 +181,7 @@ export default function AdminDashboard() {
   const [modelRequests, setModelRequests] = useState<any[]>([]);
   const [modelRequestsLoaded, setModelRequestsLoaded] = useState(false);
   const [requestFilter, setRequestFilter] = useState<"all" | "pending" | "accepted" | "in_progress" | "rejected">("all");
+  const [contentLinkFilter, setContentLinkFilter] = useState<"all" | "with_link" | "without_link">("all");
   const [notifTitle, setNotifTitle] = useState("");
   const [notifBody, setNotifBody] = useState("");
   const [notifSending, setNotifSending] = useState(false);
@@ -2396,7 +2397,7 @@ export default function AdminDashboard() {
                 return (
                   <button
                     key={key}
-                    onClick={() => setRequestFilter(requestFilter === key ? "all" : key)}
+                    onClick={() => { setRequestFilter(requestFilter === key ? "all" : key); setContentLinkFilter("all"); }}
                     className={cn(
                       "glass-card-subtle rounded-xl p-4 flex flex-col items-center justify-center transition-all",
                       isActive && "ring-2 ring-accent shadow-[0_0_12px_-3px_hsl(var(--accent)/0.3)]"
@@ -2419,13 +2420,42 @@ export default function AdminDashboard() {
                   <p className="text-[10px] text-muted-foreground">{modelRequests.length} Anfrage{modelRequests.length !== 1 ? "n" : ""} insgesamt</p>
                 </div>
                 {requestFilter !== "all" && (
-                  <button onClick={() => setRequestFilter("all")} className="text-[10px] text-accent hover:text-accent/80 transition-colors font-medium">
+                  <button onClick={() => { setRequestFilter("all"); setContentLinkFilter("all"); }} className="text-[10px] text-accent hover:text-accent/80 transition-colors font-medium">
                     Alle anzeigen
                   </button>
                 )}
               </div>
 
-              {modelRequests.filter(r => requestFilter === "all" || r.status === requestFilter).length === 0 ? (
+              {requestFilter === "accepted" && (
+                <div className="px-5 py-2 border-b border-border/50 flex items-center gap-2">
+                  <span className="text-[10px] text-muted-foreground mr-1">Content-Link:</span>
+                  {([
+                    { key: "all" as const, label: "Alle" },
+                    { key: "with_link" as const, label: "Mit Link" },
+                    { key: "without_link" as const, label: "Ohne Link" },
+                  ]).map(({ key, label }) => (
+                    <button
+                      key={key}
+                      onClick={() => setContentLinkFilter(key)}
+                      className={cn(
+                        "text-[10px] px-2.5 py-1 rounded-full transition-all font-medium",
+                        contentLinkFilter === key
+                          ? "bg-accent/20 text-accent ring-1 ring-accent/30"
+                          : "bg-secondary/50 text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {modelRequests.filter(r => {
+                if (requestFilter !== "all" && r.status !== requestFilter) return false;
+                if (requestFilter === "accepted" && contentLinkFilter === "with_link" && !r.content_link) return false;
+                if (requestFilter === "accepted" && contentLinkFilter === "without_link" && r.content_link) return false;
+                return true;
+              }).length === 0 ? (
                 <div className="p-12 text-center">
                   <div className="h-12 w-12 rounded-full bg-secondary/50 flex items-center justify-center mx-auto mb-3">
                     <Send className="h-5 w-5 text-muted-foreground" />
@@ -2434,7 +2464,12 @@ export default function AdminDashboard() {
                 </div>
               ) : (
                 <div className="p-3 space-y-2">
-                  {modelRequests.filter(r => requestFilter === "all" || r.status === requestFilter).map((req) => {
+                  {modelRequests.filter(r => {
+                    if (requestFilter !== "all" && r.status !== requestFilter) return false;
+                    if (requestFilter === "accepted" && contentLinkFilter === "with_link" && !r.content_link) return false;
+                    if (requestFilter === "accepted" && contentLinkFilter === "without_link" && r.content_link) return false;
+                    return true;
+                  }).map((req) => {
                     const chatter = chatters.find(c => c.user_id === req.user_id);
                     const chatterName = chatter?.group_name || req.user_id.slice(0, 8);
                     const statusConfig = {
