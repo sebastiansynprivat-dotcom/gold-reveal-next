@@ -624,7 +624,7 @@ export default function Dashboard() {
 
           {/* Anfrage an das Model – immer sichtbar */}
           <div className="px-4 pb-4 lg:px-6 lg:pb-6 border-t border-border/30">
-            <div className="pt-3 flex justify-center">
+            <div className="pt-3 flex items-center justify-center">
               <ModelRequestDialog />
             </div>
           </div>
