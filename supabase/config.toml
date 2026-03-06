@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.share-drive]
 verify_jwt = false
+
+[functions.unshare-drive]
+verify_jwt = false

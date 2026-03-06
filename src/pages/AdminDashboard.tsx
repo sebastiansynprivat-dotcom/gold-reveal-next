@@ -29,6 +29,39 @@ const extractDriveFolderId = (input: string): string => {
   return match ? match[1] : input;
 };
 
+// Revoke Drive access for accounts being unassigned
+const revokeDriveAccess = async (accountIds: string[], userId: string) => {
+  try {
+    const { data: session } = await supabase.auth.getSession();
+    if (!session?.session?.access_token) return;
+
+    // Get accounts with drive_folder_id
+    const { data: accs } = await supabase
+      .from("accounts")
+      .select("id, drive_folder_id")
+      .in("id", accountIds);
+
+    const withDrive = accs?.filter(a => a.drive_folder_id) || [];
+    if (withDrive.length === 0) return;
+
+    // Get user's email
+    const { data: userData } = await supabase.auth.admin?.getUserById?.(userId) || {};
+    // Fallback: get email from profiles or auth via edge function
+    // We'll call the unshare-drive function which handles it server-side
+    for (const acc of withDrive) {
+      try {
+        await supabase.functions.invoke("unshare-drive", {
+          body: { folder_id: acc.drive_folder_id, user_id: userId },
+        });
+      } catch (e) {
+        console.error("Drive unshare failed:", e);
+      }
+    }
+  } catch (e) {
+    console.error("revokeDriveAccess error:", e);
+  }
+};
+
 // Platform colors – premium aesthetic matching gold/dark theme
 const PLATFORM_COLORS = {
   maloum: "#d4af37",    // gold
@@ -102,6 +135,7 @@ interface AccountEntry {
   assigned_at: string | null;
   created_at: string;
   is_manual?: boolean;
+  drive_folder_id?: string | null;
 }
 
 function AnimatedNumber({ value, className, suffix = "€" }: { value: number; className?: string; suffix?: string }) {
@@ -863,10 +897,13 @@ export default function AdminDashboard() {
     if (!selectedPlatform) return;
     setDeletingPool(true);
     try {
-      // Unassign all accounts for this platform from profiles
+      // Revoke Drive access & unassign all accounts for this platform from profiles
       const platformAccs = accounts.filter((a) => a.platform === selectedPlatform);
       for (const acc of platformAccs) {
         if (acc.assigned_to) {
+          if (acc.drive_folder_id) {
+            await revokeDriveAccess([acc.id], acc.assigned_to);
+          }
           await supabase
             .from("profiles")
             .update({ account_email: null, account_password: null, account_domain: null })
@@ -969,6 +1006,18 @@ export default function AdminDashboard() {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
+      // Revoke Drive access for assigned accounts
+      const { data: userAccounts } = await supabase
+        .from("accounts")
+        .select("id, drive_folder_id")
+        .eq("assigned_to", deleteTarget.user_id);
+      if (userAccounts?.some(a => a.drive_folder_id)) {
+        await revokeDriveAccess(
+          userAccounts.filter(a => a.drive_folder_id).map(a => a.id),
+          deleteTarget.user_id
+        );
+      }
+
       // Unassign any accounts assigned to this user
       await supabase
         .from("accounts")
@@ -1014,12 +1063,25 @@ export default function AdminDashboard() {
     setReassigning(true);
     try {
       if (accountId) {
+        // Revoke Drive access for specific account
+        await revokeDriveAccess([accountId], reassignTarget.user_id);
         // Remove specific account
         await supabase
           .from("accounts")
           .update({ assigned_to: null, assigned_at: null })
           .eq("id", accountId);
       } else {
+        // Revoke Drive for all accounts
+        const { data: userAccs } = await supabase
+          .from("accounts")
+          .select("id, drive_folder_id")
+          .eq("assigned_to", reassignTarget.user_id);
+        if (userAccs?.some(a => a.drive_folder_id)) {
+          await revokeDriveAccess(
+            userAccs.filter(a => a.drive_folder_id).map(a => a.id),
+            reassignTarget.user_id
+          );
+        }
         // Remove all accounts (legacy)
         await supabase
           .from("accounts")
@@ -3696,6 +3758,9 @@ export default function AdminDashboard() {
                         className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive shrink-0"
                         title="Account freigeben"
                         onClick={async () => {
+                          if (acc.drive_folder_id && acc.assigned_to) {
+                            await revokeDriveAccess([acc.id], acc.assigned_to);
+                          }
                           await supabase.from("accounts").update({ assigned_to: null, assigned_at: null }).eq("id", acc.id);
                           toast.success("Account freigegeben");
                           loadAccounts();
@@ -4071,6 +4136,7 @@ export default function AdminDashboard() {
                               className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive shrink-0"
                               title="Account freigeben"
                               onClick={async () => {
+                                await revokeDriveAccess([acc.id], acc.assigned_to!);
                                 await supabase.from("accounts").update({ assigned_to: null, assigned_at: null }).eq("id", acc.id);
                                 toast.success("Account freigegeben");
                                 loadAccounts();
