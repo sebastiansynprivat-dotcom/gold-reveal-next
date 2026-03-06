@@ -716,7 +716,7 @@ export default function Dashboard() {
                         <div className="flex items-center justify-between gap-2">
                           <span className="text-xs font-medium text-foreground">{req.model_name}</span>
                           <Badge variant={req.status === "accepted" ? "default" : req.status === "rejected" ? "destructive" : "secondary"} className="text-[10px]">
-                            {req.status === "pending" ? "⏳ Ausstehend" : req.status === "accepted" ? "✅ Angenommen" : "❌ Abgelehnt"}
+                            {req.status === "pending" ? "⏳ Ausstehend" : req.status === "accepted" ? "✅ Angenommen" : "⏳ Wird bearbeitet"}
                           </Badge>
                         </div>
                         <p className="text-[10px] text-muted-foreground line-clamp-2">{req.description}</p>
