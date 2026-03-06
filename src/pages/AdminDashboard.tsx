@@ -177,6 +177,7 @@ export default function AdminDashboard() {
   const [goalSaving, setGoalSaving] = useState(false);
   const [expandedChatter, setExpandedChatter] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<"einnahmen" | "chatter" | "anfragen" | "botdms" | "notifications" | "kiprompt">("einnahmen");
+  const activeTabRef = useRef(activeTab);
   const [modelRequests, setModelRequests] = useState<any[]>([]);
   const [modelRequestsLoaded, setModelRequestsLoaded] = useState(false);
   const [requestFilter, setRequestFilter] = useState<"all" | "pending" | "accepted" | "in_progress" | "rejected">("all");
@@ -271,6 +272,10 @@ export default function AdminDashboard() {
     localStorage.removeItem("admin_checked_chatters");
     toast.success("Alle Häkchen zurückgesetzt!");
   }, []);
+
+  // Keep activeTabRef in sync
+  useEffect(() => { activeTabRef.current = activeTab; }, [activeTab]);
+
   const allRevenueData = useMemo(() => generateFakeRevenueData(), []);
 
   const filteredRevenueData = useMemo(() => {
@@ -351,7 +356,9 @@ export default function AdminDashboard() {
           const diff = amount - oldAmount;
           if (diff > 0) {
             setRevenueBoost(prev => prev + diff);
-            toast.success(`+${diff}€ Umsatz eingegangen!`, { duration: 3000 });
+            if (activeTabRef.current === 'einnahmen') {
+              toast.success(`+${diff}€ Umsatz eingegangen!`, { duration: 3000 });
+            }
           }
           loadRevenueUsers();
         }
@@ -360,9 +367,11 @@ export default function AdminDashboard() {
 
     // Demo: every 5s add random 5-100€
     const demoInterval = setInterval(() => {
-      const randomAmount = Math.floor(Math.random() * 96) + 5; // 5-100
+      const randomAmount = Math.floor(Math.random() * 96) + 5;
       setRevenueBoost(prev => prev + randomAmount);
-      toast.success(`+${randomAmount}€ Umsatz eingegangen!`, { duration: 2000 });
+      if (activeTabRef.current === 'einnahmen') {
+        toast.success(`+${randomAmount}€ Umsatz eingegangen!`, { duration: 2000 });
+      }
     }, 5000);
 
     return () => {
