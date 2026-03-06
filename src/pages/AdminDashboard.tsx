@@ -2504,11 +2504,12 @@ export default function AdminDashboard() {
                             </button>
                           )}
 
-                          {/* Description */}
+                          {/* Description with Header */}
                           <button
                             onClick={() => { navigator.clipboard.writeText(req.description); toast.success("Beschreibung kopiert!"); }}
                             className="glass-card-subtle rounded-lg px-3 py-2.5 text-sm text-foreground/90 leading-relaxed hover:bg-accent/5 transition-colors text-left w-full group"
                           >
+                            <p className="text-xs text-muted-foreground italic mb-1.5">Hey, eine neue Anfrage des Chatters an dich – ich leite sie dir einmal eins zu eins weiter 🙋🏼‍♂️:</p>
                             {req.description}
                             <Copy className="h-3 w-3 inline-block ml-1.5 opacity-0 group-hover:opacity-40 transition-opacity" />
                           </button>
