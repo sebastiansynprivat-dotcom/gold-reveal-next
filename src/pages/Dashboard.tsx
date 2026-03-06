@@ -693,6 +693,24 @@ export default function Dashboard() {
                 </button>
                 {requestsOpen && (
                   <div className="px-4 pb-4 lg:px-6 lg:pb-6 space-y-2">
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <button className="flex items-center gap-2 text-[11px] text-accent hover:underline mb-1 cursor-pointer">
+                          <HelpCircle className="h-3.5 w-3.5" />
+                          Wie lange dauert es, bis eine Anfrage bearbeitet wird?
+                        </button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-sm bg-background border-border">
+                        <DialogHeader>
+                          <DialogTitle className="text-foreground text-sm">⏳ Bearbeitungsdauer</DialogTitle>
+                          <DialogDescription className="text-muted-foreground text-xs leading-relaxed pt-2">
+                            In der Regel werden Anfragen innerhalb von <strong className="text-foreground">24 bis 48 Stunden</strong> bearbeitet.
+                            <br /><br />
+                            In Sonderfällen – zum Beispiel wenn das Model gesundheitlich angeschlagen ist – kann es auch länger dauern.
+                          </DialogDescription>
+                        </DialogHeader>
+                      </DialogContent>
+                    </Dialog>
                     {myRequests.map((req) => (
                       <div key={req.id} className="rounded-lg border border-border/50 bg-secondary/20 p-3 space-y-1.5">
                         <div className="flex items-center justify-between gap-2">
