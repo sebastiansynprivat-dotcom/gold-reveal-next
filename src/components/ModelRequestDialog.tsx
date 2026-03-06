@@ -154,9 +154,33 @@ const ModelRequestDialog = () => {
             />
           </div>
 
-          <Button onClick={handleSubmit} disabled={loading} className="w-full">
+          <Button onClick={async () => { await handleSubmit(); loadMyRequests(); }} disabled={loading} className="w-full">
             {loading ? "Wird gesendet..." : "Anfrage absenden"}
           </Button>
+
+          {/* Meine bisherigen Anfragen */}
+          {myRequests.length > 0 && (
+            <div className="space-y-2 pt-2 border-t border-border/30">
+              <p className="text-xs font-semibold text-foreground">Deine bisherigen Anfragen</p>
+              {myRequests.map((req) => (
+                <div key={req.id} className="rounded-lg border border-border/50 bg-secondary/20 p-3 space-y-1.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-xs font-medium text-foreground">{req.model_name}</span>
+                    <Badge variant={req.status === "accepted" ? "default" : req.status === "rejected" ? "destructive" : "secondary"} className="text-[10px]">
+                      {req.status === "pending" ? "⏳ Ausstehend" : req.status === "accepted" ? "✅ Angenommen" : "❌ Abgelehnt"}
+                    </Badge>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground line-clamp-2">{req.description}</p>
+                  {req.admin_comment && (
+                    <div className="flex items-start gap-1.5 rounded-md bg-accent/10 border border-accent/20 px-2.5 py-2 mt-1">
+                      <MessageSquare className="h-3 w-3 text-accent shrink-0 mt-0.5" />
+                      <p className="text-[11px] text-foreground leading-relaxed">{req.admin_comment}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>
