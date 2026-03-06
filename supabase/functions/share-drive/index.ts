@@ -64,7 +64,10 @@ async function getAccessToken(): Promise<string> {
     .replace("-----END PRIVATE KEY-----", "")
     .replace(/\s/g, "");
 
-  const binaryKey = Uint8Array.from(atob(pemContents), (c) => c.charCodeAt(0));
+  // Decode base64 PEM - handle both standard and URL-safe base64
+  const standardB64 = pemContents.replace(/-/g, "+").replace(/_/g, "/");
+  const rawBinary = atob(standardB64);
+  const binaryKey = Uint8Array.from(rawBinary, (c) => c.charCodeAt(0));
 
   const cryptoKey = await crypto.subtle.importKey(
     "pkcs8",
@@ -80,10 +83,7 @@ async function getAccessToken(): Promise<string> {
     new TextEncoder().encode(unsignedToken)
   );
 
-  const signatureB64 = btoa(String.fromCharCode(...new Uint8Array(signature)))
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
+  const signatureB64 = toBase64Url(new Uint8Array(signature));
 
   const jwt = `${unsignedToken}.${signatureB64}`;
 
