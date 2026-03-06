@@ -217,6 +217,7 @@ export default function AdminDashboard() {
   const [creatingFolder, setCreatingFolder] = useState(false);
   const [dragOverFolder, setDragOverFolder] = useState<string | null>(null);
   const [openFolder, setOpenFolder] = useState<string | null>(null);
+  const [customFolders, setCustomFolders] = useState<Record<string, string[]>>({});
   const [addingManual, setAddingManual] = useState(false);
   const [deleteManualPoolConfirm, setDeleteManualPoolConfirm] = useState(false);
   const [deletingManualPool, setDeletingManualPool] = useState(false);
@@ -4158,7 +4159,9 @@ export default function AdminDashboard() {
               const manualPlatformAccounts = accounts.filter(a => a.is_manual && a.platform === selectedManualPlatform);
               const mFree = manualPlatformAccounts.filter(a => !a.assigned_to).length;
               const mAssigned = manualPlatformAccounts.filter(a => a.assigned_to).length;
-              const namedFolders = [...new Set(manualPlatformAccounts.map(a => a.folder_name).filter(Boolean))] as string[];
+              const dbFolders = [...new Set(manualPlatformAccounts.map(a => a.folder_name).filter(Boolean))] as string[];
+              const platformCustom = customFolders[selectedManualPlatform || ""] || [];
+              const namedFolders = [...new Set([...dbFolders, ...platformCustom])];
               const ungrouped = manualPlatformAccounts.filter(a => !a.folder_name);
 
               const copyToClipboard = (text: string, label: string) => {
@@ -4248,8 +4251,8 @@ export default function AdminDashboard() {
                       {creatingFolder ? (
                         <div className="flex items-center gap-1.5">
                           <Input value={newFolderName} onChange={(e) => setNewFolderName(e.target.value)} placeholder="Name..." className="text-xs h-7 w-32" autoFocus
-                            onKeyDown={(e) => { if (e.key === "Enter" && newFolderName.trim()) { setManualAccFolder(newFolderName.trim()); setCreatingFolder(false); setNewFolderName(""); toast.success(`Ordner "${newFolderName.trim()}" erstellt`); } }} />
-                          <Button size="sm" className="h-7 w-7 p-0" disabled={!newFolderName.trim()} onClick={() => { setManualAccFolder(newFolderName.trim()); setCreatingFolder(false); setNewFolderName(""); toast.success(`Ordner erstellt`); }}>
+                            onKeyDown={(e) => { if (e.key === "Enter" && newFolderName.trim()) { const name = newFolderName.trim(); const platform = selectedManualPlatform || ""; setCustomFolders(prev => ({ ...prev, [platform]: [...(prev[platform] || []), name] })); setManualAccFolder(name); setCreatingFolder(false); setNewFolderName(""); toast.success(`Ordner "${name}" erstellt`); } }} />
+                          <Button size="sm" className="h-7 w-7 p-0" disabled={!newFolderName.trim()} onClick={() => { const name = newFolderName.trim(); const platform = selectedManualPlatform || ""; setCustomFolders(prev => ({ ...prev, [platform]: [...(prev[platform] || []), name] })); setManualAccFolder(name); setCreatingFolder(false); setNewFolderName(""); toast.success(`Ordner "${name}" erstellt`); }}>
                             <Check className="h-3 w-3" />
                           </Button>
                           <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => { setCreatingFolder(false); setNewFolderName(""); }}>
@@ -4306,6 +4309,8 @@ export default function AdminDashboard() {
                             <Button variant="ghost" size="sm" className="h-7 text-[10px] text-destructive/70 hover:text-destructive"
                               onClick={async () => {
                                 for (const acc of folderAccs) { await supabase.from("accounts").update({ folder_name: null } as any).eq("id", acc.id); }
+                                const platform = selectedManualPlatform || "";
+                                setCustomFolders(prev => ({ ...prev, [platform]: (prev[platform] || []).filter(f => f !== openFolder) }));
                                 toast.success(`Ordner "${openFolder}" aufgelöst`); setOpenFolder(null); loadAccounts();
                               }}>
                               <Trash2 className="h-3 w-3 mr-1" /> Auflösen
