@@ -149,31 +149,43 @@
   .gold-gradient-border-animated {
     position: relative;
     background: hsl(0 0% 6% / 0.8);
-    border: 1px solid hsl(43 30% 25% / 0.4) !important;
+    border: 1px solid transparent !important;
   }
   .gold-gradient-border-animated::before {
     content: "";
     position: absolute;
-    inset: 0;
+    inset: -1px;
     border-radius: inherit;
-    padding: 1px;
-    background: linear-gradient(
-      135deg,
-      hsl(43 56% 52% / 0.25),
-      hsl(43 76% 46% / 0.1),
-      hsl(43 56% 52% / 0.25)
+    background: conic-gradient(
+      from var(--border-angle, 0deg),
+      hsl(43 56% 52% / 0.03) 0%,
+      hsl(43 56% 52% / 0.25) 12%,
+      hsl(43 76% 46% / 0.4) 20%,
+      hsl(43 56% 52% / 0.25) 28%,
+      hsl(43 56% 52% / 0.03) 40%,
+      hsl(43 30% 20% / 0.15) 50%,
+      hsl(43 56% 52% / 0.03) 60%,
+      hsl(43 56% 52% / 0.25) 72%,
+      hsl(43 76% 46% / 0.4) 80%,
+      hsl(43 56% 52% / 0.25) 88%,
+      hsl(43 56% 52% / 0.03) 100%
     );
-    background-size: 200% 200%;
-    animation: gradient-rotate 6s ease infinite;
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
+    padding: 1px;
+    animation: border-spin 6s linear infinite;
     pointer-events: none;
   }
 
-  @keyframes gradient-rotate {
-    0%, 100% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
+  @property --border-angle {
+    syntax: "<angle>";
+    initial-value: 0deg;
+    inherits: false;
+  }
+
+  @keyframes border-spin {
+    to { --border-angle: 360deg; }
   }
 
   .pulse-glow {
