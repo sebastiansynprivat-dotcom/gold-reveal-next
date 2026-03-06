@@ -696,8 +696,11 @@ export default function Dashboard() {
                                 <button
                                   className="flex items-center gap-2 w-full rounded-lg border border-accent/30 bg-accent/5 px-3 py-2.5 text-xs font-medium text-accent hover:bg-accent/10 hover:border-accent/50 hover:shadow-[0_0_12px_hsl(43_56%_52%_/_0.15)] transition-all cursor-pointer"
                                 >
-                                  📂 Google Drive öffnen
-                                  <ExternalLink className="h-3 w-3 ml-auto opacity-70" />
+                                  <span className="flex flex-col items-start gap-0.5">
+                                    <span>📂 Google Drive öffnen</span>
+                                    <span className="text-[10px] font-normal text-muted-foreground">Wozu brauche ich den Google Drive?</span>
+                                  </span>
+                                  <ExternalLink className="h-3 w-3 ml-auto opacity-70 shrink-0" />
                                 </button>
                               </DialogTrigger>
                               <DialogContent className="glass-card border-border sm:max-w-md max-h-[85vh] overflow-y-auto">
