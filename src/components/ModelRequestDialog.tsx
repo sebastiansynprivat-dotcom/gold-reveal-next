@@ -16,6 +16,7 @@ export interface EditRequestData {
   request_type: "individual" | "general";
   price: number | null;
   description: string;
+  customer_name?: string | null;
 }
 
 interface ModelRequestDialogProps {
@@ -28,6 +29,7 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear }: ModelRequest
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [modelName, setModelName] = useState("");
+  const [customerName, setCustomerName] = useState("");
   const [requestType, setRequestType] = useState<"individual" | "general">("general");
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
@@ -38,6 +40,7 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear }: ModelRequest
   useEffect(() => {
     if (editData) {
       setModelName(editData.model_name);
+      setCustomerName(editData.customer_name ?? "");
       setRequestType(editData.request_type);
       setPrice(editData.price != null ? String(editData.price) : "");
       setDescription(editData.description);
@@ -55,6 +58,7 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear }: ModelRequest
 
   const resetForm = () => {
     setModelName("");
+    setCustomerName("");
     setRequestType("general");
     setPrice("");
     setDescription("");
@@ -88,9 +92,10 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear }: ModelRequest
         request_type: requestType,
         price: requestType === "individual" ? parseFloat(price) : null,
         description: description.trim(),
+        customer_name: requestType === "individual" ? customerName.trim() || null : null,
         status: "pending",
         admin_comment: null,
-      }).eq("id", editData.id);
+      } as any).eq("id", editData.id);
       setLoading(false);
       if (error) {
         toast.error("Fehler beim Aktualisieren der Anfrage.");
@@ -105,7 +110,8 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear }: ModelRequest
         request_type: requestType,
         price: requestType === "individual" ? parseFloat(price) : null,
         description: description.trim(),
-      });
+        customer_name: requestType === "individual" ? customerName.trim() || null : null,
+      } as any);
       setLoading(false);
       if (error) {
         toast.error("Fehler beim Senden der Anfrage.");
@@ -179,15 +185,26 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear }: ModelRequest
           </div>
 
           {requestType === "individual" && (
-            <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200">
-              <Label className="text-xs text-foreground">Was ist der Kunde bereit zu bezahlen? (€) *</Label>
-              <Input
-                type="number"
-                placeholder="z.B. 50"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                min={0}
-              />
+            <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="space-y-1.5">
+                <Label className="text-xs text-foreground">Kundenname</Label>
+                <Input
+                  placeholder="z.B. Max, @username"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                  maxLength={100}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-foreground">Was ist der Kunde bereit zu bezahlen? (€) *</Label>
+                <Input
+                  type="number"
+                  placeholder="z.B. 50"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  min={0}
+                />
+              </div>
             </div>
           )}
 

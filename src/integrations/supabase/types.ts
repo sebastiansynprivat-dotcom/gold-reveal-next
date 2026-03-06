@@ -240,6 +240,7 @@ export type Database = {
           admin_comment: string | null
           content_link: string | null
           created_at: string
+          customer_name: string | null
           description: string
           id: string
           model_name: string
@@ -252,6 +253,7 @@ export type Database = {
           admin_comment?: string | null
           content_link?: string | null
           created_at?: string
+          customer_name?: string | null
           description: string
           id?: string
           model_name: string
@@ -264,6 +266,7 @@ export type Database = {
           admin_comment?: string | null
           content_link?: string | null
           created_at?: string
+          customer_name?: string | null
           description?: string
           id?: string
           model_name?: string

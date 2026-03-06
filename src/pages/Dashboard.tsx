@@ -779,6 +779,7 @@ export default function Dashboard() {
                               request_type: req.request_type as "individual" | "general",
                               price: req.price,
                               description: req.description,
+                              customer_name: (req as any).customer_name,
                             })}
                             className="flex items-center gap-1.5 text-[10px] text-accent hover:text-accent/80 transition-colors mt-1 cursor-pointer"
                           >
