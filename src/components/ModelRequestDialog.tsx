@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Send, Pencil } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,7 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear }: ModelRequest
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
+  const descriptionRef = useRef<HTMLTextAreaElement>(null);
 
   // When editData changes, open dialog and pre-fill
   useEffect(() => {
@@ -41,6 +42,8 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear }: ModelRequest
       setPrice(editData.price != null ? String(editData.price) : "");
       setDescription(editData.description);
       setOpen(true);
+      // Focus description after dialog opens
+      setTimeout(() => descriptionRef.current?.focus(), 150);
     }
   }, [editData]);
 
@@ -80,6 +83,7 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear }: ModelRequest
         price: requestType === "individual" ? parseFloat(price) : null,
         description: description.trim(),
         status: "pending",
+        admin_comment: null,
       }).eq("id", editData.id);
       setLoading(false);
       if (error) {
