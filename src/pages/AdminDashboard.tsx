@@ -202,6 +202,9 @@ export default function AdminDashboard() {
   const [schedListOpen, setSchedListOpen] = useState(false);
   const [chatterFilter, setChatterFilter] = useState<ChatterFilter>("alle");
   const [platformFilters, setPlatformFilters] = useState<Set<string>>(new Set());
+  const [filterTelegramOnly, setFilterTelegramOnly] = useState(false);
+  const [filterPushOnly, setFilterPushOnly] = useState(false);
+  const [filterPwaOnly, setFilterPwaOnly] = useState(false);
   const [botMessages, setBotMessages] = useState<Record<string, { message: string; followUp: string; isActive: boolean; saving: boolean }>>({});
   const [botMessagesLoaded, setBotMessagesLoaded] = useState(false);
   const [expandedBot, setExpandedBot] = useState<string | null>(null);
