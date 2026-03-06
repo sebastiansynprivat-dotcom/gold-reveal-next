@@ -1,0 +1,1 @@
+ALTER TABLE public.accounts ADD COLUMN folder_name text DEFAULT NULL;

@@ -23,6 +23,7 @@ export type Database = {
           assigned_to: string | null
           created_at: string
           drive_folder_id: string | null
+          folder_name: string | null
           id: string
           is_manual: boolean
           platform: string
@@ -35,6 +36,7 @@ export type Database = {
           assigned_to?: string | null
           created_at?: string
           drive_folder_id?: string | null
+          folder_name?: string | null
           id?: string
           is_manual?: boolean
           platform?: string
@@ -47,6 +49,7 @@ export type Database = {
           assigned_to?: string | null
           created_at?: string
           drive_folder_id?: string | null
+          folder_name?: string | null
           id?: string
           is_manual?: boolean
           platform?: string
