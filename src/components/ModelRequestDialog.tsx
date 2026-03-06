@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Send, MessageSquare } from "lucide-react";
+import { useState } from "react";
+import { Send } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,9 +9,12 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Badge } from "@/components/ui/badge";
 
-const ModelRequestDialog = () => {
+interface ModelRequestDialogProps {
+  onSubmitted?: () => void;
+}
+
+const ModelRequestDialog = ({ onSubmitted }: ModelRequestDialogProps) => {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [modelName, setModelName] = useState("");
@@ -19,22 +22,6 @@ const ModelRequestDialog = () => {
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
-  const [myRequests, setMyRequests] = useState<any[]>([]);
-
-  const loadMyRequests = async () => {
-    if (!user) return;
-    const { data } = await supabase
-      .from("model_requests")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(10);
-    if (data) setMyRequests(data);
-  };
-
-  useEffect(() => {
-    if (open && user) loadMyRequests();
-  }, [open, user]);
 
   const resetForm = () => {
     setModelName("");
@@ -72,6 +59,7 @@ const ModelRequestDialog = () => {
     toast.success("Anfrage erfolgreich gesendet! ✅");
     resetForm();
     setOpen(false);
+    onSubmitted?.();
   };
 
   return (
@@ -96,7 +84,6 @@ const ModelRequestDialog = () => {
         </DialogHeader>
 
         <div className="space-y-4 pt-2">
-          {/* Model Name */}
           <div className="space-y-1.5">
             <Label className="text-xs text-foreground">Model Name aus dem Profil *</Label>
             <Input
@@ -107,7 +94,6 @@ const ModelRequestDialog = () => {
             />
           </div>
 
-          {/* Request Type */}
           <div className="space-y-2">
             <Label className="text-xs text-foreground">Art der Anfrage *</Label>
             <RadioGroup value={requestType} onValueChange={(v) => setRequestType(v as "individual" | "general")} className="flex flex-col gap-3">
@@ -128,7 +114,6 @@ const ModelRequestDialog = () => {
             </RadioGroup>
           </div>
 
-          {/* Conditional Price */}
           {requestType === "individual" && (
             <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200">
               <Label className="text-xs text-foreground">Was ist der Kunde bereit zu bezahlen? (€) *</Label>
@@ -142,7 +127,6 @@ const ModelRequestDialog = () => {
             </div>
           )}
 
-          {/* Description */}
           <div className="space-y-1.5">
             <Label className="text-xs text-foreground">Beschreibung der Anfrage *</Label>
             <Textarea
@@ -154,33 +138,9 @@ const ModelRequestDialog = () => {
             />
           </div>
 
-          <Button onClick={async () => { await handleSubmit(); loadMyRequests(); }} disabled={loading} className="w-full">
+          <Button onClick={handleSubmit} disabled={loading} className="w-full">
             {loading ? "Wird gesendet..." : "Anfrage absenden"}
           </Button>
-
-          {/* Meine bisherigen Anfragen */}
-          {myRequests.length > 0 && (
-            <div className="space-y-2 pt-2 border-t border-border/30">
-              <p className="text-xs font-semibold text-foreground">Deine bisherigen Anfragen</p>
-              {myRequests.map((req) => (
-                <div key={req.id} className="rounded-lg border border-border/50 bg-secondary/20 p-3 space-y-1.5">
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="text-xs font-medium text-foreground">{req.model_name}</span>
-                    <Badge variant={req.status === "accepted" ? "default" : req.status === "rejected" ? "destructive" : "secondary"} className="text-[10px]">
-                      {req.status === "pending" ? "⏳ Ausstehend" : req.status === "accepted" ? "✅ Angenommen" : "❌ Abgelehnt"}
-                    </Badge>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground line-clamp-2">{req.description}</p>
-                  {req.admin_comment && (
-                    <div className="flex items-start gap-1.5 rounded-md bg-accent/10 border border-accent/20 px-2.5 py-2 mt-1">
-                      <MessageSquare className="h-3 w-3 text-accent shrink-0 mt-0.5" />
-                      <p className="text-[11px] text-foreground leading-relaxed">{req.admin_comment}</p>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
         </div>
       </DialogContent>
     </Dialog>
