@@ -26,6 +26,7 @@ import HomescreenTutorial from "@/components/HomescreenTutorial";
 import PushNotificationDialog from "@/components/PushNotificationDialog";
 import AccountMemoDialog from "@/components/AccountMemoDialog";
 import FrageMemoDialog from "@/components/FrageMemoDialog";
+import ModelRequestDialog from "@/components/ModelRequestDialog";
 
 const GOLD_THRESHOLD = 3000;
 const STARTER_RATE = 0.2;
@@ -620,6 +621,11 @@ export default function Dashboard() {
             }
             </div>
           }
+        </section>
+
+        {/* Anfrage an das Model */}
+        <section className="glass-card rounded-xl p-4 lg:p-6">
+          <ModelRequestDialog />
         </section>
 
         {/* MassDM Generator */}
