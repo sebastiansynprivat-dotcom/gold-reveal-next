@@ -60,13 +60,13 @@ const ModelRequestDialog = () => {
   return (
     <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
       <DialogTrigger asChild>
-        <button className="flex items-center justify-center gap-3 w-full px-4 py-4 lg:px-6 lg:py-5 hover:bg-secondary/30 active:scale-[0.99] transition-all cursor-pointer group">
-          <div className="h-9 w-9 rounded-full bg-accent/20 flex items-center justify-center shrink-0">
-            <Send className="h-4 w-4 text-accent" />
+        <button className="flex items-center gap-3 w-full px-4 py-4 lg:px-6 lg:py-5 hover:bg-secondary/30 active:scale-[0.99] transition-all cursor-pointer group">
+          <div className="h-10 w-10 rounded-full bg-accent/20 flex items-center justify-center shrink-0">
+            <Send className="h-5 w-5 text-accent" />
           </div>
           <div className="text-left">
-            <p className="text-xs font-semibold text-foreground">Anfrage an das Model stellen</p>
-            <p className="text-[10px] text-muted-foreground">Individuelle oder allgemeine Anfrage senden</p>
+            <p className="text-sm font-semibold text-foreground">Anfrage an das Model stellen</p>
+            <p className="text-xs text-muted-foreground">Individuelle oder allgemeine Anfrage senden</p>
           </div>
         </button>
       </DialogTrigger>
