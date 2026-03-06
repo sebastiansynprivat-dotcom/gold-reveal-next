@@ -4163,8 +4163,16 @@ export default function AdminDashboard() {
                               )}
                             </div>
                             <p className="text-[10px] text-muted-foreground truncate">PW: {acc.account_password}</p>
-                          </div>
-                          {acc.assigned_to && (
+                            {acc.drive_folder_id && (
+                              <a
+                                href={`https://drive.google.com/drive/folders/${acc.drive_folder_id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[10px] text-primary hover:underline truncate flex items-center gap-1"
+                              >
+                                📁 Drive-Ordner
+                              </a>
+                            )}
                             <Button
                               variant="ghost"
                               size="sm"
