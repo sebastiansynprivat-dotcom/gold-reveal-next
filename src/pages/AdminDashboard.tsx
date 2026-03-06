@@ -1965,8 +1965,6 @@ export default function AdminDashboard() {
             { key: "top_woche", label: "Top Woche", icon: TrendingUp },
             { key: "top_monat", label: "Top Monat", icon: DollarSign },
             { key: "no_revenue_7d", label: "7d+ ohne Umsatz", icon: AlertTriangle },
-            { key: "no_telegram", label: "Telegram fehlt", icon: AlertTriangle },
-            { key: "no_push", label: "Push fehlt", icon: BellOff },
           ] as const).map(({ key, label, icon: Icon }) => (
             <button
               key={key}
