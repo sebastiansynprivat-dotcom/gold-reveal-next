@@ -360,7 +360,7 @@ export default function Dashboard() {
       <AccountMemoDialog open={showMemo} onOpenChange={setShowMemo} />
       <FrageMemoDialog open={showFrageMemo} onOpenChange={setShowFrageMemo} />
       {/* Header with Telegram + Umsatz inline */}
-      <header className="border-b border-border">
+      <header className="header-gradient-border">
         <div className="container max-w-5xl mx-auto px-4 py-3 lg:px-8">
           {/* Desktop: single row */}
           <div className="hidden sm:flex items-center gap-3">
@@ -513,61 +513,71 @@ export default function Dashboard() {
 
         {/* Stats Cards */}
         {/* Mobile: 2-col grid with full-width status */}
-        <div className="grid grid-cols-2 gap-3 lg:hidden">
-          <div className="glass-card-subtle rounded-xl p-3 text-center">
+        <motion.div
+          variants={staggerContainer}
+          initial="hidden"
+          animate="show"
+          className="grid grid-cols-2 gap-3 lg:hidden"
+        >
+          <motion.div variants={staggerItem} className="glass-card-subtle rounded-xl p-3 text-center hover:scale-[1.02] hover:border-accent/30 transition-all duration-200">
             <p className="text-[10px] text-muted-foreground mb-0.5">Umsatz gestern</p>
-            <p className="text-xl font-bold text-gold-gradient">{yesterdayRevenue.toLocaleString("de-DE")}€</p>
-          </div>
-          <div className="glass-card-subtle rounded-xl p-3 text-center">
+            <p className="text-xl font-bold text-gold-gradient"><AnimatedValue value={yesterdayRevenue} /></p>
+          </motion.div>
+          <motion.div variants={staggerItem} className="glass-card-subtle rounded-xl p-3 text-center hover:scale-[1.02] hover:border-accent/30 transition-all duration-200">
             <p className="text-[10px] text-muted-foreground mb-0.5">Monatsumsatz</p>
-            <p className="text-xl font-bold text-gold-gradient">{monthlyRevenue.toLocaleString("de-DE")}€</p>
-          </div>
-          <div className="glass-card-subtle rounded-xl p-3 text-center">
+            <p className="text-xl font-bold text-gold-gradient"><AnimatedValue value={monthlyRevenue} /></p>
+          </motion.div>
+          <motion.div variants={staggerItem} className="glass-card-subtle rounded-xl p-3 text-center hover:scale-[1.02] hover:border-accent/30 transition-all duration-200">
             <p className="text-[10px] text-muted-foreground mb-0.5">Gesamtumsatz</p>
-            <p className="text-xl font-bold text-gold-gradient">{totalRevenue.toLocaleString("de-DE")}€</p>
-          </div>
-          <div className="glass-card-subtle rounded-xl p-3 text-center">
+            <p className="text-xl font-bold text-gold-gradient"><AnimatedValue value={totalRevenue} /></p>
+          </motion.div>
+          <motion.div variants={staggerItem} className="glass-card-subtle rounded-xl p-3 text-center hover:scale-[1.02] hover:border-accent/30 transition-all duration-200">
             <p className="text-[10px] text-muted-foreground mb-0.5">Verdienst diesen Monat</p>
-            <p className="text-xl font-bold text-gold-gradient">{verdienst.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€</p>
-          </div>
-          <div className="glass-card-subtle rounded-xl p-3 text-center">
+            <p className="text-xl font-bold text-gold-gradient"><AnimatedDecimalValue value={verdienst} /></p>
+          </motion.div>
+          <motion.div variants={staggerItem} className="glass-card-subtle rounded-xl p-3 text-center hover:scale-[1.02] hover:border-accent/30 transition-all duration-200">
             <p className="text-[10px] text-muted-foreground mb-0.5">Deine Rate</p>
             <p className="text-xl font-bold text-gold-gradient">{Math.round(rate * 100)}%</p>
-          </div>
+          </motion.div>
           <DailyGoal />
-          <div className="glass-card-subtle rounded-xl p-3 text-center col-span-2">
+          <motion.div variants={staggerItem} className="gold-gradient-border-animated rounded-xl p-3 text-center col-span-2 pulse-glow">
             <p className="text-[10px] text-muted-foreground mb-0.5">Status</p>
             <p className={`text-xl font-bold ${isGold ? "text-gold-gradient" : "text-muted-foreground"}`}>{isGold ? "Gold" : "Starter"}</p>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
         {/* Desktop grid */}
-        <div className="hidden lg:grid grid-cols-3 gap-4">
-          <div className="glass-card-subtle rounded-xl p-5 text-center">
+        <motion.div
+          variants={staggerContainer}
+          initial="hidden"
+          animate="show"
+          className="hidden lg:grid grid-cols-3 gap-4"
+        >
+          <motion.div variants={staggerItem} className="glass-card-subtle rounded-xl p-5 text-center hover:scale-[1.02] hover:border-accent/30 transition-all duration-200">
             <p className="text-xs text-muted-foreground mb-0.5">Umsatz gestern</p>
-            <p className="text-2xl font-bold text-gold-gradient">{yesterdayRevenue.toLocaleString("de-DE")}€</p>
-          </div>
-          <div className="glass-card-subtle rounded-xl p-5 text-center">
+            <p className="text-2xl font-bold text-gold-gradient"><AnimatedValue value={yesterdayRevenue} /></p>
+          </motion.div>
+          <motion.div variants={staggerItem} className="glass-card-subtle rounded-xl p-5 text-center hover:scale-[1.02] hover:border-accent/30 transition-all duration-200">
             <p className="text-xs text-muted-foreground mb-0.5">Monatsumsatz</p>
-            <p className="text-2xl font-bold text-gold-gradient">{monthlyRevenue.toLocaleString("de-DE")}€</p>
-          </div>
-          <div className="glass-card-subtle rounded-xl p-5 text-center">
+            <p className="text-2xl font-bold text-gold-gradient"><AnimatedValue value={monthlyRevenue} /></p>
+          </motion.div>
+          <motion.div variants={staggerItem} className="glass-card-subtle rounded-xl p-5 text-center hover:scale-[1.02] hover:border-accent/30 transition-all duration-200">
             <p className="text-xs text-muted-foreground mb-0.5">Gesamtumsatz</p>
-            <p className="text-2xl font-bold text-gold-gradient">{totalRevenue.toLocaleString("de-DE")}€</p>
-          </div>
-          <div className="glass-card-subtle rounded-xl p-5 text-center">
+            <p className="text-2xl font-bold text-gold-gradient"><AnimatedValue value={totalRevenue} /></p>
+          </motion.div>
+          <motion.div variants={staggerItem} className="glass-card-subtle rounded-xl p-5 text-center hover:scale-[1.02] hover:border-accent/30 transition-all duration-200">
             <p className="text-xs text-muted-foreground mb-0.5">Verdienst diesen Monat</p>
-            <p className="text-2xl font-bold text-gold-gradient">{verdienst.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€</p>
-          </div>
-          <div className="glass-card-subtle rounded-xl p-5 text-center">
+            <p className="text-2xl font-bold text-gold-gradient"><AnimatedDecimalValue value={verdienst} /></p>
+          </motion.div>
+          <motion.div variants={staggerItem} className="glass-card-subtle rounded-xl p-5 text-center hover:scale-[1.02] hover:border-accent/30 transition-all duration-200">
             <p className="text-xs text-muted-foreground mb-0.5">Deine Rate</p>
             <p className="text-2xl font-bold text-gold-gradient">{Math.round(rate * 100)}%</p>
-          </div>
+          </motion.div>
           <DailyGoal />
-          <div className="glass-card-subtle rounded-xl p-5 text-center col-span-3">
+          <motion.div variants={staggerItem} className="gold-gradient-border-animated rounded-xl p-5 text-center col-span-3 pulse-glow">
             <p className="text-xs text-muted-foreground mb-0.5">Status</p>
             <p className={`text-2xl font-bold ${isGold ? "text-gold-gradient" : "text-muted-foreground"}`}>{isGold ? "Gold" : "Starter"}</p>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         {/* PWA Install To-Do – between Status and Account, non-dismissable, auto-hides when installed */}
         {!isPwaInstalled &&
