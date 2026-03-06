@@ -367,9 +367,11 @@ export default function AdminDashboard() {
 
     // Demo: every 5s add random 5-100€
     const demoInterval = setInterval(() => {
-      const randomAmount = Math.floor(Math.random() * 96) + 5; // 5-100
+      const randomAmount = Math.floor(Math.random() * 96) + 5;
       setRevenueBoost(prev => prev + randomAmount);
-      toast.success(`+${randomAmount}€ Umsatz eingegangen!`, { duration: 2000 });
+      if (activeTabRef.current === 'einnahmen') {
+        toast.success(`+${randomAmount}€ Umsatz eingegangen!`, { duration: 2000 });
+      }
     }, 5000);
 
     return () => {
