@@ -177,7 +177,7 @@ export default function AdminDashboard() {
   const [goalAmount, setGoalAmount] = useState("");
   const [goalSaving, setGoalSaving] = useState(false);
   const [expandedChatter, setExpandedChatter] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"einnahmen" | "chatter" | "anfragen" | "botdms" | "notifications" | "kiprompt">("einnahmen");
+  const [activeTab, setActiveTab] = useState<"einnahmen" | "chatter" | "anfragen" | "botdms" | "notifications" | "kiprompt" | "gdrive">("einnahmen");
   const activeTabRef = useRef(activeTab);
   const [modelRequests, setModelRequests] = useState<any[]>([]);
   const [modelRequestsLoaded, setModelRequestsLoaded] = useState(false);
@@ -1306,6 +1306,7 @@ export default function AdminDashboard() {
     { key: "botdms" as const, label: "Bot DMs", icon: Bot, onClick: () => { setActiveTab("botdms"); if (!botMessagesLoaded) loadBotMessages(); } },
     { key: "notifications" as const, label: "Benachrichtigungen", icon: Bell, onClick: () => { setActiveTab("notifications"); if (!notifHistoryLoaded) loadNotifHistory(); if (!schedulesLoaded) loadSchedules(); } },
     { key: "kiprompt" as const, label: "KI Prompt", icon: Brain, onClick: () => { setActiveTab("kiprompt"); if (!kiPromptLoaded) loadKiPrompt(); } },
+    { key: "gdrive" as const, label: "Google Drive", icon: ExternalLink, onClick: () => setActiveTab("gdrive") },
   ];
 
   return (
@@ -3412,6 +3413,146 @@ export default function AdminDashboard() {
                   )}
                 </div>
               )}
+            </section>
+          </div>
+        )}
+
+        {activeTab === "gdrive" && (
+          <div className="space-y-4">
+            <section className="glass-card rounded-xl overflow-hidden">
+              <div className="px-4 py-3 border-b border-border flex items-center gap-2">
+                <ExternalLink className="h-4 w-4 text-accent" />
+                <h2 className="text-sm font-semibold text-foreground">Google Drive Automatisierung</h2>
+              </div>
+              <div className="p-4 space-y-5">
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Wenn ein Chatter einen Account zugewiesen bekommt, wird der zugehörige Google Drive Ordner automatisch mit seiner <span className="font-semibold text-foreground">Login-E-Mail</span> geteilt.
+                </p>
+
+                {/* Setup Checklist */}
+                <div className="space-y-3">
+                  <h3 className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-accent" />
+                    Setup-Schritte
+                  </h3>
+                  <div className="space-y-2">
+                    {[
+                      {
+                        step: "1",
+                        title: "Google Cloud Projekt erstellen",
+                        desc: (
+                          <>
+                            Gehe zu{" "}
+                            <a href="https://console.cloud.google.com/projectcreate" target="_blank" rel="noopener noreferrer" className="text-accent underline underline-offset-2 hover:text-accent/80">
+                              console.cloud.google.com
+                            </a>{" "}
+                            und erstelle ein neues Projekt (oder nutze ein bestehendes).
+                          </>
+                        ),
+                      },
+                      {
+                        step: "2",
+                        title: "Google Drive API aktivieren",
+                        desc: (
+                          <>
+                            Im Projekt → „APIs & Dienste" → „Bibliothek" → nach „Google Drive API" suchen → <span className="font-semibold text-foreground">Aktivieren</span>.
+                          </>
+                        ),
+                      },
+                      {
+                        step: "3",
+                        title: "Service Account erstellen",
+                        desc: (
+                          <>
+                            „APIs & Dienste" → „Anmeldedaten" → „Anmeldedaten erstellen" → „Dienstkonto". Namen vergeben (z.B. „drive-bot"), Fertig klicken.
+                          </>
+                        ),
+                      },
+                      {
+                        step: "4",
+                        title: "JSON-Key herunterladen",
+                        desc: (
+                          <>
+                            Das neue Dienstkonto öffnen → Tab „Schlüssel" → „Schlüssel hinzufügen" → „Neuen Schlüssel erstellen" → <span className="font-semibold text-foreground">JSON</span>. Datei wird heruntergeladen.
+                          </>
+                        ),
+                      },
+                      {
+                        step: "5",
+                        title: "Service Account zum Drive-Ordner einladen",
+                        desc: (
+                          <>
+                            Den übergeordneten Google Drive Ordner öffnen → „Teilen" → Die E-Mail des Service Accounts (z.B. <span className="font-mono text-[10px] text-accent">drive-bot@projekt.iam.gserviceaccount.com</span>) als <span className="font-semibold text-foreground">Bearbeiter</span> hinzufügen.
+                          </>
+                        ),
+                      },
+                      {
+                        step: "6",
+                        title: "Secrets hier speichern",
+                        desc: (
+                          <>
+                            Unten die zwei Werte aus der JSON-Datei eingeben: <span className="font-mono text-[10px] text-accent">client_email</span> und <span className="font-mono text-[10px] text-accent">private_key</span>.
+                          </>
+                        ),
+                      },
+                      {
+                        step: "7",
+                        title: "Folder IDs bei Accounts hinterlegen",
+                        desc: (
+                          <>
+                            Beim Anlegen von Accounts im Account-Pool das Feld „Google Drive Folder ID" ausfüllen. Die Folder ID findest du in der URL:{" "}
+                            <span className="font-mono text-[10px] text-accent break-all">drive.google.com/drive/folders/<span className="font-bold underline">FOLDER_ID_HIER</span></span>
+                          </>
+                        ),
+                      },
+                    ].map((item) => (
+                      <div key={item.step} className="flex gap-3 p-3 rounded-lg border border-border/50 bg-secondary/20">
+                        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-accent/20 text-accent text-xs font-bold flex items-center justify-center">
+                          {item.step}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold text-foreground">{item.title}</p>
+                          <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">{item.desc}</p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Secrets Input Section */}
+                <div className="border-t border-border/50 pt-4 space-y-3">
+                  <h3 className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                    <KeyRound className="h-3.5 w-3.5 text-accent" />
+                    Secrets konfigurieren
+                  </h3>
+                  <p className="text-[11px] text-muted-foreground">
+                    Klicke auf den Button unten, um die Google Service Account Secrets sicher zu speichern. Du brauchst die zwei Werte aus der heruntergeladenen JSON-Datei.
+                  </p>
+                  <div className="flex flex-col gap-2">
+                    <div className="p-3 rounded-lg border border-border/50 bg-secondary/20">
+                      <p className="text-xs font-semibold text-foreground">GOOGLE_SERVICE_ACCOUNT_EMAIL</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">Der Wert von <span className="font-mono text-accent">client_email</span> aus der JSON-Datei</p>
+                    </div>
+                    <div className="p-3 rounded-lg border border-border/50 bg-secondary/20">
+                      <p className="text-xs font-semibold text-foreground">GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">Der Wert von <span className="font-mono text-accent">private_key</span> aus der JSON-Datei (inkl. <span className="font-mono">-----BEGIN PRIVATE KEY-----</span>)</p>
+                    </div>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground italic">
+                    💡 Die Secrets werden sicher im Backend gespeichert und sind nie im Frontend sichtbar. Schreib mir im Chat „Secrets hinzufügen", dann leite ich dich durch den Prozess.
+                  </p>
+                </div>
+
+                {/* Status */}
+                <div className="border-t border-border/50 pt-4">
+                  <div className="flex items-center gap-2 p-3 rounded-lg border border-accent/30 bg-accent/5">
+                    <Clock className="h-4 w-4 text-accent flex-shrink-0" />
+                    <p className="text-xs text-foreground">
+                      <span className="font-semibold">Status:</span> Sobald die Secrets gespeichert und die Folder IDs hinterlegt sind, funktioniert die automatische Freigabe bei jeder Account-Zuweisung.
+                    </p>
+                  </div>
+                </div>
+              </div>
             </section>
           </div>
         )}
