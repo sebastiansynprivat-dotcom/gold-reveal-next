@@ -1194,6 +1194,17 @@ export default function AdminDashboard() {
       );
     }
 
+    // Top-level toggle filters
+    if (filterTelegramOnly) {
+      result = result.filter((c) => c.telegram_id && c.telegram_id.trim() !== "");
+    }
+    if (filterPushOnly) {
+      result = result.filter((c) => pushUsers.has(c.user_id));
+    }
+    if (filterPwaOnly) {
+      result = result.filter((c) => pwaUsers.has(c.user_id));
+    }
+
     switch (chatterFilter) {
       case "no_telegram":
         result = result.filter((c) => !c.telegram_id || c.telegram_id.trim() === "");
@@ -1224,7 +1235,7 @@ export default function AdminDashboard() {
       }
     }
     return result;
-  }, [chatters, search, chatterFilter, pushUsers, revenueUsers, platformFilters]);
+  }, [chatters, search, chatterFilter, pushUsers, revenueUsers, platformFilters, filterTelegramOnly, filterPushOnly, filterPwaOnly, pwaUsers]);
 
   const openGoalEditor = async (chatter: ChatterProfile) => {
     setGoalTarget(chatter);
