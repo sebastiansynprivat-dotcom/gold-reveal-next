@@ -210,6 +210,7 @@ export default function AdminDashboard() {
   const [manualAccEmail, setManualAccEmail] = useState("");
   const [manualAccPassword, setManualAccPassword] = useState("");
   const [manualAccDomain, setManualAccDomain] = useState("");
+  const [manualAccDriveFolder, setManualAccDriveFolder] = useState("");
   const [addingManual, setAddingManual] = useState(false);
   const [deleteManualPoolConfirm, setDeleteManualPoolConfirm] = useState(false);
   const [deletingManualPool, setDeletingManualPool] = useState(false);
@@ -4087,6 +4088,12 @@ export default function AdminDashboard() {
                 onChange={(e) => setManualAccPassword(e.target.value)}
                 placeholder="Passwort"
               />
+              <Input
+                value={manualAccDriveFolder}
+                onChange={(e) => setManualAccDriveFolder(e.target.value)}
+                placeholder="Google Drive Link / Folder ID (optional)"
+                className="text-xs"
+              />
               <Button
                 onClick={async () => {
                   if (!manualAccEmail.trim() || !selectedManualPlatform) return;
@@ -4096,6 +4103,7 @@ export default function AdminDashboard() {
                     account_email: manualAccEmail.trim(),
                     account_password: manualAccPassword.trim(),
                     account_domain: manualAccDomain.trim(),
+                    drive_folder_id: extractDriveFolderId(manualAccDriveFolder.trim()),
                     is_manual: true,
                   } as any);
                   if (error) {
@@ -4104,6 +4112,7 @@ export default function AdminDashboard() {
                     toast.success("Account hinzugefügt!");
                     setManualAccEmail("");
                     setManualAccPassword("");
+                    setManualAccDriveFolder("");
                     loadAccounts();
                     loadChatters();
                   }
@@ -4154,6 +4163,16 @@ export default function AdminDashboard() {
                               )}
                             </div>
                             <p className="text-[10px] text-muted-foreground truncate">PW: {acc.account_password}</p>
+                            {acc.drive_folder_id && (
+                              <a
+                                href={`https://drive.google.com/drive/folders/${acc.drive_folder_id}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[10px] text-primary hover:underline truncate flex items-center gap-1"
+                              >
+                                📁 Drive-Ordner
+                              </a>
+                            )}
                           </div>
                           {acc.assigned_to && (
                             <Button
