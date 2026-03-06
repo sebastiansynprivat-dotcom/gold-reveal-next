@@ -3983,7 +3983,7 @@ export default function AdminDashboard() {
               );
 
               const CollapsibleSection = ({ dotColor, title, count, children }: { dotColor: string; title: string; count: number; children: React.ReactNode }) => {
-                const [open, setOpen] = useState(true);
+                const [open, setOpen] = useState(false);
                 return (
                   <div className="space-y-2">
                     <button onClick={() => setOpen(!open)} className="flex items-center gap-2 px-1 w-full text-left group/sec">
