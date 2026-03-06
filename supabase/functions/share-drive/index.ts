@@ -36,13 +36,21 @@ async function getAccessToken(): Promise<string> {
     iat: now,
   };
 
-  const encode = (obj: unknown) => {
-    const json = JSON.stringify(obj);
-    const bytes = new TextEncoder().encode(json);
-    return btoa(String.fromCharCode(...bytes))
+  const toBase64Url = (data: Uint8Array): string => {
+    let binary = "";
+    for (let i = 0; i < data.length; i++) {
+      binary += String.fromCharCode(data[i]);
+    }
+    return btoa(binary)
       .replace(/\+/g, "-")
       .replace(/\//g, "_")
       .replace(/=+$/, "");
+  };
+
+  const encode = (obj: unknown) => {
+    const json = JSON.stringify(obj);
+    const bytes = new TextEncoder().encode(json);
+    return toBase64Url(bytes);
   };
 
   const headerB64 = encode(header);
