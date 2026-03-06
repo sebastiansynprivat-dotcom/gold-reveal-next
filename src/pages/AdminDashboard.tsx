@@ -136,6 +136,7 @@ interface AccountEntry {
   created_at: string;
   is_manual?: boolean;
   drive_folder_id?: string | null;
+  folder_name?: string | null;
 }
 
 function AnimatedNumber({ value, className, suffix = "€" }: { value: number; className?: string; suffix?: string }) {
