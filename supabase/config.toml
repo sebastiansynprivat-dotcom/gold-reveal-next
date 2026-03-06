@@ -26,3 +26,6 @@ verify_jwt = false
 
 [functions.generate-chatter-summary]
 verify_jwt = false
+
+[functions.share-drive]
+verify_jwt = false
