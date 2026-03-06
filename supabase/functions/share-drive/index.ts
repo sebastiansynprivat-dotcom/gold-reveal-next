@@ -53,7 +53,7 @@ async function getAccessToken(): Promise<string> {
     const em = privateKeyRaw.match(/"client_email"\s*:\s*"([^"]+)"/);
     if (em) serviceEmail = em[1];
   }
-  console.log("PEM starts with:", pemKey.substring(0, 30), "email:", serviceEmail);
+  
 
   if (!serviceEmail || !pemKey) {
     throw new Error("Google Service Account credentials incomplete.");
