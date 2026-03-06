@@ -311,7 +311,7 @@ export default function AdminDashboard() {
     "4based": filteredRevenueData.reduce((s, d) => s + d["4based"], 0),
   }), [filteredRevenueData]);
 
-  const grandTotal = platformTotals.maloum + platformTotals.brezzels + platformTotals["4based"];
+  const grandTotal = platformTotals.maloum + platformTotals.brezzels + platformTotals["4based"] + revenueBoost;
 
   const filterLabels: Record<TimeFilter, string> = {
     heute: "Heute", gestern: "Gestern", "7": "7 Tage", "30": "30 Tage", "90": "90 Tage", custom: "Zeitraum",
