@@ -25,14 +25,6 @@ const Auth = () => {
   const [submitting, setSubmitting] = useState(false);
   const [signUpSuccess, setSignUpSuccess] = useState(false);
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
   // Transfer pending telegram ID and offer after login, then trigger Drive sharing
   useEffect(() => {
     if (!user) return;
