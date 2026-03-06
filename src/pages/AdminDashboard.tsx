@@ -2990,19 +2990,28 @@ export default function AdminDashboard() {
                 {/* Frequency */}
                 <div className="space-y-2">
                   <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Häufigkeit</label>
-                  <div className="flex gap-1.5">
+                  <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-secondary/40 backdrop-blur-sm border border-border/30 relative w-full">
                     {(["daily", "weekly", "monthly"] as const).map((f) => (
                       <button
                         key={f}
                         className={cn(
-                          "flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-all",
+                          "relative flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors duration-200 z-10",
                           schedFrequency === f
-                            ? "bg-accent/15 text-accent ring-1 ring-accent/30"
-                            : "bg-secondary/30 text-muted-foreground hover:bg-secondary/50"
+                            ? "text-accent-foreground"
+                            : "text-muted-foreground hover:text-foreground"
                         )}
                         onClick={() => setSchedFrequency(f)}
                       >
-                        {f === "daily" ? "Täglich" : f === "weekly" ? "Wöchentlich" : "Monatlich"}
+                        {schedFrequency === f && (
+                          <motion.div
+                            layoutId="activeFrequency"
+                            className="absolute inset-0 bg-accent rounded-lg shadow-md shadow-accent/20"
+                            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                          />
+                        )}
+                        <span className="relative z-10">
+                          {f === "daily" ? "Täglich" : f === "weekly" ? "Wöchentlich" : "Monatlich"}
+                        </span>
                       </button>
                     ))}
                   </div>
