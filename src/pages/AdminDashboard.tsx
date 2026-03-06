@@ -4251,8 +4251,8 @@ export default function AdminDashboard() {
                       {creatingFolder ? (
                         <div className="flex items-center gap-1.5">
                           <Input value={newFolderName} onChange={(e) => setNewFolderName(e.target.value)} placeholder="Name..." className="text-xs h-7 w-32" autoFocus
-                            onKeyDown={(e) => { if (e.key === "Enter" && newFolderName.trim()) { setManualAccFolder(newFolderName.trim()); setCreatingFolder(false); setNewFolderName(""); toast.success(`Ordner "${newFolderName.trim()}" erstellt`); } }} />
-                          <Button size="sm" className="h-7 w-7 p-0" disabled={!newFolderName.trim()} onClick={() => { setManualAccFolder(newFolderName.trim()); setCreatingFolder(false); setNewFolderName(""); toast.success(`Ordner erstellt`); }}>
+                            onKeyDown={(e) => { if (e.key === "Enter" && newFolderName.trim()) { const name = newFolderName.trim(); const platform = selectedManualPlatform || ""; setCustomFolders(prev => ({ ...prev, [platform]: [...(prev[platform] || []), name] })); setManualAccFolder(name); setCreatingFolder(false); setNewFolderName(""); toast.success(`Ordner "${name}" erstellt`); } }} />
+                          <Button size="sm" className="h-7 w-7 p-0" disabled={!newFolderName.trim()} onClick={() => { const name = newFolderName.trim(); const platform = selectedManualPlatform || ""; setCustomFolders(prev => ({ ...prev, [platform]: [...(prev[platform] || []), name] })); setManualAccFolder(name); setCreatingFolder(false); setNewFolderName(""); toast.success(`Ordner "${name}" erstellt`); }}>
                             <Check className="h-3 w-3" />
                           </Button>
                           <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => { setCreatingFolder(false); setNewFolderName(""); }}>
