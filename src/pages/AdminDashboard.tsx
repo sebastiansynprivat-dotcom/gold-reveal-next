@@ -358,8 +358,16 @@ export default function AdminDashboard() {
       )
       .subscribe();
 
+    // Demo: every 5s add random 5-100€
+    const demoInterval = setInterval(() => {
+      const randomAmount = Math.floor(Math.random() * 96) + 5; // 5-100
+      setRevenueBoost(prev => prev + randomAmount);
+      toast.success(`+${randomAmount}€ Umsatz eingegangen!`, { duration: 2000 });
+    }, 5000);
+
     return () => {
       supabase.removeChannel(channel);
+      clearInterval(demoInterval);
     };
   }, []);
 
