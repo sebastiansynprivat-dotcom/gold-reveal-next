@@ -583,9 +583,9 @@ export default function Dashboard() {
         {!isPwaInstalled &&
         <button
           onClick={() => setShowTutorial(true)}
-          className="w-full flex items-center gap-3 glass-card-subtle rounded-xl p-3 lg:p-4 border border-accent/30 bg-accent/5 text-left cursor-pointer hover:bg-accent/10 transition-colors">
+          className="w-full flex items-center gap-3 glass-card-subtle rounded-xl p-3 lg:p-4 border border-accent/30 bg-accent/5 text-left cursor-pointer hover:bg-accent/10 hover:border-accent/50 transition-all">
           
-            <Smartphone className="h-5 w-5 text-accent shrink-0" />
+            <Smartphone className="h-5 w-5 text-accent shrink-0 animate-pulse" />
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-foreground">Aufgabe bevor du startest: Füge die App auf deinem Handy zum Homescreen hinzu.</p>
               <p className="text-xs text-accent mt-0.5 hover:underline">
@@ -598,9 +598,9 @@ export default function Dashboard() {
         {/* Frage stellen */}
         <button
           onClick={() => setShowFrageMemo(true)}
-          className="w-full flex items-center gap-3 glass-card-subtle rounded-xl p-3 lg:p-4 border border-accent/30 bg-accent/5 text-left cursor-pointer hover:bg-accent/10 transition-colors"
+          className="w-full flex items-center gap-3 glass-card-subtle rounded-xl p-3 lg:p-4 border border-accent/30 bg-accent/5 text-left cursor-pointer hover:bg-accent/10 hover:border-accent/50 transition-all"
         >
-          <HelpCircle className="h-5 w-5 text-accent shrink-0" />
+          <HelpCircle className="h-5 w-5 text-accent shrink-0 animate-pulse" />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-foreground">Ich habe eine Frage</p>
             <p className="text-xs text-accent mt-0.5">Wo kann ich diese Frage stellen?</p>
@@ -985,20 +985,19 @@ function DashboardBillingInfo({ onNavigate }: {onNavigate: () => void;}) {
         </div>
         <div className="space-y-1">
           <div className="flex justify-between text-[10px] text-muted-foreground">
-            <span>Noch {daysLeft} Tage</span>
+            <span>Noch <span className="text-accent font-semibold">{daysLeft}</span> Tage</span>
             <span>{format(deadline, "dd.MM.yyyy")}</span>
           </div>
-          <div className="w-full h-1.5 rounded-full bg-secondary overflow-hidden">
+          <div className="w-full h-1.5 rounded-full bg-secondary overflow-hidden shimmer-bar">
             <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${progressPct}%` }} />
           </div>
         </div>
       </div>
       <Button
         onClick={onNavigate}
-        variant="outline"
-        className="w-full h-11 border-border text-foreground hover:bg-secondary">
+        className="w-full h-11 bg-gradient-to-r from-accent to-accent/80 text-accent-foreground hover:brightness-110 transition-all">
         
-        <FileText className="mr-2 h-4 w-4 text-accent" />
+        <FileText className="mr-2 h-4 w-4" />
         Rechnung erstellen
       </Button>
     </div>);

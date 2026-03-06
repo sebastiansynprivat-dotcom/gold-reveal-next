@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { MessageCircle, X, Send, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -131,20 +132,33 @@ export default function DashboardChat({ externalOpen, onExternalOpenChange }: Da
     }
   };
 
-  if (!open) {
-    return (
-      <button
-        onClick={() => setOpen(true)}
-        className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center gold-glow-strong hover:scale-110 transition-transform"
-        aria-label="Chat öffnen"
-      >
-        <MessageCircle className="h-6 w-6" />
-      </button>
-    );
-  }
-
   return (
-    <div className="fixed bottom-0 right-0 z-50 w-full sm:bottom-6 sm:right-6 sm:w-[400px] sm:max-h-[600px] flex flex-col glass-card rounded-t-2xl sm:rounded-2xl overflow-hidden border border-border">
+    <>
+      <AnimatePresence>
+        {!open && (
+          <motion.button
+            key="chat-fab"
+            onClick={() => setOpen(true)}
+            className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center gold-glow-strong hover:scale-110 transition-transform pulse-glow"
+            aria-label="Chat öffnen"
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+          >
+            <MessageCircle className="h-6 w-6" />
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            key="chat-window"
+            initial={{ y: 40, opacity: 0, scale: 0.95 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            exit={{ y: 40, opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.25, ease: "easeOut" }}
+            className="fixed bottom-0 right-0 z-50 w-full sm:bottom-6 sm:right-6 sm:w-[400px] sm:max-h-[600px] flex flex-col glass-card rounded-t-2xl sm:rounded-2xl overflow-hidden border border-border">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-border">
         <div>
@@ -216,6 +230,9 @@ export default function DashboardChat({ externalOpen, onExternalOpenChange }: Da
           <Send className="h-4 w-4" />
         </Button>
       </form>
-    </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

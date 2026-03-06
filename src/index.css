@@ -202,6 +202,20 @@
     }
   }
 
+  .dialog-glow {
+    box-shadow: 0 0 40px hsl(43 56% 52% / 0.08),
+                0 0 80px hsl(43 56% 52% / 0.04);
+  }
+
+  .streak-circle-pulse {
+    animation: streak-pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes streak-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 hsl(43 76% 46% / 0); }
+    50% { box-shadow: 0 0 8px 2px hsl(43 76% 46% / 0.3); }
+  }
+
   .header-gradient-border {
     border-bottom: none;
     position: relative;

@@ -90,7 +90,7 @@ export default function MassDmGenerator() {
             <button
               onClick={generate}
               disabled={loading}
-              className="w-full h-12 rounded-xl bg-accent text-accent-foreground font-semibold text-sm transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full h-12 rounded-xl bg-accent text-accent-foreground font-semibold text-sm transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shimmer-bar"
             >
               {loading ? (
                 <>

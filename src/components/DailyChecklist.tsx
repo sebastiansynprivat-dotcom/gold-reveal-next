@@ -97,7 +97,7 @@ export default function DailyChecklist() {
 
   return (
     <motion.section
-      className="glass-card-subtle rounded-xl p-4 lg:p-6"
+      className={`glass-card-subtle rounded-xl p-4 lg:p-6 transition-all duration-500 ${allDone ? "gold-gradient-border-animated pulse-glow" : ""}`}
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
@@ -123,7 +123,7 @@ export default function DailyChecklist() {
 
         <CollapsibleContent>
           <div className="mt-4 space-y-4">
-            <Progress value={progress} className="h-2 [&>div]:bg-accent" />
+            <Progress value={progress} className="h-2 [&>div]:bg-accent shimmer-bar" />
 
             <div className="space-y-1">
               {TASKS.map((task) => {

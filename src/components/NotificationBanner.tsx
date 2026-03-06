@@ -62,10 +62,10 @@ export default function NotificationBanner() {
     : "Öffne die Browser-Einstellungen und erlaube Benachrichtigungen für diese Seite.";
 
   return (
-    <div className="glass-card-subtle rounded-xl p-3 lg:p-4 border border-accent/20 bg-accent/5">
+    <div className="glass-card-subtle rounded-xl p-3 lg:p-4 border border-accent/20 bg-accent/5 hover:border-accent/40 transition-all">
       <div className="flex items-start gap-3">
         <div className="w-8 h-8 rounded-full bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0">
-          <BellOff className="h-4 w-4 text-accent" />
+          <BellOff className="h-4 w-4 text-accent animate-pulse" />
         </div>
         <div className="flex-1 min-w-0 space-y-2">
           <p className="text-xs font-semibold text-foreground">
