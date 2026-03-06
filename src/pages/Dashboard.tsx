@@ -78,6 +78,7 @@ function AnimatedDecimalValue({ value, suffix = "€", className }: { value: num
 }
 
 export default function Dashboard() {
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const platform = searchParams.get("platform") || "Brezzels";
 
