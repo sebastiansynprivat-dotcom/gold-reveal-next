@@ -3982,18 +3982,28 @@ export default function AdminDashboard() {
                 </div>
               );
 
+              const CollapsibleSection = ({ dotColor, title, count, children }: { dotColor: string; title: string; count: number; children: React.ReactNode }) => {
+                const [open, setOpen] = useState(true);
+                return (
+                  <div className="space-y-2">
+                    <button onClick={() => setOpen(!open)} className="flex items-center gap-2 px-1 w-full text-left group/sec">
+                      <ChevronRight className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${open ? "rotate-90" : ""}`} />
+                      <div className={`h-1.5 w-1.5 rounded-full ${dotColor}`} />
+                      <p className="text-[11px] font-semibold text-foreground tracking-wide uppercase">{title}</p>
+                      <Badge variant="secondary" className="text-[9px] ml-auto">{count} frei</Badge>
+                    </button>
+                    {open && children}
+                  </div>
+                );
+              };
+
               return (
                 <div className="space-y-4">
                   {/* Account-Pools */}
                   {poolPlatforms.length > 0 && (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 px-1">
-                        <div className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                        <p className="text-[11px] font-semibold text-foreground tracking-wide uppercase">Account-Pools</p>
-                        <Badge variant="secondary" className="text-[9px] ml-auto">{poolAccounts.length} frei</Badge>
-                      </div>
+                    <CollapsibleSection dotColor="bg-emerald-400" title="Account-Pools" count={poolAccounts.length}>
                       {poolPlatforms.map((p) => (
-                        <div key={p} className="space-y-1.5">
+                        <div key={p} className="space-y-1.5 pl-6">
                           <div className="flex items-center gap-1.5 px-1">
                             <Badge className="text-[9px] px-1.5 py-0 bg-accent/10 text-accent/80 border-accent/15">{p}</Badge>
                             <span className="text-[9px] text-muted-foreground">{poolAccounts.filter(a => a.platform === p).length} verfügbar</span>
@@ -4001,19 +4011,14 @@ export default function AdminDashboard() {
                           {renderAccountList(poolAccounts, p)}
                         </div>
                       ))}
-                    </div>
+                    </CollapsibleSection>
                   )}
 
                   {/* Freie Accounts */}
                   {manualPlatforms.length > 0 && (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 px-1">
-                        <div className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-                        <p className="text-[11px] font-semibold text-foreground tracking-wide uppercase">Freie Accounts</p>
-                        <Badge variant="secondary" className="text-[9px] ml-auto">{manualAccounts.length} frei</Badge>
-                      </div>
+                    <CollapsibleSection dotColor="bg-amber-400" title="Freie Accounts" count={manualAccounts.length}>
                       {manualPlatforms.map((p) => (
-                        <div key={p} className="space-y-1.5">
+                        <div key={p} className="space-y-1.5 pl-6">
                           <div className="flex items-center gap-1.5 px-1">
                             <Badge className="text-[9px] px-1.5 py-0 bg-amber-400/10 text-amber-400/80 border-amber-400/15">{p}</Badge>
                             <span className="text-[9px] text-muted-foreground">{manualAccounts.filter(a => a.platform === p).length} verfügbar</span>
@@ -4021,7 +4026,7 @@ export default function AdminDashboard() {
                           {renderAccountList(manualAccounts, p)}
                         </div>
                       ))}
-                    </div>
+                    </CollapsibleSection>
                   )}
                 </div>
               );
