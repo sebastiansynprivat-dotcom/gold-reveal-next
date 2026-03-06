@@ -2568,18 +2568,22 @@ export default function AdminDashboard() {
                     <p className="text-3xl font-bold text-gold-gradient">{allAssignedAccounts.length}</p>
                   </div>
 
-                  {/* Bot-DM fehlt */}
-                  <button
-                    onClick={() => setBotFilter(botFilter === "missing" ? "alle" : "missing")}
-                    className={cn(
-                      "glass-card-subtle rounded-xl p-4 flex flex-col items-center justify-center transition-all",
-                      botFilter === "missing" && "ring-2 ring-destructive/60 shadow-[0_0_12px_-3px_hsl(var(--destructive)/0.2)]"
-                    )}
-                  >
-                    <AlertTriangle className={cn("h-4 w-4 mb-1", botFilter === "missing" ? "text-destructive" : "text-muted-foreground")} />
-                    <p className="text-[9px] text-muted-foreground tracking-wide uppercase">Bot-DM fehlt</p>
-                    <p className={cn("text-lg font-bold", botFilter === "missing" ? "text-destructive" : "text-gold-gradient")}>{botMissing}</p>
-                  </button>
+                  {/* Bot-DM fehlt – matches DualCard height */}
+                  <div className={cn(
+                    "glass-card-subtle rounded-xl overflow-hidden transition-all",
+                    botFilter === "missing" && "ring-2 ring-destructive/60 shadow-[0_0_12px_-3px_hsl(var(--destructive)/0.2)]"
+                  )}>
+                    <button
+                      onClick={() => setBotFilter(botFilter === "missing" ? "alle" : "missing")}
+                      className={cn(
+                        "w-full h-full px-3 py-2.5 text-center transition-all flex flex-col items-center justify-center",
+                        botFilter === "missing" ? "bg-destructive/10" : "hover:bg-secondary/30"
+                      )}
+                    >
+                      <p className="text-[9px] text-muted-foreground tracking-wide uppercase">Bot-DM fehlt</p>
+                      <p className={cn("text-lg font-bold", botFilter === "missing" ? "text-destructive" : "text-gold-gradient")}>{botMissing}</p>
+                    </button>
+                  </div>
 
                   {/* Bot Aktiv / Inaktiv – DualCard style */}
                   <div className={cn(
