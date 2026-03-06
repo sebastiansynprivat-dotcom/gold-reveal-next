@@ -2223,8 +2223,8 @@ export default function AdminDashboard() {
                             {new Date(req.created_at).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit" })}
                           </span>
                         </div>
-                        <p className="text-[10px] text-muted-foreground">Model: <span className="text-foreground font-medium">{req.model_name}</span></p>
-                        <p className="text-xs text-foreground/80 leading-relaxed">{req.description}</p>
+                        <button onClick={() => { navigator.clipboard.writeText(req.model_name); toast.success("Model Name kopiert!"); }} className="text-[10px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer text-left">Model: <span className="text-foreground font-medium underline underline-offset-2 decoration-border">{req.model_name}</span> <Copy className="h-2.5 w-2.5 inline-block ml-0.5 opacity-50" /></button>
+                        <button onClick={() => { navigator.clipboard.writeText(req.description); toast.success("Beschreibung kopiert!"); }} className="text-xs text-foreground/80 leading-relaxed hover:text-foreground transition-colors cursor-pointer text-left">{req.description} <Copy className="h-2.5 w-2.5 inline-block ml-0.5 opacity-50" /></button>
                         <div className="flex items-center gap-2 pt-1">
                           {req.status === "pending" ? (
                             <>
