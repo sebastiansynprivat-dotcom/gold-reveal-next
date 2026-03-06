@@ -911,7 +911,7 @@ export default function AdminDashboard() {
       account_email: newAccEmail.trim(),
       account_password: newAccPassword.trim(),
       account_domain: newAccDomain.trim(),
-      drive_folder_id: newAccDriveFolder.trim() || "",
+      drive_folder_id: extractDriveFolderId(newAccDriveFolder.trim()),
     } as any);
     if (error) {
       toast.error("Fehler beim Hinzufügen");
