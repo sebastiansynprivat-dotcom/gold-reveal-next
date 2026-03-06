@@ -778,6 +778,33 @@ export default function AdminDashboard() {
     }
   };
 
+function AnimatedNumber({ value, className }: { value: number; className?: string }) {
+  const ref = React.useRef<HTMLSpanElement>(null);
+  const prevValue = React.useRef(0);
+
+  React.useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const start = prevValue.current;
+    const end = value;
+    const duration = 600;
+    const startTime = performance.now();
+
+    const animate = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = Math.round(start + (end - start) * eased);
+      el.textContent = current.toLocaleString("de-DE") + "€";
+      if (progress < 1) requestAnimationFrame(animate);
+    };
+    requestAnimationFrame(animate);
+    prevValue.current = end;
+  }, [value]);
+
+  return <span ref={ref} className={className}>{value.toLocaleString("de-DE")}€</span>;
+}
 
 
   const deletePool = async () => {
