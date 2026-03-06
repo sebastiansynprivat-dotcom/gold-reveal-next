@@ -886,7 +886,7 @@ export default function Dashboard() {
             </div>
 
             {/* Gold - Tier 2 with progress bar */}
-            <div className={`relative rounded-xl overflow-hidden border p-4 lg:p-5 space-y-3 transition-all ${isGold ? "border-accent/40 gold-border-glow bg-accent/10" : "border-border bg-secondary/30"}`}>
+            <div className={`relative rounded-xl overflow-hidden border p-4 lg:p-5 space-y-3 transition-all ${isGold ? "border-accent/40 gold-border-glow bg-accent/10 pulse-glow" : "border-border bg-secondary/30"}`}>
               {isGold && <div className="absolute left-0 top-0 bottom-0 w-1 bg-accent" />}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -905,7 +905,7 @@ export default function Dashboard() {
               </div>
               {/* Gold progress bar */}
               <div className="space-y-1.5">
-                <Progress value={progressPct} className="h-2 [&>div]:bg-accent" />
+                <Progress value={progressPct} className="h-2 [&>div]:bg-accent shimmer-bar" />
                 <div className="flex justify-between text-[10px] text-muted-foreground">
                   <span>{umsatz.toLocaleString("de-DE")}€</span>
                   <span>
