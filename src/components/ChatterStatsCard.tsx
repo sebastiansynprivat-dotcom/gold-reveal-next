@@ -145,7 +145,7 @@ export default function ChatterStatsCard({ userId, name }: Props) {
       </div>
 
       {/* All-time Revenue */}
-      <div className="gold-gradient-border-animated rounded-lg p-3 text-center">
+      <div className="gold-gradient-border-animated pulse-glow rounded-lg p-3 text-center">
         <p className="text-[9px] text-muted-foreground mb-0.5">Einnahmen All-Time</p>
         <p className="text-lg font-bold text-gold-gradient">{fmt(stats.allTime)}€</p>
       </div>
