@@ -1237,20 +1237,29 @@ export default function AdminDashboard() {
       <main className="container max-w-4xl mx-auto p-4 space-y-5">
         {/* Premium Tab Navigation */}
         <div className="overflow-x-auto scrollbar-none -mx-4 px-4">
-          <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-secondary/40 backdrop-blur-sm border border-border/30">
+          <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-secondary/40 backdrop-blur-sm border border-border/30 relative">
             {tabItems.map(({ key, label, icon: Icon, onClick }) => (
               <button
                 key={key}
                 onClick={onClick}
                 className={cn(
-                  "flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap",
+                  "relative flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors duration-200 whitespace-nowrap z-10",
                   activeTab === key
-                    ? "bg-accent text-accent-foreground shadow-md shadow-accent/20"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
+                    ? "text-accent-foreground"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                <Icon className="h-3.5 w-3.5" />
-                {label}
+                {activeTab === key && (
+                  <motion.div
+                    layoutId="activeTab"
+                    className="absolute inset-0 bg-accent rounded-lg shadow-md shadow-accent/20"
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  />
+                )}
+                <span className="relative z-10 flex items-center gap-1.5">
+                  <Icon className="h-3.5 w-3.5" />
+                  {label}
+                </span>
               </button>
             ))}
           </div>
@@ -1269,33 +1278,32 @@ export default function AdminDashboard() {
           <div className="space-y-5">
             {/* Premium Time Filter */}
             <div className="overflow-x-auto scrollbar-none -mx-4 px-4">
-              <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-secondary/40 backdrop-blur-sm border border-border/30">
-                {(["heute", "gestern", "7", "30", "90"] as TimeFilter[]).map((f) => (
+              <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-secondary/40 backdrop-blur-sm border border-border/30 relative">
+                {([...["heute", "gestern", "7", "30", "90"] as TimeFilter[], "custom" as TimeFilter]).map((f) => (
                   <button
                     key={f}
                     onClick={() => setTimeFilter(f)}
                     className={cn(
-                      "px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap",
+                      "relative px-3 py-1.5 rounded-lg text-xs font-medium transition-colors duration-200 whitespace-nowrap z-10",
+                      f === "custom" && "flex items-center gap-1",
                       timeFilter === f
-                        ? "bg-accent text-accent-foreground shadow-md shadow-accent/20"
-                        : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
+                        ? "text-accent-foreground"
+                        : "text-muted-foreground hover:text-foreground"
                     )}
                   >
-                    {filterLabels[f]}
+                    {timeFilter === f && (
+                      <motion.div
+                        layoutId="activeTimeFilter"
+                        className="absolute inset-0 bg-accent rounded-lg shadow-md shadow-accent/20"
+                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                      />
+                    )}
+                    <span className="relative z-10 flex items-center gap-1">
+                      {f === "custom" && <CalendarIcon className="h-3 w-3" />}
+                      {f === "custom" ? "Zeitraum" : filterLabels[f]}
+                    </span>
                   </button>
                 ))}
-                <button
-                  onClick={() => setTimeFilter("custom")}
-                  className={cn(
-                    "flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 whitespace-nowrap",
-                    timeFilter === "custom"
-                      ? "bg-accent text-accent-foreground shadow-md shadow-accent/20"
-                      : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
-                  )}
-                >
-                  <CalendarIcon className="h-3 w-3" />
-                  Zeitraum
-                </button>
               </div>
             </div>
 
