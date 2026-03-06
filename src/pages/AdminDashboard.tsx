@@ -2548,6 +2548,70 @@ export default function AdminDashboard() {
 
         {activeTab === "botdms" && (
           <div className="space-y-4">
+            {/* Bot Stats Cards */}
+            {(() => {
+              const botMissing = allAssignedAccounts.filter((acc) => {
+                const saved = savedBotState[acc.id];
+                return !saved || (!saved.message.trim() && !saved.followUp.trim());
+              }).length;
+              const botActive = allAssignedAccounts.filter((acc) => {
+                const saved = savedBotState[acc.id];
+                return saved && saved.isActive;
+              }).length;
+              const botInactive = allAssignedAccounts.length - botActive;
+
+              return (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {/* Models gesamt */}
+                  <div className="glass-card-subtle rounded-xl p-4 flex flex-col items-center justify-center">
+                    <p className="text-[9px] text-muted-foreground mb-1 tracking-wide uppercase">Models gesamt</p>
+                    <p className="text-3xl font-bold text-gold-gradient">{allAssignedAccounts.length}</p>
+                  </div>
+
+                  {/* Bot-DM fehlt */}
+                  <button
+                    onClick={() => setBotFilter(botFilter === "missing" ? "alle" : "missing")}
+                    className={cn(
+                      "glass-card-subtle rounded-xl p-4 flex flex-col items-center justify-center transition-all",
+                      botFilter === "missing" && "ring-2 ring-destructive/60 shadow-[0_0_12px_-3px_hsl(var(--destructive)/0.2)]"
+                    )}
+                  >
+                    <AlertTriangle className={cn("h-4 w-4 mb-1", botFilter === "missing" ? "text-destructive" : "text-muted-foreground")} />
+                    <p className="text-[9px] text-muted-foreground tracking-wide uppercase">Bot-DM fehlt</p>
+                    <p className={cn("text-lg font-bold", botFilter === "missing" ? "text-destructive" : "text-gold-gradient")}>{botMissing}</p>
+                  </button>
+
+                  {/* Bot Aktiv / Inaktiv – DualCard style */}
+                  <div className={cn(
+                    "glass-card-subtle rounded-xl overflow-hidden transition-all",
+                    botFilter === "active" && "ring-2 ring-accent shadow-[0_0_12px_-3px_hsl(var(--accent)/0.3)]",
+                    botFilter === "inactive" && "ring-2 ring-destructive/60 shadow-[0_0_12px_-3px_hsl(var(--destructive)/0.2)]"
+                  )}>
+                    <button
+                      onClick={() => setBotFilter(botFilter === "active" ? "alle" : "active")}
+                      className={cn(
+                        "w-full px-3 py-2.5 text-center transition-all border-b border-border/20",
+                        botFilter === "active" ? "bg-accent/10" : "hover:bg-secondary/30"
+                      )}
+                    >
+                      <p className="text-[9px] text-muted-foreground tracking-wide uppercase">Bot aktiv</p>
+                      <p className={cn("text-lg font-bold", botFilter === "active" ? "text-accent" : "text-gold-gradient")}>{botActive}</p>
+                    </button>
+                    <button
+                      onClick={() => setBotFilter(botFilter === "inactive" ? "alle" : "inactive")}
+                      className={cn(
+                        "w-full px-3 py-2.5 text-center transition-all",
+                        botFilter === "inactive" ? "bg-destructive/10" : "hover:bg-secondary/30"
+                      )}
+                    >
+                      <p className="text-[9px] text-muted-foreground tracking-wide uppercase">Bot inaktiv</p>
+                      <p className={cn("text-lg font-bold", botFilter === "inactive" ? "text-destructive" : "text-gold-gradient")}>{botInactive}</p>
+                    </button>
+                  </div>
+                </div>
+              );
+            })()}
+
             <section className="glass-card rounded-xl overflow-hidden">
               <div className="px-4 py-3 border-b border-border flex items-center gap-2">
                 <Bot className="h-4 w-4 text-accent" />
@@ -2580,27 +2644,6 @@ export default function AdminDashboard() {
                   >
                     <Package className="h-3 w-3" />
                     {p}
-                  </button>
-                ))}
-              </div>
-
-              {/* Status filters row */}
-              <div className="px-3 pt-1 flex gap-2 overflow-x-auto scrollbar-none pb-1">
-                {([
-                  { key: "missing" as const, label: "Bot-DM fehlt", icon: AlertTriangle },
-                  { key: "active" as const, label: "Bot aktiv", icon: Check },
-                  { key: "inactive" as const, label: "Bot inaktiv", icon: XCircle },
-                ] as const).map(({ key, label, icon: Icon }) => (
-                  <button
-                    key={key}
-                    onClick={() => setBotFilter(botFilter === key ? "alle" : key)}
-                    className={cn(
-                      "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium transition-colors shrink-0",
-                      botFilter === key ? "bg-accent text-accent-foreground" : "bg-secondary/50 text-muted-foreground hover:bg-secondary"
-                    )}
-                  >
-                    <Icon className="h-3 w-3" />
-                    {label}
                   </button>
                 ))}
               </div>
