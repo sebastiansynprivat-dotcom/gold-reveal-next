@@ -714,7 +714,12 @@ export default function Dashboard() {
                     {[...myRequests].sort((a, b) => a.status === "rejected" && b.status !== "rejected" ? 1 : b.status === "rejected" && a.status !== "rejected" ? -1 : 0).map((req) => (
                       <div key={req.id} className="rounded-lg border border-border/50 bg-secondary/20 p-3 space-y-1.5">
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-xs font-medium text-foreground">{req.model_name}</span>
+                          <div className="flex flex-col">
+                            <span className="text-xs font-medium text-foreground">{req.model_name}</span>
+                            {(req as any).customer_name && (
+                              <span className="text-[10px] text-muted-foreground">Kunde: {(req as any).customer_name}</span>
+                            )}
+                          </div>
                           <Badge variant={req.status === "accepted" ? "default" : req.status === "rejected" ? "destructive" : req.status === "in_progress" ? "secondary" : "secondary"} className="text-[10px]">
                             {req.status === "pending" ? "⏳ Ausstehend" : req.status === "accepted" ? "✅ Angenommen" : req.status === "in_progress" ? "⏳ Wird bearbeitet" : "❌ Abgelehnt"}
                           </Badge>
