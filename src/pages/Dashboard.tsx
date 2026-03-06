@@ -708,20 +708,22 @@ export default function Dashboard() {
                             <p className="text-[11px] text-foreground leading-relaxed">{req.admin_comment}</p>
                           </div>
                         )}
-                        {/* Bearbeiten Button */}
-                        <button
-                          onClick={() => setEditRequest({
-                            id: req.id,
-                            model_name: req.model_name,
-                            request_type: req.request_type as "individual" | "general",
-                            price: req.price,
-                            description: req.description,
-                          })}
-                          className="flex items-center gap-1.5 text-[10px] text-accent hover:text-accent/80 transition-colors mt-1 cursor-pointer"
-                        >
-                          <Pencil className="h-3 w-3" />
-                          Anfrage bearbeiten
-                        </button>
+                        {/* Bearbeiten Button – nur bei Admin-Kommentar */}
+                        {req.admin_comment && (
+                          <button
+                            onClick={() => setEditRequest({
+                              id: req.id,
+                              model_name: req.model_name,
+                              request_type: req.request_type as "individual" | "general",
+                              price: req.price,
+                              description: req.description,
+                            })}
+                            className="flex items-center gap-1.5 text-[10px] text-accent hover:text-accent/80 transition-colors mt-1 cursor-pointer"
+                          >
+                            <Pencil className="h-3 w-3" />
+                            Anfrage bearbeiten
+                          </button>
+                        )}
                       </div>
                     ))}
                   </div>
