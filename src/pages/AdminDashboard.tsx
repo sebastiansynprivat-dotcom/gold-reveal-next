@@ -1522,7 +1522,7 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {activeTab === "chatter" && (<>
+        {activeTab === "chatter" && (<div className="space-y-6">
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
@@ -1917,69 +1917,72 @@ export default function AdminDashboard() {
           </AlertDialogContent>
         </AlertDialog>
 
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Chatter suchen (Gruppe oder Telegram-ID)..."
-            className="pl-9 text-sm"
-          />
-        </div>
+        {/* Search & Filters Group */}
+        <div className="space-y-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Chatter suchen (Gruppe oder Telegram-ID)..."
+              className="pl-9 text-sm"
+            />
+          </div>
 
-        {/* Platform Filters (independent, combinable) */}
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-          {[
-            { key: "maloum", label: "Maloum" },
-            { key: "brezzels", label: "Brezzels" },
-          ].map(({ key, label }) => (
-            <button
-              key={key}
-              onClick={() => {
-                setPlatformFilters((prev) => {
-                  const next = new Set(prev);
-                  if (next.has(key)) next.delete(key);
-                  else next.add(key);
-                  return next;
-                });
-              }}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap transition-colors shrink-0 border",
-                platformFilters.has(key)
-                  ? "bg-accent text-accent-foreground border-accent"
-                  : "bg-secondary/50 text-muted-foreground hover:bg-secondary border-transparent"
-              )}
-            >
-              <Filter className="h-3 w-3" />
-              {label}
-            </button>
-          ))}
-        </div>
+          {/* Platform Filters (independent, combinable) */}
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+            {[
+              { key: "maloum", label: "Maloum" },
+              { key: "brezzels", label: "Brezzels" },
+            ].map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => {
+                  setPlatformFilters((prev) => {
+                    const next = new Set(prev);
+                    if (next.has(key)) next.delete(key);
+                    else next.add(key);
+                    return next;
+                  });
+                }}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap transition-colors shrink-0 border",
+                  platformFilters.has(key)
+                    ? "bg-accent text-accent-foreground border-accent"
+                    : "bg-secondary/50 text-muted-foreground hover:bg-secondary border-transparent"
+                )}
+              >
+                <Filter className="h-3 w-3" />
+                {label}
+              </button>
+            ))}
+          </div>
 
-        {/* Chatter Filters */}
-        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-          {([
-            { key: "alle", label: "Alle", icon: Users },
-            { key: "open_2d", label: "> 3 Tage offen", icon: MessageSquare },
-            { key: "top_tag", label: "Top Tag", icon: Star },
-            { key: "top_woche", label: "Top Woche", icon: TrendingUp },
-            { key: "top_monat", label: "Top Monat", icon: DollarSign },
-            { key: "no_revenue_7d", label: "7d+ ohne Umsatz", icon: AlertTriangle },
-          ] as const).map(({ key, label, icon: Icon }) => (
-            <button
-              key={key}
-              onClick={() => setChatterFilter(key)}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap transition-colors shrink-0",
-                chatterFilter === key
-                  ? "bg-accent text-accent-foreground"
-                  : "bg-secondary/50 text-muted-foreground hover:bg-secondary"
-              )}
-            >
-              <Icon className="h-3 w-3" />
-              {label}
-            </button>
-          ))}
+          {/* Chatter Filters */}
+          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+            {([
+              { key: "alle", label: "Alle", icon: Users },
+              { key: "open_2d", label: "> 3 Tage offen", icon: MessageSquare },
+              { key: "top_tag", label: "Top Tag", icon: Star },
+              { key: "top_woche", label: "Top Woche", icon: TrendingUp },
+              { key: "top_monat", label: "Top Monat", icon: DollarSign },
+              { key: "no_revenue_7d", label: "7d+ ohne Umsatz", icon: AlertTriangle },
+            ] as const).map(({ key, label, icon: Icon }) => (
+              <button
+                key={key}
+                onClick={() => setChatterFilter(key)}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium whitespace-nowrap transition-colors shrink-0",
+                  chatterFilter === key
+                    ? "bg-accent text-accent-foreground"
+                    : "bg-secondary/50 text-muted-foreground hover:bg-secondary"
+                )}
+              >
+                <Icon className="h-3 w-3" />
+                {label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <section className="glass-card rounded-xl overflow-hidden">
@@ -2318,7 +2321,7 @@ export default function AdminDashboard() {
             </div>
           )}
         </section>
-        </>)}
+        </div>)}
 
         {activeTab === "anfragen" && (
           <div className="space-y-4">
