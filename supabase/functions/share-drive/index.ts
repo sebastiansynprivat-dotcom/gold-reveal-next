@@ -32,8 +32,10 @@ async function getAccessToken(): Promise<string> {
     const json = JSON.parse(privateKeyRaw);
     pemKey = json.private_key;
     if (!serviceEmail) serviceEmail = json.client_email;
-  } catch {
+    console.log("Parsed JSON key file, got private_key:", !!pemKey, "email:", serviceEmail);
+  } catch (e) {
     // Not JSON, treat as raw PEM key
+    console.log("Not JSON, treating as raw PEM. Parse error:", e.message);
     pemKey = privateKeyRaw;
   }
 
