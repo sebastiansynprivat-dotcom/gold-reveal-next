@@ -60,7 +60,7 @@ const ModelRequestDialog = () => {
   return (
     <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
       <DialogTrigger asChild>
-        <button className="flex items-center gap-3 rounded-xl border border-border/50 bg-secondary/30 px-4 py-3 hover:border-accent/50 hover:bg-secondary/50 active:scale-[0.98] transition-all cursor-pointer group text-left">
+        <button className="flex items-center gap-3 w-full rounded-xl border border-border/50 bg-secondary/30 px-4 py-3 hover:border-accent/50 hover:bg-secondary/50 active:scale-[0.98] transition-all cursor-pointer group text-left">
           <div className="h-9 w-9 rounded-full bg-accent/20 flex items-center justify-center shrink-0">
             <Send className="h-4 w-4 text-accent" />
           </div>
