@@ -2492,6 +2492,18 @@ export default function AdminDashboard() {
                             <Copy className="h-3 w-3 opacity-0 group-hover:opacity-50 transition-opacity ml-auto shrink-0" />
                           </button>
 
+                          {/* Customer Name */}
+                          {(req as any).customer_name && (
+                            <button
+                              onClick={() => { navigator.clipboard.writeText((req as any).customer_name); toast.success("Kundenname kopiert!"); }}
+                              className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors group w-full text-left"
+                            >
+                              <span className="text-muted-foreground">Kunde:</span>
+                              <span className="text-foreground font-medium">{(req as any).customer_name}</span>
+                              <Copy className="h-3 w-3 opacity-0 group-hover:opacity-50 transition-opacity ml-auto shrink-0" />
+                            </button>
+                          )}
+
                           {/* Description */}
                           <button
                             onClick={() => { navigator.clipboard.writeText(req.description); toast.success("Beschreibung kopiert!"); }}
