@@ -217,6 +217,7 @@ export default function AdminDashboard() {
   const [pushUsers, setPushUsers] = useState<Set<string>>(new Set());
   const [revenueUsers, setRevenueUsers] = useState<Set<string>>(new Set());
   const [pwaUsers, setPwaUsers] = useState<Set<string>>(new Set());
+  const [revenueBoost, setRevenueBoost] = useState(0);
 
   // Admin management state
   const [adminSectionOpen, setAdminSectionOpen] = useState(false);
@@ -310,7 +311,7 @@ export default function AdminDashboard() {
     "4based": filteredRevenueData.reduce((s, d) => s + d["4based"], 0),
   }), [filteredRevenueData]);
 
-  const grandTotal = platformTotals.maloum + platformTotals.brezzels + platformTotals["4based"];
+  const grandTotal = platformTotals.maloum + platformTotals.brezzels + platformTotals["4based"] + revenueBoost;
 
   const filterLabels: Record<TimeFilter, string> = {
     heute: "Heute", gestern: "Gestern", "7": "7 Tage", "30": "30 Tage", "90": "90 Tage", custom: "Zeitraum",
@@ -337,6 +338,29 @@ export default function AdminDashboard() {
     loadLoginStats();
     loadPushUsers();
     loadRevenueUsers();
+
+    // Realtime subscription for live revenue updates
+    const channel = supabase
+      .channel('admin-revenue-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'daily_revenue' },
+        (payload) => {
+          const amount = (payload.new as any)?.amount || 0;
+          const oldAmount = (payload.old as any)?.amount || 0;
+          const diff = amount - oldAmount;
+          if (diff > 0) {
+            setRevenueBoost(prev => prev + diff);
+            toast.success(`+${diff}€ Umsatz eingegangen!`, { duration: 3000 });
+          }
+          loadRevenueUsers();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   // Load cached AI summaries
