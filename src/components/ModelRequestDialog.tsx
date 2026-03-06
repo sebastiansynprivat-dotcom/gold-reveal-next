@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Send } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Send, Pencil } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,11 +10,21 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 
-interface ModelRequestDialogProps {
-  onSubmitted?: () => void;
+export interface EditRequestData {
+  id: string;
+  model_name: string;
+  request_type: "individual" | "general";
+  price: number | null;
+  description: string;
 }
 
-const ModelRequestDialog = ({ onSubmitted }: ModelRequestDialogProps) => {
+interface ModelRequestDialogProps {
+  onSubmitted?: () => void;
+  editData?: EditRequestData | null;
+  onEditClear?: () => void;
+}
+
+const ModelRequestDialog = ({ onSubmitted, editData, onEditClear }: ModelRequestDialogProps) => {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [modelName, setModelName] = useState("");
@@ -23,11 +33,30 @@ const ModelRequestDialog = ({ onSubmitted }: ModelRequestDialogProps) => {
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
 
+  // When editData changes, open dialog and pre-fill
+  useEffect(() => {
+    if (editData) {
+      setModelName(editData.model_name);
+      setRequestType(editData.request_type);
+      setPrice(editData.price != null ? String(editData.price) : "");
+      setDescription(editData.description);
+      setOpen(true);
+    }
+  }, [editData]);
+
   const resetForm = () => {
     setModelName("");
     setRequestType("general");
     setPrice("");
     setDescription("");
+  };
+
+  const handleClose = (v: boolean) => {
+    setOpen(v);
+    if (!v) {
+      resetForm();
+      onEditClear?.();
+    }
   };
 
   const handleSubmit = async () => {
@@ -42,44 +71,69 @@ const ModelRequestDialog = ({ onSubmitted }: ModelRequestDialogProps) => {
     }
 
     setLoading(true);
-    const { error } = await supabase.from("model_requests").insert({
-      user_id: user.id,
-      model_name: modelName.trim(),
-      request_type: requestType,
-      price: requestType === "individual" ? parseFloat(price) : null,
-      description: description.trim(),
-    });
-    setLoading(false);
 
-    if (error) {
-      toast.error("Fehler beim Senden der Anfrage.");
-      return;
+    if (editData) {
+      // Update existing request
+      const { error } = await supabase.from("model_requests").update({
+        model_name: modelName.trim(),
+        request_type: requestType,
+        price: requestType === "individual" ? parseFloat(price) : null,
+        description: description.trim(),
+        status: "pending",
+      }).eq("id", editData.id);
+      setLoading(false);
+      if (error) {
+        toast.error("Fehler beim Aktualisieren der Anfrage.");
+        return;
+      }
+      toast.success("Anfrage aktualisiert! ✅");
+    } else {
+      // Insert new request
+      const { error } = await supabase.from("model_requests").insert({
+        user_id: user.id,
+        model_name: modelName.trim(),
+        request_type: requestType,
+        price: requestType === "individual" ? parseFloat(price) : null,
+        description: description.trim(),
+      });
+      setLoading(false);
+      if (error) {
+        toast.error("Fehler beim Senden der Anfrage.");
+        return;
+      }
+      toast.success("Anfrage erfolgreich gesendet! ✅");
     }
 
-    toast.success("Anfrage erfolgreich gesendet! ✅");
     resetForm();
     setOpen(false);
+    onEditClear?.();
     onSubmitted?.();
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
-      <DialogTrigger asChild>
-        <button className="flex items-center gap-3 w-full px-4 py-4 lg:px-6 lg:py-5 hover:bg-secondary/30 active:scale-[0.99] transition-all cursor-pointer group">
-          <div className="h-10 w-10 rounded-full bg-accent/20 flex items-center justify-center shrink-0">
-            <Send className="h-5 w-5 text-accent" />
-          </div>
-          <div className="text-left">
-            <p className="text-sm font-semibold text-foreground">Anfrage an das Model stellen</p>
-            <p className="text-xs text-muted-foreground">Individuelle oder allgemeine Anfrage senden</p>
-          </div>
-        </button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={handleClose}>
+      {!editData && (
+        <DialogTrigger asChild>
+          <button className="flex items-center gap-3 w-full px-4 py-4 lg:px-6 lg:py-5 hover:bg-secondary/30 active:scale-[0.99] transition-all cursor-pointer group">
+            <div className="h-10 w-10 rounded-full bg-accent/20 flex items-center justify-center shrink-0">
+              <Send className="h-5 w-5 text-accent" />
+            </div>
+            <div className="text-left">
+              <p className="text-sm font-semibold text-foreground">Anfrage an das Model stellen</p>
+              <p className="text-xs text-muted-foreground">Individuelle oder allgemeine Anfrage senden</p>
+            </div>
+          </button>
+        </DialogTrigger>
+      )}
       <DialogContent className="max-w-md bg-background border-border">
         <DialogHeader>
-          <DialogTitle className="text-foreground">Anfrage an das Model</DialogTitle>
+          <DialogTitle className="text-foreground">
+            {editData ? "Anfrage bearbeiten" : "Anfrage an das Model"}
+          </DialogTitle>
           <DialogDescription className="text-muted-foreground">
-            Stelle eine Anfrage an dein Model – individuell oder allgemein.
+            {editData
+              ? "Bearbeite deine Anfrage und sende sie erneut."
+              : "Stelle eine Anfrage an dein Model – individuell oder allgemein."}
           </DialogDescription>
         </DialogHeader>
 
@@ -139,7 +193,9 @@ const ModelRequestDialog = ({ onSubmitted }: ModelRequestDialogProps) => {
           </div>
 
           <Button onClick={handleSubmit} disabled={loading} className="w-full">
-            {loading ? "Wird gesendet..." : "Anfrage absenden"}
+            {loading
+              ? (editData ? "Wird aktualisiert..." : "Wird gesendet...")
+              : (editData ? "Anfrage aktualisieren" : "Anfrage absenden")}
           </Button>
         </div>
       </DialogContent>
