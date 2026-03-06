@@ -26,7 +26,7 @@ import HomescreenTutorial from "@/components/HomescreenTutorial";
 import PushNotificationDialog from "@/components/PushNotificationDialog";
 import AccountMemoDialog from "@/components/AccountMemoDialog";
 import FrageMemoDialog from "@/components/FrageMemoDialog";
-import ModelRequestDialog from "@/components/ModelRequestDialog";
+import ModelRequestDialog, { EditRequestData } from "@/components/ModelRequestDialog";
 
 const GOLD_THRESHOLD = 3000;
 const STARTER_RATE = 0.2;
