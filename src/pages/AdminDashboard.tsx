@@ -338,6 +338,29 @@ export default function AdminDashboard() {
     loadLoginStats();
     loadPushUsers();
     loadRevenueUsers();
+
+    // Realtime subscription for live revenue updates
+    const channel = supabase
+      .channel('admin-revenue-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'daily_revenue' },
+        (payload) => {
+          const amount = (payload.new as any)?.amount || 0;
+          const oldAmount = (payload.old as any)?.amount || 0;
+          const diff = amount - oldAmount;
+          if (diff > 0) {
+            setRevenueBoost(prev => prev + diff);
+            toast.success(`+${diff}€ Umsatz eingegangen!`, { duration: 3000 });
+          }
+          loadRevenueUsers();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   // Load cached AI summaries
