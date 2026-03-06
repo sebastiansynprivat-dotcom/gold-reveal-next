@@ -4309,6 +4309,8 @@ export default function AdminDashboard() {
                             <Button variant="ghost" size="sm" className="h-7 text-[10px] text-destructive/70 hover:text-destructive"
                               onClick={async () => {
                                 for (const acc of folderAccs) { await supabase.from("accounts").update({ folder_name: null } as any).eq("id", acc.id); }
+                                const platform = selectedManualPlatform || "";
+                                setCustomFolders(prev => ({ ...prev, [platform]: (prev[platform] || []).filter(f => f !== openFolder) }));
                                 toast.success(`Ordner "${openFolder}" aufgelöst`); setOpenFolder(null); loadAccounts();
                               }}>
                               <Trash2 className="h-3 w-3 mr-1" /> Auflösen
