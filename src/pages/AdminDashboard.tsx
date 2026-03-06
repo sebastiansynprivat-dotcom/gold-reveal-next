@@ -2577,7 +2577,7 @@ export default function AdminDashboard() {
                     )}
                   >
                     <p className="text-[9px] text-muted-foreground mb-1 tracking-wide uppercase">Bot-DM fehlt</p>
-                    <p className={cn("text-3xl font-bold", botFilter === "missing" ? "text-destructive" : "text-destructive/80")}>{botMissing}</p>
+                    <p className={cn("text-3xl font-bold", botMissing === 0 ? "text-gold-gradient" : botFilter === "missing" ? "text-destructive" : "text-destructive/80")}>{botMissing}</p>
                   </button>
 
                   {/* Bot aktiv */}
@@ -2601,7 +2601,7 @@ export default function AdminDashboard() {
                     )}
                   >
                     <p className="text-[9px] text-muted-foreground mb-1 tracking-wide uppercase">Bot inaktiv</p>
-                    <p className={cn("text-3xl font-bold", botFilter === "inactive" ? "text-destructive" : "text-destructive/80")}>{botInactive}</p>
+                    <p className={cn("text-3xl font-bold", botInactive === 0 ? "text-gold-gradient" : botFilter === "inactive" ? "text-destructive" : "text-destructive/80")}>{botInactive}</p>
                   </button>
                 </div>
               );
