@@ -50,6 +50,23 @@ export default function Dashboard() {
   const [offer, setOffer] = useState("");
   const [assignedAccounts, setAssignedAccounts] = useState<{id: string;account_email: string;account_password: string;account_domain: string;platform: string;assigned_at: string | null;}[]>([]);
   const [accountsOpen, setAccountsOpen] = useState(true);
+  const [myRequests, setMyRequests] = useState<any[]>([]);
+  const [requestsOpen, setRequestsOpen] = useState(false);
+
+  const loadMyRequests = useCallback(async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("model_requests")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(20);
+    if (data) setMyRequests(data);
+  }, [user]);
+
+  useEffect(() => {
+    if (user) loadMyRequests();
+  }, [user, loadMyRequests]);
 
   // Per-account drive done/hidden state stored in localStorage, keyed by account id + assigned_at
   const getDriveState = (accountId: string) => {
