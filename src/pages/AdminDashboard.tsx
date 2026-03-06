@@ -147,6 +147,7 @@ export default function AdminDashboard() {
   const [newAccEmail, setNewAccEmail] = useState("");
   const [newAccPassword, setNewAccPassword] = useState("");
   const [newAccDomain, setNewAccDomain] = useState("");
+  const [newAccDriveFolder, setNewAccDriveFolder] = useState("");
   const [addingAccount, setAddingAccount] = useState(false);
   const [assigning, setAssigning] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<ChatterProfile | null>(null);
@@ -910,7 +911,8 @@ export default function AdminDashboard() {
       account_email: newAccEmail.trim(),
       account_password: newAccPassword.trim(),
       account_domain: newAccDomain.trim(),
-    });
+      drive_folder_id: newAccDriveFolder.trim() || "",
+    } as any);
     if (error) {
       toast.error("Fehler beim Hinzufügen");
     } else {
@@ -918,6 +920,7 @@ export default function AdminDashboard() {
       setNewAccEmail("");
       setNewAccPassword("");
       setNewAccDomain("");
+      setNewAccDriveFolder("");
       loadAccounts();
     }
     setAddingAccount(false);
@@ -3467,6 +3470,12 @@ export default function AdminDashboard() {
                 value={newAccPassword}
                 onChange={(e) => setNewAccPassword(e.target.value)}
                 placeholder="Passwort"
+              />
+              <Input
+                value={newAccDriveFolder}
+                onChange={(e) => setNewAccDriveFolder(e.target.value)}
+                placeholder="Google Drive Folder ID (optional)"
+                className="text-xs"
               />
               <Button
                 onClick={addAccount}

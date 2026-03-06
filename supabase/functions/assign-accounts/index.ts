@@ -113,6 +113,40 @@ Deno.serve(async (req) => {
         })
         .eq("user_id", profile.user_id);
 
+      // Auto-share Google Drive folder if drive_folder_id is set
+      if (freeAccount.drive_folder_id) {
+        try {
+          // Get the user's login email
+          const { data: userData } = await supabase.auth.admin.getUserById(profile.user_id);
+          const loginEmail = userData?.user?.email;
+          if (loginEmail) {
+            const driveRes = await fetch(
+              `${Deno.env.get("SUPABASE_URL")}/functions/v1/share-drive`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "x-service-role": "true",
+                  Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+                },
+                body: JSON.stringify({
+                  folder_id: freeAccount.drive_folder_id,
+                  email: loginEmail,
+                }),
+              }
+            );
+            if (!driveRes.ok) {
+              const driveErr = await driveRes.json();
+              console.error("Drive share failed for user:", profile.user_id, driveErr);
+            } else {
+              console.log("Drive folder shared with", loginEmail);
+            }
+          }
+        } catch (driveErr) {
+          console.error("Drive share error for user:", profile.user_id, driveErr);
+        }
+      }
+
       // Send push notification to the assigned user
       try {
         const vapidPublic = Deno.env.get("VAPID_PUBLIC_KEY");

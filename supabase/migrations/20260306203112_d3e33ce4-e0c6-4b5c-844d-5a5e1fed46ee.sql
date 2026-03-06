@@ -1,0 +1,1 @@
+ALTER TABLE public.accounts ADD COLUMN IF NOT EXISTS drive_folder_id text DEFAULT '';
