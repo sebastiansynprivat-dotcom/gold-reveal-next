@@ -1526,15 +1526,32 @@ export default function AdminDashboard() {
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[
-            { label: "Chatter gesamt", value: chatters.length },
-            { label: "Mit Telegram", value: chatters.filter((c) => c.telegram_id).length },
-            { label: "Push aktiv", value: chatters.filter((c) => pushUsers.has(c.user_id)).length },
-            { label: "App installiert", value: pwaUsers.size },
+            { label: "Chatter gesamt", value: chatters.length, filterKey: null, active: false },
+            { label: "Mit Telegram", value: chatters.filter((c) => c.telegram_id && c.telegram_id.trim() !== "").length, filterKey: "telegram" as const, active: filterTelegramOnly },
+            { label: "Push aktiv", value: chatters.filter((c) => pushUsers.has(c.user_id)).length, filterKey: "push" as const, active: filterPushOnly },
+            { label: "App installiert", value: pwaUsers.size, filterKey: "pwa" as const, active: filterPwaOnly },
           ].map((stat, i) => (
-            <div key={i} className="glass-card-subtle rounded-xl p-4 text-center hover:scale-[1.02] transition-transform">
+            <button
+              key={i}
+              onClick={() => {
+                if (stat.filterKey === "telegram") setFilterTelegramOnly(p => !p);
+                else if (stat.filterKey === "push") setFilterPushOnly(p => !p);
+                else if (stat.filterKey === "pwa") setFilterPwaOnly(p => !p);
+              }}
+              className={cn(
+                "glass-card-subtle rounded-xl p-4 text-center transition-all",
+                stat.filterKey ? "cursor-pointer hover:scale-[1.02]" : "cursor-default",
+                stat.active && "ring-2 ring-accent bg-accent/10"
+              )}
+            >
               <p className="text-[10px] text-muted-foreground mb-1 tracking-wide uppercase">{stat.label}</p>
               <p className="text-2xl font-bold text-gold-gradient">{stat.value}</p>
-            </div>
+              {stat.filterKey && (
+                <p className={cn("text-[9px] mt-1 font-medium", stat.active ? "text-accent" : "text-muted-foreground/50")}>
+                  {stat.active ? "Filter aktiv ✓" : "Klicken zum Filtern"}
+                </p>
+              )}
+            </button>
           ))}
         </div>
 
