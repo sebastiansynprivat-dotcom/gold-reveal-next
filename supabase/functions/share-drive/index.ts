@@ -19,11 +19,26 @@ const corsHeaders = {
  * Called internally from assign-accounts or manually from admin.
  */
 async function getAccessToken(): Promise<string> {
-  const serviceEmail = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_EMAIL");
+  let serviceEmail = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_EMAIL");
   const privateKeyRaw = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY");
 
-  if (!serviceEmail || !privateKeyRaw) {
-    throw new Error("Google Service Account credentials not configured. Set GOOGLE_SERVICE_ACCOUNT_EMAIL and GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY secrets.");
+  if (!privateKeyRaw) {
+    throw new Error("Google Service Account credentials not configured.");
+  }
+
+  // The secret might contain the entire JSON key file
+  let pemKey: string;
+  try {
+    const json = JSON.parse(privateKeyRaw);
+    pemKey = json.private_key;
+    if (!serviceEmail) serviceEmail = json.client_email;
+  } catch {
+    // Not JSON, treat as raw PEM key
+    pemKey = privateKeyRaw;
+  }
+
+  if (!serviceEmail || !pemKey) {
+    throw new Error("Google Service Account credentials incomplete.");
   }
 
   // Build JWT for Google OAuth2
@@ -59,16 +74,10 @@ async function getAccessToken(): Promise<string> {
   const unsignedToken = `${headerB64}.${claimB64}`;
 
   // Import the private key
-  const privateKey = privateKeyRaw.replace(/\\n/g, "\n");
-  const pemContents = privateKey
+  const pemContents = pemKey
     .replace(/-----BEGIN PRIVATE KEY-----/g, "")
     .replace(/-----END PRIVATE KEY-----/g, "")
     .replace(/[\s\r\n]/g, "");
-
-  console.log("PEM length:", pemContents.length);
-  console.log("PEM first 20 chars:", pemContents.substring(0, 20));
-  console.log("PEM last 20 chars:", pemContents.substring(pemContents.length - 20));
-  console.log("Raw key first 80 chars:", privateKeyRaw.substring(0, 80));
 
   const binaryKey = decodeBase64(pemContents);
 
