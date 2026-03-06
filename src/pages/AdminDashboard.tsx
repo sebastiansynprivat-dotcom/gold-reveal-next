@@ -1386,28 +1386,17 @@ export default function AdminDashboard() {
         {activeTab === "chatter" && (<>
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="glass-card-subtle rounded-xl p-4 text-center">
-            <p className="text-[10px] text-muted-foreground mb-0.5">Chatter gesamt</p>
-            <p className="text-2xl font-bold text-gold-gradient">{chatters.length}</p>
-          </div>
-          <div className="glass-card-subtle rounded-xl p-4 text-center">
-            <p className="text-[10px] text-muted-foreground mb-0.5">Mit Telegram</p>
-            <p className="text-2xl font-bold text-gold-gradient">
-              {chatters.filter((c) => c.telegram_id).length}
-            </p>
-          </div>
-          <div className="glass-card-subtle rounded-xl p-4 text-center">
-            <p className="text-[10px] text-muted-foreground mb-0.5">Push aktiv</p>
-            <p className="text-2xl font-bold text-gold-gradient">
-              {chatters.filter((c) => pushUsers.has(c.user_id)).length}
-            </p>
-          </div>
-          <div className="glass-card-subtle rounded-xl p-4 text-center">
-            <p className="text-[10px] text-muted-foreground mb-0.5">App installiert</p>
-            <p className="text-2xl font-bold text-gold-gradient">
-              {pwaUsers.size}
-            </p>
-          </div>
+          {[
+            { label: "Chatter gesamt", value: chatters.length },
+            { label: "Mit Telegram", value: chatters.filter((c) => c.telegram_id).length },
+            { label: "Push aktiv", value: chatters.filter((c) => pushUsers.has(c.user_id)).length },
+            { label: "App installiert", value: pwaUsers.size },
+          ].map((stat, i) => (
+            <div key={i} className="glass-card-subtle rounded-xl p-4 text-center hover:scale-[1.02] transition-transform">
+              <p className="text-[10px] text-muted-foreground mb-1 tracking-wide uppercase">{stat.label}</p>
+              <p className="text-2xl font-bold text-gold-gradient">{stat.value}</p>
+            </div>
+          ))}
         </div>
 
         {/* Offer-Verteilung (collapsible) */}
