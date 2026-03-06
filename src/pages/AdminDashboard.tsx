@@ -2250,25 +2250,51 @@ export default function AdminDashboard() {
                           )}
                         </div>
 
-                        <div className="flex items-center gap-2 pt-1">
-                          {req.status === "pending" ? (
-                            <>
-                              <Button size="sm" variant="outline" className="h-7 text-xs border-green-500/30 text-green-400 hover:bg-green-500/10" onClick={() => updateRequestStatus(req.id, "accepted")}>
-                                <Check className="h-3 w-3 mr-1" /> Annehmen
+                        <div className="flex flex-col gap-2 pt-1">
+                          <div className="flex items-center gap-2">
+                            {req.status === "pending" ? (
+                              <>
+                                <Button size="sm" variant="outline" className="h-7 text-xs border-green-500/30 text-green-400 hover:bg-green-500/10" onClick={() => updateRequestStatus(req.id, "accepted")}>
+                                  <Check className="h-3 w-3 mr-1" /> Angenommen
+                                </Button>
+                                <Button size="sm" variant="outline" className="h-7 text-xs border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10" onClick={() => {
+                                  setModelRequests(prev => prev.map(r => r.id === req.id ? { ...r, _showRejectReason: !r._showRejectReason } : r));
+                                }}>
+                                  <XCircle className="h-3 w-3 mr-1" /> Wird bearbeitet
+                                </Button>
+                              </>
+                            ) : (
+                              <Badge variant={req.status === "accepted" ? "default" : "destructive"} className="text-xs">
+                                {req.status === "accepted" ? "✅ Angenommen" : "⏳ Wird bearbeitet"}
+                              </Badge>
+                            )}
+                            {req.status !== "pending" && (
+                              <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground" onClick={() => updateRequestStatus(req.id, "pending")}>
+                                <RefreshCw className="h-3 w-3 mr-1" /> Zurücksetzen
                               </Button>
-                              <Button size="sm" variant="outline" className="h-7 text-xs border-red-500/30 text-red-400 hover:bg-red-500/10" onClick={() => updateRequestStatus(req.id, "rejected")}>
-                                <XCircle className="h-3 w-3 mr-1" /> Ablehnen
+                            )}
+                          </div>
+                          {req._showRejectReason && req.status === "pending" && (
+                            <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200">
+                              <Textarea
+                                placeholder="Grund angeben (z.B. Model ist krank, dauert länger...)"
+                                value={req._rejectReason ?? ""}
+                                onChange={(e) => {
+                                  setModelRequests(prev => prev.map(r => r.id === req.id ? { ...r, _rejectReason: e.target.value } : r));
+                                }}
+                                rows={2}
+                                className="text-xs"
+                              />
+                              <Button size="sm" variant="outline" className="h-7 text-xs border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10" onClick={async () => {
+                                const reason = req._rejectReason ?? "";
+                                const { error } = await supabase.from("model_requests").update({ status: "rejected", admin_comment: reason || null }).eq("id", req.id);
+                                if (error) { toast.error("Fehler beim Aktualisieren"); return; }
+                                toast.success("Status auf 'Wird bearbeitet' gesetzt");
+                                loadModelRequests();
+                              }}>
+                                <Save className="h-3 w-3 mr-1" /> Absenden
                               </Button>
-                            </>
-                          ) : (
-                            <Badge variant={req.status === "accepted" ? "default" : "destructive"} className="text-xs">
-                              {req.status === "accepted" ? "✅ Angenommen" : "❌ Abgelehnt"}
-                            </Badge>
-                          )}
-                          {req.status !== "pending" && (
-                            <Button size="sm" variant="ghost" className="h-7 text-xs text-muted-foreground" onClick={() => updateRequestStatus(req.id, "pending")}>
-                              <RefreshCw className="h-3 w-3 mr-1" /> Zurücksetzen
-                            </Button>
+                            </div>
                           )}
                         </div>
                       </div>
