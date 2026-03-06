@@ -50,7 +50,7 @@ const generateFakeRevenueData = () => {
 };
 
 type TimeFilter = "heute" | "gestern" | "7" | "30" | "90" | "custom";
-type ChatterFilter = "alle" | "open_2d" | "top_tag" | "top_woche" | "top_monat" | "no_telegram" | "no_push" | "no_revenue_7d";
+type ChatterFilter = "alle" | "open_2d" | "top_tag" | "top_woche" | "top_monat" | "no_telegram" | "no_push" | "no_revenue_7d" | "new_2d";
 
 // Reuse hash function from ChatterStatsCard for consistent fake stats
 const hashCodeAdmin = (s: string) => {
@@ -1239,6 +1239,12 @@ export default function AdminDashboard() {
         });
         break;
       }
+      case "new_2d": {
+        const twoDaysAgo = new Date();
+        twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+        result = result.filter((c) => new Date(c.created_at) >= twoDaysAgo);
+        break;
+      }
     }
     return result;
   }, [chatters, search, chatterFilter, pushUsers, revenueUsers, platformFilters, filterTelegram, filterPush, filterPwa, pwaUsers]);
@@ -2018,6 +2024,7 @@ export default function AdminDashboard() {
               { key: "top_woche", label: "Top Woche", icon: TrendingUp },
               { key: "top_monat", label: "Top Monat", icon: DollarSign },
               { key: "no_revenue_7d", label: "7d+ ohne Umsatz", icon: AlertTriangle },
+              { key: "new_2d", label: "Gestern gestartet", icon: UserPlus },
             ] as const).map(({ key, label, icon: Icon }) => (
               <button
                 key={key}
