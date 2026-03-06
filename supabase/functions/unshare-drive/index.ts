@@ -57,9 +57,7 @@ async function getAccessToken(): Promise<string> {
     .replace(/-----END PRIVATE KEY-----/g, "")
     .replace(/[\s\r\n]/g, "");
 
-  const padded = pemContents + "=".repeat((4 - (pemContents.length % 4)) % 4);
-  const rawBinary = atob(padded);
-  const binaryKey = Uint8Array.from(rawBinary, (c) => c.charCodeAt(0));
+  const binaryKey = decodeBase64(pemContents);
 
   const cryptoKey = await crypto.subtle.importKey(
     "pkcs8",
