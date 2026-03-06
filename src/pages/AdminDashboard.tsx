@@ -805,33 +805,6 @@ export default function AdminDashboard() {
     }
   };
 
-function AnimatedNumber({ value, className, suffix = "€" }: { value: number; className?: string; suffix?: string }) {
-  const spanRef = useRef<HTMLSpanElement>(null);
-  const prevValue = useRef(0);
-
-  useEffect(() => {
-    const el = spanRef.current;
-    if (!el) return;
-    const start = prevValue.current;
-    const end = value;
-    const duration = 600;
-    const startTime = performance.now();
-
-    const tick = (now: number) => {
-      const elapsed = now - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      const current = Math.round(start + (end - start) * eased);
-      el.textContent = current.toLocaleString("de-DE") + suffix;
-      if (progress < 1) requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
-    prevValue.current = end;
-  }, [value, suffix]);
-
-  return <span ref={spanRef} className={className}>{value.toLocaleString("de-DE")}{suffix}</span>;
-}
-
 
   const deletePool = async () => {
     if (!selectedPlatform) return;
