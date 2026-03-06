@@ -2501,40 +2501,68 @@ export default function AdminDashboard() {
                             <Copy className="h-3 w-3 inline-block ml-1.5 opacity-0 group-hover:opacity-40 transition-opacity" />
                           </button>
 
-                          {/* Saved Admin Comment (read-only display) */}
-                          {req.admin_comment && req._localComment === undefined && (
-                            <div className="glass-card-subtle rounded-lg px-3 py-2.5 space-y-1">
-                              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Letzter Kommentar</p>
+                          {/* Admin Kommentar */}
+                          {req.admin_comment && !req._editingComment ? (
+                            <div className="glass-card-subtle rounded-lg px-3 py-2.5 space-y-1.5">
+                              <div className="flex items-center justify-between">
+                                <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Kommentar</p>
+                                <button
+                                  onClick={() => setModelRequests(prev => prev.map(r => r.id === req.id ? { ...r, _editingComment: true, _localComment: r.admin_comment ?? "" } : r))}
+                                  className="text-[10px] text-accent hover:text-accent/80 transition-colors font-medium"
+                                >
+                                  Bearbeiten
+                                </button>
+                              </div>
                               <p className="text-xs text-foreground leading-relaxed">{req.admin_comment}</p>
                             </div>
+                          ) : (
+                            <div className="space-y-1.5">
+                              {!req.admin_comment && !req._editingComment ? (
+                                <button
+                                  onClick={() => setModelRequests(prev => prev.map(r => r.id === req.id ? { ...r, _editingComment: true, _localComment: "" } : r))}
+                                  className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                                >
+                                  <MessageSquare className="h-3 w-3" />
+                                  Kommentar hinzufügen
+                                </button>
+                              ) : req._editingComment && (
+                                <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200">
+                                  <div className="flex items-center justify-between">
+                                    <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                                      {req.admin_comment ? "Kommentar bearbeiten" : "Kommentar"}
+                                    </p>
+                                    <button
+                                      onClick={() => setModelRequests(prev => prev.map(r => r.id === req.id ? { ...r, _editingComment: false, _localComment: undefined } : r))}
+                                      className="text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                                    >
+                                      Abbrechen
+                                    </button>
+                                  </div>
+                                  <Textarea
+                                    placeholder="Kommentar für den Chatter..."
+                                    value={req._localComment ?? req.admin_comment ?? ""}
+                                    onChange={(e) => {
+                                      setModelRequests(prev => prev.map(r => r.id === req.id ? { ...r, _localComment: e.target.value } : r));
+                                    }}
+                                    rows={2}
+                                    className="text-xs bg-secondary/30 border-border/30 focus:border-accent/40 resize-none"
+                                    autoFocus
+                                  />
+                                  {(req._localComment != null && req._localComment !== (req.admin_comment ?? "")) && (
+                                    <Button size="sm" variant="outline" className="h-7 text-xs" onClick={async () => {
+                                      const comment = req._localComment ?? "";
+                                      const { error } = await supabase.from("model_requests").update({ admin_comment: comment || null }).eq("id", req.id);
+                                      if (error) { toast.error("Fehler beim Speichern"); return; }
+                                      toast.success("Kommentar gespeichert!");
+                                      setModelRequests(prev => prev.map(r => r.id === req.id ? { ...r, admin_comment: comment || null, _localComment: undefined, _editingComment: false } : r));
+                                    }}>
+                                      <Save className="h-3 w-3 mr-1" /> Speichern
+                                    </Button>
+                                  )}
+                                </div>
+                              )}
+                            </div>
                           )}
-
-                          {/* Admin Kommentar – edit */}
-                          <div className="space-y-1.5">
-                            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                              {req.admin_comment ? "Kommentar bearbeiten" : "Kommentar"}
-                            </p>
-                            <Textarea
-                              placeholder="Kommentar für den Chatter..."
-                              value={req._localComment ?? req.admin_comment ?? ""}
-                              onChange={(e) => {
-                                setModelRequests(prev => prev.map(r => r.id === req.id ? { ...r, _localComment: e.target.value } : r));
-                              }}
-                              rows={2}
-                              className="text-xs bg-secondary/30 border-border/30 focus:border-accent/40 resize-none"
-                            />
-                            {(req._localComment != null && req._localComment !== (req.admin_comment ?? "")) && (
-                              <Button size="sm" variant="outline" className="h-7 text-xs" onClick={async () => {
-                                const comment = req._localComment ?? "";
-                                const { error } = await supabase.from("model_requests").update({ admin_comment: comment || null }).eq("id", req.id);
-                                if (error) { toast.error("Fehler beim Speichern"); return; }
-                                toast.success("Kommentar gespeichert!");
-                                setModelRequests(prev => prev.map(r => r.id === req.id ? { ...r, admin_comment: comment || null, _localComment: undefined } : r));
-                              }}>
-                                <Save className="h-3 w-3 mr-1" /> Speichern
-                              </Button>
-                            )}
-                          </div>
 
                           {/* Content Link – only for accepted requests */}
                           {(req.status === "accepted" || req.status === "in_progress") && (
