@@ -180,7 +180,7 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
     );
   }
 
-  const grouped: Record<string, { account_email: string; account_domain: string; platform: string; entries: any[] }> = {};
+  const grouped: Record<string, { account_email: string; account_domain: string; platform: string; folder_name: string; subfolder_name: string; entries: any[] }> = {};
   for (const a of assignments) {
     const key = a.account_id;
     if (!grouped[key]) {
@@ -188,6 +188,8 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
         account_email: a.accounts?.account_email || "–",
         account_domain: a.accounts?.account_domain || "",
         platform: a.accounts?.platform || "",
+        folder_name: (a.accounts as any)?.folder_name || "",
+        subfolder_name: (a.accounts as any)?.subfolder_name || "",
         entries: [],
       };
     }
@@ -305,11 +307,16 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
                   return (
                     <div key={accId}>
                       <div className="px-4 py-2 bg-secondary/20 flex items-center justify-between">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <Users className="h-3.5 w-3.5 text-muted-foreground" />
                           <span className="text-xs font-medium text-foreground">{g.account_email}</span>
                           {g.account_domain && (
                             <span className="text-[10px] text-muted-foreground">({g.account_domain})</span>
+                          )}
+                          {g.folder_name && (
+                            <span className="text-[10px] bg-accent/20 text-accent border border-accent/30 rounded px-1.5 py-0.5">
+                              📁 {g.folder_name}{g.subfolder_name ? ` › ${g.subfolder_name}` : ""}
+                            </span>
                           )}
                         </div>
                         {activeCount > 0 && (
@@ -912,7 +919,7 @@ export default function AdminDashboard() {
     setAssignmentsLoading(true);
     const { data } = await supabase
       .from("account_assignments")
-      .select("*, accounts(account_email, account_domain, platform)")
+      .select("*, accounts(account_email, account_domain, platform, folder_name, subfolder_name)")
       .order("assigned_at", { ascending: false });
     if (data) setAssignments(data);
     setAssignmentsLoaded(true);
