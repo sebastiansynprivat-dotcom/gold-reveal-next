@@ -93,7 +93,8 @@ export default function Dashboard() {
   const [editingGroupName, setEditingGroupName] = useState(false);
 
   const [offer, setOffer] = useState("");
-  const [assignedAccounts, setAssignedAccounts] = useState<{id: string;account_email: string;account_password: string;account_domain: string;platform: string;assigned_at: string | null;drive_folder_id?: string;model_language?: string;}[]>([]);
+  const [assignedAccounts, setAssignedAccounts] = useState<{id: string;account_email: string;account_password: string;account_domain: string;platform: string;assigned_at: string | null;drive_folder_id?: string;model_language?: string;model_active?: boolean;}[]>([]);
+  const [modelInactiveInfoOpen, setModelInactiveInfoOpen] = useState(false);
   const [accountsOpen, setAccountsOpen] = useState(true);
   const [myRequests, setMyRequests] = useState<any[]>([]);
   const [requestsOpen, setRequestsOpen] = useState(false);
@@ -178,7 +179,7 @@ export default function Dashboard() {
     // Load all assigned accounts
     supabase.
     from("accounts").
-    select("id, account_email, account_password, account_domain, platform, assigned_at, drive_folder_id, model_language").
+    select("id, account_email, account_password, account_domain, platform, assigned_at, drive_folder_id, model_language, model_active").
     eq("assigned_to", user.id).
     order("created_at", { ascending: true }).
     then(({ data }) => {
@@ -772,14 +773,53 @@ export default function Dashboard() {
             </div>
           }
 
-          {/* Anfrage an das Model – immer sichtbar */}
+          {/* Anfrage an das Model – oder Inaktiv-Hinweis */}
           <div className="border-t border-border/30">
-            <ModelRequestDialog
-              onSubmitted={loadMyRequests}
-              editData={editRequest}
-              onEditClear={() => setEditRequest(null)}
-              modelLanguage={assignedAccounts.length > 0 ? (assignedAccounts[0] as any).model_language || "de" : "de"}
-            />
+            {assignedAccounts.some(acc => acc.model_active === false) ? (
+              <>
+                <div className="px-4 py-4 lg:px-6 lg:py-5">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 rounded-full bg-destructive/15 flex items-center justify-center shrink-0">
+                      <MessageSquare className="h-5 w-5 text-destructive/70" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-muted-foreground">Dein Model kann momentan keine Anfragen entgegennehmen</p>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="mt-3 text-xs"
+                    onClick={() => setModelInactiveInfoOpen(true)}
+                  >
+                    <HelpCircle className="h-3.5 w-3.5 mr-1.5" />
+                    Wieso ist das so?
+                  </Button>
+                </div>
+                <Dialog open={modelInactiveInfoOpen} onOpenChange={setModelInactiveInfoOpen}>
+                  <DialogContent className="max-w-md">
+                    <DialogHeader>
+                      <DialogTitle className="text-foreground">Model momentan inaktiv</DialogTitle>
+                      <DialogDescription className="text-muted-foreground">
+                        Dein Model hat uns mitgeteilt, dass sie aktuell keine neuen Anfragen entgegennehmen kann. Das ist der letzte Stand, den wir haben.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="rounded-lg border border-accent/20 bg-accent/5 p-4">
+                      <p className="text-sm text-foreground">
+                        💰 <strong>Trotzdem kann gutes Geld verdient werden!</strong> Es ist bereits genug Content auf dem Account vorhanden, mit dem du weiterarbeiten kannst. Nutze den vorhandenen Content, um Umsatz zu machen.
+                      </p>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </>
+            ) : (
+              <ModelRequestDialog
+                onSubmitted={loadMyRequests}
+                editData={editRequest}
+                onEditClear={() => setEditRequest(null)}
+                modelLanguage={assignedAccounts.length > 0 ? (assignedAccounts[0] as any).model_language || "de" : "de"}
+              />
+            )}
           </div>
 
           {/* Bisherige Anfragen – einklappbar */}

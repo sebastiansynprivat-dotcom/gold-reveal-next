@@ -137,6 +137,7 @@ interface AccountEntry {
   is_manual?: boolean;
   drive_folder_id?: string | null;
   folder_name?: string | null;
+  model_active?: boolean;
 }
 
 function AnimatedNumber({ value, className, suffix = "€" }: { value: number; className?: string; suffix?: string }) {
@@ -3850,6 +3851,17 @@ export default function AdminDashboard() {
                         <ExternalLink className="h-3 w-3 shrink-0" /> Drive-Ordner
                       </a>
                     )}
+                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/20">
+                      <span className="text-[10px] text-muted-foreground">Model aktiv</span>
+                      <Switch
+                        checked={acc.model_active !== false}
+                        onCheckedChange={async (checked) => {
+                          await supabase.from("accounts").update({ model_active: checked } as any).eq("id", acc.id);
+                          loadAccounts();
+                          toast.success(checked ? "Model aktiviert" : "Model deaktiviert");
+                        }}
+                      />
+                    </div>
                   </div>
                 ));
               })()}
@@ -4388,6 +4400,17 @@ export default function AdminDashboard() {
                             <ExternalLink className="h-2.5 w-2.5" /> Drive
                           </a>
                         )}
+                      </div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[9px] text-muted-foreground">Model aktiv</span>
+                        <Switch
+                          checked={acc.model_active !== false}
+                          onCheckedChange={async (checked) => {
+                            await supabase.from("accounts").update({ model_active: checked } as any).eq("id", acc.id);
+                            loadAccounts();
+                            toast.success(checked ? "Model aktiviert" : "Model deaktiviert");
+                          }}
+                        />
                       </div>
                     </div>
                     <div className="flex flex-col gap-1.5 shrink-0">

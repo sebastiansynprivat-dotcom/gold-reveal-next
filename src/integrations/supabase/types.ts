@@ -26,6 +26,7 @@ export type Database = {
           folder_name: string | null
           id: string
           is_manual: boolean
+          model_active: boolean
           model_language: string
           platform: string
         }
@@ -40,6 +41,7 @@ export type Database = {
           folder_name?: string | null
           id?: string
           is_manual?: boolean
+          model_active?: boolean
           model_language?: string
           platform?: string
         }
@@ -54,6 +56,7 @@ export type Database = {
           folder_name?: string | null
           id?: string
           is_manual?: boolean
+          model_active?: boolean
           model_language?: string
           platform?: string
         }

@@ -1,26 +1,41 @@
 
+# Fortschrittsanzeige und Schritt-Nummerierung fur OfferB
 
-## Plan: Model Aktiv/Inaktiv Toggle
+## Was wird gemacht
 
-### Was wird gebaut
-1. **Neues Feld `model_active`** (boolean, default `true`) auf der `accounts`-Tabelle
-2. **Admin-Dashboard**: Toggle (Switch) pro Account, um das Model aktiv/inaktiv zu setzen
-3. **Chatter-Dashboard**: Wenn das Model inaktiv ist, wird statt dem normalen "Anfrage an das Model stellen"-Button ein deaktivierter Hinweis angezeigt: *"Dein Model kann momentan keine Anfragen entgegennehmen"*. Darunter ein Info-Button, der ein Popup öffnet mit der Erklärung, dass das Model diese Info mitgeteilt hat, es der letzte Stand ist, aber trotzdem gutes Geld im Account verdient werden kann, da Content vorhanden ist.
+### 1. Alle Schritte als einheitliche Liste definieren
+Die Videos und Links werden zu einer gemeinsamen Schritt-Liste zusammengefasst:
+- Schritt 1: Plattform Erklärungs Video
+- Schritt 2: Telegram Nachrichten Video
+- Schritt 3: Brezzels Notifications aktivieren
+- Schritt 4: My ID Bot einrichten
+- Schritt 5: Tägliches Feedback
 
-### Technische Schritte
+### 2. Fortschritts-Bar oben auf der Seite
+Direkt unter dem Hero-Bereich wird eine Progress-Bar eingefügt, die den Gesamtfortschritt anzeigt (z.B. "2 von 5 Schritten erledigt"). Nutzt die vorhandene `Progress`-Komponente im Gold-Styling.
 
-**1. Datenbank-Migration**
-- `ALTER TABLE accounts ADD COLUMN model_active boolean NOT NULL DEFAULT true;`
+### 3. Klickbare Checkliste
+Unter der Progress-Bar eine kompakte Checkliste mit allen 5 Schritten. Jeder Schritt hat:
+- Eine Checkbox zum Abhaken
+- Schritt-Nummer ("Schritt 1", "Schritt 2" etc.)
+- Kurzer Titel
 
-**2. Admin-Dashboard (`AdminDashboard.tsx`)**
-- Bei den Account-Karten (sowohl Pool- als auch manuelle Accounts) einen Switch "Aktiv/Inaktiv" hinzufügen
-- Bei Toggle-Änderung: `supabase.from("accounts").update({ model_active }).eq("id", acc.id)`
+Der Fortschritt wird im `localStorage` gespeichert, damit er beim Neuladen erhalten bleibt.
 
-**3. Chatter-Dashboard (`Dashboard.tsx`)**
-- `assignedAccounts`-Typ erweitern um `model_active?: boolean`
-- Prüfen ob mindestens ein Account `model_active === false` hat
-- Wenn inaktiv: Statt `<ModelRequestDialog>` einen deaktivierten Button zeigen + Info-Button
-- Info-Button öffnet ein Dialog mit dem erklärenden Text
+### 4. Schritt-Nummern bei den Sektionen
+Jede Video-/Link-/Feedback-Sektion bekommt eine prominente Schritt-Nummer als Badge (z.B. goldener Kreis mit "1" darin) neben dem Titel.
 
-**4. ModelRequestDialog bleibt unverändert** -- die Logik wird in `Dashboard.tsx` vor dem Rendern abgefangen.
+## Technische Details
 
+**Datei: `src/pages/OfferB.tsx`**
+
+- Neue `steps`-Array-Konstante mit id, title, type fur alle 5 Schritte
+- `useState` + `localStorage` fur `completedSteps: Set<number>`
+- Progress-Bar-Sektion nach dem Hero mit `Progress`-Komponente (Wert = `completedSteps.size / steps.length * 100`)
+- Checkliste mit `Checkbox`-Komponenten, gestylt im bestehenden `glass-card-subtle` Look
+- Videos bekommen "Schritt 1" / "Schritt 2" als nummerierte Badge-Kreise
+- Links-Sektion wird zu Schritt 3 und 4 mit individuellen Nummern
+- Feedback wird Schritt 5
+- Erledigte Schritte bekommen eine subtile visuelle Markierung (leicht reduzierte Opazitat / Hakchen)
+
+Keine neuen Abhangigkeiten notwendig -- nutzt vorhandene `Progress`, `Checkbox` und `framer-motion`.
