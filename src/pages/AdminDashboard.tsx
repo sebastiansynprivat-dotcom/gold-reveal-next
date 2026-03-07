@@ -854,7 +854,7 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
     setAssignmentsLoading(false);
   };
 
-
+  const loadNotifHistory = async () => {
     const { data } = await supabase
       .from("notifications")
       .select("*")
