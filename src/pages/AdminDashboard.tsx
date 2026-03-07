@@ -288,8 +288,8 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
   );
 }
 
+export default function AdminDashboard() {
 
-  const { user } = useAuth();
   const navigate = useNavigate();
   const [chatters, setChatters] = useState<ChatterProfile[]>([]);
   const [loading, setLoading] = useState(true);
