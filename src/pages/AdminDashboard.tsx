@@ -4001,8 +4001,6 @@ export default function AdminDashboard() {
                 </div>
               );
 
-              const [poolSectionOpen, setPoolSectionOpen] = useState(false);
-              const [manualSectionOpen, setManualSectionOpen] = useState(false);
 
               return (
                 <div className="space-y-4">
