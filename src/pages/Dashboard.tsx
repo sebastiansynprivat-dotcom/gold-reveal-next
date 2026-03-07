@@ -994,7 +994,7 @@ export default function Dashboard() {
               style={{
                 background: 'linear-gradient(105deg, transparent 40%, hsl(43 56% 52%) 50%, transparent 60%)',
                 backgroundSize: '200% 100%',
-                animation: 'bonus-sweep 6s ease-in-out infinite',
+                animation: 'bonus-sweep 14s ease-in-out infinite',
               }}
             />
           </div>
