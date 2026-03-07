@@ -231,8 +231,7 @@ export default function AdminDashboard() {
   const [deleteManualPoolConfirm, setDeleteManualPoolConfirm] = useState(false);
   const [deletingManualPool, setDeletingManualPool] = useState(false);
   const [accountPoolSectionOpen, setAccountPoolSectionOpen] = useState(false);
-  const [mainPoolSearch, setMainPoolSearch] = useState("");
-  const [mainManualSearch, setMainManualSearch] = useState("");
+   const [manualAccountSearch, setManualAccountSearch] = useState("");
   const [poolSearchQuery, setPoolSearchQuery] = useState("");
   const [reassignSearchQuery, setReassignSearchQuery] = useState("");
   const [goalTarget, setGoalTarget] = useState<ChatterProfile | null>(null);
@@ -1878,29 +1877,15 @@ export default function AdminDashboard() {
             )}
           </div>
 
-          {accountPoolSectionOpen && (
+           {accountPoolSectionOpen && (
             <>
-              {/* Search */}
-              <div className="relative">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                <Input
-                  value={mainPoolSearch}
-                  onChange={(e) => setMainPoolSearch(e.target.value)}
-                  placeholder="Pool suchen..."
-                  className="pl-8 text-xs h-8"
-                />
-              </div>
-              {(() => {
-                const filteredPlatforms = mainPoolSearch.trim()
-                  ? platforms.filter((p) => p.toLowerCase().includes(mainPoolSearch.toLowerCase()))
-                  : platforms;
-                return filteredPlatforms.length === 0 ? (
+              {platforms.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-4">
-                    {platforms.length === 0 ? "Noch keine Pools angelegt. Erstelle einen neuen Pool oben." : "Kein Pool gefunden."}
+                    Noch keine Pools angelegt. Erstelle einen neuen Pool oben.
                   </p>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {filteredPlatforms.map((p) => {
+                    {platforms.map((p) => {
                       const pAccounts = accounts.filter((a) => a.platform === p);
                       const free = pAccounts.filter((a) => !a.assigned_to).length;
                       const assigned = pAccounts.filter((a) => a.assigned_to).length;
@@ -1977,30 +1962,15 @@ export default function AdminDashboard() {
                 Accounts für manuelle Zuweisung – nicht Teil der automatischen Verteilung.
               </p>
 
-              {/* Search */}
-              <div className="relative">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                <Input
-                  value={mainManualSearch}
-                  onChange={(e) => setMainManualSearch(e.target.value)}
-                  placeholder="Plattform suchen..."
-                  className="pl-8 text-xs h-8"
-                />
-              </div>
-
               <span className="text-xs text-muted-foreground">{manualPlatforms.length} Plattform{manualPlatforms.length !== 1 ? "en" : ""}</span>
 
-              {(() => {
-                const filteredManualPlatforms = mainManualSearch.trim()
-                  ? manualPlatforms.filter((p) => p.toLowerCase().includes(mainManualSearch.toLowerCase()))
-                  : manualPlatforms;
-                return filteredManualPlatforms.length === 0 ? (
+              {manualPlatforms.length === 0 ? (
                   <p className="text-xs text-muted-foreground text-center py-4 italic">
-                    {manualPlatforms.length === 0 ? "Noch keine Plattformen. Erstelle eine neue Plattform oben." : "Keine Plattform gefunden."}
+                    Noch keine Plattformen. Erstelle eine neue Plattform oben.
                   </p>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {filteredManualPlatforms.map((p) => {
+                    {manualPlatforms.map((p) => {
                       const pAccounts = accounts.filter(a => a.is_manual && a.platform === p);
                       const free = pAccounts.filter(a => !a.assigned_to).length;
                       const assigned = pAccounts.filter(a => a.assigned_to).length;
