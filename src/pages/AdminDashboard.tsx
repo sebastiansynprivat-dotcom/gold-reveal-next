@@ -295,22 +295,33 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
 
   return (
     <div className="space-y-4">
-      {/* Filter slider */}
-      <div className="flex gap-1 p-1 bg-secondary/30 rounded-lg w-fit">
-        {filterOptions.map(opt => (
-          <button
-            key={opt.key}
-            onClick={() => setOverviewFilter(opt.key)}
-            className={cn(
-              "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
-              overviewFilter === opt.key
-                ? "bg-accent text-accent-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            {opt.label}
-          </button>
-        ))}
+      {/* Filter & Search */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex gap-1 p-1 bg-secondary/30 rounded-lg w-fit">
+          {filterOptions.map(opt => (
+            <button
+              key={opt.key}
+              onClick={() => setOverviewFilter(opt.key)}
+              className={cn(
+                "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
+                overviewFilter === opt.key
+                  ? "bg-accent text-accent-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+          <Input
+            placeholder="Chatter suchen…"
+            value={chatterSearch}
+            onChange={e => setChatterSearch(e.target.value)}
+            className="h-8 w-48 pl-8 text-xs bg-secondary/30 border-border/50"
+          />
+        </div>
       </div>
 
       {folderKeys.length === 0 ? (
