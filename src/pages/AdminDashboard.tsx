@@ -4680,6 +4680,11 @@ export default function AdminDashboard() {
                     /* INSIDE FOLDER VIEW */
                     (() => {
                       const isUngrouped = openFolder === "__ungrouped__";
+                      // Unfiltered folder accounts (for showing filter pills)
+                      const totalFolderAccs = isUngrouped
+                        ? manualPlatformAccounts.filter(a => !a.folder_name)
+                        : manualPlatformAccounts.filter(a => a.folder_name === openFolder);
+                      // Filtered by frei/vergeben/alle
                       const allFolderAccs = isUngrouped
                         ? filteredAccounts.filter(a => !a.folder_name)
                         : filteredAccounts.filter(a => a.folder_name === openFolder);
@@ -4699,7 +4704,7 @@ export default function AdminDashboard() {
                       return (
                         <>
                           {/* Back button */}
-                          <button onClick={() => { setOpenFolder(null); setManualAccountSearch(""); }} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mb-1">
+                          <button onClick={() => { setOpenFolder(null); setManualAccountSearch(""); setManualFilter("alle"); }} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mb-1">
                             <ChevronRight className="h-3 w-3 rotate-180" /> Zurück zu Ordnern
                           </button>
 
@@ -4730,7 +4735,7 @@ export default function AdminDashboard() {
                             </div>
 
                             {/* Filter Pills */}
-                            {allFolderAccs.length > 0 && (
+                            {totalFolderAccs.length > 0 && (
                               <div className="flex gap-1 p-1 rounded-lg bg-secondary/30 border border-border/50 relative">
                                 {(["alle", "frei", "vergeben"] as const).map((f) => (
                                   <button key={f} onClick={() => setManualFilter(f)}
