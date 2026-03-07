@@ -1,0 +1,1 @@
+ALTER TABLE public.accounts ADD COLUMN subfolder_name text DEFAULT NULL;

@@ -4785,7 +4785,7 @@ export default function AdminDashboard() {
                 const accId = e.dataTransfer.getData("text/account-id") || dragItemRef.current;
                 if (!accId) return;
                 dragItemRef.current = null;
-                await supabase.from("accounts").update({ folder_name: targetFolder } as any).eq("id", accId);
+                await supabase.from("accounts").update({ folder_name: targetFolder, subfolder_name: null } as any).eq("id", accId);
                 toast.success(targetFolder ? `In „${targetFolder}" verschoben` : "Aus Ordner entfernt");
                 loadAccounts();
               };
@@ -4797,9 +4797,9 @@ export default function AdminDashboard() {
                 setDragOverFolder(folder);
               };
 
-              const moveAccountToFolder = async (accId: string, targetFolder: string | null) => {
-                await supabase.from("accounts").update({ folder_name: targetFolder } as any).eq("id", accId);
-                toast.success(targetFolder ? `In „${targetFolder}" verschoben` : "Aus Ordner entfernt");
+              const moveAccountToFolder = async (accId: string, targetFolder: string | null, targetSubfolder?: string | null) => {
+                await supabase.from("accounts").update({ folder_name: targetFolder, subfolder_name: targetSubfolder ?? null } as any).eq("id", accId);
+                toast.success(targetFolder ? `In „${targetFolder}${targetSubfolder ? ` > ${targetSubfolder}` : ""}" verschoben` : "Aus Ordner entfernt");
                 setMoveToFolderAcc(null);
                 loadAccounts();
               };
@@ -4868,7 +4868,7 @@ export default function AdminDashboard() {
                           {moveToFolderAcc === acc.id && (
                             <div className="absolute right-0 top-7 z-50 min-w-[140px] rounded-lg border border-border bg-card shadow-xl py-1" onClick={(e) => e.stopPropagation()}>
                               {acc.folder_name && (
-                                <button onClick={() => moveAccountToFolder(acc.id, null)}
+                                <button onClick={() => moveAccountToFolder(acc.id, null, null)}
                                   className="w-full px-3 py-1.5 text-left text-[10px] text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-colors">
                                   ← Aus Ordner entfernen
                                 </button>
@@ -5147,6 +5147,59 @@ export default function AdminDashboard() {
                         </Button>
                       </div>
                     </>
+                  ) : openFolder?.startsWith("__sub__::") ? (
+                    /* INSIDE SUBFOLDER VIEW */
+                    (() => {
+                      const parts = openFolder.replace("__sub__::", "").split("::");
+                      const parentFolder = parts[0];
+                      const subFolder = parts[1];
+                      const folderColor = getFolderColor(parentFolder);
+                      const subAccs = filteredAccounts.filter(a => a.folder_name === parentFolder && (a as any).subfolder_name === subFolder);
+                      const searchedSubAccs = manualAccountSearch.trim()
+                        ? subAccs.filter(acc => {
+                            const q = manualAccountSearch.toLowerCase();
+                            return acc.account_email?.toLowerCase().includes(q) || acc.account_password?.toLowerCase().includes(q) || acc.account_domain?.toLowerCase().includes(q);
+                          })
+                        : subAccs;
+
+                      return (
+                        <>
+                          <button onClick={() => { setOpenFolder(parentFolder); setManualAccountSearch(""); }} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mb-1">
+                            <ChevronRight className="h-3 w-3 rotate-180" /> Zurück zu {parentFolder}
+                          </button>
+                          <div className="rounded-xl border p-3 space-y-3" style={{ borderColor: `${folderColor}30`, backgroundColor: `${folderColor}05` }}>
+                            <div className="flex items-center gap-2">
+                              <FolderOpen className="h-3.5 w-3.5" style={{ color: folderColor }} />
+                              <span className="text-xs text-muted-foreground">{parentFolder}</span>
+                              <ChevronRight className="h-3 w-3 text-muted-foreground" />
+                              <span className="text-sm font-semibold text-foreground">{subFolder}</span>
+                              <Badge variant="secondary" className="text-[9px]">{subAccs.length}</Badge>
+                            </div>
+                          </div>
+
+                          {subAccs.length > 0 && (
+                            <div className="relative">
+                              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                              <Input value={manualAccountSearch} onChange={(e) => setManualAccountSearch(e.target.value)} placeholder="Account suchen..." className="pl-8 text-xs h-8" />
+                            </div>
+                          )}
+
+                          {searchedSubAccs.length === 0 ? (
+                            <div className="py-6 text-center">
+                              <Package className="h-5 w-5 text-muted-foreground mx-auto mb-2 opacity-40" />
+                              <p className="text-xs text-muted-foreground italic">{manualAccountSearch.trim() ? "Kein Account gefunden" : "Keine Accounts in diesem Unterordner"}</p>
+                            </div>
+                          ) : (
+                            <div className="space-y-1.5">{searchedSubAccs.map(renderAccountCard)}</div>
+                          )}
+
+                          <Button variant="outline" size="sm" className="w-full border-accent/20 text-accent hover:bg-accent/10"
+                            onClick={() => { setManualAccFolder(parentFolder); setOpenFolder("__add__"); }}>
+                            <Plus className="h-3.5 w-3.5 mr-2" /> Account hinzufügen
+                          </Button>
+                        </>
+                      );
+                    })()
                   ) : (
                     /* INSIDE FOLDER VIEW */
                     (() => {
@@ -5161,6 +5214,10 @@ export default function AdminDashboard() {
                         : filteredAccounts.filter(a => a.folder_name === openFolder);
                       const folderColor = isUngrouped ? "hsl(var(--accent))" : getFolderColor(openFolder);
 
+                      // Subfolder logic
+                      const subfolders = [...new Set(allFolderAccs.map(a => (a as any).subfolder_name).filter(Boolean))] as string[];
+                      const accsWithoutSubfolder = allFolderAccs.filter(a => !(a as any).subfolder_name);
+
                       const folderAccs = manualAccountSearch.trim()
                         ? allFolderAccs.filter(acc => {
                             const q = manualAccountSearch.toLowerCase();
@@ -5171,6 +5228,9 @@ export default function AdminDashboard() {
                             );
                           })
                         : allFolderAccs;
+
+                      // When searching, show flat list
+                      const isSearching = manualAccountSearch.trim().length > 0;
 
                       return (
                         <>
@@ -5195,7 +5255,7 @@ export default function AdminDashboard() {
                                 <Button variant="ghost" size="sm" className="h-7 text-[10px] text-destructive/70 hover:text-destructive"
                                   onClick={async () => {
                                     const accsInFolder = manualPlatformAccounts.filter(a => a.folder_name === openFolder);
-                                    for (const acc of accsInFolder) { await supabase.from("accounts").update({ folder_name: null } as any).eq("id", acc.id); }
+                                    for (const acc of accsInFolder) { await supabase.from("accounts").update({ folder_name: null, subfolder_name: null } as any).eq("id", acc.id); }
                                     const platform = selectedManualPlatform || "";
                                     setCustomFolders(prev => ({ ...prev, [platform]: (prev[platform] || []).filter(f => f !== openFolder) }));
                                     toast.success(`Ordner "${openFolder}" aufgelöst`); setOpenFolder(null); loadAccounts();
@@ -5240,16 +5300,88 @@ export default function AdminDashboard() {
                             </div>
                           )}
 
-                          {/* Account list */}
-                          {folderAccs.length === 0 ? (
-                            <div className="py-6 text-center">
-                              <Package className="h-5 w-5 text-muted-foreground mx-auto mb-2 opacity-40" />
-                              <p className="text-xs text-muted-foreground italic">
-                                {manualAccountSearch.trim() ? "Kein Account gefunden" : manualFilter !== "alle" ? "Keine Accounts für diesen Filter" : "Keine Accounts in diesem Ordner"}
-                              </p>
-                            </div>
+                          {isSearching ? (
+                            /* Flat search results */
+                            folderAccs.length === 0 ? (
+                              <div className="py-6 text-center">
+                                <Search className="h-5 w-5 text-muted-foreground mx-auto mb-2 opacity-40" />
+                                <p className="text-xs text-muted-foreground">Kein Account gefunden</p>
+                              </div>
+                            ) : (
+                              <div className="space-y-1.5">
+                                {folderAccs.map(acc => (
+                                  <div key={acc.id} className="relative">
+                                    {renderAccountCard(acc)}
+                                    {(acc as any).subfolder_name && (
+                                      <span className="absolute top-1.5 right-10 text-[9px] text-muted-foreground bg-secondary/50 px-1.5 py-0.5 rounded">
+                                        📂 {(acc as any).subfolder_name}
+                                      </span>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            )
                           ) : (
-                            <div className="space-y-1.5">{folderAccs.map(renderAccountCard)}</div>
+                            <>
+                              {/* Subfolders */}
+                              {!isUngrouped && subfolders.length > 0 && (
+                                <div className="space-y-1.5">
+                                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Unterordner</p>
+                                  <div className="grid grid-cols-2 gap-2">
+                                    {subfolders.sort().map(sub => {
+                                      const subAccs = allFolderAccs.filter(a => (a as any).subfolder_name === sub);
+                                      const subFree = subAccs.filter(a => !a.assigned_to).length;
+                                      return (
+                                        <button key={sub} onClick={() => setOpenFolder(`__sub__::${openFolder}::${sub}`)}
+                                          className="w-full rounded-xl p-3 text-left transition-all border border-border/40 hover:border-accent/30 hover:scale-[1.01] bg-secondary/10">
+                                          <div className="flex items-center gap-2 mb-1.5">
+                                            <FolderOpen className="h-3 w-3 text-muted-foreground shrink-0" />
+                                            <span className="text-xs font-semibold text-foreground truncate flex-1">{sub}</span>
+                                            <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
+                                          </div>
+                                          <div className="flex items-center gap-1.5">
+                                            <Badge variant="secondary" className="text-[9px]">{subAccs.length}</Badge>
+                                            <Badge className="text-[9px] bg-accent/10 text-accent border-accent/20">{subFree} frei</Badge>
+                                          </div>
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Create subfolder button */}
+                              {!isUngrouped && (
+                                <div className="flex items-center gap-2">
+                                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider flex-1">
+                                    {subfolders.length > 0 ? "Ohne Unterordner" : "Accounts"}
+                                  </p>
+                                  <Button variant="ghost" size="sm" className="h-7 text-[10px] text-muted-foreground hover:text-accent"
+                                    onClick={() => {
+                                      const name = prompt("Unterordner-Name:");
+                                      if (name?.trim()) {
+                                        // We just need to move an account into this subfolder to create it
+                                        // For now, show it as a prompt – the subfolder is created when accounts are moved in
+                                        toast.info(`Unterordner "${name.trim()}" wird erstellt, wenn du Accounts hineinverschiebst.`);
+                                      }
+                                    }}>
+                                    <Plus className="h-3 w-3 mr-1" /> Unterordner
+                                  </Button>
+                                </div>
+                              )}
+
+                              {/* Accounts without subfolder */}
+                              {accsWithoutSubfolder.length === 0 && subfolders.length > 0 ? null : accsWithoutSubfolder.length === 0 ? (
+                                <div className="py-6 text-center">
+                                  <Package className="h-5 w-5 text-muted-foreground mx-auto mb-2 opacity-40" />
+                                  <p className="text-xs text-muted-foreground italic">
+                                    {manualFilter !== "alle" ? "Keine Accounts für diesen Filter" : "Keine Accounts in diesem Ordner"}
+                                  </p>
+                                </div>
+                              ) : (
+                                <div className="space-y-1.5">{accsWithoutSubfolder.map(renderAccountCard)}</div>
+                              )}
+                            </>
                           )}
 
                           {/* Add account to this folder */}
