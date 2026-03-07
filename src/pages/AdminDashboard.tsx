@@ -170,6 +170,7 @@ function AnimatedNumber({ value, className, suffix = "€" }: { value: number; c
 function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { assignments: any[]; assignmentsLoading: boolean; chatters: ChatterProfile[] }) {
   const [overviewFilter, setOverviewFilter] = useState<"alle" | "aktiv" | "inaktiv">("alle");
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
+  const [chatterSearch, setChatterSearch] = useState("");
 
   const toggleFolder = (key: string) => {
     setExpandedFolders(prev => {
@@ -223,6 +224,15 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
     const keepActive = overviewFilter === "aktiv";
     for (const key of Object.keys(grouped)) {
       grouped[key].entries = grouped[key].entries.filter((e: any) => e.isActive === keepActive);
+      if (grouped[key].entries.length === 0) delete grouped[key];
+    }
+  }
+
+  // Apply search filter
+  if (chatterSearch.trim()) {
+    const q = chatterSearch.trim().toLowerCase();
+    for (const key of Object.keys(grouped)) {
+      grouped[key].entries = grouped[key].entries.filter((e: any) => e.name?.toLowerCase().includes(q));
       if (grouped[key].entries.length === 0) delete grouped[key];
     }
   }
@@ -285,22 +295,33 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
 
   return (
     <div className="space-y-4">
-      {/* Filter slider */}
-      <div className="flex gap-1 p-1 bg-secondary/30 rounded-lg w-fit">
-        {filterOptions.map(opt => (
-          <button
-            key={opt.key}
-            onClick={() => setOverviewFilter(opt.key)}
-            className={cn(
-              "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
-              overviewFilter === opt.key
-                ? "bg-accent text-accent-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            {opt.label}
-          </button>
-        ))}
+      {/* Filter & Search */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="flex gap-1 p-1 bg-secondary/30 rounded-lg w-fit">
+          {filterOptions.map(opt => (
+            <button
+              key={opt.key}
+              onClick={() => setOverviewFilter(opt.key)}
+              className={cn(
+                "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
+                overviewFilter === opt.key
+                  ? "bg-accent text-accent-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+          <Input
+            placeholder="Chatter suchen…"
+            value={chatterSearch}
+            onChange={e => setChatterSearch(e.target.value)}
+            className="h-8 w-48 pl-8 text-xs bg-secondary/30 border-border/50"
+          />
+        </div>
       </div>
 
       {folderKeys.length === 0 ? (
@@ -318,7 +339,7 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
       ) : (
         folderKeys.map(folder => {
           const { totalAccounts, totalActive } = getFolderStats(folder);
-          const isExpanded = expandedFolders.has(folder);
+          const isExpanded = expandedFolders.has(folder) || !!chatterSearch.trim();
           const subfolders = Object.keys(byFolder[folder]).sort((a, b) => {
             if (a === "") return 1;
             if (b === "") return -1;
