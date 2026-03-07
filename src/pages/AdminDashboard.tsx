@@ -3687,7 +3687,7 @@ export default function AdminDashboard() {
                   <p className="text-[11px] text-muted-foreground font-normal mt-0.5">Account-Pool</p>
                 </div>
               </DialogTitle>
-              <Button variant="outline" size="sm" onClick={() => setDeletePoolConfirm(true)} className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive h-8">
+              <Button variant="outline" size="sm" onClick={() => setDeletePoolConfirm(true)} className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive h-8 ml-auto">
                 <Trash2 className="h-3.5 w-3.5" />
               </Button>
             </div>
