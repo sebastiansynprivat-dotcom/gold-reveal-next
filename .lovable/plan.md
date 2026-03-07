@@ -1,41 +1,41 @@
 
-# Fortschrittsanzeige und Schritt-Nummerierung fur OfferB
 
-## Was wird gemacht
+## Chatter-Übersicht Tab
 
-### 1. Alle Schritte als einheitliche Liste definieren
-Die Videos und Links werden zu einer gemeinsamen Schritt-Liste zusammengefasst:
-- Schritt 1: Plattform Erklärungs Video
-- Schritt 2: Telegram Nachrichten Video
-- Schritt 3: Brezzels Notifications aktivieren
-- Schritt 4: My ID Bot einrichten
-- Schritt 5: Tägliches Feedback
+### Ziel
+Den "Platzhalter"-Tab in "Chatter-Übersicht" umbenennen und eine Funktion bauen, die automatisch trackt, wann ein Chatter einem Account zugewiesen und wann er wieder entzogen wurde – inklusive Model-E-Mail.
 
-### 2. Fortschritts-Bar oben auf der Seite
-Direkt unter dem Hero-Bereich wird eine Progress-Bar eingefügt, die den Gesamtfortschritt anzeigt (z.B. "2 von 5 Schritten erledigt"). Nutzt die vorhandene `Progress`-Komponente im Gold-Styling.
+### Datenbank
 
-### 3. Klickbare Checkliste
-Unter der Progress-Bar eine kompakte Checkliste mit allen 5 Schritten. Jeder Schritt hat:
-- Eine Checkbox zum Abhaken
-- Schritt-Nummer ("Schritt 1", "Schritt 2" etc.)
-- Kurzer Titel
+**Neue Tabelle: `account_assignments`**
+- `id` (uuid, PK)
+- `account_id` (uuid, FK → accounts.id)
+- `user_id` (uuid, Chatter)
+- `assigned_at` (timestamptz, NOT NULL)
+- `unassigned_at` (timestamptz, NULL = noch aktiv)
+- `created_at` (timestamptz, default now())
 
-Der Fortschritt wird im `localStorage` gespeichert, damit er beim Neuladen erhalten bleibt.
+RLS: Admins haben vollen Zugriff (`is_admin()`).
 
-### 4. Schritt-Nummern bei den Sektionen
-Jede Video-/Link-/Feedback-Sektion bekommt eine prominente Schritt-Nummer als Badge (z.B. goldener Kreis mit "1" darin) neben dem Titel.
+**Automatische Erfassung via Trigger:**
+Ein PostgreSQL-Trigger auf `accounts` bei UPDATE von `assigned_to`:
+1. Wenn `OLD.assigned_to IS NOT NULL` und sich ändert → alten Eintrag schließen (`unassigned_at = now()`)
+2. Wenn `NEW.assigned_to IS NOT NULL` → neuen Eintrag anlegen
 
-## Technische Details
+So wird jede Zuweisung/Entziehung automatisch protokolliert, ohne Frontend-Code ändern zu müssen.
 
-**Datei: `src/pages/OfferB.tsx`**
+### Frontend (AdminDashboard.tsx)
 
-- Neue `steps`-Array-Konstante mit id, title, type fur alle 5 Schritte
-- `useState` + `localStorage` fur `completedSteps: Set<number>`
-- Progress-Bar-Sektion nach dem Hero mit `Progress`-Komponente (Wert = `completedSteps.size / steps.length * 100`)
-- Checkliste mit `Checkbox`-Komponenten, gestylt im bestehenden `glass-card-subtle` Look
-- Videos bekommen "Schritt 1" / "Schritt 2" als nummerierte Badge-Kreise
-- Links-Sektion wird zu Schritt 3 und 4 mit individuellen Nummern
-- Feedback wird Schritt 5
-- Erledigte Schritte bekommen eine subtile visuelle Markierung (leicht reduzierte Opazitat / Hakchen)
+1. Tab umbenennen: `"placeholder"` → `"chatter_overview"`, Label: `"Chatter-Übersicht"`, Icon: `Users`
+2. Tab-Inhalt:
+   - Daten aus `account_assignments` laden, gejoined mit `accounts` (für `account_email`) und `profiles` (für Chatter-Name)
+   - Gruppierte Darstellung pro Account (Model-E-Mail als Header)
+   - Jeder Eintrag zeigt: Chatter-Name, Zugewiesen am, Entzogen am (oder "Aktiv"-Badge), Dauer
+   - Sortierung: aktive Zuweisungen oben, dann nach Datum absteigend
 
-Keine neuen Abhangigkeiten notwendig -- nutzt vorhandene `Progress`, `Checkbox` und `framer-motion`.
+### Technische Details
+
+- Der Trigger ersetzt manuelle Logging-Aufrufe – alle bestehenden Zuweisungs-/Entziehungs-Logiken (Reassign, Freigabe, Account-Löschung) werden automatisch erfasst
+- Migration: 1 SQL-Migration für Tabelle + Trigger + RLS
+- Keine Edge Functions nötig
+
