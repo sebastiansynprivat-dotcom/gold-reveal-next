@@ -1,41 +1,50 @@
 
-# Fortschrittsanzeige und Schritt-Nummerierung fur OfferB
 
-## Was wird gemacht
+## Plan: Model-Dashboard im Platzhalter-Tab
 
-### 1. Alle Schritte als einheitliche Liste definieren
-Die Videos und Links werden zu einer gemeinsamen Schritt-Liste zusammengefasst:
-- Schritt 1: Plattform Erklärungs Video
-- Schritt 2: Telegram Nachrichten Video
-- Schritt 3: Brezzels Notifications aktivieren
-- Schritt 4: My ID Bot einrichten
-- Schritt 5: Tägliches Feedback
+### Übersicht
+Der Platzhalter-Tab wird zum **Model-Dashboard** umgebaut. Oben ein Dropdown zur Auswahl eines Models (aus `accounts`-Tabelle), darunter die 6 Bereiche als Karten.
 
-### 2. Fortschritts-Bar oben auf der Seite
-Direkt unter dem Hero-Bereich wird eine Progress-Bar eingefügt, die den Gesamtfortschritt anzeigt (z.B. "2 von 5 Schritten erledigt"). Nutzt die vorhandene `Progress`-Komponente im Gold-Styling.
+### 1. Datenbank-Migration
+Neue Tabelle `model_dashboard` mit folgenden Spalten:
 
-### 3. Klickbare Checkliste
-Unter der Progress-Bar eine kompakte Checkliste mit allen 5 Schritten. Jeder Schritt hat:
-- Eine Checkbox zum Abhaken
-- Schritt-Nummer ("Schritt 1", "Schritt 2" etc.)
-- Kurzer Titel
+| Spalte | Typ | Beschreibung |
+|--------|-----|--------------|
+| id | uuid PK | |
+| account_id | uuid (unique, FK accounts) | Verknüpfung zum Account |
+| fourbased_submitted | boolean | 4based eingereicht? |
+| notes | text | Freitext Model-Daten/Notizen |
+| revenue_percentage | numeric | Prozente (0-100) |
+| crypto_address | text | Crypto-Adresse |
+| contract_file_path | text | Storage-Pfad des Vertrags |
+| created_at | timestamptz | |
+| updated_at | timestamptz | |
 
-Der Fortschritt wird im `localStorage` gespeichert, damit er beim Neuladen erhalten bleibt.
+Plus: Storage Bucket `model-contracts` (public: false) für Vertrag-PDFs.
 
-### 4. Schritt-Nummern bei den Sektionen
-Jede Video-/Link-/Feedback-Sektion bekommt eine prominente Schritt-Nummer als Badge (z.B. goldener Kreis mit "1" darin) neben dem Titel.
+RLS: Nur Admins (is_admin()).
 
-## Technische Details
+### 2. UI-Aufbau im Platzhalter-Tab (→ "Model-Dashboard")
 
-**Datei: `src/pages/OfferB.tsx`**
+**Header**: Dropdown mit allen Accounts (account_email / account_domain). Bei Auswahl werden Daten aus `model_dashboard` geladen.
 
-- Neue `steps`-Array-Konstante mit id, title, type fur alle 5 Schritte
-- `useState` + `localStorage` fur `completedSteps: Set<number>`
-- Progress-Bar-Sektion nach dem Hero mit `Progress`-Komponente (Wert = `completedSteps.size / steps.length * 100`)
-- Checkliste mit `Checkbox`-Komponenten, gestylt im bestehenden `glass-card-subtle` Look
-- Videos bekommen "Schritt 1" / "Schritt 2" als nummerierte Badge-Kreise
-- Links-Sektion wird zu Schritt 3 und 4 mit individuellen Nummern
-- Feedback wird Schritt 5
-- Erledigte Schritte bekommen eine subtile visuelle Markierung (leicht reduzierte Opazitat / Hakchen)
+**6 Karten untereinander:**
 
-Keine neuen Abhangigkeiten notwendig -- nutzt vorhandene `Progress`, `Checkbox` und `framer-motion`.
+1. **Vertrag Upload** — Datei-Upload (PDF), Anzeige ob hochgeladen, Download-Link
+2. **4based submitted** — Toggle mit Speichern
+3. **Model Daten** — Textarea für Notizen/Freitext + Crypto-Adresse als separates Feld
+4. **Prozente einstellen** — Slider (0-100%) mit Anzeige
+5. **Crypto Address** — Input-Feld zum Speichern der Adresse
+6. **Gutschrift generieren** — PDF-Generierung (jsPDF) ähnlich Invoice-Seite, aber als "GUTSCHRIFT" mit Model-Daten vorausgefüllt
+
+### 3. Tab-Umbenennung
+- Label: "Platzhalter" → "Model-Dashboard"
+- Icon: Package → Star oder Users
+
+### 4. Technische Details
+- Daten werden beim Dropdown-Wechsel geladen/gespeichert
+- Auto-Save bei Änderungen oder expliziter "Speichern"-Button
+- Vertrag-Upload über Supabase Storage mit RLS
+- Gutschrift-PDF nutzt das gleiche jsPDF-Pattern wie Invoice.tsx, Titel "GUTSCHRIFT" statt "RECHNUNG"
+- Keine Änderungen an bestehenden Tabs
+
