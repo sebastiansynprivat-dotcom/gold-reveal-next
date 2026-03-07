@@ -3670,62 +3670,35 @@ export default function AdminDashboard() {
       </main>
 
       {/* Account Pool Dialog */}
-      <Dialog open={accountPoolOpen} onOpenChange={setAccountPoolOpen}>
-        <DialogContent className="glass-card border-border sm:max-w-lg max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="text-foreground flex items-center gap-2">
-              <Package className="h-5 w-5" />
-              {selectedPlatform} – Accounts
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            {/* Pool löschen */}
+      <Dialog open={accountPoolOpen} onOpenChange={(o) => { setAccountPoolOpen(o); if (!o) setPoolFilter("alle"); }}>
+        <DialogContent className="glass-card border-border sm:max-w-lg max-h-[85vh] overflow-hidden flex flex-col">
+          <DialogHeader className="pb-0">
             <div className="flex items-center justify-between">
-              <p className="text-xs text-muted-foreground">Pool: <span className="font-semibold text-foreground">{selectedPlatform}</span></p>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setDeletePoolConfirm(true)}
-                className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
-              >
-                <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-                Löschen
+              <DialogTitle className="text-foreground flex items-center gap-2">
+                <div className="h-9 w-9 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
+                  <Package className="h-4 w-4 text-accent" />
+                </div>
+                <div>
+                  <span>{selectedPlatform}</span>
+                  <p className="text-[11px] text-muted-foreground font-normal mt-0.5">Account-Pool</p>
+                </div>
+              </DialogTitle>
+              <Button variant="outline" size="sm" onClick={() => setDeletePoolConfirm(true)} className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive h-8">
+                <Trash2 className="h-3.5 w-3.5" />
               </Button>
             </div>
+          </DialogHeader>
 
-            {/* Pool Domain */}
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Pool-Domain</label>
-              <Input
-                value={newAccDomain}
-                onChange={(e) => setNewAccDomain(e.target.value)}
-                placeholder="Domain (z.B. brezzels.com)"
-                className="text-xs"
-              />
-              <p className="text-[10px] text-muted-foreground">Wird automatisch für alle neuen Accounts verwendet.</p>
-            </div>
-
-            {/* Add new account */}
-            <div className="space-y-2 border border-border rounded-xl p-3">
-              <p className="text-xs font-semibold text-foreground">Neuen Account hinzufügen</p>
-              <Input
-                value={newAccEmail}
-                onChange={(e) => setNewAccEmail(e.target.value)}
-                placeholder="E-Mail"
-                type="email"
-              />
-              <Input
-                value={newAccPassword}
-                onChange={(e) => setNewAccPassword(e.target.value)}
-                placeholder="Passwort"
-              />
-              <Input
-                value={newAccDriveFolder}
-                onChange={(e) => setNewAccDriveFolder(e.target.value)}
-                placeholder="Google Drive Folder ID (optional)"
-                className="text-xs"
-              />
+          <div className="overflow-y-auto flex-1 space-y-4 pr-1 -mr-1 pt-3">
+            {/* Add new account — always on top */}
+            <div className="rounded-xl border border-accent/20 bg-accent/[0.03] p-3 space-y-2">
+              <p className="text-xs font-semibold text-foreground flex items-center gap-2">
+                <Plus className="h-3.5 w-3.5 text-accent" /> Neuen Account hinzufügen
+              </p>
+              <Input value={newAccDomain} onChange={(e) => setNewAccDomain(e.target.value)} placeholder="Domain (z.B. brezzels.com)" className="text-xs" />
+              <Input value={newAccEmail} onChange={(e) => setNewAccEmail(e.target.value)} placeholder="E-Mail" type="email" className="text-xs" />
+              <Input value={newAccPassword} onChange={(e) => setNewAccPassword(e.target.value)} placeholder="Passwort" className="text-xs" />
+              <Input value={newAccDriveFolder} onChange={(e) => setNewAccDriveFolder(e.target.value)} placeholder="Google Drive Folder ID (optional)" className="text-xs" />
               <div className="space-y-1">
                 <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Model spricht</label>
                 <div className="flex gap-2">
@@ -3739,105 +3712,108 @@ export default function AdminDashboard() {
                   </button>
                 </div>
               </div>
-              <Button
-                onClick={addAccount}
-                disabled={addingAccount || !newAccEmail.trim() || !newAccDomain.trim()}
-                className="w-full"
-                size="sm"
-              >
+              <Button onClick={addAccount} disabled={addingAccount || !newAccEmail.trim() || !newAccDomain.trim()} className="w-full" size="sm">
                 <Plus className="h-4 w-4 mr-2" />
                 {addingAccount ? "Wird hinzugefügt..." : "Account hinzufügen"}
               </Button>
             </div>
 
-            {/* Stats + Bulk Assign */}
+            {/* Separator */}
+            <div className="relative py-1">
+              <div className="absolute inset-x-0 top-1/2 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+            </div>
+
+            {/* Stats row */}
             <div className="flex items-center justify-between">
               <div className="flex gap-3 text-xs">
-                <span className="text-muted-foreground">
-                  Gesamt: <span className="text-foreground font-semibold">{platformAccounts.length}</span>
-                </span>
-                <span className="text-accent">
-                  Frei: <span className="font-semibold">{freeCount}</span>
-                </span>
-                <span className="text-muted-foreground">
-                  Vergeben: <span className="font-semibold">{assignedCount}</span>
-                </span>
+                <span className="text-muted-foreground">Gesamt: <span className="text-foreground font-semibold">{platformAccounts.length}</span></span>
+                <span className="text-accent">Frei: <span className="font-semibold">{freeCount}</span></span>
+                <span className="text-muted-foreground">Vergeben: <span className="font-semibold">{assignedCount}</span></span>
               </div>
               {freeCount > 0 && (
-                <Button
-                  onClick={assignAccounts}
-                  disabled={assigning}
-                  size="sm"
-                  variant="default"
-                >
+                <Button onClick={assignAccounts} disabled={assigning} size="sm" variant="default">
                   <RefreshCw className={cn("h-3.5 w-3.5 mr-1.5", assigning && "animate-spin")} />
-                  {assigning ? "Zuweisen..." : "Auto-Zuweisen"}
+                  {assigning ? "..." : "Auto-Zuweisen"}
                 </Button>
               )}
             </div>
 
+            {/* Filter Pills */}
+            {platformAccounts.length > 0 && (
+              <div className="flex gap-1.5 p-1 rounded-lg bg-secondary/30 border border-border/50">
+                {(["alle", "frei", "vergeben"] as const).map((f) => (
+                  <button key={f} onClick={() => setPoolFilter(f)}
+                    className={`flex-1 text-[10px] font-medium px-3 py-1.5 rounded-md transition-all ${poolFilter === f ? "bg-accent/15 text-accent shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
+                    {f === "alle" ? "Alle" : f === "frei" ? "Frei" : "Vergeben"}
+                  </button>
+                ))}
+              </div>
+            )}
+
             {/* Account list */}
-            <div className="divide-y divide-border rounded-xl border border-border overflow-hidden">
-              {platformAccounts.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-6">
-                  Noch keine Accounts für {selectedPlatform}.
-                </p>
-              ) : (
-                platformAccounts.map((acc) => (
-                  <div key={acc.id} className="p-3 flex items-center gap-2">
-                    <span className={`h-2 w-2 rounded-full shrink-0 ${acc.assigned_to ? "bg-muted-foreground/30" : "bg-green-500"}`} />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium text-foreground truncate">{acc.account_email}</span>
+            <div className="space-y-2">
+              {(() => {
+                const filtered = platformAccounts.filter((acc) => {
+                  if (poolFilter === "frei") return !acc.assigned_to;
+                  if (poolFilter === "vergeben") return !!acc.assigned_to;
+                  return true;
+                });
+                if (filtered.length === 0) return (
+                  <div className="glass-card-subtle rounded-xl p-6 text-center">
+                    <Package className="h-5 w-5 text-muted-foreground mx-auto mb-2 opacity-40" />
+                    <p className="text-xs text-muted-foreground">
+                      {platformAccounts.length === 0 ? `Noch keine Accounts für ${selectedPlatform}.` : "Keine Accounts für diesen Filter."}
+                    </p>
+                  </div>
+                );
+                const copyToClipboard = (text: string, label: string) => { navigator.clipboard.writeText(text); toast.success(`${label} kopiert!`); };
+                return filtered.map((acc) => (
+                  <div key={acc.id} className="glass-card-subtle rounded-lg p-3 group/card hover:border-accent/30 transition-all">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`h-2 w-2 rounded-full shrink-0 ${acc.assigned_to ? "bg-muted-foreground/30" : "bg-green-500"}`} />
                         {acc.assigned_to ? (
-                          <Badge className="text-[10px] bg-secondary text-secondary-foreground shrink-0">
-                            → {getChatterName(acc.assigned_to)}
-                          </Badge>
+                          <Badge className="text-[9px] bg-secondary text-secondary-foreground">→ {getChatterName(acc.assigned_to)}</Badge>
                         ) : (
-                          <Badge className="text-[10px] bg-accent/20 text-accent shrink-0">
-                            Frei
-                          </Badge>
+                          <Badge className="text-[9px] bg-accent/15 text-accent border-accent/20">Frei</Badge>
                         )}
                       </div>
-                      <p className="text-[10px] text-muted-foreground truncate">
-                        PW: {acc.account_password}
-                      </p>
+                      <div className="flex items-center gap-0.5 opacity-0 group-hover/card:opacity-100 transition-opacity">
+                        {acc.assigned_to && (
+                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground hover:text-accent" title="Freigeben"
+                            onClick={async () => {
+                              if (acc.drive_folder_id && acc.assigned_to) await revokeDriveAccess([acc.id], acc.assigned_to);
+                              await supabase.from("accounts").update({ assigned_to: null, assigned_at: null }).eq("id", acc.id);
+                              toast.success("Account freigegeben"); loadAccounts(); loadChatters();
+                            }}>
+                            <RefreshCw className="h-3 w-3" />
+                          </Button>
+                        )}
+                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive" title="Löschen"
+                          onClick={async () => {
+                            await supabase.from("accounts").delete().eq("id", acc.id);
+                            toast.success("Account gelöscht"); loadAccounts();
+                          }}>
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
                     </div>
-                    {acc.assigned_to && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive shrink-0"
-                        title="Account freigeben"
-                        onClick={async () => {
-                          if (acc.drive_folder_id && acc.assigned_to) {
-                            await revokeDriveAccess([acc.id], acc.assigned_to);
-                          }
-                          await supabase.from("accounts").update({ assigned_to: null, assigned_at: null }).eq("id", acc.id);
-                          toast.success("Account freigegeben");
-                          loadAccounts();
-                          loadChatters();
-                        }}
-                      >
-                        <RefreshCw className="h-3 w-3" />
-                      </Button>
+                    <button onClick={() => copyToClipboard(acc.account_email, "E-Mail")} className="w-full flex items-center gap-2 p-1.5 -mx-1.5 rounded-md hover:bg-accent/5 transition-colors group/copy text-left">
+                      <Copy className="h-3 w-3 text-muted-foreground group-hover/copy:text-accent shrink-0 transition-colors" />
+                      <span className="text-xs font-medium text-foreground truncate">{acc.account_email}</span>
+                    </button>
+                    <button onClick={() => copyToClipboard(acc.account_password, "Passwort")} className="w-full flex items-center gap-2 p-1.5 -mx-1.5 rounded-md hover:bg-accent/5 transition-colors group/copy text-left">
+                      <Copy className="h-3 w-3 text-muted-foreground group-hover/copy:text-accent shrink-0 transition-colors" />
+                      <span className="text-[11px] text-muted-foreground truncate">PW: {acc.account_password}</span>
+                    </button>
+                    {acc.drive_folder_id && (
+                      <a href={`https://drive.google.com/drive/folders/${acc.drive_folder_id}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-1.5 -mx-1.5 rounded-md hover:bg-accent/5 transition-colors text-[11px] text-primary hover:underline">
+                        <ExternalLink className="h-3 w-3 shrink-0" /> Drive-Ordner
+                      </a>
                     )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive shrink-0"
-                      title="Account löschen"
-                      onClick={async () => {
-                        await supabase.from("accounts").delete().eq("id", acc.id);
-                        toast.success("Account gelöscht");
-                        loadAccounts();
-                      }}
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
                   </div>
-                ))
-              )}
+                ));
+              })()}
             </div>
           </div>
         </DialogContent>
