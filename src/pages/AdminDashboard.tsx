@@ -220,6 +220,7 @@ export default function AdminDashboard() {
   const [dragOverFolder, setDragOverFolder] = useState<string | null>(null);
   const [openFolder, setOpenFolder] = useState<string | null>(null);
   const [customFolders, setCustomFolders] = useState<Record<string, string[]>>({});
+  const [folderColors, setFolderColors] = useState<Record<string, string>>({});
   const [addingManual, setAddingManual] = useState(false);
   const [deleteManualPoolConfirm, setDeleteManualPoolConfirm] = useState(false);
   const [deletingManualPool, setDeletingManualPool] = useState(false);
