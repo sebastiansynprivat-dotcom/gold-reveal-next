@@ -177,25 +177,34 @@ const Auth = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setSubmitting(true);
 
     if (isSignUp) {
       if (!groupName.trim()) {
         setError("Bitte gib deinen Gruppennamen ein.");
-        setSubmitting(false);
         return;
       }
-      const { error } = await signUp(email, password, { group_name: groupName.trim() });
-      if (error) {
-        setError(translateError(error.message));
-      } else {
-        setSignUpSuccess(true);
-      }
+      // Show confirmation popup first
+      pendingSubmitRef.current = e;
+      setShowGroupConfirm(true);
+      return;
+    }
+
+    setSubmitting(true);
+    const { error } = await signIn(email, password);
+    if (error) {
+      setError(translateError(error.message));
+    }
+    setSubmitting(false);
+  };
+
+  const handleConfirmSignUp = async () => {
+    setShowGroupConfirm(false);
+    setSubmitting(true);
+    const { error } = await signUp(email, password, { group_name: groupName.trim() });
+    if (error) {
+      setError(translateError(error.message));
     } else {
-      const { error } = await signIn(email, password);
-      if (error) {
-        setError(translateError(error.message));
-      }
+      setSignUpSuccess(true);
     }
     setSubmitting(false);
   };
