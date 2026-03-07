@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_assignments: {
+        Row: {
+          account_id: string
+          assigned_at: string
+          created_at: string
+          id: string
+          unassigned_at: string | null
+          user_id: string
+        }
+        Insert: {
+          account_id: string
+          assigned_at?: string
+          created_at?: string
+          id?: string
+          unassigned_at?: string | null
+          user_id: string
+        }
+        Update: {
+          account_id?: string
+          assigned_at?: string
+          created_at?: string
+          id?: string
+          unassigned_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_assignments_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       accounts: {
         Row: {
           account_domain: string
