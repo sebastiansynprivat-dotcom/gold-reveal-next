@@ -112,7 +112,7 @@ export default function DailyChecklist() {
             </div>
             <div className="flex items-center gap-2">
               {!isOpen && (
-                <Progress value={progress} className="h-1.5 w-16 [&>div]:bg-accent" />
+                <Progress value={progress} className="h-1.5 w-16 [&>div]:bg-accent shimmer-bar" />
               )}
               <span className="text-xs text-muted-foreground">
                 {completed.size}/{TASKS.length} erledigt
