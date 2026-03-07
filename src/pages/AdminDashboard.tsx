@@ -268,6 +268,14 @@ export default function AdminDashboard() {
   const [schedSaving, setSchedSaving] = useState(false);
   const [schedDeleteConfirm, setSchedDeleteConfirm] = useState<string | null>(null);
   const [schedListOpen, setSchedListOpen] = useState(false);
+
+  // Notification templates state
+  const [notifTemplates, setNotifTemplates] = useState<{ id: string; template_key: string; label: string; title: string; body: string }[]>([]);
+  const [notifTemplatesLoaded, setNotifTemplatesLoaded] = useState(false);
+  const [templatesSectionOpen, setTemplatesSectionOpen] = useState(false);
+  const [editingTemplate, setEditingTemplate] = useState<string | null>(null);
+  const [templateEdits, setTemplateEdits] = useState<Record<string, { title: string; body: string }>>({});
+  const [templateSaving, setTemplateSaving] = useState<string | null>(null);
   const [chatterFilter, setChatterFilter] = useState<ChatterFilter>("alle");
   const [platformFilters, setPlatformFilters] = useState<Set<string>>(new Set());
   const [filterTelegram, setFilterTelegram] = useState<boolean | null>(null);
