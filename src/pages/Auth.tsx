@@ -28,6 +28,14 @@ const Auth = () => {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [signUpSuccess, setSignUpSuccess] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (containerRef.current) {
+      containerRef.current.style.setProperty('--mouse-x', `${e.clientX}px`);
+      containerRef.current.style.setProperty('--mouse-y', `${e.clientY}px`);
+    }
+  }, []);
 
   useEffect(() => {
     if (!user) return;
