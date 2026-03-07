@@ -990,7 +990,7 @@ export default function Dashboard() {
             className="pointer-events-none absolute inset-0 overflow-hidden rounded-xl"
           >
             <div
-              className="absolute w-72 h-72 rounded-full opacity-[0.1]"
+              className="absolute w-72 h-72 rounded-full opacity-[0.055]"
               style={{
                 background: 'radial-gradient(circle, hsl(43 56% 52%), transparent 70%)',
                 animation: 'bonus-glow-move 12s ease-in-out infinite',
