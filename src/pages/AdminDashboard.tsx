@@ -4735,7 +4735,7 @@ export default function AdminDashboard() {
                             </div>
 
                             {/* Filter Pills */}
-                            {allFolderAccs.length > 0 && (
+                            {totalFolderAccs.length > 0 && (
                               <div className="flex gap-1 p-1 rounded-lg bg-secondary/30 border border-border/50 relative">
                                 {(["alle", "frei", "vergeben"] as const).map((f) => (
                                   <button key={f} onClick={() => setManualFilter(f)}
