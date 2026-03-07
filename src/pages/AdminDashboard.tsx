@@ -3465,6 +3465,96 @@ export default function AdminDashboard() {
               </>
               )}
             </section>
+
+            {/* Standard Notification Templates */}
+            <section className="glass-card rounded-xl overflow-hidden">
+              <button
+                onClick={() => setTemplatesSectionOpen(!templatesSectionOpen)}
+                className="w-full px-5 py-4 flex items-center justify-between hover:bg-secondary/10 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-lg bg-accent/10 flex items-center justify-center">
+                    <Star className="h-4 w-4 text-accent" />
+                  </div>
+                  <div className="text-left">
+                    <h2 className="text-sm font-bold text-foreground">Standard-Benachrichtigungen</h2>
+                    <p className="text-[10px] text-muted-foreground">Vorlagen für automatische Nachrichten</p>
+                  </div>
+                </div>
+                <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", templatesSectionOpen && "rotate-180")} />
+              </button>
+              {templatesSectionOpen && (
+                <div className="p-4 space-y-3">
+                  {notifTemplates.length === 0 ? (
+                    <p className="text-xs text-muted-foreground text-center py-3">Keine Vorlagen vorhanden.</p>
+                  ) : (
+                    notifTemplates.map((tpl) => {
+                      const isEditing = editingTemplate === tpl.id;
+                      const edits = templateEdits[tpl.id] || { title: tpl.title, body: tpl.body };
+                      return (
+                        <div key={tpl.id} className="glass-card-subtle rounded-xl px-4 py-3 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Badge variant="secondary" className="text-[10px]">{tpl.label}</Badge>
+                            </div>
+                            {!isEditing ? (
+                              <button
+                                onClick={() => {
+                                  setEditingTemplate(tpl.id);
+                                  setTemplateEdits(prev => ({ ...prev, [tpl.id]: { title: tpl.title, body: tpl.body } }));
+                                }}
+                                className="text-xs text-accent hover:text-accent/80 transition-colors"
+                              >
+                                Bearbeiten
+                              </button>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={() => setEditingTemplate(null)}
+                                  className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+                                >
+                                  Abbrechen
+                                </button>
+                                <Button
+                                  size="sm"
+                                  onClick={() => saveTemplate(tpl.id)}
+                                  disabled={templateSaving === tpl.id}
+                                  className="h-7 text-xs px-3"
+                                >
+                                  <Save className="h-3 w-3 mr-1" />
+                                  {templateSaving === tpl.id ? "..." : "Speichern"}
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                          {isEditing ? (
+                            <div className="space-y-2">
+                              <Input
+                                value={edits.title}
+                                onChange={(e) => setTemplateEdits(prev => ({ ...prev, [tpl.id]: { ...edits, title: e.target.value } }))}
+                                placeholder="Titel"
+                                className="text-sm bg-secondary/30 border-border/30 focus:border-accent/40"
+                              />
+                              <Textarea
+                                value={edits.body}
+                                onChange={(e) => setTemplateEdits(prev => ({ ...prev, [tpl.id]: { ...edits, body: e.target.value } }))}
+                                placeholder="Nachricht"
+                                className="text-sm min-h-[60px] bg-secondary/30 border-border/30 focus:border-accent/40 resize-none"
+                              />
+                            </div>
+                          ) : (
+                            <div>
+                              <p className="text-sm font-medium text-foreground">{tpl.title}</p>
+                              <p className="text-xs text-muted-foreground mt-0.5">{tpl.body}</p>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              )}
+            </section>
           </div>
         )}
 
