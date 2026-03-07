@@ -518,7 +518,7 @@ export default function AdminDashboard() {
   const [goalAmount, setGoalAmount] = useState("");
   const [goalSaving, setGoalSaving] = useState(false);
   const [expandedChatter, setExpandedChatter] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"einnahmen" | "chatter" | "anfragen" | "botdms" | "notifications" | "kiprompt" | "chatter_overview" | "gdrive">("einnahmen");
+  const [activeTab, setActiveTab] = useState<"einnahmen" | "chatter" | "anfragen" | "botdms" | "notifications" | "kiprompt" | "chatter_overview" | "platzhalter" | "gdrive">("einnahmen");
   const [assignments, setAssignments] = useState<any[]>([]);
   const [assignmentsLoaded, setAssignmentsLoaded] = useState(false);
   const [assignmentsLoading, setAssignmentsLoading] = useState(false);
@@ -1802,6 +1802,7 @@ export default function AdminDashboard() {
     { key: "notifications" as const, label: "Benachrichtigungen", icon: Bell, onClick: () => { setActiveTab("notifications"); if (!notifHistoryLoaded) loadNotifHistory(); if (!schedulesLoaded) loadSchedules(); if (!notifTemplatesLoaded) loadNotifTemplates(); } },
     { key: "kiprompt" as const, label: "KI Prompt", icon: Brain, onClick: () => { setActiveTab("kiprompt"); if (!kiPromptLoaded) loadKiPrompt(); } },
     { key: "chatter_overview" as const, label: "Chatter-Übersicht", icon: Users, onClick: () => { setActiveTab("chatter_overview"); if (!assignmentsLoaded) loadAssignments(); } },
+    { key: "platzhalter" as const, label: "Platzhalter", icon: Package, onClick: () => setActiveTab("platzhalter") },
     { key: "gdrive" as const, label: "Google Drive", icon: ExternalLink, onClick: () => setActiveTab("gdrive") },
   ];
 
@@ -4072,6 +4073,22 @@ export default function AdminDashboard() {
             assignmentsLoading={assignmentsLoading}
             chatters={chatters}
           />
+        )}
+
+        {activeTab === "platzhalter" && (
+          <div className="space-y-4">
+            <section className="glass-card rounded-xl overflow-hidden">
+              <div className="px-4 py-3 border-b border-border flex items-center gap-2">
+                <Package className="h-4 w-4 text-accent" />
+                <h2 className="text-sm font-semibold text-foreground">Platzhalter</h2>
+              </div>
+              <div className="p-8 flex flex-col items-center justify-center text-center">
+                <Package className="h-10 w-10 text-muted-foreground/30 mb-3" />
+                <p className="text-sm text-muted-foreground">Dieser Bereich ist noch in Arbeit.</p>
+                <p className="text-xs text-muted-foreground/60 mt-1">Hier wird bald neuer Inhalt erscheinen.</p>
+              </div>
+            </section>
+          </div>
         )}
 
         {activeTab === "gdrive" && (
