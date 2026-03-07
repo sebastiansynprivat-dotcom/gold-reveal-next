@@ -270,7 +270,7 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
           </div>
         </section>
       ) : (
-        <div className="space-y-4-inner">
+        <div className="space-y-4">
           {accountKeys.map(accId => {
             const g = grouped[accId];
             const activeCount = g.entries.filter((e: any) => e.isActive).length;
