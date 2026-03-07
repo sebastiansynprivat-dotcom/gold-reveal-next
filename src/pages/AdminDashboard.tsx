@@ -220,6 +220,8 @@ export default function AdminDashboard() {
   const [dragOverFolder, setDragOverFolder] = useState<string | null>(null);
   const [openFolder, setOpenFolder] = useState<string | null>(null);
   const [customFolders, setCustomFolders] = useState<Record<string, string[]>>({});
+  const [folderColors, setFolderColors] = useState<Record<string, string>>({});
+  const [colorPickerFolder, setColorPickerFolder] = useState<string | null>(null);
   const [addingManual, setAddingManual] = useState(false);
   const [deleteManualPoolConfirm, setDeleteManualPoolConfirm] = useState(false);
   const [deletingManualPool, setDeletingManualPool] = useState(false);
@@ -4152,6 +4154,19 @@ export default function AdminDashboard() {
               const platformCustom = customFolders[selectedManualPlatform || ""] || [];
               const namedFolders = [...new Set([...dbFolders, ...platformCustom])];
 
+              const FOLDER_COLOR_OPTIONS = [
+                { name: "Gold", value: "hsl(var(--accent))" },
+                { name: "Blau", value: "hsl(217 91% 60%)" },
+                { name: "Grün", value: "hsl(142 71% 45%)" },
+                { name: "Rot", value: "hsl(0 84% 60%)" },
+                { name: "Lila", value: "hsl(271 81% 56%)" },
+                { name: "Cyan", value: "hsl(186 91% 48%)" },
+                { name: "Orange", value: "hsl(25 95% 53%)" },
+                { name: "Pink", value: "hsl(330 81% 60%)" },
+              ];
+              const getFolderColor = (folder: string) => folderColors[`${selectedManualPlatform}::${folder}`] || FOLDER_COLOR_OPTIONS[0].value;
+              const setFolderColorFn = (folder: string, color: string) => setFolderColors(prev => ({ ...prev, [`${selectedManualPlatform}::${folder}`]: color }));
+
               const copyToClipboard = (text: string, label: string) => {
                 navigator.clipboard.writeText(text);
                 toast.success(`${label} kopiert!`);
@@ -4176,51 +4191,56 @@ export default function AdminDashboard() {
                 <div
                   key={acc.id}
                   draggable
-                  onDragStart={(e) => { e.dataTransfer.setData("text/account-id", acc.id); e.dataTransfer.effectAllowed = "move"; }}
-                  className="glass-card-subtle rounded-lg p-3 cursor-grab active:cursor-grabbing hover:border-accent/30 transition-all group/card"
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData("text/account-id", acc.id);
+                    e.dataTransfer.effectAllowed = "move";
+                    (e.target as HTMLElement).style.opacity = "0.5";
+                  }}
+                  onDragEnd={(e) => { (e.target as HTMLElement).style.opacity = "1"; }}
+                  className="flex items-center gap-2 p-2.5 rounded-lg border border-border/40 bg-secondary/10 hover:border-accent/30 hover:bg-secondary/20 transition-all cursor-grab active:cursor-grabbing group/card"
                 >
-                  <div className="flex items-center justify-between mb-1.5">
+                  <span className={`h-2 w-2 rounded-full shrink-0 ${acc.assigned_to ? "bg-muted-foreground/30" : "bg-green-500"}`} />
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <span className={`h-2 w-2 rounded-full shrink-0 ${acc.assigned_to ? "bg-muted-foreground/30" : "bg-green-500"}`} />
-                      {acc.assigned_to ? (
-                        <Badge className="text-[9px] bg-secondary text-secondary-foreground">→ {getChatterName(acc.assigned_to)}</Badge>
-                      ) : (
-                        <Badge className="text-[9px] bg-accent/15 text-accent border-accent/20">Frei</Badge>
-                      )}
+                      <button onClick={() => copyToClipboard(acc.account_email, "E-Mail")} className="text-xs font-medium text-foreground truncate hover:text-accent transition-colors text-left">
+                        {acc.account_email}
+                      </button>
+                      <button onClick={() => copyToClipboard(acc.account_password, "Passwort")} title="Passwort kopieren" className="shrink-0 opacity-0 group-hover/card:opacity-100 transition-opacity">
+                        <Copy className="h-3 w-3 text-muted-foreground hover:text-accent transition-colors" />
+                      </button>
                     </div>
-                    <div className="flex items-center gap-0.5 opacity-0 group-hover/card:opacity-100 transition-opacity">
-                      {acc.assigned_to && (
-                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground hover:text-accent" title="Freigeben"
-                          onClick={async () => {
-                            await revokeDriveAccess([acc.id], acc.assigned_to!);
-                            await supabase.from("accounts").update({ assigned_to: null, assigned_at: null } as any).eq("id", acc.id);
-                            toast.success("Freigegeben"); loadAccounts(); loadChatters();
-                          }}>
-                          <RefreshCw className="h-3 w-3" />
-                        </Button>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      {acc.assigned_to ? (
+                        <span className="text-[9px] text-muted-foreground">→ {getChatterName(acc.assigned_to)}</span>
+                      ) : (
+                        <span className="text-[9px] text-accent font-medium">Frei</span>
                       )}
-                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive" title="Löschen"
-                        onClick={async () => {
-                          await supabase.from("accounts").delete().eq("id", acc.id);
-                          toast.success("Gelöscht"); loadAccounts();
-                        }}>
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
+                      {acc.drive_folder_id && (
+                        <a href={`https://drive.google.com/drive/folders/${acc.drive_folder_id}`} target="_blank" rel="noopener noreferrer" className="text-[9px] text-primary hover:underline flex items-center gap-0.5">
+                          <ExternalLink className="h-2.5 w-2.5" /> Drive
+                        </a>
+                      )}
                     </div>
                   </div>
-                  <button onClick={() => copyToClipboard(acc.account_email, "E-Mail")} className="w-full flex items-center gap-2 p-1.5 -mx-1.5 rounded-md hover:bg-accent/5 transition-colors group/copy text-left">
-                    <Copy className="h-3 w-3 text-muted-foreground group-hover/copy:text-accent shrink-0 transition-colors" />
-                    <span className="text-xs font-medium text-foreground truncate">{acc.account_email}</span>
-                  </button>
-                  <button onClick={() => copyToClipboard(acc.account_password, "Passwort")} className="w-full flex items-center gap-2 p-1.5 -mx-1.5 rounded-md hover:bg-accent/5 transition-colors group/copy text-left">
-                    <Copy className="h-3 w-3 text-muted-foreground group-hover/copy:text-accent shrink-0 transition-colors" />
-                    <span className="text-[11px] text-muted-foreground truncate">PW: {acc.account_password}</span>
-                  </button>
-                  {acc.drive_folder_id && (
-                    <a href={`https://drive.google.com/drive/folders/${acc.drive_folder_id}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-1.5 -mx-1.5 rounded-md hover:bg-accent/5 transition-colors text-[11px] text-primary hover:underline">
-                      <ExternalLink className="h-3 w-3 shrink-0" /> Drive-Ordner
-                    </a>
-                  )}
+                  <div className="flex items-center gap-0.5 opacity-0 group-hover/card:opacity-100 transition-opacity shrink-0">
+                    {acc.assigned_to && (
+                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground hover:text-accent" title="Freigeben"
+                        onClick={async () => {
+                          await revokeDriveAccess([acc.id], acc.assigned_to!);
+                          await supabase.from("accounts").update({ assigned_to: null, assigned_at: null } as any).eq("id", acc.id);
+                          toast.success("Freigegeben"); loadAccounts(); loadChatters();
+                        }}>
+                        <RefreshCw className="h-3 w-3" />
+                      </Button>
+                    )}
+                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive" title="Löschen"
+                      onClick={async () => {
+                        await supabase.from("accounts").delete().eq("id", acc.id);
+                        toast.success("Gelöscht"); loadAccounts();
+                      }}>
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
                 </div>
               );
 
@@ -4341,19 +4361,45 @@ export default function AdminDashboard() {
                           const folderFree = folderAccs.filter(a => !a.assigned_to).length;
                           const isOver = dragOverFolder === folder;
                           const isOpen = openFolder === folder;
+                          const color = getFolderColor(folder);
                           return (
-                            <button key={folder} onClick={() => setOpenFolder(isOpen ? null : folder)}
-                              onDragOver={(e) => handleDragOver(e, folder)} onDragLeave={() => setDragOverFolder(null)} onDrop={(e) => handleDrop(e, folder)}
-                              className={`glass-card-subtle rounded-xl p-3 text-left transition-all ${isOver ? "border-accent/50 bg-accent/5 scale-[1.02]" : ""} ${isOpen ? "ring-1 ring-accent/30" : "hover:bg-accent/3"}`}>
-                              <div className="flex items-center gap-2 mb-1">
-                                <Package className="h-3.5 w-3.5 text-accent/70" />
-                                <span className="text-xs font-semibold text-foreground truncate flex-1">{folder}</span>
-                              </div>
-                              <div className="flex items-center gap-1.5">
-                                <Badge variant="secondary" className="text-[9px]">{folderAccs.length}</Badge>
-                                <Badge className="text-[9px] bg-accent/15 text-accent border-accent/20">{folderFree} frei</Badge>
-                              </div>
-                            </button>
+                            <div key={folder} className="relative">
+                              <button onClick={() => setOpenFolder(isOpen ? null : folder)}
+                                onDragOver={(e) => handleDragOver(e, folder)} onDragLeave={() => setDragOverFolder(null)} onDrop={(e) => handleDrop(e, folder)}
+                                className={`w-full rounded-xl p-3 text-left transition-all border ${isOver ? "scale-[1.03] shadow-lg" : ""} ${isOpen ? "ring-1" : "hover:scale-[1.01]"}`}
+                                style={{
+                                  borderColor: isOver || isOpen ? color : 'hsl(var(--border) / 0.4)',
+                                  backgroundColor: isOver ? `${color}11` : 'hsl(var(--secondary) / 0.15)',
+                                  ...(isOpen ? { boxShadow: `0 0 12px ${color}22` } : {}),
+                                }}>
+                                <div className="flex items-center gap-2 mb-1.5">
+                                  <div className="h-3 w-3 rounded-sm shrink-0" style={{ backgroundColor: color }} />
+                                  <span className="text-xs font-semibold text-foreground truncate flex-1">{folder}</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                  <Badge variant="secondary" className="text-[9px]">{folderAccs.length}</Badge>
+                                  <Badge className="text-[9px] border" style={{ backgroundColor: `${color}20`, color, borderColor: `${color}40` }}>{folderFree} frei</Badge>
+                                </div>
+                              </button>
+                              {/* Color picker trigger */}
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setColorPickerFolder(colorPickerFolder === folder ? null : folder); }}
+                                className="absolute top-1.5 right-1.5 h-5 w-5 rounded-full border border-border/50 opacity-0 hover:opacity-100 group-hover:opacity-60 transition-opacity flex items-center justify-center bg-card/80 backdrop-blur-sm"
+                                title="Farbe ändern"
+                                style={{ opacity: colorPickerFolder === folder ? 1 : undefined }}>
+                                <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
+                              </button>
+                              {/* Color picker dropdown */}
+                              {colorPickerFolder === folder && (
+                                <div className="absolute top-8 right-0 z-50 p-2 rounded-lg border border-border bg-card shadow-xl grid grid-cols-4 gap-1.5" onClick={(e) => e.stopPropagation()}>
+                                  {FOLDER_COLOR_OPTIONS.map((c) => (
+                                    <button key={c.value} onClick={() => { setFolderColorFn(folder, c.value); setColorPickerFolder(null); }} title={c.name}
+                                      className={`h-6 w-6 rounded-full border-2 transition-transform hover:scale-110 ${getFolderColor(folder) === c.value ? "border-foreground scale-110" : "border-transparent"}`}
+                                      style={{ backgroundColor: c.value }} />
+                                  ))}
+                                </div>
+                              )}
+                            </div>
                           );
                         })}
                       </div>
@@ -4365,11 +4411,12 @@ export default function AdminDashboard() {
                   {/* Opened folder content */}
                   {openFolder && (() => {
                     const folderAccs = filteredAccounts.filter(a => a.folder_name === openFolder);
+                    const folderColor = getFolderColor(openFolder);
                     return (
-                      <div className="space-y-2">
+                      <div className="space-y-2 rounded-xl border p-3" style={{ borderColor: `${folderColor}30`, backgroundColor: `${folderColor}05` }}>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <Package className="h-4 w-4 text-accent" />
+                            <div className="h-3.5 w-3.5 rounded-sm" style={{ backgroundColor: folderColor }} />
                             <span className="text-sm font-semibold text-foreground">{openFolder}</span>
                             <Badge variant="secondary" className="text-[9px]">{folderAccs.length}</Badge>
                           </div>
@@ -4392,7 +4439,7 @@ export default function AdminDashboard() {
                         {folderAccs.length === 0 ? (
                           <p className="text-xs text-muted-foreground text-center py-4 italic">Ordner ist leer – ziehe Accounts hierher</p>
                         ) : (
-                          <div className="space-y-2">{folderAccs.map(renderAccountCard)}</div>
+                          <div className="space-y-1.5">{folderAccs.map(renderAccountCard)}</div>
                         )}
                       </div>
                     );
@@ -4401,24 +4448,24 @@ export default function AdminDashboard() {
                   {/* Ungrouped accounts */}
                   {!openFolder && (
                     <div
-                      className={`space-y-2 rounded-xl p-2 -mx-2 transition-colors ${dragOverFolder === "__ungrouped__" ? "bg-accent/5 ring-1 ring-accent/20" : ""}`}
+                      className={`space-y-1.5 rounded-xl p-3 border border-dashed transition-all ${dragOverFolder === "__ungrouped__" ? "border-accent/50 bg-accent/5 scale-[1.01]" : "border-border/30"}`}
                       onDragOver={(e) => handleDragOver(e, "__ungrouped__")}
                       onDragLeave={() => setDragOverFolder(null)}
                       onDrop={(e) => { e.preventDefault(); setDragOverFolder(null); const accId = e.dataTransfer.getData("text/account-id"); if (!accId) return; supabase.from("accounts").update({ folder_name: null } as any).eq("id", accId).then(() => { toast.success("Aus Ordner entfernt"); loadAccounts(); }); }}
                     >
-                      <div className="flex items-center gap-2 px-2">
+                      <div className="flex items-center gap-2 mb-1">
                         <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Accounts</p>
                         {namedFolders.length > 0 && <span className="text-[9px] text-muted-foreground italic">– ohne Ordner</span>}
                       </div>
                       {ungrouped.length === 0 && manualPlatformAccounts.length === 0 ? (
-                        <div className="glass-card-subtle rounded-xl p-6 text-center">
+                        <div className="py-6 text-center">
                           <Package className="h-5 w-5 text-muted-foreground mx-auto mb-2 opacity-40" />
                           <p className="text-xs text-muted-foreground">Noch keine Accounts</p>
                         </div>
                       ) : ungrouped.length === 0 ? (
                         <p className="text-[11px] text-muted-foreground text-center py-3 italic">{manualFilter !== "alle" ? "Keine Accounts für diesen Filter" : "Alle Accounts in Ordnern sortiert"}</p>
                       ) : (
-                        <div className="space-y-2">{ungrouped.map(renderAccountCard)}</div>
+                        <div className="space-y-1.5">{ungrouped.map(renderAccountCard)}</div>
                       )}
                     </div>
                   )}
