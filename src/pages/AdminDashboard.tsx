@@ -5218,7 +5218,10 @@ export default function AdminDashboard() {
                       const folderColor = isUngrouped ? "hsl(var(--accent))" : getFolderColor(openFolder);
 
                       // Subfolder logic
-                      const subfolders = [...new Set(allFolderAccs.map(a => (a as any).subfolder_name).filter(Boolean))] as string[];
+                      // Merge DB subfolders with virtual (empty) subfolders
+                      const dbSubfolders = [...new Set(allFolderAccs.map(a => (a as any).subfolder_name).filter(Boolean))] as string[];
+                      const virtualSubs = (customSubfolders[openFolder] || []).filter(s => !dbSubfolders.includes(s));
+                      const subfolders = [...dbSubfolders, ...virtualSubs].sort();
                       const accsWithoutSubfolder = allFolderAccs.filter(a => !(a as any).subfolder_name);
 
                       const folderAccs = manualAccountSearch.trim()
