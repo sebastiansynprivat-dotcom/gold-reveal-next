@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,14 +28,6 @@ const Auth = () => {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [signUpSuccess, setSignUpSuccess] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
-    if (containerRef.current) {
-      containerRef.current.style.setProperty('--mouse-x', `${e.clientX}px`);
-      containerRef.current.style.setProperty('--mouse-y', `${e.clientY}px`);
-    }
-  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -137,17 +129,25 @@ const Auth = () => {
     }
     setSubmitting(false);
   };
-
+  const fireflies = Array.from({ length: 12 }, (_, i) => i);
 
   return (
-    <div
-      ref={containerRef}
-      onMouseMove={handleMouseMove}
-      className="min-h-screen flex flex-col items-center justify-center px-4"
-      style={{
-        background: 'radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), hsl(43 56% 52% / 0.06), transparent 40%)',
-      }}
-    >
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden">
+      {/* Fireflies */}
+      {fireflies.map((i) => (
+        <div
+          key={i}
+          className="auth-firefly"
+          style={{
+            left: `${8 + Math.random() * 84}%`,
+            top: `${5 + Math.random() * 90}%`,
+            animationDelay: `${i * 0.7}s`,
+            animationDuration: `${4 + Math.random() * 4}s`,
+            width: `${3 + Math.random() * 4}px`,
+            height: `${3 + Math.random() * 4}px`,
+          }}
+        />
+      ))}
       {/* Logo */}
       <motion.img
         src={logo}
