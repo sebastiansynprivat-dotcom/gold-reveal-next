@@ -232,6 +232,7 @@ export default function AdminDashboard() {
   const [deletingManualPool, setDeletingManualPool] = useState(false);
   const [accountPoolSectionOpen, setAccountPoolSectionOpen] = useState(false);
   const [mainPoolSearch, setMainPoolSearch] = useState("");
+  const [mainManualSearch, setMainManualSearch] = useState("");
   const [poolSearchQuery, setPoolSearchQuery] = useState("");
   const [reassignSearchQuery, setReassignSearchQuery] = useState("");
   const [goalTarget, setGoalTarget] = useState<ChatterProfile | null>(null);
@@ -1976,44 +1977,60 @@ export default function AdminDashboard() {
                 Accounts für manuelle Zuweisung – nicht Teil der automatischen Verteilung.
               </p>
 
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Input
+                  value={mainManualSearch}
+                  onChange={(e) => setMainManualSearch(e.target.value)}
+                  placeholder="Plattform suchen..."
+                  className="pl-8 text-xs h-8"
+                />
+              </div>
+
               <span className="text-xs text-muted-foreground">{manualPlatforms.length} Plattform{manualPlatforms.length !== 1 ? "en" : ""}</span>
 
-              {manualPlatforms.length === 0 ? (
-                <p className="text-xs text-muted-foreground text-center py-4 italic">
-                  Noch keine Plattformen. Erstelle eine neue Plattform oben.
-                </p>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {manualPlatforms.map((p) => {
-                    const pAccounts = accounts.filter(a => a.is_manual && a.platform === p);
-                    const free = pAccounts.filter(a => !a.assigned_to).length;
-                    const assigned = pAccounts.filter(a => a.assigned_to).length;
-                    return (
-                      <button
-                        key={p}
-                        onClick={() => {
-                          setSelectedManualPlatform(p);
-                          const existingDomain = accounts.find(a => a.is_manual && a.platform === p)?.account_domain;
-                          setManualAccDomain(existingDomain || "");
-                          setManualPoolOpen(true);
-                        }}
-                        className="glass-card-subtle rounded-xl p-4 text-left hover:bg-secondary/30 transition-colors"
-                      >
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm font-semibold text-foreground">{p}</span>
-                          <Badge variant="secondary" className="text-[10px]">
-                            {pAccounts.length} Accounts
-                          </Badge>
-                        </div>
-                        <div className="flex gap-3 text-[10px] text-muted-foreground">
-                          <span className="text-accent">{free} frei</span>
-                          <span>{assigned} vergeben</span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
+              {(() => {
+                const filteredManualPlatforms = mainManualSearch.trim()
+                  ? manualPlatforms.filter((p) => p.toLowerCase().includes(mainManualSearch.toLowerCase()))
+                  : manualPlatforms;
+                return filteredManualPlatforms.length === 0 ? (
+                  <p className="text-xs text-muted-foreground text-center py-4 italic">
+                    {manualPlatforms.length === 0 ? "Noch keine Plattformen. Erstelle eine neue Plattform oben." : "Keine Plattform gefunden."}
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {filteredManualPlatforms.map((p) => {
+                      const pAccounts = accounts.filter(a => a.is_manual && a.platform === p);
+                      const free = pAccounts.filter(a => !a.assigned_to).length;
+                      const assigned = pAccounts.filter(a => a.assigned_to).length;
+                      return (
+                        <button
+                          key={p}
+                          onClick={() => {
+                            setSelectedManualPlatform(p);
+                            const existingDomain = accounts.find(a => a.is_manual && a.platform === p)?.account_domain;
+                            setManualAccDomain(existingDomain || "");
+                            setManualPoolOpen(true);
+                          }}
+                          className="glass-card-subtle rounded-xl p-4 text-left hover:bg-secondary/30 transition-colors"
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-sm font-semibold text-foreground">{p}</span>
+                            <Badge variant="secondary" className="text-[10px]">
+                              {pAccounts.length} Accounts
+                            </Badge>
+                          </div>
+                          <div className="flex gap-3 text-[10px] text-muted-foreground">
+                            <span className="text-accent">{free} frei</span>
+                            <span>{assigned} vergeben</span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
             </div>
           )}
         </section>
