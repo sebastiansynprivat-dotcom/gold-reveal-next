@@ -4252,7 +4252,7 @@ export default function AdminDashboard() {
                         )}
                       </div>
                     </div>
-                    <div className="flex flex-col gap-0.5 shrink-0">
+                    <div className="flex flex-col gap-1.5 shrink-0">
                       {/* Move to folder button */}
                       {namedFolders.length > 0 && (
                         <div className="relative">
