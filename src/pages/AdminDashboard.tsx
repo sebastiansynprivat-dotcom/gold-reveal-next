@@ -241,7 +241,7 @@ export default function AdminDashboard() {
   const [goalAmount, setGoalAmount] = useState("");
   const [goalSaving, setGoalSaving] = useState(false);
   const [expandedChatter, setExpandedChatter] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"einnahmen" | "chatter" | "anfragen" | "botdms" | "notifications" | "kiprompt" | "gdrive">("einnahmen");
+  const [activeTab, setActiveTab] = useState<"einnahmen" | "chatter" | "anfragen" | "botdms" | "notifications" | "kiprompt" | "placeholder" | "gdrive">("einnahmen");
   const activeTabRef = useRef(activeTab);
   const [modelRequests, setModelRequests] = useState<any[]>([]);
   const [modelRequestsLoaded, setModelRequestsLoaded] = useState(false);
@@ -1510,6 +1510,7 @@ export default function AdminDashboard() {
     { key: "botdms" as const, label: "Bot DMs", icon: Bot, onClick: () => { setActiveTab("botdms"); if (!botMessagesLoaded) loadBotMessages(); } },
     { key: "notifications" as const, label: "Benachrichtigungen", icon: Bell, onClick: () => { setActiveTab("notifications"); if (!notifHistoryLoaded) loadNotifHistory(); if (!schedulesLoaded) loadSchedules(); if (!notifTemplatesLoaded) loadNotifTemplates(); } },
     { key: "kiprompt" as const, label: "KI Prompt", icon: Brain, onClick: () => { setActiveTab("kiprompt"); if (!kiPromptLoaded) loadKiPrompt(); } },
+    { key: "placeholder" as const, label: "Platzhalter", icon: Package, onClick: () => setActiveTab("placeholder") },
     { key: "gdrive" as const, label: "Google Drive", icon: ExternalLink, onClick: () => setActiveTab("gdrive") },
   ];
 
@@ -3770,6 +3771,22 @@ export default function AdminDashboard() {
                   )}
                 </div>
               )}
+            </section>
+          </div>
+        )}
+
+        {activeTab === "placeholder" && (
+          <div className="space-y-4">
+            <section className="glass-card rounded-xl overflow-hidden">
+              <div className="px-4 py-3 border-b border-border flex items-center gap-2">
+                <Package className="h-4 w-4 text-accent" />
+                <h2 className="text-sm font-semibold text-foreground">Platzhalter</h2>
+              </div>
+              <div className="p-4">
+                <p className="text-sm text-muted-foreground">
+                  Dieser Tab ist noch leer und wartet auf neue Funktionen...
+                </p>
+              </div>
             </section>
           </div>
         )}
