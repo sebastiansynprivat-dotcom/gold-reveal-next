@@ -1914,8 +1914,7 @@ export default function AdminDashboard() {
                       );
                     })}
                   </div>
-                );
-              })()}
+                )
             </>
           )}
         </section>
@@ -1999,8 +1998,7 @@ export default function AdminDashboard() {
                       );
                     })}
                   </div>
-                );
-              })()}
+                )
             </div>
           )}
         </section>
