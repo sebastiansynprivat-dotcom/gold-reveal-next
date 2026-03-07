@@ -231,8 +231,7 @@ export default function AdminDashboard() {
   const [deleteManualPoolConfirm, setDeleteManualPoolConfirm] = useState(false);
   const [deletingManualPool, setDeletingManualPool] = useState(false);
   const [accountPoolSectionOpen, setAccountPoolSectionOpen] = useState(false);
-  const [mainPoolSearch, setMainPoolSearch] = useState("");
-  const [mainManualSearch, setMainManualSearch] = useState("");
+   const [manualAccountSearch, setManualAccountSearch] = useState("");
   const [poolSearchQuery, setPoolSearchQuery] = useState("");
   const [reassignSearchQuery, setReassignSearchQuery] = useState("");
   const [goalTarget, setGoalTarget] = useState<ChatterProfile | null>(null);
@@ -1878,29 +1877,15 @@ export default function AdminDashboard() {
             )}
           </div>
 
-          {accountPoolSectionOpen && (
+           {accountPoolSectionOpen && (
             <>
-              {/* Search */}
-              <div className="relative">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                <Input
-                  value={mainPoolSearch}
-                  onChange={(e) => setMainPoolSearch(e.target.value)}
-                  placeholder="Pool suchen..."
-                  className="pl-8 text-xs h-8"
-                />
-              </div>
-              {(() => {
-                const filteredPlatforms = mainPoolSearch.trim()
-                  ? platforms.filter((p) => p.toLowerCase().includes(mainPoolSearch.toLowerCase()))
-                  : platforms;
-                return filteredPlatforms.length === 0 ? (
+              {platforms.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-4">
-                    {platforms.length === 0 ? "Noch keine Pools angelegt. Erstelle einen neuen Pool oben." : "Kein Pool gefunden."}
+                    Noch keine Pools angelegt. Erstelle einen neuen Pool oben.
                   </p>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {filteredPlatforms.map((p) => {
+                    {platforms.map((p) => {
                       const pAccounts = accounts.filter((a) => a.platform === p);
                       const free = pAccounts.filter((a) => !a.assigned_to).length;
                       const assigned = pAccounts.filter((a) => a.assigned_to).length;
@@ -1929,8 +1914,8 @@ export default function AdminDashboard() {
                       );
                     })}
                   </div>
-                );
-              })()}
+                )}
+
             </>
           )}
         </section>
@@ -1977,30 +1962,15 @@ export default function AdminDashboard() {
                 Accounts für manuelle Zuweisung – nicht Teil der automatischen Verteilung.
               </p>
 
-              {/* Search */}
-              <div className="relative">
-                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                <Input
-                  value={mainManualSearch}
-                  onChange={(e) => setMainManualSearch(e.target.value)}
-                  placeholder="Plattform suchen..."
-                  className="pl-8 text-xs h-8"
-                />
-              </div>
-
               <span className="text-xs text-muted-foreground">{manualPlatforms.length} Plattform{manualPlatforms.length !== 1 ? "en" : ""}</span>
 
-              {(() => {
-                const filteredManualPlatforms = mainManualSearch.trim()
-                  ? manualPlatforms.filter((p) => p.toLowerCase().includes(mainManualSearch.toLowerCase()))
-                  : manualPlatforms;
-                return filteredManualPlatforms.length === 0 ? (
+              {manualPlatforms.length === 0 ? (
                   <p className="text-xs text-muted-foreground text-center py-4 italic">
-                    {manualPlatforms.length === 0 ? "Noch keine Plattformen. Erstelle eine neue Plattform oben." : "Keine Plattform gefunden."}
+                    Noch keine Plattformen. Erstelle eine neue Plattform oben.
                   </p>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {filteredManualPlatforms.map((p) => {
+                    {manualPlatforms.map((p) => {
                       const pAccounts = accounts.filter(a => a.is_manual && a.platform === p);
                       const free = pAccounts.filter(a => !a.assigned_to).length;
                       const assigned = pAccounts.filter(a => a.assigned_to).length;
@@ -2029,8 +1999,7 @@ export default function AdminDashboard() {
                       );
                     })}
                   </div>
-                );
-              })()}
+                )}
             </div>
           )}
         </section>
@@ -4307,7 +4276,7 @@ export default function AdminDashboard() {
       </Dialog>
 
       {/* Manual Platform Dialog */}
-      <Dialog open={manualPoolOpen} onOpenChange={(o) => { setManualPoolOpen(o); if (!o) { setManualAccFolder(""); setCreatingFolder(false); setNewFolderName(""); setOpenFolder(null); setDragOverFolder(null); setManualFilter("alle"); setMoveToFolderAcc(null); setColorPickerFolder(null); } }}>
+      <Dialog open={manualPoolOpen} onOpenChange={(o) => { setManualPoolOpen(o); if (!o) { setManualAccFolder(""); setCreatingFolder(false); setNewFolderName(""); setOpenFolder(null); setDragOverFolder(null); setManualFilter("alle"); setMoveToFolderAcc(null); setColorPickerFolder(null); setManualAccountSearch(""); } }}>
         <DialogContent className="glass-card border-border sm:max-w-lg max-h-[85vh] overflow-hidden flex flex-col">
           <DialogHeader className="pb-0">
             <DialogTitle className="text-foreground flex items-center gap-2">
@@ -4659,15 +4628,26 @@ export default function AdminDashboard() {
                     /* INSIDE FOLDER VIEW */
                     (() => {
                       const isUngrouped = openFolder === "__ungrouped__";
-                      const folderAccs = isUngrouped
+                      const allFolderAccs = isUngrouped
                         ? filteredAccounts.filter(a => !a.folder_name)
                         : filteredAccounts.filter(a => a.folder_name === openFolder);
                       const folderColor = isUngrouped ? "hsl(var(--accent))" : getFolderColor(openFolder);
 
+                      const folderAccs = manualAccountSearch.trim()
+                        ? allFolderAccs.filter(acc => {
+                            const q = manualAccountSearch.toLowerCase();
+                            return (
+                              acc.account_email?.toLowerCase().includes(q) ||
+                              acc.account_password?.toLowerCase().includes(q) ||
+                              acc.account_domain?.toLowerCase().includes(q)
+                            );
+                          })
+                        : allFolderAccs;
+
                       return (
                         <>
                           {/* Back button */}
-                          <button onClick={() => setOpenFolder(null)} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mb-1">
+                          <button onClick={() => { setOpenFolder(null); setManualAccountSearch(""); }} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mb-1">
                             <ChevronRight className="h-3 w-3 rotate-180" /> Zurück zu Ordnern
                           </button>
 
@@ -4681,13 +4661,13 @@ export default function AdminDashboard() {
                                   <div className="h-3.5 w-3.5 rounded-sm" style={{ backgroundColor: folderColor }} />
                                 )}
                                 <span className="text-sm font-semibold text-foreground">{isUngrouped ? "Unsortiert" : openFolder}</span>
-                                <Badge variant="secondary" className="text-[9px]">{folderAccs.length}</Badge>
+                                <Badge variant="secondary" className="text-[9px]">{allFolderAccs.length}</Badge>
                               </div>
                               {!isUngrouped && (
                                 <Button variant="ghost" size="sm" className="h-7 text-[10px] text-destructive/70 hover:text-destructive"
                                   onClick={async () => {
-                                    const allFolderAccs = manualPlatformAccounts.filter(a => a.folder_name === openFolder);
-                                    for (const acc of allFolderAccs) { await supabase.from("accounts").update({ folder_name: null } as any).eq("id", acc.id); }
+                                    const accsInFolder = manualPlatformAccounts.filter(a => a.folder_name === openFolder);
+                                    for (const acc of accsInFolder) { await supabase.from("accounts").update({ folder_name: null } as any).eq("id", acc.id); }
                                     const platform = selectedManualPlatform || "";
                                     setCustomFolders(prev => ({ ...prev, [platform]: (prev[platform] || []).filter(f => f !== openFolder) }));
                                     toast.success(`Ordner "${openFolder}" aufgelöst`); setOpenFolder(null); loadAccounts();
@@ -4698,7 +4678,7 @@ export default function AdminDashboard() {
                             </div>
 
                             {/* Filter Pills */}
-                            {folderAccs.length > 0 && (
+                            {allFolderAccs.length > 0 && (
                               <div className="flex gap-1 p-1 rounded-lg bg-secondary/30 border border-border/50 relative">
                                 {(["alle", "frei", "vergeben"] as const).map((f) => (
                                   <button key={f} onClick={() => setManualFilter(f)}
@@ -4719,12 +4699,25 @@ export default function AdminDashboard() {
                             )}
                           </div>
 
+                          {/* Account search */}
+                          {allFolderAccs.length > 0 && (
+                            <div className="relative">
+                              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                              <Input
+                                value={manualAccountSearch}
+                                onChange={(e) => setManualAccountSearch(e.target.value)}
+                                placeholder="Account suchen..."
+                                className="pl-8 text-xs h-8"
+                              />
+                            </div>
+                          )}
+
                           {/* Account list */}
                           {folderAccs.length === 0 ? (
                             <div className="py-6 text-center">
                               <Package className="h-5 w-5 text-muted-foreground mx-auto mb-2 opacity-40" />
                               <p className="text-xs text-muted-foreground italic">
-                                {manualFilter !== "alle" ? "Keine Accounts für diesen Filter" : "Keine Accounts in diesem Ordner"}
+                                {manualAccountSearch.trim() ? "Kein Account gefunden" : manualFilter !== "alle" ? "Keine Accounts für diesen Filter" : "Keine Accounts in diesem Ordner"}
                               </p>
                             </div>
                           ) : (
