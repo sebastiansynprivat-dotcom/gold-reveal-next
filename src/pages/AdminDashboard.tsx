@@ -409,6 +409,9 @@ export default function AdminDashboard() {
   const [dragOverFolder, setDragOverFolder] = useState<string | null>(null);
   const [openFolder, setOpenFolder] = useState<string | null>(null);
   const [customFolders, setCustomFolders] = useState<Record<string, string[]>>({});
+  const [customSubfolders, setCustomSubfolders] = useState<Record<string, string[]>>({});
+  const [newSubfolderName, setNewSubfolderName] = useState("");
+  const [creatingSubfolder, setCreatingSubfolder] = useState(false);
   const [folderColors, setFolderColors] = useState<Record<string, string>>({});
   const [colorPickerFolder, setColorPickerFolder] = useState<string | null>(null);
   const [moveToFolderAcc, setMoveToFolderAcc] = useState<string | null>(null);
@@ -4732,7 +4735,7 @@ export default function AdminDashboard() {
       </Dialog>
 
       {/* Manual Platform Dialog */}
-      <Dialog open={manualPoolOpen} onOpenChange={(o) => { setManualPoolOpen(o); if (!o) { setManualAccFolder(""); setCreatingFolder(false); setNewFolderName(""); setOpenFolder(null); setDragOverFolder(null); setManualFilter("alle"); setMoveToFolderAcc(null); setColorPickerFolder(null); setManualAccountSearch(""); } }}>
+      <Dialog open={manualPoolOpen} onOpenChange={(o) => { setManualPoolOpen(o); if (!o) { setManualAccFolder(""); setCreatingFolder(false); setNewFolderName(""); setOpenFolder(null); setDragOverFolder(null); setManualFilter("alle"); setMoveToFolderAcc(null); setColorPickerFolder(null); setManualAccountSearch(""); setCreatingSubfolder(false); setNewSubfolderName(""); } }}>
         <DialogContent className="glass-card border-border sm:max-w-lg max-h-[85vh] overflow-hidden flex flex-col">
           <DialogHeader className="pb-0">
             <DialogTitle className="text-foreground flex items-center gap-2">
@@ -5215,7 +5218,10 @@ export default function AdminDashboard() {
                       const folderColor = isUngrouped ? "hsl(var(--accent))" : getFolderColor(openFolder);
 
                       // Subfolder logic
-                      const subfolders = [...new Set(allFolderAccs.map(a => (a as any).subfolder_name).filter(Boolean))] as string[];
+                      // Merge DB subfolders with virtual (empty) subfolders
+                      const dbSubfolders = [...new Set(allFolderAccs.map(a => (a as any).subfolder_name).filter(Boolean))] as string[];
+                      const virtualSubs = (customSubfolders[openFolder] || []).filter(s => !dbSubfolders.includes(s));
+                      const subfolders = [...dbSubfolders, ...virtualSubs].sort();
                       const accsWithoutSubfolder = allFolderAccs.filter(a => !(a as any).subfolder_name);
 
                       const folderAccs = manualAccountSearch.trim()
@@ -5350,23 +5356,65 @@ export default function AdminDashboard() {
                                 </div>
                               )}
 
-                              {/* Create subfolder button */}
+                              {/* Create subfolder */}
                               {!isUngrouped && (
-                                <div className="flex items-center gap-2">
-                                  <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider flex-1">
-                                    {subfolders.length > 0 ? "Ohne Unterordner" : "Accounts"}
-                                  </p>
-                                  <Button variant="ghost" size="sm" className="h-7 text-[10px] text-muted-foreground hover:text-accent"
-                                    onClick={() => {
-                                      const name = prompt("Unterordner-Name:");
-                                      if (name?.trim()) {
-                                        // We just need to move an account into this subfolder to create it
-                                        // For now, show it as a prompt – the subfolder is created when accounts are moved in
-                                        toast.info(`Unterordner "${name.trim()}" wird erstellt, wenn du Accounts hineinverschiebst.`);
-                                      }
-                                    }}>
-                                    <Plus className="h-3 w-3 mr-1" /> Unterordner
-                                  </Button>
+                                <div className="space-y-2">
+                                  <div className="flex items-center gap-2">
+                                    <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider flex-1">
+                                      {subfolders.length > 0 ? "Ohne Unterordner" : "Accounts"}
+                                    </p>
+                                    {!creatingSubfolder && (
+                                      <Button variant="ghost" size="sm" className="h-7 text-[10px] text-muted-foreground hover:text-accent"
+                                        onClick={() => setCreatingSubfolder(true)}>
+                                        <Plus className="h-3 w-3 mr-1" /> Unterordner
+                                      </Button>
+                                    )}
+                                  </div>
+                                  {creatingSubfolder && (
+                                    <div className="flex items-center gap-2">
+                                      <Input
+                                        autoFocus
+                                        placeholder="Unterordner-Name..."
+                                        value={newSubfolderName}
+                                        onChange={e => setNewSubfolderName(e.target.value)}
+                                        onKeyDown={e => {
+                                          if (e.key === "Enter" && newSubfolderName.trim()) {
+                                            const name = newSubfolderName.trim();
+                                            setCustomSubfolders(prev => ({
+                                              ...prev,
+                                              [openFolder]: [...(prev[openFolder] || []), name].filter((v, i, a) => a.indexOf(v) === i)
+                                            }));
+                                            setNewSubfolderName("");
+                                            setCreatingSubfolder(false);
+                                            toast.success(`Unterordner „${name}" erstellt`);
+                                          } else if (e.key === "Escape") {
+                                            setNewSubfolderName("");
+                                            setCreatingSubfolder(false);
+                                          }
+                                        }}
+                                        className="h-8 text-xs flex-1"
+                                      />
+                                      <Button size="sm" className="h-8 px-3"
+                                        disabled={!newSubfolderName.trim()}
+                                        onClick={() => {
+                                          const name = newSubfolderName.trim();
+                                          if (!name) return;
+                                          setCustomSubfolders(prev => ({
+                                            ...prev,
+                                            [openFolder]: [...(prev[openFolder] || []), name].filter((v, i, a) => a.indexOf(v) === i)
+                                          }));
+                                          setNewSubfolderName("");
+                                          setCreatingSubfolder(false);
+                                          toast.success(`Unterordner „${name}" erstellt`);
+                                        }}>
+                                        <Check className="h-3 w-3" />
+                                      </Button>
+                                      <Button variant="ghost" size="sm" className="h-8 px-2"
+                                        onClick={() => { setNewSubfolderName(""); setCreatingSubfolder(false); }}>
+                                        <XCircle className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                  )}
                                 </div>
                               )}
 
