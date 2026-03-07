@@ -28,6 +28,7 @@ const Auth = () => {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [signUpSuccess, setSignUpSuccess] = useState(false);
+  const [showGroupHelp, setShowGroupHelp] = useState(false);
 
   // Mouse-following particles
   const particlesRef = useRef<{ x: number; y: number; size: number; opacity: number; vx: number; vy: number; life: number }[]>([]);
@@ -259,15 +260,39 @@ const Auth = () => {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignUp && (
-              <div className="input-gold-shimmer rounded-xl">
-                <input
-                  type="text"
-                  placeholder="Gruppenname (Beispiel: ⬜️ (M) Max Mu)"
-                  value={groupName}
-                  onChange={(e) => setGroupName(e.target.value)}
-                  required
-                  className={inputClass}
-                />
+              <div>
+                <div className="input-gold-shimmer rounded-xl">
+                  <input
+                    type="text"
+                    placeholder="Gruppenname (Beispiel: ⬜️ (M) Max Mu)"
+                    value={groupName}
+                    onChange={(e) => setGroupName(e.target.value)}
+                    required
+                    className={inputClass}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowGroupHelp((v) => !v)}
+                  className="mt-1.5 text-xs text-primary hover:text-primary/80 transition-colors underline underline-offset-2"
+                >
+                  Wo finde ich meinen Gruppennamen?
+                </button>
+                {showGroupHelp && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-2 p-3 rounded-xl bg-card border border-border text-xs text-muted-foreground leading-relaxed space-y-2"
+                  >
+                    <p>
+                      Wir haben mit dir eine <span className="text-foreground font-medium">WhatsApp-Gruppe</span> eröffnet. Den Gruppennamen findest du direkt oben in der Gruppe – kopiere ihn einfach 1:1 und füge ihn hier ein.
+                    </p>
+                    <p className="text-primary font-semibold">
+                      ⚠️ Es ist extrem wichtig, dass du den richtigen Gruppennamen angibst, damit du korrekt abgerechnet werden kannst!
+                    </p>
+                  </motion.div>
+                )}
               </div>
             )}
             <div className="input-gold-shimmer rounded-xl">
