@@ -4411,11 +4411,12 @@ export default function AdminDashboard() {
                   {/* Opened folder content */}
                   {openFolder && (() => {
                     const folderAccs = filteredAccounts.filter(a => a.folder_name === openFolder);
+                    const folderColor = getFolderColor(openFolder);
                     return (
-                      <div className="space-y-2">
+                      <div className="space-y-2 rounded-xl border p-3" style={{ borderColor: `${folderColor}30`, backgroundColor: `${folderColor}05` }}>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <Package className="h-4 w-4 text-accent" />
+                            <div className="h-3.5 w-3.5 rounded-sm" style={{ backgroundColor: folderColor }} />
                             <span className="text-sm font-semibold text-foreground">{openFolder}</span>
                             <Badge variant="secondary" className="text-[9px]">{folderAccs.length}</Badge>
                           </div>
@@ -4438,7 +4439,7 @@ export default function AdminDashboard() {
                         {folderAccs.length === 0 ? (
                           <p className="text-xs text-muted-foreground text-center py-4 italic">Ordner ist leer – ziehe Accounts hierher</p>
                         ) : (
-                          <div className="space-y-2">{folderAccs.map(renderAccountCard)}</div>
+                          <div className="space-y-1.5">{folderAccs.map(renderAccountCard)}</div>
                         )}
                       </div>
                     );
