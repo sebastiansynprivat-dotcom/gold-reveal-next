@@ -182,7 +182,7 @@ const Auth = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, delay: 0.08 }}
         >
-          <h1 className="gold-gradient-text text-2xl font-bold text-center tracking-tight leading-tight mb-2">
+          <h1 className="text-gold-gradient-shimmer text-2xl font-bold text-center tracking-tight leading-tight mb-2">
             {isSignUp ? "Erstelle ein kostenloses Konto bei SheX" : "Willkommen zurück"}
           </h1>
           <p className="text-muted-foreground text-sm text-center mb-7">
