@@ -256,5 +256,15 @@
       hsl(43 56% 52% / 0.4),
       transparent
     );
+  @keyframes bonus-shimmer-drift {
+    0% {
+      background: radial-gradient(ellipse 80% 60% at 15% 35%, hsl(43 56% 52%), transparent 70%);
+    }
+    50% {
+      background: radial-gradient(ellipse 90% 70% at 75% 55%, hsl(43 76% 46%), transparent 70%);
+    }
+    100% {
+      background: radial-gradient(ellipse 80% 60% at 50% 30%, hsl(43 56% 52%), transparent 70%);
+    }
   }
 }

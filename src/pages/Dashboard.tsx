@@ -984,7 +984,15 @@ export default function Dashboard() {
         <DailyChecklist />
 
         {/* Bonus Model - alles in einer Karte */}
-        <section className="glass-card rounded-xl p-4 lg:p-6 space-y-4">
+        <section className="glass-card rounded-xl p-4 lg:p-6 space-y-4 relative overflow-hidden">
+          {/* Animated gold shimmer background */}
+          <div
+            className="pointer-events-none absolute inset-0 opacity-[0.07]"
+            style={{
+              background: 'radial-gradient(ellipse 80% 60% at 20% 40%, hsl(43 56% 52%), transparent 70%)',
+              animation: 'bonus-shimmer-drift 8s ease-in-out infinite alternate',
+            }}
+          />
           {/* Animated Header */}
           <div className="relative">
             <div className="flex items-center gap-2">
