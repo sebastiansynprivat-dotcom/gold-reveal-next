@@ -4797,9 +4797,9 @@ export default function AdminDashboard() {
                 setDragOverFolder(folder);
               };
 
-              const moveAccountToFolder = async (accId: string, targetFolder: string | null) => {
-                await supabase.from("accounts").update({ folder_name: targetFolder } as any).eq("id", accId);
-                toast.success(targetFolder ? `In „${targetFolder}" verschoben` : "Aus Ordner entfernt");
+              const moveAccountToFolder = async (accId: string, targetFolder: string | null, targetSubfolder?: string | null) => {
+                await supabase.from("accounts").update({ folder_name: targetFolder, subfolder_name: targetSubfolder ?? null } as any).eq("id", accId);
+                toast.success(targetFolder ? `In „${targetFolder}${targetSubfolder ? ` > ${targetSubfolder}` : ""}" verschoben` : "Aus Ordner entfernt");
                 setMoveToFolderAcc(null);
                 loadAccounts();
               };
