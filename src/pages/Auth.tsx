@@ -191,32 +191,38 @@ const Auth = () => {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignUp && (
+              <div className="input-gold-shimmer rounded-xl">
+                <input
+                  type="text"
+                  placeholder="Gruppenname (z.B. Team Alpha)"
+                  value={groupName}
+                  onChange={(e) => setGroupName(e.target.value)}
+                  required
+                  className={inputClass}
+                />
+              </div>
+            )}
+            <div className="input-gold-shimmer rounded-xl">
               <input
-                type="text"
-                placeholder="Gruppenname (z.B. Team Alpha)"
-                value={groupName}
-                onChange={(e) => setGroupName(e.target.value)}
+                type="email"
+                placeholder="E-Mail Adresse"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
                 className={inputClass}
               />
-            )}
-            <input
-              type="email"
-              placeholder="E-Mail Adresse"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className={inputClass}
-            />
-            <input
-              type="password"
-              placeholder="Passwort (min. 6 Zeichen)"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-              className={inputClass}
-            />
+            </div>
+            <div className="input-gold-shimmer rounded-xl">
+              <input
+                type="password"
+                placeholder="Passwort (min. 6 Zeichen)"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                className={inputClass}
+              />
+            </div>
 
             {error && (
               <p className="text-destructive text-sm text-center animate-fade-in">{error}</p>
