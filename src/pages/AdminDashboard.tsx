@@ -4153,6 +4153,20 @@ export default function AdminDashboard() {
               const platformCustom = customFolders[selectedManualPlatform || ""] || [];
               const namedFolders = [...new Set([...dbFolders, ...platformCustom])];
 
+              const FOLDER_COLOR_OPTIONS = [
+                { name: "Gold", value: "hsl(var(--accent))" },
+                { name: "Blau", value: "hsl(217 91% 60%)" },
+                { name: "Grün", value: "hsl(142 71% 45%)" },
+                { name: "Rot", value: "hsl(0 84% 60%)" },
+                { name: "Lila", value: "hsl(271 81% 56%)" },
+                { name: "Cyan", value: "hsl(186 91% 48%)" },
+                { name: "Orange", value: "hsl(25 95% 53%)" },
+                { name: "Pink", value: "hsl(330 81% 60%)" },
+              ];
+              const getFolderColor = (folder: string) => folderColors[`${selectedManualPlatform}::${folder}`] || FOLDER_COLOR_OPTIONS[0].value;
+              const setFolderColor = (folder: string, color: string) => setFolderColors(prev => ({ ...prev, [`${selectedManualPlatform}::${folder}`]: color }));
+              const [colorPickerFolder, setColorPickerFolder] = useState<string | null>(null);
+
               const copyToClipboard = (text: string, label: string) => {
                 navigator.clipboard.writeText(text);
                 toast.success(`${label} kopiert!`);
