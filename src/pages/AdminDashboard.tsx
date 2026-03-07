@@ -3744,11 +3744,21 @@ export default function AdminDashboard() {
 
             {/* Filter Pills */}
             {platformAccounts.length > 0 && (
-              <div className="flex gap-1.5 p-1 rounded-lg bg-secondary/30 border border-border/50">
+              <div className="flex gap-1 p-1 rounded-lg bg-secondary/30 border border-border/50 relative">
                 {(["alle", "frei", "vergeben"] as const).map((f) => (
                   <button key={f} onClick={() => setPoolFilter(f)}
-                    className={`flex-1 text-[10px] font-medium px-3 py-1.5 rounded-md transition-all ${poolFilter === f ? "bg-accent/15 text-accent shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
-                    {f === "alle" ? "Alle" : f === "frei" ? "Frei" : "Vergeben"}
+                    className="relative flex-1 text-[10px] font-medium px-3 py-1.5 rounded-md transition-colors z-10"
+                    style={{ color: poolFilter === f ? undefined : undefined }}>
+                    <span className={poolFilter === f ? "text-accent" : "text-muted-foreground hover:text-foreground"}>
+                      {f === "alle" ? "Alle" : f === "frei" ? "Frei" : "Vergeben"}
+                    </span>
+                    {poolFilter === f && (
+                      <motion.div
+                        layoutId="activePoolFilter"
+                        className="absolute inset-0 bg-accent/15 rounded-md shadow-sm"
+                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                      />
+                    )}
                   </button>
                 ))}
               </div>
@@ -4369,11 +4379,20 @@ export default function AdminDashboard() {
 
                   {/* Filter Pills */}
                   {manualPlatformAccounts.length > 0 && (
-                    <div className="flex gap-1.5 p-1 rounded-lg bg-secondary/30 border border-border/50">
+                    <div className="flex gap-1 p-1 rounded-lg bg-secondary/30 border border-border/50 relative">
                       {(["alle", "frei", "vergeben"] as const).map((f) => (
                         <button key={f} onClick={() => setManualFilter(f)}
-                          className={`flex-1 text-[10px] font-medium px-3 py-1.5 rounded-md transition-all ${manualFilter === f ? "bg-accent/15 text-accent shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
-                          {f === "alle" ? "Alle" : f === "frei" ? "Frei" : "Vergeben"}
+                          className="relative flex-1 text-[10px] font-medium px-3 py-1.5 rounded-md transition-colors z-10">
+                          <span className={manualFilter === f ? "text-accent" : "text-muted-foreground hover:text-foreground"}>
+                            {f === "alle" ? "Alle" : f === "frei" ? "Frei" : "Vergeben"}
+                          </span>
+                          {manualFilter === f && (
+                            <motion.div
+                              layoutId="activeManualFilter"
+                              className="absolute inset-0 bg-accent/15 rounded-md shadow-sm"
+                              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                            />
+                          )}
                         </button>
                       ))}
                     </div>
