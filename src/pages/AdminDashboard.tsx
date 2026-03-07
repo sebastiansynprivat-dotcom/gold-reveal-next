@@ -192,6 +192,7 @@ export default function AdminDashboard() {
   const [newAccDomain, setNewAccDomain] = useState("");
   const [newAccDriveFolder, setNewAccDriveFolder] = useState("");
   const [newAccLanguage, setNewAccLanguage] = useState<"de" | "en">("de");
+  const [newAccModelActive, setNewAccModelActive] = useState(true);
   const [addingAccount, setAddingAccount] = useState(false);
   const [assigning, setAssigning] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<ChatterProfile | null>(null);
