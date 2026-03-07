@@ -1086,7 +1086,7 @@ function DashboardBillingInfo({ onNavigate, groupName }: {onNavigate: () => void
   const totalDays = differenceInDays(deadline, startDate);
   const progressPct = Math.round((totalDays - daysLeft) / totalDays * 100);
 
-  const referralText = `Hey! Ich arbeite als Chatter und verdiene damit richtig gutes Geld. Wenn du Lust hast, bewirb dich hier: ${REFERRAL_LINKEDIN_URL}\n\nWichtig: Gib bei der Bewerbung meinen Gruppennamen „${groupName}" an – das ist nötig, damit es zugeordnet werden kann!`;
+  const referralText = `Hey! Ich arbeite als Chatter und verdiene damit richtig gutes Geld. Wenn du Lust hast, bewirb dich hier!\n\nWichtig: Gib bei der Bewerbung meinen Gruppennamen „${groupName}" an – das ist nötig, damit es zugeordnet werden kann!\n\nLink zum Bewerben: ${REFERRAL_LINKEDIN_URL}`;
 
   const copyReferralText = async () => {
     try {
