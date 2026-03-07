@@ -29,6 +29,74 @@ const Auth = () => {
   const [submitting, setSubmitting] = useState(false);
   const [signUpSuccess, setSignUpSuccess] = useState(false);
 
+  // Mouse-following particles
+  const particlesRef = useRef<{ x: number; y: number; size: number; opacity: number; vx: number; vy: number; life: number }[]>([]);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const animFrameRef = useRef<number>(0);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    for (let i = 0; i < 2; i++) {
+      particlesRef.current.push({
+        x: e.clientX + (Math.random() - 0.5) * 10,
+        y: e.clientY + (Math.random() - 0.5) * 10,
+        size: 2 + Math.random() * 4,
+        opacity: 0.6 + Math.random() * 0.4,
+        vx: (Math.random() - 0.5) * 1.5,
+        vy: (Math.random() - 0.5) * 1.5 - 0.5,
+        life: 1,
+      });
+    }
+    if (particlesRef.current.length > 80) {
+      particlesRef.current = particlesRef.current.slice(-80);
+    }
+  }, []);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    resize();
+    window.addEventListener("resize", resize);
+
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particlesRef.current.forEach((p) => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life -= 0.015;
+        const alpha = Math.max(0, p.life) * p.opacity;
+
+        const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 3);
+        grad.addColorStop(0, `hsla(43, 76%, 56%, ${alpha})`);
+        grad.addColorStop(0.4, `hsla(43, 56%, 52%, ${alpha * 0.5})`);
+        grad.addColorStop(1, `hsla(43, 56%, 52%, 0)`);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * 3, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * 0.5, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(43, 76%, 68%, ${alpha})`;
+        ctx.fill();
+      });
+      particlesRef.current = particlesRef.current.filter((p) => p.life > 0);
+      animFrameRef.current = requestAnimationFrame(animate);
+    };
+    animate();
+
+    return () => {
+      window.removeEventListener("resize", resize);
+      cancelAnimationFrame(animFrameRef.current);
+    };
+  }, []);
+
   useEffect(() => {
     if (!user) return;
     const pendingId = localStorage.getItem("pending_telegram_id");
@@ -129,83 +197,15 @@ const Auth = () => {
     }
     setSubmitting(false);
   };
-  // Mouse-following particles
-  const particlesRef = useRef<{ x: number; y: number; size: number; opacity: number; vx: number; vy: number; life: number }[]>([]);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animFrameRef = useRef<number>(0);
-  const mouseRef = useRef({ x: 0, y: 0 });
 
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    mouseRef.current = { x: e.clientX, y: e.clientY };
-    // Spawn particles at mouse position
-    for (let i = 0; i < 2; i++) {
-      particlesRef.current.push({
-        x: e.clientX + (Math.random() - 0.5) * 10,
-        y: e.clientY + (Math.random() - 0.5) * 10,
-        size: 2 + Math.random() * 4,
-        opacity: 0.6 + Math.random() * 0.4,
-        vx: (Math.random() - 0.5) * 1.5,
-        vy: (Math.random() - 0.5) * 1.5 - 0.5,
-        life: 1,
-      });
-    }
-    if (particlesRef.current.length > 80) {
-      particlesRef.current = particlesRef.current.slice(-80);
-    }
-  }, []);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    const resize = () => {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    };
-    resize();
-    window.addEventListener("resize", resize);
-
-    const animate = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      particlesRef.current.forEach((p) => {
-        p.x += p.vx;
-        p.y += p.vy;
-        p.life -= 0.015;
-        const alpha = Math.max(0, p.life) * p.opacity;
-
-        // Glow
-        const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 3);
-        grad.addColorStop(0, `hsla(43, 76%, 56%, ${alpha})`);
-        grad.addColorStop(0.4, `hsla(43, 56%, 52%, ${alpha * 0.5})`);
-        grad.addColorStop(1, `hsla(43, 56%, 52%, 0)`);
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size * 3, 0, Math.PI * 2);
-        ctx.fillStyle = grad;
-        ctx.fill();
-
-        // Core
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.size * 0.5, 0, Math.PI * 2);
-        ctx.fillStyle = `hsla(43, 76%, 68%, ${alpha})`;
-        ctx.fill();
-      });
-      particlesRef.current = particlesRef.current.filter((p) => p.life > 0);
-      animFrameRef.current = requestAnimationFrame(animate);
-    };
-    animate();
-
-    return () => {
-      window.removeEventListener("resize", resize);
-      cancelAnimationFrame(animFrameRef.current);
-    };
-  }, []);
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden" onMouseMove={handleMouseMove}>
+      <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none z-0" />
       {/* Logo */}
       <motion.img
         src={logo}
         alt="SheX Logo"
-        className="w-20 h-20 rounded-full mb-10"
+        className="w-20 h-20 rounded-full mb-10 relative z-10"
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ type: "spring", stiffness: 180, damping: 20 }}
@@ -213,7 +213,7 @@ const Auth = () => {
 
       {signUpSuccess ? (
         <motion.div
-          className="w-full max-w-sm rounded-2xl border border-border bg-card p-7 text-center space-y-4"
+          className="w-full max-w-sm rounded-2xl border border-border bg-card p-7 text-center space-y-4 relative z-10"
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35 }}
@@ -246,7 +246,7 @@ const Auth = () => {
         </motion.div>
       ) : (
         <motion.div
-          className="w-full max-w-sm"
+          className="w-full max-w-sm relative z-10"
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, delay: 0.08 }}
