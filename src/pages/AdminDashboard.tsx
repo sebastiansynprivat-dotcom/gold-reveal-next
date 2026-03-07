@@ -3888,7 +3888,7 @@ export default function AdminDashboard() {
       </AlertDialog>
 
       {/* Reassign Account Dialog */}
-      <Dialog open={!!reassignTarget} onOpenChange={(o) => { if (!o) setReassignTarget(null); }}>
+      <Dialog open={!!reassignTarget} onOpenChange={(o) => { if (!o) { setReassignTarget(null); setReassignOpenFolder(null); } }}>
         <DialogContent className="glass-card border-border sm:max-w-md max-h-[85vh] overflow-hidden flex flex-col">
           <DialogHeader className="pb-0">
             <div className="flex items-center gap-3 mb-1">
