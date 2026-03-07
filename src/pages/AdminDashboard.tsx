@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Send, Bell, BellOff, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, CalendarDays, CalendarRange, Filter, MessageSquare, Star, AlertTriangle, Bot, Save, Power, Copy, Smartphone, Percent, ChevronRight, ChevronDown, Shield, UserPlus, UserMinus, Check, XCircle, Sparkles, Loader2, ExternalLink, Brain, CheckCircle2, Clock, Repeat, Pause, Play } from "lucide-react";
+import { Users, Send, Bell, BellOff, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, CalendarDays, CalendarRange, Filter, MessageSquare, Star, AlertTriangle, Bot, Save, Power, Copy, Smartphone, Percent, ChevronRight, ChevronDown, Shield, UserPlus, UserMinus, Check, XCircle, Sparkles, Loader2, ExternalLink, Brain, CheckCircle2, Clock, Repeat, Pause, Play, FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -222,6 +222,8 @@ export default function AdminDashboard() {
   const [customFolders, setCustomFolders] = useState<Record<string, string[]>>({});
   const [folderColors, setFolderColors] = useState<Record<string, string>>({});
   const [colorPickerFolder, setColorPickerFolder] = useState<string | null>(null);
+  const [moveToFolderAcc, setMoveToFolderAcc] = useState<string | null>(null);
+  const dragItemRef = useRef<string | null>(null);
   const [addingManual, setAddingManual] = useState(false);
   const [deleteManualPoolConfirm, setDeleteManualPoolConfirm] = useState(false);
   const [deletingManualPool, setDeletingManualPool] = useState(false);
@@ -4126,7 +4128,7 @@ export default function AdminDashboard() {
       </Dialog>
 
       {/* Manual Platform Dialog */}
-      <Dialog open={manualPoolOpen} onOpenChange={(o) => { setManualPoolOpen(o); if (!o) { setManualAccFolder(""); setCreatingFolder(false); setNewFolderName(""); setOpenFolder(null); setDragOverFolder(null); setManualFilter("alle"); } }}>
+      <Dialog open={manualPoolOpen} onOpenChange={(o) => { setManualPoolOpen(o); if (!o) { setManualAccFolder(""); setCreatingFolder(false); setNewFolderName(""); setOpenFolder(null); setDragOverFolder(null); setManualFilter("alle"); setMoveToFolderAcc(null); setColorPickerFolder(null); } }}>
         <DialogContent className="glass-card border-border sm:max-w-lg max-h-[85vh] overflow-hidden flex flex-col">
           <DialogHeader className="pb-0">
             <div className="flex items-center justify-between">
@@ -4174,17 +4176,28 @@ export default function AdminDashboard() {
 
               const handleDrop = async (e: React.DragEvent, targetFolder: string | null) => {
                 e.preventDefault();
+                e.stopPropagation();
                 setDragOverFolder(null);
-                const accId = e.dataTransfer.getData("text/account-id");
+                const accId = e.dataTransfer.getData("text/account-id") || dragItemRef.current;
                 if (!accId) return;
+                dragItemRef.current = null;
                 await supabase.from("accounts").update({ folder_name: targetFolder } as any).eq("id", accId);
-                toast.success(targetFolder ? `In "${targetFolder}" verschoben` : "Aus Ordner entfernt");
+                toast.success(targetFolder ? `In „${targetFolder}" verschoben` : "Aus Ordner entfernt");
                 loadAccounts();
               };
 
               const handleDragOver = (e: React.DragEvent, folder: string | null) => {
                 e.preventDefault();
+                e.stopPropagation();
+                e.dataTransfer.dropEffect = "move";
                 setDragOverFolder(folder);
+              };
+
+              const moveAccountToFolder = async (accId: string, targetFolder: string | null) => {
+                await supabase.from("accounts").update({ folder_name: targetFolder } as any).eq("id", accId);
+                toast.success(targetFolder ? `In „${targetFolder}" verschoben` : "Aus Ordner entfernt");
+                setMoveToFolderAcc(null);
+                loadAccounts();
               };
 
               const renderAccountCard = (acc: AccountEntry) => (
@@ -4194,52 +4207,86 @@ export default function AdminDashboard() {
                   onDragStart={(e) => {
                     e.dataTransfer.setData("text/account-id", acc.id);
                     e.dataTransfer.effectAllowed = "move";
-                    (e.target as HTMLElement).style.opacity = "0.5";
+                    dragItemRef.current = acc.id;
+                    requestAnimationFrame(() => {
+                      (e.target as HTMLElement).style.opacity = "0.4";
+                    });
                   }}
-                  onDragEnd={(e) => { (e.target as HTMLElement).style.opacity = "1"; }}
-                  className="flex items-center gap-2 p-2.5 rounded-lg border border-border/40 bg-secondary/10 hover:border-accent/30 hover:bg-secondary/20 transition-all cursor-grab active:cursor-grabbing group/card"
+                  onDragEnd={(e) => { (e.target as HTMLElement).style.opacity = "1"; setDragOverFolder(null); }}
+                  className="rounded-xl border border-border/30 bg-card/50 p-3 hover:border-accent/20 transition-all cursor-grab active:cursor-grabbing group/card"
                 >
-                  <span className={`h-2 w-2 rounded-full shrink-0 ${acc.assigned_to ? "bg-muted-foreground/30" : "bg-green-500"}`} />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <button onClick={() => copyToClipboard(acc.account_email, "E-Mail")} className="text-xs font-medium text-foreground truncate hover:text-accent transition-colors text-left">
-                        {acc.account_email}
-                      </button>
-                      <button onClick={() => copyToClipboard(acc.account_password, "Passwort")} title="Passwort kopieren" className="shrink-0 opacity-0 group-hover/card:opacity-100 transition-opacity">
-                        <Copy className="h-3 w-3 text-muted-foreground hover:text-accent transition-colors" />
-                      </button>
+                  <div className="flex items-start gap-2.5">
+                    <span className={`h-2.5 w-2.5 rounded-full shrink-0 mt-1 ${acc.assigned_to ? "bg-muted-foreground/30" : "bg-green-500 shadow-[0_0_6px] shadow-green-500/30"}`} />
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <div className="flex items-center gap-1">
+                        <button onClick={() => copyToClipboard(acc.account_email, "E-Mail")} className="text-xs font-medium text-foreground truncate hover:text-accent transition-colors text-left">
+                          {acc.account_email}
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <button onClick={() => copyToClipboard(acc.account_password, "Passwort")} className="text-[10px] text-muted-foreground hover:text-accent transition-colors flex items-center gap-1 text-left">
+                          <Copy className="h-2.5 w-2.5 shrink-0" />
+                          <span className="truncate">PW: {acc.account_password}</span>
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {acc.assigned_to ? (
+                          <span className="text-[9px] text-muted-foreground">→ {getChatterName(acc.assigned_to)}</span>
+                        ) : (
+                          <Badge className="text-[8px] px-1.5 py-0 bg-accent/10 text-accent border-accent/20">Frei</Badge>
+                        )}
+                        {acc.drive_folder_id && (
+                          <a href={`https://drive.google.com/drive/folders/${acc.drive_folder_id}`} target="_blank" rel="noopener noreferrer" className="text-[9px] text-primary hover:underline flex items-center gap-0.5">
+                            <ExternalLink className="h-2.5 w-2.5" /> Drive
+                          </a>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      {acc.assigned_to ? (
-                        <span className="text-[9px] text-muted-foreground">→ {getChatterName(acc.assigned_to)}</span>
-                      ) : (
-                        <span className="text-[9px] text-accent font-medium">Frei</span>
+                    <div className="flex flex-col gap-0.5 shrink-0">
+                      {/* Move to folder button */}
+                      {namedFolders.length > 0 && (
+                        <div className="relative">
+                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground hover:text-accent" title="In Ordner verschieben"
+                            onClick={() => setMoveToFolderAcc(moveToFolderAcc === acc.id ? null : acc.id)}>
+                            <FolderOpen className="h-3 w-3" />
+                          </Button>
+                          {moveToFolderAcc === acc.id && (
+                            <div className="absolute right-0 top-7 z-50 min-w-[140px] rounded-lg border border-border bg-card shadow-xl py-1" onClick={(e) => e.stopPropagation()}>
+                              {acc.folder_name && (
+                                <button onClick={() => moveAccountToFolder(acc.id, null)}
+                                  className="w-full px-3 py-1.5 text-left text-[10px] text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-colors">
+                                  ← Aus Ordner entfernen
+                                </button>
+                              )}
+                              {namedFolders.filter(f => f !== acc.folder_name).map((f) => (
+                                <button key={f} onClick={() => moveAccountToFolder(acc.id, f)}
+                                  className="w-full px-3 py-1.5 text-left text-[10px] hover:bg-secondary/50 transition-colors flex items-center gap-2">
+                                  <div className="h-2.5 w-2.5 rounded-sm shrink-0" style={{ backgroundColor: getFolderColor(f) }} />
+                                  <span className="text-foreground truncate">{f}</span>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
                       )}
-                      {acc.drive_folder_id && (
-                        <a href={`https://drive.google.com/drive/folders/${acc.drive_folder_id}`} target="_blank" rel="noopener noreferrer" className="text-[9px] text-primary hover:underline flex items-center gap-0.5">
-                          <ExternalLink className="h-2.5 w-2.5" /> Drive
-                        </a>
+                      {acc.assigned_to && (
+                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground hover:text-accent" title="Freigeben"
+                          onClick={async () => {
+                            await revokeDriveAccess([acc.id], acc.assigned_to!);
+                            await supabase.from("accounts").update({ assigned_to: null, assigned_at: null } as any).eq("id", acc.id);
+                            toast.success("Freigegeben"); loadAccounts(); loadChatters();
+                          }}>
+                          <RefreshCw className="h-3 w-3" />
+                        </Button>
                       )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-0.5 opacity-0 group-hover/card:opacity-100 transition-opacity shrink-0">
-                    {acc.assigned_to && (
-                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground hover:text-accent" title="Freigeben"
+                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive" title="Löschen"
                         onClick={async () => {
-                          await revokeDriveAccess([acc.id], acc.assigned_to!);
-                          await supabase.from("accounts").update({ assigned_to: null, assigned_at: null } as any).eq("id", acc.id);
-                          toast.success("Freigegeben"); loadAccounts(); loadChatters();
+                          await supabase.from("accounts").delete().eq("id", acc.id);
+                          toast.success("Gelöscht"); loadAccounts();
                         }}>
-                        <RefreshCw className="h-3 w-3" />
+                        <Trash2 className="h-3 w-3" />
                       </Button>
-                    )}
-                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive" title="Löschen"
-                      onClick={async () => {
-                        await supabase.from("accounts").delete().eq("id", acc.id);
-                        toast.success("Gelöscht"); loadAccounts();
-                      }}>
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
+                    </div>
                   </div>
                 </div>
               );
