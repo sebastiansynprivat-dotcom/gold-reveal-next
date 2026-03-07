@@ -98,9 +98,10 @@ export default function DailyChecklist() {
 
   return (
     <motion.section
-      className={`glass-card-subtle rounded-xl p-4 lg:p-6 transition-all duration-500 ${allDone ? "gold-gradient-border-animated pulse-glow" : ""}`}
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
+      className={`glass-card-subtle rounded-xl p-4 lg:p-6 transition-all duration-500 card-inner-glow ${allDone ? "gold-gradient-border-animated pulse-glow" : ""}`}
+      initial={{ opacity: 0, y: 24, filter: "blur(4px)" }}
+      whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+      viewport={{ once: true, margin: "-50px" }}
       transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
     >
       <Collapsible open={isOpen} onOpenChange={setIsOpen}>

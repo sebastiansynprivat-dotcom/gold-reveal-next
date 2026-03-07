@@ -48,9 +48,13 @@ export default function MassDmGenerator() {
 
   return (
     <>
-      <button
+      <motion.button
         onClick={() => setOpen(true)}
-        className="w-full glass-card-subtle rounded-xl p-3 lg:p-4 border border-accent/20 hover:border-accent/40 transition-all hover:bg-accent/5 active:scale-[0.98] text-left group"
+        initial={{ opacity: 0, y: 24, filter: "blur(4px)" }}
+        whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+        viewport={{ once: true, margin: "-50px" }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        className="w-full glass-card-subtle rounded-xl p-3 lg:p-4 border border-accent/20 hover:border-accent/40 transition-all hover:bg-accent/5 active:scale-[0.98] text-left group card-inner-glow"
       >
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center shrink-0 group-hover:bg-accent/20 transition-colors">
@@ -62,7 +66,7 @@ export default function MassDmGenerator() {
           </div>
           <Sparkles className="h-4 w-4 text-accent/60 shrink-0" />
         </div>
-      </button>
+      </motion.button>
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="max-w-md p-0 overflow-hidden border-accent/20 bg-background">
