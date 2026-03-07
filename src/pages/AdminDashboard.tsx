@@ -3679,7 +3679,7 @@ export default function AdminDashboard() {
       </main>
 
       {/* Account Pool Dialog */}
-      <Dialog open={accountPoolOpen} onOpenChange={(o) => { setAccountPoolOpen(o); if (!o) setPoolFilter("alle"); }}>
+      <Dialog open={accountPoolOpen} onOpenChange={(o) => { setAccountPoolOpen(o); if (!o) { setPoolFilter("alle"); setPoolSearchQuery(""); } }}>
         <DialogContent className="glass-card border-border sm:max-w-lg max-h-[85vh] overflow-hidden flex flex-col" onOpenAutoFocus={(e) => e.preventDefault()}>
           <DialogHeader className="pb-0">
             <DialogTitle className="text-foreground flex items-center gap-2">
