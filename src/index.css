@@ -272,11 +272,19 @@
     position: absolute;
     inset: -2px;
     border-radius: inherit;
-    background: linear-gradient(
-      135deg,
-      hsl(43 56% 52% / 0.6),
-      hsl(43 76% 46% / 0.8),
-      hsl(43 56% 52% / 0.6)
+    background: conic-gradient(
+      from var(--border-angle, 0deg),
+      hsl(43 56% 52% / 0.25) 0%,
+      hsl(43 56% 52% / 0.5) 10%,
+      hsl(43 76% 46% / 0.8) 15%,
+      hsl(43 56% 52% / 0.5) 20%,
+      hsl(43 56% 52% / 0.25) 30%,
+      hsl(43 56% 52% / 0.25) 50%,
+      hsl(43 56% 52% / 0.5) 60%,
+      hsl(43 76% 46% / 0.8) 65%,
+      hsl(43 56% 52% / 0.5) 70%,
+      hsl(43 56% 52% / 0.25) 80%,
+      hsl(43 56% 52% / 0.25) 100%
     );
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
@@ -285,9 +293,13 @@
     opacity: 0;
     transition: opacity 0.3s ease;
     pointer-events: none;
+    animation: border-spin 4s linear infinite;
   }
   .input-gold-shimmer:focus-within::before {
     opacity: 1;
+  }
+  .input-gold-shimmer:focus-within {
+    box-shadow: inset 0 0 16px hsl(43 56% 52% / 0.06), 0 0 12px hsl(43 56% 52% / 0.08);
   }
 
   .card-hover-glow {
