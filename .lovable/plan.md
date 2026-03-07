@@ -1,41 +1,42 @@
 
-# Fortschrittsanzeige und Schritt-Nummerierung fur OfferB
 
-## Was wird gemacht
+## Auth-Seite visuelles Upgrade
 
-### 1. Alle Schritte als einheitliche Liste definieren
-Die Videos und Links werden zu einer gemeinsamen Schritt-Liste zusammengefasst:
-- Schritt 1: Plattform Erklärungs Video
-- Schritt 2: Telegram Nachrichten Video
-- Schritt 3: Brezzels Notifications aktivieren
-- Schritt 4: My ID Bot einrichten
-- Schritt 5: Tägliches Feedback
+Die aktuelle Login-Seite ist funktional aber visuell flach -- kein Glassmorphismus, keine Animationen, kein Premium-Feeling passend zum Rest der App.
 
-### 2. Fortschritts-Bar oben auf der Seite
-Direkt unter dem Hero-Bereich wird eine Progress-Bar eingefügt, die den Gesamtfortschritt anzeigt (z.B. "2 von 5 Schritten erledigt"). Nutzt die vorhandene `Progress`-Komponente im Gold-Styling.
+### Verbesserungen
 
-### 3. Klickbare Checkliste
-Unter der Progress-Bar eine kompakte Checkliste mit allen 5 Schritten. Jeder Schritt hat:
-- Eine Checkbox zum Abhaken
-- Schritt-Nummer ("Schritt 1", "Schritt 2" etc.)
-- Kurzer Titel
+**1. Glassmorphismus-Karte um das Formular**
+- Das gesamte Formular wird in eine `glass-card-subtle`-Karte mit `gold-gradient-border-animated` eingewickelt (wie die Premium-Karten im Dashboard)
+- Padding, abgerundete Ecken (`rounded-2xl`), subtiler `dialog-glow`
 
-Der Fortschritt wird im `localStorage` gespeichert, damit er beim Neuladen erhalten bleibt.
+**2. Hintergrund-Akzente**
+- Zwei radiale Gold-Gradient-Blobs im Hintergrund (absolute positioned, `opacity-[0.03]`, blur) fur Tiefe
+- Feiner radialer Gradient vom Zentrum nach aussen
 
-### 4. Schritt-Nummern bei den Sektionen
-Jede Video-/Link-/Feedback-Sektion bekommt eine prominente Schritt-Nummer als Badge (z.B. goldener Kreis mit "1" darin) neben dem Titel.
+**3. Logo-Animation aufwerten**
+- Logo bekommt einen pulsierenden Gold-Glow-Ring (`streak-circle-pulse`)
+- Leichter Scale-Bounce beim Laden via Framer Motion
 
-## Technische Details
+**4. Input-Felder: Focus-Glow**
+- Beim Fokus bekommen die Inputs einen subtilen Gold-Glow (`focus:shadow-[0_0_12px_hsl(43_56%_52%_/_0.15)]`) statt nur Ring
+- Leichter Hover-Effekt auf den Inputs (`hover:border-primary/40`)
 
-**Datei: `src/pages/OfferB.tsx`**
+**5. Submit-Button: Shimmer-Sweep**
+- Der "Anmelden"/"Konto erstellen"-Button bekommt den gleichen `bonus-sweep`-Shimmer wie die Bonus-Karte im Dashboard
+- Dezent, 14s Zyklus
 
-- Neue `steps`-Array-Konstante mit id, title, type fur alle 5 Schritte
-- `useState` + `localStorage` fur `completedSteps: Set<number>`
-- Progress-Bar-Sektion nach dem Hero mit `Progress`-Komponente (Wert = `completedSteps.size / steps.length * 100`)
-- Checkliste mit `Checkbox`-Komponenten, gestylt im bestehenden `glass-card-subtle` Look
-- Videos bekommen "Schritt 1" / "Schritt 2" als nummerierte Badge-Kreise
-- Links-Sektion wird zu Schritt 3 und 4 mit individuellen Nummern
-- Feedback wird Schritt 5
-- Erledigte Schritte bekommen eine subtile visuelle Markierung (leicht reduzierte Opazitat / Hakchen)
+**6. Entrance-Animationen (Framer Motion)**
+- Logo: `scale(0.8) -> scale(1)` + `opacity(0) -> opacity(1)` mit Spring
+- Formular-Karte: `y(20) -> y(0)` + Fade-in mit 200ms Delay
+- Inputs: Staggered fade-in (je 80ms versetzt)
+- Toggle-Text ("Bereits ein Konto?"): Fade-in mit Delay
 
-Keine neuen Abhangigkeiten notwendig -- nutzt vorhandene `Progress`, `Checkbox` und `framer-motion`.
+**7. Sign-Up-Success-State**
+- Erfolgs-Karte ebenfalls in Glassmorphismus-Karte
+- Check-Icon mit Gold-Pulse-Animation
+
+### Technische Umsetzung
+- **Auth.tsx**: Framer Motion imports, `motion.div` Wrapper, Glass-Card-Klassen, Background-Blobs, Input-Styling-Upgrade
+- **index.css**: Keine neuen Klassen nötig -- alle bestehenden Utilities werden wiederverwendet (`glass-card-subtle`, `gold-gradient-border-animated`, `dialog-glow`, `streak-circle-pulse`, `bonus-sweep`)
+
