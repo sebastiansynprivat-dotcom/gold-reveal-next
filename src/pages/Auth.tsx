@@ -17,7 +17,7 @@ const translateError = (msg: string): string => {
 };
 
 const inputClass =
-  "w-full px-4 py-3 rounded-xl bg-card border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:shadow-[0_0_0_3px_hsl(43_56%_52%_/_0.12),0_0_8px_hsl(43_56%_52%_/_0.08)] hover:border-primary/25 transition-all duration-300";
+  "w-full px-4 py-3 rounded-xl bg-card border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-transparent hover:border-primary/25 transition-all duration-300";
 
 const Auth = () => {
   const { user, loading, signUp, signIn } = useAuth();
@@ -191,32 +191,38 @@ const Auth = () => {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignUp && (
+              <div className="input-gold-shimmer rounded-xl">
+                <input
+                  type="text"
+                  placeholder="Gruppenname (z.B. Team Alpha)"
+                  value={groupName}
+                  onChange={(e) => setGroupName(e.target.value)}
+                  required
+                  className={inputClass}
+                />
+              </div>
+            )}
+            <div className="input-gold-shimmer rounded-xl">
               <input
-                type="text"
-                placeholder="Gruppenname (z.B. Team Alpha)"
-                value={groupName}
-                onChange={(e) => setGroupName(e.target.value)}
+                type="email"
+                placeholder="E-Mail Adresse"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
                 className={inputClass}
               />
-            )}
-            <input
-              type="email"
-              placeholder="E-Mail Adresse"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className={inputClass}
-            />
-            <input
-              type="password"
-              placeholder="Passwort (min. 6 Zeichen)"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-              className={inputClass}
-            />
+            </div>
+            <div className="input-gold-shimmer rounded-xl">
+              <input
+                type="password"
+                placeholder="Passwort (min. 6 Zeichen)"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                className={inputClass}
+              />
+            </div>
 
             {error && (
               <p className="text-destructive text-sm text-center animate-fade-in">{error}</p>

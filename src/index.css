@@ -263,6 +263,36 @@
     70%, 100% { background-position: -200% center; }
   }
 
+  .input-gold-shimmer {
+    position: relative;
+    z-index: 0;
+  }
+  .input-gold-shimmer::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    border-radius: inherit;
+    background: conic-gradient(
+      from var(--border-angle, 0deg),
+      transparent 60%,
+      hsl(43 56% 52% / 0.5) 78%,
+      hsl(43 76% 46% / 0.7) 82%,
+      hsl(43 56% 52% / 0.5) 86%,
+      transparent 100%
+    );
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    padding: 2px;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    pointer-events: none;
+    animation: border-spin 3s linear infinite;
+  }
+  .input-gold-shimmer:focus-within::before {
+    opacity: 1;
+  }
+
   .card-hover-glow {
     transition: all 0.3s ease;
     border-top: 2px solid transparent;
