@@ -29,6 +29,8 @@ const Auth = () => {
   const [submitting, setSubmitting] = useState(false);
   const [signUpSuccess, setSignUpSuccess] = useState(false);
   const [showGroupHelp, setShowGroupHelp] = useState(false);
+  const [showGroupConfirm, setShowGroupConfirm] = useState(false);
+  const pendingSubmitRef = useRef<React.FormEvent | null>(null);
 
   // Mouse-following particles
   const particlesRef = useRef<{ x: number; y: number; size: number; opacity: number; vx: number; vy: number; life: number }[]>([]);
