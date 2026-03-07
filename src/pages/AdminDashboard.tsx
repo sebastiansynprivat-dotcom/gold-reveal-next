@@ -4640,6 +4640,8 @@ export default function AdminDashboard() {
                         <Badge variant="secondary" className="text-[9px] ml-auto">{manualAccounts.length} frei</Badge>
                       </button>
                       {reassignManualSectionOpen && manualPlatforms.map((p) => {
+                        // If a folder is open, only show the platform that owns it
+                        if (reassignOpenFolder && !reassignOpenFolder.startsWith(`${p}::`)) return null;
                         const platAccs = manualAccounts.filter(a => a.platform === p);
                         const platFolders = [...new Set(platAccs.map(a => a.folder_name).filter(Boolean))] as string[];
                         const platCustom = customFolders[p] || [];
