@@ -4680,6 +4680,11 @@ export default function AdminDashboard() {
                     /* INSIDE FOLDER VIEW */
                     (() => {
                       const isUngrouped = openFolder === "__ungrouped__";
+                      // Unfiltered folder accounts (for showing filter pills)
+                      const totalFolderAccs = isUngrouped
+                        ? manualPlatformAccounts.filter(a => !a.folder_name)
+                        : manualPlatformAccounts.filter(a => a.folder_name === openFolder);
+                      // Filtered by frei/vergeben/alle
                       const allFolderAccs = isUngrouped
                         ? filteredAccounts.filter(a => !a.folder_name)
                         : filteredAccounts.filter(a => a.folder_name === openFolder);
