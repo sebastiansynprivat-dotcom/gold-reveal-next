@@ -228,6 +228,15 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
     }
   }
 
+  // Apply search filter
+  if (chatterSearch.trim()) {
+    const q = chatterSearch.trim().toLowerCase();
+    for (const key of Object.keys(grouped)) {
+      grouped[key].entries = grouped[key].entries.filter((e: any) => e.name?.toLowerCase().includes(q));
+      if (grouped[key].entries.length === 0) delete grouped[key];
+    }
+  }
+
   Object.values(grouped).forEach(g => {
     g.entries.sort((a: any, b: any) => {
       if (a.isActive && !b.isActive) return -1;
