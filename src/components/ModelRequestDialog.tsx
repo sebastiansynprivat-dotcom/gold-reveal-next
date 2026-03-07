@@ -31,7 +31,7 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
   const [open, setOpen] = useState(false);
   const [modelName, setModelName] = useState("");
   const [customerName, setCustomerName] = useState("");
-  const [modelLanguage, setModelLanguage] = useState<"de" | "en">("de");
+  
   const [requestType, setRequestType] = useState<"individual" | "general">("general");
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
