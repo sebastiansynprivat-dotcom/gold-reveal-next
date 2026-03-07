@@ -4491,42 +4491,50 @@ export default function AdminDashboard() {
                         )}
                       </div>
 
-                      {/* Folder grid */}
+                      {/* Folder grid OR flat search results */}
                       {(() => {
                         const sq = manualAccountSearch.trim().toLowerCase();
-                        const matchesSearch = (acc: any) => {
-                          if (!sq) return true;
-                          return (
+
+                        // If searching, show flat account list directly
+                        if (sq) {
+                          const matchedAccs = filteredAccounts.filter(acc =>
                             acc.account_email?.toLowerCase().includes(sq) ||
                             acc.account_password?.toLowerCase().includes(sq) ||
                             acc.account_domain?.toLowerCase().includes(sq)
                           );
-                        };
 
-                        const visibleFolders = namedFolders.sort().map(folder => {
-                          const folderAccs = manualPlatformAccounts.filter(a => a.folder_name === folder);
-                          const matchedAccs = folderAccs.filter(matchesSearch);
-                          return { folder, folderAccs, matchedAccs };
-                        }).filter(f => !sq || f.matchedAccs.length > 0);
+                          if (matchedAccs.length === 0) {
+                            return (
+                              <div className="py-6 text-center">
+                                <Search className="h-5 w-5 text-muted-foreground mx-auto mb-2 opacity-40" />
+                                <p className="text-xs text-muted-foreground">Keine Accounts gefunden für „{manualAccountSearch.trim()}"</p>
+                              </div>
+                            );
+                          }
 
-                        const ungroupedAccs = manualPlatformAccounts.filter(a => !a.folder_name);
-                        const matchedUngrouped = ungroupedAccs.filter(matchesSearch);
-                        const showUngrouped = !sq ? (ungroupedAccs.length > 0 || namedFolders.length === 0) : matchedUngrouped.length > 0;
-
-                        if (sq && visibleFolders.length === 0 && !showUngrouped) {
                           return (
-                            <div className="py-6 text-center">
-                              <Search className="h-5 w-5 text-muted-foreground mx-auto mb-2 opacity-40" />
-                              <p className="text-xs text-muted-foreground">Keine Accounts gefunden für „{manualAccountSearch.trim()}"</p>
+                            <div className="space-y-1.5">
+                              <p className="text-[10px] text-muted-foreground">{matchedAccs.length} Treffer</p>
+                              {matchedAccs.map(acc => (
+                                <div key={acc.id} className="relative">
+                                  {renderAccountCard(acc)}
+                                  {acc.folder_name && (
+                                    <span className="absolute top-1.5 right-10 text-[9px] text-muted-foreground bg-secondary/50 px-1.5 py-0.5 rounded">
+                                      📁 {acc.folder_name}
+                                    </span>
+                                  )}
+                                </div>
+                              ))}
                             </div>
                           );
                         }
 
+                        // Normal folder grid view
                         return (
                           <div className="grid grid-cols-2 gap-2">
-                            {visibleFolders.map(({ folder, folderAccs, matchedAccs }) => {
-                              const displayCount = sq ? matchedAccs.length : folderAccs.length;
-                              const displayFree = (sq ? matchedAccs : folderAccs).filter(a => !a.assigned_to).length;
+                            {namedFolders.sort().map((folder) => {
+                              const folderAccs = manualPlatformAccounts.filter(a => a.folder_name === folder);
+                              const folderFree = folderAccs.filter(a => !a.assigned_to).length;
                               const isOver = dragOverFolder === folder;
                               const color = getFolderColor(folder);
                               return (
@@ -4544,8 +4552,8 @@ export default function AdminDashboard() {
                                       <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
                                     </div>
                                     <div className="flex items-center gap-1.5">
-                                      <Badge variant="secondary" className="text-[9px]">{displayCount}</Badge>
-                                      <Badge className="text-[9px] border" style={{ backgroundColor: `${color}20`, color, borderColor: `${color}40` }}>{displayFree} frei</Badge>
+                                      <Badge variant="secondary" className="text-[9px]">{folderAccs.length}</Badge>
+                                      <Badge className="text-[9px] border" style={{ backgroundColor: `${color}20`, color, borderColor: `${color}40` }}>{folderFree} frei</Badge>
                                     </div>
                                   </button>
                                   {/* Color picker trigger */}
@@ -4570,29 +4578,34 @@ export default function AdminDashboard() {
                               );
                             })}
 
-                            {/* "Unsortiert" card for ungrouped accounts */}
-                            {showUngrouped && (
-                              <button onClick={() => setOpenFolder("__ungrouped__")}
-                                onDragOver={(e) => handleDragOver(e, "__ungrouped__")}
-                                onDragLeave={() => setDragOverFolder(null)}
-                                onDrop={(e) => { e.preventDefault(); setDragOverFolder(null); const accId = e.dataTransfer.getData("text/account-id"); if (!accId) return; supabase.from("accounts").update({ folder_name: null } as any).eq("id", accId).then(() => { toast.success("Aus Ordner entfernt"); loadAccounts(); }); }}
-                                className={`w-full rounded-xl p-3 text-left transition-all border border-dashed ${dragOverFolder === "__ungrouped__" ? "scale-[1.03] shadow-lg border-accent/50 bg-accent/5" : "border-border/40 hover:scale-[1.01] hover:border-border/60"}`}>
-                                <div className="flex items-center gap-2 mb-1.5">
-                                  <Package className="h-3 w-3 text-muted-foreground shrink-0" />
-                                  <span className="text-xs font-semibold text-foreground truncate flex-1">Unsortiert</span>
-                                  <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
-                                </div>
-                                <div className="flex items-center gap-1.5">
-                                  <Badge variant="secondary" className="text-[9px]">{sq ? matchedUngrouped.length : ungroupedAccs.length}</Badge>
-                                  <Badge className="text-[9px] bg-accent/10 text-accent border-accent/20">{(sq ? matchedUngrouped : ungroupedAccs).filter(a => !a.assigned_to).length} frei</Badge>
-                                </div>
-                              </button>
-                            )}
+                            {/* "Unsortiert" card */}
+                            {(() => {
+                              const ungroupedAccs = manualPlatformAccounts.filter(a => !a.folder_name);
+                              const ungroupedFree = ungroupedAccs.filter(a => !a.assigned_to).length;
+                              if (ungroupedAccs.length === 0 && namedFolders.length > 0) return null;
+                              return (
+                                <button onClick={() => setOpenFolder("__ungrouped__")}
+                                  onDragOver={(e) => handleDragOver(e, "__ungrouped__")}
+                                  onDragLeave={() => setDragOverFolder(null)}
+                                  onDrop={(e) => { e.preventDefault(); setDragOverFolder(null); const accId = e.dataTransfer.getData("text/account-id"); if (!accId) return; supabase.from("accounts").update({ folder_name: null } as any).eq("id", accId).then(() => { toast.success("Aus Ordner entfernt"); loadAccounts(); }); }}
+                                  className={`w-full rounded-xl p-3 text-left transition-all border border-dashed ${dragOverFolder === "__ungrouped__" ? "scale-[1.03] shadow-lg border-accent/50 bg-accent/5" : "border-border/40 hover:scale-[1.01] hover:border-border/60"}`}>
+                                  <div className="flex items-center gap-2 mb-1.5">
+                                    <Package className="h-3 w-3 text-muted-foreground shrink-0" />
+                                    <span className="text-xs font-semibold text-foreground truncate flex-1">Unsortiert</span>
+                                    <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
+                                  </div>
+                                  <div className="flex items-center gap-1.5">
+                                    <Badge variant="secondary" className="text-[9px]">{ungroupedAccs.length}</Badge>
+                                    <Badge className="text-[9px] bg-accent/10 text-accent border-accent/20">{ungroupedFree} frei</Badge>
+                                  </div>
+                                </button>
+                              );
+                            })()}
                           </div>
                         );
                       })()}
 
-                      {!manualAccountSearch.trim() && namedFolders.length === 0 && manualPlatformAccounts.length === 0 && (
+                      {namedFolders.length === 0 && manualPlatformAccounts.length === 0 && (
                         <div className="py-6 text-center">
                           <Package className="h-5 w-5 text-muted-foreground mx-auto mb-2 opacity-40" />
                           <p className="text-xs text-muted-foreground">Noch keine Accounts – füge welche über den Button unten hinzu</p>
