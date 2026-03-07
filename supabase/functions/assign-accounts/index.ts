@@ -157,9 +157,23 @@ Deno.serve(async (req) => {
             .from("push_subscriptions")
             .select("*")
             .eq("user_id", profile.user_id);
+
+          // Fetch template from DB
+          let tplTitle = "Gute Nachrichten 🥳";
+          let tplBody = "Dir wurde ein neuer Account zugewiesen! Schau jetzt in dein Dashboard.";
+          const { data: tpl } = await supabase
+            .from("notification_templates")
+            .select("title, body")
+            .eq("template_key", "account_assigned")
+            .maybeSingle();
+          if (tpl) {
+            tplTitle = tpl.title;
+            tplBody = tpl.body;
+          }
+
           const payload = JSON.stringify({
-            title: "Gute Nachrichten 🥳",
-            body: "Dir wurde ein neuer Account zugewiesen! Schau jetzt in dein Dashboard.",
+            title: tplTitle,
+            body: tplBody,
             url: "/dashboard",
           });
           for (const sub of subs || []) {
