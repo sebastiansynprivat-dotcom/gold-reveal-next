@@ -1,41 +1,34 @@
 
-# Fortschrittsanzeige und Schritt-Nummerierung fur OfferB
 
-## Was wird gemacht
+## Visuelle Verbesserungen für das Bonus-Modell
 
-### 1. Alle Schritte als einheitliche Liste definieren
-Die Videos und Links werden zu einer gemeinsamen Schritt-Liste zusammengefasst:
-- Schritt 1: Plattform Erklärungs Video
-- Schritt 2: Telegram Nachrichten Video
-- Schritt 3: Brezzels Notifications aktivieren
-- Schritt 4: My ID Bot einrichten
-- Schritt 5: Tägliches Feedback
+Das aktuelle Bonus-Modell ist funktional, aber relativ flach gestaltet. Hier sind konkrete Vorschläge, um es visuell aufzuwerten — passend zum bestehenden Premium-Design (Schwarz/Gold, Glassmorphismus, Animationen):
 
-### 2. Fortschritts-Bar oben auf der Seite
-Direkt unter dem Hero-Bereich wird eine Progress-Bar eingefügt, die den Gesamtfortschritt anzeigt (z.B. "2 von 5 Schritten erledigt"). Nutzt die vorhandene `Progress`-Komponente im Gold-Styling.
+### 1. Animierter Sektions-Header
+- Titel "Bonus-Modell" mit `text-gold-gradient-shimmer` statt statischem Text
+- Kleines Trophy/Crown-Icon daneben mit dezenter Puls-Animation
+- Goldene Gradient-Linie unter dem Header (wie `header-gradient-border`)
 
-### 3. Klickbare Checkliste
-Unter der Progress-Bar eine kompakte Checkliste mit allen 5 Schritten. Jeder Schritt hat:
-- Eine Checkbox zum Abhaken
-- Schritt-Nummer ("Schritt 1", "Schritt 2" etc.)
-- Kurzer Titel
+### 2. Stufenkarten mit mehr Tiefe
+- **Gold-Status**: `gold-gradient-border-animated` (rotierender conic-gradient Rahmen) statt statischer border, wenn Gold aktiv ist
+- **Starter**: Dezenter, zurückgenommener Stil bleibt, aber mit leichtem Hover-Effekt (`hover:scale-[1.01]` + transition)
+- **Account Upgrade**: Leichter Gradient-Hintergrund statt flachem `bg-accent/5`
 
-Der Fortschritt wird im `localStorage` gespeichert, damit er beim Neuladen erhalten bleibt.
+### 3. Animierte Progress-Bar
+- Zahl über der Progress-Bar, die beim Laden hochzählt (Roll-up Counter mit Framer Motion `useMotionValue`)
+- Goldener Partikel-Shimmer auf dem gefüllten Bereich (bereits `shimmer-bar`, aber stärker betonen)
 
-### 4. Schritt-Nummern bei den Sektionen
-Jede Video-/Link-/Feedback-Sektion bekommt eine prominente Schritt-Nummer als Badge (z.B. goldener Kreis mit "1" darin) neben dem Titel.
+### 4. Staggered Entrance Animations
+- Alle drei Tier-Karten mit `framer-motion` staggered fade-in von unten (`variants` mit `staggerChildren: 0.1`)
+- Smooth und dezent, passend zum bestehenden Design-System
 
-## Technische Details
+### 5. Aktiver Status visuell hervorheben
+- Wenn Gold aktiv: Konfetti-ähnliches Emoji oder animiertes Badge "🏆 Gold aktiv" mit Glow
+- Progress-Bar bei 100% bekommt einen kontinuierlichen Gold-Shimmer
 
-**Datei: `src/pages/OfferB.tsx`**
+### Dateien
+- `src/pages/Dashboard.tsx` — Bonus-Modell Sektion (~Zeilen 986-1070) umgestalten mit motion-Wrappern und verbesserten CSS-Klassen
 
-- Neue `steps`-Array-Konstante mit id, title, type fur alle 5 Schritte
-- `useState` + `localStorage` fur `completedSteps: Set<number>`
-- Progress-Bar-Sektion nach dem Hero mit `Progress`-Komponente (Wert = `completedSteps.size / steps.length * 100`)
-- Checkliste mit `Checkbox`-Komponenten, gestylt im bestehenden `glass-card-subtle` Look
-- Videos bekommen "Schritt 1" / "Schritt 2" als nummerierte Badge-Kreise
-- Links-Sektion wird zu Schritt 3 und 4 mit individuellen Nummern
-- Feedback wird Schritt 5
-- Erledigte Schritte bekommen eine subtile visuelle Markierung (leicht reduzierte Opazitat / Hakchen)
+### Kein Backend nötig
+Rein visuelle Änderungen, keine Datenbank- oder API-Anpassungen.
 
-Keine neuen Abhangigkeiten notwendig -- nutzt vorhandene `Progress`, `Checkbox` und `framer-motion`.
