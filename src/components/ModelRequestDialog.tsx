@@ -30,6 +30,7 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear }: ModelRequest
   const [open, setOpen] = useState(false);
   const [modelName, setModelName] = useState("");
   const [customerName, setCustomerName] = useState("");
+  const [modelLanguage, setModelLanguage] = useState<"de" | "en">("de");
   const [requestType, setRequestType] = useState<"individual" | "general">("general");
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
@@ -41,6 +42,7 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear }: ModelRequest
     if (editData) {
       setModelName(editData.model_name);
       setCustomerName(editData.customer_name ?? "");
+      setModelLanguage((editData as any).model_language === "en" ? "en" : "de");
       setRequestType(editData.request_type);
       setPrice(editData.price != null ? String(editData.price) : "");
       setDescription(editData.description);
@@ -59,6 +61,7 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear }: ModelRequest
   const resetForm = () => {
     setModelName("");
     setCustomerName("");
+    setModelLanguage("de");
     setRequestType("general");
     setPrice("");
     setDescription("");
@@ -90,6 +93,7 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear }: ModelRequest
       const { error } = await supabase.from("model_requests").update({
         model_name: modelName.trim(),
         request_type: requestType,
+        model_language: modelLanguage,
         price: requestType === "individual" ? parseFloat(price) : null,
         description: description.trim(),
         customer_name: requestType === "individual" ? customerName.trim() || null : null,
@@ -108,6 +112,7 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear }: ModelRequest
         user_id: user.id,
         model_name: modelName.trim(),
         request_type: requestType,
+        model_language: modelLanguage,
         price: requestType === "individual" ? parseFloat(price) : null,
         description: description.trim(),
         customer_name: requestType === "individual" ? customerName.trim() || null : null,
@@ -165,6 +170,26 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear }: ModelRequest
           </div>
 
           <div className="space-y-2">
+            <Label className="text-xs text-foreground">Dein Model spricht *</Label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setModelLanguage("de")}
+                className={`flex-1 text-xs px-3 py-2 rounded-lg border transition-colors ${modelLanguage === "de" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/20 text-muted-foreground border-border/50 hover:border-accent/30"}`}
+              >
+                🇩🇪 Deutsch
+              </button>
+              <button
+                type="button"
+                onClick={() => setModelLanguage("en")}
+                className={`flex-1 text-xs px-3 py-2 rounded-lg border transition-colors ${modelLanguage === "en" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/20 text-muted-foreground border-border/50 hover:border-accent/30"}`}
+              >
+                🇬🇧 Englisch
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-2">
             <Label className="text-xs text-foreground">Art der Anfrage *</Label>
             <RadioGroup value={requestType} onValueChange={(v) => setRequestType(v as "individual" | "general")} className="flex flex-col gap-3">
               <div className="rounded-lg border border-border/50 bg-secondary/20 p-3 space-y-1">
@@ -209,7 +234,9 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear }: ModelRequest
           )}
 
           <div className="space-y-1.5">
-            <Label className="text-xs text-foreground">Beschreibung der Anfrage *</Label>
+            <Label className="text-xs text-foreground">
+              Beschreibung der Anfrage {modelLanguage === "en" ? "(bitte auf Englisch)" : "(bitte auf Deutsch)"} *
+            </Label>
             <Textarea
               ref={descriptionRef}
               placeholder="Beschreibe hier die Anfrage an das Model..."
