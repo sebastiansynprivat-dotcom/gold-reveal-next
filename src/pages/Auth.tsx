@@ -262,7 +262,7 @@ const Auth = () => {
               <div className="input-gold-shimmer rounded-xl">
                 <input
                   type="text"
-                  placeholder="⬜️ (M) Max Mu"
+                  placeholder="Gruppenname (Beispiel: ⬜️ (M) Max Mu)"
                   value={groupName}
                   onChange={(e) => setGroupName(e.target.value)}
                   required
