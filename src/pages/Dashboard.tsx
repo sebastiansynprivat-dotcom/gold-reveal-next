@@ -59,11 +59,16 @@ function useAnimatedCounter(target: number, duration = 1200) {
 // Stagger container/item variants
 const staggerContainer = {
   hidden: {},
-  show: { transition: { staggerChildren: 0.08 } },
+  show: { transition: { staggerChildren: 0.1 } },
 } as const;
 const staggerItem = {
-  hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.45 } },
+  hidden: { opacity: 0, y: 16, filter: "blur(4px)" },
+  show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.5 } },
+} as const;
+
+const sectionVariants = {
+  hidden: { opacity: 0, y: 24, filter: "blur(4px)" },
+  visible: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } },
 } as const;
 
 function AnimatedValue({ value, suffix = "€", className }: { value: number; suffix?: string; className?: string }) {
