@@ -4141,18 +4141,18 @@ export default function AdminDashboard() {
       <Dialog open={manualPoolOpen} onOpenChange={(o) => { setManualPoolOpen(o); if (!o) { setManualAccFolder(""); setCreatingFolder(false); setNewFolderName(""); setOpenFolder(null); setDragOverFolder(null); setManualFilter("alle"); setMoveToFolderAcc(null); setColorPickerFolder(null); } }}>
         <DialogContent className="glass-card border-border sm:max-w-lg max-h-[85vh] overflow-hidden flex flex-col">
           <DialogHeader className="pb-0">
-            <div className="flex items-center justify-between">
-              <DialogTitle className="text-foreground flex items-center gap-2">
-                <div className="h-9 w-9 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
-                  <KeyRound className="h-4 w-4 text-accent" />
-                </div>
-                <div>
-                  <span>{selectedManualPlatform}</span>
-                  <p className="text-[11px] text-muted-foreground font-normal mt-0.5">Freie Accounts</p>
-                </div>
-              </DialogTitle>
-              <Button variant="outline" size="sm" onClick={() => setDeleteManualPoolConfirm(true)} className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive h-8">
-                <Trash2 className="h-3.5 w-3.5" />
+            <DialogTitle className="text-foreground flex items-center gap-2">
+              <div className="h-9 w-9 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
+                <KeyRound className="h-4 w-4 text-accent" />
+              </div>
+              <div>
+                <span>{selectedManualPlatform}</span>
+                <p className="text-[11px] text-muted-foreground font-normal mt-0.5">Freie Accounts</p>
+              </div>
+            </DialogTitle>
+            <div className="flex justify-end pt-2">
+              <Button variant="outline" size="sm" onClick={() => setDeleteManualPoolConfirm(true)} className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive h-7 text-[10px] gap-1">
+                <Trash2 className="h-3 w-3" /> Pool löschen
               </Button>
             </div>
           </DialogHeader>
