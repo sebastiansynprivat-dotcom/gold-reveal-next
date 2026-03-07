@@ -4361,19 +4361,45 @@ export default function AdminDashboard() {
                           const folderFree = folderAccs.filter(a => !a.assigned_to).length;
                           const isOver = dragOverFolder === folder;
                           const isOpen = openFolder === folder;
+                          const color = getFolderColor(folder);
                           return (
-                            <button key={folder} onClick={() => setOpenFolder(isOpen ? null : folder)}
-                              onDragOver={(e) => handleDragOver(e, folder)} onDragLeave={() => setDragOverFolder(null)} onDrop={(e) => handleDrop(e, folder)}
-                              className={`glass-card-subtle rounded-xl p-3 text-left transition-all ${isOver ? "border-accent/50 bg-accent/5 scale-[1.02]" : ""} ${isOpen ? "ring-1 ring-accent/30" : "hover:bg-accent/3"}`}>
-                              <div className="flex items-center gap-2 mb-1">
-                                <Package className="h-3.5 w-3.5 text-accent/70" />
-                                <span className="text-xs font-semibold text-foreground truncate flex-1">{folder}</span>
-                              </div>
-                              <div className="flex items-center gap-1.5">
-                                <Badge variant="secondary" className="text-[9px]">{folderAccs.length}</Badge>
-                                <Badge className="text-[9px] bg-accent/15 text-accent border-accent/20">{folderFree} frei</Badge>
-                              </div>
-                            </button>
+                            <div key={folder} className="relative">
+                              <button onClick={() => setOpenFolder(isOpen ? null : folder)}
+                                onDragOver={(e) => handleDragOver(e, folder)} onDragLeave={() => setDragOverFolder(null)} onDrop={(e) => handleDrop(e, folder)}
+                                className={`w-full rounded-xl p-3 text-left transition-all border ${isOver ? "scale-[1.03] shadow-lg" : ""} ${isOpen ? "ring-1" : "hover:scale-[1.01]"}`}
+                                style={{
+                                  borderColor: isOver || isOpen ? color : 'hsl(var(--border) / 0.4)',
+                                  backgroundColor: isOver ? `${color}11` : 'hsl(var(--secondary) / 0.15)',
+                                  ...(isOpen ? { boxShadow: `0 0 12px ${color}22` } : {}),
+                                }}>
+                                <div className="flex items-center gap-2 mb-1.5">
+                                  <div className="h-3 w-3 rounded-sm shrink-0" style={{ backgroundColor: color }} />
+                                  <span className="text-xs font-semibold text-foreground truncate flex-1">{folder}</span>
+                                </div>
+                                <div className="flex items-center gap-1.5">
+                                  <Badge variant="secondary" className="text-[9px]">{folderAccs.length}</Badge>
+                                  <Badge className="text-[9px] border" style={{ backgroundColor: `${color}20`, color, borderColor: `${color}40` }}>{folderFree} frei</Badge>
+                                </div>
+                              </button>
+                              {/* Color picker trigger */}
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setColorPickerFolder(colorPickerFolder === folder ? null : folder); }}
+                                className="absolute top-1.5 right-1.5 h-5 w-5 rounded-full border border-border/50 opacity-0 hover:opacity-100 group-hover:opacity-60 transition-opacity flex items-center justify-center bg-card/80 backdrop-blur-sm"
+                                title="Farbe ändern"
+                                style={{ opacity: colorPickerFolder === folder ? 1 : undefined }}>
+                                <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
+                              </button>
+                              {/* Color picker dropdown */}
+                              {colorPickerFolder === folder && (
+                                <div className="absolute top-8 right-0 z-50 p-2 rounded-lg border border-border bg-card shadow-xl grid grid-cols-4 gap-1.5" onClick={(e) => e.stopPropagation()}>
+                                  {FOLDER_COLOR_OPTIONS.map((c) => (
+                                    <button key={c.value} onClick={() => { setFolderColorFn(folder, c.value); setColorPickerFolder(null); }} title={c.name}
+                                      className={`h-6 w-6 rounded-full border-2 transition-transform hover:scale-110 ${getFolderColor(folder) === c.value ? "border-foreground scale-110" : "border-transparent"}`}
+                                      style={{ backgroundColor: c.value }} />
+                                  ))}
+                                </div>
+                              )}
+                            </div>
                           );
                         })}
                       </div>
