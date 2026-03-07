@@ -3999,20 +3999,8 @@ export default function AdminDashboard() {
                 </div>
               );
 
-              const CollapsibleSection = ({ dotColor, title, count, children }: { dotColor: string; title: string; count: number; children: React.ReactNode }) => {
-                const [open, setOpen] = useState(false);
-                return (
-                  <div className="space-y-2">
-                    <button onClick={() => setOpen(!open)} className="flex items-center gap-2 px-1 w-full text-left group/sec">
-                      <ChevronRight className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${open ? "rotate-90" : ""}`} />
-                      <div className={`h-1.5 w-1.5 rounded-full ${dotColor}`} />
-                      <p className="text-[11px] font-semibold text-foreground tracking-wide uppercase">{title}</p>
-                      <Badge variant="secondary" className="text-[9px] ml-auto">{count} frei</Badge>
-                    </button>
-                    {open && children}
-                  </div>
-                );
-              };
+              const [poolSectionOpen, setPoolSectionOpen] = useState(false);
+              const [manualSectionOpen, setManualSectionOpen] = useState(false);
 
               return (
                 <div className="space-y-4">
