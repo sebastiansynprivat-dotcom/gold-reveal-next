@@ -231,6 +231,8 @@ export default function AdminDashboard() {
   const [deleteManualPoolConfirm, setDeleteManualPoolConfirm] = useState(false);
   const [deletingManualPool, setDeletingManualPool] = useState(false);
   const [accountPoolSectionOpen, setAccountPoolSectionOpen] = useState(false);
+  const [poolSearchQuery, setPoolSearchQuery] = useState("");
+  const [reassignSearchQuery, setReassignSearchQuery] = useState("");
   const [goalTarget, setGoalTarget] = useState<ChatterProfile | null>(null);
   const [goalAmount, setGoalAmount] = useState("");
   const [goalSaving, setGoalSaving] = useState(false);
@@ -3677,8 +3679,8 @@ export default function AdminDashboard() {
       </main>
 
       {/* Account Pool Dialog */}
-      <Dialog open={accountPoolOpen} onOpenChange={(o) => { setAccountPoolOpen(o); if (!o) setPoolFilter("alle"); }}>
-        <DialogContent className="glass-card border-border sm:max-w-lg max-h-[85vh] overflow-hidden flex flex-col">
+      <Dialog open={accountPoolOpen} onOpenChange={(o) => { setAccountPoolOpen(o); if (!o) { setPoolFilter("alle"); setPoolSearchQuery(""); } }}>
+        <DialogContent className="glass-card border-border sm:max-w-lg max-h-[85vh] overflow-hidden flex flex-col" onOpenAutoFocus={(e) => e.preventDefault()}>
           <DialogHeader className="pb-0">
             <DialogTitle className="text-foreground flex items-center gap-2">
               <div className="h-9 w-9 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
@@ -3767,12 +3769,27 @@ export default function AdminDashboard() {
               </div>
             )}
 
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                value={poolSearchQuery}
+                onChange={(e) => setPoolSearchQuery(e.target.value)}
+                placeholder="Account suchen..."
+                className="pl-8 text-xs h-8"
+              />
+            </div>
+
             {/* Account list */}
             <div className="space-y-2">
               {(() => {
                 const filtered = platformAccounts.filter((acc) => {
-                  if (poolFilter === "frei") return !acc.assigned_to;
-                  if (poolFilter === "vergeben") return !!acc.assigned_to;
+                  if (poolFilter === "frei" && acc.assigned_to) return false;
+                  if (poolFilter === "vergeben" && !acc.assigned_to) return false;
+                  if (poolSearchQuery.trim()) {
+                    const q = poolSearchQuery.toLowerCase();
+                    return (acc.account_email?.toLowerCase().includes(q) || acc.account_domain?.toLowerCase().includes(q));
+                  }
                   return true;
                 });
                 if (filtered.length === 0) return (
@@ -3890,7 +3907,7 @@ export default function AdminDashboard() {
       </AlertDialog>
 
       {/* Reassign Account Dialog */}
-      <Dialog open={!!reassignTarget} onOpenChange={(o) => { if (!o) { setReassignTarget(null); setReassignOpenFolder(null); setReassignPoolSectionOpen(false); setReassignManualSectionOpen(false); } }}>
+      <Dialog open={!!reassignTarget} onOpenChange={(o) => { if (!o) { setReassignTarget(null); setReassignOpenFolder(null); setReassignPoolSectionOpen(false); setReassignManualSectionOpen(false); setReassignSearchQuery(""); } }}>
         <DialogContent className="glass-card border-border sm:max-w-md max-h-[85vh] overflow-hidden flex flex-col">
           <DialogHeader className="pb-0">
             <div className="flex items-center gap-3 mb-1">
@@ -3959,10 +3976,28 @@ export default function AdminDashboard() {
                 Account zuweisen
               </p>
             </div>
+
+            {/* Search for reassign */}
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                value={reassignSearchQuery}
+                onChange={(e) => setReassignSearchQuery(e.target.value)}
+                placeholder="Account suchen..."
+                className="pl-8 text-xs h-8"
+              />
+            </div>
             
             {/* Free accounts grouped by source */}
             {(() => {
-              const freeAccs = accounts.filter((a) => !a.assigned_to);
+              const freeAccs = accounts.filter((a) => {
+                if (a.assigned_to) return false;
+                if (reassignSearchQuery.trim()) {
+                  const q = reassignSearchQuery.toLowerCase();
+                  return (a.account_email?.toLowerCase().includes(q) || a.account_domain?.toLowerCase().includes(q) || a.folder_name?.toLowerCase().includes(q));
+                }
+                return true;
+              });
               if (freeAccs.length === 0) {
                 return (
                   <div className="glass-card-subtle rounded-xl p-6 text-center">
