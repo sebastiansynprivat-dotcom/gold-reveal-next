@@ -729,6 +729,32 @@ export default function AdminDashboard() {
     setNotifHistoryLoaded(true);
   };
 
+  const loadNotifTemplates = async () => {
+    const { data } = await supabase
+      .from("notification_templates")
+      .select("id, template_key, label, title, body");
+    if (data) setNotifTemplates(data);
+    setNotifTemplatesLoaded(true);
+  };
+
+  const saveTemplate = async (id: string) => {
+    const edits = templateEdits[id];
+    if (!edits) return;
+    setTemplateSaving(id);
+    const { error } = await supabase
+      .from("notification_templates")
+      .update({ title: edits.title, body: edits.body, updated_at: new Date().toISOString() })
+      .eq("id", id);
+    if (error) {
+      toast.error("Fehler beim Speichern");
+    } else {
+      toast.success("Vorlage gespeichert!");
+      setNotifTemplates(prev => prev.map(t => t.id === id ? { ...t, title: edits.title, body: edits.body } : t));
+      setEditingTemplate(null);
+    }
+    setTemplateSaving(null);
+  };
+
   const handleSendNotification = async () => {
     if (!notifTitle.trim() || !notifBody.trim()) {
       toast.error("Titel und Nachricht sind erforderlich");
@@ -1438,7 +1464,7 @@ export default function AdminDashboard() {
     { key: "chatter" as const, label: "Chatter", icon: Users, onClick: () => setActiveTab("chatter") },
     { key: "anfragen" as const, label: "Anfragen", icon: Send, onClick: () => { setActiveTab("anfragen"); if (!modelRequestsLoaded) loadModelRequests(); } },
     { key: "botdms" as const, label: "Bot DMs", icon: Bot, onClick: () => { setActiveTab("botdms"); if (!botMessagesLoaded) loadBotMessages(); } },
-    { key: "notifications" as const, label: "Benachrichtigungen", icon: Bell, onClick: () => { setActiveTab("notifications"); if (!notifHistoryLoaded) loadNotifHistory(); if (!schedulesLoaded) loadSchedules(); } },
+    { key: "notifications" as const, label: "Benachrichtigungen", icon: Bell, onClick: () => { setActiveTab("notifications"); if (!notifHistoryLoaded) loadNotifHistory(); if (!schedulesLoaded) loadSchedules(); if (!notifTemplatesLoaded) loadNotifTemplates(); } },
     { key: "kiprompt" as const, label: "KI Prompt", icon: Brain, onClick: () => { setActiveTab("kiprompt"); if (!kiPromptLoaded) loadKiPrompt(); } },
     { key: "gdrive" as const, label: "Google Drive", icon: ExternalLink, onClick: () => setActiveTab("gdrive") },
   ];
