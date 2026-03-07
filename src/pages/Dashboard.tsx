@@ -988,7 +988,12 @@ export default function Dashboard() {
           {/* Animated Header */}
           <div className="relative">
             <div className="flex items-center gap-2">
-              <Crown className="h-4 w-4 lg:h-5 lg:w-5 text-accent streak-circle-pulse" />
+              <motion.div
+                animate={{ scale: [1, 1.12, 1], opacity: [0.85, 1, 0.85] }}
+                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <Crown className="h-4 w-4 lg:h-5 lg:w-5 text-accent" />
+              </motion.div>
               <h2 className="text-sm lg:text-base font-bold text-gold-gradient-shimmer">Bonus-Modell</h2>
             </div>
             <div className="mt-2 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
