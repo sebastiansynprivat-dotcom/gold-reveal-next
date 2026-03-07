@@ -192,6 +192,7 @@ export default function AdminDashboard() {
   const [newAccDomain, setNewAccDomain] = useState("");
   const [newAccDriveFolder, setNewAccDriveFolder] = useState("");
   const [newAccLanguage, setNewAccLanguage] = useState<"de" | "en">("de");
+  const [newAccModelActive, setNewAccModelActive] = useState(true);
   const [addingAccount, setAddingAccount] = useState(false);
   const [assigning, setAssigning] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<ChatterProfile | null>(null);
@@ -980,6 +981,7 @@ export default function AdminDashboard() {
       account_domain: newAccDomain.trim(),
       drive_folder_id: extractDriveFolderId(newAccDriveFolder.trim()),
       model_language: newAccLanguage,
+      model_active: newAccModelActive,
     } as any);
     if (error) {
       toast.error("Fehler beim Hinzufügen");
@@ -990,6 +992,7 @@ export default function AdminDashboard() {
       setNewAccDomain("");
       setNewAccDriveFolder("");
       setNewAccLanguage("de");
+      setNewAccModelActive(true);
       loadAccounts();
     }
     setAddingAccount(false);
@@ -3726,6 +3729,10 @@ export default function AdminDashboard() {
                     🇬🇧 Englisch
                   </button>
                 </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Model aktiv</span>
+                <Switch checked={newAccModelActive} onCheckedChange={setNewAccModelActive} />
               </div>
               <Button onClick={addAccount} disabled={addingAccount || !newAccEmail.trim() || !newAccDomain.trim()} className="w-full" size="sm">
                 <Plus className="h-4 w-4 mr-2" />
