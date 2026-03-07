@@ -29,11 +29,12 @@ interface ModelData {
   contract_file_path: string;
 }
 
-const RECIPIENT = {
-  company: "BasedBuilders Ltd.",
-  line1: "CENTRIS BUSINESS GATEWAY, LEVEL 4/W",
-  line2: "TRIQ IS-SALIB TA L-IMRIEHEL, ZONE 3",
-  line3: "CENTRAL BUSINESS DISTRICT, BIRKIRKARA, CBD 3020, Malta",
+const SENDER = {
+  company: "Sharify Media FZCO",
+  line1: "IFZA Business Park DDP 21236-001",
+  line2: "Silicon Oasis",
+  line3: "00000, United Arab Emirates",
+  taxId: "1041507169",
 };
 
 export default function ModelDashboardTab() {
