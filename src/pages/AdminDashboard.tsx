@@ -4276,7 +4276,7 @@ export default function AdminDashboard() {
       </Dialog>
 
       {/* Manual Platform Dialog */}
-      <Dialog open={manualPoolOpen} onOpenChange={(o) => { setManualPoolOpen(o); if (!o) { setManualAccFolder(""); setCreatingFolder(false); setNewFolderName(""); setOpenFolder(null); setDragOverFolder(null); setManualFilter("alle"); setMoveToFolderAcc(null); setColorPickerFolder(null); } }}>
+      <Dialog open={manualPoolOpen} onOpenChange={(o) => { setManualPoolOpen(o); if (!o) { setManualAccFolder(""); setCreatingFolder(false); setNewFolderName(""); setOpenFolder(null); setDragOverFolder(null); setManualFilter("alle"); setMoveToFolderAcc(null); setColorPickerFolder(null); setManualAccountSearch(""); } }}>
         <DialogContent className="glass-card border-border sm:max-w-lg max-h-[85vh] overflow-hidden flex flex-col">
           <DialogHeader className="pb-0">
             <DialogTitle className="text-foreground flex items-center gap-2">
@@ -4636,7 +4636,7 @@ export default function AdminDashboard() {
                       return (
                         <>
                           {/* Back button */}
-                          <button onClick={() => setOpenFolder(null)} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mb-1">
+                          <button onClick={() => { setOpenFolder(null); setManualAccountSearch(""); }} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mb-1">
                             <ChevronRight className="h-3 w-3 rotate-180" /> Zurück zu Ordnern
                           </button>
 
