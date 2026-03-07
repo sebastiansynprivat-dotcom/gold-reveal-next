@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.unshare-drive]
 verify_jwt = false
+
+[functions.notify-account-assigned]
+verify_jwt = false

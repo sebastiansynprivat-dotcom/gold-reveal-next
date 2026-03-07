@@ -75,6 +75,25 @@ const Auth = () => {
                 console.error("Auto drive share failed:", err);
               }
             }
+
+            // Send push notification about account assignment
+            try {
+              const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+              await fetch(
+                `https://${projectId}.supabase.co/functions/v1/notify-account-assigned`,
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+                  },
+                  body: JSON.stringify({ user_id: user.id }),
+                }
+              );
+              console.log("Account assignment notification sent");
+            } catch (err) {
+              console.error("Account assignment notification failed:", err);
+            }
           }
         });
     }
