@@ -169,6 +169,15 @@ function AnimatedNumber({ value, className, suffix = "€" }: { value: number; c
 
 function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { assignments: any[]; assignmentsLoading: boolean; chatters: ChatterProfile[] }) {
   const [overviewFilter, setOverviewFilter] = useState<"alle" | "aktiv" | "inaktiv">("alle");
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
+
+  const toggleFolder = (key: string) => {
+    setExpandedFolders(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+  };
 
   if (assignmentsLoading) {
     return (
@@ -225,30 +234,54 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
       return (b.assignedAt?.getTime() || 0) - (a.assignedAt?.getTime() || 0);
     });
   });
-  // Group by platform → accounts
-  const byPlatform: Record<string, string[]> = {};
+
+  // Group by folder → subfolder → accounts
+  const byFolder: Record<string, Record<string, string[]>> = {};
   for (const accId of Object.keys(grouped)) {
-    const platform = grouped[accId].platform || "Unbekannt";
-    if (!byPlatform[platform]) byPlatform[platform] = [];
-    byPlatform[platform].push(accId);
+    const folder = grouped[accId].folder_name || "Ohne Ordner";
+    const subfolder = grouped[accId].subfolder_name || "";
+    if (!byFolder[folder]) byFolder[folder] = {};
+    if (!byFolder[folder][subfolder]) byFolder[folder][subfolder] = [];
+    byFolder[folder][subfolder].push(accId);
   }
-  // Sort accounts within each platform: active first, then by email
-  for (const p of Object.keys(byPlatform)) {
-    byPlatform[p].sort((a, b) => {
-      const aActive = grouped[a].entries.some((e: any) => e.isActive);
-      const bActive = grouped[b].entries.some((e: any) => e.isActive);
-      if (aActive && !bActive) return -1;
-      if (!aActive && bActive) return 1;
-      return grouped[a].account_email.localeCompare(grouped[b].account_email);
-    });
+
+  // Sort accounts within each subfolder
+  for (const folder of Object.keys(byFolder)) {
+    for (const sub of Object.keys(byFolder[folder])) {
+      byFolder[folder][sub].sort((a, b) => {
+        const aActive = grouped[a].entries.some((e: any) => e.isActive);
+        const bActive = grouped[b].entries.some((e: any) => e.isActive);
+        if (aActive && !bActive) return -1;
+        if (!aActive && bActive) return 1;
+        return grouped[a].account_email.localeCompare(grouped[b].account_email);
+      });
+    }
   }
-  const platformKeys = Object.keys(byPlatform).sort();
+
+  const folderKeys = Object.keys(byFolder).sort((a, b) => {
+    if (a === "Ohne Ordner") return 1;
+    if (b === "Ohne Ordner") return -1;
+    return a.localeCompare(b);
+  });
 
   const filterOptions = [
     { key: "alle" as const, label: "Alle" },
     { key: "aktiv" as const, label: "Aktiv" },
     { key: "inaktiv" as const, label: "Inaktiv" },
   ];
+
+  const getFolderStats = (folder: string) => {
+    const subs = byFolder[folder];
+    let totalAccounts = 0;
+    let totalActive = 0;
+    for (const sub of Object.keys(subs)) {
+      for (const accId of subs[sub]) {
+        totalAccounts++;
+        totalActive += grouped[accId].entries.filter((e: any) => e.isActive).length;
+      }
+    }
+    return { totalAccounts, totalActive };
+  };
 
   return (
     <div className="space-y-4">
@@ -270,7 +303,7 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
         ))}
       </div>
 
-      {platformKeys.length === 0 ? (
+      {folderKeys.length === 0 ? (
         <section className="glass-card rounded-xl overflow-hidden">
           <div className="px-4 py-3 border-b border-border flex items-center gap-2">
             <Users className="h-4 w-4 text-accent" />
@@ -283,16 +316,30 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
           </div>
         </section>
       ) : (
-        platformKeys.map(platform => {
-          const accIds = byPlatform[platform];
-          const totalActive = accIds.reduce((sum, id) => sum + grouped[id].entries.filter((e: any) => e.isActive).length, 0);
+        folderKeys.map(folder => {
+          const { totalAccounts, totalActive } = getFolderStats(folder);
+          const isExpanded = expandedFolders.has(folder);
+          const subfolders = Object.keys(byFolder[folder]).sort((a, b) => {
+            if (a === "") return 1;
+            if (b === "") return -1;
+            return a.localeCompare(b);
+          });
+
           return (
-            <section key={platform} className="glass-card rounded-xl overflow-hidden">
-              <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+            <section key={folder} className="glass-card rounded-xl overflow-hidden">
+              <div
+                className="px-4 py-3 border-b border-border flex items-center justify-between cursor-pointer hover:bg-secondary/20 transition-colors"
+                onClick={() => toggleFolder(folder)}
+              >
                 <div className="flex items-center gap-2">
+                  {isExpanded ? (
+                    <ChevronDown className="h-4 w-4 text-accent" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4 text-accent" />
+                  )}
                   <FolderOpen className="h-4 w-4 text-accent" />
-                  <h2 className="text-sm font-semibold text-foreground capitalize">{platform}</h2>
-                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">{accIds.length} Accounts</Badge>
+                  <h2 className="text-sm font-semibold text-foreground">{folder}</h2>
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">{totalAccounts} Accounts</Badge>
                 </div>
                 {totalActive > 0 && (
                   <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">
@@ -300,55 +347,71 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
                   </Badge>
                 )}
               </div>
-              <div className="divide-y divide-border/30">
-                {accIds.map(accId => {
-                  const g = grouped[accId];
-                  const activeCount = g.entries.filter((e: any) => e.isActive).length;
-                  return (
-                    <div key={accId}>
-                      <div className="px-4 py-2 bg-secondary/20 flex items-center justify-between">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <Users className="h-3.5 w-3.5 text-muted-foreground" />
-                          <span className="text-xs font-medium text-foreground">{g.account_email}</span>
-                          {g.account_domain && (
-                            <span className="text-[10px] text-muted-foreground">({g.account_domain})</span>
-                          )}
-                          {g.folder_name && (
-                            <span className="text-[10px] bg-accent/20 text-accent border border-accent/30 rounded px-1.5 py-0.5">
-                              📁 {g.folder_name}{g.subfolder_name ? ` › ${g.subfolder_name}` : ""}
-                            </span>
-                          )}
-                        </div>
-                        {activeCount > 0 && (
-                          <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">
-                            {activeCount} aktiv
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="divide-y divide-border/50">
-                        {g.entries.map((entry: any) => (
-                          <div key={entry.id} className="px-6 py-2 flex items-center justify-between text-sm">
-                            <div className="flex items-center gap-3">
-                              <div className={cn("w-2 h-2 rounded-full", entry.isActive ? "bg-emerald-400 animate-pulse" : "bg-muted-foreground/30")} />
-                              <span className="font-medium text-foreground text-xs">{entry.name}</span>
-                            </div>
-                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                              <span>{entry.assignedAt ? format(entry.assignedAt, "dd.MM.yyyy HH:mm") : "–"}</span>
-                              <span>→</span>
-                              {entry.isActive ? (
-                                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">Aktiv</Badge>
-                              ) : (
-                                <span>{entry.unassignedAt ? format(entry.unassignedAt, "dd.MM.yyyy HH:mm") : "–"}</span>
-                              )}
-                              <span className="text-accent font-medium ml-1">{entry.duration}</span>
-                            </div>
+
+              {isExpanded && (
+                <div className="divide-y divide-border/30">
+                  {subfolders.map(sub => {
+                    const accIds = byFolder[folder][sub];
+                    return (
+                      <div key={sub || "__root"}>
+                        {sub && (
+                          <div className="px-6 py-1.5 bg-secondary/10 flex items-center gap-2">
+                            <FolderOpen className="h-3 w-3 text-muted-foreground" />
+                            <span className="text-[11px] font-medium text-muted-foreground">{sub}</span>
                           </div>
-                        ))}
+                        )}
+                        {accIds.map(accId => {
+                          const g = grouped[accId];
+                          const activeCount = g.entries.filter((e: any) => e.isActive).length;
+                          return (
+                            <div key={accId}>
+                              <div className="px-4 py-2 bg-secondary/20 flex items-center justify-between">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                                  <span className="text-xs font-medium text-foreground">{g.account_email}</span>
+                                  {g.account_domain && (
+                                    <span className="text-[10px] text-muted-foreground">({g.account_domain})</span>
+                                  )}
+                                  {g.platform && (
+                                    <span className="text-[10px] bg-secondary/50 text-muted-foreground border border-border/50 rounded px-1.5 py-0.5 capitalize">
+                                      {g.platform}
+                                    </span>
+                                  )}
+                                </div>
+                                {activeCount > 0 && (
+                                  <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">
+                                    {activeCount} aktiv
+                                  </Badge>
+                                )}
+                              </div>
+                              <div className="divide-y divide-border/50">
+                                {g.entries.map((entry: any) => (
+                                  <div key={entry.id} className="px-6 py-2 flex items-center justify-between text-sm">
+                                    <div className="flex items-center gap-3">
+                                      <div className={cn("w-2 h-2 rounded-full", entry.isActive ? "bg-emerald-400 animate-pulse" : "bg-muted-foreground/30")} />
+                                      <span className="font-medium text-foreground text-xs">{entry.name}</span>
+                                    </div>
+                                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                      <span>{entry.assignedAt ? format(entry.assignedAt, "dd.MM.yyyy HH:mm") : "–"}</span>
+                                      <span>→</span>
+                                      {entry.isActive ? (
+                                        <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">Aktiv</Badge>
+                                      ) : (
+                                        <span>{entry.unassignedAt ? format(entry.unassignedAt, "dd.MM.yyyy HH:mm") : "–"}</span>
+                                      )}
+                                      <span className="text-accent font-medium ml-1">{entry.duration}</span>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
+                    );
+                  })}
+                </div>
+              )}
             </section>
           );
         })
