@@ -3238,19 +3238,29 @@ export default function AdminDashboard() {
                   )}
                 </>
               )}
+              </>
+              )}
             </section>
 
             {/* Scheduled Notifications */}
             <section className="glass-card rounded-xl overflow-hidden">
-              <div className="px-5 py-4 border-b border-border/50 flex items-center gap-3">
-                <div className="h-8 w-8 rounded-lg bg-accent/10 flex items-center justify-center">
-                  <Repeat className="h-4 w-4 text-accent" />
+              <button
+                onClick={() => setSchedSectionOpen(!schedSectionOpen)}
+                className="w-full px-5 py-4 flex items-center justify-between hover:bg-secondary/10 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-lg bg-accent/10 flex items-center justify-center">
+                    <Repeat className="h-4 w-4 text-accent" />
+                  </div>
+                  <div className="text-left">
+                    <h2 className="text-sm font-bold text-foreground">Geplante Benachrichtigung</h2>
+                    <p className="text-[10px] text-muted-foreground">Wiederkehrende Push-Nachrichten</p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-sm font-bold text-foreground">Geplante Benachrichtigung</h2>
-                  <p className="text-[10px] text-muted-foreground">Wiederkehrende Push-Nachrichten</p>
-                </div>
-              </div>
+                <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", schedSectionOpen && "rotate-180")} />
+              </button>
+              {schedSectionOpen && (
+              <>
               <div className="p-4 space-y-3">
                 <Input
                   value={schedTitle}
