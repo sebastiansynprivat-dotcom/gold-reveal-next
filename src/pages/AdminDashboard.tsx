@@ -3976,10 +3976,28 @@ export default function AdminDashboard() {
                 Account zuweisen
               </p>
             </div>
+
+            {/* Search for reassign */}
+            <div className="relative">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                value={reassignSearchQuery}
+                onChange={(e) => setReassignSearchQuery(e.target.value)}
+                placeholder="Account suchen..."
+                className="pl-8 text-xs h-8"
+              />
+            </div>
             
             {/* Free accounts grouped by source */}
             {(() => {
-              const freeAccs = accounts.filter((a) => !a.assigned_to);
+              const freeAccs = accounts.filter((a) => {
+                if (a.assigned_to) return false;
+                if (reassignSearchQuery.trim()) {
+                  const q = reassignSearchQuery.toLowerCase();
+                  return (a.account_email?.toLowerCase().includes(q) || a.account_domain?.toLowerCase().includes(q) || a.folder_name?.toLowerCase().includes(q));
+                }
+                return true;
+              });
               if (freeAccs.length === 0) {
                 return (
                   <div className="glass-card-subtle rounded-xl p-6 text-center">
