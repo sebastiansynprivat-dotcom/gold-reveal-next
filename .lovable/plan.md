@@ -1,41 +1,27 @@
 
-# Fortschrittsanzeige und Schritt-Nummerierung fur OfferB
 
-## Was wird gemacht
+## Plan: Empfehlungsprogramm-Kachel unter "Rechnung erstellen"
 
-### 1. Alle Schritte als einheitliche Liste definieren
-Die Videos und Links werden zu einer gemeinsamen Schritt-Liste zusammengefasst:
-- Schritt 1: Plattform Erklärungs Video
-- Schritt 2: Telegram Nachrichten Video
-- Schritt 3: Brezzels Notifications aktivieren
-- Schritt 4: My ID Bot einrichten
-- Schritt 5: Tägliches Feedback
+### Platzierung
+Direkt unter dem "Rechnung erstellen"-Button in der `DashboardBillingInfo`-Komponente (Zeile ~1124).
 
-### 2. Fortschritts-Bar oben auf der Seite
-Direkt unter dem Hero-Bereich wird eine Progress-Bar eingefügt, die den Gesamtfortschritt anzeigt (z.B. "2 von 5 Schritten erledigt"). Nutzt die vorhandene `Progress`-Komponente im Gold-Styling.
+### Neue Kachel
+Eine `glass-card` mit Gold-Akzent:
+- Icon (Users/Gift) + Titel: **"Empfehle deine Freunde"**
+- Untertitel: **"Verdiene 1% von dem, was sie verdienen – Lifetime"**
+- Button "Mehr erfahren" öffnet ein Dialog-Popup
 
-### 3. Klickbare Checkliste
-Unter der Progress-Bar eine kompakte Checkliste mit allen 5 Schritten. Jeder Schritt hat:
-- Eine Checkbox zum Abhaken
-- Schritt-Nummer ("Schritt 1", "Schritt 2" etc.)
-- Kurzer Titel
+### Dialog-Inhalt
+1. **Erklärung**: Kurzer Text zum Programm (1% Lifetime-Provision)
+2. **LinkedIn-Link**: Platzhalter-Button "Zur Bewerbung (LinkedIn)" – URL wird später eingefügt
+3. **Wichtiger Hinweis**: Dein Freund muss im Bewerbungsprozess deinen **Gruppennamen** angeben, damit die Empfehlung registriert wird. Der aktuelle Gruppenname wird aus dem State dynamisch angezeigt.
+4. **Kopierbarer Text**: Vorgefertigte Nachricht mit LinkedIn-Link, die per Klick kopiert wird (Copy-to-Clipboard mit Toast-Feedback). Beispiel:
 
-Der Fortschritt wird im `localStorage` gespeichert, damit er beim Neuladen erhalten bleibt.
+> "Hey! Ich arbeite als Chatter und verdiene damit richtig gutes Geld. Wenn du Lust hast, bewirb dich hier: [LinkedIn-Link]. Gib bei der Bewerbung meinen Gruppennamen „{groupName}" an – das ist wichtig, damit es zugeordnet werden kann!"
 
-### 4. Schritt-Nummern bei den Sektionen
-Jede Video-/Link-/Feedback-Sektion bekommt eine prominente Schritt-Nummer als Badge (z.B. goldener Kreis mit "1" darin) neben dem Titel.
+### Technisch
+- Alles in `src/pages/Dashboard.tsx` innerhalb `DashboardBillingInfo` (+ groupName als Prop durchreichen)
+- LinkedIn-URL als Konstante (Platzhalter `"LINKEDIN_URL"` bis der User sie liefert)
+- Copy nutzt `navigator.clipboard.writeText` + `toast.success`
+- Keine DB-Änderungen nötig
 
-## Technische Details
-
-**Datei: `src/pages/OfferB.tsx`**
-
-- Neue `steps`-Array-Konstante mit id, title, type fur alle 5 Schritte
-- `useState` + `localStorage` fur `completedSteps: Set<number>`
-- Progress-Bar-Sektion nach dem Hero mit `Progress`-Komponente (Wert = `completedSteps.size / steps.length * 100`)
-- Checkliste mit `Checkbox`-Komponenten, gestylt im bestehenden `glass-card-subtle` Look
-- Videos bekommen "Schritt 1" / "Schritt 2" als nummerierte Badge-Kreise
-- Links-Sektion wird zu Schritt 3 und 4 mit individuellen Nummern
-- Feedback wird Schritt 5
-- Erledigte Schritte bekommen eine subtile visuelle Markierung (leicht reduzierte Opazitat / Hakchen)
-
-Keine neuen Abhangigkeiten notwendig -- nutzt vorhandene `Progress`, `Checkbox` und `framer-motion`.
