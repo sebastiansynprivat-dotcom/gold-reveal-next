@@ -64,6 +64,7 @@ export type Database = {
           model_active: boolean
           model_language: string
           platform: string
+          subfolder_name: string | null
         }
         Insert: {
           account_domain?: string
@@ -79,6 +80,7 @@ export type Database = {
           model_active?: boolean
           model_language?: string
           platform?: string
+          subfolder_name?: string | null
         }
         Update: {
           account_domain?: string
@@ -94,6 +96,7 @@ export type Database = {
           model_active?: boolean
           model_language?: string
           platform?: string
+          subfolder_name?: string | null
         }
         Relationships: []
       }
