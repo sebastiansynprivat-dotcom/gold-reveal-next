@@ -722,7 +722,18 @@ export default function AdminDashboard() {
     setLoginStats(statsMap);
   };
 
-  const loadNotifHistory = async () => {
+  const loadAssignments = async () => {
+    setAssignmentsLoading(true);
+    const { data } = await supabase
+      .from("account_assignments")
+      .select("*, accounts(account_email, account_domain, platform)")
+      .order("assigned_at", { ascending: false });
+    if (data) setAssignments(data);
+    setAssignmentsLoaded(true);
+    setAssignmentsLoading(false);
+  };
+
+
     const { data } = await supabase
       .from("notifications")
       .select("*")
