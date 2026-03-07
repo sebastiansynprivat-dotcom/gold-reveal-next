@@ -168,15 +168,16 @@ export default function ModelDashboardTab() {
     const rightCol = pageWidth - margin;
     let y = 25;
 
-    // Header
+    // Sender (Sharify)
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
-    doc.text(RECIPIENT.company, margin, y); y += 5;
+    doc.text(SENDER.company, margin, y); y += 5;
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
-    doc.text(RECIPIENT.line1, margin, y); y += 4;
-    doc.text(RECIPIENT.line2, margin, y); y += 4;
-    doc.text(RECIPIENT.line3, margin, y); y += 12;
+    doc.text(SENDER.line1, margin, y); y += 4;
+    doc.text(SENDER.line2, margin, y); y += 4;
+    doc.text(SENDER.line3, margin, y); y += 4;
+    doc.text(`Tax ID: ${SENDER.taxId}`, margin, y); y += 10;
 
     // Model info
     doc.setFontSize(10);
@@ -236,7 +237,7 @@ export default function ModelDashboardTab() {
     // Footer
     doc.setFontSize(7);
     doc.setTextColor(150, 150, 150);
-    doc.text(`${RECIPIENT.company} · Gutschrift für ${selectedAccount.account_email}`, pageWidth / 2, 285, { align: "center" });
+    doc.text(`${SENDER.company} · Gutschrift für ${selectedAccount.account_email}`, pageWidth / 2, 285, { align: "center" });
 
     doc.save(`Gutschrift_${selectedAccount.account_email.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`);
     toast.success("Gutschrift-PDF erstellt ✅");
