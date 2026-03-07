@@ -791,24 +791,19 @@ export default function Dashboard() {
           <div className="border-t border-border/30">
             {(demoModelInactive || assignedAccounts.some(acc => acc.model_active === false)) ? (
               <>
-                <div className="px-4 py-4 lg:px-6 lg:py-5">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-full bg-destructive/15 flex items-center justify-center shrink-0">
-                      <MessageSquare className="h-5 w-5 text-destructive/70" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold text-muted-foreground">Dein Model kann momentan keine Anfragen entgegennehmen</p>
-                    </div>
+                <div className="flex items-center gap-3 px-4 py-4 lg:px-6 lg:py-5">
+                  <div className="h-10 w-10 rounded-full bg-destructive/15 flex items-center justify-center shrink-0">
+                    <MessageSquare className="h-5 w-5 text-destructive/70" />
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="mt-3 text-xs"
-                    onClick={() => setModelInactiveInfoOpen(true)}
-                  >
-                    <HelpCircle className="h-3.5 w-3.5 mr-1.5" />
-                    Wieso ist das so?
-                  </Button>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-muted-foreground">Dein Model kann momentan keine Anfragen entgegennehmen</p>
+                    <button
+                      onClick={() => setModelInactiveInfoOpen(true)}
+                      className="text-[11px] text-accent/70 hover:text-accent underline underline-offset-2 mt-0.5 transition-colors"
+                    >
+                      Wieso ist das so?
+                    </button>
+                  </div>
                 </div>
                 <Dialog open={modelInactiveInfoOpen} onOpenChange={setModelInactiveInfoOpen}>
                   <DialogContent className="max-w-md">
