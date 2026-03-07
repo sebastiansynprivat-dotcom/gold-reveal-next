@@ -4164,8 +4164,7 @@ export default function AdminDashboard() {
                 { name: "Pink", value: "hsl(330 81% 60%)" },
               ];
               const getFolderColor = (folder: string) => folderColors[`${selectedManualPlatform}::${folder}`] || FOLDER_COLOR_OPTIONS[0].value;
-              const setFolderColor = (folder: string, color: string) => setFolderColors(prev => ({ ...prev, [`${selectedManualPlatform}::${folder}`]: color }));
-              const [colorPickerFolder, setColorPickerFolder] = useState<string | null>(null);
+              const setFolderColorFn = (folder: string, color: string) => setFolderColors(prev => ({ ...prev, [`${selectedManualPlatform}::${folder}`]: color }));
 
               const copyToClipboard = (text: string, label: string) => {
                 navigator.clipboard.writeText(text);
