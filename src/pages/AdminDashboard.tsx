@@ -1830,9 +1830,14 @@ export default function AdminDashboard() {
         </div>
       </header>
 
-      <main className="container max-w-4xl mx-auto p-4 space-y-5">
-        {/* Premium Tab Navigation */}
-        <div className="overflow-x-auto scrollbar-none -mx-4 px-4">
+       <main className="container max-w-4xl mx-auto p-4 space-y-5">
+         {/* Premium Tab Navigation */}
+         <div className="overflow-x-auto -mx-4 px-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+           <style>{`
+             div:has(> .inline-flex)::-webkit-scrollbar {
+               display: none;
+             }
+           `}</style>
           <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-secondary/40 backdrop-blur-sm border border-border/30 relative">
             {tabItems.map(({ key, label, icon: Icon, onClick }) => (
               <button
