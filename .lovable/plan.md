@@ -1,41 +1,47 @@
+## Visuelles Upgrade: Animationen & Moderneres Karten-Design
 
-# Fortschrittsanzeige und Schritt-Nummerierung fur OfferB
+### 1. Stat-Karten: Hover-Glow + Icon-Akzente
 
-## Was wird gemacht
+Jede Stat-Kachel (Gestern, Monat, Gesamt, Verdienst, Rate, Tagesziel) bekommt:
 
-### 1. Alle Schritte als einheitliche Liste definieren
-Die Videos und Links werden zu einer gemeinsamen Schritt-Liste zusammengefasst:
-- Schritt 1: Plattform Erklärungs Video
-- Schritt 2: Telegram Nachrichten Video
-- Schritt 3: Brezzels Notifications aktivieren
-- Schritt 4: My ID Bot einrichten
-- Schritt 5: Tägliches Feedback
+- **Hover-Effekt**: Beim Hover leuchtet der obere Rand kurz gold auf (`border-t-2 border-transparent hover:border-accent/60` + sanfter Glow-Shadow)
+- Leichter **Glassmorphismus-Upgrade**: etwas stärkerer Blur und feinerer innerer Schatten
 
-### 2. Fortschritts-Bar oben auf der Seite
-Direkt unter dem Hero-Bereich wird eine Progress-Bar eingefügt, die den Gesamtfortschritt anzeigt (z.B. "2 von 5 Schritten erledigt"). Nutzt die vorhandene `Progress`-Komponente im Gold-Styling.
+### 2. Stat-Grid: Bento-Style-Layout (Desktop)
 
-### 3. Klickbare Checkliste
-Unter der Progress-Bar eine kompakte Checkliste mit allen 5 Schritten. Jeder Schritt hat:
-- Eine Checkbox zum Abhaken
-- Schritt-Nummer ("Schritt 1", "Schritt 2" etc.)
-- Kurzer Titel
+- Desktop-Grid wird ein **Bento-Grid**: Die wichtigsten Karten (Monatsumsatz, Verdienst) bekommen `col-span-2` bzw. eine prominentere Darstellung
+- Die Status-Karte bleibt full-width mit dem bestehenden animierten Gold-Border
 
-Der Fortschritt wird im `localStorage` gespeichert, damit er beim Neuladen erhalten bleibt.
+### 3. Micro-Interactions auf den Stat-Werten
 
-### 4. Schritt-Nummern bei den Sektionen
-Jede Video-/Link-/Feedback-Sektion bekommt eine prominente Schritt-Nummer als Badge (z.B. goldener Kreis mit "1" darin) neben dem Titel.
+- Beim Hover auf eine Stat-Kachel skaliert der **Zahlenwert leicht hoch** (`scale-105`, 200ms ease) -- rein per CSS `group-hover`
+- Copy-Buttons (Account-Daten) bekommen einen kurzen **Ripple-Pulse** beim Klick (bereits teilweise vorhanden, wird konsistenter)
 
-## Technische Details
+### 4. Sektions-Header mit animiertem Unterstrich
 
-**Datei: `src/pages/OfferB.tsx`**
+- Alle Sektionen (Account, MassDM, Tägliche Aufgaben, Bonus-Modell, Abrechnung) bekommen einen **animierten Gold-Gradient-Unterstrich** der von links nach rechts einblendet wenn die Sektion in den Viewport kommt (`whileInView` + CSS `scaleX` Animation)
 
-- Neue `steps`-Array-Konstante mit id, title, type fur alle 5 Schritte
-- `useState` + `localStorage` fur `completedSteps: Set<number>`
-- Progress-Bar-Sektion nach dem Hero mit `Progress`-Komponente (Wert = `completedSteps.size / steps.length * 100`)
-- Checkliste mit `Checkbox`-Komponenten, gestylt im bestehenden `glass-card-subtle` Look
-- Videos bekommen "Schritt 1" / "Schritt 2" als nummerierte Badge-Kreise
-- Links-Sektion wird zu Schritt 3 und 4 mit individuellen Nummern
-- Feedback wird Schritt 5
-- Erledigte Schritte bekommen eine subtile visuelle Markierung (leicht reduzierte Opazitat / Hakchen)
+### 5. Karten-Design: Subtle Inner-Glow bei Interaction
 
-Keine neuen Abhangigkeiten notwendig -- nutzt vorhandene `Progress`, `Checkbox` und `framer-motion`.
+- Alle `glass-card-subtle` Karten erhalten beim Hover einen **inneren Gold-Glow**: `hover:shadow-[inset_0_0_20px_hsl(43_56%_52%_/_0.06)]`
+- Die Account-Karte und Bonus-Karte bekommen eine subtile **Top-Gradient-Line** (1px, gold gradient von transparent zu accent zu transparent)
+
+### 6. Entrance-Animationen verbessern
+
+- Stat-Karten: Stagger-Delay wird leicht erhöht (0.08 -> 0.1) und es kommt ein leichter **blur-in** dazu (`filter: blur(4px)` -> `blur(0)`)
+- Sektionskarten (Account, Daily Tasks etc.): leichter **slide-up + fade** beim ersten Rendern via `whileInView`
+
+### Technische Umsetzung
+
+- **Dashboard.tsx**: Anpassung des Stat-Grids, Hinzufügen von Icons, group-hover Klassen, whileInView für Sektionen
+- **index.css**: Neue Utility-Klasse `.card-hover-glow` und `.section-header-line` Animation
+- **DailyChecklist.tsx**, **MassDmGenerator.tsx**: whileInView wrapper für Entrance-Animation
+- Kein Datenbankzugriff nötig, rein Frontend-Styling
+
+### Zusammenfassung der visuellen Veränderungen
+
+- Stat-Kacheln: Icons + Hover-Glow + Wert-Scale-Animation
+- Bento-Grid auf Desktop mit prominenteren Hauptkarten
+- Animierte Section-Divider beim Scrollen
+- Innerer Glow auf allen Karten beim Hover
+- Blur-in Entrance-Animation statt nur fade
