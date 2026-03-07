@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,6 +28,14 @@ const Auth = () => {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [signUpSuccess, setSignUpSuccess] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    if (containerRef.current) {
+      containerRef.current.style.setProperty('--mouse-x', `${e.clientX}px`);
+      containerRef.current.style.setProperty('--mouse-y', `${e.clientY}px`);
+    }
+  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -130,8 +138,16 @@ const Auth = () => {
     setSubmitting(false);
   };
 
+
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4">
+    <div
+      ref={containerRef}
+      onMouseMove={handleMouseMove}
+      className="min-h-screen flex flex-col items-center justify-center px-4"
+      style={{
+        background: 'radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), hsl(43 56% 52% / 0.06), transparent 40%)',
+      }}
+    >
       {/* Logo */}
       <motion.img
         src={logo}
