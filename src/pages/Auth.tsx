@@ -262,7 +262,7 @@ const Auth = () => {
               <div className="input-gold-shimmer rounded-xl">
                 <input
                   type="text"
-                  placeholder="Gruppenname (z.B. Team Alpha)"
+                  placeholder="⬜️ (M) Max Mu"
                   value={groupName}
                   onChange={(e) => setGroupName(e.target.value)}
                   required
