@@ -985,15 +985,16 @@ export default function Dashboard() {
 
         {/* Bonus Model - alles in einer Karte */}
         <section className="glass-card rounded-xl p-4 lg:p-6 space-y-4 relative overflow-hidden">
-          {/* Animated gold shimmer background */}
+          {/* Animated gold shimmer sweep */}
           <div
             className="pointer-events-none absolute inset-0 overflow-hidden rounded-xl"
           >
             <div
-              className="absolute w-72 h-72 rounded-full opacity-[0.055]"
+              className="absolute inset-0 opacity-[0.04]"
               style={{
-                background: 'radial-gradient(circle, hsl(43 56% 52%), transparent 70%)',
-                animation: 'bonus-glow-move 12s ease-in-out infinite',
+                background: 'linear-gradient(105deg, transparent 40%, hsl(43 56% 52%) 50%, transparent 60%)',
+                backgroundSize: '200% 100%',
+                animation: 'bonus-sweep 6s ease-in-out infinite',
               }}
             />
           </div>
