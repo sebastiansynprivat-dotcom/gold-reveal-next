@@ -615,7 +615,13 @@ export default function Dashboard() {
         </button>
 
         {/* Account-Daten */}
-        <section className="glass-card-subtle rounded-xl overflow-hidden">
+        <motion.section
+          variants={sectionVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-50px" }}
+          className="glass-card-subtle rounded-xl overflow-hidden card-inner-glow card-top-line"
+        >
           <button
             onClick={() => setAccountsOpen(!accountsOpen)}
             className="w-full flex items-center justify-between p-4 lg:p-6 text-left">
@@ -980,7 +986,7 @@ export default function Dashboard() {
               </div>
             );
           })()}
-        </section>
+        </motion.section>
 
         {/* MassDM Generator */}
         <MassDmGenerator />
@@ -989,7 +995,13 @@ export default function Dashboard() {
         <DailyChecklist />
 
         {/* Bonus Model - alles in einer Karte */}
-        <section className="glass-card rounded-xl p-4 lg:p-6 space-y-4 relative overflow-hidden">
+        <motion.section
+          variants={sectionVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-50px" }}
+          className="glass-card rounded-xl p-4 lg:p-6 space-y-4 relative overflow-hidden card-inner-glow"
+        >
           {/* Animated gold shimmer sweep */}
           <div
             className="pointer-events-none absolute inset-0 overflow-hidden rounded-xl"
@@ -1131,7 +1143,7 @@ export default function Dashboard() {
           <p className="text-[10px] lg:text-xs text-muted-foreground">
             7 Tage in Folge mind. 30€ = <strong className="text-foreground">Upgrade auf besseren Account</strong>.
           </p>
-        </section>
+        </motion.section>
 
         {/* Billing countdown + Invoice button */}
         <DashboardBillingInfo onNavigate={() => navigate("/rechnung")} groupName={groupName} />
