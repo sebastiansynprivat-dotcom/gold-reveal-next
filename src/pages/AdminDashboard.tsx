@@ -725,9 +725,9 @@ export default function AdminDashboard() {
   const loadAssignments = async () => {
     setAssignmentsLoading(true);
     const { data } = await supabase
-      .from("account_assignments")
+      .from("account_assignments" as any)
       .select("*, accounts(account_email, account_domain, platform)")
-      .order("assigned_at", { ascending: false });
+      .order("assigned_at", { ascending: false }) as any;
     if (data) setAssignments(data);
     setAssignmentsLoaded(true);
     setAssignmentsLoading(false);
