@@ -192,7 +192,7 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
       };
     }
     const chatter = chatters.find(c => c.user_id === a.user_id);
-    const name = chatter?.group_name || chatter?.telegram_id || a.user_id?.slice(0, 8);
+    const name = chatter?.group_name && chatter.group_name.trim() !== "" ? chatter.group_name : chatter?.telegram_id || `User ${a.user_id?.slice(0, 6)}`;
     const assignedAt = a.assigned_at ? new Date(a.assigned_at) : null;
     const unassignedAt = a.unassigned_at ? new Date(a.unassigned_at) : null;
     const isActive = !a.unassigned_at;
