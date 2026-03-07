@@ -129,25 +129,78 @@ const Auth = () => {
     }
     setSubmitting(false);
   };
-  const fireflies = Array.from({ length: 12 }, (_, i) => i);
+  // Mouse-following particles
+  const particlesRef = useRef<{ x: number; y: number; size: number; opacity: number; vx: number; vy: number; life: number }[]>([]);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const animFrameRef = useRef<number>(0);
+  const mouseRef = useRef({ x: 0, y: 0 });
 
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden">
-      {/* Fireflies */}
-      {fireflies.map((i) => (
-        <div
-          key={i}
-          className="auth-firefly"
-          style={{
-            left: `${8 + Math.random() * 84}%`,
-            top: `${5 + Math.random() * 90}%`,
-            animationDelay: `${i * 0.7}s`,
-            animationDuration: `${4 + Math.random() * 4}s`,
-            width: `${3 + Math.random() * 4}px`,
-            height: `${3 + Math.random() * 4}px`,
-          }}
-        />
-      ))}
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    mouseRef.current = { x: e.clientX, y: e.clientY };
+    // Spawn particles at mouse position
+    for (let i = 0; i < 2; i++) {
+      particlesRef.current.push({
+        x: e.clientX + (Math.random() - 0.5) * 10,
+        y: e.clientY + (Math.random() - 0.5) * 10,
+        size: 2 + Math.random() * 4,
+        opacity: 0.6 + Math.random() * 0.4,
+        vx: (Math.random() - 0.5) * 1.5,
+        vy: (Math.random() - 0.5) * 1.5 - 0.5,
+        life: 1,
+      });
+    }
+    if (particlesRef.current.length > 80) {
+      particlesRef.current = particlesRef.current.slice(-80);
+    }
+  }, []);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const resize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    resize();
+    window.addEventListener("resize", resize);
+
+    const animate = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particlesRef.current.forEach((p) => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life -= 0.015;
+        const alpha = Math.max(0, p.life) * p.opacity;
+
+        // Glow
+        const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size * 3);
+        grad.addColorStop(0, `hsla(43, 76%, 56%, ${alpha})`);
+        grad.addColorStop(0.4, `hsla(43, 56%, 52%, ${alpha * 0.5})`);
+        grad.addColorStop(1, `hsla(43, 56%, 52%, 0)`);
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * 3, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        // Core
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size * 0.5, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(43, 76%, 68%, ${alpha})`;
+        ctx.fill();
+      });
+      particlesRef.current = particlesRef.current.filter((p) => p.life > 0);
+      animFrameRef.current = requestAnimationFrame(animate);
+    };
+    animate();
+
+    return () => {
+      window.removeEventListener("resize", resize);
+      cancelAnimationFrame(animFrameRef.current);
+    };
+  }, []);
       {/* Logo */}
       <motion.img
         src={logo}
