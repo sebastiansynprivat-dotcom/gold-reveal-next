@@ -26,6 +26,7 @@ export type Database = {
           folder_name: string | null
           id: string
           is_manual: boolean
+          model_language: string
           platform: string
         }
         Insert: {
@@ -39,6 +40,7 @@ export type Database = {
           folder_name?: string | null
           id?: string
           is_manual?: boolean
+          model_language?: string
           platform?: string
         }
         Update: {
@@ -52,6 +54,7 @@ export type Database = {
           folder_name?: string | null
           id?: string
           is_manual?: boolean
+          model_language?: string
           platform?: string
         }
         Relationships: []
@@ -249,6 +252,7 @@ export type Database = {
           customer_name: string | null
           description: string
           id: string
+          model_language: string
           model_name: string
           price: number | null
           request_type: string
@@ -262,6 +266,7 @@ export type Database = {
           customer_name?: string | null
           description: string
           id?: string
+          model_language?: string
           model_name: string
           price?: number | null
           request_type?: string
@@ -275,6 +280,7 @@ export type Database = {
           customer_name?: string | null
           description?: string
           id?: string
+          model_language?: string
           model_name?: string
           price?: number | null
           request_type?: string
