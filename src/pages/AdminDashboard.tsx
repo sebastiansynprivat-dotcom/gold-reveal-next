@@ -846,9 +846,9 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
   const loadAssignments = async () => {
     setAssignmentsLoading(true);
     const { data } = await supabase
-      .from("account_assignments" as any)
+      .from("account_assignments")
       .select("*, accounts(account_email, account_domain, platform)")
-      .order("assigned_at", { ascending: false }) as any;
+      .order("assigned_at", { ascending: false });
     if (data) setAssignments(data);
     setAssignmentsLoaded(true);
     setAssignmentsLoading(false);
