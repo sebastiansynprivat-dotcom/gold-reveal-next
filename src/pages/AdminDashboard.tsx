@@ -190,6 +190,7 @@ export default function AdminDashboard() {
   const [newAccPassword, setNewAccPassword] = useState("");
   const [newAccDomain, setNewAccDomain] = useState("");
   const [newAccDriveFolder, setNewAccDriveFolder] = useState("");
+  const [newAccLanguage, setNewAccLanguage] = useState<"de" | "en">("de");
   const [addingAccount, setAddingAccount] = useState(false);
   const [assigning, setAssigning] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<ChatterProfile | null>(null);
@@ -212,6 +213,7 @@ export default function AdminDashboard() {
   const [manualAccPassword, setManualAccPassword] = useState("");
   const [manualAccDomain, setManualAccDomain] = useState("");
   const [manualAccDriveFolder, setManualAccDriveFolder] = useState("");
+  const [manualAccLanguage, setManualAccLanguage] = useState<"de" | "en">("de");
   const [manualAccFolder, setManualAccFolder] = useState("");
   const [newFolderName, setNewFolderName] = useState("");
   const [creatingFolder, setCreatingFolder] = useState(false);
