@@ -4861,28 +4861,69 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                     <div className="flex flex-col gap-1.5 shrink-0">
-                      {/* Move to folder button */}
-                      {namedFolders.length > 0 && (
+                      {/* Move to folder/subfolder button */}
+                      {(namedFolders.length > 0 || (openFolder && !openFolder.startsWith("__"))) && (
                         <div className="relative">
-                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground hover:text-accent" title="In Ordner verschieben"
+                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground hover:text-accent" title="Verschieben"
                             onClick={() => setMoveToFolderAcc(moveToFolderAcc === acc.id ? null : acc.id)}>
                             <FolderOpen className="h-3 w-3" />
                           </Button>
                           {moveToFolderAcc === acc.id && (
-                            <div className="absolute right-0 top-7 z-50 min-w-[140px] rounded-lg border border-border bg-card shadow-xl py-1" onClick={(e) => e.stopPropagation()}>
-                              {acc.folder_name && (
+                            <div className="absolute right-0 top-7 z-50 min-w-[160px] max-h-[200px] overflow-y-auto rounded-lg border border-border bg-card shadow-xl py-1" onClick={(e) => e.stopPropagation()}>
+                              {/* Remove from folder/subfolder */}
+                              {(acc as any).subfolder_name && (
+                                <button onClick={() => moveAccountToFolder(acc.id, acc.folder_name, null)}
+                                  className="w-full px-3 py-1.5 text-left text-[10px] text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-colors">
+                                  ← Aus Unterordner entfernen
+                                </button>
+                              )}
+                              {acc.folder_name && !(acc as any).subfolder_name && (
                                 <button onClick={() => moveAccountToFolder(acc.id, null, null)}
                                   className="w-full px-3 py-1.5 text-left text-[10px] text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-colors">
                                   ← Aus Ordner entfernen
                                 </button>
                               )}
-                              {namedFolders.filter(f => f !== acc.folder_name).map((f) => (
-                                <button key={f} onClick={() => moveAccountToFolder(acc.id, f)}
-                                  className="w-full px-3 py-1.5 text-left text-[10px] hover:bg-secondary/50 transition-colors flex items-center gap-2">
-                                  <div className="h-2.5 w-2.5 rounded-sm shrink-0" style={{ backgroundColor: getFolderColor(f) }} />
-                                  <span className="text-foreground truncate">{f}</span>
-                                </button>
-                              ))}
+                              {/* Show subfolders if we're inside a folder */}
+                              {(() => {
+                                const currentFolder = openFolder?.startsWith("__sub__::") 
+                                  ? openFolder.replace("__sub__::", "").split("::")[0]
+                                  : (openFolder && !openFolder.startsWith("__") ? openFolder : acc.folder_name);
+                                if (currentFolder) {
+                                  const dbSubs = [...new Set(manualPlatformAccounts.filter(a => a.folder_name === currentFolder).map(a => (a as any).subfolder_name).filter(Boolean))] as string[];
+                                  const virtualSubs = (customSubfolders[currentFolder] || []).filter(s => !dbSubs.includes(s));
+                                  const allSubs = [...dbSubs, ...virtualSubs].sort();
+                                  const currentSub = (acc as any).subfolder_name;
+                                  const availableSubs = allSubs.filter(s => s !== currentSub);
+                                  if (availableSubs.length > 0) {
+                                    return (
+                                      <>
+                                        <div className="px-3 py-1 text-[9px] text-muted-foreground uppercase tracking-wider border-t border-border/30 mt-0.5 pt-1.5">Unterordner</div>
+                                        {availableSubs.map(sub => (
+                                          <button key={sub} onClick={() => moveAccountToFolder(acc.id, currentFolder, sub)}
+                                            className="w-full px-3 py-1.5 text-left text-[10px] hover:bg-secondary/50 transition-colors flex items-center gap-2">
+                                            <FolderOpen className="h-2.5 w-2.5 text-muted-foreground shrink-0" />
+                                            <span className="text-foreground truncate">{sub}</span>
+                                          </button>
+                                        ))}
+                                      </>
+                                    );
+                                  }
+                                }
+                                return null;
+                              })()}
+                              {/* Show other folders */}
+                              {namedFolders.filter(f => f !== acc.folder_name).length > 0 && (
+                                <>
+                                  <div className="px-3 py-1 text-[9px] text-muted-foreground uppercase tracking-wider border-t border-border/30 mt-0.5 pt-1.5">Ordner</div>
+                                  {namedFolders.filter(f => f !== acc.folder_name).map((f) => (
+                                    <button key={f} onClick={() => moveAccountToFolder(acc.id, f)}
+                                      className="w-full px-3 py-1.5 text-left text-[10px] hover:bg-secondary/50 transition-colors flex items-center gap-2">
+                                      <div className="h-2.5 w-2.5 rounded-sm shrink-0" style={{ backgroundColor: getFolderColor(f) }} />
+                                      <span className="text-foreground truncate">{f}</span>
+                                    </button>
+                                  ))}
+                                </>
+                              )}
                             </div>
                           )}
                         </div>
