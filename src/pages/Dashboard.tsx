@@ -986,11 +986,19 @@ export default function Dashboard() {
         {/* Bonus Model - alles in einer Karte */}
         <section className="glass-card rounded-xl p-4 lg:p-6 space-y-4 relative overflow-hidden">
           {/* Animated gold shimmer background */}
-          <div
-            className="pointer-events-none absolute inset-0 opacity-[0.07]"
+          <motion.div
+            className="pointer-events-none absolute -inset-1/2 w-[200%] h-[200%] opacity-[0.06] rounded-full blur-3xl"
             style={{
-              background: 'radial-gradient(ellipse 80% 60% at 20% 40%, hsl(43 56% 52%), transparent 70%)',
-              animation: 'bonus-shimmer-drift 8s ease-in-out infinite alternate',
+              background: 'radial-gradient(ellipse 50% 50% at center, hsl(43 56% 52%), transparent 70%)',
+            }}
+            animate={{
+              x: ['-10%', '30%', '-10%'],
+              y: ['-10%', '20%', '-10%'],
+            }}
+            transition={{
+              duration: 10,
+              repeat: Infinity,
+              ease: 'easeInOut',
             }}
           />
           {/* Animated Header */}
