@@ -14,6 +14,7 @@ const TASKS = [
   { id: 3, label: "Feedback gegeben, wie der heutige Tag lief?", popupHint: true, popupLabel: "Wie mache ich das?" },
   { id: 4, label: "Geschaut ob wir für dich gepostet haben? (Falls nicht, gib uns bitte eine Info in der Gruppe)" },
   { id: 5, label: "Auf alle Nachrichten geantwortet die in deinem Account offen sind?", audioHint: "/audio/open-chats-info.mp3", audioLabel: "Wie weiß ich das alles beantwortet ist?" },
+  { id: 6, label: "Mindestens 10 Posts von anderen Models kommentiert?" },
 ];
 
 const FEEDBACK_TEMPLATE = `Feedback zum heutigen Tag:
