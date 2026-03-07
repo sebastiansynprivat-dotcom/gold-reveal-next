@@ -1,28 +1,41 @@
 
+# Fortschrittsanzeige und Schritt-Nummerierung fur OfferB
 
-## Plan: Model-Liste mit Filter & Klick-Auswahl
+## Was wird gemacht
 
-### Änderungen in `src/components/ModelDashboardTab.tsx`
+### 1. Alle Schritte als einheitliche Liste definieren
+Die Videos und Links werden zu einer gemeinsamen Schritt-Liste zusammengefasst:
+- Schritt 1: Plattform Erklärungs Video
+- Schritt 2: Telegram Nachrichten Video
+- Schritt 3: Brezzels Notifications aktivieren
+- Schritt 4: My ID Bot einrichten
+- Schritt 5: Tägliches Feedback
 
-**1. Alle model_dashboard-Daten laden**
-- Beim Mount alle `model_dashboard`-Einträge fetchen (nicht nur für das ausgewählte Model), um den Submitted-Status jedes Models zu kennen.
-- Accounts mit ihrem jeweiligen `fourbased_submitted`-Status zusammenführen.
+### 2. Fortschritts-Bar oben auf der Seite
+Direkt unter dem Hero-Bereich wird eine Progress-Bar eingefügt, die den Gesamtfortschritt anzeigt (z.B. "2 von 5 Schritten erledigt"). Nutzt die vorhandene `Progress`-Komponente im Gold-Styling.
 
-**2. Filter-Buttons oben (Alle / Submitted / Nicht Submitted)**
-- Drei Buttons direkt unter dem Dropdown: "Alle", "Submitted", "Nicht Submitted"
-- Filtern die Model-Liste darunter basierend auf dem `fourbased_submitted`-Wert aus `model_dashboard`.
-- Models ohne Eintrag in `model_dashboard` gelten als "Nicht Submitted".
+### 3. Klickbare Checkliste
+Unter der Progress-Bar eine kompakte Checkliste mit allen 5 Schritten. Jeder Schritt hat:
+- Eine Checkbox zum Abhaken
+- Schritt-Nummer ("Schritt 1", "Schritt 2" etc.)
+- Kurzer Titel
 
-**3. Model-Liste als Karte unterhalb des Dropdowns**
-- Neue Karte "Alle Models" mit einer scrollbaren Liste aller (gefilterten) Accounts.
-- Jeder Eintrag zeigt: Email, Domain, Platform, und ein Badge (Submitted / Nicht Submitted).
-- Klick auf einen Eintrag setzt `selectedAccountId` und scrollt/zeigt die Detail-Ansicht darunter (gleiche Ansicht wie bisher).
+Der Fortschritt wird im `localStorage` gespeichert, damit er beim Neuladen erhalten bleibt.
 
-**4. Ablauf**
-- Dropdown bleibt als Schnellauswahl erhalten.
-- Darunter: Filter-Buttons + Model-Liste-Karte.
-- Darunter: Detail-Ansicht des ausgewählten Models (wie bisher).
+### 4. Schritt-Nummern bei den Sektionen
+Jede Video-/Link-/Feedback-Sektion bekommt eine prominente Schritt-Nummer als Badge (z.B. goldener Kreis mit "1" darin) neben dem Titel.
 
-### Keine DB-Änderungen nötig
-Alle Daten sind bereits in `model_dashboard` vorhanden.
+## Technische Details
 
+**Datei: `src/pages/OfferB.tsx`**
+
+- Neue `steps`-Array-Konstante mit id, title, type fur alle 5 Schritte
+- `useState` + `localStorage` fur `completedSteps: Set<number>`
+- Progress-Bar-Sektion nach dem Hero mit `Progress`-Komponente (Wert = `completedSteps.size / steps.length * 100`)
+- Checkliste mit `Checkbox`-Komponenten, gestylt im bestehenden `glass-card-subtle` Look
+- Videos bekommen "Schritt 1" / "Schritt 2" als nummerierte Badge-Kreise
+- Links-Sektion wird zu Schritt 3 und 4 mit individuellen Nummern
+- Feedback wird Schritt 5
+- Erledigte Schritte bekommen eine subtile visuelle Markierung (leicht reduzierte Opazitat / Hakchen)
+
+Keine neuen Abhangigkeiten notwendig -- nutzt vorhandene `Progress`, `Checkbox` und `framer-motion`.
