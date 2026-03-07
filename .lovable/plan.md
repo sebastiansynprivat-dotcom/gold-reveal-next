@@ -1,38 +1,41 @@
 
+# Fortschrittsanzeige und Schritt-Nummerierung fur OfferB
 
-## Plan: Ordnerstruktur & Account-Dialoge cleaner gestalten
+## Was wird gemacht
 
-### Zusammenfassung
-Beide Account-Dialoge (Account-Pools und Freie Accounts) werden überarbeitet:
-1. **"Account hinzufügen"-Formular immer oben** im Dialog (statt unten)
-2. **Filter-Leiste** für Frei / Vergeben / Alle
-3. **Cleaneres Design** mit einheitlichem Layout
+### 1. Alle Schritte als einheitliche Liste definieren
+Die Videos und Links werden zu einer gemeinsamen Schritt-Liste zusammengefasst:
+- Schritt 1: Plattform Erklärungs Video
+- Schritt 2: Telegram Nachrichten Video
+- Schritt 3: Brezzels Notifications aktivieren
+- Schritt 4: My ID Bot einrichten
+- Schritt 5: Tägliches Feedback
 
-### Änderungen in `src/pages/AdminDashboard.tsx`
+### 2. Fortschritts-Bar oben auf der Seite
+Direkt unter dem Hero-Bereich wird eine Progress-Bar eingefügt, die den Gesamtfortschritt anzeigt (z.B. "2 von 5 Schritten erledigt"). Nutzt die vorhandene `Progress`-Komponente im Gold-Styling.
 
-#### 1. Account-Pool Dialog (ab Zeile ~3670)
-- **Formular nach oben verschieben**: "Neuen Account hinzufügen"-Block kommt direkt nach dem Header (vor Stats und Account-Liste)
-- **Filter-Buttons hinzufügen**: Drei Pill-Buttons ("Alle", "Frei", "Vergeben") über der Account-Liste
-- Neuer State: `poolFilter: "alle" | "frei" | "vergeben"` — filtert `platformAccounts` vor dem Rendern
-- Click-to-Copy für E-Mail und Passwort (wie bereits im Freie-Accounts-Dialog)
+### 3. Klickbare Checkliste
+Unter der Progress-Bar eine kompakte Checkliste mit allen 5 Schritten. Jeder Schritt hat:
+- Eine Checkbox zum Abhaken
+- Schritt-Nummer ("Schritt 1", "Schritt 2" etc.)
+- Kurzer Titel
 
-#### 2. Freie Accounts / Manual Platform Dialog (ab Zeile ~4148)
-- **Formular nach oben verschieben**: "Neuen Account hinzufügen"-Block direkt nach Domain-Feld (vor Ordner-Grid und Account-Liste)
-- **Filter-Buttons hinzufügen**: Gleiche Pill-Buttons ("Alle", "Frei", "Vergeben") zwischen Ordner-Bereich und Account-Karten
-- Neuer State: `manualFilter: "alle" | "frei" | "vergeben"` — filtert angezeigte Accounts
+Der Fortschritt wird im `localStorage` gespeichert, damit er beim Neuladen erhalten bleibt.
 
-#### 3. Design-Verbesserungen (beide Dialoge)
-- Formular in einem einklappbaren/collapsible Bereich mit Accent-Border, standardmäßig offen
-- Account-Karten: einheitliches Card-Design mit Status-Dot, Copy-Buttons für E-Mail/PW, Hover-Actions
-- Filter-Pills mit Sliding-Indicator (Framer Motion) passend zum bestehenden Design-System
-- Cleaner Spacing: konsistente `gap-3`, subtile Trennlinien statt harter Borders
+### 4. Schritt-Nummern bei den Sektionen
+Jede Video-/Link-/Feedback-Sektion bekommt eine prominente Schritt-Nummer als Badge (z.B. goldener Kreis mit "1" darin) neben dem Titel.
 
-#### 4. Neuer State
-```text
-poolFilter: "alle" | "frei" | "vergeben"   (default: "alle")
-manualFilter: "alle" | "frei" | "vergeben" (default: "alle")
-```
+## Technische Details
 
-### Betroffene Datei
-- `src/pages/AdminDashboard.tsx` — Beide Dialoge werden umstrukturiert (Reihenfolge der Sektionen, Filter-Logik, Design-Cleanup)
+**Datei: `src/pages/OfferB.tsx`**
 
+- Neue `steps`-Array-Konstante mit id, title, type fur alle 5 Schritte
+- `useState` + `localStorage` fur `completedSteps: Set<number>`
+- Progress-Bar-Sektion nach dem Hero mit `Progress`-Komponente (Wert = `completedSteps.size / steps.length * 100`)
+- Checkliste mit `Checkbox`-Komponenten, gestylt im bestehenden `glass-card-subtle` Look
+- Videos bekommen "Schritt 1" / "Schritt 2" als nummerierte Badge-Kreise
+- Links-Sektion wird zu Schritt 3 und 4 mit individuellen Nummern
+- Feedback wird Schritt 5
+- Erledigte Schritte bekommen eine subtile visuelle Markierung (leicht reduzierte Opazitat / Hakchen)
+
+Keine neuen Abhangigkeiten notwendig -- nutzt vorhandene `Progress`, `Checkbox` und `framer-motion`.
