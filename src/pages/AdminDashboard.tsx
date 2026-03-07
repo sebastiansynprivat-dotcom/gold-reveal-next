@@ -966,6 +966,7 @@ export default function AdminDashboard() {
       account_password: newAccPassword.trim(),
       account_domain: newAccDomain.trim(),
       drive_folder_id: extractDriveFolderId(newAccDriveFolder.trim()),
+      model_language: newAccLanguage,
     } as any);
     if (error) {
       toast.error("Fehler beim Hinzufügen");
@@ -975,6 +976,7 @@ export default function AdminDashboard() {
       setNewAccPassword("");
       setNewAccDomain("");
       setNewAccDriveFolder("");
+      setNewAccLanguage("de");
       loadAccounts();
     }
     setAddingAccount(false);
