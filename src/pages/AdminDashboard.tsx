@@ -4704,7 +4704,7 @@ export default function AdminDashboard() {
                       return (
                         <>
                           {/* Back button */}
-                          <button onClick={() => { setOpenFolder(null); setManualAccountSearch(""); }} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mb-1">
+                          <button onClick={() => { setOpenFolder(null); setManualAccountSearch(""); setManualFilter("alle"); }} className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors mb-1">
                             <ChevronRight className="h-3 w-3 rotate-180" /> Zurück zu Ordnern
                           </button>
 
