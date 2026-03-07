@@ -4007,13 +4007,13 @@ export default function AdminDashboard() {
                   {/* Account-Pools */}
                   {poolPlatforms.length > 0 && (
                     <div className="space-y-2">
-                      <button onClick={() => setPoolSectionOpen(!poolSectionOpen)} className="flex items-center gap-2 px-1 w-full text-left group/sec">
-                        <ChevronRight className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${poolSectionOpen ? "rotate-90" : ""}`} />
+                      <button onClick={() => setReassignPoolSectionOpen(!reassignPoolSectionOpen)} className="flex items-center gap-2 px-1 w-full text-left group/sec">
+                        <ChevronRight className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${reassignPoolSectionOpen ? "rotate-90" : ""}`} />
                         <div className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
                         <p className="text-[11px] font-semibold text-foreground tracking-wide uppercase">Account-Pools</p>
                         <Badge variant="secondary" className="text-[9px] ml-auto">{poolAccounts.length} frei</Badge>
                       </button>
-                      {poolSectionOpen && poolPlatforms.map((p) => (
+                      {reassignPoolSectionOpen && poolPlatforms.map((p) => (
                         <div key={p} className="space-y-1.5 pl-6">
                           <div className="flex items-center gap-1.5 px-1">
                             <Badge className="text-[9px] px-1.5 py-0 bg-accent/10 text-accent/80 border-accent/15">{p}</Badge>
@@ -4028,13 +4028,13 @@ export default function AdminDashboard() {
                   {/* Freie Accounts */}
                   {manualPlatforms.length > 0 && (
                     <div className="space-y-2">
-                      <button onClick={() => setManualSectionOpen(!manualSectionOpen)} className="flex items-center gap-2 px-1 w-full text-left group/sec">
-                        <ChevronRight className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${manualSectionOpen ? "rotate-90" : ""}`} />
+                      <button onClick={() => setReassignManualSectionOpen(!reassignManualSectionOpen)} className="flex items-center gap-2 px-1 w-full text-left group/sec">
+                        <ChevronRight className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${reassignManualSectionOpen ? "rotate-90" : ""}`} />
                         <div className="h-1.5 w-1.5 rounded-full bg-amber-400" />
                         <p className="text-[11px] font-semibold text-foreground tracking-wide uppercase">Freie Accounts</p>
                         <Badge variant="secondary" className="text-[9px] ml-auto">{manualAccounts.length} frei</Badge>
                       </button>
-                      {manualSectionOpen && manualPlatforms.map((p) => {
+                      {reassignManualSectionOpen && manualPlatforms.map((p) => {
                         const platAccs = manualAccounts.filter(a => a.platform === p);
                         const platFolders = [...new Set(platAccs.map(a => a.folder_name).filter(Boolean))] as string[];
                         const platCustom = customFolders[p] || [];
