@@ -4448,24 +4448,24 @@ export default function AdminDashboard() {
                   {/* Ungrouped accounts */}
                   {!openFolder && (
                     <div
-                      className={`space-y-2 rounded-xl p-2 -mx-2 transition-colors ${dragOverFolder === "__ungrouped__" ? "bg-accent/5 ring-1 ring-accent/20" : ""}`}
+                      className={`space-y-1.5 rounded-xl p-3 border border-dashed transition-all ${dragOverFolder === "__ungrouped__" ? "border-accent/50 bg-accent/5 scale-[1.01]" : "border-border/30"}`}
                       onDragOver={(e) => handleDragOver(e, "__ungrouped__")}
                       onDragLeave={() => setDragOverFolder(null)}
                       onDrop={(e) => { e.preventDefault(); setDragOverFolder(null); const accId = e.dataTransfer.getData("text/account-id"); if (!accId) return; supabase.from("accounts").update({ folder_name: null } as any).eq("id", accId).then(() => { toast.success("Aus Ordner entfernt"); loadAccounts(); }); }}
                     >
-                      <div className="flex items-center gap-2 px-2">
+                      <div className="flex items-center gap-2 mb-1">
                         <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Accounts</p>
                         {namedFolders.length > 0 && <span className="text-[9px] text-muted-foreground italic">– ohne Ordner</span>}
                       </div>
                       {ungrouped.length === 0 && manualPlatformAccounts.length === 0 ? (
-                        <div className="glass-card-subtle rounded-xl p-6 text-center">
+                        <div className="py-6 text-center">
                           <Package className="h-5 w-5 text-muted-foreground mx-auto mb-2 opacity-40" />
                           <p className="text-xs text-muted-foreground">Noch keine Accounts</p>
                         </div>
                       ) : ungrouped.length === 0 ? (
                         <p className="text-[11px] text-muted-foreground text-center py-3 italic">{manualFilter !== "alle" ? "Keine Accounts für diesen Filter" : "Alle Accounts in Ordnern sortiert"}</p>
                       ) : (
-                        <div className="space-y-2">{ungrouped.map(renderAccountCard)}</div>
+                        <div className="space-y-1.5">{ungrouped.map(renderAccountCard)}</div>
                       )}
                     </div>
                   )}
