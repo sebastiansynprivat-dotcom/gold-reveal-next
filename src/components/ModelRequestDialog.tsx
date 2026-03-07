@@ -43,7 +43,7 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
     if (editData) {
       setModelName(editData.model_name);
       setCustomerName(editData.customer_name ?? "");
-      setModelLanguage((editData as any).model_language === "en" ? "en" : "de");
+      // modelLanguage comes from prop now
       setRequestType(editData.request_type);
       setPrice(editData.price != null ? String(editData.price) : "");
       setDescription(editData.description);
@@ -62,7 +62,7 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
   const resetForm = () => {
     setModelName("");
     setCustomerName("");
-    setModelLanguage("de");
+    
     setRequestType("general");
     setPrice("");
     setDescription("");
@@ -170,18 +170,10 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
             />
           </div>
 
-          <div className="space-y-2">
-            <Label className="text-xs text-foreground">Dein Model spricht *</Label>
-            <RadioGroup value={modelLanguage} onValueChange={(v) => setModelLanguage(v as "de" | "en")} className="flex gap-3">
-              <div className="flex items-center gap-2">
-                <RadioGroupItem value="de" id="lang-de" />
-                <Label htmlFor="lang-de" className="text-xs cursor-pointer">🇩🇪 Deutsch</Label>
-              </div>
-              <div className="flex items-center gap-2">
-                <RadioGroupItem value="en" id="lang-en" />
-                <Label htmlFor="lang-en" className="text-xs cursor-pointer">🇬🇧 Englisch</Label>
-              </div>
-            </RadioGroup>
+          <div className="rounded-lg border border-border/50 bg-secondary/20 p-3">
+            <p className="text-xs text-muted-foreground">
+              Dein Model spricht: <span className="font-semibold text-foreground">{modelLanguage === "en" ? "🇬🇧 Englisch" : "🇩🇪 Deutsch"}</span>
+            </p>
           </div>
 
           <div className="space-y-2">
