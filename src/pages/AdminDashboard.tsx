@@ -4868,7 +4868,7 @@ export default function AdminDashboard() {
                           {moveToFolderAcc === acc.id && (
                             <div className="absolute right-0 top-7 z-50 min-w-[140px] rounded-lg border border-border bg-card shadow-xl py-1" onClick={(e) => e.stopPropagation()}>
                               {acc.folder_name && (
-                                <button onClick={() => moveAccountToFolder(acc.id, null)}
+                                <button onClick={() => moveAccountToFolder(acc.id, null, null)}
                                   className="w-full px-3 py-1.5 text-left text-[10px] text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-colors">
                                   ← Aus Ordner entfernen
                                 </button>
