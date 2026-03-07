@@ -95,6 +95,7 @@ export default function Dashboard() {
   const [offer, setOffer] = useState("");
   const [assignedAccounts, setAssignedAccounts] = useState<{id: string;account_email: string;account_password: string;account_domain: string;platform: string;assigned_at: string | null;drive_folder_id?: string;model_language?: string;model_active?: boolean;}[]>([]);
   const [modelInactiveInfoOpen, setModelInactiveInfoOpen] = useState(false);
+  const [demoModelInactive, setDemoModelInactive] = useState(false);
   const [accountsOpen, setAccountsOpen] = useState(true);
   const [myRequests, setMyRequests] = useState<any[]>([]);
   const [requestsOpen, setRequestsOpen] = useState(false);
@@ -773,9 +774,22 @@ export default function Dashboard() {
             </div>
           }
 
+          {/* Demo Toggle für Model aktiv/inaktiv */}
+          <div className="border-t border-border/30 px-4 py-2 lg:px-6 flex items-center gap-2">
+            <span className="text-[10px] text-muted-foreground">🧪 Demo:</span>
+            <Button
+              variant={demoModelInactive ? "destructive" : "outline"}
+              size="sm"
+              className="h-6 text-[10px] px-2"
+              onClick={() => setDemoModelInactive(!demoModelInactive)}
+            >
+              {demoModelInactive ? "Model inaktiv" : "Model aktiv"}
+            </Button>
+          </div>
+
           {/* Anfrage an das Model – oder Inaktiv-Hinweis */}
           <div className="border-t border-border/30">
-            {assignedAccounts.some(acc => acc.model_active === false) ? (
+            {(demoModelInactive || assignedAccounts.some(acc => acc.model_active === false)) ? (
               <>
                 <div className="px-4 py-4 lg:px-6 lg:py-5">
                   <div className="flex items-center gap-3">
