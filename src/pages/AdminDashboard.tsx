@@ -2857,6 +2857,19 @@ export default function AdminDashboard() {
                                   if (error) { toast.error("Fehler beim Speichern"); return; }
                                   toast.success("Content-Link gespeichert!");
                                   setModelRequests(prev => prev.map(r => r.id === req.id ? { ...r, content_link: link || null, _localContentLink: undefined } : r));
+                                  try {
+                                    let tplTitle = "Update zu deiner Anfrage 📋";
+                                    let tplBody = "Es gibt Neuigkeiten zu deiner Content-Anfrage! Schau jetzt nach.";
+                                    const { data: tpl } = await supabase.from("notification_templates").select("title, body").eq("template_key", "request_update").maybeSingle();
+                                    if (tpl && tpl.title.trim() && tpl.body.trim()) { tplTitle = tpl.title; tplBody = tpl.body; }
+                                    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+                                    const session = await supabase.auth.getSession();
+                                    await fetch(`https://${projectId}.supabase.co/functions/v1/send-notification`, {
+                                      method: "POST",
+                                      headers: { "Content-Type": "application/json", apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY, Authorization: `Bearer ${session.data.session?.access_token}` },
+                                      body: JSON.stringify({ title: tplTitle, body: tplBody, target_user_id: req.user_id }),
+                                    });
+                                  } catch {}
                                 }}>
                                   <Save className="h-3 w-3 mr-1" /> Link speichern
                                 </Button>
@@ -2910,6 +2923,19 @@ export default function AdminDashboard() {
                                   if (error) { toast.error("Fehler beim Aktualisieren"); return; }
                                   toast.success("Anfrage abgelehnt");
                                   loadModelRequests();
+                                  try {
+                                    let tplTitle = "Update zu deiner Anfrage 📋";
+                                    let tplBody = "Es gibt Neuigkeiten zu deiner Content-Anfrage! Schau jetzt nach.";
+                                    const { data: tpl } = await supabase.from("notification_templates").select("title, body").eq("template_key", "request_update").maybeSingle();
+                                    if (tpl && tpl.title.trim() && tpl.body.trim()) { tplTitle = tpl.title; tplBody = tpl.body; }
+                                    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+                                    const session = await supabase.auth.getSession();
+                                    await fetch(`https://${projectId}.supabase.co/functions/v1/send-notification`, {
+                                      method: "POST",
+                                      headers: { "Content-Type": "application/json", apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY, Authorization: `Bearer ${session.data.session?.access_token}` },
+                                      body: JSON.stringify({ title: tplTitle, body: tplBody, target_user_id: req.user_id }),
+                                    });
+                                  } catch {}
                                 }}>
                                   <XCircle className="h-3 w-3 mr-1" /> Ablehnen
                                 </Button>
