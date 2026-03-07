@@ -274,7 +274,7 @@ const Auth = () => {
                 <button
                   type="button"
                   onClick={() => setShowGroupHelp((v) => !v)}
-                  className="mt-1.5 text-xs text-primary hover:text-primary/80 transition-colors underline underline-offset-2"
+                  className="mt-1.5 w-full text-center text-xs text-primary hover:text-primary/80 transition-colors underline underline-offset-2"
                 >
                   Wo finde ich meinen Gruppennamen?
                 </button>
