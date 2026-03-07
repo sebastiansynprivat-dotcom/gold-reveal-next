@@ -4459,6 +4459,17 @@ export default function AdminDashboard() {
                         <span className="text-muted-foreground">Vergeben: <span className="font-semibold">{mAssigned}</span></span>
                       </div>
 
+                      {/* Account search across folders */}
+                      <div className="relative">
+                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                        <Input
+                          value={manualAccountSearch}
+                          onChange={(e) => setManualAccountSearch(e.target.value)}
+                          placeholder="Account suchen…"
+                          className="pl-8 h-8 text-xs"
+                        />
+                      </div>
+
                       {/* Create folder */}
                       <div className="flex items-center gap-2">
                         <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider flex-1">Ordner</p>
