@@ -1213,8 +1213,17 @@ function DashboardBillingInfo({ onNavigate, groupName }: {onNavigate: () => void
             {/* Copyable text */}
             <div className="space-y-2">
               <p className="text-xs text-foreground font-medium">Nachricht zum Teilen:</p>
-              <div className="glass-card-subtle rounded-lg p-3">
-                <p className="text-[11px] text-muted-foreground leading-relaxed whitespace-pre-line">{referralText}</p>
+              <div className="glass-card-subtle rounded-lg p-3 space-y-2">
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Hey! Ich arbeite als Chatter und verdiene damit richtig gutes Geld. Wenn du Lust hast, bewirb dich hier!
+                </p>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Wichtig: Gib bei der Bewerbung meinen Gruppennamen „<span className="text-accent font-semibold">{groupName || "—"}</span>" an – das ist nötig, damit es zugeordnet werden kann!
+                </p>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Link zum Bewerben:{" "}
+                  <span className="text-accent font-semibold break-all">{REFERRAL_LINKEDIN_URL}</span>
+                </p>
               </div>
               <Button
                 onClick={copyReferralText}
