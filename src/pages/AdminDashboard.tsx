@@ -1273,6 +1273,18 @@ export default function AdminDashboard() {
             // silently ignore push errors
           }
         }
+
+        // Schedule follow-up push notification for 1 day later
+        try {
+          const sendAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+          await supabase.from("pending_notifications" as any).insert({
+            user_id: reassignTarget.user_id,
+            template_key: "account_followup",
+            send_at: sendAt,
+          });
+        } catch {
+          // silently ignore
+        }
       }
 
       toast.success(`Account für ${reassignTarget.group_name || "Chatter"} zugewiesen!`);
