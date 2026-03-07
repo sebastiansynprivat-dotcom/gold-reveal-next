@@ -409,6 +409,9 @@ export default function AdminDashboard() {
   const [dragOverFolder, setDragOverFolder] = useState<string | null>(null);
   const [openFolder, setOpenFolder] = useState<string | null>(null);
   const [customFolders, setCustomFolders] = useState<Record<string, string[]>>({});
+  const [customSubfolders, setCustomSubfolders] = useState<Record<string, string[]>>({});
+  const [newSubfolderName, setNewSubfolderName] = useState("");
+  const [creatingSubfolder, setCreatingSubfolder] = useState(false);
   const [folderColors, setFolderColors] = useState<Record<string, string>>({});
   const [colorPickerFolder, setColorPickerFolder] = useState<string | null>(null);
   const [moveToFolderAcc, setMoveToFolderAcc] = useState<string | null>(null);
