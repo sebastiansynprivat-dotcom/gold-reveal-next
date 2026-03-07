@@ -3724,6 +3724,19 @@ export default function AdminDashboard() {
                 placeholder="Google Drive Folder ID (optional)"
                 className="text-xs"
               />
+              <div className="space-y-1">
+                <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Model spricht</label>
+                <div className="flex gap-2">
+                  <button onClick={() => setNewAccLanguage("de")}
+                    className={`flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-colors ${newAccLanguage === "de" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50 hover:border-accent/30"}`}>
+                    🇩🇪 Deutsch
+                  </button>
+                  <button onClick={() => setNewAccLanguage("en")}
+                    className={`flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-colors ${newAccLanguage === "en" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50 hover:border-accent/30"}`}>
+                    🇬🇧 Englisch
+                  </button>
+                </div>
+              </div>
               <Button
                 onClick={addAccount}
                 disabled={addingAccount || !newAccEmail.trim() || !newAccDomain.trim()}
