@@ -259,10 +259,10 @@
   }
 
   @keyframes bonus-glow-move {
-    0% { transform: translate(-30%, -30%); }
-    25% { transform: translate(80%, -10%); }
-    50% { transform: translate(60%, 80%); }
-    75% { transform: translate(-20%, 60%); }
-    100% { transform: translate(-30%, -30%); }
+    0% { top: -15%; left: -15%; }
+    25% { top: -15%; left: 75%; }
+    50% { top: 70%; left: 75%; }
+    75% { top: 70%; left: -15%; }
+    100% { top: -15%; left: -15%; }
   }
 }
