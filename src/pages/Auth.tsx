@@ -35,19 +35,18 @@ const Auth = () => {
   const animFrameRef = useRef<number>(0);
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    for (let i = 0; i < 2; i++) {
-      particlesRef.current.push({
-        x: e.clientX + (Math.random() - 0.5) * 10,
-        y: e.clientY + (Math.random() - 0.5) * 10,
-        size: 2 + Math.random() * 4,
-        opacity: 0.6 + Math.random() * 0.4,
-        vx: (Math.random() - 0.5) * 1.5,
-        vy: (Math.random() - 0.5) * 1.5 - 0.5,
-        life: 1,
-      });
-    }
-    if (particlesRef.current.length > 80) {
-      particlesRef.current = particlesRef.current.slice(-80);
+    if (Math.random() > 0.5) return; // spawn less often
+    particlesRef.current.push({
+      x: e.clientX + (Math.random() - 0.5) * 8,
+      y: e.clientY + (Math.random() - 0.5) * 8,
+      size: 1.5 + Math.random() * 2.5,
+      opacity: 0.3 + Math.random() * 0.3,
+      vx: (Math.random() - 0.5) * 0.8,
+      vy: (Math.random() - 0.5) * 0.8 - 0.3,
+      life: 1,
+    });
+    if (particlesRef.current.length > 40) {
+      particlesRef.current = particlesRef.current.slice(-40);
     }
   }, []);
 
