@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Save, CheckCircle2, Award, Zap, HelpCircle, FileText, Clock, Users, Pencil, ChevronDown, Copy, Smartphone, Mic, MessageSquare, ExternalLink } from "lucide-react";
+import { Save, CheckCircle2, Award, Zap, HelpCircle, FileText, Clock, Users, Pencil, ChevronDown, Copy, Smartphone, Mic, MessageSquare, ExternalLink, Gift } from "lucide-react";
 import { motion } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -1070,19 +1070,32 @@ export default function Dashboard() {
         </section>
 
         {/* Billing countdown + Invoice button */}
-        <DashboardBillingInfo onNavigate={() => navigate("/rechnung")} />
+        <DashboardBillingInfo onNavigate={() => navigate("/rechnung")} groupName={groupName} />
       </main>
 
       <DashboardChat externalOpen={chatOpen} onExternalOpenChange={setChatOpen} />
     </div>);}
 
-function DashboardBillingInfo({ onNavigate }: {onNavigate: () => void;}) {
+const REFERRAL_LINKEDIN_URL = "LINKEDIN_URL";
+
+function DashboardBillingInfo({ onNavigate, groupName }: {onNavigate: () => void; groupName: string;}) {
   const now = new Date();
   const deadline = endOfMonth(addMonths(now, 1));
   const daysLeft = differenceInDays(deadline, now);
   const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
   const totalDays = differenceInDays(deadline, startDate);
   const progressPct = Math.round((totalDays - daysLeft) / totalDays * 100);
+
+  const referralText = `Hey! Ich arbeite als Chatter und verdiene damit richtig gutes Geld. Wenn du Lust hast, bewirb dich hier: ${REFERRAL_LINKEDIN_URL}\n\nWichtig: Gib bei der Bewerbung meinen Gruppennamen „${groupName}" an – das ist nötig, damit es zugeordnet werden kann!`;
+
+  const copyReferralText = async () => {
+    try {
+      await navigator.clipboard.writeText(referralText);
+      toast.success("Text kopiert!");
+    } catch {
+      toast.error("Kopieren fehlgeschlagen");
+    }
+  };
 
   return (
     <div className="space-y-3">
@@ -1114,13 +1127,104 @@ function DashboardBillingInfo({ onNavigate }: {onNavigate: () => void;}) {
           </div>
         </div>
       </div>
+
       <Button
         onClick={onNavigate}
         className="w-full h-11 bg-gradient-to-r from-accent to-accent/80 text-accent-foreground hover:brightness-110 transition-all">
-        
         <FileText className="mr-2 h-4 w-4" />
         Rechnung erstellen
       </Button>
-    </div>);
 
+      {/* Referral Card */}
+      <Dialog>
+        <DialogTrigger asChild>
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="glass-card-subtle rounded-xl p-4 cursor-pointer group hover:gold-border-glow transition-all"
+          >
+            <div className="flex items-center gap-3">
+              <div className="h-9 w-9 rounded-lg bg-accent/10 flex items-center justify-center shrink-0 group-hover:bg-accent/20 transition-colors">
+                <Gift className="h-4 w-4 text-accent" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-foreground">Empfehle deine Freunde</p>
+                <p className="text-[10px] text-muted-foreground">Verdiene 1% von dem, was sie verdienen – <span className="text-accent font-semibold">Lifetime</span></p>
+              </div>
+              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+            </div>
+          </motion.div>
+        </DialogTrigger>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <Gift className="h-4 w-4 text-accent" />
+              Empfehlungsprogramm
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              Verdiene passiv mit – für jeden Freund, den du bringst.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            {/* Explanation */}
+            <div className="glass-card-subtle rounded-lg p-3 space-y-2">
+              <p className="text-xs text-foreground font-medium">So funktioniert's:</p>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Für jeden Freund, den du zu uns bringst, erhältst du <span className="text-accent font-semibold">1% von dessen Verdienst – lebenslang</span>. 
+                Je mehr Freunde du empfiehlst, desto mehr verdienst du passiv dazu.
+              </p>
+            </div>
+
+            {/* Important note */}
+            <div className="glass-card-subtle rounded-lg p-3 space-y-2 border border-accent/20">
+              <p className="text-xs text-foreground font-medium flex items-center gap-1.5">
+                <HelpCircle className="h-3.5 w-3.5 text-accent" />
+                Wichtig
+              </p>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Dein Freund muss im Bewerbungsprozess deinen <span className="text-foreground font-semibold">Gruppennamen</span> angeben, damit wir die Empfehlung zuordnen können.
+              </p>
+              {groupName && (
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-[10px] text-muted-foreground">Dein Gruppenname:</span>
+                  <Badge variant="outline" className="text-[11px] border-accent/30 text-accent font-semibold">
+                    {groupName}
+                  </Badge>
+                </div>
+              )}
+            </div>
+
+            {/* LinkedIn Link */}
+            <a
+              href={REFERRAL_LINKEDIN_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClickCapture={(e) => e.stopPropagation()}
+              onPointerDownCapture={(e) => e.stopPropagation()}
+              className="flex items-center justify-center gap-2 w-full h-10 rounded-lg bg-accent/10 hover:bg-accent/20 text-accent text-xs font-semibold transition-colors"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              Zur Bewerbung (LinkedIn)
+            </a>
+
+            {/* Copyable text */}
+            <div className="space-y-2">
+              <p className="text-xs text-foreground font-medium">Nachricht zum Teilen:</p>
+              <div className="glass-card-subtle rounded-lg p-3">
+                <p className="text-[11px] text-muted-foreground leading-relaxed whitespace-pre-line">{referralText}</p>
+              </div>
+              <Button
+                onClick={copyReferralText}
+                variant="outline"
+                className="w-full h-9 text-xs border-accent/30 hover:bg-accent/10 hover:text-accent"
+              >
+                <Copy className="mr-2 h-3.5 w-3.5" />
+                Nachricht kopieren
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>);
 }
