@@ -1,41 +1,20 @@
 
-# Fortschrittsanzeige und Schritt-Nummerierung fur OfferB
 
-## Was wird gemacht
+## Plan: Account-Suche auf Ordner-Ebene (Freie Accounts)
 
-### 1. Alle Schritte als einheitliche Liste definieren
-Die Videos und Links werden zu einer gemeinsamen Schritt-Liste zusammengefasst:
-- Schritt 1: Plattform Erklärungs Video
-- Schritt 2: Telegram Nachrichten Video
-- Schritt 3: Brezzels Notifications aktivieren
-- Schritt 4: My ID Bot einrichten
-- Schritt 5: Tägliches Feedback
+### Was
+Eine Suchleiste auf der Ordner-Übersichtsseite im "Freie Accounts"-Dialog hinzufügen. Wenn der User einen Suchbegriff eingibt, werden die Ordner gefiltert -- es werden nur Ordner angezeigt, die mindestens einen passenden Account enthalten. Die Ordner-Badges aktualisieren sich entsprechend (zeigen nur Treffer-Anzahl).
 
-### 2. Fortschritts-Bar oben auf der Seite
-Direkt unter dem Hero-Bereich wird eine Progress-Bar eingefügt, die den Gesamtfortschritt anzeigt (z.B. "2 von 5 Schritten erledigt"). Nutzt die vorhandene `Progress`-Komponente im Gold-Styling.
+### Wo
+`src/pages/AdminDashboard.tsx` -- im Block `{!openFolder ? (` (Zeile ~4453), vor den Stats/Ordnern.
 
-### 3. Klickbare Checkliste
-Unter der Progress-Bar eine kompakte Checkliste mit allen 5 Schritten. Jeder Schritt hat:
-- Eine Checkbox zum Abhaken
-- Schritt-Nummer ("Schritt 1", "Schritt 2" etc.)
-- Kurzer Titel
+### Technische Umsetzung
 
-Der Fortschritt wird im `localStorage` gespeichert, damit er beim Neuladen erhalten bleibt.
+1. **Suchfeld einfügen** zwischen den Stats (Zeile ~4456) und dem "Ordner"-Label (Zeile ~4462). Gleicher Style wie die bestehende Account-Suche (Search-Icon + Input).
 
-### 4. Schritt-Nummern bei den Sektionen
-Jede Video-/Link-/Feedback-Sektion bekommt eine prominente Schritt-Nummer als Badge (z.B. goldener Kreis mit "1" darin) neben dem Titel.
+2. **Filter-Logik**: Wenn `manualAccountSearch` nicht leer ist, die `namedFolders`-Liste und die Unsortiert-Karte filtern -- nur Ordner anzeigen, deren Accounts (email/password/domain) den Suchbegriff matchen. Die Badge-Zahlen auf der Ordner-Karte zeigen dann nur die Treffer.
 
-## Technische Details
+3. **State wiederverwenden**: Der bestehende `manualAccountSearch`-State wird für beide Ebenen genutzt (Ordner-Übersicht und Ordner-Innenansicht). Er wird beim Dialog-Schließen bereits zurückgesetzt.
 
-**Datei: `src/pages/OfferB.tsx`**
+4. **Ordner-Klick bei Suche**: Wenn ein User bei aktiver Suche einen Ordner öffnet, bleibt der Suchbegriff erhalten, sodass die Account-Liste im Ordner direkt gefiltert ist.
 
-- Neue `steps`-Array-Konstante mit id, title, type fur alle 5 Schritte
-- `useState` + `localStorage` fur `completedSteps: Set<number>`
-- Progress-Bar-Sektion nach dem Hero mit `Progress`-Komponente (Wert = `completedSteps.size / steps.length * 100`)
-- Checkliste mit `Checkbox`-Komponenten, gestylt im bestehenden `glass-card-subtle` Look
-- Videos bekommen "Schritt 1" / "Schritt 2" als nummerierte Badge-Kreise
-- Links-Sektion wird zu Schritt 3 und 4 mit individuellen Nummern
-- Feedback wird Schritt 5
-- Erledigte Schritte bekommen eine subtile visuelle Markierung (leicht reduzierte Opazitat / Hakchen)
-
-Keine neuen Abhangigkeiten notwendig -- nutzt vorhandene `Progress`, `Checkbox` und `framer-motion`.
