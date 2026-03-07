@@ -241,7 +241,10 @@ export default function AdminDashboard() {
   const [goalAmount, setGoalAmount] = useState("");
   const [goalSaving, setGoalSaving] = useState(false);
   const [expandedChatter, setExpandedChatter] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"einnahmen" | "chatter" | "anfragen" | "botdms" | "notifications" | "kiprompt" | "placeholder" | "gdrive">("einnahmen");
+  const [activeTab, setActiveTab] = useState<"einnahmen" | "chatter" | "anfragen" | "botdms" | "notifications" | "kiprompt" | "chatter_overview" | "gdrive">("einnahmen");
+  const [assignments, setAssignments] = useState<any[]>([]);
+  const [assignmentsLoaded, setAssignmentsLoaded] = useState(false);
+  const [assignmentsLoading, setAssignmentsLoading] = useState(false);
   const activeTabRef = useRef(activeTab);
   const [modelRequests, setModelRequests] = useState<any[]>([]);
   const [modelRequestsLoaded, setModelRequestsLoaded] = useState(false);
@@ -1510,7 +1513,7 @@ export default function AdminDashboard() {
     { key: "botdms" as const, label: "Bot DMs", icon: Bot, onClick: () => { setActiveTab("botdms"); if (!botMessagesLoaded) loadBotMessages(); } },
     { key: "notifications" as const, label: "Benachrichtigungen", icon: Bell, onClick: () => { setActiveTab("notifications"); if (!notifHistoryLoaded) loadNotifHistory(); if (!schedulesLoaded) loadSchedules(); if (!notifTemplatesLoaded) loadNotifTemplates(); } },
     { key: "kiprompt" as const, label: "KI Prompt", icon: Brain, onClick: () => { setActiveTab("kiprompt"); if (!kiPromptLoaded) loadKiPrompt(); } },
-    { key: "placeholder" as const, label: "Platzhalter", icon: Package, onClick: () => setActiveTab("placeholder") },
+    { key: "chatter_overview" as const, label: "Chatter-Übersicht", icon: Users, onClick: () => { setActiveTab("chatter_overview"); if (!assignmentsLoaded) loadAssignments(); } },
     { key: "gdrive" as const, label: "Google Drive", icon: ExternalLink, onClick: () => setActiveTab("gdrive") },
   ];
 
@@ -3775,19 +3778,117 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {activeTab === "placeholder" && (
+        {activeTab === "chatter_overview" && (
           <div className="space-y-4">
-            <section className="glass-card rounded-xl overflow-hidden">
-              <div className="px-4 py-3 border-b border-border flex items-center gap-2">
-                <Package className="h-4 w-4 text-accent" />
-                <h2 className="text-sm font-semibold text-foreground">Platzhalter</h2>
+            {assignmentsLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-6 w-6 animate-spin text-accent" />
               </div>
-              <div className="p-4">
-                <p className="text-sm text-muted-foreground">
-                  Dieser Tab ist noch leer und wartet auf neue Funktionen...
-                </p>
-              </div>
-            </section>
+            ) : (() => {
+              // Group assignments by account
+              const grouped: Record<string, { account_email: string; account_domain: string; platform: string; entries: any[] }> = {};
+              for (const a of assignments) {
+                const key = a.account_id;
+                if (!grouped[key]) {
+                  grouped[key] = {
+                    account_email: a.accounts?.account_email || "–",
+                    account_domain: a.accounts?.account_domain || "",
+                    platform: a.accounts?.platform || "",
+                    entries: [],
+                  };
+                }
+                // Find chatter name from chatters list
+                const chatter = chatters.find(c => c.user_id === a.user_id);
+                const name = chatter?.group_name || chatter?.telegram_id || a.user_id?.slice(0, 8);
+                const assignedAt = a.assigned_at ? new Date(a.assigned_at) : null;
+                const unassignedAt = a.unassigned_at ? new Date(a.unassigned_at) : null;
+                const isActive = !a.unassigned_at;
+                let duration = "";
+                if (assignedAt) {
+                  const end = unassignedAt || new Date();
+                  const diffMs = end.getTime() - assignedAt.getTime();
+                  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                  const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                  duration = days > 0 ? `${days}d ${hours}h` : `${hours}h`;
+                }
+                grouped[key].entries.push({ ...a, name, assignedAt, unassignedAt, isActive, duration });
+              }
+              // Sort entries: active first, then by date desc
+              Object.values(grouped).forEach(g => {
+                g.entries.sort((a: any, b: any) => {
+                  if (a.isActive && !b.isActive) return -1;
+                  if (!a.isActive && b.isActive) return 1;
+                  return (b.assignedAt?.getTime() || 0) - (a.assignedAt?.getTime() || 0);
+                });
+              });
+              const accountKeys = Object.keys(grouped).sort((a, b) => {
+                const aActive = grouped[a].entries.some((e: any) => e.isActive);
+                const bActive = grouped[b].entries.some((e: any) => e.isActive);
+                if (aActive && !bActive) return -1;
+                if (!aActive && bActive) return 1;
+                return grouped[a].account_email.localeCompare(grouped[b].account_email);
+              });
+
+              if (accountKeys.length === 0) {
+                return (
+                  <section className="glass-card rounded-xl overflow-hidden">
+                    <div className="px-4 py-3 border-b border-border flex items-center gap-2">
+                      <Users className="h-4 w-4 text-accent" />
+                      <h2 className="text-sm font-semibold text-foreground">Chatter-Übersicht</h2>
+                    </div>
+                    <div className="p-4 text-sm text-muted-foreground">
+                      Noch keine Zuweisungen protokolliert. Zuweisungen werden ab jetzt automatisch erfasst.
+                    </div>
+                  </section>
+                );
+              }
+
+              return accountKeys.map(accId => {
+                const g = grouped[accId];
+                const activeCount = g.entries.filter((e: any) => e.isActive).length;
+                return (
+                  <section key={accId} className="glass-card rounded-xl overflow-hidden">
+                    <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Users className="h-4 w-4 text-accent" />
+                        <h2 className="text-sm font-semibold text-foreground">{g.account_email}</h2>
+                        {g.account_domain && (
+                          <span className="text-xs text-muted-foreground">({g.account_domain})</span>
+                        )}
+                        {g.platform && (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">{g.platform}</Badge>
+                        )}
+                      </div>
+                      {activeCount > 0 && (
+                        <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">
+                          {activeCount} aktiv
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="divide-y divide-border/50">
+                      {g.entries.map((entry: any) => (
+                        <div key={entry.id} className="px-4 py-2.5 flex items-center justify-between text-sm">
+                          <div className="flex items-center gap-3">
+                            <div className={cn("w-2 h-2 rounded-full", entry.isActive ? "bg-emerald-400 animate-pulse" : "bg-muted-foreground/30")} />
+                            <span className="font-medium text-foreground">{entry.name}</span>
+                          </div>
+                          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                            <span>{entry.assignedAt ? format(entry.assignedAt, "dd.MM.yyyy HH:mm") : "–"}</span>
+                            <span>→</span>
+                            {entry.isActive ? (
+                              <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">Aktiv</Badge>
+                            ) : (
+                              <span>{entry.unassignedAt ? format(entry.unassignedAt, "dd.MM.yyyy HH:mm") : "–"}</span>
+                            )}
+                            <span className="text-accent font-medium ml-1">{entry.duration}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                );
+              });
+            })()}
           </div>
         )}
 
