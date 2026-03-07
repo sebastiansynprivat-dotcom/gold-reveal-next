@@ -17,7 +17,7 @@ const translateError = (msg: string): string => {
 };
 
 const inputClass =
-  "w-full px-4 py-3 rounded-xl bg-card border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:shadow-[0_0_0_3px_hsl(43_56%_52%_/_0.12),0_0_8px_hsl(43_56%_52%_/_0.08)] hover:border-primary/25 transition-all duration-300";
+  "w-full px-4 py-3 rounded-xl bg-card border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-transparent hover:border-primary/25 transition-all duration-300";
 
 const Auth = () => {
   const { user, loading, signUp, signIn } = useAuth();
