@@ -198,6 +198,8 @@ export default function AdminDashboard() {
   const [reassignTarget, setReassignTarget] = useState<ChatterProfile | null>(null);
   const [reassigning, setReassigning] = useState(false);
   const [reassignOpenFolder, setReassignOpenFolder] = useState<string | null>(null);
+  const [poolSectionOpen, setPoolSectionOpen] = useState(false);
+  const [manualSectionOpen, setManualSectionOpen] = useState(false);
   const [deletingPool, setDeletingPool] = useState(false);
   const [deletePoolConfirm, setDeletePoolConfirm] = useState(false);
   const [offers, setOffers] = useState<{ name: string; target_path: string }[]>([]);
