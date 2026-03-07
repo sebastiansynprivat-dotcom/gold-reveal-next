@@ -17,7 +17,7 @@ const translateError = (msg: string): string => {
 };
 
 const inputClass =
-  "w-full px-4 py-3 rounded-xl bg-card border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 hover:border-primary/30 transition-all duration-200";
+  "w-full px-4 py-3 rounded-xl bg-card border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/60 focus:shadow-[0_0_0_3px_hsl(43_56%_52%_/_0.12),0_0_8px_hsl(43_56%_52%_/_0.08)] hover:border-primary/25 transition-all duration-300";
 
 const Auth = () => {
   const { user, loading, signUp, signIn } = useAuth();
@@ -182,7 +182,7 @@ const Auth = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, delay: 0.08 }}
         >
-          <h1 className="gold-gradient-text text-2xl font-bold text-center tracking-tight leading-tight mb-2">
+          <h1 className="text-gold-gradient-shimmer text-2xl font-bold text-center tracking-tight leading-tight mb-2">
             {isSignUp ? "Erstelle ein kostenloses Konto bei SheX" : "Willkommen zurück"}
           </h1>
           <p className="text-muted-foreground text-sm text-center mb-7">
