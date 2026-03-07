@@ -268,6 +268,8 @@ export default function AdminDashboard() {
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("30");
   const [newPlatformOpen, setNewPlatformOpen] = useState(false);
   const [newPlatformName, setNewPlatformName] = useState("");
+  const [poolFilter, setPoolFilter] = useState<"alle" | "frei" | "vergeben">("alle");
+  const [manualFilter, setManualFilter] = useState<"alle" | "frei" | "vergeben">("alle");
   const [customFrom, setCustomFrom] = useState<Date | undefined>(undefined);
   const [customTo, setCustomTo] = useState<Date | undefined>(undefined);
   const [loginStats, setLoginStats] = useState<Record<string, LoginStats>>({});
