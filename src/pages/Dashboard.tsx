@@ -1195,18 +1195,20 @@ function DashboardBillingInfo({ onNavigate, groupName }: {onNavigate: () => void
               )}
             </div>
 
-            {/* LinkedIn Link */}
-            <a
-              href={REFERRAL_LINKEDIN_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClickCapture={(e) => e.stopPropagation()}
-              onPointerDownCapture={(e) => e.stopPropagation()}
-              className="flex items-center justify-center gap-2 w-full h-10 rounded-lg bg-accent/10 hover:bg-accent/20 text-accent text-xs font-semibold transition-colors"
+            {/* LinkedIn Link – copy */}
+            <Button
+              variant="outline"
+              onClick={async () => {
+                try {
+                  await navigator.clipboard.writeText(REFERRAL_LINKEDIN_URL);
+                  toast.success("Bewerbungslink kopiert!");
+                } catch { toast.error("Kopieren fehlgeschlagen"); }
+              }}
+              className="w-full h-10 text-xs border-accent/30 hover:bg-accent/10 hover:text-accent"
             >
-              <ExternalLink className="h-3.5 w-3.5" />
-              Zur Bewerbung (LinkedIn)
-            </a>
+              <Copy className="mr-2 h-3.5 w-3.5" />
+              Bewerbungslink kopieren
+            </Button>
 
             {/* Copyable text */}
             <div className="space-y-2">
