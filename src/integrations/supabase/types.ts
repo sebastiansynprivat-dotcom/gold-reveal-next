@@ -285,6 +285,50 @@ export type Database = {
         }
         Relationships: []
       }
+      model_dashboard: {
+        Row: {
+          account_id: string
+          contract_file_path: string | null
+          created_at: string
+          crypto_address: string | null
+          fourbased_submitted: boolean
+          id: string
+          notes: string | null
+          revenue_percentage: number | null
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          contract_file_path?: string | null
+          created_at?: string
+          crypto_address?: string | null
+          fourbased_submitted?: boolean
+          id?: string
+          notes?: string | null
+          revenue_percentage?: number | null
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          contract_file_path?: string | null
+          created_at?: string
+          crypto_address?: string | null
+          fourbased_submitted?: boolean
+          id?: string
+          notes?: string | null
+          revenue_percentage?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "model_dashboard_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: true
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       model_requests: {
         Row: {
           admin_comment: string | null
