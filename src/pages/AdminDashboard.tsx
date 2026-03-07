@@ -197,6 +197,7 @@ export default function AdminDashboard() {
   const [deleting, setDeleting] = useState(false);
   const [reassignTarget, setReassignTarget] = useState<ChatterProfile | null>(null);
   const [reassigning, setReassigning] = useState(false);
+  const [reassignOpenFolder, setReassignOpenFolder] = useState<string | null>(null);
   const [deletingPool, setDeletingPool] = useState(false);
   const [deletePoolConfirm, setDeletePoolConfirm] = useState(false);
   const [offers, setOffers] = useState<{ name: string; target_path: string }[]>([]);
@@ -3887,7 +3888,7 @@ export default function AdminDashboard() {
       </AlertDialog>
 
       {/* Reassign Account Dialog */}
-      <Dialog open={!!reassignTarget} onOpenChange={(o) => { if (!o) setReassignTarget(null); }}>
+      <Dialog open={!!reassignTarget} onOpenChange={(o) => { if (!o) { setReassignTarget(null); setReassignOpenFolder(null); } }}>
         <DialogContent className="glass-card border-border sm:max-w-md max-h-[85vh] overflow-hidden flex flex-col">
           <DialogHeader className="pb-0">
             <div className="flex items-center gap-3 mb-1">
@@ -4033,15 +4034,106 @@ export default function AdminDashboard() {
                   {/* Freie Accounts */}
                   {manualPlatforms.length > 0 && (
                     <CollapsibleSection dotColor="bg-amber-400" title="Freie Accounts" count={manualAccounts.length}>
-                      {manualPlatforms.map((p) => (
-                        <div key={p} className="space-y-1.5 pl-6">
-                          <div className="flex items-center gap-1.5 px-1">
-                            <Badge className="text-[9px] px-1.5 py-0 bg-amber-400/10 text-amber-400/80 border-amber-400/15">{p}</Badge>
-                            <span className="text-[9px] text-muted-foreground">{manualAccounts.filter(a => a.platform === p).length} verfügbar</span>
+                      {manualPlatforms.map((p) => {
+                        const platAccs = manualAccounts.filter(a => a.platform === p);
+                        const platFolders = [...new Set(platAccs.map(a => a.folder_name).filter(Boolean))] as string[];
+                        const platCustom = customFolders[p] || [];
+                        const allFolders = [...new Set([...platFolders, ...platCustom])];
+                        const ungroupedAccs = platAccs.filter(a => !a.folder_name);
+
+                        const getFolderColor = (folder: string) => folderColors[`${p}::${folder}`] || "hsl(var(--accent))";
+
+                        return (
+                          <div key={p} className="space-y-1.5 pl-6">
+                            <div className="flex items-center gap-1.5 px-1">
+                              <Badge className="text-[9px] px-1.5 py-0 bg-amber-400/10 text-amber-400/80 border-amber-400/15">{p}</Badge>
+                              <span className="text-[9px] text-muted-foreground">{platAccs.length} verfügbar</span>
+                            </div>
+
+                            {/* Folder-first navigation */}
+                            {allFolders.length > 0 ? (
+                              <>
+                                {reassignOpenFolder && reassignOpenFolder.startsWith(`${p}::`) ? (
+                                  /* Inside a folder */
+                                  (() => {
+                                    const folderName = reassignOpenFolder.replace(`${p}::`, "");
+                                    const isUngrouped = folderName === "__ungrouped__";
+                                    const folderAccs = isUngrouped ? ungroupedAccs : platAccs.filter(a => a.folder_name === folderName);
+                                    const folderColor = isUngrouped ? "hsl(var(--muted-foreground))" : getFolderColor(folderName);
+                                    return (
+                                      <div className="space-y-1.5">
+                                        <button onClick={() => setReassignOpenFolder(null)} className="flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-foreground transition-colors">
+                                          <ChevronRight className="h-3 w-3 rotate-180" /> Zurück
+                                        </button>
+                                        <div className="flex items-center gap-2 px-1 mb-1">
+                                          {isUngrouped ? (
+                                            <Package className="h-3 w-3 text-muted-foreground" />
+                                          ) : (
+                                            <div className="h-3 w-3 rounded-sm" style={{ backgroundColor: folderColor }} />
+                                          )}
+                                          <span className="text-[10px] font-semibold text-foreground">{isUngrouped ? "Unsortiert" : folderName}</span>
+                                          <Badge variant="secondary" className="text-[9px]">{folderAccs.length}</Badge>
+                                        </div>
+                                        {folderAccs.length === 0 ? (
+                                          <p className="text-[10px] text-muted-foreground text-center py-3 italic">Keine freien Accounts</p>
+                                        ) : (
+                                          <div className="divide-y divide-border/50 rounded-lg overflow-hidden border border-border/50">
+                                            {folderAccs.map((acc) => (
+                                              <button key={acc.id} onClick={() => reassignAccount(acc.id)} disabled={reassigning}
+                                                className="w-full p-2.5 text-left hover:bg-accent/5 transition-all disabled:opacity-50 group/item">
+                                                <div className="flex items-center justify-between gap-2">
+                                                  <div className="min-w-0 flex-1">
+                                                    <p className="text-xs font-medium text-foreground truncate group-hover/item:text-accent transition-colors">{acc.account_email}</p>
+                                                    {acc.account_domain && <p className="text-[10px] text-muted-foreground truncate">{acc.account_domain}</p>}
+                                                  </div>
+                                                  <Plus className="h-3.5 w-3.5 text-muted-foreground group-hover/item:text-accent shrink-0 transition-colors" />
+                                                </div>
+                                              </button>
+                                            ))}
+                                          </div>
+                                        )}
+                                      </div>
+                                    );
+                                  })()
+                                ) : (
+                                  /* Folder overview */
+                                  <div className="grid grid-cols-2 gap-1.5">
+                                    {allFolders.sort().map((folder) => {
+                                      const folderAccs = platAccs.filter(a => a.folder_name === folder);
+                                      const color = getFolderColor(folder);
+                                      return (
+                                        <button key={folder} onClick={() => setReassignOpenFolder(`${p}::${folder}`)}
+                                          className="rounded-lg p-2 text-left transition-all border border-border/40 hover:border-accent/30 hover:scale-[1.02] bg-secondary/10">
+                                          <div className="flex items-center gap-1.5 mb-1">
+                                            <div className="h-2.5 w-2.5 rounded-sm shrink-0" style={{ backgroundColor: color }} />
+                                            <span className="text-[10px] font-semibold text-foreground truncate flex-1">{folder}</span>
+                                            <ChevronRight className="h-2.5 w-2.5 text-muted-foreground shrink-0" />
+                                          </div>
+                                          <Badge variant="secondary" className="text-[8px]">{folderAccs.length} frei</Badge>
+                                        </button>
+                                      );
+                                    })}
+                                    {ungroupedAccs.length > 0 && (
+                                      <button onClick={() => setReassignOpenFolder(`${p}::__ungrouped__`)}
+                                        className="rounded-lg p-2 text-left transition-all border border-dashed border-border/40 hover:border-accent/30 hover:scale-[1.02]">
+                                        <div className="flex items-center gap-1.5 mb-1">
+                                          <Package className="h-2.5 w-2.5 text-muted-foreground shrink-0" />
+                                          <span className="text-[10px] font-semibold text-foreground truncate flex-1">Unsortiert</span>
+                                          <ChevronRight className="h-2.5 w-2.5 text-muted-foreground shrink-0" />
+                                        </div>
+                                        <Badge variant="secondary" className="text-[8px]">{ungroupedAccs.length} frei</Badge>
+                                      </button>
+                                    )}
+                                  </div>
+                                )}
+                              </>
+                            ) : (
+                              /* No folders – show accounts directly */
+                              renderAccountList(manualAccounts, p)
+                            )}
                           </div>
-                          {renderAccountList(manualAccounts, p)}
-                        </div>
-                      ))}
+                        );
+                      })}
                     </CollapsibleSection>
                   )}
                 </div>
