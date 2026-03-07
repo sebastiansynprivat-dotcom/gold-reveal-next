@@ -4785,7 +4785,7 @@ export default function AdminDashboard() {
                 const accId = e.dataTransfer.getData("text/account-id") || dragItemRef.current;
                 if (!accId) return;
                 dragItemRef.current = null;
-                await supabase.from("accounts").update({ folder_name: targetFolder } as any).eq("id", accId);
+                await supabase.from("accounts").update({ folder_name: targetFolder, subfolder_name: null } as any).eq("id", accId);
                 toast.success(targetFolder ? `In „${targetFolder}" verschoben` : "Aus Ordner entfernt");
                 loadAccounts();
               };
