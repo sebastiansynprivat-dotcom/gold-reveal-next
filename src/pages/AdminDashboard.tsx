@@ -4401,6 +4401,17 @@ export default function AdminDashboard() {
                           </a>
                         )}
                       </div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-[9px] text-muted-foreground">Model aktiv</span>
+                        <Switch
+                          checked={acc.model_active !== false}
+                          onCheckedChange={async (checked) => {
+                            await supabase.from("accounts").update({ model_active: checked } as any).eq("id", acc.id);
+                            loadAccounts();
+                            toast.success(checked ? "Model aktiviert" : "Model deaktiviert");
+                          }}
+                        />
+                      </div>
                     </div>
                     <div className="flex flex-col gap-1.5 shrink-0">
                       {/* Move to folder button */}
