@@ -349,6 +349,33 @@ export type Database = {
         }
         Relationships: []
       }
+      pending_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          send_at: string
+          sent: boolean
+          template_key: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          send_at: string
+          sent?: boolean
+          template_key: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          send_at?: string
+          sent?: boolean
+          template_key?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           account_domain: string | null

@@ -92,8 +92,52 @@ serve(async (req) => {
       }
     }
 
+    // Process pending (delayed) notifications
+    let pendingProcessed = 0;
+    const { data: pendingItems } = await adminClient
+      .from("pending_notifications")
+      .select("*")
+      .eq("sent", false)
+      .lte("send_at", now.toISOString());
+
+    for (const item of pendingItems || []) {
+      // Fetch template
+      const { data: tpl } = await adminClient
+        .from("notification_templates")
+        .select("title, body")
+        .eq("template_key", item.template_key)
+        .maybeSingle();
+
+      if (!tpl || (!tpl.title.trim() && !tpl.body.trim())) {
+        // Template empty or not found – mark as sent to avoid retrying
+        await adminClient.from("pending_notifications").update({ sent: true }).eq("id", item.id);
+        continue;
+      }
+
+      const sendRes = await fetch(
+        `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-notification`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+          },
+          body: JSON.stringify({
+            title: tpl.title,
+            body: tpl.body,
+            target_user_id: item.user_id,
+          }),
+        }
+      );
+
+      if (sendRes.ok) {
+        await adminClient.from("pending_notifications").update({ sent: true }).eq("id", item.id);
+        pendingProcessed++;
+      }
+    }
+
     return new Response(
-      JSON.stringify({ processed, total: schedules.length }),
+      JSON.stringify({ processed, pendingProcessed, total: schedules.length }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: any) {

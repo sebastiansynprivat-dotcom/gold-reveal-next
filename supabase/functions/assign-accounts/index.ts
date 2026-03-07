@@ -193,6 +193,18 @@ Deno.serve(async (req) => {
         console.error("Push notification failed for user:", profile.user_id, notifErr);
       }
 
+      // Schedule follow-up notification for 1 day later
+      try {
+        const sendAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+        await supabase.from("pending_notifications").insert({
+          user_id: profile.user_id,
+          template_key: "account_followup",
+          send_at: sendAt,
+        });
+      } catch (pendingErr) {
+        console.error("Failed to schedule follow-up:", pendingErr);
+      }
+
       assigned++;
     }
 
