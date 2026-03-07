@@ -339,7 +339,7 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
       ) : (
         folderKeys.map(folder => {
           const { totalAccounts, totalActive } = getFolderStats(folder);
-          const isExpanded = expandedFolders.has(folder);
+          const isExpanded = expandedFolders.has(folder) || !!chatterSearch.trim();
           const subfolders = Object.keys(byFolder[folder]).sort((a, b) => {
             if (a === "") return 1;
             if (b === "") return -1;
