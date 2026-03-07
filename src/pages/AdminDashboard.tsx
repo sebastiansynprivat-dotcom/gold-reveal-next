@@ -4191,51 +4191,56 @@ export default function AdminDashboard() {
                 <div
                   key={acc.id}
                   draggable
-                  onDragStart={(e) => { e.dataTransfer.setData("text/account-id", acc.id); e.dataTransfer.effectAllowed = "move"; }}
-                  className="glass-card-subtle rounded-lg p-3 cursor-grab active:cursor-grabbing hover:border-accent/30 transition-all group/card"
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData("text/account-id", acc.id);
+                    e.dataTransfer.effectAllowed = "move";
+                    (e.target as HTMLElement).style.opacity = "0.5";
+                  }}
+                  onDragEnd={(e) => { (e.target as HTMLElement).style.opacity = "1"; }}
+                  className="flex items-center gap-2 p-2.5 rounded-lg border border-border/40 bg-secondary/10 hover:border-accent/30 hover:bg-secondary/20 transition-all cursor-grab active:cursor-grabbing group/card"
                 >
-                  <div className="flex items-center justify-between mb-1.5">
+                  <span className={`h-2 w-2 rounded-full shrink-0 ${acc.assigned_to ? "bg-muted-foreground/30" : "bg-green-500"}`} />
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
-                      <span className={`h-2 w-2 rounded-full shrink-0 ${acc.assigned_to ? "bg-muted-foreground/30" : "bg-green-500"}`} />
-                      {acc.assigned_to ? (
-                        <Badge className="text-[9px] bg-secondary text-secondary-foreground">→ {getChatterName(acc.assigned_to)}</Badge>
-                      ) : (
-                        <Badge className="text-[9px] bg-accent/15 text-accent border-accent/20">Frei</Badge>
-                      )}
+                      <button onClick={() => copyToClipboard(acc.account_email, "E-Mail")} className="text-xs font-medium text-foreground truncate hover:text-accent transition-colors text-left">
+                        {acc.account_email}
+                      </button>
+                      <button onClick={() => copyToClipboard(acc.account_password, "Passwort")} title="Passwort kopieren" className="shrink-0 opacity-0 group-hover/card:opacity-100 transition-opacity">
+                        <Copy className="h-3 w-3 text-muted-foreground hover:text-accent transition-colors" />
+                      </button>
                     </div>
-                    <div className="flex items-center gap-0.5 opacity-0 group-hover/card:opacity-100 transition-opacity">
-                      {acc.assigned_to && (
-                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground hover:text-accent" title="Freigeben"
-                          onClick={async () => {
-                            await revokeDriveAccess([acc.id], acc.assigned_to!);
-                            await supabase.from("accounts").update({ assigned_to: null, assigned_at: null } as any).eq("id", acc.id);
-                            toast.success("Freigegeben"); loadAccounts(); loadChatters();
-                          }}>
-                          <RefreshCw className="h-3 w-3" />
-                        </Button>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      {acc.assigned_to ? (
+                        <span className="text-[9px] text-muted-foreground">→ {getChatterName(acc.assigned_to)}</span>
+                      ) : (
+                        <span className="text-[9px] text-accent font-medium">Frei</span>
                       )}
-                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive" title="Löschen"
-                        onClick={async () => {
-                          await supabase.from("accounts").delete().eq("id", acc.id);
-                          toast.success("Gelöscht"); loadAccounts();
-                        }}>
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
+                      {acc.drive_folder_id && (
+                        <a href={`https://drive.google.com/drive/folders/${acc.drive_folder_id}`} target="_blank" rel="noopener noreferrer" className="text-[9px] text-primary hover:underline flex items-center gap-0.5">
+                          <ExternalLink className="h-2.5 w-2.5" /> Drive
+                        </a>
+                      )}
                     </div>
                   </div>
-                  <button onClick={() => copyToClipboard(acc.account_email, "E-Mail")} className="w-full flex items-center gap-2 p-1.5 -mx-1.5 rounded-md hover:bg-accent/5 transition-colors group/copy text-left">
-                    <Copy className="h-3 w-3 text-muted-foreground group-hover/copy:text-accent shrink-0 transition-colors" />
-                    <span className="text-xs font-medium text-foreground truncate">{acc.account_email}</span>
-                  </button>
-                  <button onClick={() => copyToClipboard(acc.account_password, "Passwort")} className="w-full flex items-center gap-2 p-1.5 -mx-1.5 rounded-md hover:bg-accent/5 transition-colors group/copy text-left">
-                    <Copy className="h-3 w-3 text-muted-foreground group-hover/copy:text-accent shrink-0 transition-colors" />
-                    <span className="text-[11px] text-muted-foreground truncate">PW: {acc.account_password}</span>
-                  </button>
-                  {acc.drive_folder_id && (
-                    <a href={`https://drive.google.com/drive/folders/${acc.drive_folder_id}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-1.5 -mx-1.5 rounded-md hover:bg-accent/5 transition-colors text-[11px] text-primary hover:underline">
-                      <ExternalLink className="h-3 w-3 shrink-0" /> Drive-Ordner
-                    </a>
-                  )}
+                  <div className="flex items-center gap-0.5 opacity-0 group-hover/card:opacity-100 transition-opacity shrink-0">
+                    {acc.assigned_to && (
+                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground hover:text-accent" title="Freigeben"
+                        onClick={async () => {
+                          await revokeDriveAccess([acc.id], acc.assigned_to!);
+                          await supabase.from("accounts").update({ assigned_to: null, assigned_at: null } as any).eq("id", acc.id);
+                          toast.success("Freigegeben"); loadAccounts(); loadChatters();
+                        }}>
+                        <RefreshCw className="h-3 w-3" />
+                      </Button>
+                    )}
+                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive" title="Löschen"
+                      onClick={async () => {
+                        await supabase.from("accounts").delete().eq("id", acc.id);
+                        toast.success("Gelöscht"); loadAccounts();
+                      }}>
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
                 </div>
               );
 
