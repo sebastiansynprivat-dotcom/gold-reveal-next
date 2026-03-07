@@ -526,25 +526,25 @@ export default function Dashboard() {
           animate="show"
           className="grid grid-cols-2 gap-3 lg:hidden"
         >
-          <motion.div variants={staggerItem} className="glass-card-subtle rounded-xl p-3 text-center hover:scale-[1.02] hover:border-accent/30 transition-all duration-200">
+          <motion.div variants={staggerItem} className="glass-card-subtle rounded-xl p-3 text-center card-hover-glow card-inner-glow group">
             <p className="text-[10px] text-muted-foreground mb-0.5">Umsatz gestern</p>
-            <p className="text-xl font-bold text-gold-gradient"><AnimatedValue value={yesterdayRevenue} /></p>
+            <p className="text-xl font-bold text-gold-gradient transition-transform duration-200 group-hover:scale-105"><AnimatedValue value={yesterdayRevenue} /></p>
           </motion.div>
-          <motion.div variants={staggerItem} className="glass-card-subtle rounded-xl p-3 text-center hover:scale-[1.02] hover:border-accent/30 transition-all duration-200">
+          <motion.div variants={staggerItem} className="glass-card-subtle rounded-xl p-3 text-center card-hover-glow card-inner-glow group">
             <p className="text-[10px] text-muted-foreground mb-0.5">Monatsumsatz</p>
-            <p className="text-xl font-bold text-gold-gradient"><AnimatedValue value={monthlyRevenue} /></p>
+            <p className="text-xl font-bold text-gold-gradient transition-transform duration-200 group-hover:scale-105"><AnimatedValue value={monthlyRevenue} /></p>
           </motion.div>
-          <motion.div variants={staggerItem} className="glass-card-subtle rounded-xl p-3 text-center hover:scale-[1.02] hover:border-accent/30 transition-all duration-200">
+          <motion.div variants={staggerItem} className="glass-card-subtle rounded-xl p-3 text-center card-hover-glow card-inner-glow group">
             <p className="text-[10px] text-muted-foreground mb-0.5">Gesamtumsatz</p>
-            <p className="text-xl font-bold text-gold-gradient"><AnimatedValue value={totalRevenue} /></p>
+            <p className="text-xl font-bold text-gold-gradient transition-transform duration-200 group-hover:scale-105"><AnimatedValue value={totalRevenue} /></p>
           </motion.div>
-          <motion.div variants={staggerItem} className="glass-card-subtle rounded-xl p-3 text-center hover:scale-[1.02] hover:border-accent/30 transition-all duration-200">
+          <motion.div variants={staggerItem} className="glass-card-subtle rounded-xl p-3 text-center card-hover-glow card-inner-glow group">
             <p className="text-[10px] text-muted-foreground mb-0.5">Verdienst diesen Monat</p>
-            <p className="text-xl font-bold text-gold-gradient"><AnimatedDecimalValue value={verdienst} /></p>
+            <p className="text-xl font-bold text-gold-gradient transition-transform duration-200 group-hover:scale-105"><AnimatedDecimalValue value={verdienst} /></p>
           </motion.div>
-          <motion.div variants={staggerItem} className="glass-card-subtle rounded-xl p-3 text-center hover:scale-[1.02] hover:border-accent/30 transition-all duration-200">
+          <motion.div variants={staggerItem} className="glass-card-subtle rounded-xl p-3 text-center card-hover-glow card-inner-glow group">
             <p className="text-[10px] text-muted-foreground mb-0.5">Deine Rate</p>
-            <p className="text-xl font-bold text-gold-gradient">{Math.round(rate * 100)}%</p>
+            <p className="text-xl font-bold text-gold-gradient transition-transform duration-200 group-hover:scale-105">{Math.round(rate * 100)}%</p>
           </motion.div>
           <DailyGoal />
           <motion.div variants={staggerItem} className="gold-gradient-border-animated rounded-xl p-3 text-center col-span-2 pulse-glow">
@@ -552,35 +552,35 @@ export default function Dashboard() {
             <p className={`text-xl font-bold ${isGold ? "text-gold-gradient" : "text-muted-foreground"}`}>{isGold ? "Gold" : "Starter"}</p>
           </motion.div>
         </motion.div>
-        {/* Desktop grid */}
+        {/* Desktop: Bento grid */}
         <motion.div
           variants={staggerContainer}
           initial="hidden"
           animate="show"
-          className="hidden lg:grid grid-cols-3 gap-4"
+          className="hidden lg:grid grid-cols-4 gap-4"
         >
-          <motion.div variants={staggerItem} className="glass-card-subtle rounded-xl p-5 text-center hover:scale-[1.02] hover:border-accent/30 transition-all duration-200">
+          <motion.div variants={staggerItem} className="glass-card-subtle rounded-xl p-5 text-center card-hover-glow card-inner-glow group">
             <p className="text-xs text-muted-foreground mb-0.5">Umsatz gestern</p>
-            <p className="text-2xl font-bold text-gold-gradient"><AnimatedValue value={yesterdayRevenue} /></p>
+            <p className="text-2xl font-bold text-gold-gradient transition-transform duration-200 group-hover:scale-105"><AnimatedValue value={yesterdayRevenue} /></p>
           </motion.div>
-          <motion.div variants={staggerItem} className="glass-card-subtle rounded-xl p-5 text-center hover:scale-[1.02] hover:border-accent/30 transition-all duration-200">
+          <motion.div variants={staggerItem} className="col-span-2 glass-card-subtle rounded-xl p-5 text-center card-hover-glow card-inner-glow card-top-line group">
             <p className="text-xs text-muted-foreground mb-0.5">Monatsumsatz</p>
-            <p className="text-2xl font-bold text-gold-gradient"><AnimatedValue value={monthlyRevenue} /></p>
+            <p className="text-3xl font-bold text-gold-gradient transition-transform duration-200 group-hover:scale-105"><AnimatedValue value={monthlyRevenue} /></p>
           </motion.div>
-          <motion.div variants={staggerItem} className="glass-card-subtle rounded-xl p-5 text-center hover:scale-[1.02] hover:border-accent/30 transition-all duration-200">
+          <motion.div variants={staggerItem} className="glass-card-subtle rounded-xl p-5 text-center card-hover-glow card-inner-glow group">
             <p className="text-xs text-muted-foreground mb-0.5">Gesamtumsatz</p>
-            <p className="text-2xl font-bold text-gold-gradient"><AnimatedValue value={totalRevenue} /></p>
+            <p className="text-2xl font-bold text-gold-gradient transition-transform duration-200 group-hover:scale-105"><AnimatedValue value={totalRevenue} /></p>
           </motion.div>
-          <motion.div variants={staggerItem} className="glass-card-subtle rounded-xl p-5 text-center hover:scale-[1.02] hover:border-accent/30 transition-all duration-200">
+          <motion.div variants={staggerItem} className="col-span-2 glass-card-subtle rounded-xl p-5 text-center card-hover-glow card-inner-glow card-top-line group">
             <p className="text-xs text-muted-foreground mb-0.5">Verdienst diesen Monat</p>
-            <p className="text-2xl font-bold text-gold-gradient"><AnimatedDecimalValue value={verdienst} /></p>
+            <p className="text-3xl font-bold text-gold-gradient transition-transform duration-200 group-hover:scale-105"><AnimatedDecimalValue value={verdienst} /></p>
           </motion.div>
-          <motion.div variants={staggerItem} className="glass-card-subtle rounded-xl p-5 text-center hover:scale-[1.02] hover:border-accent/30 transition-all duration-200">
+          <motion.div variants={staggerItem} className="glass-card-subtle rounded-xl p-5 text-center card-hover-glow card-inner-glow group">
             <p className="text-xs text-muted-foreground mb-0.5">Deine Rate</p>
-            <p className="text-2xl font-bold text-gold-gradient">{Math.round(rate * 100)}%</p>
+            <p className="text-2xl font-bold text-gold-gradient transition-transform duration-200 group-hover:scale-105">{Math.round(rate * 100)}%</p>
           </motion.div>
           <DailyGoal />
-          <motion.div variants={staggerItem} className="gold-gradient-border-animated rounded-xl p-5 text-center col-span-3 pulse-glow">
+          <motion.div variants={staggerItem} className="gold-gradient-border-animated rounded-xl p-5 text-center col-span-4 pulse-glow">
             <p className="text-xs text-muted-foreground mb-0.5">Status</p>
             <p className={`text-2xl font-bold ${isGold ? "text-gold-gradient" : "text-muted-foreground"}`}>{isGold ? "Gold" : "Starter"}</p>
           </motion.div>
