@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Save, CheckCircle2, Award, Zap, HelpCircle, FileText, Clock, Users, Pencil, ChevronDown, Copy, Smartphone, Mic, MessageSquare, ExternalLink, Gift } from "lucide-react";
-import { motion } from "framer-motion";
+import { Save, CheckCircle2, Award, Zap, HelpCircle, FileText, Clock, Users, Pencil, ChevronDown, Copy, Smartphone, Mic, MessageSquare, ExternalLink, Gift, Crown } from "lucide-react";
+import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -985,11 +985,27 @@ export default function Dashboard() {
 
         {/* Bonus Model - alles in einer Karte */}
         <section className="glass-card rounded-xl p-4 lg:p-6 space-y-4">
-          <h2 className="text-sm lg:text-base font-semibold text-foreground">Bonus-Modell</h2>
+          {/* Animated Header */}
+          <div className="relative">
+            <div className="flex items-center gap-2">
+              <Crown className="h-4 w-4 lg:h-5 lg:w-5 text-accent streak-circle-pulse" />
+              <h2 className="text-sm lg:text-base font-bold text-gold-gradient-shimmer">Bonus-Modell</h2>
+            </div>
+            <div className="mt-2 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
+          </div>
 
-          <div className="space-y-2">
-            {/* Account Upgrade - Tier 1 (top) with streak */}
-            <div className="relative rounded-xl overflow-hidden border border-accent/30 bg-accent/5 p-4 lg:p-5 space-y-4">
+          <motion.div
+            className="space-y-2"
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true }}
+            variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.1 } } }}
+          >
+            {/* Account Upgrade - Tier 1 */}
+            <motion.div
+              variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
+              className="relative rounded-xl overflow-hidden bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/30 p-4 lg:p-5 space-y-4 transition-transform duration-200 hover:scale-[1.01]"
+            >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-accent/20 flex items-center justify-center">
@@ -1002,64 +1018,89 @@ export default function Dashboard() {
                 </div>
                 <span className="font-bold text-accent text-sm lg:text-base">Besserer Account</span>
               </div>
-              {/* Streak tracker inline */}
               <StreakTracker dailyRevenue={umsatz} />
-            </div>
+            </motion.div>
 
             {/* Gold - Tier 2 with progress bar */}
-            <div className={`relative rounded-xl overflow-hidden border p-4 lg:p-5 space-y-3 transition-all ${isGold ? "border-accent/40 gold-border-glow bg-accent/10 pulse-glow" : "border-border bg-secondary/30"}`}>
+            <motion.div
+              variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
+              className={cn(
+                "relative rounded-xl overflow-hidden border p-4 lg:p-5 space-y-3 transition-all duration-300",
+                isGold
+                  ? "gold-gradient-border-animated pulse-glow bg-accent/10"
+                  : "border-border bg-secondary/30 hover:scale-[1.01] hover:border-border/80"
+              )}
+            >
               {isGold && <div className="absolute left-0 top-0 bottom-0 w-1 bg-accent" />}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className={`h-10 w-10 rounded-full flex items-center justify-center ${isGold ? "bg-accent/20 gold-glow" : "bg-secondary"}`}>
-                    <Award className={`h-5 w-5 ${isGold ? "text-accent" : "text-muted-foreground"}`} />
+                  <div className={cn("h-10 w-10 rounded-full flex items-center justify-center", isGold ? "bg-accent/20 gold-glow" : "bg-secondary")}>
+                    <Award className={cn("h-5 w-5", isGold ? "text-accent" : "text-muted-foreground")} />
                   </div>
                   <div>
-                    <p className={`font-bold text-sm lg:text-base ${isGold ? "text-gold-gradient" : "text-muted-foreground"}`}>Gold-Status</p>
+                    <p className={cn("font-bold text-sm lg:text-base", isGold ? "text-gold-gradient-shimmer" : "text-muted-foreground")}>Gold-Status</p>
                     <p className="text-[10px] lg:text-xs text-muted-foreground">Ab 3.000€ Monatsumsatz</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <span className={`font-bold text-lg lg:text-xl ${isGold ? "text-gold-gradient" : "text-muted-foreground"}`}>25%</span>
-                  {isGold && <p className="text-[10px] text-accent">Aktiv ✓</p>}
+                  <span className={cn("font-bold text-lg lg:text-xl", isGold ? "text-gold-gradient" : "text-muted-foreground")}>25%</span>
+                  {isGold && (
+                    <motion.p
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      className="text-[10px] text-accent font-semibold gold-glow rounded-full px-2 py-0.5 bg-accent/10 mt-1 inline-block"
+                    >
+                      🏆 Gold aktiv
+                    </motion.p>
+                  )}
                 </div>
               </div>
               {/* Gold progress bar */}
               <div className="space-y-1.5">
-                <Progress value={progressPct} className="h-2 [&>div]:bg-accent shimmer-bar" />
+                <Progress value={progressPct} className={cn("h-2.5 [&>div]:bg-accent shimmer-bar", isGold && "[&>div]:bg-gradient-to-r [&>div]:from-accent [&>div]:to-gold-light")} />
                 <div className="flex justify-between text-[10px] text-muted-foreground">
-                  <span>{umsatz.toLocaleString("de-DE")}€</span>
+                  <motion.span
+                    key={umsatz}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    {umsatz.toLocaleString("de-DE")}€
+                  </motion.span>
                   <span>
-                    {isGold ?
-                    "Gold-Status aktiv 🎉" :
-                    `Noch ${(GOLD_THRESHOLD - umsatz).toLocaleString("de-DE")}€`}
+                    {isGold
+                      ? "Gold-Status aktiv 🎉"
+                      : `Noch ${(GOLD_THRESHOLD - umsatz).toLocaleString("de-DE")}€`}
                   </span>
                 </div>
               </div>
-            </div>
+            </motion.div>
 
             {/* Starter - Tier 3 */}
-            <div className={`relative rounded-xl overflow-hidden border p-4 lg:p-5 transition-all ${!isGold ? "border-border bg-secondary/50" : "border-border/50 bg-secondary/20"}`}>
+            <motion.div
+              variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
+              className={cn(
+                "relative rounded-xl overflow-hidden border p-4 lg:p-5 transition-all duration-200",
+                !isGold ? "border-border bg-secondary/50" : "border-border/50 bg-secondary/20 hover:scale-[1.01]"
+              )}
+            >
               {!isGold && <div className="absolute left-0 top-0 bottom-0 w-1 bg-accent" />}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className={`h-10 w-10 rounded-full flex items-center justify-center ${!isGold ? "bg-secondary" : "bg-secondary/50"}`}>
-                    <Zap className={`h-5 w-5 ${!isGold ? "text-foreground" : "text-muted-foreground/50"}`} />
+                  <div className={cn("h-10 w-10 rounded-full flex items-center justify-center", !isGold ? "bg-secondary" : "bg-secondary/50")}>
+                    <Zap className={cn("h-5 w-5", !isGold ? "text-foreground" : "text-muted-foreground/50")} />
                   </div>
                   <div>
-                    <p className={`font-bold text-sm lg:text-base ${!isGold ? "text-foreground" : "text-muted-foreground/50"}`}>Starter</p>
+                    <p className={cn("font-bold text-sm lg:text-base", !isGold ? "text-foreground" : "text-muted-foreground/50")}>Starter</p>
                     <p className="text-[10px] lg:text-xs text-muted-foreground">0€ – 2.999€ Umsatz</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <span className={`font-bold text-lg lg:text-xl ${!isGold ? "text-foreground" : "text-muted-foreground/50"}`}>20%</span>
-                  {!isGold
-
-                  }
+                  <span className={cn("font-bold text-lg lg:text-xl", !isGold ? "text-foreground" : "text-muted-foreground/50")}>20%</span>
                 </div>
               </div>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
           <p className="text-[10px] lg:text-xs text-muted-foreground">
             Ab 3.000€ Monatsumsatz gilt die 25%-Rate für diesen Monat auf den <strong className="text-foreground">gesamten Betrag</strong>.
