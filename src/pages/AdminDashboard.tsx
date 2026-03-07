@@ -3775,6 +3775,22 @@ export default function AdminDashboard() {
           </div>
         )}
 
+        {activeTab === "placeholder" && (
+          <div className="space-y-4">
+            <section className="glass-card rounded-xl overflow-hidden">
+              <div className="px-4 py-3 border-b border-border flex items-center gap-2">
+                <Package className="h-4 w-4 text-accent" />
+                <h2 className="text-sm font-semibold text-foreground">Platzhalter</h2>
+              </div>
+              <div className="p-4">
+                <p className="text-sm text-muted-foreground">
+                  Dieser Tab ist noch leer und wartet auf neue Funktionen...
+                </p>
+              </div>
+            </section>
+          </div>
+        )}
+
         {activeTab === "gdrive" && (
           <div className="space-y-4">
             <section className="glass-card rounded-xl overflow-hidden">
