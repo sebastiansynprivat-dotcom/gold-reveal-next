@@ -219,6 +219,7 @@ export default function AdminDashboard() {
   const [manualAccDomain, setManualAccDomain] = useState("");
   const [manualAccDriveFolder, setManualAccDriveFolder] = useState("");
   const [manualAccLanguage, setManualAccLanguage] = useState<"de" | "en">("de");
+  const [manualAccModelActive, setManualAccModelActive] = useState(true);
   const [manualAccFolder, setManualAccFolder] = useState("");
   const [newFolderName, setNewFolderName] = useState("");
   const [creatingFolder, setCreatingFolder] = useState(false);
@@ -4692,12 +4693,16 @@ export default function AdminDashboard() {
                             </button>
                           </div>
                         </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Model aktiv</span>
+                          <Switch checked={manualAccModelActive} onCheckedChange={setManualAccModelActive} />
+                        </div>
                         <Button
                           onClick={async () => {
                             if (!manualAccEmail.trim() || !selectedManualPlatform) return;
                             setAddingManual(true);
-                            const { error } = await supabase.from("accounts").insert({ platform: selectedManualPlatform, account_email: manualAccEmail.trim(), account_password: manualAccPassword.trim(), account_domain: manualAccDomain.trim(), drive_folder_id: extractDriveFolderId(manualAccDriveFolder.trim()), is_manual: true, folder_name: manualAccFolder.trim() || null, model_language: manualAccLanguage } as any);
-                            if (error) { toast.error("Fehler"); } else { toast.success("Hinzugefügt!"); setManualAccEmail(""); setManualAccPassword(""); setManualAccDriveFolder(""); setManualAccLanguage("de"); loadAccounts(); loadChatters(); }
+                            const { error } = await supabase.from("accounts").insert({ platform: selectedManualPlatform, account_email: manualAccEmail.trim(), account_password: manualAccPassword.trim(), account_domain: manualAccDomain.trim(), drive_folder_id: extractDriveFolderId(manualAccDriveFolder.trim()), is_manual: true, folder_name: manualAccFolder.trim() || null, model_language: manualAccLanguage, model_active: manualAccModelActive } as any);
+                            if (error) { toast.error("Fehler"); } else { toast.success("Hinzugefügt!"); setManualAccEmail(""); setManualAccPassword(""); setManualAccDriveFolder(""); setManualAccLanguage("de"); setManualAccModelActive(true); loadAccounts(); loadChatters(); }
                             setAddingManual(false);
                           }}
                           disabled={addingManual || !manualAccEmail.trim()} className="w-full" size="sm">
