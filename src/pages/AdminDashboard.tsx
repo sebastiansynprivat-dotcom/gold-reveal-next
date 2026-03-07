@@ -270,52 +270,54 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
           </div>
         </section>
       ) : (
-    <div className="space-y-4">
-      {accountKeys.map(accId => {
-        const g = grouped[accId];
-        const activeCount = g.entries.filter((e: any) => e.isActive).length;
-        return (
-          <section key={accId} className="glass-card rounded-xl overflow-hidden">
-            <div className="px-4 py-3 border-b border-border flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-accent" />
-                <h2 className="text-sm font-semibold text-foreground">{g.account_email}</h2>
-                {g.account_domain && (
-                  <span className="text-xs text-muted-foreground">({g.account_domain})</span>
-                )}
-                {g.platform && (
-                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">{g.platform}</Badge>
-                )}
-              </div>
-              {activeCount > 0 && (
-                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">
-                  {activeCount} aktiv
-                </Badge>
-              )}
-            </div>
-            <div className="divide-y divide-border/50">
-              {g.entries.map((entry: any) => (
-                <div key={entry.id} className="px-4 py-2.5 flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-3">
-                    <div className={cn("w-2 h-2 rounded-full", entry.isActive ? "bg-emerald-400 animate-pulse" : "bg-muted-foreground/30")} />
-                    <span className="font-medium text-foreground">{entry.name}</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                    <span>{entry.assignedAt ? format(entry.assignedAt, "dd.MM.yyyy HH:mm") : "–"}</span>
-                    <span>→</span>
-                    {entry.isActive ? (
-                      <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">Aktiv</Badge>
-                    ) : (
-                      <span>{entry.unassignedAt ? format(entry.unassignedAt, "dd.MM.yyyy HH:mm") : "–"}</span>
+        <div className="space-y-4-inner">
+          {accountKeys.map(accId => {
+            const g = grouped[accId];
+            const activeCount = g.entries.filter((e: any) => e.isActive).length;
+            return (
+              <section key={accId} className="glass-card rounded-xl overflow-hidden">
+                <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-accent" />
+                    <h2 className="text-sm font-semibold text-foreground">{g.account_email}</h2>
+                    {g.account_domain && (
+                      <span className="text-xs text-muted-foreground">({g.account_domain})</span>
                     )}
-                    <span className="text-accent font-medium ml-1">{entry.duration}</span>
+                    {g.platform && (
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0">{g.platform}</Badge>
+                    )}
                   </div>
+                  {activeCount > 0 && (
+                    <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">
+                      {activeCount} aktiv
+                    </Badge>
+                  )}
                 </div>
-              ))}
-            </div>
-          </section>
-        );
-      })}
+                <div className="divide-y divide-border/50">
+                  {g.entries.map((entry: any) => (
+                    <div key={entry.id} className="px-4 py-2.5 flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-3">
+                        <div className={cn("w-2 h-2 rounded-full", entry.isActive ? "bg-emerald-400 animate-pulse" : "bg-muted-foreground/30")} />
+                        <span className="font-medium text-foreground">{entry.name}</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                        <span>{entry.assignedAt ? format(entry.assignedAt, "dd.MM.yyyy HH:mm") : "–"}</span>
+                        <span>→</span>
+                        {entry.isActive ? (
+                          <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">Aktiv</Badge>
+                        ) : (
+                          <span>{entry.unassignedAt ? format(entry.unassignedAt, "dd.MM.yyyy HH:mm") : "–"}</span>
+                        )}
+                        <span className="text-accent font-medium ml-1">{entry.duration}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
