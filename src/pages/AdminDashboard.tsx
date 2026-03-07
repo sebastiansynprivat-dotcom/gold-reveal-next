@@ -253,6 +253,8 @@ export default function AdminDashboard() {
   const [notifHistory, setNotifHistory] = useState<any[]>([]);
   const [notifHistoryLoaded, setNotifHistoryLoaded] = useState(false);
   const [notifHistoryOpen, setNotifHistoryOpen] = useState(false);
+  const [notifSendOpen, setNotifSendOpen] = useState(false);
+  const [schedSectionOpen, setSchedSectionOpen] = useState(false);
 
   // Scheduled notifications state
   const [schedules, setSchedules] = useState<any[]>([]);
@@ -3159,15 +3161,23 @@ export default function AdminDashboard() {
 
             {/* Send Notification */}
             <section className="glass-card rounded-xl overflow-hidden">
-              <div className="px-5 py-4 border-b border-border/50 flex items-center gap-3">
-                <div className="h-8 w-8 rounded-lg bg-accent/10 flex items-center justify-center">
-                  <Bell className="h-4 w-4 text-accent" />
+              <button
+                onClick={() => setNotifSendOpen(!notifSendOpen)}
+                className="w-full px-5 py-4 flex items-center justify-between hover:bg-secondary/10 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-lg bg-accent/10 flex items-center justify-center">
+                    <Bell className="h-4 w-4 text-accent" />
+                  </div>
+                  <div className="text-left">
+                    <h2 className="text-sm font-bold text-foreground">Sofort senden</h2>
+                    <p className="text-[10px] text-muted-foreground">Push an alle Nutzer</p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-sm font-bold text-foreground">Sofort senden</h2>
-                  <p className="text-[10px] text-muted-foreground">Push an alle Nutzer</p>
-                </div>
-              </div>
+                <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", notifSendOpen && "rotate-180")} />
+              </button>
+              {notifSendOpen && (
+              <>
               <div className="p-4 space-y-3">
                 <Input
                   value={notifTitle}
@@ -3228,19 +3238,29 @@ export default function AdminDashboard() {
                   )}
                 </>
               )}
+              </>
+              )}
             </section>
 
             {/* Scheduled Notifications */}
             <section className="glass-card rounded-xl overflow-hidden">
-              <div className="px-5 py-4 border-b border-border/50 flex items-center gap-3">
-                <div className="h-8 w-8 rounded-lg bg-accent/10 flex items-center justify-center">
-                  <Repeat className="h-4 w-4 text-accent" />
+              <button
+                onClick={() => setSchedSectionOpen(!schedSectionOpen)}
+                className="w-full px-5 py-4 flex items-center justify-between hover:bg-secondary/10 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-lg bg-accent/10 flex items-center justify-center">
+                    <Repeat className="h-4 w-4 text-accent" />
+                  </div>
+                  <div className="text-left">
+                    <h2 className="text-sm font-bold text-foreground">Geplante Benachrichtigung</h2>
+                    <p className="text-[10px] text-muted-foreground">Wiederkehrende Push-Nachrichten</p>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-sm font-bold text-foreground">Geplante Benachrichtigung</h2>
-                  <p className="text-[10px] text-muted-foreground">Wiederkehrende Push-Nachrichten</p>
-                </div>
-              </div>
+                <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", schedSectionOpen && "rotate-180")} />
+              </button>
+              {schedSectionOpen && (
+              <>
               <div className="p-4 space-y-3">
                 <Input
                   value={schedTitle}
@@ -3407,6 +3427,8 @@ export default function AdminDashboard() {
                     ))
                   )}
                 </div>
+              )}
+              </>
               )}
             </section>
           </div>
