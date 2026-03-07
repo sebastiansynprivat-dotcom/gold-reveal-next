@@ -171,22 +171,16 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear }: ModelRequest
 
           <div className="space-y-2">
             <Label className="text-xs text-foreground">Dein Model spricht *</Label>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setModelLanguage("de")}
-                className={`flex-1 text-xs px-3 py-2 rounded-lg border transition-colors ${modelLanguage === "de" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/20 text-muted-foreground border-border/50 hover:border-accent/30"}`}
-              >
-                🇩🇪 Deutsch
-              </button>
-              <button
-                type="button"
-                onClick={() => setModelLanguage("en")}
-                className={`flex-1 text-xs px-3 py-2 rounded-lg border transition-colors ${modelLanguage === "en" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/20 text-muted-foreground border-border/50 hover:border-accent/30"}`}
-              >
-                🇬🇧 Englisch
-              </button>
-            </div>
+            <RadioGroup value={modelLanguage} onValueChange={(v) => setModelLanguage(v as "de" | "en")} className="flex gap-3">
+              <div className="flex items-center gap-2">
+                <RadioGroupItem value="de" id="lang-de" />
+                <Label htmlFor="lang-de" className="text-xs cursor-pointer">🇩🇪 Deutsch</Label>
+              </div>
+              <div className="flex items-center gap-2">
+                <RadioGroupItem value="en" id="lang-en" />
+                <Label htmlFor="lang-en" className="text-xs cursor-pointer">🇬🇧 Englisch</Label>
+              </div>
+            </RadioGroup>
           </div>
 
           <div className="space-y-2">
