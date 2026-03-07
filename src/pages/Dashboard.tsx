@@ -93,7 +93,7 @@ export default function Dashboard() {
   const [editingGroupName, setEditingGroupName] = useState(false);
 
   const [offer, setOffer] = useState("");
-  const [assignedAccounts, setAssignedAccounts] = useState<{id: string;account_email: string;account_password: string;account_domain: string;platform: string;assigned_at: string | null;drive_folder_id?: string;}[]>([]);
+  const [assignedAccounts, setAssignedAccounts] = useState<{id: string;account_email: string;account_password: string;account_domain: string;platform: string;assigned_at: string | null;drive_folder_id?: string;model_language?: string;}[]>([]);
   const [accountsOpen, setAccountsOpen] = useState(true);
   const [myRequests, setMyRequests] = useState<any[]>([]);
   const [requestsOpen, setRequestsOpen] = useState(false);
@@ -178,7 +178,7 @@ export default function Dashboard() {
     // Load all assigned accounts
     supabase.
     from("accounts").
-    select("id, account_email, account_password, account_domain, platform, assigned_at, drive_folder_id").
+    select("id, account_email, account_password, account_domain, platform, assigned_at, drive_folder_id, model_language").
     eq("assigned_to", user.id).
     order("created_at", { ascending: true }).
     then(({ data }) => {
@@ -778,6 +778,7 @@ export default function Dashboard() {
               onSubmitted={loadMyRequests}
               editData={editRequest}
               onEditClear={() => setEditRequest(null)}
+              modelLanguage={assignedAccounts.length > 0 ? (assignedAccounts[0] as any).model_language || "de" : "de"}
             />
           </div>
 
