@@ -1238,6 +1238,19 @@ export default function AdminDashboard() {
         // Auto-send push notification if user has push enabled
         if (pushUsers.has(reassignTarget.user_id)) {
           try {
+            // Fetch template from DB
+            let tplTitle = "Gute Nachrichten 🥳";
+            let tplBody = "Dir wurde ein neuer Account zugewiesen! Schau jetzt in dein Dashboard.";
+            const { data: tpl } = await supabase
+              .from("notification_templates")
+              .select("title, body")
+              .eq("template_key", "account_assigned")
+              .maybeSingle();
+            if (tpl) {
+              tplTitle = tpl.title;
+              tplBody = tpl.body;
+            }
+
             const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
             const session = await supabase.auth.getSession();
             await fetch(
@@ -1250,8 +1263,8 @@ export default function AdminDashboard() {
                   Authorization: `Bearer ${session.data.session?.access_token}`,
                 },
                 body: JSON.stringify({
-                  title: "Gute Nachrichten 🥳",
-                  body: "Du hast einen neuen Account bekommen! 🚀 Öffne die App für die Log-In Details 👀",
+                  title: tplTitle,
+                  body: tplBody,
                   target_user_id: reassignTarget.user_id,
                 }),
               }
