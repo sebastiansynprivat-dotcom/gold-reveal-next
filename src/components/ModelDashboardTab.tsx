@@ -578,13 +578,9 @@ export default function ModelDashboardTab() {
                             </p>
                           </div>
                           <div className="flex items-center gap-1.5 shrink-0">
-                            {PLATFORMS.map(p => (
-                              <span key={p.key} className={`text-[9px] px-1 py-0.5 rounded ${
-                                dash?.[p.dbField] ? "bg-accent/15 text-accent" : "bg-muted text-muted-foreground"
-                              }`}>
-                                {p.label.charAt(0)}{dash?.[p.dbField] ? "✅" : "❌"}
-                              </span>
-                            ))}
+                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-secondary/50 text-muted-foreground">
+                              {acc.platform}
+                            </span>
                             <ChevronRight className={`h-3.5 w-3.5 transition-colors ${isSelected ? "text-accent" : "text-muted-foreground/40"}`} />
                           </div>
                         </motion.div>
