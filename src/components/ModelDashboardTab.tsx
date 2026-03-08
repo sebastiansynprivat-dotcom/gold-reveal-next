@@ -413,7 +413,7 @@ export default function ModelDashboardTab() {
     setModelLoginLoading(false);
   };
 
-
+  const generateGutschrift = () => {
     if (!selectedAccount || !gutschriftAmount.trim()) {
       toast.error("Bitte Model auswählen und Betrag eingeben.");
       return;
