@@ -1,23 +1,41 @@
 
+# Fortschrittsanzeige und Schritt-Nummerierung fur OfferB
 
-## Problem
+## Was wird gemacht
 
-Die Chatter-Übersicht gruppiert aktuell nach Ordnern (folder_name / subfolder_name) mit aufklappbaren Ordner-Karten. Der User will stattdessen nur zwei Karten: **SheX** und **SYN**, gruppiert nach `model_agency`.
+### 1. Alle Schritte als einheitliche Liste definieren
+Die Videos und Links werden zu einer gemeinsamen Schritt-Liste zusammengefasst:
+- Schritt 1: Plattform Erklärungs Video
+- Schritt 2: Telegram Nachrichten Video
+- Schritt 3: Brezzels Notifications aktivieren
+- Schritt 4: My ID Bot einrichten
+- Schritt 5: Tägliches Feedback
 
-## Plan
+### 2. Fortschritts-Bar oben auf der Seite
+Direkt unter dem Hero-Bereich wird eine Progress-Bar eingefügt, die den Gesamtfortschritt anzeigt (z.B. "2 von 5 Schritten erledigt"). Nutzt die vorhandene `Progress`-Komponente im Gold-Styling.
 
-### ChatterOverviewTab umbauen (src/pages/AdminDashboard.tsx, Zeilen 173-477)
+### 3. Klickbare Checkliste
+Unter der Progress-Bar eine kompakte Checkliste mit allen 5 Schritten. Jeder Schritt hat:
+- Eine Checkbox zum Abhaken
+- Schritt-Nummer ("Schritt 1", "Schritt 2" etc.)
+- Kurzer Titel
 
-1. **Ordner-Logik entfernen**: `byFolder`, `expandedFolders`, `toggleFolder`, `getFolderStats` und die gesamte Ordner-Hierarchie-Darstellung rauswerfen.
+Der Fortschritt wird im `localStorage` gespeichert, damit er beim Neuladen erhalten bleibt.
 
-2. **Nach Agency gruppieren**: Statt `byFolder` zwei Gruppen erstellen — `shex` und `syn` — basierend auf `grouped[accId].model_agency`. Jede Gruppe enthält ihre Account-IDs.
+### 4. Schritt-Nummern bei den Sektionen
+Jede Video-/Link-/Feedback-Sektion bekommt eine prominente Schritt-Nummer als Badge (z.B. goldener Kreis mit "1" darin) neben dem Titel.
 
-3. **Zwei Karten rendern**: Zwei `section`-Karten mit dem bestehenden glass-card-Styling:
-   - **SheX**-Karte (immer offen, kein Toggle nötig) mit allen SheX-Accounts und ihren Chatter-Einträgen
-   - **SYN**-Karte analog
-   - Jede Karte zeigt im Header: Name (SheX/SYN), Anzahl Accounts, Anzahl aktive Chatter
+## Technische Details
 
-4. **Agency-Filter entfernen**: Da die Trennung jetzt visuell über zwei Karten erfolgt, wird der separate Agency-Filter-Toggle (Alle/SheX/SYN) überflüssig. Die Filter Alle/Aktiv/Inaktiv + Suche bleiben.
+**Datei: `src/pages/OfferB.tsx`**
 
-5. **Account-Darstellung beibehalten**: Innerhalb jeder Karte werden wie bisher die Accounts mit Email, Domain, Platform, Sprache-Badge und darunter die Chatter-Einträge (Name, Datum, Status, Dauer) angezeigt — nur ohne Ordner-Verschachtelung.
+- Neue `steps`-Array-Konstante mit id, title, type fur alle 5 Schritte
+- `useState` + `localStorage` fur `completedSteps: Set<number>`
+- Progress-Bar-Sektion nach dem Hero mit `Progress`-Komponente (Wert = `completedSteps.size / steps.length * 100`)
+- Checkliste mit `Checkbox`-Komponenten, gestylt im bestehenden `glass-card-subtle` Look
+- Videos bekommen "Schritt 1" / "Schritt 2" als nummerierte Badge-Kreise
+- Links-Sektion wird zu Schritt 3 und 4 mit individuellen Nummern
+- Feedback wird Schritt 5
+- Erledigte Schritte bekommen eine subtile visuelle Markierung (leicht reduzierte Opazitat / Hakchen)
 
+Keine neuen Abhangigkeiten notwendig -- nutzt vorhandene `Progress`, `Checkbox` und `framer-motion`.
