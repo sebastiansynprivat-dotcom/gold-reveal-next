@@ -4979,6 +4979,7 @@ export default function AdminDashboard() {
           <div className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-xs text-muted-foreground">Tagesziel in €</label>
+              <div className="input-gold-shimmer rounded-lg">
               <Input
                 type="number"
                 min={0}
@@ -4986,8 +4987,9 @@ export default function AdminDashboard() {
                 value={goalAmount}
                 onChange={(e) => setGoalAmount(e.target.value)}
                 placeholder="30"
-                className="text-lg font-semibold"
+                className="text-lg font-semibold border-transparent"
               />
+              </div>
             </div>
             <Button onClick={saveGoal} disabled={goalSaving} className="w-full">
               <Target className="h-4 w-4 mr-2" />
