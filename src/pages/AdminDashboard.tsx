@@ -4743,7 +4743,7 @@ export default function AdminDashboard() {
                   }
                 }}
                 placeholder="Account suchen..."
-                className="pl-8 text-xs h-9 bg-secondary/30 border border-border/50 rounded-md focus:ring-1 focus:ring-accent/50"
+                className="pl-8 text-xs h-9 bg-secondary/30 border-transparent rounded-md"
               />
             </div>
             
