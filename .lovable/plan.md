@@ -1,41 +1,26 @@
 
-# Fortschrittsanzeige und Schritt-Nummerierung fur OfferB
 
-## Was wird gemacht
+## Problem
 
-### 1. Alle Schritte als einheitliche Liste definieren
-Die Videos und Links werden zu einer gemeinsamen Schritt-Liste zusammengefasst:
-- Schritt 1: Plattform Erklärungs Video
-- Schritt 2: Telegram Nachrichten Video
-- Schritt 3: Brezzels Notifications aktivieren
-- Schritt 4: My ID Bot einrichten
-- Schritt 5: Tägliches Feedback
+Der "Freie Accounts"-Dialog (`manualPoolOpen`) nutzt ein schmales Single-Column-Layout (`sm:max-w-lg`) ohne Split-Layout, während der Account-Pool-Dialog (`accountPoolOpen`) ein breiteres Split-Layout hat (`sm:max-w-3xl`) mit dem "Neuer Account"-Formular links und der Account-Liste rechts. Der User möchte dasselbe Layout.
 
-### 2. Fortschritts-Bar oben auf der Seite
-Direkt unter dem Hero-Bereich wird eine Progress-Bar eingefügt, die den Gesamtfortschritt anzeigt (z.B. "2 von 5 Schritten erledigt"). Nutzt die vorhandene `Progress`-Komponente im Gold-Styling.
+## Plan
 
-### 3. Klickbare Checkliste
-Unter der Progress-Bar eine kompakte Checkliste mit allen 5 Schritten. Jeder Schritt hat:
-- Eine Checkbox zum Abhaken
-- Schritt-Nummer ("Schritt 1", "Schritt 2" etc.)
-- Kurzer Titel
+### Freie-Accounts-Dialog an Account-Pool-Layout angleichen
 
-Der Fortschritt wird im `localStorage` gespeichert, damit er beim Neuladen erhalten bleibt.
+**Änderungen in `src/pages/AdminDashboard.tsx`:**
 
-### 4. Schritt-Nummern bei den Sektionen
-Jede Video-/Link-/Feedback-Sektion bekommt eine prominente Schritt-Nummer als Badge (z.B. goldener Kreis mit "1" darin) neben dem Titel.
+1. **Dialog breiter machen**: `sm:max-w-lg` → `sm:max-w-3xl` für den `manualPoolOpen`-Dialog
 
-## Technische Details
+2. **Split-Layout einbauen**: Den Dialog-Inhalt in ein `flex-row`-Layout umbauen:
+   - **Links (280px)**: "Neuer Account"-Formular (aktuell hinter `openFolder === "__add__"` versteckt) — permanent sichtbar wie beim Pool-Dialog. Enthält: Domain, E-Mail, Passwort, Drive Folder ID, Ordner-Auswahl, Model-Sprache (DE/EN), Model-Agency (SheX/SYN), Model-aktiv-Switch, Hinzufügen-Button
+   - **Rechts (flex-1)**: Ordner-/Account-Ansicht mit Stats-Zeile oben, Suchfeld, Filter-Pills (Alle/Frei/Vergeben), und der bestehenden Ordner-Grid + Account-Liste
 
-**Datei: `src/pages/OfferB.tsx`**
+3. **Stats-Zeile** nach oben ziehen (wie beim Pool-Dialog): Gesamt / Frei / Vergeben als Badges in einer Row unterhalb des Headers
 
-- Neue `steps`-Array-Konstante mit id, title, type fur alle 5 Schritte
-- `useState` + `localStorage` fur `completedSteps: Set<number>`
-- Progress-Bar-Sektion nach dem Hero mit `Progress`-Komponente (Wert = `completedSteps.size / steps.length * 100`)
-- Checkliste mit `Checkbox`-Komponenten, gestylt im bestehenden `glass-card-subtle` Look
-- Videos bekommen "Schritt 1" / "Schritt 2" als nummerierte Badge-Kreise
-- Links-Sektion wird zu Schritt 3 und 4 mit individuellen Nummern
-- Feedback wird Schritt 5
-- Erledigte Schritte bekommen eine subtile visuelle Markierung (leicht reduzierte Opazitat / Hakchen)
+4. **"Account hinzufügen"-Button unten entfernen**, da das Formular jetzt permanent links sichtbar ist
 
-Keine neuen Abhangigkeiten notwendig -- nutzt vorhandene `Progress`, `Checkbox` und `framer-motion`.
+5. **Header angleichen**: Delete-Button und ggf. Auto-Zuweisen-Button in die Header-Zeile neben den Titel (wie beim Pool-Dialog)
+
+6. **Responsiv**: Auf Mobile (`sm:` Breakpoint) stacked statt side-by-side, Formular oben als collapsible Section
+
