@@ -446,7 +446,6 @@ export default function ModelDashboardTab() {
           })}
         </div>
       </motion.div>
-      </motion.div>
 
       {/* ── Search ── */}
       <motion.div
