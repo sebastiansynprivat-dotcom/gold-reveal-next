@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -13,9 +13,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Upload, FileText, Trash2, Download, Save, Loader2, Star,
-  Percent, Wallet, StickyNote, CheckCircle2, FileDown, List, Filter, Search, ChevronRight
+  Percent, Wallet, StickyNote, CheckCircle2, FileDown, List, Filter, Search, ChevronRight, TrendingUp, CalendarDays, DollarSign
 } from "lucide-react";
 import jsPDF from "jspdf";
+import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
 
 interface Account {
   id: string;
@@ -119,6 +120,11 @@ export default function ModelDashboardTab() {
   const [gutschriftAmount, setGutschriftAmount] = useState("");
   const [gutschriftDescription, setGutschriftDescription] = useState("Gutschrift für erbrachte Leistungen");
 
+  // Revenue per model
+  const [modelRevenue, setModelRevenue] = useState<{ date: string; amount: number; user_id: string }[]>([]);
+  const [revenueLoading, setRevenueLoading] = useState(false);
+  const [revenueMonth, setRevenueMonth] = useState(() => format(new Date(), "yyyy-MM"));
+
   const loadAllDashboards = useCallback(async () => {
     const { data } = await supabase.from("model_dashboard").select("*");
     if (data) setAllDashboards(data as ModelDashboardRow[]);
@@ -160,12 +166,59 @@ export default function ModelDashboardTab() {
     setLoading(false);
   }, []);
 
+  const loadModelRevenue = useCallback(async (accountId: string, month: string) => {
+    setRevenueLoading(true);
+    // 1. Get all user_ids assigned to this account (current + historical)
+    const { data: assignments } = await supabase
+      .from("account_assignments")
+      .select("user_id")
+      .eq("account_id", accountId);
+
+    const userIds = [...new Set((assignments || []).map(a => a.user_id))];
+    if (userIds.length === 0) { setModelRevenue([]); setRevenueLoading(false); return; }
+
+    // 2. Get daily_revenue for those users in the selected month
+    const [year, mon] = month.split("-").map(Number);
+    const monthStart = format(new Date(year, mon - 1, 1), "yyyy-MM-dd");
+    const monthEnd = format(endOfMonth(new Date(year, mon - 1, 1)), "yyyy-MM-dd");
+
+    const { data: revenue } = await supabase
+      .from("daily_revenue")
+      .select("date, amount, user_id")
+      .in("user_id", userIds)
+      .gte("date", monthStart)
+      .lte("date", monthEnd)
+      .order("date", { ascending: true });
+
+    setModelRevenue((revenue || []) as { date: string; amount: number; user_id: string }[]);
+    setRevenueLoading(false);
+  }, []);
+
   useEffect(() => {
     if (selectedAccountId) {
       loadModelData(selectedAccountId);
+      loadModelRevenue(selectedAccountId, revenueMonth);
       setTimeout(() => detailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
     }
-  }, [selectedAccountId, loadModelData]);
+  }, [selectedAccountId, loadModelData, loadModelRevenue, revenueMonth]);
+
+  // Revenue calculations
+  const totalMonthRevenue = useMemo(() => modelRevenue.reduce((sum, r) => sum + r.amount, 0), [modelRevenue]);
+  const gutschriftFromRevenue = useMemo(() => {
+    if (revenuePercentage <= 0 || totalMonthRevenue <= 0) return 0;
+    return (totalMonthRevenue * revenuePercentage) / 100;
+  }, [totalMonthRevenue, revenuePercentage]);
+
+  // Available months for selection (last 12 months)
+  const availableMonths = useMemo(() => {
+    const months = [];
+    const now = new Date();
+    for (let i = 0; i < 12; i++) {
+      const d = subMonths(now, i);
+      months.push({ value: format(d, "yyyy-MM"), label: format(d, "MMMM yyyy") });
+    }
+    return months;
+  }, []);
 
   const getDashboard = (id: string) => allDashboards.find(d => d.account_id === id);
 
@@ -604,9 +657,99 @@ export default function ModelDashboardTab() {
               </Button>
             </motion.div>
 
+            {/* Einnahmen Übersicht */}
+            <Section icon={TrendingUp} title="Einnahmen Übersicht" delay={0.35}>
+              <div className="space-y-4">
+                {/* Month selector */}
+                <div className="flex items-center gap-3">
+                  <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Select value={revenueMonth} onValueChange={setRevenueMonth}>
+                    <SelectTrigger className="bg-secondary/50 border-border h-8 text-xs w-48">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableMonths.map(m => (
+                        <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {revenueLoading ? (
+                  <div className="flex justify-center py-6">
+                    <Loader2 className="h-5 w-5 animate-spin text-accent" />
+                  </div>
+                ) : (
+                  <>
+                    {/* Summary cards */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="rounded-xl border border-border/50 bg-secondary/20 p-3 space-y-1">
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Gesamtumsatz</p>
+                        <p className="text-lg font-bold text-gold-gradient tabular-nums">
+                          {totalMonthRevenue.toLocaleString("de-DE", { minimumFractionDigits: 2 })} €
+                        </p>
+                      </div>
+                      <div className="rounded-xl border border-accent/20 bg-accent/5 p-3 space-y-1">
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                          Gutschrift ({revenuePercentage}%)
+                        </p>
+                        <p className="text-lg font-bold text-accent tabular-nums">
+                          {gutschriftFromRevenue.toLocaleString("de-DE", { minimumFractionDigits: 2 })} €
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Daily breakdown */}
+                    {modelRevenue.length > 0 ? (
+                      <div className="space-y-1.5">
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Tagesübersicht</p>
+                        <div className="max-h-[200px] overflow-y-auto space-y-1 pr-1 -mr-1">
+                          {(() => {
+                            // Group by date, sum amounts
+                            const byDate: Record<string, number> = {};
+                            for (const r of modelRevenue) {
+                              byDate[r.date] = (byDate[r.date] || 0) + r.amount;
+                            }
+                            return Object.entries(byDate)
+                              .sort(([a], [b]) => b.localeCompare(a))
+                              .map(([date, amount]) => (
+                                <div key={date} className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-secondary/30 transition-colors">
+                                  <span className="text-xs text-muted-foreground">
+                                    {new Date(date).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" })}
+                                  </span>
+                                  <span className="text-xs font-semibold text-foreground tabular-nums">
+                                    {amount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} €
+                                  </span>
+                                </div>
+                              ));
+                          })()}
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground text-center py-4 italic">
+                        Keine Einnahmen für diesen Monat.
+                      </p>
+                    )}
+                  </>
+                )}
+              </div>
+            </Section>
+
             {/* Gutschrift */}
-            <Section icon={FileDown} title="Gutschrift generieren" delay={0.35}>
+            <Section icon={FileDown} title="Gutschrift generieren" delay={0.4}>
               <div className="space-y-3">
+                {/* Auto-fill hint */}
+                {gutschriftFromRevenue > 0 && gutschriftAmount !== gutschriftFromRevenue.toFixed(2).replace(".", ",") && (
+                  <button
+                    onClick={() => setGutschriftAmount(gutschriftFromRevenue.toFixed(2).replace(".", ","))}
+                    className="w-full flex items-center gap-2 p-2.5 rounded-lg border border-accent/20 bg-accent/5 hover:bg-accent/10 transition-colors text-left"
+                  >
+                    <DollarSign className="h-3.5 w-3.5 text-accent shrink-0" />
+                    <span className="text-[11px] text-foreground">
+                      Automatisch aus Einnahmen: <span className="font-bold text-accent">{gutschriftFromRevenue.toLocaleString("de-DE", { minimumFractionDigits: 2 })} €</span> ({revenuePercentage}% von {totalMonthRevenue.toLocaleString("de-DE", { minimumFractionDigits: 2 })} €)
+                    </span>
+                  </button>
+                )}
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Beschreibung</Label>
                   <div className="input-gold-shimmer rounded-lg">
