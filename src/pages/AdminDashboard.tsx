@@ -3570,20 +3570,24 @@ export default function AdminDashboard() {
               {notifSendOpen && (
               <>
               <div className="p-4 space-y-3">
+                <div className="input-gold-shimmer rounded-lg">
                 <Input
                   value={notifTitle}
                   onChange={(e) => setNotifTitle(e.target.value)}
                   placeholder="Titel der Benachrichtigung"
-                  className="text-sm bg-secondary/30 border-border/30 focus:border-accent/40"
+                  className="text-sm bg-secondary/30 border-transparent"
                   maxLength={100}
                 />
+                </div>
+                <div className="input-gold-shimmer rounded-lg">
                 <Textarea
                   value={notifBody}
                   onChange={(e) => setNotifBody(e.target.value)}
                   placeholder="Nachricht eingeben..."
-                  className="text-sm min-h-[80px] bg-secondary/30 border-border/30 focus:border-accent/40 resize-none"
+                  className="text-sm min-h-[80px] bg-secondary/30 border-transparent resize-none"
                   maxLength={500}
                 />
+                </div>
                 <Button
                   onClick={handleSendNotification}
                   disabled={notifSending || !notifTitle.trim() || !notifBody.trim()}
