@@ -172,6 +172,7 @@ function AnimatedNumber({ value, className, suffix = "€" }: { value: number; c
 
 function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { assignments: any[]; assignmentsLoading: boolean; chatters: ChatterProfile[] }) {
   const [overviewFilter, setOverviewFilter] = useState<"alle" | "aktiv" | "inaktiv">("alle");
+  const [agencyFilter, setAgencyFilter] = useState<"alle" | "shex" | "syn">("alle");
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [chatterSearch, setChatterSearch] = useState("");
 
