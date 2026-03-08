@@ -451,7 +451,7 @@ Mein Gruppenname ist: ${groupName || "[Bitte Gruppenname im Dashboard eintragen]
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Leistungszeitraum von *</Label>
-                  <Input value={periodFrom} onChange={(e) => setPeriodFrom(e.target.value)} placeholder="01.07.2025" className="h-9 text-sm bg-secondary border-border" />
+                  <div className="input-gold-shimmer rounded-lg"><Input value={periodFrom} onChange={(e) => setPeriodFrom(e.target.value)} placeholder="01.07.2025" className="h-9 text-sm bg-secondary border-transparent" /></div>
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Leistungszeitraum bis *</Label>
