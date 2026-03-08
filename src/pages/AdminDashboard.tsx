@@ -22,6 +22,7 @@ import logo from "@/assets/logo.png";
 import ChatterStatsCard from "@/components/ChatterStatsCard";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import ModelDashboardTab from "@/components/ModelDashboardTab";
+import GoldParticles from "@/components/GoldParticles";
 
 // Extract folder ID from a full Google Drive URL or return as-is if already an ID
 const extractDriveFolderId = (input: string): string => {
@@ -298,7 +299,7 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
             </button>
           ))}
         </div>
-        <div className="relative input-gold-shimmer rounded-lg">
+        <div className="relative input-gold-shimmer rounded-xl">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
           <Input
             placeholder="Chatter suchen…"
@@ -1772,7 +1773,8 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
+      <GoldParticles spawnRate={0.2} maxParticles={20} baseOpacity={0.15} />
       {/* Premium Header */}
       <header className="relative border-b border-border/50 bg-gradient-to-b from-secondary/30 to-background">
         <div className="absolute inset-0 bg-gradient-to-r from-accent/5 via-transparent to-accent/5" />
