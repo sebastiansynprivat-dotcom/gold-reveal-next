@@ -468,6 +468,7 @@ export default function AdminDashboard() {
   const [newAccDriveFolder, setNewAccDriveFolder] = useState("");
   const [newAccLanguage, setNewAccLanguage] = useState<"de" | "en">("de");
   const [newAccModelActive, setNewAccModelActive] = useState(true);
+  const [newAccModelAgency, setNewAccModelAgency] = useState<"shex" | "syn">("shex");
   const [addingAccount, setAddingAccount] = useState(false);
   const [assigning, setAssigning] = useState(false);
   const [assignConfirmOpen, setAssignConfirmOpen] = useState(false);
