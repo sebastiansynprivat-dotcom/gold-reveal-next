@@ -174,6 +174,8 @@ function AnimatedNumber({ value, className, suffix = "€" }: { value: number; c
 function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { assignments: any[]; assignmentsLoading: boolean; chatters: ChatterProfile[] }) {
   const [overviewFilter, setOverviewFilter] = useState<"alle" | "aktiv" | "inaktiv">("alle");
   const [chatterSearch, setChatterSearch] = useState("");
+  const [collapsedAgencies, setCollapsedAgencies] = useState<Record<string, boolean>>({});
+  const toggleAgency = (key: string) => setCollapsedAgencies(prev => ({ ...prev, [key]: !prev[key] }));
 
   if (assignmentsLoading) {
     return (
@@ -316,8 +318,12 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
 
         return (
           <section key={agencyKey} className="glass-card rounded-xl overflow-hidden">
-            <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+            <button
+              onClick={() => toggleAgency(agencyKey)}
+              className="w-full px-4 py-3 flex items-center justify-between hover:bg-secondary/20 transition-colors cursor-pointer"
+            >
               <div className="flex items-center gap-2">
+                <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform duration-200", collapsedAgencies[agencyKey] && "-rotate-90")} />
                 <span className={cn("text-sm font-bold px-2 py-0.5 rounded border", colorClass)}>{label}</span>
                 <Badge variant="outline" className="text-[10px] px-1.5 py-0">{totalAccounts} Accounts</Badge>
               </div>
@@ -326,66 +332,78 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
                   {totalActive} aktiv
                 </Badge>
               )}
-            </div>
+            </button>
 
-            {accIds.length === 0 ? (
-              <div className="p-4 text-sm text-muted-foreground">
-                Keine Zuweisungen für {label}.
-              </div>
-            ) : (
-              <div className="divide-y divide-border/30">
-                {accIds.map(accId => {
-                  const g = grouped[accId];
-                  const activeCount = g.entries.filter((e: any) => e.isActive).length;
-                  return (
-                    <div key={accId}>
-                      <div className="px-4 py-2 bg-secondary/20 flex items-center justify-between">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <Users className="h-3.5 w-3.5 text-muted-foreground" />
-                          <span className="text-xs font-medium text-foreground">{g.account_email}</span>
-                          {g.account_domain && (
-                            <span className="text-[10px] text-muted-foreground">({g.account_domain})</span>
-                          )}
-                          {g.platform && (
-                            <span className="text-[10px] bg-secondary/50 text-muted-foreground border border-border/50 rounded px-1.5 py-0.5 capitalize">
-                              {g.platform}
-                            </span>
-                          )}
-                          <span className="text-[10px] bg-secondary/50 text-muted-foreground border border-border/50 rounded px-1.5 py-0.5">
-                            {g.model_language === "en" ? "🇬🇧 EN" : "🇩🇪 DE"}
-                          </span>
-                        </div>
-                        {activeCount > 0 && (
-                          <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">
-                            {activeCount} aktiv
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="divide-y divide-border/50">
-                        {g.entries.map((entry: any) => (
-                          <div key={entry.id} className="px-6 py-2 flex items-center justify-between text-sm">
-                            <div className="flex items-center gap-3">
-                              <div className={cn("w-2 h-2 rounded-full", entry.isActive ? "bg-emerald-400 animate-pulse" : "bg-muted-foreground/30")} />
-                              <span className="font-medium text-foreground text-xs">{entry.name}</span>
-                            </div>
-                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                              <span>{entry.assignedAt ? format(entry.assignedAt, "dd.MM.yyyy HH:mm") : "–"}</span>
-                              <span>→</span>
-                              {entry.isActive ? (
-                                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">Aktiv</Badge>
-                              ) : (
-                                <span>{entry.unassignedAt ? format(entry.unassignedAt, "dd.MM.yyyy HH:mm") : "–"}</span>
+            <AnimatePresence initial={false}>
+              {!collapsedAgencies[agencyKey] && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2, ease: "easeInOut" }}
+                  className="overflow-hidden"
+                >
+                  {accIds.length === 0 ? (
+                    <div className="p-4 text-sm text-muted-foreground border-t border-border/30">
+                      Keine Zuweisungen für {label}.
+                    </div>
+                  ) : (
+                    <div className="divide-y divide-border/30 border-t border-border/30">
+                      {accIds.map(accId => {
+                        const g = grouped[accId];
+                        const activeCount = g.entries.filter((e: any) => e.isActive).length;
+                        return (
+                          <div key={accId}>
+                            <div className="px-4 py-2 bg-secondary/20 flex items-center justify-between">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                                <span className="text-xs font-medium text-foreground">{g.account_email}</span>
+                                {g.account_domain && (
+                                  <span className="text-[10px] text-muted-foreground">({g.account_domain})</span>
+                                )}
+                                {g.platform && (
+                                  <span className="text-[10px] bg-secondary/50 text-muted-foreground border border-border/50 rounded px-1.5 py-0.5 capitalize">
+                                    {g.platform}
+                                  </span>
+                                )}
+                                <span className="text-[10px] bg-secondary/50 text-muted-foreground border border-border/50 rounded px-1.5 py-0.5">
+                                  {g.model_language === "en" ? "🇬🇧 EN" : "🇩🇪 DE"}
+                                </span>
+                              </div>
+                              {activeCount > 0 && (
+                                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">
+                                  {activeCount} aktiv
+                                </Badge>
                               )}
-                              <span className="text-accent font-medium ml-1">{entry.duration}</span>
+                            </div>
+                            <div className="divide-y divide-border/50">
+                              {g.entries.map((entry: any) => (
+                                <div key={entry.id} className="px-6 py-2 flex items-center justify-between text-sm">
+                                  <div className="flex items-center gap-3">
+                                    <div className={cn("w-2 h-2 rounded-full", entry.isActive ? "bg-emerald-400 animate-pulse" : "bg-muted-foreground/30")} />
+                                    <span className="font-medium text-foreground text-xs">{entry.name}</span>
+                                  </div>
+                                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                    <span>{entry.assignedAt ? format(entry.assignedAt, "dd.MM.yyyy HH:mm") : "–"}</span>
+                                    <span>→</span>
+                                    {entry.isActive ? (
+                                      <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">Aktiv</Badge>
+                                    ) : (
+                                      <span>{entry.unassignedAt ? format(entry.unassignedAt, "dd.MM.yyyy HH:mm") : "–"}</span>
+                                    )}
+                                    <span className="text-accent font-medium ml-1">{entry.duration}</span>
+                                  </div>
+                                </div>
+                              ))}
                             </div>
                           </div>
-                        ))}
-                      </div>
+                        );
+                      })}
                     </div>
-                  );
-                })}
-              </div>
-            )}
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </section>
         );
       })}
