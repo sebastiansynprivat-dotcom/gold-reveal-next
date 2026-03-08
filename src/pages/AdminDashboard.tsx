@@ -3118,14 +3118,16 @@ export default function AdminDashboard() {
                             <div className="space-y-1.5">
                               <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Content-Link</p>
                               <div className="flex gap-2">
+                                <div className="input-gold-shimmer rounded-lg flex-1">
                                 <Input
                                   placeholder="Link zum fertigen Content einfügen..."
                                   value={req._localContentLink ?? (req as any).content_link ?? ""}
                                   onChange={(e) => {
                                     setModelRequests(prev => prev.map(r => r.id === req.id ? { ...r, _localContentLink: e.target.value } : r));
                                   }}
-                                  className="text-xs bg-secondary/30 border-border/30 focus:border-accent/40 flex-1"
+                                  className="text-xs bg-secondary/30 border-transparent flex-1"
                                 />
+                                </div>
                                 {(req as any).content_link && (
                                   <Button size="sm" variant="outline" className="h-9 px-2" asChild>
                                     <a href={(req as any).content_link} target="_blank" rel="noopener noreferrer">
