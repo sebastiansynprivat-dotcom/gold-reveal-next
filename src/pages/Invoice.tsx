@@ -489,7 +489,7 @@ Mein Gruppenname ist: ${groupName || "[Bitte Gruppenname im Dashboard eintragen]
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">IBAN *</Label>
-                  <Input value={iban} onChange={(e) => setIban(e.target.value)} placeholder="DE89 3704 0044 0532 0130 00" className="h-9 text-sm bg-secondary border-border" />
+                  <div className="input-gold-shimmer rounded-lg"><Input value={iban} onChange={(e) => setIban(e.target.value)} placeholder="DE89 3704 0044 0532 0130 00" className="h-9 text-sm bg-secondary border-transparent" /></div>
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">BIC *</Label>
