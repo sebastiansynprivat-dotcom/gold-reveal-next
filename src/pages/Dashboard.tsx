@@ -423,7 +423,7 @@ export default function Dashboard() {
                 </> :
 
               <div className="flex items-center gap-1.5">
-                  <Input value={groupName} onChange={(e) => setGroupName(e.target.value)} placeholder="Gruppenname" className="h-7 text-xs w-36" />
+                  <div className="input-gold-shimmer rounded-lg"><Input value={groupName} onChange={(e) => setGroupName(e.target.value)} placeholder="Gruppenname" className="h-7 text-xs w-36 border-transparent" /></div>
                   <Button onClick={saveGroupName} size="sm" disabled={!groupName.trim()} className="h-7 text-xs px-2.5"><Save className="h-3 w-3" /></Button>
                 </div>
               }
