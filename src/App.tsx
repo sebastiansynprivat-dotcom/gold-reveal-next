@@ -17,7 +17,8 @@ import AdminLogin from "./pages/AdminLogin";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import Invoice from "./pages/Invoice";
-import Model from "./pages/Model";
+import ModelLogin from "./pages/ModelLogin";
+import ModelDashboard from "./pages/ModelDashboard";
 
 const queryClient = new QueryClient();
 
