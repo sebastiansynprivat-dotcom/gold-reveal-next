@@ -2364,13 +2364,13 @@ export default function AdminDashboard() {
             <div className="space-y-4">
               {/* Add new admin */}
               <div className="flex gap-2">
-                <div className="relative flex-1">
+                <div className="relative flex-1 input-gold-shimmer rounded-lg">
                   <UserPlus className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                   <Input
                     value={newAdminEmail}
                     onChange={(e) => setNewAdminEmail(e.target.value)}
                     placeholder="E-Mail des neuen Admins..."
-                    className="pl-9 text-sm"
+                    className="pl-9 text-sm border-transparent"
                     onKeyDown={(e) => e.key === "Enter" && addAdmin()}
                   />
                 </div>
