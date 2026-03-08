@@ -215,13 +215,16 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs text-foreground">Was ist der Kunde bereit zu bezahlen? (€) *</Label>
-                <Input
-                  type="number"
-                  placeholder="z.B. 50"
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  min={0}
-                />
+                <div className="input-gold-shimmer rounded-lg">
+                  <Input
+                    type="number"
+                    placeholder="z.B. 50"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    min={0}
+                    className="border-transparent"
+                  />
+                </div>
               </div>
             </div>
           )}
