@@ -357,12 +357,14 @@ export default function ModelDashboardTab() {
       >
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-          <Input
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Model suchen…"
-            className="pl-9 bg-secondary/50 border-border text-sm h-9"
-          />
+          <div className="input-gold-shimmer rounded-lg">
+            <Input
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Model suchen…"
+              className="pl-9 bg-secondary/50 border-transparent text-sm h-9"
+            />
+          </div>
         </div>
 
         <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
