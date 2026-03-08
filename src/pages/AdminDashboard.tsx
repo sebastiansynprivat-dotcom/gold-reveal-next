@@ -4032,12 +4032,14 @@ export default function AdminDashboard() {
                     </div>
                   ) : (
                     <>
+                      <div className="input-gold-shimmer rounded-lg">
                       <Textarea
                         value={analysisPrompt}
                         onChange={(e) => setAnalysisPrompt(e.target.value)}
-                        className="min-h-[300px] text-sm resize-y bg-background/50 border-border/50 focus:border-accent/50 leading-relaxed"
+                        className="min-h-[300px] text-sm resize-y bg-background/50 border-transparent leading-relaxed"
                         placeholder="Analyse-Prompt eingeben..."
                       />
+                      </div>
                       <div className="flex items-center justify-between">
                         <span className="text-[11px] text-muted-foreground">
                           {analysisPrompt.length} Zeichen
