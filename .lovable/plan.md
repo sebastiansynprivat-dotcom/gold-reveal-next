@@ -1,30 +1,41 @@
 
+# Fortschrittsanzeige und Schritt-Nummerierung fur OfferB
 
-## Problem
+## Was wird gemacht
 
-Das "Accounts verwalten"-Popup (`reassignTarget`-Dialog) bei Chattern nutzt ein einfaches, schmales Layout (`sm:max-w-md`) ohne die Premium-Haptik der anderen Dialoge (Account-Pool, Freie Accounts). Es fehlen visuelle Akzente wie Stats-Zeile, bessere Karten-Struktur und konsistentes Styling.
+### 1. Alle Schritte als einheitliche Liste definieren
+Die Videos und Links werden zu einer gemeinsamen Schritt-Liste zusammengefasst:
+- Schritt 1: Plattform Erklärungs Video
+- Schritt 2: Telegram Nachrichten Video
+- Schritt 3: Brezzels Notifications aktivieren
+- Schritt 4: My ID Bot einrichten
+- Schritt 5: Tägliches Feedback
 
-## Plan
+### 2. Fortschritts-Bar oben auf der Seite
+Direkt unter dem Hero-Bereich wird eine Progress-Bar eingefügt, die den Gesamtfortschritt anzeigt (z.B. "2 von 5 Schritten erledigt"). Nutzt die vorhandene `Progress`-Komponente im Gold-Styling.
 
-### "Accounts verwalten"-Dialog aufwerten (src/pages/AdminDashboard.tsx)
+### 3. Klickbare Checkliste
+Unter der Progress-Bar eine kompakte Checkliste mit allen 5 Schritten. Jeder Schritt hat:
+- Eine Checkbox zum Abhaken
+- Schritt-Nummer ("Schritt 1", "Schritt 2" etc.)
+- Kurzer Titel
 
-1. **Dialog breiter machen**: `sm:max-w-md` → `sm:max-w-lg` für mehr Platz
+Der Fortschritt wird im `localStorage` gespeichert, damit er beim Neuladen erhalten bleibt.
 
-2. **Header aufwerten**: Gold-Gradient-Linie oben (wie bei anderen Dialogen), Icon-Box mit `gold-glow`-Effekt, Chatter-Name prominenter darstellen
+### 4. Schritt-Nummern bei den Sektionen
+Jede Video-/Link-/Feedback-Sektion bekommt eine prominente Schritt-Nummer als Badge (z.B. goldener Kreis mit "1" darin) neben dem Titel.
 
-3. **Zugewiesene Accounts als Premium-Karten**:
-   - Jede Account-Karte bekommt `gold-gradient-border-animated` oder `card-hover-glow`-Effekt
-   - Sprache-Badge (🇩🇪/🇬🇧) und Agency-Badge (SheX/SYN) hinzufügen (wie bei den anderen Dialogen)
-   - Subtiler Hover-Glow auf den Karten
+## Technische Details
 
-4. **Separator aufwerten**: Der "Account zuweisen"-Trennstrich bekommt den Gold-Gradient-Stil (wie `header-gradient-border`)
+**Datei: `src/pages/OfferB.tsx`**
 
-5. **Freie Accounts-Bereich aufwerten**:
-   - Pool/Manual-Sektionen mit dezenten Gold-Akzenten an den Collapsible-Headers
-   - Account-Items mit Hover-Glow und sanfteren Transitions
-   - Plus-Icon als Gold-Accent beim Hover
+- Neue `steps`-Array-Konstante mit id, title, type fur alle 5 Schritte
+- `useState` + `localStorage` fur `completedSteps: Set<number>`
+- Progress-Bar-Sektion nach dem Hero mit `Progress`-Komponente (Wert = `completedSteps.size / steps.length * 100`)
+- Checkliste mit `Checkbox`-Komponenten, gestylt im bestehenden `glass-card-subtle` Look
+- Videos bekommen "Schritt 1" / "Schritt 2" als nummerierte Badge-Kreise
+- Links-Sektion wird zu Schritt 3 und 4 mit individuellen Nummern
+- Feedback wird Schritt 5
+- Erledigte Schritte bekommen eine subtile visuelle Markierung (leicht reduzierte Opazitat / Hakchen)
 
-6. **Leere-State aufwerten**: Leere Zustände mit subtilerem Gold-Glow statt plain glass-card
-
-7. **Suchfeld**: `input-gold-shimmer`-Klasse für den Focus-Effekt
-
+Keine neuen Abhangigkeiten notwendig -- nutzt vorhandene `Progress`, `Checkbox` und `framer-motion`.

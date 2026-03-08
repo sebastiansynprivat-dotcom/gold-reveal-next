@@ -4623,44 +4623,52 @@ export default function AdminDashboard() {
 
       {/* Reassign Account Dialog */}
       <Dialog open={!!reassignTarget} onOpenChange={(o) => { if (!o) { setReassignTarget(null); setReassignOpenFolder(null); setReassignPoolSectionOpen(false); setReassignManualSectionOpen(false); setReassignSearchQuery(""); } }}>
-        <DialogContent className="glass-card border-border sm:max-w-md max-h-[85vh] overflow-hidden flex flex-col">
+        <DialogContent className="glass-card border-border/30 sm:max-w-lg max-h-[85vh] overflow-hidden flex flex-col">
           <DialogHeader className="pb-0">
             <div className="flex items-center gap-3 mb-1">
-              <div className="h-9 w-9 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
-                <KeyRound className="h-4.5 w-4.5 text-accent" />
+              <div className="h-10 w-10 rounded-xl bg-accent/10 flex items-center justify-center shrink-0 gold-glow">
+                <KeyRound className="h-5 w-5 text-accent" />
               </div>
-              <div>
-                <DialogTitle className="text-foreground text-base">
+              <div className="flex-1 min-w-0">
+                <DialogTitle className="text-foreground text-base font-bold">
                   Accounts verwalten
                 </DialogTitle>
-                <p className="text-[11px] text-muted-foreground mt-0.5">{reassignTarget?.group_name || "Chatter"}</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5 truncate">{reassignTarget?.group_name || "Chatter"}</p>
               </div>
             </div>
           </DialogHeader>
 
-          <div className="overflow-y-auto flex-1 space-y-4 pr-1 -mr-1 pt-2">
+          <div className="overflow-y-auto flex-1 space-y-4 pr-1 -mr-1 pt-3">
             {/* Currently assigned accounts */}
             {(() => {
               const assigned = reassignTarget?.assigned_accounts || [];
               if (assigned.length === 0) return (
-                <div className="glass-card-subtle rounded-xl p-4 text-center">
-                  <Package className="h-5 w-5 text-muted-foreground mx-auto mb-2 opacity-50" />
+                <div className="glass-card-subtle rounded-xl p-6 text-center gold-border-glow">
+                  <div className="h-10 w-10 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-3">
+                    <Package className="h-5 w-5 text-muted-foreground opacity-50" />
+                  </div>
                   <p className="text-xs text-muted-foreground">Keine Accounts zugewiesen</p>
                 </div>
               );
               return (
-                <div className="space-y-2">
+                <div className="space-y-2.5">
                   <div className="flex items-center gap-2 px-1">
                     <div className="h-1.5 w-1.5 rounded-full bg-accent" />
                     <p className="text-[11px] font-semibold text-foreground tracking-wide uppercase">Zugewiesen</p>
                     <Badge variant="secondary" className="text-[9px] ml-auto">{assigned.length}</Badge>
                   </div>
                   {assigned.map((acc) => (
-                    <div key={acc.id} className="flex items-center justify-between p-3 rounded-xl glass-card-subtle group hover:border-accent/30 transition-colors">
+                    <div key={acc.id} className="flex items-center justify-between p-3 rounded-xl glass-card-subtle card-hover-glow group transition-all duration-300">
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5 mb-1">
+                        <div className="flex items-center gap-1.5 mb-1 flex-wrap">
                           <Badge className="text-[9px] px-1.5 py-0 bg-accent/15 text-accent border-accent/20 font-medium">{acc.platform}</Badge>
-                          <span className="text-[9px] text-muted-foreground">
+                          <Badge variant="secondary" className="text-[9px] px-1.5 py-0">
+                            {acc.model_language === "en" ? "🇬🇧 EN" : "🇩🇪 DE"}
+                          </Badge>
+                          <Badge variant="secondary" className="text-[9px] px-1.5 py-0">
+                            {acc.model_agency === "syn" ? "SYN" : "SheX"}
+                          </Badge>
+                          <span className="text-[9px] text-muted-foreground ml-auto">
                             {acc.is_manual ? "Freier Account" : "Account-Pool"}
                           </span>
                         </div>
@@ -4684,17 +4692,17 @@ export default function AdminDashboard() {
               );
             })()}
 
-            {/* Separator */}
-            <div className="relative py-1">
-              <div className="absolute inset-x-0 top-1/2 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
-              <p className="relative text-center text-[10px] text-muted-foreground bg-card px-3 mx-auto w-fit">
+            {/* Gold gradient separator */}
+            <div className="relative py-2">
+              <div className="absolute inset-x-0 top-1/2 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
+              <p className="relative text-center text-[10px] font-medium text-accent/70 bg-card px-4 mx-auto w-fit uppercase tracking-wider">
                 Account zuweisen
               </p>
             </div>
 
             {/* Search for reassign */}
-            <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <div className="relative input-gold-shimmer rounded-md">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground z-10" />
               <Input
                 value={reassignSearchQuery}
                 onChange={(e) => {
@@ -4705,7 +4713,7 @@ export default function AdminDashboard() {
                   }
                 }}
                 placeholder="Account suchen..."
-                className="pl-8 text-xs h-8"
+                className="pl-8 text-xs h-9 bg-secondary/30 border-border/50"
               />
             </div>
             
@@ -4721,8 +4729,10 @@ export default function AdminDashboard() {
               });
               if (freeAccs.length === 0) {
                 return (
-                  <div className="glass-card-subtle rounded-xl p-6 text-center">
-                    <Package className="h-5 w-5 text-muted-foreground mx-auto mb-2 opacity-40" />
+                  <div className="glass-card-subtle rounded-xl p-6 text-center gold-border-glow">
+                    <div className="h-10 w-10 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-3">
+                      <Package className="h-5 w-5 text-muted-foreground opacity-40" />
+                    </div>
                     <p className="text-xs text-muted-foreground">Keine freien Accounts verfügbar</p>
                   </div>
                 );
@@ -4735,22 +4745,29 @@ export default function AdminDashboard() {
               const manualPlatforms = [...new Set(manualAccounts.map((a) => a.platform))];
 
               const renderAccountList = (accs: typeof freeAccs, platform: string) => (
-                <div className="divide-y divide-border/50 rounded-lg overflow-hidden border border-border/50">
+                <div className="divide-y divide-border/30 rounded-xl overflow-hidden border border-border/30 glass-card-subtle">
                   {accs.filter((a) => a.platform === platform).map((acc) => (
                     <button
                       key={acc.id}
                       onClick={() => reassignAccount(acc.id)}
                       disabled={reassigning}
-                      className="w-full p-2.5 text-left hover:bg-accent/5 transition-all disabled:opacity-50 group/item"
+                      className="w-full p-3 text-left hover:bg-accent/5 transition-all duration-200 disabled:opacity-50 group/item"
                     >
                       <div className="flex items-center justify-between gap-2">
                         <div className="min-w-0 flex-1">
-                          <p className="text-xs font-medium text-foreground truncate group-hover/item:text-accent transition-colors">{acc.account_email}</p>
-                          {acc.account_domain && (
-                            <p className="text-[10px] text-muted-foreground truncate">{acc.account_domain}</p>
-                          )}
+                          <div className="flex items-center gap-1.5 mb-0.5">
+                            <p className="text-xs font-medium text-foreground truncate group-hover/item:text-accent transition-colors">{acc.account_email}</p>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            {acc.account_domain && <p className="text-[10px] text-muted-foreground truncate">{acc.account_domain}</p>}
+                            <Badge variant="secondary" className="text-[8px] px-1 py-0 shrink-0">
+                              {acc.model_language === "en" ? "🇬🇧" : "🇩🇪"}
+                            </Badge>
+                          </div>
                         </div>
-                        <Plus className="h-3.5 w-3.5 text-muted-foreground group-hover/item:text-accent shrink-0 transition-colors" />
+                        <div className="h-7 w-7 rounded-lg bg-accent/10 flex items-center justify-center shrink-0 group-hover/item:bg-accent/20 group-hover/item:scale-110 transition-all duration-200">
+                          <Plus className="h-3.5 w-3.5 text-accent/60 group-hover/item:text-accent transition-colors" />
+                        </div>
                       </div>
                     </button>
                   ))}
@@ -4761,10 +4778,10 @@ export default function AdminDashboard() {
                 <div className="space-y-4">
                   {/* Account-Pools */}
                   {poolPlatforms.length > 0 && (
-                    <div className="space-y-2">
-                      <button onClick={() => setReassignPoolSectionOpen(!reassignPoolSectionOpen)} className="flex items-center gap-2 px-1 w-full text-left group/sec">
-                        <ChevronRight className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${reassignPoolSectionOpen ? "rotate-90" : ""}`} />
-                        <div className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                    <div className="space-y-2.5">
+                      <button onClick={() => setReassignPoolSectionOpen(!reassignPoolSectionOpen)} className="flex items-center gap-2 px-1 w-full text-left group/sec hover:opacity-80 transition-opacity">
+                        <ChevronRight className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 ${reassignPoolSectionOpen ? "rotate-90" : ""}`} />
+                        <div className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_6px_hsl(152_69%_45%/0.4)]" />
                         <p className="text-[11px] font-semibold text-foreground tracking-wide uppercase">Account-Pools</p>
                         <Badge variant="secondary" className="text-[9px] ml-auto">{poolAccounts.length} frei</Badge>
                       </button>
@@ -4782,10 +4799,10 @@ export default function AdminDashboard() {
 
                   {/* Freie Accounts */}
                   {manualPlatforms.length > 0 && (
-                    <div className="space-y-2">
-                      <button onClick={() => setReassignManualSectionOpen(!reassignManualSectionOpen)} className="flex items-center gap-2 px-1 w-full text-left group/sec">
-                        <ChevronRight className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${reassignManualSectionOpen ? "rotate-90" : ""}`} />
-                        <div className="h-1.5 w-1.5 rounded-full bg-amber-400" />
+                    <div className="space-y-2.5">
+                      <button onClick={() => setReassignManualSectionOpen(!reassignManualSectionOpen)} className="flex items-center gap-2 px-1 w-full text-left group/sec hover:opacity-80 transition-opacity">
+                        <ChevronRight className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 ${reassignManualSectionOpen ? "rotate-90" : ""}`} />
+                        <div className="h-2 w-2 rounded-full bg-amber-400 shadow-[0_0_6px_hsl(38_92%_50%/0.4)]" />
                         <p className="text-[11px] font-semibold text-foreground tracking-wide uppercase">Freie Accounts</p>
                         <Badge variant="secondary" className="text-[9px] ml-auto">{manualAccounts.length} frei</Badge>
                       </button>
@@ -4834,16 +4851,18 @@ export default function AdminDashboard() {
                                         {folderAccs.length === 0 ? (
                                           <p className="text-[10px] text-muted-foreground text-center py-3 italic">Keine freien Accounts</p>
                                         ) : (
-                                          <div className="divide-y divide-border/50 rounded-lg overflow-hidden border border-border/50">
+                                          <div className="divide-y divide-border/30 rounded-xl overflow-hidden border border-border/30 glass-card-subtle">
                                             {folderAccs.map((acc) => (
                                               <button key={acc.id} onClick={() => reassignAccount(acc.id)} disabled={reassigning}
-                                                className="w-full p-2.5 text-left hover:bg-accent/5 transition-all disabled:opacity-50 group/item">
+                                                className="w-full p-3 text-left hover:bg-accent/5 transition-all duration-200 disabled:opacity-50 group/item">
                                                 <div className="flex items-center justify-between gap-2">
                                                   <div className="min-w-0 flex-1">
                                                     <p className="text-xs font-medium text-foreground truncate group-hover/item:text-accent transition-colors">{acc.account_email}</p>
                                                     {acc.account_domain && <p className="text-[10px] text-muted-foreground truncate">{acc.account_domain}</p>}
                                                   </div>
-                                                  <Plus className="h-3.5 w-3.5 text-muted-foreground group-hover/item:text-accent shrink-0 transition-colors" />
+                                                  <div className="h-7 w-7 rounded-lg bg-accent/10 flex items-center justify-center shrink-0 group-hover/item:bg-accent/20 group-hover/item:scale-110 transition-all duration-200">
+                                                    <Plus className="h-3.5 w-3.5 text-accent/60 group-hover/item:text-accent transition-colors" />
+                                                  </div>
                                                 </div>
                                               </button>
                                             ))}
@@ -4860,7 +4879,7 @@ export default function AdminDashboard() {
                                       const color = getFolderColor(folder);
                                       return (
                                         <button key={folder} onClick={() => setReassignOpenFolder(`${p}::${folder}`)}
-                                          className="rounded-lg p-2 text-left transition-all border border-border/40 hover:border-accent/30 hover:scale-[1.02] bg-secondary/10">
+                                          className="rounded-xl p-2.5 text-left transition-all duration-200 border border-border/30 hover:border-accent/30 hover:scale-[1.02] glass-card-subtle card-inner-glow">
                                           <div className="flex items-center gap-1.5 mb-1">
                                             <div className="h-2.5 w-2.5 rounded-sm shrink-0" style={{ backgroundColor: color }} />
                                             <span className="text-[10px] font-semibold text-foreground truncate flex-1">{folder}</span>
@@ -4872,7 +4891,7 @@ export default function AdminDashboard() {
                                     })}
                                     {ungroupedAccs.length > 0 && (
                                       <button onClick={() => setReassignOpenFolder(`${p}::__ungrouped__`)}
-                                        className="rounded-lg p-2 text-left transition-all border border-dashed border-border/40 hover:border-accent/30 hover:scale-[1.02]">
+                                        className="rounded-xl p-2.5 text-left transition-all duration-200 border border-dashed border-border/30 hover:border-accent/30 hover:scale-[1.02] card-inner-glow">
                                         <div className="flex items-center gap-1.5 mb-1">
                                           <Package className="h-2.5 w-2.5 text-muted-foreground shrink-0" />
                                           <span className="text-[10px] font-semibold text-foreground truncate flex-1">Unsortiert</span>
