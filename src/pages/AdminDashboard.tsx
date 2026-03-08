@@ -3194,6 +3194,7 @@ export default function AdminDashboard() {
                             </div>
                             {req._showRejectReason && req.status === "pending" && (
                               <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200">
+                                <div className="input-gold-shimmer rounded-lg">
                                 <Textarea
                                   placeholder="Grund für die Ablehnung..."
                                   value={req._rejectReason ?? ""}
@@ -3201,8 +3202,9 @@ export default function AdminDashboard() {
                                     setModelRequests(prev => prev.map(r => r.id === req.id ? { ...r, _rejectReason: e.target.value } : r));
                                   }}
                                   rows={2}
-                                  className="text-xs bg-destructive/5 border-destructive/20 focus:border-destructive/40 resize-none"
+                                  className="text-xs bg-destructive/5 border-transparent resize-none"
                                 />
+                                </div>
                                 <Button size="sm" variant="outline" className="h-7 text-xs border-red-500/30 text-red-400 hover:bg-red-500/10" onClick={async () => {
                                   const reason = req._rejectReason ?? "";
                                   const { error } = await supabase.from("model_requests").update({ status: "rejected", admin_comment: reason || null }).eq("id", req.id);
