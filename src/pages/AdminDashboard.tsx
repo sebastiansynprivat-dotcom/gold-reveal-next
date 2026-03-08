@@ -3657,20 +3657,24 @@ export default function AdminDashboard() {
               {schedSectionOpen && (
               <>
               <div className="p-4 space-y-3">
+                <div className="input-gold-shimmer rounded-lg">
                 <Input
                   value={schedTitle}
                   onChange={(e) => setSchedTitle(e.target.value)}
                   placeholder="Titel"
-                  className="text-sm bg-secondary/30 border-border/30 focus:border-accent/40"
+                  className="text-sm bg-secondary/30 border-transparent"
                   maxLength={100}
                 />
+                </div>
+                <div className="input-gold-shimmer rounded-lg">
                 <Textarea
                   value={schedBody}
                   onChange={(e) => setSchedBody(e.target.value)}
                   placeholder="Nachricht..."
-                  className="text-sm min-h-[60px] bg-secondary/30 border-border/30 focus:border-accent/40 resize-none"
+                  className="text-sm min-h-[60px] bg-secondary/30 border-transparent resize-none"
                   maxLength={500}
                 />
+                </div>
 
                 {/* Frequency */}
                 <div className="space-y-2">
