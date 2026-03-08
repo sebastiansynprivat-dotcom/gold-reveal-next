@@ -1333,6 +1333,7 @@ export default function AdminDashboard() {
       drive_folder_id: extractDriveFolderId(newAccDriveFolder.trim()),
       model_language: newAccLanguage,
       model_active: newAccModelActive,
+      model_agency: newAccModelAgency,
     } as any);
     if (error) {
       toast.error("Fehler beim Hinzufügen");
