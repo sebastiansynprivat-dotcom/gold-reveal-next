@@ -203,12 +203,15 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
             <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="space-y-1.5">
                 <Label className="text-xs text-foreground">Kundenname</Label>
-                <Input
-                  placeholder="z.B. Max, @username"
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  maxLength={100}
-                />
+                <div className="input-gold-shimmer rounded-lg">
+                  <Input
+                    placeholder="z.B. Max, @username"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    maxLength={100}
+                    className="border-transparent"
+                  />
+                </div>
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs text-foreground">Was ist der Kunde bereit zu bezahlen? (€) *</Label>
