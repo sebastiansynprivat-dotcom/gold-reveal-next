@@ -3898,18 +3898,22 @@ export default function AdminDashboard() {
                           </div>
                           {isEditing ? (
                             <div className="space-y-2">
+                              <div className="input-gold-shimmer rounded-lg">
                               <Input
                                 value={edits.title}
                                 onChange={(e) => setTemplateEdits(prev => ({ ...prev, [tpl.id]: { ...edits, title: e.target.value } }))}
                                 placeholder="Titel"
-                                className="text-sm bg-secondary/30 border-border/30 focus:border-accent/40"
+                                className="text-sm bg-secondary/30 border-transparent"
                               />
+                              </div>
+                              <div className="input-gold-shimmer rounded-lg">
                               <Textarea
                                 value={edits.body}
                                 onChange={(e) => setTemplateEdits(prev => ({ ...prev, [tpl.id]: { ...edits, body: e.target.value } }))}
                                 placeholder="Nachricht"
-                                className="text-sm min-h-[60px] bg-secondary/30 border-border/30 focus:border-accent/40 resize-none"
+                                className="text-sm min-h-[60px] bg-secondary/30 border-transparent resize-none"
                               />
+                              </div>
                             </div>
                           ) : (
                             <div>
