@@ -35,3 +35,6 @@ verify_jwt = false
 
 [functions.notify-account-assigned]
 verify_jwt = false
+
+[functions.create-model-login]
+verify_jwt = false
