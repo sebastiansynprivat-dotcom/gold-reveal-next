@@ -166,6 +166,8 @@ export default function ModelDashboardTab() {
       const d = data as ModelDashboardRow;
       setData(d);
       setFourbasedSubmitted(d.fourbased_submitted);
+      setMaloumSubmitted(d.maloum_submitted);
+      setBrezzelsSubmitted(d.brezzels_submitted);
       setNotes(d.notes || "");
       setRevenuePercentage(d.revenue_percentage || 0);
       setCryptoAddress(d.crypto_address || "");
@@ -173,6 +175,8 @@ export default function ModelDashboardTab() {
     } else {
       setData(null);
       setFourbasedSubmitted(false);
+      setMaloumSubmitted(false);
+      setBrezzelsSubmitted(false);
       setNotes("");
       setRevenuePercentage(0);
       setCryptoAddress("");
