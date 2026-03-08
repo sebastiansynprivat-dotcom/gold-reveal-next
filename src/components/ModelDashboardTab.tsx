@@ -119,7 +119,7 @@ export default function ModelDashboardTab() {
   const [uploading, setUploading] = useState(false);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [searchQuery, setSearchQuery] = useState("");
-
+  const [modelListOpen, setModelListOpen] = useState(false);
   const detailRef = useRef<HTMLDivElement>(null);
 
   // Local form state
