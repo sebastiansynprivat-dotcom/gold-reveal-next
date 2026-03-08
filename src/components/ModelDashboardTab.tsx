@@ -552,12 +552,14 @@ export default function ModelDashboardTab() {
             <Section icon={StickyNote} title="Model Daten" delay={0.15}>
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Notizen / Freitext</Label>
-                <Textarea
-                  value={notes}
-                  onChange={e => setNotes(e.target.value)}
-                  placeholder="Notizen zum Model…"
-                  className="bg-secondary/40 border-border min-h-[100px] text-sm focus:border-accent/40 transition-colors"
-                />
+                <div className="input-gold-shimmer rounded-lg">
+                  <Textarea
+                    value={notes}
+                    onChange={e => setNotes(e.target.value)}
+                    placeholder="Notizen zum Model…"
+                    className="bg-secondary/40 border-transparent min-h-[100px] text-sm"
+                  />
+                </div>
               </div>
             </Section>
 
