@@ -3709,12 +3709,14 @@ export default function AdminDashboard() {
                 {/* Time */}
                 <div className="space-y-2">
                   <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Uhrzeit (deutsche Zeit)</label>
+                  <div className="input-gold-shimmer rounded-lg w-32">
                   <Input
                     type="time"
                     value={schedTime}
                     onChange={(e) => setSchedTime(e.target.value)}
-                    className="text-sm w-32 bg-secondary/30 border-border/30 focus:border-accent/40"
+                    className="text-sm w-full bg-secondary/30 border-transparent"
                   />
+                  </div>
                 </div>
 
                 {/* Weekday for weekly */}
