@@ -4349,6 +4349,7 @@ export default function AdminDashboard() {
                     <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Model aktiv</span>
                     <Switch checked={newAccModelActive} onCheckedChange={setNewAccModelActive} />
                   </div>
+                </div>
 
                 <Button onClick={addAccount} disabled={addingAccount || !newAccEmail.trim() || !newAccDomain.trim()} className="w-full" size="sm">
                   <Plus className="h-3.5 w-3.5 mr-1.5" />
