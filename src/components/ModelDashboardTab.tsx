@@ -699,10 +699,56 @@ export default function ModelDashboardTab() {
                 <p className="text-xs text-muted-foreground truncate">
                   {selectedAccount?.account_domain && `${selectedAccount.account_domain} · `}{selectedAccount?.platform}
                 </p>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={generateModelLogin}
+                disabled={modelLoginLoading}
+                className="shrink-0 text-xs gap-1.5 border-accent/30 text-accent hover:bg-accent/10"
+              >
+                <KeyRound className="h-3 w-3" />
+                {modelLoginLoading ? "Wird erstellt…" : "Login generieren"}
+              </Button>
               </div>
             </div>
 
-            {/* Einnahmen Übersicht – oben */}
+            {/* Model Login Credentials Dialog */}
+            <Dialog open={modelLoginDialog} onOpenChange={setModelLoginDialog}>
+              <DialogContent className="glass-card border-border sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle className="text-foreground">Model-Login erstellt</DialogTitle>
+                </DialogHeader>
+                {modelLoginCreds && (
+                  <div className="space-y-4">
+                    <p className="text-xs text-muted-foreground">Sende diese Zugangsdaten an das Model. Das Passwort wird nur einmal angezeigt!</p>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 p-3 rounded-lg bg-secondary/50 border border-border">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] text-muted-foreground">E-Mail</p>
+                          <p className="text-sm font-mono text-foreground truncate">{modelLoginCreds.email}</p>
+                        </div>
+                        <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" onClick={() => { navigator.clipboard.writeText(modelLoginCreds.email); toast.success("Kopiert!"); }}>
+                          <Copy className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                      <div className="flex items-center gap-2 p-3 rounded-lg bg-secondary/50 border border-border">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] text-muted-foreground">Passwort</p>
+                          <p className="text-sm font-mono text-foreground truncate">{showLoginPassword ? modelLoginCreds.password : "••••••••••••"}</p>
+                        </div>
+                        <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" onClick={() => setShowLoginPassword(!showLoginPassword)}>
+                          {showLoginPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                        </Button>
+                        <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" onClick={() => { navigator.clipboard.writeText(modelLoginCreds.password); toast.success("Kopiert!"); }}>
+                          <Copy className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">Login-URL: <span className="text-foreground font-mono">{window.location.origin}/model/login</span></p>
+                  </div>
+                )}
+              </DialogContent>
+            </Dialog>
             <Section icon={TrendingUp} title="Einnahmen Übersicht" delay={0.05}>
               <div className="space-y-4">
                 {/* Month selector */}
