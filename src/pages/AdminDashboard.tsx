@@ -298,13 +298,13 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
             </button>
           ))}
         </div>
-        <div className="relative">
+        <div className="relative input-gold-shimmer rounded-lg">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
           <Input
             placeholder="Chatter suchen…"
             value={chatterSearch}
             onChange={e => setChatterSearch(e.target.value)}
-            className="h-8 w-48 pl-8 text-xs bg-secondary/30 border-border/50"
+            className="h-8 w-48 pl-8 text-xs bg-secondary/30 border-transparent"
           />
         </div>
       </div>
@@ -2364,13 +2364,13 @@ export default function AdminDashboard() {
             <div className="space-y-4">
               {/* Add new admin */}
               <div className="flex gap-2">
-                <div className="relative flex-1">
+                <div className="relative flex-1 input-gold-shimmer rounded-lg">
                   <UserPlus className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                   <Input
                     value={newAdminEmail}
                     onChange={(e) => setNewAdminEmail(e.target.value)}
                     placeholder="E-Mail des neuen Admins..."
-                    className="pl-9 text-sm"
+                    className="pl-9 text-sm border-transparent"
                     onKeyDown={(e) => e.key === "Enter" && addAdmin()}
                   />
                 </div>
@@ -2451,13 +2451,13 @@ export default function AdminDashboard() {
 
         {/* Search & Filters Group */}
         <div className="space-y-3">
-          <div className="relative">
+          <div className="relative input-gold-shimmer rounded-lg">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Chatter suchen (Gruppe oder Telegram-ID)..."
-              className="pl-9 text-sm"
+              className="pl-9 text-sm border-transparent"
             />
           </div>
 
@@ -3071,16 +3071,18 @@ export default function AdminDashboard() {
                                       Abbrechen
                                     </button>
                                   </div>
-                                  <Textarea
-                                    placeholder="Kommentar für den Chatter..."
-                                    value={req._localComment ?? req.admin_comment ?? ""}
-                                    onChange={(e) => {
-                                      setModelRequests(prev => prev.map(r => r.id === req.id ? { ...r, _localComment: e.target.value } : r));
-                                    }}
-                                    rows={2}
-                                    className="text-xs bg-secondary/30 border-border/30 focus:border-accent/40 resize-none"
-                                    autoFocus
-                                  />
+                                   <div className="input-gold-shimmer rounded-lg">
+                                   <Textarea
+                                     placeholder="Kommentar für den Chatter..."
+                                     value={req._localComment ?? req.admin_comment ?? ""}
+                                     onChange={(e) => {
+                                       setModelRequests(prev => prev.map(r => r.id === req.id ? { ...r, _localComment: e.target.value } : r));
+                                     }}
+                                     rows={2}
+                                     className="text-xs bg-secondary/30 border-transparent resize-none"
+                                     autoFocus
+                                   />
+                                   </div>
                                   {(req._localComment != null && req._localComment !== (req.admin_comment ?? "")) && (
                                     <Button size="sm" variant="outline" className="h-7 text-xs" onClick={async () => {
                                       const comment = req._localComment ?? "";
@@ -3116,14 +3118,16 @@ export default function AdminDashboard() {
                             <div className="space-y-1.5">
                               <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Content-Link</p>
                               <div className="flex gap-2">
+                                <div className="input-gold-shimmer rounded-lg flex-1">
                                 <Input
                                   placeholder="Link zum fertigen Content einfügen..."
                                   value={req._localContentLink ?? (req as any).content_link ?? ""}
                                   onChange={(e) => {
                                     setModelRequests(prev => prev.map(r => r.id === req.id ? { ...r, _localContentLink: e.target.value } : r));
                                   }}
-                                  className="text-xs bg-secondary/30 border-border/30 focus:border-accent/40 flex-1"
+                                  className="text-xs bg-secondary/30 border-transparent flex-1"
                                 />
+                                </div>
                                 {(req as any).content_link && (
                                   <Button size="sm" variant="outline" className="h-9 px-2" asChild>
                                     <a href={(req as any).content_link} target="_blank" rel="noopener noreferrer">
@@ -3190,6 +3194,7 @@ export default function AdminDashboard() {
                             </div>
                             {req._showRejectReason && req.status === "pending" && (
                               <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200">
+                                <div className="input-gold-shimmer rounded-lg">
                                 <Textarea
                                   placeholder="Grund für die Ablehnung..."
                                   value={req._rejectReason ?? ""}
@@ -3197,8 +3202,9 @@ export default function AdminDashboard() {
                                     setModelRequests(prev => prev.map(r => r.id === req.id ? { ...r, _rejectReason: e.target.value } : r));
                                   }}
                                   rows={2}
-                                  className="text-xs bg-destructive/5 border-destructive/20 focus:border-destructive/40 resize-none"
+                                  className="text-xs bg-destructive/5 border-transparent resize-none"
                                 />
+                                </div>
                                 <Button size="sm" variant="outline" className="h-7 text-xs border-red-500/30 text-red-400 hover:bg-red-500/10" onClick={async () => {
                                   const reason = req._rejectReason ?? "";
                                   const { error } = await supabase.from("model_requests").update({ status: "rejected", admin_comment: reason || null }).eq("id", req.id);
@@ -3333,14 +3339,14 @@ export default function AdminDashboard() {
 
               {/* Search */}
               <div className="px-3 pt-1 pb-2">
-                <div className="relative">
+                <div className="relative input-gold-shimmer rounded-lg">
                   <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                   <input
                     type="text"
                     value={botSearch}
                     onChange={(e) => setBotSearch(e.target.value)}
                     placeholder="Account suchen..."
-                    className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg bg-secondary/50 border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+                    className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg bg-secondary/50 border border-transparent text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-0"
                   />
                 </div>
               </div>
@@ -3453,6 +3459,7 @@ export default function AdminDashboard() {
                               <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                                 Bot-Nachricht
                               </label>
+                              <div className="input-gold-shimmer rounded-lg">
                               <Textarea
                                 value={entry.message}
                                 onChange={(e) =>
@@ -3462,8 +3469,9 @@ export default function AdminDashboard() {
                                   }))
                                 }
                                 placeholder="Hey! Schreib mir gerne eine Nachricht 💋"
-                                className="text-sm min-h-[70px] resize-none bg-background/50 border-border/50 focus:border-accent/50"
+                                className="text-sm min-h-[70px] resize-none bg-background/50 border-transparent"
                               />
+                              </div>
                             </div>
 
                             {/* Follow-up Message */}
@@ -3471,6 +3479,7 @@ export default function AdminDashboard() {
                               <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                                 Follow-up Nachricht
                               </label>
+                              <div className="input-gold-shimmer rounded-lg">
                               <Textarea
                                 value={entry.followUp}
                                 onChange={(e) =>
@@ -3480,8 +3489,9 @@ export default function AdminDashboard() {
                                   }))
                                 }
                                 placeholder="Na, hast du meine letzte Nachricht gelesen? 😏"
-                                className="text-sm min-h-[70px] resize-none bg-background/50 border-border/50 focus:border-accent/50"
+                                className="text-sm min-h-[70px] resize-none bg-background/50 border-transparent"
                               />
+                              </div>
                             </div>
 
                             {/* Save Button */}
@@ -3560,20 +3570,24 @@ export default function AdminDashboard() {
               {notifSendOpen && (
               <>
               <div className="p-4 space-y-3">
+                <div className="input-gold-shimmer rounded-lg">
                 <Input
                   value={notifTitle}
                   onChange={(e) => setNotifTitle(e.target.value)}
                   placeholder="Titel der Benachrichtigung"
-                  className="text-sm bg-secondary/30 border-border/30 focus:border-accent/40"
+                  className="text-sm bg-secondary/30 border-transparent"
                   maxLength={100}
                 />
+                </div>
+                <div className="input-gold-shimmer rounded-lg">
                 <Textarea
                   value={notifBody}
                   onChange={(e) => setNotifBody(e.target.value)}
                   placeholder="Nachricht eingeben..."
-                  className="text-sm min-h-[80px] bg-secondary/30 border-border/30 focus:border-accent/40 resize-none"
+                  className="text-sm min-h-[80px] bg-secondary/30 border-transparent resize-none"
                   maxLength={500}
                 />
+                </div>
                 <Button
                   onClick={handleSendNotification}
                   disabled={notifSending || !notifTitle.trim() || !notifBody.trim()}
@@ -3643,20 +3657,24 @@ export default function AdminDashboard() {
               {schedSectionOpen && (
               <>
               <div className="p-4 space-y-3">
+                <div className="input-gold-shimmer rounded-lg">
                 <Input
                   value={schedTitle}
                   onChange={(e) => setSchedTitle(e.target.value)}
                   placeholder="Titel"
-                  className="text-sm bg-secondary/30 border-border/30 focus:border-accent/40"
+                  className="text-sm bg-secondary/30 border-transparent"
                   maxLength={100}
                 />
+                </div>
+                <div className="input-gold-shimmer rounded-lg">
                 <Textarea
                   value={schedBody}
                   onChange={(e) => setSchedBody(e.target.value)}
                   placeholder="Nachricht..."
-                  className="text-sm min-h-[60px] bg-secondary/30 border-border/30 focus:border-accent/40 resize-none"
+                  className="text-sm min-h-[60px] bg-secondary/30 border-transparent resize-none"
                   maxLength={500}
                 />
+                </div>
 
                 {/* Frequency */}
                 <div className="space-y-2">
@@ -3691,12 +3709,14 @@ export default function AdminDashboard() {
                 {/* Time */}
                 <div className="space-y-2">
                   <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Uhrzeit (deutsche Zeit)</label>
+                  <div className="input-gold-shimmer rounded-lg w-32">
                   <Input
                     type="time"
                     value={schedTime}
                     onChange={(e) => setSchedTime(e.target.value)}
-                    className="text-sm w-32 bg-secondary/30 border-border/30 focus:border-accent/40"
+                    className="text-sm w-full bg-secondary/30 border-transparent"
                   />
+                  </div>
                 </div>
 
                 {/* Weekday for weekly */}
@@ -3726,14 +3746,16 @@ export default function AdminDashboard() {
                 {schedFrequency === "monthly" && (
                   <div className="space-y-2">
                     <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Tag im Monat</label>
+                    <div className="input-gold-shimmer rounded-lg w-20">
                     <Input
                       type="number"
                       min={1}
                       max={28}
                       value={schedDayOfMonth}
                       onChange={(e) => setSchedDayOfMonth(Number(e.target.value))}
-                      className="text-sm w-20 bg-secondary/30 border-border/30 focus:border-accent/40"
+                      className="text-sm w-full bg-secondary/30 border-transparent"
                     />
+                    </div>
                   </div>
                 )}
 
@@ -3876,18 +3898,22 @@ export default function AdminDashboard() {
                           </div>
                           {isEditing ? (
                             <div className="space-y-2">
+                              <div className="input-gold-shimmer rounded-lg">
                               <Input
                                 value={edits.title}
                                 onChange={(e) => setTemplateEdits(prev => ({ ...prev, [tpl.id]: { ...edits, title: e.target.value } }))}
                                 placeholder="Titel"
-                                className="text-sm bg-secondary/30 border-border/30 focus:border-accent/40"
+                                className="text-sm bg-secondary/30 border-transparent"
                               />
+                              </div>
+                              <div className="input-gold-shimmer rounded-lg">
                               <Textarea
                                 value={edits.body}
                                 onChange={(e) => setTemplateEdits(prev => ({ ...prev, [tpl.id]: { ...edits, body: e.target.value } }))}
                                 placeholder="Nachricht"
-                                className="text-sm min-h-[60px] bg-secondary/30 border-border/30 focus:border-accent/40 resize-none"
+                                className="text-sm min-h-[60px] bg-secondary/30 border-transparent resize-none"
                               />
+                              </div>
                             </div>
                           ) : (
                             <div>
@@ -3947,12 +3973,14 @@ export default function AdminDashboard() {
                     </div>
                   ) : (
                     <>
+                      <div className="input-gold-shimmer rounded-lg">
                       <Textarea
                         value={kiPrompt}
                         onChange={(e) => { setKiPrompt(e.target.value); setKiPromptSaved(false); }}
-                        className="min-h-[300px] text-sm resize-y bg-background/50 border-border/50 focus:border-accent/50 leading-relaxed"
+                        className="min-h-[300px] text-sm resize-y bg-background/50 border-transparent leading-relaxed"
                         placeholder="System-Prompt eingeben..."
                       />
+                      </div>
                       <div className="flex items-center justify-between">
                         <span className="text-[11px] text-muted-foreground">
                           {kiPrompt.length} Zeichen
@@ -4004,12 +4032,14 @@ export default function AdminDashboard() {
                     </div>
                   ) : (
                     <>
+                      <div className="input-gold-shimmer rounded-lg">
                       <Textarea
                         value={analysisPrompt}
                         onChange={(e) => setAnalysisPrompt(e.target.value)}
-                        className="min-h-[300px] text-sm resize-y bg-background/50 border-border/50 focus:border-accent/50 leading-relaxed"
+                        className="min-h-[300px] text-sm resize-y bg-background/50 border-transparent leading-relaxed"
                         placeholder="Analyse-Prompt eingeben..."
                       />
+                      </div>
                       <div className="flex items-center justify-between">
                         <span className="text-[11px] text-muted-foreground">
                           {analysisPrompt.length} Zeichen
@@ -4253,19 +4283,19 @@ export default function AdminDashboard() {
                 <div className="space-y-2">
                   <div className="space-y-1">
                     <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Domain</label>
-                    <Input value={newAccDomain} onChange={(e) => setNewAccDomain(e.target.value)} placeholder="z.B. brezzels.com" className="text-xs h-8" />
+                    <div className="input-gold-shimmer rounded-lg"><Input value={newAccDomain} onChange={(e) => setNewAccDomain(e.target.value)} placeholder="z.B. brezzels.com" className="text-xs h-8 border-transparent" /></div>
                   </div>
                   <div className="space-y-1">
                     <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">E-Mail</label>
-                    <Input value={newAccEmail} onChange={(e) => setNewAccEmail(e.target.value)} placeholder="account@email.com" type="email" className="text-xs h-8" />
+                    <div className="input-gold-shimmer rounded-lg"><Input value={newAccEmail} onChange={(e) => setNewAccEmail(e.target.value)} placeholder="account@email.com" type="email" className="text-xs h-8 border-transparent" /></div>
                   </div>
                   <div className="space-y-1">
                     <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Passwort</label>
-                    <Input value={newAccPassword} onChange={(e) => setNewAccPassword(e.target.value)} placeholder="••••••••" className="text-xs h-8" />
+                    <div className="input-gold-shimmer rounded-lg"><Input value={newAccPassword} onChange={(e) => setNewAccPassword(e.target.value)} placeholder="••••••••" className="text-xs h-8 border-transparent" /></div>
                   </div>
                   <div className="space-y-1">
                     <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Drive Folder ID</label>
-                    <Input value={newAccDriveFolder} onChange={(e) => setNewAccDriveFolder(e.target.value)} placeholder="Optional" className="text-xs h-8" />
+                    <div className="input-gold-shimmer rounded-lg"><Input value={newAccDriveFolder} onChange={(e) => setNewAccDriveFolder(e.target.value)} placeholder="Optional" className="text-xs h-8 border-transparent" /></div>
                   </div>
                 </div>
 
@@ -4332,13 +4362,13 @@ export default function AdminDashboard() {
                     ))}
                   </div>
                 )}
-                <div className="relative flex-1">
+                <div className="relative flex-1 input-gold-shimmer rounded-lg">
                   <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                   <Input
                     value={poolSearchQuery}
                     onChange={(e) => setPoolSearchQuery(e.target.value)}
                     placeholder="Suchen..."
-                    className="pl-8 text-xs h-8"
+                    className="pl-8 text-xs h-8 border-transparent"
                   />
                 </div>
               </div>
@@ -4446,8 +4476,8 @@ export default function AdminDashboard() {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            <Input value={pushTitle} onChange={(e) => setPushTitle(e.target.value)} placeholder="Titel" maxLength={100} />
-            <Textarea value={pushBody} onChange={(e) => setPushBody(e.target.value)} placeholder="Nachricht..." maxLength={500} className="min-h-[80px]" />
+            <div className="input-gold-shimmer rounded-lg"><Input value={pushTitle} onChange={(e) => setPushTitle(e.target.value)} placeholder="Titel" maxLength={100} className="border-transparent" /></div>
+            <div className="input-gold-shimmer rounded-lg"><Textarea value={pushBody} onChange={(e) => setPushBody(e.target.value)} placeholder="Nachricht..." maxLength={500} className="min-h-[80px] border-transparent" /></div>
             <Button onClick={sendIndividualPush} disabled={sending || !pushTitle.trim() || !pushBody.trim()} className="w-full">
               <Send className="h-4 w-4 mr-2" />
               {sending ? "Wird gesendet..." : "Push senden"}
@@ -4463,8 +4493,8 @@ export default function AdminDashboard() {
             <DialogTitle className="text-foreground">An alle Chatter senden</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            <Input value={broadcastTitle} onChange={(e) => setBroadcastTitle(e.target.value)} placeholder="Titel" maxLength={100} />
-            <Textarea value={broadcastBody} onChange={(e) => setBroadcastBody(e.target.value)} placeholder="Nachricht..." maxLength={500} className="min-h-[80px]" />
+            <div className="input-gold-shimmer rounded-lg"><Input value={broadcastTitle} onChange={(e) => setBroadcastTitle(e.target.value)} placeholder="Titel" maxLength={100} className="border-transparent" /></div>
+            <div className="input-gold-shimmer rounded-lg"><Textarea value={broadcastBody} onChange={(e) => setBroadcastBody(e.target.value)} placeholder="Nachricht..." maxLength={500} className="min-h-[80px] border-transparent" /></div>
             <Button onClick={sendBroadcast} disabled={broadcastSending || !broadcastTitle.trim() || !broadcastBody.trim()} className="w-full">
               <Bell className="h-4 w-4 mr-2" />
               {broadcastSending ? "Wird gesendet..." : "An alle senden"}
@@ -4701,7 +4731,7 @@ export default function AdminDashboard() {
             </div>
 
             {/* Search for reassign */}
-            <div className="relative">
+            <div className="relative input-gold-shimmer rounded-lg">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
               <Input
                 value={reassignSearchQuery}
@@ -4713,7 +4743,7 @@ export default function AdminDashboard() {
                   }
                 }}
                 placeholder="Account suchen..."
-                className="pl-8 text-xs h-9 bg-secondary/30 border border-border/50 rounded-md focus:ring-1 focus:ring-accent/50"
+                className="pl-8 text-xs h-9 bg-secondary/30 border-transparent rounded-md"
               />
             </div>
             
@@ -4949,6 +4979,7 @@ export default function AdminDashboard() {
           <div className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-xs text-muted-foreground">Tagesziel in €</label>
+              <div className="input-gold-shimmer rounded-lg">
               <Input
                 type="number"
                 min={0}
@@ -4956,8 +4987,9 @@ export default function AdminDashboard() {
                 value={goalAmount}
                 onChange={(e) => setGoalAmount(e.target.value)}
                 placeholder="30"
-                className="text-lg font-semibold"
+                className="text-lg font-semibold border-transparent"
               />
+              </div>
             </div>
             <Button onClick={saveGoal} disabled={goalSaving} className="w-full">
               <Target className="h-4 w-4 mr-2" />
@@ -4979,13 +5011,15 @@ export default function AdminDashboard() {
           <div className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground">Pool-Name</label>
+              <div className="input-gold-shimmer rounded-lg">
               <Input
                 value={newPlatformName}
                 onChange={(e) => setNewPlatformName(e.target.value)}
                 placeholder="z.B. Brezzels, Maloum, 4Based..."
-                className="text-sm"
+                className="text-sm border-transparent"
                 autoFocus
               />
+              </div>
             </div>
             <Button
               onClick={() => {
@@ -5269,19 +5303,19 @@ export default function AdminDashboard() {
                       <div className="space-y-2">
                         <div className="space-y-1">
                           <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Domain</label>
-                          <Input value={manualAccDomain} onChange={(e) => setManualAccDomain(e.target.value)} placeholder="z.B. onlyfans.com" className="text-xs h-8" />
+                          <div className="input-gold-shimmer rounded-lg"><Input value={manualAccDomain} onChange={(e) => setManualAccDomain(e.target.value)} placeholder="z.B. onlyfans.com" className="text-xs h-8 border-transparent" /></div>
                         </div>
                         <div className="space-y-1">
                           <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">E-Mail</label>
-                          <Input value={manualAccEmail} onChange={(e) => setManualAccEmail(e.target.value)} placeholder="account@email.com" className="text-xs h-8" />
+                          <div className="input-gold-shimmer rounded-lg"><Input value={manualAccEmail} onChange={(e) => setManualAccEmail(e.target.value)} placeholder="account@email.com" className="text-xs h-8 border-transparent" /></div>
                         </div>
                         <div className="space-y-1">
                           <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Passwort</label>
-                          <Input value={manualAccPassword} onChange={(e) => setManualAccPassword(e.target.value)} placeholder="••••••••" className="text-xs h-8" />
+                          <div className="input-gold-shimmer rounded-lg"><Input value={manualAccPassword} onChange={(e) => setManualAccPassword(e.target.value)} placeholder="••••••••" className="text-xs h-8 border-transparent" /></div>
                         </div>
                         <div className="space-y-1">
                           <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Drive Folder ID</label>
-                          <Input value={manualAccDriveFolder} onChange={(e) => setManualAccDriveFolder(e.target.value)} placeholder="Optional" className="text-xs h-8" />
+                          <div className="input-gold-shimmer rounded-lg"><Input value={manualAccDriveFolder} onChange={(e) => setManualAccDriveFolder(e.target.value)} placeholder="Optional" className="text-xs h-8 border-transparent" /></div>
                         </div>
                       </div>
 
@@ -5356,13 +5390,13 @@ export default function AdminDashboard() {
                     {!openFolder ? (
                       <div className="flex-1 overflow-y-auto space-y-4 pr-1 -mr-1">
                         {/* Account search across folders */}
-                        <div className="relative">
+                        <div className="relative input-gold-shimmer rounded-lg">
                           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                           <Input
                             value={manualAccountSearch}
                             onChange={(e) => setManualAccountSearch(e.target.value)}
                             placeholder="Account suchen…"
-                            className="pl-8 h-8 text-xs"
+                            className="pl-8 h-8 text-xs border-transparent"
                           />
                         </div>
 
@@ -5535,9 +5569,9 @@ export default function AdminDashboard() {
                             </div>
 
                             {subAccs.length > 0 && (
-                              <div className="relative">
+                              <div className="relative input-gold-shimmer rounded-lg">
                                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                                <Input value={manualAccountSearch} onChange={(e) => setManualAccountSearch(e.target.value)} placeholder="Account suchen..." className="pl-8 text-xs h-8" />
+                                <Input value={manualAccountSearch} onChange={(e) => setManualAccountSearch(e.target.value)} placeholder="Account suchen..." className="pl-8 text-xs h-8 border-transparent" />
                               </div>
                             )}
 
@@ -5639,13 +5673,13 @@ export default function AdminDashboard() {
 
                             {/* Account search */}
                             {allFolderAccs.length > 0 && (
-                              <div className="relative">
+                              <div className="relative input-gold-shimmer rounded-lg">
                                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                                 <Input
                                   value={manualAccountSearch}
                                   onChange={(e) => setManualAccountSearch(e.target.value)}
                                   placeholder="Account suchen..."
-                                  className="pl-8 text-xs h-8"
+                                  className="pl-8 text-xs h-8 border-transparent"
                                 />
                               </div>
                             )}

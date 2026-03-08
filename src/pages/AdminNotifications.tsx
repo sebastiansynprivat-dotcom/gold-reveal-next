@@ -88,20 +88,24 @@ export default function AdminNotifications() {
           </div>
 
           <div className="space-y-3">
+            <div className="input-gold-shimmer rounded-lg">
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Titel der Benachrichtigung"
-              className="text-sm"
+              className="text-sm border-transparent"
               maxLength={100}
             />
+            </div>
+            <div className="input-gold-shimmer rounded-lg">
             <Textarea
               value={body}
               onChange={(e) => setBody(e.target.value)}
               placeholder="Nachricht eingeben..."
-              className="text-sm min-h-[80px]"
+              className="text-sm min-h-[80px] border-transparent"
               maxLength={500}
             />
+            </div>
             <Button
               onClick={handleSend}
               disabled={sending || !title.trim() || !body.trim()}
