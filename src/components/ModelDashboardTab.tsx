@@ -119,9 +119,11 @@ export default function ModelDashboardTab() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [platformFilter, setPlatformFilter] = useState<PlatformFilter>("all");
+  const [subFilter, setSubFilter] = useState<SubFilter>("none");
   const [searchQuery, setSearchQuery] = useState("");
   const [modelListOpen, setModelListOpen] = useState(false);
+  const [allBotMessages, setAllBotMessages] = useState<BotMessageRow[]>([]);
   const detailRef = useRef<HTMLDivElement>(null);
 
   // Local form state
