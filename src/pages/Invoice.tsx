@@ -471,7 +471,7 @@ Mein Gruppenname ist: ${groupName || "[Bitte Gruppenname im Dashboard eintragen]
 
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Mehrwertsteuer-Vermerk *</Label>
-                <Input value={vatNote} onChange={(e) => setVatNote(e.target.value)} className="h-9 text-sm bg-secondary border-border text-xs" />
+                <div className="input-gold-shimmer rounded-lg"><Input value={vatNote} onChange={(e) => setVatNote(e.target.value)} className="h-9 text-sm bg-secondary border-transparent text-xs" /></div>
               </div>
             </CardContent>
           </Card>
