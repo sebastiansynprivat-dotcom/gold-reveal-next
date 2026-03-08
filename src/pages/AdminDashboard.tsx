@@ -326,6 +326,23 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
             </button>
           ))}
         </div>
+        {/* Agency filter */}
+        <div className="flex gap-1 p-1 bg-secondary/30 rounded-lg w-fit">
+          {([{ key: "alle" as const, label: "Alle" }, { key: "shex" as const, label: "SheX" }, { key: "syn" as const, label: "SYN" }]).map(opt => (
+            <button
+              key={opt.key}
+              onClick={() => setAgencyFilter(opt.key)}
+              className={cn(
+                "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
+                agencyFilter === opt.key
+                  ? "bg-accent text-accent-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
           <Input
