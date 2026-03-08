@@ -470,6 +470,8 @@ export default function AdminDashboard() {
   const [newAccModelActive, setNewAccModelActive] = useState(true);
   const [addingAccount, setAddingAccount] = useState(false);
   const [assigning, setAssigning] = useState(false);
+  const [assignConfirmOpen, setAssignConfirmOpen] = useState(false);
+  const [assignResult, setAssignResult] = useState<{ assigned: number; message: string } | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ChatterProfile | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [reassignTarget, setReassignTarget] = useState<ChatterProfile | null>(null);
