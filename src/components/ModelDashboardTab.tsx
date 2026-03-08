@@ -32,6 +32,8 @@ interface ModelDashboardRow {
   fourbased_submitted: boolean;
   maloum_submitted: boolean;
   brezzels_submitted: boolean;
+  botdm_done: boolean;
+  massdm_done: boolean;
   notes: string | null;
   revenue_percentage: number | null;
   crypto_address: string | null;
