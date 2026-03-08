@@ -484,7 +484,7 @@ Mein Gruppenname ist: ${groupName || "[Bitte Gruppenname im Dashboard eintragen]
             <CardContent className="space-y-3">
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Bank *</Label>
-                <Input value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="Sparkasse Musterstadt" className="h-9 text-sm bg-secondary border-border" />
+                <div className="input-gold-shimmer rounded-lg"><Input value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="Sparkasse Musterstadt" className="h-9 text-sm bg-secondary border-transparent" /></div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
