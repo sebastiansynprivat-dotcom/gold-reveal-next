@@ -210,6 +210,12 @@ export default function ModelDashboardTab() {
       setBrezzelsSubmitted(false);
       setBotdmDone(false);
       setMassdmDone(false);
+      setFourbasedBotdm(false);
+      setFourbasedMassdm(false);
+      setMaloumBotdm(false);
+      setMaloumMassdm(false);
+      setBrezzelsBotdm(false);
+      setBrezzelsMassdm(false);
       setNotes("");
       setRevenuePercentage(0);
       setCryptoAddress("");
