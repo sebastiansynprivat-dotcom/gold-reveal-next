@@ -398,31 +398,54 @@ export default function ModelDashboardTab() {
         </div>
       </motion.div>
 
-      {/* ── Stats row ── */}
+      {/* ── Stats row – per platform ── */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.05 }}
-        className="grid grid-cols-3 gap-3"
+        className="space-y-2"
       >
-        {[
-          { label: "Gesamt", value: accounts.length, active: statusFilter === "all", filter: "all" as StatusFilter },
-          { label: "Submitted", value: submittedCount, active: statusFilter === "submitted", filter: "submitted" as StatusFilter },
-          { label: "Offen", value: openCount, active: statusFilter === "not_submitted", filter: "not_submitted" as StatusFilter },
-        ].map((stat) => (
-          <button
-            key={stat.label}
-            onClick={() => setStatusFilter(stat.filter)}
-            className={`glass-card rounded-xl p-3 text-center transition-all duration-300 cursor-pointer ${
-              stat.active ? "gold-border-glow scale-[1.02]" : "hover:scale-[1.02]"
-            }`}
-          >
-            <p className="text-xl font-bold text-gold-gradient">
-              <AnimatedNumber value={stat.value} />
-            </p>
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground mt-0.5">{stat.label}</p>
-          </button>
-        ))}
+        <button
+          onClick={() => setStatusFilter("all")}
+          className={`w-full glass-card rounded-xl p-2.5 text-center transition-all duration-300 cursor-pointer ${
+            statusFilter === "all" ? "gold-border-glow scale-[1.01]" : "hover:scale-[1.01]"
+          }`}
+        >
+          <p className="text-lg font-bold text-gold-gradient"><AnimatedNumber value={accounts.length} /></p>
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Gesamt</p>
+        </button>
+        <div className="grid grid-cols-3 gap-2">
+          {PLATFORMS.map(p => {
+            const submitted = countByPlatform(p.dbField);
+            const open = accounts.length - submitted;
+            return (
+              <div key={p.key} className="glass-card rounded-xl p-2.5 space-y-1.5">
+                <p className="text-[10px] font-semibold text-foreground text-center tracking-wide">{p.label}</p>
+                <div className="grid grid-cols-2 gap-1">
+                  <button
+                    onClick={() => setStatusFilter(`${p.key}_submitted` as StatusFilter)}
+                    className={`rounded-lg py-1 text-center transition-all cursor-pointer ${
+                      statusFilter === `${p.key}_submitted` ? "bg-accent/20 border border-accent/40" : "bg-secondary/30 hover:bg-secondary/50"
+                    }`}
+                  >
+                    <p className="text-xs font-bold text-accent tabular-nums">{submitted}</p>
+                    <p className="text-[8px] text-muted-foreground">✅</p>
+                  </button>
+                  <button
+                    onClick={() => setStatusFilter(`${p.key}_open` as StatusFilter)}
+                    className={`rounded-lg py-1 text-center transition-all cursor-pointer ${
+                      statusFilter === `${p.key}_open` ? "bg-destructive/20 border border-destructive/40" : "bg-secondary/30 hover:bg-secondary/50"
+                    }`}
+                  >
+                    <p className="text-xs font-bold text-foreground tabular-nums">{open}</p>
+                    <p className="text-[8px] text-muted-foreground">❌</p>
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </motion.div>
       </motion.div>
 
       {/* ── Search ── */}
