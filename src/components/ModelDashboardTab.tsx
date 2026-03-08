@@ -248,23 +248,41 @@ export default function ModelDashboardTab() {
 
   const getDashboard = (id: string) => allDashboards.find(d => d.account_id === id);
 
+  const getBotMessage = (accountId: string) => allBotMessages.find(b => b.account_id === accountId);
+
+  const getSetupField = (acc: Account): "fourbased_submitted" | "maloum_submitted" | "brezzels_submitted" => {
+    if (acc.platform === "Maloum") return "maloum_submitted";
+    if (acc.platform === "Brezzels") return "brezzels_submitted";
+    return "fourbased_submitted";
+  };
+
   const filteredAccounts = accounts.filter(acc => {
-    const dash = getDashboard(acc.id);
-    if (statusFilter === "fourbased_submitted" && !dash?.fourbased_submitted) return false;
-    if (statusFilter === "fourbased_open" && dash?.fourbased_submitted) return false;
-    if (statusFilter === "maloum_submitted" && !dash?.maloum_submitted) return false;
-    if (statusFilter === "maloum_open" && dash?.maloum_submitted) return false;
-    if (statusFilter === "brezzels_submitted" && !dash?.brezzels_submitted) return false;
-    if (statusFilter === "brezzels_open" && dash?.brezzels_submitted) return false;
+    // Platform filter
+    if (platformFilter !== "all" && acc.platform !== platformFilter) return false;
+
+    // Sub filter
+    if (subFilter !== "none") {
+      const dash = getDashboard(acc.id);
+      const bot = getBotMessage(acc.id);
+      const hasBotDm = !!(bot && bot.message && bot.message.trim());
+      const hasMassDm = !!(bot && bot.follow_up_message && bot.follow_up_message.trim());
+      const setupField = getSetupField(acc);
+      const hasSetup = !!dash?.[setupField];
+
+      if (subFilter === "botdm_fehlt" && hasBotDm) return false;
+      if (subFilter === "botdm_vorhanden" && !hasBotDm) return false;
+      if (subFilter === "massdm_fehlt" && hasMassDm) return false;
+      if (subFilter === "massdm_vorhanden" && !hasMassDm) return false;
+      if (subFilter === "setup_fehlt" && hasSetup) return false;
+      if (subFilter === "setup_vorhanden" && !hasSetup) return false;
+    }
+
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       return acc.account_email.toLowerCase().includes(q) || acc.account_domain.toLowerCase().includes(q);
     }
     return true;
   });
-
-  const countByPlatform = (field: "fourbased_submitted" | "maloum_submitted" | "brezzels_submitted") =>
-    accounts.filter(a => getDashboard(a.id)?.[field]).length;
 
   const saveData = async () => {
     if (!selectedAccountId) return;
