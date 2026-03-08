@@ -194,7 +194,7 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
     );
   }
 
-  const grouped: Record<string, { account_email: string; account_domain: string; platform: string; folder_name: string; subfolder_name: string; entries: any[] }> = {};
+  const grouped: Record<string, { account_email: string; account_domain: string; platform: string; folder_name: string; subfolder_name: string; model_language: string; model_agency: string; entries: any[] }> = {};
   for (const a of assignments) {
     const key = a.account_id;
     if (!grouped[key]) {
@@ -204,6 +204,8 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
         platform: a.accounts?.platform || "",
         folder_name: (a.accounts as any)?.folder_name || "",
         subfolder_name: (a.accounts as any)?.subfolder_name || "",
+        model_language: (a.accounts as any)?.model_language || "de",
+        model_agency: (a.accounts as any)?.model_agency || "shex",
         entries: [],
       };
     }
