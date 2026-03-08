@@ -266,6 +266,7 @@
   .input-gold-shimmer {
     position: relative;
     z-index: 0;
+    border-radius: 0.75rem;
   }
   .input-gold-shimmer::before {
     content: "";
