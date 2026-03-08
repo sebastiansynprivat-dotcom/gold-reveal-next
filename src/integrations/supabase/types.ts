@@ -292,12 +292,18 @@ export type Database = {
         Row: {
           account_id: string
           botdm_done: boolean
+          brezzels_botdm_done: boolean
+          brezzels_massdm_done: boolean
           brezzels_submitted: boolean
           contract_file_path: string | null
           created_at: string
           crypto_address: string | null
+          fourbased_botdm_done: boolean
+          fourbased_massdm_done: boolean
           fourbased_submitted: boolean
           id: string
+          maloum_botdm_done: boolean
+          maloum_massdm_done: boolean
           maloum_submitted: boolean
           massdm_done: boolean
           notes: string | null
@@ -307,12 +313,18 @@ export type Database = {
         Insert: {
           account_id: string
           botdm_done?: boolean
+          brezzels_botdm_done?: boolean
+          brezzels_massdm_done?: boolean
           brezzels_submitted?: boolean
           contract_file_path?: string | null
           created_at?: string
           crypto_address?: string | null
+          fourbased_botdm_done?: boolean
+          fourbased_massdm_done?: boolean
           fourbased_submitted?: boolean
           id?: string
+          maloum_botdm_done?: boolean
+          maloum_massdm_done?: boolean
           maloum_submitted?: boolean
           massdm_done?: boolean
           notes?: string | null
@@ -322,12 +334,18 @@ export type Database = {
         Update: {
           account_id?: string
           botdm_done?: boolean
+          brezzels_botdm_done?: boolean
+          brezzels_massdm_done?: boolean
           brezzels_submitted?: boolean
           contract_file_path?: string | null
           created_at?: string
           crypto_address?: string | null
+          fourbased_botdm_done?: boolean
+          fourbased_massdm_done?: boolean
           fourbased_submitted?: boolean
           id?: string
+          maloum_botdm_done?: boolean
+          maloum_massdm_done?: boolean
           maloum_submitted?: boolean
           massdm_done?: boolean
           notes?: string | null
