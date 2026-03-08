@@ -283,17 +283,26 @@ export default function ModelDashboardTab() {
     return "fourbased_submitted";
   };
 
+  const getBotdmField = (acc: Account): "fourbased_botdm_done" | "maloum_botdm_done" | "brezzels_botdm_done" => {
+    if (acc.platform === "Maloum") return "maloum_botdm_done";
+    if (acc.platform === "Brezzels") return "brezzels_botdm_done";
+    return "fourbased_botdm_done";
+  };
+
+  const getMassdmField = (acc: Account): "fourbased_massdm_done" | "maloum_massdm_done" | "brezzels_massdm_done" => {
+    if (acc.platform === "Maloum") return "maloum_massdm_done";
+    if (acc.platform === "Brezzels") return "brezzels_massdm_done";
+    return "fourbased_massdm_done";
+  };
+
   const filteredAccounts = accounts.filter(acc => {
-    // Platform filter
     if (platformFilter !== "all" && acc.platform !== platformFilter) return false;
 
-    // Sub filter
     if (subFilter !== "none") {
       const dash = getDashboard(acc.id);
-      const hasBotDm = !!dash?.botdm_done;
-      const hasMassDm = !!dash?.massdm_done;
-      const setupField = getSetupField(acc);
-      const hasSetup = !!dash?.[setupField];
+      const hasBotDm = !!dash?.[getBotdmField(acc)];
+      const hasMassDm = !!dash?.[getMassdmField(acc)];
+      const hasSetup = !!dash?.[getSetupField(acc)];
 
       if (subFilter === "botdm_fehlt" && hasBotDm) return false;
       if (subFilter === "botdm_vorhanden" && !hasBotDm) return false;
