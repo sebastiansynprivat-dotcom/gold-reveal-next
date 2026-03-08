@@ -23,13 +23,22 @@ export default function ModelLogin() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [isModel, setIsModel] = useState<boolean | null>(null);
+  const [signingOut, setSigningOut] = useState(false);
 
-  // Check if logged-in user has model role
+  // If logged in as non-model, sign out automatically so model can log in fresh
   useEffect(() => {
-    if (!user) { setIsModel(null); return; }
+    if (!user || signingOut) return;
     supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "model").maybeSingle()
-      .then(({ data }) => setIsModel(!!data));
-  }, [user]);
+      .then(({ data }) => {
+        if (data) {
+          setIsModel(true);
+        } else {
+          // Not a model – sign out so they can log in as model
+          setSigningOut(true);
+          supabase.auth.signOut().then(() => setSigningOut(false));
+        }
+      });
+  }, [user, signingOut]);
 
   // Mouse particles
   const particlesRef = useRef<{ x: number; y: number; size: number; opacity: number; vx: number; vy: number; life: number }[]>([]);
@@ -78,7 +87,7 @@ export default function ModelLogin() {
     return () => { window.removeEventListener("resize", resize); cancelAnimationFrame(animFrameRef.current); };
   }, []);
 
-  if (loading) {
+  if (loading || signingOut) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
@@ -87,7 +96,6 @@ export default function ModelLogin() {
   }
 
   if (user && isModel === true) return <Navigate to="/model" replace />;
-  if (user && isModel === false) return <Navigate to="/dashboard" replace />;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
