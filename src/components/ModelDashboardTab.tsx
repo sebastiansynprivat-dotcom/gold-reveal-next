@@ -132,6 +132,8 @@ export default function ModelDashboardTab() {
   const [fourbasedSubmitted, setFourbasedSubmitted] = useState(false);
   const [maloumSubmitted, setMaloumSubmitted] = useState(false);
   const [brezzelsSubmitted, setBrezzelsSubmitted] = useState(false);
+  const [botdmDone, setBotdmDone] = useState(false);
+  const [massdmDone, setMassdmDone] = useState(false);
   const [notes, setNotes] = useState("");
   const [revenuePercentage, setRevenuePercentage] = useState(0);
   const [cryptoAddress, setCryptoAddress] = useState("");
