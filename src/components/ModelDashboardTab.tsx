@@ -401,12 +401,11 @@ export default function ModelDashboardTab() {
         ))}
       </motion.div>
 
-      {/* ── Search + Quick Select ── */}
+      {/* ── Search ── */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="space-y-3"
       >
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
@@ -419,19 +418,6 @@ export default function ModelDashboardTab() {
             />
           </div>
         </div>
-
-        <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
-          <SelectTrigger className="bg-secondary/50 border-border h-9 text-sm">
-            <SelectValue placeholder="Schnellauswahl…" />
-          </SelectTrigger>
-          <SelectContent>
-            {accounts.map(a => (
-              <SelectItem key={a.id} value={a.id}>
-                {a.account_email} {a.account_domain ? `(${a.account_domain})` : ""} — {a.platform}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
       </motion.div>
 
       {/* ── Filter pills ── */}
