@@ -430,7 +430,7 @@ Mein Gruppenname ist: ${groupName || "[Bitte Gruppenname im Dashboard eintragen]
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Rechnungsnummer *</Label>
-                  <Input value={invoiceNumber} onChange={(e) => setInvoiceNumber(e.target.value)} placeholder="2025-001" className="h-9 text-sm bg-secondary border-border" />
+                  <div className="input-gold-shimmer rounded-lg"><Input value={invoiceNumber} onChange={(e) => setInvoiceNumber(e.target.value)} placeholder="2025-001" className="h-9 text-sm bg-secondary border-transparent" /></div>
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Rechnungsdatum *</Label>
