@@ -300,6 +300,8 @@ export default function ModelDashboardTab() {
       fourbased_submitted: fourbasedSubmitted,
       maloum_submitted: maloumSubmitted,
       brezzels_submitted: brezzelsSubmitted,
+      botdm_done: botdmDone,
+      massdm_done: massdmDone,
       notes,
       revenue_percentage: revenuePercentage,
       crypto_address: cryptoAddress,
