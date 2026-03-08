@@ -22,6 +22,7 @@ import logo from "@/assets/logo.png";
 import ChatterStatsCard from "@/components/ChatterStatsCard";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import ModelDashboardTab from "@/components/ModelDashboardTab";
+import GoldParticles from "@/components/GoldParticles";
 
 // Extract folder ID from a full Google Drive URL or return as-is if already an ID
 const extractDriveFolderId = (input: string): string => {
