@@ -29,13 +29,16 @@ interface ModelDashboardRow {
   id: string;
   account_id: string;
   fourbased_submitted: boolean;
+  maloum_submitted: boolean;
+  brezzels_submitted: boolean;
   notes: string | null;
   revenue_percentage: number | null;
   crypto_address: string | null;
   contract_file_path: string | null;
 }
 
-type StatusFilter = "all" | "submitted" | "not_submitted";
+type PlatformKey = "fourbased" | "maloum" | "brezzels";
+type StatusFilter = "all" | "fourbased_submitted" | "fourbased_open" | "maloum_submitted" | "maloum_open" | "brezzels_submitted" | "brezzels_open";
 
 const SENDER = {
   company: "Sharify Media FZCO",
