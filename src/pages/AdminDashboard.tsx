@@ -4795,7 +4795,6 @@ export default function AdminDashboard() {
                   ))}
                 </div>
               );
-                </div>
 
               return (
                 <div className="space-y-4">
