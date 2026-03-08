@@ -1348,9 +1348,15 @@ export default function AdminDashboard() {
     setAddingAccount(false);
   };
 
+  const openAssignDialog = () => {
+    setAssignResult(null);
+    setAssignConfirmOpen(true);
+  };
+
   const assignAccounts = async () => {
     if (!selectedPlatform) return;
     setAssigning(true);
+    setAssignResult(null);
     try {
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const session = await supabase.auth.getSession();
@@ -1368,14 +1374,16 @@ export default function AdminDashboard() {
       );
       const result = await res.json();
       if (res.ok) {
-        toast.success(result.message || "Accounts zugewiesen!");
+        setAssignResult({ assigned: result.assigned || 0, message: result.message || "Fertig" });
         loadAccounts();
         loadChatters();
       } else {
         toast.error(result.error || "Fehler beim Zuweisen");
+        setAssignConfirmOpen(false);
       }
     } catch (err: any) {
       toast.error("Fehler: " + err.message);
+      setAssignConfirmOpen(false);
     }
     setAssigning(false);
   };
