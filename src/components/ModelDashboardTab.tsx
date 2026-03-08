@@ -383,7 +383,37 @@ export default function ModelDashboardTab() {
 
   const selectedAccount = accounts.find(a => a.id === selectedAccountId);
 
-  const generateGutschrift = () => {
+  const generateModelLogin = async () => {
+    if (!selectedAccountId) return;
+    setModelLoginLoading(true);
+    setModelLoginCreds(null);
+    try {
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const session = (await supabase.auth.getSession()).data.session;
+      const res = await fetch(`https://${projectId}.supabase.co/functions/v1/create-model-login`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session?.access_token}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+        },
+        body: JSON.stringify({ account_id: selectedAccountId }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Fehler beim Erstellen");
+      } else {
+        setModelLoginCreds({ email: data.email, password: data.password });
+        setModelLoginDialog(true);
+        toast.success("Model-Login erstellt ✅");
+      }
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+    setModelLoginLoading(false);
+  };
+
+
     if (!selectedAccount || !gutschriftAmount.trim()) {
       toast.error("Bitte Model auswählen und Betrag eingeben.");
       return;
