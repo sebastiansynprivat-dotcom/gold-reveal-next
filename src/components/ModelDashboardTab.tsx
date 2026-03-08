@@ -243,9 +243,12 @@ export default function ModelDashboardTab() {
 
   const filteredAccounts = accounts.filter(acc => {
     const dash = getDashboard(acc.id);
-    const submitted = dash?.fourbased_submitted || false;
-    if (statusFilter === "submitted" && !submitted) return false;
-    if (statusFilter === "not_submitted" && submitted) return false;
+    if (statusFilter === "fourbased_submitted" && !dash?.fourbased_submitted) return false;
+    if (statusFilter === "fourbased_open" && dash?.fourbased_submitted) return false;
+    if (statusFilter === "maloum_submitted" && !dash?.maloum_submitted) return false;
+    if (statusFilter === "maloum_open" && dash?.maloum_submitted) return false;
+    if (statusFilter === "brezzels_submitted" && !dash?.brezzels_submitted) return false;
+    if (statusFilter === "brezzels_open" && dash?.brezzels_submitted) return false;
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       return acc.account_email.toLowerCase().includes(q) || acc.account_domain.toLowerCase().includes(q);
@@ -253,8 +256,8 @@ export default function ModelDashboardTab() {
     return true;
   });
 
-  const submittedCount = accounts.filter(a => getDashboard(a.id)?.fourbased_submitted).length;
-  const openCount = accounts.length - submittedCount;
+  const countByPlatform = (field: "fourbased_submitted" | "maloum_submitted" | "brezzels_submitted") =>
+    accounts.filter(a => getDashboard(a.id)?.[field]).length;
 
   const saveData = async () => {
     if (!selectedAccountId) return;
