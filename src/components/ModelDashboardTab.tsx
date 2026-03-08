@@ -180,6 +180,8 @@ export default function ModelDashboardTab() {
       setFourbasedSubmitted(d.fourbased_submitted);
       setMaloumSubmitted(d.maloum_submitted);
       setBrezzelsSubmitted(d.brezzels_submitted);
+      setBotdmDone(d.botdm_done);
+      setMassdmDone(d.massdm_done);
       setNotes(d.notes || "");
       setRevenuePercentage(d.revenue_percentage || 0);
       setCryptoAddress(d.crypto_address || "");
