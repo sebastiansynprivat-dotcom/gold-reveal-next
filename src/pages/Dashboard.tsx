@@ -483,7 +483,7 @@ export default function Dashboard() {
 
               <div className="flex-1 min-w-0 space-y-0.5">
                   <div className="flex items-center gap-1">
-                    <Input value={telegramId} onChange={(e) => setTelegramId(e.target.value)} placeholder="Telegram ID" className="h-7 text-xs flex-1 min-w-0" />
+                    <div className="input-gold-shimmer rounded-lg flex-1 min-w-0"><Input value={telegramId} onChange={(e) => setTelegramId(e.target.value)} placeholder="Telegram ID" className="h-7 text-xs w-full border-transparent" /></div>
                     <Button onClick={saveTelegram} size="sm" disabled={!telegramId.trim()} className="h-7 text-xs px-2"><Save className="h-3 w-3" /></Button>
                   </div>
                   <Dialog onOpenChange={(open) => {setVideoOpen(open);if (!open) setVideoLoaded(false);}}>
