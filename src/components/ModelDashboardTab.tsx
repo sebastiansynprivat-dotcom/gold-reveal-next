@@ -265,6 +265,8 @@ export default function ModelDashboardTab() {
     const payload = {
       account_id: selectedAccountId,
       fourbased_submitted: fourbasedSubmitted,
+      maloum_submitted: maloumSubmitted,
+      brezzels_submitted: brezzelsSubmitted,
       notes,
       revenue_percentage: revenuePercentage,
       crypto_address: cryptoAddress,
