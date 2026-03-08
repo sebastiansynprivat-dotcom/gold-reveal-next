@@ -552,6 +552,81 @@ export default function ModelDashboardTab() {
               </div>
             </div>
 
+            {/* Einnahmen Übersicht – oben */}
+            <Section icon={TrendingUp} title="Einnahmen Übersicht" delay={0.05}>
+              <div className="space-y-4">
+                {/* Month selector */}
+                <div className="flex items-center gap-3">
+                  <CalendarDays className="h-3.5 w-3.5 text-muted-foreground" />
+                  <Select value={revenueMonth} onValueChange={setRevenueMonth}>
+                    <SelectTrigger className="bg-secondary/50 border-border h-8 text-xs w-48">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableMonths.map(m => (
+                        <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {revenueLoading ? (
+                  <div className="flex justify-center py-6">
+                    <Loader2 className="h-5 w-5 animate-spin text-accent" />
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="rounded-xl border border-border/50 bg-secondary/20 p-3 space-y-1">
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Gesamtumsatz</p>
+                        <p className="text-lg font-bold text-gold-gradient tabular-nums">
+                          {totalMonthRevenue.toLocaleString("de-DE", { minimumFractionDigits: 2 })} €
+                        </p>
+                      </div>
+                      <div className="rounded-xl border border-accent/20 bg-accent/5 p-3 space-y-1">
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                          Gutschrift ({revenuePercentage}%)
+                        </p>
+                        <p className="text-lg font-bold text-accent tabular-nums">
+                          {gutschriftFromRevenue.toLocaleString("de-DE", { minimumFractionDigits: 2 })} €
+                        </p>
+                      </div>
+                    </div>
+
+                    {modelRevenue.length > 0 ? (
+                      <div className="space-y-1.5">
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Tagesübersicht</p>
+                        <div className="max-h-[200px] overflow-y-auto space-y-1 pr-1 -mr-1">
+                          {(() => {
+                            const byDate: Record<string, number> = {};
+                            for (const r of modelRevenue) {
+                              byDate[r.date] = (byDate[r.date] || 0) + r.amount;
+                            }
+                            return Object.entries(byDate)
+                              .sort(([a], [b]) => b.localeCompare(a))
+                              .map(([date, amount]) => (
+                                <div key={date} className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-secondary/30 transition-colors">
+                                  <span className="text-xs text-muted-foreground">
+                                    {new Date(date).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" })}
+                                  </span>
+                                  <span className="text-xs font-semibold text-foreground tabular-nums">
+                                    {amount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} €
+                                  </span>
+                                </div>
+                              ));
+                          })()}
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground text-center py-4 italic">
+                        Keine Einnahmen für diesen Monat.
+                      </p>
+                    )}
+                  </>
+                )}
+              </div>
+            </Section>
+
             {/* Vertrag */}
             <Section icon={FileText} title="Vertrag Upload" delay={0.05}>
               <div className="space-y-3">
