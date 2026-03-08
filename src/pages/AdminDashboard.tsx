@@ -3071,16 +3071,18 @@ export default function AdminDashboard() {
                                       Abbrechen
                                     </button>
                                   </div>
-                                  <Textarea
-                                    placeholder="Kommentar für den Chatter..."
-                                    value={req._localComment ?? req.admin_comment ?? ""}
-                                    onChange={(e) => {
-                                      setModelRequests(prev => prev.map(r => r.id === req.id ? { ...r, _localComment: e.target.value } : r));
-                                    }}
-                                    rows={2}
-                                    className="text-xs bg-secondary/30 border-border/30 focus:border-accent/40 resize-none"
-                                    autoFocus
-                                  />
+                                   <div className="input-gold-shimmer rounded-lg">
+                                   <Textarea
+                                     placeholder="Kommentar für den Chatter..."
+                                     value={req._localComment ?? req.admin_comment ?? ""}
+                                     onChange={(e) => {
+                                       setModelRequests(prev => prev.map(r => r.id === req.id ? { ...r, _localComment: e.target.value } : r));
+                                     }}
+                                     rows={2}
+                                     className="text-xs bg-secondary/30 border-transparent resize-none"
+                                     autoFocus
+                                   />
+                                   </div>
                                   {(req._localComment != null && req._localComment !== (req.admin_comment ?? "")) && (
                                     <Button size="sm" variant="outline" className="h-7 text-xs" onClick={async () => {
                                       const comment = req._localComment ?? "";
