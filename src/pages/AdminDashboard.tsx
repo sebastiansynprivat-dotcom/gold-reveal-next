@@ -4239,189 +4239,223 @@ export default function AdminDashboard() {
 
       {/* Account Pool Dialog */}
       <Dialog open={accountPoolOpen} onOpenChange={(o) => { setAccountPoolOpen(o); if (!o) { setPoolFilter("alle"); setPoolSearchQuery(""); } }}>
-        <DialogContent className="glass-card border-border sm:max-w-lg max-h-[85vh] overflow-hidden flex flex-col" onOpenAutoFocus={(e) => e.preventDefault()}>
+        <DialogContent className="glass-card border-border sm:max-w-3xl max-h-[85vh] overflow-hidden flex flex-col" onOpenAutoFocus={(e) => e.preventDefault()}>
           <DialogHeader className="pb-0">
-            <DialogTitle className="text-foreground flex items-center gap-2">
-              <div className="h-9 w-9 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
-                <Package className="h-4 w-4 text-accent" />
+            <div className="flex items-center justify-between">
+              <DialogTitle className="text-foreground flex items-center gap-2">
+                <div className="h-9 w-9 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
+                  <Package className="h-4 w-4 text-accent" />
+                </div>
+                <div>
+                  <span className="capitalize">{selectedPlatform}</span>
+                  <p className="text-[11px] text-muted-foreground font-normal mt-0.5">Account-Pool verwalten</p>
+                </div>
+              </DialogTitle>
+              <div className="flex items-center gap-2">
+                {freeCount > 0 && (
+                  <Button onClick={openAssignDialog} size="sm" variant="default" className="h-8 text-xs gap-1.5">
+                    <UserPlus className="h-3.5 w-3.5" />
+                    Auto-Zuweisen
+                  </Button>
+                )}
+                <Button variant="outline" size="sm" onClick={() => setDeletePoolConfirm(true)} className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive h-8 text-[10px] gap-1">
+                  <Trash2 className="h-3 w-3" /> Löschen
+                </Button>
               </div>
-              <div>
-                <span>{selectedPlatform}</span>
-                <p className="text-[11px] text-muted-foreground font-normal mt-0.5">Account-Pool</p>
-              </div>
-            </DialogTitle>
-            <div className="flex justify-end pt-2">
-              <Button variant="outline" size="sm" onClick={() => setDeletePoolConfirm(true)} className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive h-7 text-[10px] gap-1">
-                <Trash2 className="h-3 w-3" /> Pool löschen
-              </Button>
             </div>
           </DialogHeader>
 
-          <div className="overflow-y-auto flex-1 space-y-4 pr-1 -mr-1 pt-3">
-            {/* Add new account — always on top */}
-            <div className="rounded-xl border border-accent/20 bg-accent/[0.03] p-3 space-y-2">
-              <p className="text-xs font-semibold text-foreground flex items-center gap-2">
-                <Plus className="h-3.5 w-3.5 text-accent" /> Neuen Account hinzufügen
-              </p>
-              <Input value={newAccDomain} onChange={(e) => setNewAccDomain(e.target.value)} placeholder="Domain (z.B. brezzels.com)" className="text-xs" />
-              <Input value={newAccEmail} onChange={(e) => setNewAccEmail(e.target.value)} placeholder="E-Mail" type="email" className="text-xs" />
-              <Input value={newAccPassword} onChange={(e) => setNewAccPassword(e.target.value)} placeholder="Passwort" className="text-xs" />
-              <Input value={newAccDriveFolder} onChange={(e) => setNewAccDriveFolder(e.target.value)} placeholder="Google Drive Folder ID (optional)" className="text-xs" />
-              <div className="space-y-1">
-                <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Model spricht</label>
-                <div className="flex gap-2">
-                  <button onClick={() => setNewAccLanguage("de")}
-                    className={`flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-colors ${newAccLanguage === "de" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50 hover:border-accent/30"}`}>
-                    🇩🇪 Deutsch
-                  </button>
-                  <button onClick={() => setNewAccLanguage("en")}
-                    className={`flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-colors ${newAccLanguage === "en" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50 hover:border-accent/30"}`}>
-                    🇬🇧 Englisch
-                  </button>
+          {/* Stats row */}
+          <div className="flex items-center gap-4 px-1 pt-2">
+            <div className="flex gap-3 text-xs flex-1">
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-secondary/30 border border-border/50">
+                <span className="text-muted-foreground">Gesamt</span>
+                <span className="text-foreground font-bold">{platformAccounts.length}</span>
+              </div>
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-accent/5 border border-accent/20">
+                <span className="text-accent">Frei</span>
+                <span className="text-accent font-bold">{freeCount}</span>
+              </div>
+              <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-secondary/30 border border-border/50">
+                <span className="text-muted-foreground">Vergeben</span>
+                <span className="text-foreground font-bold">{assignedCount}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Split Layout: Form + List */}
+          <div className="flex-1 overflow-hidden flex flex-col sm:flex-row gap-4 pt-3 min-h-0">
+            
+            {/* Left: Add Account Form */}
+            <div className="sm:w-[280px] shrink-0">
+              <div className="rounded-xl border border-accent/20 bg-accent/[0.03] p-4 space-y-3 h-full">
+                <div className="flex items-center gap-2 pb-1">
+                  <div className="h-7 w-7 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center">
+                    <Plus className="h-3.5 w-3.5 text-accent" />
+                  </div>
+                  <p className="text-xs font-semibold text-foreground">Neuer Account</p>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Domain</label>
+                    <Input value={newAccDomain} onChange={(e) => setNewAccDomain(e.target.value)} placeholder="z.B. brezzels.com" className="text-xs h-8" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">E-Mail</label>
+                    <Input value={newAccEmail} onChange={(e) => setNewAccEmail(e.target.value)} placeholder="account@email.com" type="email" className="text-xs h-8" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Passwort</label>
+                    <Input value={newAccPassword} onChange={(e) => setNewAccPassword(e.target.value)} placeholder="••••••••" className="text-xs h-8" />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Drive Folder ID</label>
+                    <Input value={newAccDriveFolder} onChange={(e) => setNewAccDriveFolder(e.target.value)} placeholder="Optional" className="text-xs h-8" />
+                  </div>
+                </div>
+
+                <div className="space-y-2 pt-1">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Model spricht</label>
+                    <div className="flex gap-1.5">
+                      <button onClick={() => setNewAccLanguage("de")}
+                        className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", newAccLanguage === "de" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50 hover:border-accent/30")}>
+                        🇩🇪 DE
+                      </button>
+                      <button onClick={() => setNewAccLanguage("en")}
+                        className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", newAccLanguage === "en" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50 hover:border-accent/30")}>
+                        🇬🇧 EN
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between py-1">
+                    <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Model aktiv</span>
+                    <Switch checked={newAccModelActive} onCheckedChange={setNewAccModelActive} />
+                  </div>
+                </div>
+
+                <Button onClick={addAccount} disabled={addingAccount || !newAccEmail.trim() || !newAccDomain.trim()} className="w-full" size="sm">
+                  <Plus className="h-3.5 w-3.5 mr-1.5" />
+                  {addingAccount ? "Wird hinzugefügt..." : "Hinzufügen"}
+                </Button>
+              </div>
+            </div>
+
+            {/* Right: Account List */}
+            <div className="flex-1 flex flex-col min-h-0 gap-3">
+              {/* Filter + Search */}
+              <div className="flex items-center gap-2">
+                {platformAccounts.length > 0 && (
+                  <div className="flex gap-1 p-1 rounded-lg bg-secondary/30 border border-border/50">
+                    {(["alle", "frei", "vergeben"] as const).map((f) => (
+                      <button key={f} onClick={() => setPoolFilter(f)}
+                        className="relative text-[10px] font-medium px-3 py-1.5 rounded-md transition-colors z-10">
+                        <span className={poolFilter === f ? "text-accent" : "text-muted-foreground hover:text-foreground"}>
+                          {f === "alle" ? "Alle" : f === "frei" ? "Frei" : "Vergeben"}
+                        </span>
+                        {poolFilter === f && (
+                          <motion.div
+                            layoutId="activePoolFilter"
+                            className="absolute inset-0 bg-accent/15 rounded-md shadow-sm"
+                            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                          />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <div className="relative flex-1">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input
+                    value={poolSearchQuery}
+                    onChange={(e) => setPoolSearchQuery(e.target.value)}
+                    placeholder="Suchen..."
+                    className="pl-8 text-xs h-8"
+                  />
                 </div>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Model aktiv</span>
-                <Switch checked={newAccModelActive} onCheckedChange={setNewAccModelActive} />
-              </div>
-              <Button onClick={addAccount} disabled={addingAccount || !newAccEmail.trim() || !newAccDomain.trim()} className="w-full" size="sm">
-                <Plus className="h-4 w-4 mr-2" />
-                {addingAccount ? "Wird hinzugefügt..." : "Account hinzufügen"}
-              </Button>
-            </div>
 
-            {/* Separator */}
-            <div className="relative py-1">
-              <div className="absolute inset-x-0 top-1/2 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
-            </div>
-
-            {/* Stats row */}
-            <div className="flex items-center justify-between">
-              <div className="flex gap-3 text-xs">
-                <span className="text-muted-foreground">Gesamt: <span className="text-foreground font-semibold">{platformAccounts.length}</span></span>
-                <span className="text-accent">Frei: <span className="font-semibold">{freeCount}</span></span>
-                <span className="text-muted-foreground">Vergeben: <span className="font-semibold">{assignedCount}</span></span>
-              </div>
-              {freeCount > 0 && (
-                <Button onClick={openAssignDialog} size="sm" variant="default">
-                  <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-                  Auto-Zuweisen
-                </Button>
-              )}
-            </div>
-
-            {/* Filter Pills */}
-            {platformAccounts.length > 0 && (
-              <div className="flex gap-1 p-1 rounded-lg bg-secondary/30 border border-border/50 relative">
-                {(["alle", "frei", "vergeben"] as const).map((f) => (
-                  <button key={f} onClick={() => setPoolFilter(f)}
-                    className="relative flex-1 text-[10px] font-medium px-3 py-1.5 rounded-md transition-colors z-10"
-                    style={{ color: poolFilter === f ? undefined : undefined }}>
-                    <span className={poolFilter === f ? "text-accent" : "text-muted-foreground hover:text-foreground"}>
-                      {f === "alle" ? "Alle" : f === "frei" ? "Frei" : "Vergeben"}
-                    </span>
-                    {poolFilter === f && (
-                      <motion.div
-                        layoutId="activePoolFilter"
-                        className="absolute inset-0 bg-accent/15 rounded-md shadow-sm"
-                        transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                      />
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input
-                value={poolSearchQuery}
-                onChange={(e) => setPoolSearchQuery(e.target.value)}
-                placeholder="Account suchen..."
-                className="pl-8 text-xs h-8"
-              />
-            </div>
-
-            {/* Account list */}
-            <div className="space-y-2">
-              {(() => {
-                const filtered = platformAccounts.filter((acc) => {
-                  if (poolFilter === "frei" && acc.assigned_to) return false;
-                  if (poolFilter === "vergeben" && !acc.assigned_to) return false;
-                  if (poolSearchQuery.trim()) {
-                    const q = poolSearchQuery.toLowerCase();
-                    return (acc.account_email?.toLowerCase().includes(q) || acc.account_domain?.toLowerCase().includes(q));
-                  }
-                  return true;
-                });
-                if (filtered.length === 0) return (
-                  <div className="glass-card-subtle rounded-xl p-6 text-center">
-                    <Package className="h-5 w-5 text-muted-foreground mx-auto mb-2 opacity-40" />
-                    <p className="text-xs text-muted-foreground">
-                      {platformAccounts.length === 0 ? `Noch keine Accounts für ${selectedPlatform}.` : "Keine Accounts für diesen Filter."}
-                    </p>
-                  </div>
-                );
-                const copyToClipboard = (text: string, label: string) => { navigator.clipboard.writeText(text); toast.success(`${label} kopiert!`); };
-                return filtered.map((acc) => (
-                  <div key={acc.id} className="glass-card-subtle rounded-lg p-3 group/card hover:border-accent/30 transition-all">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <div className="flex items-center gap-1.5">
-                        <span className={`h-2 w-2 rounded-full shrink-0 ${acc.assigned_to ? "bg-muted-foreground/30" : "bg-green-500"}`} />
-                        {acc.assigned_to ? (
-                          <Badge className="text-[9px] bg-secondary text-secondary-foreground">→ {getChatterName(acc.assigned_to)}</Badge>
-                        ) : (
-                          <Badge className="text-[9px] bg-accent/15 text-accent border-accent/20">Frei</Badge>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-0.5 opacity-0 group-hover/card:opacity-100 transition-opacity">
-                        {acc.assigned_to && (
-                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground hover:text-accent" title="Freigeben"
+              {/* Scrollable account list */}
+              <div className="flex-1 overflow-y-auto space-y-2 pr-1 -mr-1">
+                {(() => {
+                  const filtered = platformAccounts.filter((acc) => {
+                    if (poolFilter === "frei" && acc.assigned_to) return false;
+                    if (poolFilter === "vergeben" && !acc.assigned_to) return false;
+                    if (poolSearchQuery.trim()) {
+                      const q = poolSearchQuery.toLowerCase();
+                      return (acc.account_email?.toLowerCase().includes(q) || acc.account_domain?.toLowerCase().includes(q));
+                    }
+                    return true;
+                  });
+                  if (filtered.length === 0) return (
+                    <div className="glass-card-subtle rounded-xl p-8 text-center">
+                      <Package className="h-6 w-6 text-muted-foreground mx-auto mb-2 opacity-40" />
+                      <p className="text-xs text-muted-foreground">
+                        {platformAccounts.length === 0 ? `Noch keine Accounts für ${selectedPlatform}.` : "Keine Accounts für diesen Filter."}
+                      </p>
+                    </div>
+                  );
+                  const copyToClipboard = (text: string, label: string) => { navigator.clipboard.writeText(text); toast.success(`${label} kopiert!`); };
+                  return filtered.map((acc) => (
+                    <div key={acc.id} className="glass-card-subtle rounded-lg p-3 group/card hover:border-accent/30 transition-all">
+                      <div className="flex items-center justify-between mb-1.5">
+                        <div className="flex items-center gap-1.5">
+                          <span className={cn("h-2 w-2 rounded-full shrink-0", acc.assigned_to ? "bg-muted-foreground/30" : "bg-emerald-500")} />
+                          {acc.assigned_to ? (
+                            <Badge className="text-[9px] bg-secondary text-secondary-foreground">→ {getChatterName(acc.assigned_to)}</Badge>
+                          ) : (
+                            <Badge className="text-[9px] bg-accent/15 text-accent border-accent/20">Frei</Badge>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-0.5 opacity-0 group-hover/card:opacity-100 transition-opacity">
+                          {acc.assigned_to && (
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground hover:text-accent" title="Freigeben"
+                              onClick={async () => {
+                                if (acc.drive_folder_id && acc.assigned_to) await revokeDriveAccess([acc.id], acc.assigned_to);
+                                await supabase.from("accounts").update({ assigned_to: null, assigned_at: null }).eq("id", acc.id);
+                                toast.success("Account freigegeben"); loadAccounts(); loadChatters();
+                              }}>
+                              <RefreshCw className="h-3 w-3" />
+                            </Button>
+                          )}
+                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive" title="Löschen"
                             onClick={async () => {
-                              if (acc.drive_folder_id && acc.assigned_to) await revokeDriveAccess([acc.id], acc.assigned_to);
-                              await supabase.from("accounts").update({ assigned_to: null, assigned_at: null }).eq("id", acc.id);
-                              toast.success("Account freigegeben"); loadAccounts(); loadChatters();
+                              await supabase.from("accounts").delete().eq("id", acc.id);
+                              toast.success("Account gelöscht"); loadAccounts();
                             }}>
-                            <RefreshCw className="h-3 w-3" />
+                            <Trash2 className="h-3 w-3" />
                           </Button>
-                        )}
-                        <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive" title="Löschen"
-                          onClick={async () => {
-                            await supabase.from("accounts").delete().eq("id", acc.id);
-                            toast.success("Account gelöscht"); loadAccounts();
-                          }}>
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
+                        </div>
+                      </div>
+                      <button onClick={() => copyToClipboard(acc.account_email, "E-Mail")} className="w-full flex items-center gap-2 p-1.5 -mx-1.5 rounded-md hover:bg-accent/5 transition-colors group/copy text-left">
+                        <Copy className="h-3 w-3 text-muted-foreground group-hover/copy:text-accent shrink-0 transition-colors" />
+                        <span className="text-xs font-medium text-foreground truncate">{acc.account_email}</span>
+                      </button>
+                      <button onClick={() => copyToClipboard(acc.account_password, "Passwort")} className="w-full flex items-center gap-2 p-1.5 -mx-1.5 rounded-md hover:bg-accent/5 transition-colors group/copy text-left">
+                        <Copy className="h-3 w-3 text-muted-foreground group-hover/copy:text-accent shrink-0 transition-colors" />
+                        <span className="text-[11px] text-muted-foreground truncate">PW: {acc.account_password}</span>
+                      </button>
+                      {acc.drive_folder_id && (
+                        <a href={`https://drive.google.com/drive/folders/${acc.drive_folder_id}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-1.5 -mx-1.5 rounded-md hover:bg-accent/5 transition-colors text-[11px] text-primary hover:underline">
+                          <ExternalLink className="h-3 w-3 shrink-0" /> Drive-Ordner
+                        </a>
+                      )}
+                      <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/20">
+                        <span className="text-[10px] text-muted-foreground">Model aktiv</span>
+                        <Switch
+                          checked={acc.model_active !== false}
+                          onCheckedChange={async (checked) => {
+                            await supabase.from("accounts").update({ model_active: checked } as any).eq("id", acc.id);
+                            loadAccounts();
+                            toast.success(checked ? "Model aktiviert" : "Model deaktiviert");
+                          }}
+                        />
                       </div>
                     </div>
-                    <button onClick={() => copyToClipboard(acc.account_email, "E-Mail")} className="w-full flex items-center gap-2 p-1.5 -mx-1.5 rounded-md hover:bg-accent/5 transition-colors group/copy text-left">
-                      <Copy className="h-3 w-3 text-muted-foreground group-hover/copy:text-accent shrink-0 transition-colors" />
-                      <span className="text-xs font-medium text-foreground truncate">{acc.account_email}</span>
-                    </button>
-                    <button onClick={() => copyToClipboard(acc.account_password, "Passwort")} className="w-full flex items-center gap-2 p-1.5 -mx-1.5 rounded-md hover:bg-accent/5 transition-colors group/copy text-left">
-                      <Copy className="h-3 w-3 text-muted-foreground group-hover/copy:text-accent shrink-0 transition-colors" />
-                      <span className="text-[11px] text-muted-foreground truncate">PW: {acc.account_password}</span>
-                    </button>
-                    {acc.drive_folder_id && (
-                      <a href={`https://drive.google.com/drive/folders/${acc.drive_folder_id}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-1.5 -mx-1.5 rounded-md hover:bg-accent/5 transition-colors text-[11px] text-primary hover:underline">
-                        <ExternalLink className="h-3 w-3 shrink-0" /> Drive-Ordner
-                      </a>
-                    )}
-                    <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/20">
-                      <span className="text-[10px] text-muted-foreground">Model aktiv</span>
-                      <Switch
-                        checked={acc.model_active !== false}
-                        onCheckedChange={async (checked) => {
-                          await supabase.from("accounts").update({ model_active: checked } as any).eq("id", acc.id);
-                          loadAccounts();
-                          toast.success(checked ? "Model aktiviert" : "Model deaktiviert");
-                        }}
-                      />
-                    </div>
-                  </div>
-                ));
-              })()}
+                  ));
+                })()}
+              </div>
             </div>
           </div>
         </DialogContent>
