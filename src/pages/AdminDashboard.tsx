@@ -5186,6 +5186,14 @@ export default function AdminDashboard() {
                         </a>
                       )}
                     </div>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <span className="text-[9px] bg-secondary/50 text-muted-foreground border border-border/50 rounded px-1.5 py-0.5">
+                        {(acc as any).model_language === "en" ? "🇬🇧 EN" : "🇩🇪 DE"}
+                      </span>
+                      <span className={cn("text-[9px] rounded px-1.5 py-0.5 border font-medium", (acc as any).model_agency === "syn" ? "bg-primary/10 text-primary border-primary/30" : "bg-accent/10 text-accent border-accent/30")}>
+                        {(acc as any).model_agency === "syn" ? "SYN" : "SheX"}
+                      </span>
+                    </div>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-[9px] text-muted-foreground">Model aktiv</span>
                       <Switch
