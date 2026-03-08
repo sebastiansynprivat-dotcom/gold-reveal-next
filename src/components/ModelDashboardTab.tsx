@@ -38,32 +38,14 @@ interface ModelDashboardRow {
   contract_file_path: string | null;
 }
 
-type PlatformKey = "fourbased" | "maloum" | "brezzels";
-type StatusFilter = "all" | "fourbased_submitted" | "fourbased_open" | "maloum_submitted" | "maloum_open" | "brezzels_submitted" | "brezzels_open";
+type PlatformFilter = "all" | "4Based" | "Maloum" | "Brezzels";
+type SubFilter = "none" | "botdm_fehlt" | "botdm_vorhanden" | "massdm_fehlt" | "massdm_vorhanden" | "setup_fehlt" | "setup_vorhanden";
 
-const SENDER = {
-  company: "Sharify Media FZCO",
-  line1: "IFZA Business Park DDP 21236-001",
-  line2: "Silicon Oasis",
-  line3: "00000, United Arab Emirates",
-  taxId: "1041507169",
-};
-
-const PLATFORMS: { key: PlatformKey; label: string; dbField: "fourbased_submitted" | "maloum_submitted" | "brezzels_submitted" }[] = [
-  { key: "fourbased", label: "4Based", dbField: "fourbased_submitted" },
-  { key: "maloum", label: "Maloum", dbField: "maloum_submitted" },
-  { key: "brezzels", label: "Brezzels", dbField: "brezzels_submitted" },
-];
-
-const filterOptions: { label: string; value: StatusFilter }[] = [
-  { label: "Alle", value: "all" },
-  { label: "4Based ✅", value: "fourbased_submitted" },
-  { label: "4Based ❌", value: "fourbased_open" },
-  { label: "Maloum ✅", value: "maloum_submitted" },
-  { label: "Maloum ❌", value: "maloum_open" },
-  { label: "Brezzels ✅", value: "brezzels_submitted" },
-  { label: "Brezzels ❌", value: "brezzels_open" },
-];
+interface BotMessageRow {
+  account_id: string | null;
+  message: string;
+  follow_up_message: string;
+}
 
 // ─── Animated counter ───
 function AnimatedNumber({ value }: { value: number }) {
