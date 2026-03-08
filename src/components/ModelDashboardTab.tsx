@@ -736,18 +736,28 @@ export default function ModelDashboardTab() {
             </Section>
 
             {/* Plattform-Status */}
-            <Section icon={CheckCircle2} title="Plattform-Status" delay={0.1}>
+            <Section icon={CheckCircle2} title="Status-Übersicht" delay={0.1}>
               <div className="space-y-3">
                 {[
-                  { label: "4Based", value: fourbasedSubmitted, onChange: setFourbasedSubmitted },
-                  { label: "Maloum", value: maloumSubmitted, onChange: setMaloumSubmitted },
-                  { label: "Brezzels", value: brezzelsSubmitted, onChange: setBrezzelsSubmitted },
+                  { label: "BotDM", value: botdmDone, onChange: setBotdmDone },
+                  { label: "MassDM", value: massdmDone, onChange: setMassdmDone },
+                  { label: "Account Setup", value: (() => {
+                    const p = selectedAccount?.platform;
+                    if (p === "Maloum") return maloumSubmitted;
+                    if (p === "Brezzels") return brezzelsSubmitted;
+                    return fourbasedSubmitted;
+                  })(), onChange: (v: boolean) => {
+                    const p = selectedAccount?.platform;
+                    if (p === "Maloum") setMaloumSubmitted(v);
+                    else if (p === "Brezzels") setBrezzelsSubmitted(v);
+                    else setFourbasedSubmitted(v);
+                  }},
                 ].map(p => (
                   <div key={p.label} className="flex items-center justify-between py-1.5">
                     <span className="text-sm text-foreground font-medium">{p.label}</span>
                     <div className="flex items-center gap-2">
                       <span className={`text-xs ${p.value ? "text-accent" : "text-muted-foreground"}`}>
-                        {p.value ? "Eingereicht ✅" : "Offen ❌"}
+                        {p.value ? "Erledigt ✅" : "Fehlt ❌"}
                       </span>
                       <Switch checked={p.value} onCheckedChange={p.onChange} />
                     </div>
