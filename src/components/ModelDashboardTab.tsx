@@ -517,7 +517,7 @@ export default function ModelDashboardTab() {
             <AnimatePresence mode="popLayout">
               {filteredAccounts.map((acc, i) => {
                 const dash = getDashboard(acc.id);
-                const submitted = dash?.fourbased_submitted || false;
+                const allSubmitted = dash?.fourbased_submitted && dash?.maloum_submitted && dash?.brezzels_submitted;
                 const isSelected = acc.id === selectedAccountId;
                 return (
                   <motion.div
@@ -535,7 +535,7 @@ export default function ModelDashboardTab() {
                     }`}
                   >
                     <div className={`h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
-                      submitted
+                      allSubmitted
                         ? "bg-accent/15 text-accent"
                         : "bg-muted text-muted-foreground"
                     }`}>
@@ -547,15 +547,14 @@ export default function ModelDashboardTab() {
                         {acc.account_domain && `${acc.account_domain} · `}{acc.platform}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {submitted ? (
-                        <span className="flex items-center gap-1 text-[10px] font-medium text-accent">
-                          <CheckCircle2 className="h-3 w-3" />
-                          <span className="hidden sm:inline">Submitted</span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {PLATFORMS.map(p => (
+                        <span key={p.key} className={`text-[9px] px-1 py-0.5 rounded ${
+                          dash?.[p.dbField] ? "bg-accent/15 text-accent" : "bg-muted text-muted-foreground"
+                        }`}>
+                          {p.label.charAt(0)}{dash?.[p.dbField] ? "✅" : "❌"}
                         </span>
-                      ) : (
-                        <span className="text-[10px] text-muted-foreground font-medium">Offen</span>
-                      )}
+                      ))}
                       <ChevronRight className={`h-3.5 w-3.5 transition-colors ${isSelected ? "text-accent" : "text-muted-foreground/40"}`} />
                     </div>
                   </motion.div>
