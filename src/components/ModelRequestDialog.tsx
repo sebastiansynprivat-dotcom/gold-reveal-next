@@ -233,14 +233,17 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
             <Label className="text-xs text-foreground">
               Beschreibung der Anfrage {modelLanguage === "en" ? "(bitte auf Englisch)" : "(bitte auf Deutsch)"} *
             </Label>
-            <Textarea
-              ref={descriptionRef}
-              placeholder="Beschreibe hier die Anfrage an das Model..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              maxLength={2000}
-              rows={4}
-            />
+            <div className="input-gold-shimmer rounded-lg">
+              <Textarea
+                ref={descriptionRef}
+                placeholder="Beschreibe hier die Anfrage an das Model..."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                maxLength={2000}
+                rows={4}
+                className="border-transparent"
+              />
+            </div>
           </div>
 
           <Button onClick={handleSubmit} disabled={loading} className="w-full">

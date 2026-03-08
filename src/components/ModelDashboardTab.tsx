@@ -619,12 +619,14 @@ export default function ModelDashboardTab() {
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Betrag (€)</Label>
-                  <Input
-                    value={gutschriftAmount}
-                    onChange={e => setGutschriftAmount(e.target.value)}
-                    placeholder="z.B. 500,00"
-                    className="bg-secondary/40 border-border text-sm font-mono focus:border-accent/40 transition-colors"
-                  />
+                  <div className="input-gold-shimmer rounded-lg">
+                    <Input
+                      value={gutschriftAmount}
+                      onChange={e => setGutschriftAmount(e.target.value)}
+                      placeholder="z.B. 500,00"
+                      className="bg-secondary/40 border-transparent text-sm font-mono"
+                    />
+                  </div>
                 </div>
                 <Button
                   onClick={generateGutschrift}

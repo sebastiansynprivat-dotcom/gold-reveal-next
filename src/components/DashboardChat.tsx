@@ -219,13 +219,15 @@ export default function DashboardChat({ externalOpen, onExternalOpenChange }: Da
         onSubmit={(e) => { e.preventDefault(); send(input); }}
         className="flex gap-2 p-4 border-t border-border"
       >
-        <Input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Frage stellen..."
-          className="flex-1"
-          disabled={isLoading}
-        />
+        <div className="input-gold-shimmer rounded-lg flex-1">
+          <Input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Frage stellen..."
+            className="flex-1 border-transparent"
+            disabled={isLoading}
+          />
+        </div>
         <Button type="submit" size="icon" disabled={isLoading || !input.trim()}>
           <Send className="h-4 w-4" />
         </Button>
