@@ -498,6 +498,7 @@ export default function AdminDashboard() {
   const [manualAccDriveFolder, setManualAccDriveFolder] = useState("");
   const [manualAccLanguage, setManualAccLanguage] = useState<"de" | "en">("de");
   const [manualAccModelActive, setManualAccModelActive] = useState(true);
+  const [manualAccModelAgency, setManualAccModelAgency] = useState<"shex" | "syn">("shex");
   const [manualAccFolder, setManualAccFolder] = useState("");
   const [newFolderName, setNewFolderName] = useState("");
   const [creatingFolder, setCreatingFolder] = useState(false);
