@@ -29,13 +29,16 @@ interface ModelDashboardRow {
   id: string;
   account_id: string;
   fourbased_submitted: boolean;
+  maloum_submitted: boolean;
+  brezzels_submitted: boolean;
   notes: string | null;
   revenue_percentage: number | null;
   crypto_address: string | null;
   contract_file_path: string | null;
 }
 
-type StatusFilter = "all" | "submitted" | "not_submitted";
+type PlatformKey = "fourbased" | "maloum" | "brezzels";
+type StatusFilter = "all" | "fourbased_submitted" | "fourbased_open" | "maloum_submitted" | "maloum_open" | "brezzels_submitted" | "brezzels_open";
 
 const SENDER = {
   company: "Sharify Media FZCO",
@@ -45,10 +48,20 @@ const SENDER = {
   taxId: "1041507169",
 };
 
+const PLATFORMS: { key: PlatformKey; label: string; dbField: "fourbased_submitted" | "maloum_submitted" | "brezzels_submitted" }[] = [
+  { key: "fourbased", label: "4Based", dbField: "fourbased_submitted" },
+  { key: "maloum", label: "Maloum", dbField: "maloum_submitted" },
+  { key: "brezzels", label: "Brezzels", dbField: "brezzels_submitted" },
+];
+
 const filterOptions: { label: string; value: StatusFilter }[] = [
   { label: "Alle", value: "all" },
-  { label: "Submitted", value: "submitted" },
-  { label: "Offen", value: "not_submitted" },
+  { label: "4Based ✅", value: "fourbased_submitted" },
+  { label: "4Based ❌", value: "fourbased_open" },
+  { label: "Maloum ✅", value: "maloum_submitted" },
+  { label: "Maloum ❌", value: "maloum_open" },
+  { label: "Brezzels ✅", value: "brezzels_submitted" },
+  { label: "Brezzels ❌", value: "brezzels_open" },
 ];
 
 // ─── Animated counter ───
@@ -111,6 +124,8 @@ export default function ModelDashboardTab() {
 
   // Local form state
   const [fourbasedSubmitted, setFourbasedSubmitted] = useState(false);
+  const [maloumSubmitted, setMaloumSubmitted] = useState(false);
+  const [brezzelsSubmitted, setBrezzelsSubmitted] = useState(false);
   const [notes, setNotes] = useState("");
   const [revenuePercentage, setRevenuePercentage] = useState(0);
   const [cryptoAddress, setCryptoAddress] = useState("");
@@ -151,6 +166,8 @@ export default function ModelDashboardTab() {
       const d = data as ModelDashboardRow;
       setData(d);
       setFourbasedSubmitted(d.fourbased_submitted);
+      setMaloumSubmitted(d.maloum_submitted);
+      setBrezzelsSubmitted(d.brezzels_submitted);
       setNotes(d.notes || "");
       setRevenuePercentage(d.revenue_percentage || 0);
       setCryptoAddress(d.crypto_address || "");
@@ -158,6 +175,8 @@ export default function ModelDashboardTab() {
     } else {
       setData(null);
       setFourbasedSubmitted(false);
+      setMaloumSubmitted(false);
+      setBrezzelsSubmitted(false);
       setNotes("");
       setRevenuePercentage(0);
       setCryptoAddress("");
@@ -224,9 +243,12 @@ export default function ModelDashboardTab() {
 
   const filteredAccounts = accounts.filter(acc => {
     const dash = getDashboard(acc.id);
-    const submitted = dash?.fourbased_submitted || false;
-    if (statusFilter === "submitted" && !submitted) return false;
-    if (statusFilter === "not_submitted" && submitted) return false;
+    if (statusFilter === "fourbased_submitted" && !dash?.fourbased_submitted) return false;
+    if (statusFilter === "fourbased_open" && dash?.fourbased_submitted) return false;
+    if (statusFilter === "maloum_submitted" && !dash?.maloum_submitted) return false;
+    if (statusFilter === "maloum_open" && dash?.maloum_submitted) return false;
+    if (statusFilter === "brezzels_submitted" && !dash?.brezzels_submitted) return false;
+    if (statusFilter === "brezzels_open" && dash?.brezzels_submitted) return false;
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       return acc.account_email.toLowerCase().includes(q) || acc.account_domain.toLowerCase().includes(q);
@@ -234,8 +256,8 @@ export default function ModelDashboardTab() {
     return true;
   });
 
-  const submittedCount = accounts.filter(a => getDashboard(a.id)?.fourbased_submitted).length;
-  const openCount = accounts.length - submittedCount;
+  const countByPlatform = (field: "fourbased_submitted" | "maloum_submitted" | "brezzels_submitted") =>
+    accounts.filter(a => getDashboard(a.id)?.[field]).length;
 
   const saveData = async () => {
     if (!selectedAccountId) return;
@@ -243,6 +265,8 @@ export default function ModelDashboardTab() {
     const payload = {
       account_id: selectedAccountId,
       fourbased_submitted: fourbasedSubmitted,
+      maloum_submitted: maloumSubmitted,
+      brezzels_submitted: brezzelsSubmitted,
       notes,
       revenue_percentage: revenuePercentage,
       crypto_address: cryptoAddress,
@@ -374,31 +398,53 @@ export default function ModelDashboardTab() {
         </div>
       </motion.div>
 
-      {/* ── Stats row ── */}
+      {/* ── Stats row – per platform ── */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.05 }}
-        className="grid grid-cols-3 gap-3"
+        className="space-y-2"
       >
-        {[
-          { label: "Gesamt", value: accounts.length, active: statusFilter === "all", filter: "all" as StatusFilter },
-          { label: "Submitted", value: submittedCount, active: statusFilter === "submitted", filter: "submitted" as StatusFilter },
-          { label: "Offen", value: openCount, active: statusFilter === "not_submitted", filter: "not_submitted" as StatusFilter },
-        ].map((stat) => (
-          <button
-            key={stat.label}
-            onClick={() => setStatusFilter(stat.filter)}
-            className={`glass-card rounded-xl p-3 text-center transition-all duration-300 cursor-pointer ${
-              stat.active ? "gold-border-glow scale-[1.02]" : "hover:scale-[1.02]"
-            }`}
-          >
-            <p className="text-xl font-bold text-gold-gradient">
-              <AnimatedNumber value={stat.value} />
-            </p>
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground mt-0.5">{stat.label}</p>
-          </button>
-        ))}
+        <button
+          onClick={() => setStatusFilter("all")}
+          className={`w-full glass-card rounded-xl p-2.5 text-center transition-all duration-300 cursor-pointer ${
+            statusFilter === "all" ? "gold-border-glow scale-[1.01]" : "hover:scale-[1.01]"
+          }`}
+        >
+          <p className="text-lg font-bold text-gold-gradient"><AnimatedNumber value={accounts.length} /></p>
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Gesamt</p>
+        </button>
+        <div className="grid grid-cols-3 gap-2">
+          {PLATFORMS.map(p => {
+            const submitted = countByPlatform(p.dbField);
+            const open = accounts.length - submitted;
+            return (
+              <div key={p.key} className="glass-card rounded-xl p-2.5 space-y-1.5">
+                <p className="text-[10px] font-semibold text-foreground text-center tracking-wide">{p.label}</p>
+                <div className="grid grid-cols-2 gap-1">
+                  <button
+                    onClick={() => setStatusFilter(`${p.key}_submitted` as StatusFilter)}
+                    className={`rounded-lg py-1 text-center transition-all cursor-pointer ${
+                      statusFilter === `${p.key}_submitted` ? "bg-accent/20 border border-accent/40" : "bg-secondary/30 hover:bg-secondary/50"
+                    }`}
+                  >
+                    <p className="text-xs font-bold text-accent tabular-nums">{submitted}</p>
+                    <p className="text-[8px] text-muted-foreground">✅</p>
+                  </button>
+                  <button
+                    onClick={() => setStatusFilter(`${p.key}_open` as StatusFilter)}
+                    className={`rounded-lg py-1 text-center transition-all cursor-pointer ${
+                      statusFilter === `${p.key}_open` ? "bg-destructive/20 border border-destructive/40" : "bg-secondary/30 hover:bg-secondary/50"
+                    }`}
+                  >
+                    <p className="text-xs font-bold text-foreground tabular-nums">{open}</p>
+                    <p className="text-[8px] text-muted-foreground">❌</p>
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </motion.div>
 
       {/* ── Search ── */}
@@ -425,13 +471,13 @@ export default function ModelDashboardTab() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.15 }}
-        className="flex items-center gap-1.5 p-1 rounded-xl bg-secondary/40"
+        className="flex flex-wrap gap-1.5 p-1.5 rounded-xl bg-secondary/40"
       >
         {filterOptions.map(f => (
           <button
             key={f.value}
             onClick={() => setStatusFilter(f.value)}
-            className={`relative flex-1 text-xs font-medium py-1.5 rounded-lg transition-colors duration-200 ${
+            className={`relative text-[10px] font-medium px-2.5 py-1.5 rounded-lg transition-colors duration-200 ${
               statusFilter === f.value ? "text-accent-foreground" : "text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -471,7 +517,7 @@ export default function ModelDashboardTab() {
             <AnimatePresence mode="popLayout">
               {filteredAccounts.map((acc, i) => {
                 const dash = getDashboard(acc.id);
-                const submitted = dash?.fourbased_submitted || false;
+                const allSubmitted = dash?.fourbased_submitted && dash?.maloum_submitted && dash?.brezzels_submitted;
                 const isSelected = acc.id === selectedAccountId;
                 return (
                   <motion.div
@@ -489,7 +535,7 @@ export default function ModelDashboardTab() {
                     }`}
                   >
                     <div className={`h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
-                      submitted
+                      allSubmitted
                         ? "bg-accent/15 text-accent"
                         : "bg-muted text-muted-foreground"
                     }`}>
@@ -501,15 +547,14 @@ export default function ModelDashboardTab() {
                         {acc.account_domain && `${acc.account_domain} · `}{acc.platform}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      {submitted ? (
-                        <span className="flex items-center gap-1 text-[10px] font-medium text-accent">
-                          <CheckCircle2 className="h-3 w-3" />
-                          <span className="hidden sm:inline">Submitted</span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {PLATFORMS.map(p => (
+                        <span key={p.key} className={`text-[9px] px-1 py-0.5 rounded ${
+                          dash?.[p.dbField] ? "bg-accent/15 text-accent" : "bg-muted text-muted-foreground"
+                        }`}>
+                          {p.label.charAt(0)}{dash?.[p.dbField] ? "✅" : "❌"}
                         </span>
-                      ) : (
-                        <span className="text-[10px] text-muted-foreground font-medium">Offen</span>
-                      )}
+                      ))}
                       <ChevronRight className={`h-3.5 w-3.5 transition-colors ${isSelected ? "text-accent" : "text-muted-foreground/40"}`} />
                     </div>
                   </motion.div>
@@ -652,13 +697,24 @@ export default function ModelDashboardTab() {
               </div>
             </Section>
 
-            {/* 4based */}
-            <Section icon={CheckCircle2} title="4based submitted" delay={0.1}>
-              <div className="flex items-center gap-3">
-                <Switch checked={fourbasedSubmitted} onCheckedChange={setFourbasedSubmitted} />
-                <span className="text-sm text-foreground font-medium">
-                  {fourbasedSubmitted ? "Eingereicht ✅" : "Noch nicht eingereicht"}
-                </span>
+            {/* Plattform-Status */}
+            <Section icon={CheckCircle2} title="Plattform-Status" delay={0.1}>
+              <div className="space-y-3">
+                {[
+                  { label: "4Based", value: fourbasedSubmitted, onChange: setFourbasedSubmitted },
+                  { label: "Maloum", value: maloumSubmitted, onChange: setMaloumSubmitted },
+                  { label: "Brezzels", value: brezzelsSubmitted, onChange: setBrezzelsSubmitted },
+                ].map(p => (
+                  <div key={p.label} className="flex items-center justify-between py-1.5">
+                    <span className="text-sm text-foreground font-medium">{p.label}</span>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs ${p.value ? "text-accent" : "text-muted-foreground"}`}>
+                        {p.value ? "Eingereicht ✅" : "Offen ❌"}
+                      </span>
+                      <Switch checked={p.value} onCheckedChange={p.onChange} />
+                    </div>
+                  </div>
+                ))}
               </div>
             </Section>
 

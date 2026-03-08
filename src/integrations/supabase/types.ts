@@ -291,33 +291,39 @@ export type Database = {
       model_dashboard: {
         Row: {
           account_id: string
+          brezzels_submitted: boolean
           contract_file_path: string | null
           created_at: string
           crypto_address: string | null
           fourbased_submitted: boolean
           id: string
+          maloum_submitted: boolean
           notes: string | null
           revenue_percentage: number | null
           updated_at: string
         }
         Insert: {
           account_id: string
+          brezzels_submitted?: boolean
           contract_file_path?: string | null
           created_at?: string
           crypto_address?: string | null
           fourbased_submitted?: boolean
           id?: string
+          maloum_submitted?: boolean
           notes?: string | null
           revenue_percentage?: number | null
           updated_at?: string
         }
         Update: {
           account_id?: string
+          brezzels_submitted?: boolean
           contract_file_path?: string | null
           created_at?: string
           crypto_address?: string | null
           fourbased_submitted?: boolean
           id?: string
+          maloum_submitted?: boolean
           notes?: string | null
           revenue_percentage?: number | null
           updated_at?: string
