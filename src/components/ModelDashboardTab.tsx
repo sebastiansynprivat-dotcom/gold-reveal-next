@@ -13,7 +13,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Upload, FileText, Trash2, Download, Save, Loader2, Star,
-  Percent, Wallet, StickyNote, CheckCircle2, FileDown, List, Filter, Search, ChevronRight, TrendingUp, CalendarDays, DollarSign
+  Percent, Wallet, StickyNote, CheckCircle2, FileDown, List, Filter, Search, ChevronRight, ChevronDown, TrendingUp, CalendarDays, DollarSign
 } from "lucide-react";
 import jsPDF from "jspdf";
 import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
