@@ -62,6 +62,7 @@ export type Database = {
           id: string
           is_manual: boolean
           model_active: boolean
+          model_agency: string
           model_language: string
           platform: string
           subfolder_name: string | null
@@ -78,6 +79,7 @@ export type Database = {
           id?: string
           is_manual?: boolean
           model_active?: boolean
+          model_agency?: string
           model_language?: string
           platform?: string
           subfolder_name?: string | null
@@ -94,6 +96,7 @@ export type Database = {
           id?: string
           is_manual?: boolean
           model_active?: boolean
+          model_agency?: string
           model_language?: string
           platform?: string
           subfolder_name?: string | null
