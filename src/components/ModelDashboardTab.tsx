@@ -609,11 +609,13 @@ export default function ModelDashboardTab() {
               <div className="space-y-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Beschreibung</Label>
-                  <Input
-                    value={gutschriftDescription}
-                    onChange={e => setGutschriftDescription(e.target.value)}
-                    className="bg-secondary/40 border-border text-sm focus:border-accent/40 transition-colors"
-                  />
+                  <div className="input-gold-shimmer rounded-lg">
+                    <Input
+                      value={gutschriftDescription}
+                      onChange={e => setGutschriftDescription(e.target.value)}
+                      className="bg-secondary/40 border-transparent text-sm"
+                    />
+                  </div>
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Betrag (€)</Label>
