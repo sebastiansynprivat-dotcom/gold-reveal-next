@@ -578,12 +578,14 @@ export default function ModelDashboardTab() {
 
             {/* Crypto */}
             <Section icon={Wallet} title="Crypto Address" delay={0.25}>
-              <Input
-                value={cryptoAddress}
-                onChange={e => setCryptoAddress(e.target.value)}
-                placeholder="0x… / bc1… / T…"
-                className="bg-secondary/40 border-border text-sm font-mono focus:border-accent/40 transition-colors"
-              />
+              <div className="input-gold-shimmer rounded-lg">
+                <Input
+                  value={cryptoAddress}
+                  onChange={e => setCryptoAddress(e.target.value)}
+                  placeholder="0x… / bc1… / T…"
+                  className="bg-secondary/40 border-transparent text-sm font-mono"
+                />
+              </div>
             </Section>
 
             {/* Save */}
