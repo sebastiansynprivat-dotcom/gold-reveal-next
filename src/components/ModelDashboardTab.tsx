@@ -133,7 +133,10 @@ export default function ModelDashboardTab() {
   const [searchQuery, setSearchQuery] = useState("");
   const [modelListOpen, setModelListOpen] = useState(false);
   const [allBotMessages, setAllBotMessages] = useState<BotMessageRow[]>([]);
-  
+  const [modelLoginDialog, setModelLoginDialog] = useState(false);
+  const [modelLoginLoading, setModelLoginLoading] = useState(false);
+  const [modelLoginCreds, setModelLoginCreds] = useState<{ email: string; password: string } | null>(null);
+  const [showLoginPassword, setShowLoginPassword] = useState(false);
 
   // Local form state – per-platform status
   const [fourbasedSubmitted, setFourbasedSubmitted] = useState(false);
