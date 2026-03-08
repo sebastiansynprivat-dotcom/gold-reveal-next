@@ -271,9 +271,8 @@ export default function ModelDashboardTab() {
     // Sub filter
     if (subFilter !== "none") {
       const dash = getDashboard(acc.id);
-      const bot = getBotMessage(acc.id);
-      const hasBotDm = !!(bot && bot.message && bot.message.trim());
-      const hasMassDm = !!(bot && bot.follow_up_message && bot.follow_up_message.trim());
+      const hasBotDm = !!dash?.botdm_done;
+      const hasMassDm = !!dash?.massdm_done;
       const setupField = getSetupField(acc);
       const hasSetup = !!dash?.[setupField];
 
