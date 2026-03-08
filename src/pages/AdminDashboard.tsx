@@ -5307,7 +5307,7 @@ export default function AdminDashboard() {
                         </div>
                         <div className="space-y-1">
                           <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">E-Mail</label>
-                          <Input value={manualAccEmail} onChange={(e) => setManualAccEmail(e.target.value)} placeholder="account@email.com" className="text-xs h-8" />
+                          <div className="input-gold-shimmer rounded-lg"><Input value={manualAccEmail} onChange={(e) => setManualAccEmail(e.target.value)} placeholder="account@email.com" className="text-xs h-8 border-transparent" /></div>
                         </div>
                         <div className="space-y-1">
                           <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Passwort</label>
