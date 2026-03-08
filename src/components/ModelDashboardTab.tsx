@@ -48,10 +48,20 @@ const SENDER = {
   taxId: "1041507169",
 };
 
+const PLATFORMS: { key: PlatformKey; label: string; dbField: "fourbased_submitted" | "maloum_submitted" | "brezzels_submitted" }[] = [
+  { key: "fourbased", label: "4Based", dbField: "fourbased_submitted" },
+  { key: "maloum", label: "Maloum", dbField: "maloum_submitted" },
+  { key: "brezzels", label: "Brezzels", dbField: "brezzels_submitted" },
+];
+
 const filterOptions: { label: string; value: StatusFilter }[] = [
   { label: "Alle", value: "all" },
-  { label: "Submitted", value: "submitted" },
-  { label: "Offen", value: "not_submitted" },
+  { label: "4Based ✅", value: "fourbased_submitted" },
+  { label: "4Based ❌", value: "fourbased_open" },
+  { label: "Maloum ✅", value: "maloum_submitted" },
+  { label: "Maloum ❌", value: "maloum_open" },
+  { label: "Brezzels ✅", value: "brezzels_submitted" },
+  { label: "Brezzels ❌", value: "brezzels_open" },
 ];
 
 // ─── Animated counter ───
