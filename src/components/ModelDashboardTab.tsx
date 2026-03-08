@@ -166,12 +166,59 @@ export default function ModelDashboardTab() {
     setLoading(false);
   }, []);
 
+  const loadModelRevenue = useCallback(async (accountId: string, month: string) => {
+    setRevenueLoading(true);
+    // 1. Get all user_ids assigned to this account (current + historical)
+    const { data: assignments } = await supabase
+      .from("account_assignments")
+      .select("user_id")
+      .eq("account_id", accountId);
+
+    const userIds = [...new Set((assignments || []).map(a => a.user_id))];
+    if (userIds.length === 0) { setModelRevenue([]); setRevenueLoading(false); return; }
+
+    // 2. Get daily_revenue for those users in the selected month
+    const [year, mon] = month.split("-").map(Number);
+    const monthStart = format(new Date(year, mon - 1, 1), "yyyy-MM-dd");
+    const monthEnd = format(endOfMonth(new Date(year, mon - 1, 1)), "yyyy-MM-dd");
+
+    const { data: revenue } = await supabase
+      .from("daily_revenue")
+      .select("date, amount, user_id")
+      .in("user_id", userIds)
+      .gte("date", monthStart)
+      .lte("date", monthEnd)
+      .order("date", { ascending: true });
+
+    setModelRevenue((revenue || []) as { date: string; amount: number; user_id: string }[]);
+    setRevenueLoading(false);
+  }, []);
+
   useEffect(() => {
     if (selectedAccountId) {
       loadModelData(selectedAccountId);
+      loadModelRevenue(selectedAccountId, revenueMonth);
       setTimeout(() => detailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
     }
-  }, [selectedAccountId, loadModelData]);
+  }, [selectedAccountId, loadModelData, loadModelRevenue, revenueMonth]);
+
+  // Revenue calculations
+  const totalMonthRevenue = useMemo(() => modelRevenue.reduce((sum, r) => sum + r.amount, 0), [modelRevenue]);
+  const gutschriftFromRevenue = useMemo(() => {
+    if (revenuePercentage <= 0 || totalMonthRevenue <= 0) return 0;
+    return (totalMonthRevenue * revenuePercentage) / 100;
+  }, [totalMonthRevenue, revenuePercentage]);
+
+  // Available months for selection (last 12 months)
+  const availableMonths = useMemo(() => {
+    const months = [];
+    const now = new Date();
+    for (let i = 0; i < 12; i++) {
+      const d = subMonths(now, i);
+      months.push({ value: format(d, "yyyy-MM"), label: format(d, "MMMM yyyy") });
+    }
+    return months;
+  }, []);
 
   const getDashboard = (id: string) => allDashboards.find(d => d.account_id === id);
 
