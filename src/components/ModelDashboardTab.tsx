@@ -34,6 +34,12 @@ interface ModelDashboardRow {
   brezzels_submitted: boolean;
   botdm_done: boolean;
   massdm_done: boolean;
+  fourbased_botdm_done: boolean;
+  fourbased_massdm_done: boolean;
+  maloum_botdm_done: boolean;
+  maloum_massdm_done: boolean;
+  brezzels_botdm_done: boolean;
+  brezzels_massdm_done: boolean;
   notes: string | null;
   revenue_percentage: number | null;
   crypto_address: string | null;
@@ -128,12 +134,17 @@ export default function ModelDashboardTab() {
   const [allBotMessages, setAllBotMessages] = useState<BotMessageRow[]>([]);
   
 
-  // Local form state
+  // Local form state – per-platform status
   const [fourbasedSubmitted, setFourbasedSubmitted] = useState(false);
   const [maloumSubmitted, setMaloumSubmitted] = useState(false);
   const [brezzelsSubmitted, setBrezzelsSubmitted] = useState(false);
-  const [botdmDone, setBotdmDone] = useState(false);
-  const [massdmDone, setMassdmDone] = useState(false);
+  const [fourbasedBotdm, setFourbasedBotdm] = useState(false);
+  const [fourbasedMassdm, setFourbasedMassdm] = useState(false);
+  const [maloumBotdm, setMaloumBotdm] = useState(false);
+  const [maloumMassdm, setMaloumMassdm] = useState(false);
+  const [brezzelsBotdm, setBrezzelsBotdm] = useState(false);
+  const [brezzelsMassdm, setBrezzelsMassdm] = useState(false);
+  const [openPlatformStatus, setOpenPlatformStatus] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
   const [revenuePercentage, setRevenuePercentage] = useState(0);
   const [cryptoAddress, setCryptoAddress] = useState("");
@@ -180,8 +191,12 @@ export default function ModelDashboardTab() {
       setFourbasedSubmitted(d.fourbased_submitted);
       setMaloumSubmitted(d.maloum_submitted);
       setBrezzelsSubmitted(d.brezzels_submitted);
-      setBotdmDone(d.botdm_done);
-      setMassdmDone(d.massdm_done);
+      setFourbasedBotdm(d.fourbased_botdm_done);
+      setFourbasedMassdm(d.fourbased_massdm_done);
+      setMaloumBotdm(d.maloum_botdm_done);
+      setMaloumMassdm(d.maloum_massdm_done);
+      setBrezzelsBotdm(d.brezzels_botdm_done);
+      setBrezzelsMassdm(d.brezzels_massdm_done);
       setNotes(d.notes || "");
       setRevenuePercentage(d.revenue_percentage || 0);
       setCryptoAddress(d.crypto_address || "");
@@ -191,8 +206,12 @@ export default function ModelDashboardTab() {
       setFourbasedSubmitted(false);
       setMaloumSubmitted(false);
       setBrezzelsSubmitted(false);
-      setBotdmDone(false);
-      setMassdmDone(false);
+      setFourbasedBotdm(false);
+      setFourbasedMassdm(false);
+      setMaloumBotdm(false);
+      setMaloumMassdm(false);
+      setBrezzelsBotdm(false);
+      setBrezzelsMassdm(false);
       setNotes("");
       setRevenuePercentage(0);
       setCryptoAddress("");
@@ -264,17 +283,26 @@ export default function ModelDashboardTab() {
     return "fourbased_submitted";
   };
 
+  const getBotdmField = (acc: Account): "fourbased_botdm_done" | "maloum_botdm_done" | "brezzels_botdm_done" => {
+    if (acc.platform === "Maloum") return "maloum_botdm_done";
+    if (acc.platform === "Brezzels") return "brezzels_botdm_done";
+    return "fourbased_botdm_done";
+  };
+
+  const getMassdmField = (acc: Account): "fourbased_massdm_done" | "maloum_massdm_done" | "brezzels_massdm_done" => {
+    if (acc.platform === "Maloum") return "maloum_massdm_done";
+    if (acc.platform === "Brezzels") return "brezzels_massdm_done";
+    return "fourbased_massdm_done";
+  };
+
   const filteredAccounts = accounts.filter(acc => {
-    // Platform filter
     if (platformFilter !== "all" && acc.platform !== platformFilter) return false;
 
-    // Sub filter
     if (subFilter !== "none") {
       const dash = getDashboard(acc.id);
-      const hasBotDm = !!dash?.botdm_done;
-      const hasMassDm = !!dash?.massdm_done;
-      const setupField = getSetupField(acc);
-      const hasSetup = !!dash?.[setupField];
+      const hasBotDm = !!dash?.[getBotdmField(acc)];
+      const hasMassDm = !!dash?.[getMassdmField(acc)];
+      const hasSetup = !!dash?.[getSetupField(acc)];
 
       if (subFilter === "botdm_fehlt" && hasBotDm) return false;
       if (subFilter === "botdm_vorhanden" && !hasBotDm) return false;
@@ -299,8 +327,14 @@ export default function ModelDashboardTab() {
       fourbased_submitted: fourbasedSubmitted,
       maloum_submitted: maloumSubmitted,
       brezzels_submitted: brezzelsSubmitted,
-      botdm_done: botdmDone,
-      massdm_done: massdmDone,
+      botdm_done: fourbasedBotdm || maloumBotdm || brezzelsBotdm,
+      massdm_done: fourbasedMassdm || maloumMassdm || brezzelsMassdm,
+      fourbased_botdm_done: fourbasedBotdm,
+      fourbased_massdm_done: fourbasedMassdm,
+      maloum_botdm_done: maloumBotdm,
+      maloum_massdm_done: maloumMassdm,
+      brezzels_botdm_done: brezzelsBotdm,
+      brezzels_massdm_done: brezzelsMassdm,
       notes,
       revenue_percentage: revenuePercentage,
       crypto_address: cryptoAddress,
@@ -734,72 +768,126 @@ export default function ModelDashboardTab() {
               </div>
             </Section>
 
-            {/* Status-Übersicht */}
+            {/* Status-Übersicht – per platform collapsible */}
             <Section icon={CheckCircle2} title="Status-Übersicht" delay={0.1}>
-              <div className="space-y-1">
-                {[
-                  { label: "BotDM", value: botdmDone, onChange: setBotdmDone },
-                  { label: "MassDM", value: massdmDone, onChange: setMassdmDone },
-                  { label: "Account Setup", value: (() => {
-                    const p = selectedAccount?.platform;
-                    if (p === "Maloum") return maloumSubmitted;
-                    if (p === "Brezzels") return brezzelsSubmitted;
-                    return fourbasedSubmitted;
-                  })(), onChange: (v: boolean) => {
-                    const p = selectedAccount?.platform;
-                    if (p === "Maloum") setMaloumSubmitted(v);
-                    else if (p === "Brezzels") setBrezzelsSubmitted(v);
-                    else setFourbasedSubmitted(v);
-                  }},
-                ].map(p => (
-                  <button
-                    key={p.label}
-                    type="button"
-                    onClick={() => p.onChange(!p.value)}
-                    className={cn(
-                      "w-full flex items-center justify-between px-3 py-3 rounded-lg transition-all duration-200 group",
-                      p.value
-                        ? "bg-accent/8 hover:bg-accent/12"
-                        : "bg-secondary/30 hover:bg-secondary/50"
-                    )}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={cn(
-                        "h-5 w-5 rounded-md border-2 flex items-center justify-center transition-all duration-200",
-                        p.value
-                          ? "border-accent bg-accent/20"
-                          : "border-muted-foreground/30 bg-transparent"
-                      )}>
-                        <AnimatePresence mode="wait">
-                          {p.value && (
-                            <motion.div
-                              initial={{ scale: 0, opacity: 0 }}
-                              animate={{ scale: 1, opacity: 1 }}
-                              exit={{ scale: 0, opacity: 0 }}
-                              transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                            >
-                              <CheckCircle2 className="h-3 w-3 text-accent" />
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                      <span className={cn(
-                        "text-sm font-medium transition-colors",
-                        p.value ? "text-foreground" : "text-muted-foreground"
-                      )}>
-                        {p.label}
-                      </span>
+              <div className="space-y-1.5">
+                {([
+                  {
+                    platform: "4Based",
+                    items: [
+                      { label: "BotDM", value: fourbasedBotdm, onChange: setFourbasedBotdm },
+                      { label: "MassDM", value: fourbasedMassdm, onChange: setFourbasedMassdm },
+                      { label: "Account Setup", value: fourbasedSubmitted, onChange: setFourbasedSubmitted },
+                    ],
+                  },
+                  {
+                    platform: "Maloum",
+                    items: [
+                      { label: "BotDM", value: maloumBotdm, onChange: setMaloumBotdm },
+                      { label: "MassDM", value: maloumMassdm, onChange: setMaloumMassdm },
+                      { label: "Account Setup", value: maloumSubmitted, onChange: setMaloumSubmitted },
+                    ],
+                  },
+                  {
+                    platform: "Brezzels",
+                    items: [
+                      { label: "BotDM", value: brezzelsBotdm, onChange: setBrezzelsBotdm },
+                      { label: "MassDM", value: brezzelsMassdm, onChange: setBrezzelsMassdm },
+                      { label: "Account Setup", value: brezzelsSubmitted, onChange: setBrezzelsSubmitted },
+                    ],
+                  },
+                ] as const).map(group => {
+                  const doneCount = group.items.filter(i => i.value).length;
+                  const isOpen = openPlatformStatus === group.platform;
+                  return (
+                    <div key={group.platform} className="rounded-lg overflow-hidden border border-border/50">
+                      <button
+                        type="button"
+                        onClick={() => setOpenPlatformStatus(isOpen ? null : group.platform)}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-secondary/30 transition-colors"
+                      >
+                        <ChevronDown className={cn(
+                          "h-3.5 w-3.5 text-accent transition-transform duration-200",
+                          !isOpen && "-rotate-90"
+                        )} />
+                        <span className="text-sm font-medium text-foreground">{group.platform}</span>
+                        <span className={cn(
+                          "ml-auto text-[10px] font-medium px-2 py-0.5 rounded-full",
+                          doneCount === 3
+                            ? "bg-accent/15 text-accent"
+                            : doneCount > 0
+                              ? "bg-accent/10 text-accent/70"
+                              : "bg-destructive/10 text-destructive"
+                        )}>
+                          {doneCount}/3
+                        </span>
+                      </button>
+                      <AnimatePresence initial={false}>
+                        {isOpen && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="overflow-hidden"
+                          >
+                            <div className="px-2 pb-2 space-y-0.5">
+                              {group.items.map(item => (
+                                <button
+                                  key={item.label}
+                                  type="button"
+                                  onClick={() => item.onChange(!item.value)}
+                                  className={cn(
+                                    "w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-all duration-200",
+                                    item.value
+                                      ? "bg-accent/8 hover:bg-accent/12"
+                                      : "bg-secondary/20 hover:bg-secondary/40"
+                                  )}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <div className={cn(
+                                      "h-4.5 w-4.5 rounded border-2 flex items-center justify-center transition-all duration-200",
+                                      item.value
+                                        ? "border-accent bg-accent/20"
+                                        : "border-muted-foreground/30 bg-transparent"
+                                    )}>
+                                      <AnimatePresence mode="wait">
+                                        {item.value && (
+                                          <motion.div
+                                            initial={{ scale: 0, opacity: 0 }}
+                                            animate={{ scale: 1, opacity: 1 }}
+                                            exit={{ scale: 0, opacity: 0 }}
+                                            transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                                          >
+                                            <CheckCircle2 className="h-2.5 w-2.5 text-accent" />
+                                          </motion.div>
+                                        )}
+                                      </AnimatePresence>
+                                    </div>
+                                    <span className={cn(
+                                      "text-xs font-medium transition-colors",
+                                      item.value ? "text-foreground" : "text-muted-foreground"
+                                    )}>
+                                      {item.label}
+                                    </span>
+                                  </div>
+                                  <span className={cn(
+                                    "text-[10px] font-medium px-1.5 py-0.5 rounded-full transition-all",
+                                    item.value
+                                      ? "bg-accent/15 text-accent"
+                                      : "bg-destructive/10 text-destructive"
+                                  )}>
+                                    {item.value ? "Erledigt" : "Fehlt"}
+                                  </span>
+                                </button>
+                              ))}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
-                    <span className={cn(
-                      "text-[10px] font-medium px-2 py-0.5 rounded-full transition-all",
-                      p.value
-                        ? "bg-accent/15 text-accent"
-                        : "bg-destructive/10 text-destructive"
-                    )}>
-                      {p.value ? "Erledigt" : "Fehlt"}
-                    </span>
-                  </button>
-                ))}
+                  );
+                })}
               </div>
             </Section>
 
