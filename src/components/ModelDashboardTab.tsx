@@ -120,6 +120,11 @@ export default function ModelDashboardTab() {
   const [gutschriftAmount, setGutschriftAmount] = useState("");
   const [gutschriftDescription, setGutschriftDescription] = useState("Gutschrift für erbrachte Leistungen");
 
+  // Revenue per model
+  const [modelRevenue, setModelRevenue] = useState<{ date: string; amount: number; user_id: string }[]>([]);
+  const [revenueLoading, setRevenueLoading] = useState(false);
+  const [revenueMonth, setRevenueMonth] = useState(() => format(new Date(), "yyyy-MM"));
+
   const loadAllDashboards = useCallback(async () => {
     const { data } = await supabase.from("model_dashboard").select("*");
     if (data) setAllDashboards(data as ModelDashboardRow[]);
