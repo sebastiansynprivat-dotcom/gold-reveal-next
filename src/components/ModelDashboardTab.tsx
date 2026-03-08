@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -38,8 +38,14 @@ interface ModelDashboardRow {
   contract_file_path: string | null;
 }
 
-type PlatformKey = "fourbased" | "maloum" | "brezzels";
-type StatusFilter = "all" | "fourbased_submitted" | "fourbased_open" | "maloum_submitted" | "maloum_open" | "brezzels_submitted" | "brezzels_open";
+type PlatformFilter = "all" | "4Based" | "Maloum" | "Brezzels";
+type SubFilter = "none" | "botdm_fehlt" | "botdm_vorhanden" | "massdm_fehlt" | "massdm_vorhanden" | "setup_fehlt" | "setup_vorhanden";
+
+interface BotMessageRow {
+  account_id: string | null;
+  message: string;
+  follow_up_message: string;
+}
 
 const SENDER = {
   company: "Sharify Media FZCO",
@@ -49,20 +55,15 @@ const SENDER = {
   taxId: "1041507169",
 };
 
-const PLATFORMS: { key: PlatformKey; label: string; dbField: "fourbased_submitted" | "maloum_submitted" | "brezzels_submitted" }[] = [
-  { key: "fourbased", label: "4Based", dbField: "fourbased_submitted" },
-  { key: "maloum", label: "Maloum", dbField: "maloum_submitted" },
-  { key: "brezzels", label: "Brezzels", dbField: "brezzels_submitted" },
-];
+const PLATFORM_LABELS: PlatformFilter[] = ["all", "4Based", "Maloum", "Brezzels"];
 
-const filterOptions: { label: string; value: StatusFilter }[] = [
-  { label: "Alle", value: "all" },
-  { label: "4Based ✅", value: "fourbased_submitted" },
-  { label: "4Based ❌", value: "fourbased_open" },
-  { label: "Maloum ✅", value: "maloum_submitted" },
-  { label: "Maloum ❌", value: "maloum_open" },
-  { label: "Brezzels ✅", value: "brezzels_submitted" },
-  { label: "Brezzels ❌", value: "brezzels_open" },
+const SUB_FILTERS: { label: string; value: SubFilter }[] = [
+  { label: "BotDM fehlt", value: "botdm_fehlt" },
+  { label: "BotDM vorhanden", value: "botdm_vorhanden" },
+  { label: "MassDM fehlt", value: "massdm_fehlt" },
+  { label: "MassDM vorhanden", value: "massdm_vorhanden" },
+  { label: "Account Setup fehlt", value: "setup_fehlt" },
+  { label: "Account Setup vorhanden", value: "setup_vorhanden" },
 ];
 
 // ─── Animated counter ───
@@ -118,10 +119,12 @@ export default function ModelDashboardTab() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [platformFilter, setPlatformFilter] = useState<PlatformFilter>("all");
+  const [subFilter, setSubFilter] = useState<SubFilter>("none");
   const [searchQuery, setSearchQuery] = useState("");
   const [modelListOpen, setModelListOpen] = useState(false);
-  const detailRef = useRef<HTMLDivElement>(null);
+  const [allBotMessages, setAllBotMessages] = useState<BotMessageRow[]>([]);
+  
 
   // Local form state
   const [fourbasedSubmitted, setFourbasedSubmitted] = useState(false);
@@ -153,6 +156,10 @@ export default function ModelDashboardTab() {
       .order("account_email")
       .then(({ data }) => { if (data) setAccounts(data); });
     loadAllDashboards();
+    supabase
+      .from("bot_messages")
+      .select("account_id, message, follow_up_message")
+      .then(({ data }) => { if (data) setAllBotMessages(data as BotMessageRow[]); });
   }, [loadAllDashboards]);
 
   const loadModelData = useCallback(async (accountId: string) => {
@@ -241,23 +248,41 @@ export default function ModelDashboardTab() {
 
   const getDashboard = (id: string) => allDashboards.find(d => d.account_id === id);
 
+  const getBotMessage = (accountId: string) => allBotMessages.find(b => b.account_id === accountId);
+
+  const getSetupField = (acc: Account): "fourbased_submitted" | "maloum_submitted" | "brezzels_submitted" => {
+    if (acc.platform === "Maloum") return "maloum_submitted";
+    if (acc.platform === "Brezzels") return "brezzels_submitted";
+    return "fourbased_submitted";
+  };
+
   const filteredAccounts = accounts.filter(acc => {
-    const dash = getDashboard(acc.id);
-    if (statusFilter === "fourbased_submitted" && !dash?.fourbased_submitted) return false;
-    if (statusFilter === "fourbased_open" && dash?.fourbased_submitted) return false;
-    if (statusFilter === "maloum_submitted" && !dash?.maloum_submitted) return false;
-    if (statusFilter === "maloum_open" && dash?.maloum_submitted) return false;
-    if (statusFilter === "brezzels_submitted" && !dash?.brezzels_submitted) return false;
-    if (statusFilter === "brezzels_open" && dash?.brezzels_submitted) return false;
+    // Platform filter
+    if (platformFilter !== "all" && acc.platform !== platformFilter) return false;
+
+    // Sub filter
+    if (subFilter !== "none") {
+      const dash = getDashboard(acc.id);
+      const bot = getBotMessage(acc.id);
+      const hasBotDm = !!(bot && bot.message && bot.message.trim());
+      const hasMassDm = !!(bot && bot.follow_up_message && bot.follow_up_message.trim());
+      const setupField = getSetupField(acc);
+      const hasSetup = !!dash?.[setupField];
+
+      if (subFilter === "botdm_fehlt" && hasBotDm) return false;
+      if (subFilter === "botdm_vorhanden" && !hasBotDm) return false;
+      if (subFilter === "massdm_fehlt" && hasMassDm) return false;
+      if (subFilter === "massdm_vorhanden" && !hasMassDm) return false;
+      if (subFilter === "setup_fehlt" && hasSetup) return false;
+      if (subFilter === "setup_vorhanden" && !hasSetup) return false;
+    }
+
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       return acc.account_email.toLowerCase().includes(q) || acc.account_domain.toLowerCase().includes(q);
     }
     return true;
   });
-
-  const countByPlatform = (field: "fourbased_submitted" | "maloum_submitted" | "brezzels_submitted") =>
-    accounts.filter(a => getDashboard(a.id)?.[field]).length;
 
   const saveData = async () => {
     if (!selectedAccountId) return;
@@ -398,54 +423,73 @@ export default function ModelDashboardTab() {
         </div>
       </motion.div>
 
-      {/* ── Stats row – per platform ── */}
+      {/* ── Platform Filter ── */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.05 }}
-        className="space-y-2"
+        className="flex items-center gap-1.5 p-1 rounded-xl bg-secondary/40"
       >
-        <button
-          onClick={() => setStatusFilter("all")}
-          className={`w-full glass-card rounded-xl p-2.5 text-center transition-all duration-300 cursor-pointer ${
-            statusFilter === "all" ? "gold-border-glow scale-[1.01]" : "hover:scale-[1.01]"
-          }`}
-        >
-          <p className="text-lg font-bold text-gold-gradient"><AnimatedNumber value={accounts.length} /></p>
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Gesamt</p>
-        </button>
-        <div className="grid grid-cols-3 gap-2">
-          {PLATFORMS.map(p => {
-            const submitted = countByPlatform(p.dbField);
-            const open = accounts.length - submitted;
-            return (
-              <div key={p.key} className="glass-card rounded-xl p-2.5 space-y-1.5">
-                <p className="text-[10px] font-semibold text-foreground text-center tracking-wide">{p.label}</p>
-                <div className="grid grid-cols-2 gap-1">
-                  <button
-                    onClick={() => setStatusFilter(`${p.key}_submitted` as StatusFilter)}
-                    className={`rounded-lg py-1 text-center transition-all cursor-pointer ${
-                      statusFilter === `${p.key}_submitted` ? "bg-accent/20 border border-accent/40" : "bg-secondary/30 hover:bg-secondary/50"
-                    }`}
-                  >
-                    <p className="text-xs font-bold text-accent tabular-nums">{submitted}</p>
-                    <p className="text-[8px] text-muted-foreground">✅</p>
-                  </button>
-                  <button
-                    onClick={() => setStatusFilter(`${p.key}_open` as StatusFilter)}
-                    className={`rounded-lg py-1 text-center transition-all cursor-pointer ${
-                      statusFilter === `${p.key}_open` ? "bg-destructive/20 border border-destructive/40" : "bg-secondary/30 hover:bg-secondary/50"
-                    }`}
-                  >
-                    <p className="text-xs font-bold text-foreground tabular-nums">{open}</p>
-                    <p className="text-[8px] text-muted-foreground">❌</p>
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
+        {PLATFORM_LABELS.map(p => (
+          <button
+            key={p}
+            onClick={() => { setPlatformFilter(p); setSubFilter("none"); }}
+            className={`relative flex-1 text-xs font-medium py-2 rounded-lg transition-colors duration-200 ${
+              platformFilter === p ? "text-accent-foreground" : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            {platformFilter === p && (
+              <motion.div
+                layoutId="platform-pill"
+                className="absolute inset-0 rounded-lg bg-accent/20 border border-accent/30"
+                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+              />
+            )}
+            <span className="relative z-10">{p === "all" ? "Alle" : p}</span>
+          </button>
+        ))}
       </motion.div>
+
+      {/* ── Sub Filter (appears when platform selected) ── */}
+      <AnimatePresence>
+        {platformFilter !== "all" && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="flex flex-wrap gap-1.5 p-1.5 rounded-xl bg-secondary/30 border border-border/50">
+              <button
+                onClick={() => setSubFilter("none")}
+                className={`relative text-[10px] font-medium px-2.5 py-1.5 rounded-lg transition-colors duration-200 ${
+                  subFilter === "none" ? "text-accent-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {subFilter === "none" && (
+                  <motion.div layoutId="sub-pill" className="absolute inset-0 rounded-lg bg-accent/20 border border-accent/30" transition={{ type: "spring", stiffness: 400, damping: 30 }} />
+                )}
+                <span className="relative z-10">Alle</span>
+              </button>
+              {SUB_FILTERS.map(f => (
+                <button
+                  key={f.value}
+                  onClick={() => setSubFilter(subFilter === f.value ? "none" : f.value)}
+                  className={`relative text-[10px] font-medium px-2.5 py-1.5 rounded-lg transition-colors duration-200 ${
+                    subFilter === f.value ? "text-accent-foreground" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {subFilter === f.value && (
+                    <motion.div layoutId="sub-pill" className="absolute inset-0 rounded-lg bg-accent/20 border border-accent/30" transition={{ type: "spring", stiffness: 400, damping: 30 }} />
+                  )}
+                  <span className="relative z-10">{f.label}</span>
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Search ── */}
       <motion.div
@@ -464,33 +508,6 @@ export default function ModelDashboardTab() {
             />
           </div>
         </div>
-      </motion.div>
-
-      {/* ── Filter pills ── */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.15 }}
-        className="flex flex-wrap gap-1.5 p-1.5 rounded-xl bg-secondary/40"
-      >
-        {filterOptions.map(f => (
-          <button
-            key={f.value}
-            onClick={() => setStatusFilter(f.value)}
-            className={`relative text-[10px] font-medium px-2.5 py-1.5 rounded-lg transition-colors duration-200 ${
-              statusFilter === f.value ? "text-accent-foreground" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {statusFilter === f.value && (
-              <motion.div
-                layoutId="filter-pill"
-                className="absolute inset-0 rounded-lg bg-accent/20 border border-accent/30"
-                transition={{ type: "spring", stiffness: 400, damping: 30 }}
-              />
-            )}
-            <span className="relative z-10">{f.label}</span>
-          </button>
-        ))}
       </motion.div>
 
       {/* ── Model-Liste (collapsible) ── */}
@@ -561,13 +578,9 @@ export default function ModelDashboardTab() {
                             </p>
                           </div>
                           <div className="flex items-center gap-1.5 shrink-0">
-                            {PLATFORMS.map(p => (
-                              <span key={p.key} className={`text-[9px] px-1 py-0.5 rounded ${
-                                dash?.[p.dbField] ? "bg-accent/15 text-accent" : "bg-muted text-muted-foreground"
-                              }`}>
-                                {p.label.charAt(0)}{dash?.[p.dbField] ? "✅" : "❌"}
-                              </span>
-                            ))}
+                            <span className="text-[9px] px-1.5 py-0.5 rounded bg-secondary/50 text-muted-foreground">
+                              {acc.platform}
+                            </span>
                             <ChevronRight className={`h-3.5 w-3.5 transition-colors ${isSelected ? "text-accent" : "text-muted-foreground/40"}`} />
                           </div>
                         </motion.div>
