@@ -5390,8 +5390,7 @@ export default function AdminDashboard() {
                     {!openFolder ? (
                       <div className="flex-1 overflow-y-auto space-y-4 pr-1 -mr-1">
                         {/* Account search across folders */}
-                        <div className="relative">
-                          <div className="relative input-gold-shimmer rounded-lg">
+                        <div className="relative input-gold-shimmer rounded-lg">
                           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                           <Input
                             value={manualAccountSearch}
