@@ -48,11 +48,36 @@ const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   
   if (!user) return <Navigate to="/admin/login" replace />;
   
-  // Check if 2FA was verified this session (within last 8 hours)
   const verified = sessionStorage.getItem("admin_2fa_verified");
   const isValid = verified && (Date.now() - parseInt(verified)) < 8 * 60 * 60 * 1000;
   
   if (!isValid) return <Navigate to="/admin/login" replace />;
+  
+  return <>{children}</>;
+};
+
+const ModelProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, loading } = useAuth();
+  const [isModel, setIsModel] = useState<boolean | null>(null);
+  
+  useEffect(() => {
+    if (!user) return;
+    import("@/integrations/supabase/client").then(({ supabase }) => {
+      supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "model").maybeSingle()
+        .then(({ data }) => setIsModel(!!data));
+    });
+  }, [user]);
+  
+  if (loading || (user && isModel === null)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+  
+  if (!user) return <Navigate to="/model/login" replace />;
+  if (isModel === false) return <Navigate to="/dashboard" replace />;
   
   return <>{children}</>;
 };
