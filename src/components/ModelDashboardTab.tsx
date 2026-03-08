@@ -697,13 +697,24 @@ export default function ModelDashboardTab() {
               </div>
             </Section>
 
-            {/* 4based */}
-            <Section icon={CheckCircle2} title="4based submitted" delay={0.1}>
-              <div className="flex items-center gap-3">
-                <Switch checked={fourbasedSubmitted} onCheckedChange={setFourbasedSubmitted} />
-                <span className="text-sm text-foreground font-medium">
-                  {fourbasedSubmitted ? "Eingereicht ✅" : "Noch nicht eingereicht"}
-                </span>
+            {/* Plattform-Status */}
+            <Section icon={CheckCircle2} title="Plattform-Status" delay={0.1}>
+              <div className="space-y-3">
+                {[
+                  { label: "4Based", value: fourbasedSubmitted, onChange: setFourbasedSubmitted },
+                  { label: "Maloum", value: maloumSubmitted, onChange: setMaloumSubmitted },
+                  { label: "Brezzels", value: brezzelsSubmitted, onChange: setBrezzelsSubmitted },
+                ].map(p => (
+                  <div key={p.label} className="flex items-center justify-between py-1.5">
+                    <span className="text-sm text-foreground font-medium">{p.label}</span>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs ${p.value ? "text-accent" : "text-muted-foreground"}`}>
+                        {p.value ? "Eingereicht ✅" : "Offen ❌"}
+                      </span>
+                      <Switch checked={p.value} onCheckedChange={p.onChange} />
+                    </div>
+                  </div>
+                ))}
               </div>
             </Section>
 
