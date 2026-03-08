@@ -4040,7 +4040,7 @@ export default function AdminDashboard() {
             </section>
 
             {/* Chat-Analysen Prompt */}
-            <section className="glass-card rounded-xl overflow-hidden">
+            <section className={cn("glass-card rounded-xl overflow-hidden", !analysisPromptOpen && "border-b-0")}>
               <button
                 onClick={() => setAnalysisPromptOpen(!analysisPromptOpen)}
                 className="w-full px-4 py-3 flex items-center justify-between hover:bg-secondary/20 transition-colors cursor-pointer"
