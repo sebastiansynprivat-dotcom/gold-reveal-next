@@ -734,9 +734,9 @@ export default function ModelDashboardTab() {
               </div>
             </Section>
 
-            {/* Plattform-Status */}
+            {/* Status-Übersicht */}
             <Section icon={CheckCircle2} title="Status-Übersicht" delay={0.1}>
-              <div className="space-y-3">
+              <div className="space-y-1">
                 {[
                   { label: "BotDM", value: botdmDone, onChange: setBotdmDone },
                   { label: "MassDM", value: massdmDone, onChange: setMassdmDone },
@@ -752,15 +752,53 @@ export default function ModelDashboardTab() {
                     else setFourbasedSubmitted(v);
                   }},
                 ].map(p => (
-                  <div key={p.label} className="flex items-center justify-between py-1.5">
-                    <span className="text-sm text-foreground font-medium">{p.label}</span>
-                    <div className="flex items-center gap-2">
-                      <span className={`text-xs ${p.value ? "text-accent" : "text-muted-foreground"}`}>
-                        {p.value ? "Erledigt ✅" : "Fehlt ❌"}
+                  <button
+                    key={p.label}
+                    type="button"
+                    onClick={() => p.onChange(!p.value)}
+                    className={cn(
+                      "w-full flex items-center justify-between px-3 py-3 rounded-lg transition-all duration-200 group",
+                      p.value
+                        ? "bg-accent/8 hover:bg-accent/12"
+                        : "bg-secondary/30 hover:bg-secondary/50"
+                    )}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={cn(
+                        "h-5 w-5 rounded-md border-2 flex items-center justify-center transition-all duration-200",
+                        p.value
+                          ? "border-accent bg-accent/20"
+                          : "border-muted-foreground/30 bg-transparent"
+                      )}>
+                        <AnimatePresence mode="wait">
+                          {p.value && (
+                            <motion.div
+                              initial={{ scale: 0, opacity: 0 }}
+                              animate={{ scale: 1, opacity: 1 }}
+                              exit={{ scale: 0, opacity: 0 }}
+                              transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                            >
+                              <CheckCircle2 className="h-3 w-3 text-accent" />
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                      <span className={cn(
+                        "text-sm font-medium transition-colors",
+                        p.value ? "text-foreground" : "text-muted-foreground"
+                      )}>
+                        {p.label}
                       </span>
-                      <Switch checked={p.value} onCheckedChange={p.onChange} />
                     </div>
-                  </div>
+                    <span className={cn(
+                      "text-[10px] font-medium px-2 py-0.5 rounded-full transition-all",
+                      p.value
+                        ? "bg-accent/15 text-accent"
+                        : "bg-destructive/10 text-destructive"
+                    )}>
+                      {p.value ? "Erledigt" : "Fehlt"}
+                    </span>
+                  </button>
                 ))}
               </div>
             </Section>
