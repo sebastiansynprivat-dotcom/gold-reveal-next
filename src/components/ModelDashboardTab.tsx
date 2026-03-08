@@ -124,7 +124,7 @@ export default function ModelDashboardTab() {
   const [searchQuery, setSearchQuery] = useState("");
   const [modelListOpen, setModelListOpen] = useState(false);
   const [allBotMessages, setAllBotMessages] = useState<BotMessageRow[]>([]);
-  const detailRef = useRef<HTMLDivElement>(null);
+  
 
   // Local form state
   const [fourbasedSubmitted, setFourbasedSubmitted] = useState(false);
