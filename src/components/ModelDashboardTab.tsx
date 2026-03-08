@@ -492,14 +492,18 @@ export default function ModelDashboardTab() {
         ))}
       </motion.div>
 
-      {/* ── Model-Liste ── */}
+      {/* ── Model-Liste (collapsible) ── */}
       <motion.section
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="glass-card rounded-xl overflow-hidden"
+        className={cn("glass-card rounded-xl overflow-hidden", !modelListOpen && "border-b-0")}
       >
-        <div className="px-4 py-3 header-gradient-border flex items-center gap-2.5">
+        <button
+          onClick={() => setModelListOpen(!modelListOpen)}
+          className="w-full px-4 py-3 flex items-center gap-2.5 hover:bg-secondary/20 transition-colors"
+        >
+          <ChevronDown className={`h-4 w-4 text-accent transition-transform duration-200 ${!modelListOpen ? "-rotate-90" : ""}`} />
           <div className="h-7 w-7 rounded-lg bg-accent/10 flex items-center justify-center">
             <List className="h-3.5 w-3.5 text-accent" />
           </div>
@@ -507,61 +511,73 @@ export default function ModelDashboardTab() {
           <Badge variant="outline" className="ml-auto text-[10px] border-accent/30 text-accent tabular-nums">
             {filteredAccounts.length}
           </Badge>
-        </div>
-        <ScrollArea className="max-h-[320px]">
-          <div className="p-2 space-y-0.5">
-            {filteredAccounts.length === 0 && (
-              <p className="text-xs text-muted-foreground text-center py-6">Keine Models gefunden.</p>
-            )}
-            <AnimatePresence mode="popLayout">
-              {filteredAccounts.map((acc, i) => {
-                const dash = getDashboard(acc.id);
-                const allSubmitted = dash?.fourbased_submitted && dash?.maloum_submitted && dash?.brezzels_submitted;
-                const isSelected = acc.id === selectedAccountId;
-                return (
-                  <motion.div
-                    key={acc.id}
-                    layout
-                    initial={{ opacity: 0, x: -8 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: 8 }}
-                    transition={{ duration: 0.2, delay: i * 0.02 }}
-                    onClick={() => setSelectedAccountId(acc.id)}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-200 ${
-                      isSelected
-                        ? "bg-accent/10 gold-border-glow"
-                        : "hover:bg-secondary/60 border border-transparent"
-                    }`}
-                  >
-                    <div className={`h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
-                      allSubmitted
-                        ? "bg-accent/15 text-accent"
-                        : "bg-muted text-muted-foreground"
-                    }`}>
-                      {acc.account_email.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">{acc.account_email}</p>
-                      <p className="text-[11px] text-muted-foreground truncate">
-                        {acc.account_domain && `${acc.account_domain} · `}{acc.platform}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      {PLATFORMS.map(p => (
-                        <span key={p.key} className={`text-[9px] px-1 py-0.5 rounded ${
-                          dash?.[p.dbField] ? "bg-accent/15 text-accent" : "bg-muted text-muted-foreground"
-                        }`}>
-                          {p.label.charAt(0)}{dash?.[p.dbField] ? "✅" : "❌"}
-                        </span>
-                      ))}
-                      <ChevronRight className={`h-3.5 w-3.5 transition-colors ${isSelected ? "text-accent" : "text-muted-foreground/40"}`} />
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
-          </div>
-        </ScrollArea>
+        </button>
+        <AnimatePresence initial={false}>
+          {modelListOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.25, ease: [0.25, 0.46, 0.45, 0.94] }}
+              className="overflow-hidden border-t border-border"
+            >
+              <ScrollArea className="max-h-[320px]">
+                <div className="p-2 space-y-0.5">
+                  {filteredAccounts.length === 0 && (
+                    <p className="text-xs text-muted-foreground text-center py-6">Keine Models gefunden.</p>
+                  )}
+                  <AnimatePresence mode="popLayout">
+                    {filteredAccounts.map((acc, i) => {
+                      const dash = getDashboard(acc.id);
+                      const allSubmitted = dash?.fourbased_submitted && dash?.maloum_submitted && dash?.brezzels_submitted;
+                      const isSelected = acc.id === selectedAccountId;
+                      return (
+                        <motion.div
+                          key={acc.id}
+                          layout
+                          initial={{ opacity: 0, x: -8 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          exit={{ opacity: 0, x: 8 }}
+                          transition={{ duration: 0.2, delay: i * 0.02 }}
+                          onClick={() => { setSelectedAccountId(acc.id); setModelListOpen(false); }}
+                          className={`flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition-all duration-200 ${
+                            isSelected
+                              ? "bg-accent/10 gold-border-glow"
+                              : "hover:bg-secondary/60 border border-transparent"
+                          }`}
+                        >
+                          <div className={`h-8 w-8 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
+                            allSubmitted
+                              ? "bg-accent/15 text-accent"
+                              : "bg-muted text-muted-foreground"
+                          }`}>
+                            {acc.account_email.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">{acc.account_email}</p>
+                            <p className="text-[11px] text-muted-foreground truncate">
+                              {acc.account_domain && `${acc.account_domain} · `}{acc.platform}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            {PLATFORMS.map(p => (
+                              <span key={p.key} className={`text-[9px] px-1 py-0.5 rounded ${
+                                dash?.[p.dbField] ? "bg-accent/15 text-accent" : "bg-muted text-muted-foreground"
+                              }`}>
+                                {p.label.charAt(0)}{dash?.[p.dbField] ? "✅" : "❌"}
+                              </span>
+                            ))}
+                            <ChevronRight className={`h-3.5 w-3.5 transition-colors ${isSelected ? "text-accent" : "text-muted-foreground/40"}`} />
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </AnimatePresence>
+                </div>
+              </ScrollArea>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.section>
 
       {/* ── Loading ── */}
