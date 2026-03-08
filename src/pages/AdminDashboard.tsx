@@ -234,6 +234,13 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
     }
   }
 
+  // Apply agency filter
+  if (agencyFilter !== "alle") {
+    for (const key of Object.keys(grouped)) {
+      if (grouped[key].model_agency !== agencyFilter) delete grouped[key];
+    }
+  }
+
   // Apply search filter
   if (chatterSearch.trim()) {
     const q = chatterSearch.trim().toLowerCase();
