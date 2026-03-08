@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import Index from "./pages/Index";
 import Onboarding from "./pages/Onboarding";
@@ -17,7 +18,8 @@ import AdminLogin from "./pages/AdminLogin";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import Invoice from "./pages/Invoice";
-import Model from "./pages/Model";
+import ModelLogin from "./pages/ModelLogin";
+import ModelDashboard from "./pages/ModelDashboard";
 
 const queryClient = new QueryClient();
 
@@ -47,11 +49,36 @@ const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   
   if (!user) return <Navigate to="/admin/login" replace />;
   
-  // Check if 2FA was verified this session (within last 8 hours)
   const verified = sessionStorage.getItem("admin_2fa_verified");
   const isValid = verified && (Date.now() - parseInt(verified)) < 8 * 60 * 60 * 1000;
   
   if (!isValid) return <Navigate to="/admin/login" replace />;
+  
+  return <>{children}</>;
+};
+
+const ModelProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, loading } = useAuth();
+  const [isModel, setIsModel] = useState<boolean | null>(null);
+  
+  useEffect(() => {
+    if (!user) return;
+    import("@/integrations/supabase/client").then(({ supabase }) => {
+      supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "model").maybeSingle()
+        .then(({ data }) => setIsModel(!!data));
+    });
+  }, [user]);
+  
+  if (loading || (user && isModel === null)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+  
+  if (!user) return <Navigate to="/model/login" replace />;
+  if (isModel === false) return <Navigate to="/dashboard" replace />;
   
   return <>{children}</>;
 };
@@ -76,7 +103,8 @@ const App = () => (
             <Route path="/admin/notifications" element={<AdminProtectedRoute><AdminNotifications /></AdminProtectedRoute>} />
             <Route path="/admin" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
             <Route path="/rechnung" element={<ProtectedRoute><Invoice /></ProtectedRoute>} />
-            <Route path="/model" element={<Model />} />
+            <Route path="/model/login" element={<ModelLogin />} />
+            <Route path="/model" element={<ModelProtectedRoute><ModelDashboard /></ModelProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
