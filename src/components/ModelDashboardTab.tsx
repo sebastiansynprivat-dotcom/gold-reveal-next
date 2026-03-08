@@ -471,13 +471,13 @@ export default function ModelDashboardTab() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.15 }}
-        className="flex items-center gap-1.5 p-1 rounded-xl bg-secondary/40"
+        className="flex flex-wrap gap-1.5 p-1.5 rounded-xl bg-secondary/40"
       >
         {filterOptions.map(f => (
           <button
             key={f.value}
             onClick={() => setStatusFilter(f.value)}
-            className={`relative flex-1 text-xs font-medium py-1.5 rounded-lg transition-colors duration-200 ${
+            className={`relative text-[10px] font-medium px-2.5 py-1.5 rounded-lg transition-colors duration-200 ${
               statusFilter === f.value ? "text-accent-foreground" : "text-muted-foreground hover:text-foreground"
             }`}
           >
