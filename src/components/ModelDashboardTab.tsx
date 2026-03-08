@@ -357,12 +357,14 @@ export default function ModelDashboardTab() {
       >
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-          <Input
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Model suchen…"
-            className="pl-9 bg-secondary/50 border-border text-sm h-9"
-          />
+          <div className="input-gold-shimmer rounded-lg">
+            <Input
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Model suchen…"
+              className="pl-9 bg-secondary/50 border-transparent text-sm h-9"
+            />
+          </div>
         </div>
 
         <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
@@ -550,12 +552,14 @@ export default function ModelDashboardTab() {
             <Section icon={StickyNote} title="Model Daten" delay={0.15}>
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Notizen / Freitext</Label>
-                <Textarea
-                  value={notes}
-                  onChange={e => setNotes(e.target.value)}
-                  placeholder="Notizen zum Model…"
-                  className="bg-secondary/40 border-border min-h-[100px] text-sm focus:border-accent/40 transition-colors"
-                />
+                <div className="input-gold-shimmer rounded-lg">
+                  <Textarea
+                    value={notes}
+                    onChange={e => setNotes(e.target.value)}
+                    placeholder="Notizen zum Model…"
+                    className="bg-secondary/40 border-transparent min-h-[100px] text-sm"
+                  />
+                </div>
               </div>
             </Section>
 
@@ -574,12 +578,14 @@ export default function ModelDashboardTab() {
 
             {/* Crypto */}
             <Section icon={Wallet} title="Crypto Address" delay={0.25}>
-              <Input
-                value={cryptoAddress}
-                onChange={e => setCryptoAddress(e.target.value)}
-                placeholder="0x… / bc1… / T…"
-                className="bg-secondary/40 border-border text-sm font-mono focus:border-accent/40 transition-colors"
-              />
+              <div className="input-gold-shimmer rounded-lg">
+                <Input
+                  value={cryptoAddress}
+                  onChange={e => setCryptoAddress(e.target.value)}
+                  placeholder="0x… / bc1… / T…"
+                  className="bg-secondary/40 border-transparent text-sm font-mono"
+                />
+              </div>
             </Section>
 
             {/* Save */}
@@ -603,20 +609,24 @@ export default function ModelDashboardTab() {
               <div className="space-y-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Beschreibung</Label>
-                  <Input
-                    value={gutschriftDescription}
-                    onChange={e => setGutschriftDescription(e.target.value)}
-                    className="bg-secondary/40 border-border text-sm focus:border-accent/40 transition-colors"
-                  />
+                  <div className="input-gold-shimmer rounded-lg">
+                    <Input
+                      value={gutschriftDescription}
+                      onChange={e => setGutschriftDescription(e.target.value)}
+                      className="bg-secondary/40 border-transparent text-sm"
+                    />
+                  </div>
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Betrag (€)</Label>
-                  <Input
-                    value={gutschriftAmount}
-                    onChange={e => setGutschriftAmount(e.target.value)}
-                    placeholder="z.B. 500,00"
-                    className="bg-secondary/40 border-border text-sm font-mono focus:border-accent/40 transition-colors"
-                  />
+                  <div className="input-gold-shimmer rounded-lg">
+                    <Input
+                      value={gutschriftAmount}
+                      onChange={e => setGutschriftAmount(e.target.value)}
+                      placeholder="z.B. 500,00"
+                      className="bg-secondary/40 border-transparent text-sm font-mono"
+                    />
+                  </div>
                 </div>
                 <Button
                   onClick={generateGutschrift}

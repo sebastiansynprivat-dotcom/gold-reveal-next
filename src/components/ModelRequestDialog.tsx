@@ -162,12 +162,15 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
         <div className="space-y-4 pt-2">
           <div className="space-y-1.5">
             <Label className="text-xs text-foreground">Model Name aus dem Profil *</Label>
-            <Input
-              placeholder="z.B. Deborahsecret, Luisa.loves"
-              value={modelName}
-              onChange={(e) => setModelName(e.target.value)}
-              maxLength={100}
-            />
+            <div className="input-gold-shimmer rounded-lg">
+              <Input
+                placeholder="z.B. Deborahsecret, Luisa.loves"
+                value={modelName}
+                onChange={(e) => setModelName(e.target.value)}
+                maxLength={100}
+                className="border-transparent"
+              />
+            </div>
           </div>
 
           <div className="rounded-lg border border-border/50 bg-secondary/20 p-3">
@@ -200,22 +203,28 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
             <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="space-y-1.5">
                 <Label className="text-xs text-foreground">Kundenname</Label>
-                <Input
-                  placeholder="z.B. Max, @username"
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  maxLength={100}
-                />
+                <div className="input-gold-shimmer rounded-lg">
+                  <Input
+                    placeholder="z.B. Max, @username"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    maxLength={100}
+                    className="border-transparent"
+                  />
+                </div>
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs text-foreground">Was ist der Kunde bereit zu bezahlen? (€) *</Label>
-                <Input
-                  type="number"
-                  placeholder="z.B. 50"
-                  value={price}
-                  onChange={(e) => setPrice(e.target.value)}
-                  min={0}
-                />
+                <div className="input-gold-shimmer rounded-lg">
+                  <Input
+                    type="number"
+                    placeholder="z.B. 50"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    min={0}
+                    className="border-transparent"
+                  />
+                </div>
               </div>
             </div>
           )}
@@ -224,14 +233,17 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
             <Label className="text-xs text-foreground">
               Beschreibung der Anfrage {modelLanguage === "en" ? "(bitte auf Englisch)" : "(bitte auf Deutsch)"} *
             </Label>
-            <Textarea
-              ref={descriptionRef}
-              placeholder="Beschreibe hier die Anfrage an das Model..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              maxLength={2000}
-              rows={4}
-            />
+            <div className="input-gold-shimmer rounded-lg">
+              <Textarea
+                ref={descriptionRef}
+                placeholder="Beschreibe hier die Anfrage an das Model..."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                maxLength={2000}
+                rows={4}
+                className="border-transparent"
+              />
+            </div>
           </div>
 
           <Button onClick={handleSubmit} disabled={loading} className="w-full">

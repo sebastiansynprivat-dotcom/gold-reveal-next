@@ -388,7 +388,7 @@ export default function Dashboard() {
 
               <div className="space-y-0.5">
                   <div className="flex items-center gap-1.5">
-                    <Input value={telegramId} onChange={(e) => setTelegramId(e.target.value)} placeholder="Deine Telegram ID" className="h-7 text-xs w-44" />
+                    <div className="input-gold-shimmer rounded-lg"><Input value={telegramId} onChange={(e) => setTelegramId(e.target.value)} placeholder="Deine Telegram ID" className="h-7 text-xs w-44 border-transparent" /></div>
                     <Button onClick={saveTelegram} size="sm" disabled={!telegramId.trim()} className="h-7 text-xs px-2.5"><Save className="h-3 w-3" /></Button>
                   </div>
                   <Dialog onOpenChange={(open) => {setVideoOpen(open);if (!open) setVideoLoaded(false);}}>
@@ -423,7 +423,7 @@ export default function Dashboard() {
                 </> :
 
               <div className="flex items-center gap-1.5">
-                  <Input value={groupName} onChange={(e) => setGroupName(e.target.value)} placeholder="Gruppenname" className="h-7 text-xs w-36" />
+                  <div className="input-gold-shimmer rounded-lg"><Input value={groupName} onChange={(e) => setGroupName(e.target.value)} placeholder="Gruppenname" className="h-7 text-xs w-36 border-transparent" /></div>
                   <Button onClick={saveGroupName} size="sm" disabled={!groupName.trim()} className="h-7 text-xs px-2.5"><Save className="h-3 w-3" /></Button>
                 </div>
               }
@@ -431,7 +431,7 @@ export default function Dashboard() {
             <div className="ml-auto flex items-center gap-3">
               <div className="flex items-center gap-1.5">
                 <Zap className="h-3.5 w-3.5 text-accent shrink-0" />
-                <Input type="number" min={0} step={50} value={umsatz || ""} onChange={(e) => handleUmsatzChange(Number(e.target.value) || 0)} placeholder="Umsatz €" className="h-7 text-xs w-24 font-semibold" />
+                <div className="input-gold-shimmer rounded-lg"><Input type="number" min={0} step={50} value={umsatz || ""} onChange={(e) => handleUmsatzChange(Number(e.target.value) || 0)} placeholder="Umsatz €" className="h-7 text-xs w-24 font-semibold border-transparent" /></div>
               </div>
               <Badge className={isGold ? "bg-accent text-accent-foreground gold-glow" : "bg-secondary text-secondary-foreground"}>
                 <Award className="h-3 w-3 mr-1" />{isGold ? "Gold" : "Starter"}
@@ -464,7 +464,7 @@ export default function Dashboard() {
                 </div> :
 
               <div className="flex items-center gap-1 flex-1 min-w-0">
-                  <Input value={groupName} onChange={(e) => setGroupName(e.target.value)} placeholder="Gruppenname eingeben" className="h-7 text-xs flex-1 min-w-0" />
+                  <div className="input-gold-shimmer rounded-lg flex-1 min-w-0"><Input value={groupName} onChange={(e) => setGroupName(e.target.value)} placeholder="Gruppenname eingeben" className="h-7 text-xs w-full border-transparent" /></div>
                   <Button onClick={saveGroupName} size="sm" disabled={!groupName.trim()} className="h-7 text-xs px-2"><Save className="h-3 w-3" /></Button>
                 </div>
               }
@@ -483,7 +483,7 @@ export default function Dashboard() {
 
               <div className="flex-1 min-w-0 space-y-0.5">
                   <div className="flex items-center gap-1">
-                    <Input value={telegramId} onChange={(e) => setTelegramId(e.target.value)} placeholder="Telegram ID" className="h-7 text-xs flex-1 min-w-0" />
+                    <div className="input-gold-shimmer rounded-lg flex-1 min-w-0"><Input value={telegramId} onChange={(e) => setTelegramId(e.target.value)} placeholder="Telegram ID" className="h-7 text-xs w-full border-transparent" /></div>
                     <Button onClick={saveTelegram} size="sm" disabled={!telegramId.trim()} className="h-7 text-xs px-2"><Save className="h-3 w-3" /></Button>
                   </div>
                   <Dialog onOpenChange={(open) => {setVideoOpen(open);if (!open) setVideoLoaded(false);}}>
@@ -507,7 +507,7 @@ export default function Dashboard() {
               }
               <div className="shrink-0 flex items-center gap-1">
                 <Zap className="h-3 w-3 text-accent" />
-                <Input type="number" min={0} step={50} value={umsatz || ""} onChange={(e) => handleUmsatzChange(Number(e.target.value) || 0)} placeholder="€" className="h-7 text-xs w-20 font-semibold" />
+                <div className="input-gold-shimmer rounded-lg"><Input type="number" min={0} step={50} value={umsatz || ""} onChange={(e) => handleUmsatzChange(Number(e.target.value) || 0)} placeholder="€" className="h-7 text-xs w-20 font-semibold border-transparent" /></div>
               </div>
             </div>
           </div>
