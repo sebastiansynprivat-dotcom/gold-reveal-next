@@ -4701,8 +4701,8 @@ export default function AdminDashboard() {
             </div>
 
             {/* Search for reassign */}
-            <div className="relative input-gold-shimmer rounded-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground z-10" />
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
               <Input
                 value={reassignSearchQuery}
                 onChange={(e) => {
@@ -4713,7 +4713,7 @@ export default function AdminDashboard() {
                   }
                 }}
                 placeholder="Account suchen..."
-                className="pl-8 text-xs h-9 bg-secondary/30 border-border/50"
+                className="pl-8 text-xs h-9 bg-secondary/30 border border-border/50 rounded-md focus:ring-1 focus:ring-accent/50"
               />
             </div>
             
