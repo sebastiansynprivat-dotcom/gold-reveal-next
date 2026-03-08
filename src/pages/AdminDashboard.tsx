@@ -468,6 +468,7 @@ export default function AdminDashboard() {
   const [newAccDriveFolder, setNewAccDriveFolder] = useState("");
   const [newAccLanguage, setNewAccLanguage] = useState<"de" | "en">("de");
   const [newAccModelActive, setNewAccModelActive] = useState(true);
+  const [newAccModelAgency, setNewAccModelAgency] = useState<"shex" | "syn">("shex");
   const [addingAccount, setAddingAccount] = useState(false);
   const [assigning, setAssigning] = useState(false);
   const [assignConfirmOpen, setAssignConfirmOpen] = useState(false);
@@ -1332,6 +1333,7 @@ export default function AdminDashboard() {
       drive_folder_id: extractDriveFolderId(newAccDriveFolder.trim()),
       model_language: newAccLanguage,
       model_active: newAccModelActive,
+      model_agency: newAccModelAgency,
     } as any);
     if (error) {
       toast.error("Fehler beim Hinzufügen");
@@ -1343,6 +1345,7 @@ export default function AdminDashboard() {
       setNewAccDriveFolder("");
       setNewAccLanguage("de");
       setNewAccModelActive(true);
+      setNewAccModelAgency("shex");
       loadAccounts();
     }
     setAddingAccount(false);
@@ -4329,6 +4332,19 @@ export default function AdminDashboard() {
                       </button>
                     </div>
                   </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Model ist bei</label>
+                    <div className="flex gap-1.5">
+                      <button onClick={() => setNewAccModelAgency("shex")}
+                        className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", newAccModelAgency === "shex" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50 hover:border-accent/30")}>
+                        SheX
+                      </button>
+                      <button onClick={() => setNewAccModelAgency("syn")}
+                        className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", newAccModelAgency === "syn" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50 hover:border-accent/30")}>
+                        SYN
+                      </button>
+                    </div>
+                  </div>
                   <div className="flex items-center justify-between py-1">
                     <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Model aktiv</span>
                     <Switch checked={newAccModelActive} onCheckedChange={setNewAccModelActive} />
@@ -4780,7 +4796,6 @@ export default function AdminDashboard() {
                   ))}
                 </div>
               );
-
 
               return (
                 <div className="space-y-4">
@@ -5839,4 +5854,3 @@ export default function AdminDashboard() {
     </div>
   );
 }
-

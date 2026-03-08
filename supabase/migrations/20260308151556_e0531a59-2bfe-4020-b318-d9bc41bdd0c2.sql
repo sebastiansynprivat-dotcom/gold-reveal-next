@@ -1,0 +1,1 @@
+ALTER TABLE public.accounts ADD COLUMN model_agency text NOT NULL DEFAULT 'shex';
