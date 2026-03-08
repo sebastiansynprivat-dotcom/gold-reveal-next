@@ -470,6 +470,8 @@ export default function AdminDashboard() {
   const [newAccModelActive, setNewAccModelActive] = useState(true);
   const [addingAccount, setAddingAccount] = useState(false);
   const [assigning, setAssigning] = useState(false);
+  const [assignConfirmOpen, setAssignConfirmOpen] = useState(false);
+  const [assignResult, setAssignResult] = useState<{ assigned: number; message: string } | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ChatterProfile | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [reassignTarget, setReassignTarget] = useState<ChatterProfile | null>(null);
@@ -1346,9 +1348,15 @@ export default function AdminDashboard() {
     setAddingAccount(false);
   };
 
+  const openAssignDialog = () => {
+    setAssignResult(null);
+    setAssignConfirmOpen(true);
+  };
+
   const assignAccounts = async () => {
     if (!selectedPlatform) return;
     setAssigning(true);
+    setAssignResult(null);
     try {
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const session = await supabase.auth.getSession();
@@ -1366,14 +1374,16 @@ export default function AdminDashboard() {
       );
       const result = await res.json();
       if (res.ok) {
-        toast.success(result.message || "Accounts zugewiesen!");
+        setAssignResult({ assigned: result.assigned || 0, message: result.message || "Fertig" });
         loadAccounts();
         loadChatters();
       } else {
         toast.error(result.error || "Fehler beim Zuweisen");
+        setAssignConfirmOpen(false);
       }
     } catch (err: any) {
       toast.error("Fehler: " + err.message);
+      setAssignConfirmOpen(false);
     }
     setAssigning(false);
   };
@@ -4293,9 +4303,9 @@ export default function AdminDashboard() {
                 <span className="text-muted-foreground">Vergeben: <span className="font-semibold">{assignedCount}</span></span>
               </div>
               {freeCount > 0 && (
-                <Button onClick={assignAccounts} disabled={assigning} size="sm" variant="default">
-                  <RefreshCw className={cn("h-3.5 w-3.5 mr-1.5", assigning && "animate-spin")} />
-                  {assigning ? "..." : "Auto-Zuweisen"}
+                <Button onClick={openAssignDialog} size="sm" variant="default">
+                  <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+                  Auto-Zuweisen
                 </Button>
               )}
             </div>
@@ -4452,6 +4462,137 @@ export default function AdminDashboard() {
           </div>
         </DialogContent>
       </Dialog>
+      {/* Auto-Assign Confirmation Dialog */}
+      <Dialog open={assignConfirmOpen} onOpenChange={(o) => { if (!o && !assigning) { setAssignConfirmOpen(false); setAssignResult(null); } }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2.5">
+              <div className="h-9 w-9 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center">
+                <UserPlus className="h-4.5 w-4.5 text-accent" />
+              </div>
+              <span>Auto-Zuweisen</span>
+            </DialogTitle>
+          </DialogHeader>
+
+          <AnimatePresence mode="wait">
+            {!assigning && !assignResult && (
+              <motion.div
+                key="confirm"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.2 }}
+                className="space-y-4"
+              >
+                <p className="text-sm text-muted-foreground">
+                  Freie Accounts werden automatisch an Chatter ohne Account vergeben.
+                </p>
+
+                {/* Stats summary */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="rounded-lg bg-secondary/30 border border-border/50 p-3 space-y-1">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Plattform</p>
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="h-2.5 w-2.5 rounded-full"
+                        style={{ backgroundColor: PLATFORM_COLORS[selectedPlatform as keyof typeof PLATFORM_COLORS] || "hsl(var(--accent))" }}
+                      />
+                      <span className="text-sm font-semibold capitalize text-foreground">{selectedPlatform}</span>
+                    </div>
+                  </div>
+                  <div className="rounded-lg bg-secondary/30 border border-border/50 p-3 space-y-1">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Freie Accounts</p>
+                    <p className="text-sm font-semibold text-accent">{freeCount}</p>
+                  </div>
+                </div>
+
+                {/* Chatters without account */}
+                {(() => {
+                  const unassignedChatters = chatters.filter(c => !c.account_email);
+                  return (
+                    <div className="rounded-lg bg-secondary/30 border border-border/50 p-3 space-y-1">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Chatter ohne Account</p>
+                      <p className="text-sm font-semibold text-foreground">{unassignedChatters.length}</p>
+                    </div>
+                  );
+                })()}
+
+                <div className="flex gap-2 pt-1">
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={() => setAssignConfirmOpen(false)}
+                  >
+                    Abbrechen
+                  </Button>
+                  <Button
+                    className="flex-1 bg-accent text-accent-foreground hover:bg-accent/90"
+                    onClick={assignAccounts}
+                  >
+                    <UserPlus className="h-3.5 w-3.5 mr-1.5" />
+                    Jetzt zuweisen
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+
+            {assigning && !assignResult && (
+              <motion.div
+                key="loading"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.2 }}
+                className="flex flex-col items-center justify-center py-8 gap-4"
+              >
+                <div className="relative h-14 w-14">
+                  <div className="absolute inset-0 rounded-full border-2 border-accent/20" />
+                  <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-accent animate-spin" />
+                  <div className="absolute inset-2 rounded-full bg-accent/5 flex items-center justify-center">
+                    <RefreshCw className="h-5 w-5 text-accent animate-spin" style={{ animationDirection: "reverse", animationDuration: "1.5s" }} />
+                  </div>
+                </div>
+                <div className="text-center space-y-1">
+                  <p className="text-sm font-medium text-foreground">Accounts werden zugewiesen…</p>
+                  <p className="text-xs text-muted-foreground">Drive-Ordner werden geteilt</p>
+                </div>
+              </motion.div>
+            )}
+
+            {assignResult && (
+              <motion.div
+                key="result"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.3, type: "spring", damping: 15 }}
+                className="flex flex-col items-center justify-center py-6 gap-4"
+              >
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: 0.1, type: "spring", damping: 10 }}
+                  className="h-16 w-16 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center"
+                >
+                  <CheckCircle2 className="h-8 w-8 text-emerald-400" />
+                </motion.div>
+                <div className="text-center space-y-1">
+                  <p className="text-lg font-semibold text-foreground">
+                    {assignResult.assigned > 0 ? `${assignResult.assigned} Account${assignResult.assigned > 1 ? "s" : ""} zugewiesen` : "Keine Zuweisungen"}
+                  </p>
+                  <p className="text-xs text-muted-foreground">{assignResult.message}</p>
+                </div>
+                <Button
+                  className="mt-2"
+                  onClick={() => { setAssignConfirmOpen(false); setAssignResult(null); }}
+                >
+                  Schließen
+                </Button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </DialogContent>
+      </Dialog>
+
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!deleteTarget} onOpenChange={(o) => { if (!o) setDeleteTarget(null); }}>
         <AlertDialogContent>

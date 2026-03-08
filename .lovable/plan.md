@@ -1,31 +1,41 @@
 
+# Fortschrittsanzeige und Schritt-Nummerierung fur OfferB
 
-## Problem
+## Was wird gemacht
 
-Der "Auto-Zuweisen"-Button bei freien Accounts feuert direkt ohne Bestätigung — es kommt nur ein kleiner Toast. Das fühlt sich nicht premium an und bietet keine Kontrolle.
+### 1. Alle Schritte als einheitliche Liste definieren
+Die Videos und Links werden zu einer gemeinsamen Schritt-Liste zusammengefasst:
+- Schritt 1: Plattform Erklärungs Video
+- Schritt 2: Telegram Nachrichten Video
+- Schritt 3: Brezzels Notifications aktivieren
+- Schritt 4: My ID Bot einrichten
+- Schritt 5: Tägliches Feedback
 
-## Plan
+### 2. Fortschritts-Bar oben auf der Seite
+Direkt unter dem Hero-Bereich wird eine Progress-Bar eingefügt, die den Gesamtfortschritt anzeigt (z.B. "2 von 5 Schritten erledigt"). Nutzt die vorhandene `Progress`-Komponente im Gold-Styling.
 
-### Neues Bestätigungs-Dialog für Auto-Zuweisen
+### 3. Klickbare Checkliste
+Unter der Progress-Bar eine kompakte Checkliste mit allen 5 Schritten. Jeder Schritt hat:
+- Eine Checkbox zum Abhaken
+- Schritt-Nummer ("Schritt 1", "Schritt 2" etc.)
+- Kurzer Titel
 
-Einen hochwertigen Confirmation-Dialog erstellen, der dem bestehenden Admin-Design-System folgt (Glassmorphismus, Gold-Akzente, Framer Motion Animationen):
+Der Fortschritt wird im `localStorage` gespeichert, damit er beim Neuladen erhalten bleibt.
 
-**Dialog-Inhalt:**
-- Icon-Header mit goldenem Akzent (wie beim "Accounts verwalten"-Dialog)
-- Zusammenfassung: Plattform, Anzahl freier Accounts, Anzahl unversorgter Chatter
-- Animierter Fortschrittsindikator während der Zuweisung
-- Ergebnis-Anzeige nach Abschluss (Anzahl zugewiesener Accounts mit Erfolgs-Animation)
+### 4. Schritt-Nummern bei den Sektionen
+Jede Video-/Link-/Feedback-Sektion bekommt eine prominente Schritt-Nummer als Badge (z.B. goldener Kreis mit "1" darin) neben dem Titel.
 
-**Flow:**
-1. Klick auf "Auto-Zuweisen" → Dialog öffnet sich mit Übersicht
-2. User bestätigt → Ladeanimation mit Spinner + Statustext
-3. Ergebnis wird im selben Dialog angezeigt (Confetti/Checkmark bei Erfolg)
-4. "Schließen"-Button beendet den Dialog
+## Technische Details
 
-**Technische Umsetzung in `AdminDashboard.tsx`:**
-- Neuer State: `assignConfirmOpen`, `assignResult`
-- Button öffnet Dialog statt direkt `assignAccounts()` aufzurufen
-- Dialog nutzt bestehende `Dialog`/`DialogContent` Komponenten mit glass-card Styling
-- Framer Motion für Ein-/Ausblende-Animationen der Zustände (Bestätigung → Loading → Ergebnis)
-- Plattform-Badge mit Farbe aus `PLATFORM_COLORS`
+**Datei: `src/pages/OfferB.tsx`**
 
+- Neue `steps`-Array-Konstante mit id, title, type fur alle 5 Schritte
+- `useState` + `localStorage` fur `completedSteps: Set<number>`
+- Progress-Bar-Sektion nach dem Hero mit `Progress`-Komponente (Wert = `completedSteps.size / steps.length * 100`)
+- Checkliste mit `Checkbox`-Komponenten, gestylt im bestehenden `glass-card-subtle` Look
+- Videos bekommen "Schritt 1" / "Schritt 2" als nummerierte Badge-Kreise
+- Links-Sektion wird zu Schritt 3 und 4 mit individuellen Nummern
+- Feedback wird Schritt 5
+- Erledigte Schritte bekommen eine subtile visuelle Markierung (leicht reduzierte Opazitat / Hakchen)
+
+Keine neuen Abhangigkeiten notwendig -- nutzt vorhandene `Progress`, `Checkbox` und `framer-motion`.
