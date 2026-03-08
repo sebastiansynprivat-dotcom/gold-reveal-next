@@ -285,19 +285,23 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
     <div className="space-y-4">
       {/* Filter & Search */}
       <div className="flex items-center gap-3 flex-wrap">
-        <div className="flex gap-1 p-1 bg-secondary/30 rounded-lg w-fit">
+        <div className="flex gap-1 p-1 bg-secondary/30 rounded-lg border border-border/50 w-fit relative">
           {filterOptions.map(opt => (
             <button
               key={opt.key}
               onClick={() => setOverviewFilter(opt.key)}
-              className={cn(
-                "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
-                overviewFilter === opt.key
-                  ? "bg-accent text-accent-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
+              className="relative px-3 py-1.5 text-xs font-medium rounded-md transition-colors z-10"
             >
-              {opt.label}
+              <span className={overviewFilter === opt.key ? "text-accent" : "text-muted-foreground hover:text-foreground"}>
+                {opt.label}
+              </span>
+              {overviewFilter === opt.key && (
+                <motion.div
+                  layoutId="activeOverviewFilter"
+                  className="absolute inset-0 bg-accent/15 rounded-md shadow-sm"
+                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                />
+              )}
             </button>
           ))}
         </div>
