@@ -156,6 +156,10 @@ export default function ModelDashboardTab() {
       .order("account_email")
       .then(({ data }) => { if (data) setAccounts(data); });
     loadAllDashboards();
+    supabase
+      .from("bot_messages")
+      .select("account_id, message, follow_up_message")
+      .then(({ data }) => { if (data) setAllBotMessages(data as BotMessageRow[]); });
   }, [loadAllDashboards]);
 
   const loadModelData = useCallback(async (accountId: string) => {
