@@ -2451,13 +2451,13 @@ export default function AdminDashboard() {
 
         {/* Search & Filters Group */}
         <div className="space-y-3">
-          <div className="relative">
+          <div className="relative input-gold-shimmer rounded-lg">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Chatter suchen (Gruppe oder Telegram-ID)..."
-              className="pl-9 text-sm"
+              className="pl-9 text-sm border-transparent"
             />
           </div>
 
