@@ -193,6 +193,12 @@ export default function ModelDashboardTab() {
       setBrezzelsSubmitted(d.brezzels_submitted);
       setBotdmDone(d.botdm_done);
       setMassdmDone(d.massdm_done);
+      setFourbasedBotdm(d.fourbased_botdm_done);
+      setFourbasedMassdm(d.fourbased_massdm_done);
+      setMaloumBotdm(d.maloum_botdm_done);
+      setMaloumMassdm(d.maloum_massdm_done);
+      setBrezzelsBotdm(d.brezzels_botdm_done);
+      setBrezzelsMassdm(d.brezzels_massdm_done);
       setNotes(d.notes || "");
       setRevenuePercentage(d.revenue_percentage || 0);
       setCryptoAddress(d.crypto_address || "");
