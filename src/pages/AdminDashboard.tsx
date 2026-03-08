@@ -5405,8 +5405,8 @@ export default function AdminDashboard() {
                           <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider flex-1">Ordner</p>
                           {creatingFolder ? (
                             <div className="flex items-center gap-1.5">
-                              <Input value={newFolderName} onChange={(e) => setNewFolderName(e.target.value)} placeholder="Name..." className="text-xs h-7 w-32" autoFocus
-                                onKeyDown={(e) => { if (e.key === "Enter" && newFolderName.trim()) { const name = newFolderName.trim(); const platform = selectedManualPlatform || ""; setCustomFolders(prev => ({ ...prev, [platform]: [...(prev[platform] || []), name] })); setManualAccFolder(name); setCreatingFolder(false); setNewFolderName(""); toast.success(`Ordner "${name}" erstellt`); } }} />
+                              <div className="input-gold-shimmer rounded-lg"><Input value={newFolderName} onChange={(e) => setNewFolderName(e.target.value)} placeholder="Name..." className="text-xs h-7 w-32 border-transparent" autoFocus
+                                onKeyDown={(e) => { if (e.key === "Enter" && newFolderName.trim()) { const name = newFolderName.trim(); const platform = selectedManualPlatform || ""; setCustomFolders(prev => ({ ...prev, [platform]: [...(prev[platform] || []), name] })); setManualAccFolder(name); setCreatingFolder(false); setNewFolderName(""); toast.success(`Ordner "${name}" erstellt`); } }} /></div>
                               <Button size="sm" className="h-7 w-7 p-0" disabled={!newFolderName.trim()} onClick={() => { const name = newFolderName.trim(); const platform = selectedManualPlatform || ""; setCustomFolders(prev => ({ ...prev, [platform]: [...(prev[platform] || []), name] })); setManualAccFolder(name); setCreatingFolder(false); setNewFolderName(""); toast.success(`Ordner "${name}" erstellt`); }}>
                                 <Check className="h-3 w-3" />
                               </Button>
@@ -5749,7 +5749,7 @@ export default function AdminDashboard() {
                                     </div>
                                     {creatingSubfolder && (
                                       <div className="flex items-center gap-2">
-                                        <Input
+                                        <div className="input-gold-shimmer rounded-lg flex-1"><Input
                                           autoFocus
                                           placeholder="Unterordner-Name..."
                                           value={newSubfolderName}
@@ -5769,8 +5769,8 @@ export default function AdminDashboard() {
                                               setCreatingSubfolder(false);
                                             }
                                           }}
-                                          className="h-8 text-xs flex-1"
-                                        />
+                                          className="h-8 text-xs border-transparent"
+                                        /></div>
                                         <Button size="sm" className="h-8 px-3"
                                           disabled={!newSubfolderName.trim()}
                                           onClick={() => {
@@ -5864,13 +5864,13 @@ export default function AdminDashboard() {
           <div className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground">Plattform-Name</label>
-              <Input
+              <div className="input-gold-shimmer rounded-lg"><Input
                 value={newManualPlatformName}
                 onChange={(e) => setNewManualPlatformName(e.target.value)}
                 placeholder="z.B. OnlyFans, Fansly..."
-                className="text-sm"
+                className="text-sm border-transparent"
                 autoFocus
-              />
+              /></div>
             </div>
             <Button
               onClick={() => {
