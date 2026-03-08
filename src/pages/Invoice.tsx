@@ -388,20 +388,20 @@ Mein Gruppenname ist: ${groupName || "[Bitte Gruppenname im Dashboard eintragen]
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Name / Firma *</Label>
-                  <Input value={senderName} onChange={(e) => setSenderName(e.target.value)} placeholder="Max Mustermann" className="h-9 text-sm bg-secondary border-border" />
+                  <div className="input-gold-shimmer rounded-lg"><Input value={senderName} onChange={(e) => setSenderName(e.target.value)} placeholder="Max Mustermann" className="h-9 text-sm bg-secondary border-transparent" /></div>
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Steuernr. / USt-IdNr. *</Label>
-                  <Input value={taxId} onChange={(e) => setTaxId(e.target.value)} placeholder="DE123456789" className="h-9 text-sm bg-secondary border-border" />
+                  <div className="input-gold-shimmer rounded-lg"><Input value={taxId} onChange={(e) => setTaxId(e.target.value)} placeholder="DE123456789" className="h-9 text-sm bg-secondary border-transparent" /></div>
                 </div>
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Straße + Hausnummer *</Label>
-                <Input value={senderAddress} onChange={(e) => setSenderAddress(e.target.value)} placeholder="Musterstraße 1" className="h-9 text-sm bg-secondary border-border" />
+                <div className="input-gold-shimmer rounded-lg"><Input value={senderAddress} onChange={(e) => setSenderAddress(e.target.value)} placeholder="Musterstraße 1" className="h-9 text-sm bg-secondary border-transparent" /></div>
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">PLZ + Ort *</Label>
-                <Input value={senderCity} onChange={(e) => setSenderCity(e.target.value)} placeholder="12345 Musterstadt" className="h-9 text-sm bg-secondary border-border" />
+                <div className="input-gold-shimmer rounded-lg"><Input value={senderCity} onChange={(e) => setSenderCity(e.target.value)} placeholder="12345 Musterstadt" className="h-9 text-sm bg-secondary border-transparent" /></div>
               </div>
             </CardContent>
           </Card>
@@ -430,7 +430,7 @@ Mein Gruppenname ist: ${groupName || "[Bitte Gruppenname im Dashboard eintragen]
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Rechnungsnummer *</Label>
-                  <Input value={invoiceNumber} onChange={(e) => setInvoiceNumber(e.target.value)} placeholder="2025-001" className="h-9 text-sm bg-secondary border-border" />
+                  <div className="input-gold-shimmer rounded-lg"><Input value={invoiceNumber} onChange={(e) => setInvoiceNumber(e.target.value)} placeholder="2025-001" className="h-9 text-sm bg-secondary border-transparent" /></div>
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Rechnungsdatum *</Label>
@@ -451,27 +451,27 @@ Mein Gruppenname ist: ${groupName || "[Bitte Gruppenname im Dashboard eintragen]
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Leistungszeitraum von *</Label>
-                  <Input value={periodFrom} onChange={(e) => setPeriodFrom(e.target.value)} placeholder="01.07.2025" className="h-9 text-sm bg-secondary border-border" />
+                  <div className="input-gold-shimmer rounded-lg"><Input value={periodFrom} onChange={(e) => setPeriodFrom(e.target.value)} placeholder="01.07.2025" className="h-9 text-sm bg-secondary border-transparent" /></div>
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Leistungszeitraum bis *</Label>
-                  <Input value={periodTo} onChange={(e) => setPeriodTo(e.target.value)} placeholder="31.07.2025" className="h-9 text-sm bg-secondary border-border" />
+                  <div className="input-gold-shimmer rounded-lg"><Input value={periodTo} onChange={(e) => setPeriodTo(e.target.value)} placeholder="31.07.2025" className="h-9 text-sm bg-secondary border-transparent" /></div>
                 </div>
               </div>
 
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Leistungsbeschreibung *</Label>
-                <Input value={description} onChange={(e) => setDescription(e.target.value)} className="h-9 text-sm bg-secondary border-border" />
+                <div className="input-gold-shimmer rounded-lg"><Input value={description} onChange={(e) => setDescription(e.target.value)} className="h-9 text-sm bg-secondary border-transparent" /></div>
               </div>
 
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Betrag (€) *</Label>
-                <Input value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="1.500,00" className="h-9 text-sm bg-secondary border-border" />
+                <div className="input-gold-shimmer rounded-lg"><Input value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="1.500,00" className="h-9 text-sm bg-secondary border-transparent" /></div>
               </div>
 
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Mehrwertsteuer-Vermerk *</Label>
-                <Input value={vatNote} onChange={(e) => setVatNote(e.target.value)} className="h-9 text-sm bg-secondary border-border text-xs" />
+                <div className="input-gold-shimmer rounded-lg"><Input value={vatNote} onChange={(e) => setVatNote(e.target.value)} className="h-9 text-sm bg-secondary border-transparent text-xs" /></div>
               </div>
             </CardContent>
           </Card>
@@ -484,16 +484,16 @@ Mein Gruppenname ist: ${groupName || "[Bitte Gruppenname im Dashboard eintragen]
             <CardContent className="space-y-3">
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Bank *</Label>
-                <Input value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="Sparkasse Musterstadt" className="h-9 text-sm bg-secondary border-border" />
+                <div className="input-gold-shimmer rounded-lg"><Input value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="Sparkasse Musterstadt" className="h-9 text-sm bg-secondary border-transparent" /></div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">IBAN *</Label>
-                  <Input value={iban} onChange={(e) => setIban(e.target.value)} placeholder="DE89 3704 0044 0532 0130 00" className="h-9 text-sm bg-secondary border-border" />
+                  <div className="input-gold-shimmer rounded-lg"><Input value={iban} onChange={(e) => setIban(e.target.value)} placeholder="DE89 3704 0044 0532 0130 00" className="h-9 text-sm bg-secondary border-transparent" /></div>
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">BIC *</Label>
-                  <Input value={bic} onChange={(e) => setBic(e.target.value)} placeholder="COBADEFFXXX" className="h-9 text-sm bg-secondary border-border" />
+                  <div className="input-gold-shimmer rounded-lg"><Input value={bic} onChange={(e) => setBic(e.target.value)} placeholder="COBADEFFXXX" className="h-9 text-sm bg-secondary border-transparent" /></div>
                 </div>
               </div>
             </CardContent>

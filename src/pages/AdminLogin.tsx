@@ -180,25 +180,25 @@ const AdminLogin = () => {
         {/* Step 1: Login */}
         {step === "login" && (
           <form onSubmit={handleLogin} className="space-y-4">
-            <div className="relative">
+            <div className="relative input-gold-shimmer rounded-lg">
               <Input
                 type="email"
                 placeholder="Admin E-Mail"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="pl-10"
+                className="pl-10 border-transparent"
               />
               <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             </div>
-            <div className="relative">
+            <div className="relative input-gold-shimmer rounded-lg">
               <Input
                 type={showPassword ? "text" : "password"}
                 placeholder="Passwort"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                className="pl-10 pr-10"
+                className="pl-10 pr-10 border-transparent"
               />
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <button

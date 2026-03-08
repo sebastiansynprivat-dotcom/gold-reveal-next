@@ -247,7 +247,7 @@ const OfferC = () => {
               <p className="text-muted-foreground text-sm">
                 Trage hier deine Telegram ID ein.
               </p>
-              <div className="max-w-[200px] mx-auto">
+              <div className="max-w-[200px] mx-auto input-gold-shimmer rounded-lg">
                 <Input
                   type="text"
                   inputMode="numeric"
@@ -255,7 +255,7 @@ const OfferC = () => {
                   value={telegramId}
                   onChange={(e) => setTelegramId(e.target.value.replace(/\D/g, ""))}
                   disabled={idSaved || !videosWatched}
-                  className="text-center text-sm"
+                  className="text-center text-sm border-transparent"
                 />
               </div>
               {!idSaved ? (
