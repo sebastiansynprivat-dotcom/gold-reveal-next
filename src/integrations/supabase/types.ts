@@ -291,6 +291,7 @@ export type Database = {
       model_dashboard: {
         Row: {
           account_id: string
+          botdm_done: boolean
           brezzels_submitted: boolean
           contract_file_path: string | null
           created_at: string
@@ -298,12 +299,14 @@ export type Database = {
           fourbased_submitted: boolean
           id: string
           maloum_submitted: boolean
+          massdm_done: boolean
           notes: string | null
           revenue_percentage: number | null
           updated_at: string
         }
         Insert: {
           account_id: string
+          botdm_done?: boolean
           brezzels_submitted?: boolean
           contract_file_path?: string | null
           created_at?: string
@@ -311,12 +314,14 @@ export type Database = {
           fourbased_submitted?: boolean
           id?: string
           maloum_submitted?: boolean
+          massdm_done?: boolean
           notes?: string | null
           revenue_percentage?: number | null
           updated_at?: string
         }
         Update: {
           account_id?: string
+          botdm_done?: boolean
           brezzels_submitted?: boolean
           contract_file_path?: string | null
           created_at?: string
@@ -324,6 +329,7 @@ export type Database = {
           fourbased_submitted?: boolean
           id?: string
           maloum_submitted?: boolean
+          massdm_done?: boolean
           notes?: string | null
           revenue_percentage?: number | null
           updated_at?: string

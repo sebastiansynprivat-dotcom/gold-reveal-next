@@ -32,6 +32,8 @@ interface ModelDashboardRow {
   fourbased_submitted: boolean;
   maloum_submitted: boolean;
   brezzels_submitted: boolean;
+  botdm_done: boolean;
+  massdm_done: boolean;
   notes: string | null;
   revenue_percentage: number | null;
   crypto_address: string | null;
@@ -130,6 +132,8 @@ export default function ModelDashboardTab() {
   const [fourbasedSubmitted, setFourbasedSubmitted] = useState(false);
   const [maloumSubmitted, setMaloumSubmitted] = useState(false);
   const [brezzelsSubmitted, setBrezzelsSubmitted] = useState(false);
+  const [botdmDone, setBotdmDone] = useState(false);
+  const [massdmDone, setMassdmDone] = useState(false);
   const [notes, setNotes] = useState("");
   const [revenuePercentage, setRevenuePercentage] = useState(0);
   const [cryptoAddress, setCryptoAddress] = useState("");
@@ -176,6 +180,8 @@ export default function ModelDashboardTab() {
       setFourbasedSubmitted(d.fourbased_submitted);
       setMaloumSubmitted(d.maloum_submitted);
       setBrezzelsSubmitted(d.brezzels_submitted);
+      setBotdmDone(d.botdm_done);
+      setMassdmDone(d.massdm_done);
       setNotes(d.notes || "");
       setRevenuePercentage(d.revenue_percentage || 0);
       setCryptoAddress(d.crypto_address || "");
@@ -185,6 +191,8 @@ export default function ModelDashboardTab() {
       setFourbasedSubmitted(false);
       setMaloumSubmitted(false);
       setBrezzelsSubmitted(false);
+      setBotdmDone(false);
+      setMassdmDone(false);
       setNotes("");
       setRevenuePercentage(0);
       setCryptoAddress("");
@@ -263,9 +271,8 @@ export default function ModelDashboardTab() {
     // Sub filter
     if (subFilter !== "none") {
       const dash = getDashboard(acc.id);
-      const bot = getBotMessage(acc.id);
-      const hasBotDm = !!(bot && bot.message && bot.message.trim());
-      const hasMassDm = !!(bot && bot.follow_up_message && bot.follow_up_message.trim());
+      const hasBotDm = !!dash?.botdm_done;
+      const hasMassDm = !!dash?.massdm_done;
       const setupField = getSetupField(acc);
       const hasSetup = !!dash?.[setupField];
 
@@ -292,6 +299,8 @@ export default function ModelDashboardTab() {
       fourbased_submitted: fourbasedSubmitted,
       maloum_submitted: maloumSubmitted,
       brezzels_submitted: brezzelsSubmitted,
+      botdm_done: botdmDone,
+      massdm_done: massdmDone,
       notes,
       revenue_percentage: revenuePercentage,
       crypto_address: cryptoAddress,
@@ -726,18 +735,28 @@ export default function ModelDashboardTab() {
             </Section>
 
             {/* Plattform-Status */}
-            <Section icon={CheckCircle2} title="Plattform-Status" delay={0.1}>
+            <Section icon={CheckCircle2} title="Status-Übersicht" delay={0.1}>
               <div className="space-y-3">
                 {[
-                  { label: "4Based", value: fourbasedSubmitted, onChange: setFourbasedSubmitted },
-                  { label: "Maloum", value: maloumSubmitted, onChange: setMaloumSubmitted },
-                  { label: "Brezzels", value: brezzelsSubmitted, onChange: setBrezzelsSubmitted },
+                  { label: "BotDM", value: botdmDone, onChange: setBotdmDone },
+                  { label: "MassDM", value: massdmDone, onChange: setMassdmDone },
+                  { label: "Account Setup", value: (() => {
+                    const p = selectedAccount?.platform;
+                    if (p === "Maloum") return maloumSubmitted;
+                    if (p === "Brezzels") return brezzelsSubmitted;
+                    return fourbasedSubmitted;
+                  })(), onChange: (v: boolean) => {
+                    const p = selectedAccount?.platform;
+                    if (p === "Maloum") setMaloumSubmitted(v);
+                    else if (p === "Brezzels") setBrezzelsSubmitted(v);
+                    else setFourbasedSubmitted(v);
+                  }},
                 ].map(p => (
                   <div key={p.label} className="flex items-center justify-between py-1.5">
                     <span className="text-sm text-foreground font-medium">{p.label}</span>
                     <div className="flex items-center gap-2">
                       <span className={`text-xs ${p.value ? "text-accent" : "text-muted-foreground"}`}>
-                        {p.value ? "Eingereicht ✅" : "Offen ❌"}
+                        {p.value ? "Erledigt ✅" : "Fehlt ❌"}
                       </span>
                       <Switch checked={p.value} onCheckedChange={p.onChange} />
                     </div>
