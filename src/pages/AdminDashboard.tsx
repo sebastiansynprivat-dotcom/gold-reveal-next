@@ -1010,7 +1010,7 @@ export default function AdminDashboard() {
     setAssignmentsLoading(true);
     const { data } = await supabase
       .from("account_assignments")
-      .select("*, accounts(account_email, account_domain, platform, folder_name, subfolder_name)")
+      .select("*, accounts(account_email, account_domain, platform, folder_name, subfolder_name, model_language, model_agency)")
       .order("assigned_at", { ascending: false });
     if (data) setAssignments(data);
     setAssignmentsLoaded(true);
