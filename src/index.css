@@ -268,6 +268,10 @@
     z-index: 0;
     border-radius: 0.75rem;
   }
+  .input-gold-shimmer > input,
+  .input-gold-shimmer > textarea {
+    border-radius: 0.75rem;
+  }
   .input-gold-shimmer::before {
     content: "";
     position: absolute;
