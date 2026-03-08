@@ -1345,6 +1345,7 @@ export default function AdminDashboard() {
       setNewAccDriveFolder("");
       setNewAccLanguage("de");
       setNewAccModelActive(true);
+      setNewAccModelAgency("shex");
       loadAccounts();
     }
     setAddingAccount(false);
