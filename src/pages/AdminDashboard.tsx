@@ -5011,13 +5011,15 @@ export default function AdminDashboard() {
           <div className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground">Pool-Name</label>
+              <div className="input-gold-shimmer rounded-lg">
               <Input
                 value={newPlatformName}
                 onChange={(e) => setNewPlatformName(e.target.value)}
                 placeholder="z.B. Brezzels, Maloum, 4Based..."
-                className="text-sm"
+                className="text-sm border-transparent"
                 autoFocus
               />
+              </div>
             </div>
             <Button
               onClick={() => {
