@@ -217,7 +217,6 @@ export default function ModelDashboardTab() {
     if (selectedAccountId) {
       loadModelData(selectedAccountId);
       loadModelRevenue(selectedAccountId, revenueMonth);
-      setTimeout(() => detailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
     }
   }, [selectedAccountId, loadModelData, loadModelRevenue, revenueMonth]);
 
