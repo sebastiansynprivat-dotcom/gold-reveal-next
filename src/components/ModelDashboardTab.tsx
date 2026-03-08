@@ -47,6 +47,25 @@ interface BotMessageRow {
   follow_up_message: string;
 }
 
+const SENDER = {
+  company: "Sharify Media FZCO",
+  line1: "IFZA Business Park DDP 21236-001",
+  line2: "Silicon Oasis",
+  line3: "00000, United Arab Emirates",
+  taxId: "1041507169",
+};
+
+const PLATFORM_LABELS: PlatformFilter[] = ["all", "4Based", "Maloum", "Brezzels"];
+
+const SUB_FILTERS: { label: string; value: SubFilter }[] = [
+  { label: "BotDM fehlt", value: "botdm_fehlt" },
+  { label: "BotDM vorhanden", value: "botdm_vorhanden" },
+  { label: "MassDM fehlt", value: "massdm_fehlt" },
+  { label: "MassDM vorhanden", value: "massdm_vorhanden" },
+  { label: "Account Setup fehlt", value: "setup_fehlt" },
+  { label: "Account Setup vorhanden", value: "setup_vorhanden" },
+];
+
 // ─── Animated counter ───
 function AnimatedNumber({ value }: { value: number }) {
   return (
