@@ -191,8 +191,6 @@ export default function ModelDashboardTab() {
       setFourbasedSubmitted(d.fourbased_submitted);
       setMaloumSubmitted(d.maloum_submitted);
       setBrezzelsSubmitted(d.brezzels_submitted);
-      setBotdmDone(d.botdm_done);
-      setMassdmDone(d.massdm_done);
       setFourbasedBotdm(d.fourbased_botdm_done);
       setFourbasedMassdm(d.fourbased_massdm_done);
       setMaloumBotdm(d.maloum_botdm_done);
