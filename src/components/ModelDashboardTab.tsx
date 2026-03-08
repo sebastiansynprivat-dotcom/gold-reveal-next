@@ -206,8 +206,6 @@ export default function ModelDashboardTab() {
       setFourbasedSubmitted(false);
       setMaloumSubmitted(false);
       setBrezzelsSubmitted(false);
-      setBotdmDone(false);
-      setMassdmDone(false);
       setFourbasedBotdm(false);
       setFourbasedMassdm(false);
       setMaloumBotdm(false);
