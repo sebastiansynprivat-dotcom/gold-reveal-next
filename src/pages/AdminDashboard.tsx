@@ -172,17 +172,7 @@ function AnimatedNumber({ value, className, suffix = "€" }: { value: number; c
 
 function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { assignments: any[]; assignmentsLoading: boolean; chatters: ChatterProfile[] }) {
   const [overviewFilter, setOverviewFilter] = useState<"alle" | "aktiv" | "inaktiv">("alle");
-  const [agencyFilter, setAgencyFilter] = useState<"alle" | "shex" | "syn">("alle");
-  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [chatterSearch, setChatterSearch] = useState("");
-
-  const toggleFolder = (key: string) => {
-    setExpandedFolders(prev => {
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key); else next.add(key);
-      return next;
-    });
-  };
 
   if (assignmentsLoading) {
     return (
@@ -194,7 +184,7 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
     );
   }
 
-  const grouped: Record<string, { account_email: string; account_domain: string; platform: string; folder_name: string; subfolder_name: string; model_language: string; model_agency: string; entries: any[] }> = {};
+  const grouped: Record<string, { account_email: string; account_domain: string; platform: string; model_language: string; model_agency: string; entries: any[] }> = {};
   for (const a of assignments) {
     const key = a.account_id;
     if (!grouped[key]) {
@@ -202,8 +192,6 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
         account_email: a.accounts?.account_email || "–",
         account_domain: a.accounts?.account_domain || "",
         platform: a.accounts?.platform || "",
-        folder_name: (a.accounts as any)?.folder_name || "",
-        subfolder_name: (a.accounts as any)?.subfolder_name || "",
         model_language: (a.accounts as any)?.model_language || "de",
         model_agency: (a.accounts as any)?.model_agency || "shex",
         entries: [],
@@ -225,19 +213,12 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
     grouped[key].entries.push({ ...a, name, assignedAt, unassignedAt, isActive, duration });
   }
 
-  // Apply filter
+  // Apply status filter
   if (overviewFilter !== "alle") {
     const keepActive = overviewFilter === "aktiv";
     for (const key of Object.keys(grouped)) {
       grouped[key].entries = grouped[key].entries.filter((e: any) => e.isActive === keepActive);
       if (grouped[key].entries.length === 0) delete grouped[key];
-    }
-  }
-
-  // Apply agency filter
-  if (agencyFilter !== "alle") {
-    for (const key of Object.keys(grouped)) {
-      if (grouped[key].model_agency !== agencyFilter) delete grouped[key];
     }
   }
 
@@ -250,6 +231,7 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
     }
   }
 
+  // Sort entries within each account
   Object.values(grouped).forEach(g => {
     g.entries.sort((a: any, b: any) => {
       if (a.isActive && !b.isActive) return -1;
@@ -258,34 +240,23 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
     });
   });
 
-  // Group by folder → subfolder → accounts
-  const byFolder: Record<string, Record<string, string[]>> = {};
+  // Group by agency
+  const byAgency: Record<string, string[]> = { shex: [], syn: [] };
   for (const accId of Object.keys(grouped)) {
-    const folder = grouped[accId].folder_name || "Ohne Ordner";
-    const subfolder = grouped[accId].subfolder_name || "";
-    if (!byFolder[folder]) byFolder[folder] = {};
-    if (!byFolder[folder][subfolder]) byFolder[folder][subfolder] = [];
-    byFolder[folder][subfolder].push(accId);
+    const agency = grouped[accId].model_agency === "syn" ? "syn" : "shex";
+    byAgency[agency].push(accId);
   }
 
-  // Sort accounts within each subfolder
-  for (const folder of Object.keys(byFolder)) {
-    for (const sub of Object.keys(byFolder[folder])) {
-      byFolder[folder][sub].sort((a, b) => {
-        const aActive = grouped[a].entries.some((e: any) => e.isActive);
-        const bActive = grouped[b].entries.some((e: any) => e.isActive);
-        if (aActive && !bActive) return -1;
-        if (!aActive && bActive) return 1;
-        return grouped[a].account_email.localeCompare(grouped[b].account_email);
-      });
-    }
+  // Sort accounts within each agency: active first, then by email
+  for (const agency of Object.keys(byAgency)) {
+    byAgency[agency].sort((a, b) => {
+      const aActive = grouped[a].entries.some((e: any) => e.isActive);
+      const bActive = grouped[b].entries.some((e: any) => e.isActive);
+      if (aActive && !bActive) return -1;
+      if (!aActive && bActive) return 1;
+      return grouped[a].account_email.localeCompare(grouped[b].account_email);
+    });
   }
-
-  const folderKeys = Object.keys(byFolder).sort((a, b) => {
-    if (a === "Ohne Ordner") return 1;
-    if (b === "Ohne Ordner") return -1;
-    return a.localeCompare(b);
-  });
 
   const filterOptions = [
     { key: "alle" as const, label: "Alle" },
@@ -293,18 +264,19 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
     { key: "inaktiv" as const, label: "Inaktiv" },
   ];
 
-  const getFolderStats = (folder: string) => {
-    const subs = byFolder[folder];
-    let totalAccounts = 0;
+  const getAgencyStats = (agency: string) => {
+    const accIds = byAgency[agency] || [];
     let totalActive = 0;
-    for (const sub of Object.keys(subs)) {
-      for (const accId of subs[sub]) {
-        totalAccounts++;
-        totalActive += grouped[accId].entries.filter((e: any) => e.isActive).length;
-      }
+    for (const accId of accIds) {
+      totalActive += grouped[accId].entries.filter((e: any) => e.isActive).length;
     }
-    return { totalAccounts, totalActive };
+    return { totalAccounts: accIds.length, totalActive };
   };
+
+  const agencies = [
+    { key: "shex", label: "SheX", colorClass: "text-accent border-accent/30 bg-accent/10" },
+    { key: "syn", label: "SYN", colorClass: "text-primary border-primary/30 bg-primary/10" },
+  ];
 
   return (
     <div className="space-y-4">
@@ -326,23 +298,6 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
             </button>
           ))}
         </div>
-        {/* Agency filter */}
-        <div className="flex gap-1 p-1 bg-secondary/30 rounded-lg w-fit">
-          {([{ key: "alle" as const, label: "Alle" }, { key: "shex" as const, label: "SheX" }, { key: "syn" as const, label: "SYN" }]).map(opt => (
-            <button
-              key={opt.key}
-              onClick={() => setAgencyFilter(opt.key)}
-              className={cn(
-                "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
-                agencyFilter === opt.key
-                  ? "bg-accent text-accent-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
         <div className="relative">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
           <Input
@@ -354,125 +309,85 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
         </div>
       </div>
 
-      {folderKeys.length === 0 ? (
-        <section className="glass-card rounded-xl overflow-hidden">
-          <div className="px-4 py-3 border-b border-border flex items-center gap-2">
-            <Users className="h-4 w-4 text-accent" />
-            <h2 className="text-sm font-semibold text-foreground">Chatter-Übersicht</h2>
-          </div>
-          <div className="p-4 text-sm text-muted-foreground">
-            {overviewFilter === "alle"
-              ? "Noch keine Zuweisungen protokolliert. Zuweisungen werden ab jetzt automatisch erfasst."
-              : `Keine ${overviewFilter === "aktiv" ? "aktiven" : "inaktiven"} Zuweisungen gefunden.`}
-          </div>
-        </section>
-      ) : (
-        folderKeys.map(folder => {
-          const { totalAccounts, totalActive } = getFolderStats(folder);
-          const isExpanded = expandedFolders.has(folder) || !!chatterSearch.trim();
-          const subfolders = Object.keys(byFolder[folder]).sort((a, b) => {
-            if (a === "") return 1;
-            if (b === "") return -1;
-            return a.localeCompare(b);
-          });
+      {agencies.map(({ key: agencyKey, label, colorClass }) => {
+        const { totalAccounts, totalActive } = getAgencyStats(agencyKey);
+        const accIds = byAgency[agencyKey] || [];
 
-          return (
-            <section key={folder} className="glass-card rounded-xl overflow-hidden">
-              <div
-                className="px-4 py-3 border-b border-border flex items-center justify-between cursor-pointer hover:bg-secondary/20 transition-colors"
-                onClick={() => toggleFolder(folder)}
-              >
-                <div className="flex items-center gap-2">
-                  {isExpanded ? (
-                    <ChevronDown className="h-4 w-4 text-accent" />
-                  ) : (
-                    <ChevronRight className="h-4 w-4 text-accent" />
-                  )}
-                  <FolderOpen className="h-4 w-4 text-accent" />
-                  <h2 className="text-sm font-semibold text-foreground">{folder}</h2>
-                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">{totalAccounts} Accounts</Badge>
-                </div>
-                {totalActive > 0 && (
-                  <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">
-                    {totalActive} aktiv
-                  </Badge>
-                )}
+        return (
+          <section key={agencyKey} className="glass-card rounded-xl overflow-hidden">
+            <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className={cn("text-sm font-bold px-2 py-0.5 rounded border", colorClass)}>{label}</span>
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0">{totalAccounts} Accounts</Badge>
               </div>
-
-              {isExpanded && (
-                <div className="divide-y divide-border/30">
-                  {subfolders.map(sub => {
-                    const accIds = byFolder[folder][sub];
-                    return (
-                      <div key={sub || "__root"}>
-                        {sub && (
-                          <div className="px-6 py-1.5 bg-secondary/10 flex items-center gap-2">
-                            <FolderOpen className="h-3 w-3 text-muted-foreground" />
-                            <span className="text-[11px] font-medium text-muted-foreground">{sub}</span>
-                          </div>
-                        )}
-                        {accIds.map(accId => {
-                          const g = grouped[accId];
-                          const activeCount = g.entries.filter((e: any) => e.isActive).length;
-                          return (
-                            <div key={accId}>
-                              <div className="px-4 py-2 bg-secondary/20 flex items-center justify-between">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <Users className="h-3.5 w-3.5 text-muted-foreground" />
-                                  <span className="text-xs font-medium text-foreground">{g.account_email}</span>
-                                  {g.account_domain && (
-                                    <span className="text-[10px] text-muted-foreground">({g.account_domain})</span>
-                                  )}
-                                  {g.platform && (
-                                    <span className="text-[10px] bg-secondary/50 text-muted-foreground border border-border/50 rounded px-1.5 py-0.5 capitalize">
-                                      {g.platform}
-                                    </span>
-                                  )}
-                                  <span className="text-[10px] bg-secondary/50 text-muted-foreground border border-border/50 rounded px-1.5 py-0.5">
-                                    {g.model_language === "en" ? "🇬🇧 EN" : "🇩🇪 DE"}
-                                  </span>
-                                  <span className={cn("text-[10px] rounded px-1.5 py-0.5 border font-medium", g.model_agency === "syn" ? "bg-primary/10 text-primary border-primary/30" : "bg-accent/10 text-accent border-accent/30")}>
-                                    {g.model_agency === "syn" ? "SYN" : "SheX"}
-                                  </span>
-                                </div>
-                                {activeCount > 0 && (
-                                  <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">
-                                    {activeCount} aktiv
-                                  </Badge>
-                                )}
-                              </div>
-                              <div className="divide-y divide-border/50">
-                                {g.entries.map((entry: any) => (
-                                  <div key={entry.id} className="px-6 py-2 flex items-center justify-between text-sm">
-                                    <div className="flex items-center gap-3">
-                                      <div className={cn("w-2 h-2 rounded-full", entry.isActive ? "bg-emerald-400 animate-pulse" : "bg-muted-foreground/30")} />
-                                      <span className="font-medium text-foreground text-xs">{entry.name}</span>
-                                    </div>
-                                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                      <span>{entry.assignedAt ? format(entry.assignedAt, "dd.MM.yyyy HH:mm") : "–"}</span>
-                                      <span>→</span>
-                                      {entry.isActive ? (
-                                        <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">Aktiv</Badge>
-                                      ) : (
-                                        <span>{entry.unassignedAt ? format(entry.unassignedAt, "dd.MM.yyyy HH:mm") : "–"}</span>
-                                      )}
-                                      <span className="text-accent font-medium ml-1">{entry.duration}</span>
-                                    </div>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    );
-                  })}
-                </div>
+              {totalActive > 0 && (
+                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">
+                  {totalActive} aktiv
+                </Badge>
               )}
-            </section>
-          );
-        })
-      )}
+            </div>
+
+            {accIds.length === 0 ? (
+              <div className="p-4 text-sm text-muted-foreground">
+                Keine Zuweisungen für {label}.
+              </div>
+            ) : (
+              <div className="divide-y divide-border/30">
+                {accIds.map(accId => {
+                  const g = grouped[accId];
+                  const activeCount = g.entries.filter((e: any) => e.isActive).length;
+                  return (
+                    <div key={accId}>
+                      <div className="px-4 py-2 bg-secondary/20 flex items-center justify-between">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span className="text-xs font-medium text-foreground">{g.account_email}</span>
+                          {g.account_domain && (
+                            <span className="text-[10px] text-muted-foreground">({g.account_domain})</span>
+                          )}
+                          {g.platform && (
+                            <span className="text-[10px] bg-secondary/50 text-muted-foreground border border-border/50 rounded px-1.5 py-0.5 capitalize">
+                              {g.platform}
+                            </span>
+                          )}
+                          <span className="text-[10px] bg-secondary/50 text-muted-foreground border border-border/50 rounded px-1.5 py-0.5">
+                            {g.model_language === "en" ? "🇬🇧 EN" : "🇩🇪 DE"}
+                          </span>
+                        </div>
+                        {activeCount > 0 && (
+                          <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">
+                            {activeCount} aktiv
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="divide-y divide-border/50">
+                        {g.entries.map((entry: any) => (
+                          <div key={entry.id} className="px-6 py-2 flex items-center justify-between text-sm">
+                            <div className="flex items-center gap-3">
+                              <div className={cn("w-2 h-2 rounded-full", entry.isActive ? "bg-emerald-400 animate-pulse" : "bg-muted-foreground/30")} />
+                              <span className="font-medium text-foreground text-xs">{entry.name}</span>
+                            </div>
+                            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                              <span>{entry.assignedAt ? format(entry.assignedAt, "dd.MM.yyyy HH:mm") : "–"}</span>
+                              <span>→</span>
+                              {entry.isActive ? (
+                                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">Aktiv</Badge>
+                              ) : (
+                                <span>{entry.unassignedAt ? format(entry.unassignedAt, "dd.MM.yyyy HH:mm") : "–"}</span>
+                              )}
+                              <span className="text-accent font-medium ml-1">{entry.duration}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        );
+      })}
     </div>
   );
 }
