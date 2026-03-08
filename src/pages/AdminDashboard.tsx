@@ -5673,13 +5673,13 @@ export default function AdminDashboard() {
 
                             {/* Account search */}
                             {allFolderAccs.length > 0 && (
-                              <div className="relative">
+                              <div className="relative input-gold-shimmer rounded-lg">
                                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                                 <Input
                                   value={manualAccountSearch}
                                   onChange={(e) => setManualAccountSearch(e.target.value)}
                                   placeholder="Account suchen..."
-                                  className="pl-8 text-xs h-8"
+                                  className="pl-8 text-xs h-8 border-transparent"
                                 />
                               </div>
                             )}
