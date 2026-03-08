@@ -298,7 +298,7 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
             </button>
           ))}
         </div>
-        <div className="relative input-gold-shimmer rounded-lg">
+        <div className="relative input-gold-shimmer rounded-xl">
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
           <Input
             placeholder="Chatter suchen…"
