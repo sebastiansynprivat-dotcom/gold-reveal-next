@@ -5749,7 +5749,7 @@ export default function AdminDashboard() {
                                     </div>
                                     {creatingSubfolder && (
                                       <div className="flex items-center gap-2">
-                                        <Input
+                                        <div className="input-gold-shimmer rounded-lg flex-1"><Input
                                           autoFocus
                                           placeholder="Unterordner-Name..."
                                           value={newSubfolderName}
@@ -5769,8 +5769,8 @@ export default function AdminDashboard() {
                                               setCreatingSubfolder(false);
                                             }
                                           }}
-                                          className="h-8 text-xs flex-1"
-                                        />
+                                          className="h-8 text-xs border-transparent"
+                                        /></div>
                                         <Button size="sm" className="h-8 px-3"
                                           disabled={!newSubfolderName.trim()}
                                           onClick={() => {
