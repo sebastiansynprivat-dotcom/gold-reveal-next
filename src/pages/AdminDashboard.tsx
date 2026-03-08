@@ -428,6 +428,12 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
                                       {g.platform}
                                     </span>
                                   )}
+                                  <span className="text-[10px] bg-secondary/50 text-muted-foreground border border-border/50 rounded px-1.5 py-0.5">
+                                    {g.model_language === "en" ? "🇬🇧 EN" : "🇩🇪 DE"}
+                                  </span>
+                                  <span className={cn("text-[10px] rounded px-1.5 py-0.5 border font-medium", g.model_agency === "syn" ? "bg-primary/10 text-primary border-primary/30" : "bg-accent/10 text-accent border-accent/30")}>
+                                    {g.model_agency === "syn" ? "SYN" : "SheX"}
+                                  </span>
                                 </div>
                                 {activeCount > 0 && (
                                   <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">
