@@ -1773,7 +1773,8 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
+      <GoldParticles spawnRate={0.2} maxParticles={20} baseOpacity={0.15} />
       {/* Premium Header */}
       <header className="relative border-b border-border/50 bg-gradient-to-b from-secondary/30 to-background">
         <div className="absolute inset-0 bg-gradient-to-r from-accent/5 via-transparent to-accent/5" />
