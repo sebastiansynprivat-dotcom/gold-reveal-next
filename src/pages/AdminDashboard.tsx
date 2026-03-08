@@ -3746,14 +3746,16 @@ export default function AdminDashboard() {
                 {schedFrequency === "monthly" && (
                   <div className="space-y-2">
                     <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Tag im Monat</label>
+                    <div className="input-gold-shimmer rounded-lg w-20">
                     <Input
                       type="number"
                       min={1}
                       max={28}
                       value={schedDayOfMonth}
                       onChange={(e) => setSchedDayOfMonth(Number(e.target.value))}
-                      className="text-sm w-20 bg-secondary/30 border-border/30 focus:border-accent/40"
+                      className="text-sm w-full bg-secondary/30 border-transparent"
                     />
+                    </div>
                   </div>
                 )}
 
