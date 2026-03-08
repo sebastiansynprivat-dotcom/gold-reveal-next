@@ -3479,6 +3479,7 @@ export default function AdminDashboard() {
                               <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
                                 Follow-up Nachricht
                               </label>
+                              <div className="input-gold-shimmer rounded-lg">
                               <Textarea
                                 value={entry.followUp}
                                 onChange={(e) =>
@@ -3488,8 +3489,9 @@ export default function AdminDashboard() {
                                   }))
                                 }
                                 placeholder="Na, hast du meine letzte Nachricht gelesen? 😏"
-                                className="text-sm min-h-[70px] resize-none bg-background/50 border-border/50 focus:border-accent/50"
+                                className="text-sm min-h-[70px] resize-none bg-background/50 border-transparent"
                               />
+                              </div>
                             </div>
 
                             {/* Save Button */}
