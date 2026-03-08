@@ -3974,19 +3974,27 @@ export default function AdminDashboard() {
             <section className="glass-card rounded-xl overflow-hidden">
               <button
                 onClick={() => setChatPromptOpen(!chatPromptOpen)}
-                className="w-full px-4 py-3 border-b border-border flex items-center justify-between hover:bg-secondary/30 transition-colors"
+                className="w-full px-4 py-3 flex items-center justify-between hover:bg-secondary/20 transition-colors cursor-pointer"
               >
                 <div className="flex items-center gap-2">
+                  <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform duration-200", !chatPromptOpen && "-rotate-90")} />
                   <MessageSquare className="h-4 w-4 text-accent" />
-                  <h2 className="text-sm font-semibold text-foreground">Dashboard Chat-Prompt</h2>
+                  <h2 className="text-sm font-bold text-foreground">Dashboard Chat-Prompt</h2>
                   {kiPrompt !== kiPromptOriginal && (
                     <Badge className="text-[10px] bg-accent/20 text-accent">Ungespeichert</Badge>
                   )}
                 </div>
-                <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${chatPromptOpen ? "rotate-180" : ""}`} />
               </button>
-              {chatPromptOpen && (
-                <div className="p-4 space-y-4">
+              <AnimatePresence initial={false}>
+                {chatPromptOpen && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.25, ease: "easeInOut" }}
+                    className="overflow-hidden"
+                  >
+                    <div className="p-4 space-y-4 border-t border-border">
                   <p className="text-xs text-muted-foreground">
                     Dieser Prompt wird im Dashboard-Chatfenster als Anweisung an die KI gesendet.
                   </p>
@@ -4025,27 +4033,37 @@ export default function AdminDashboard() {
                       </div>
                     </>
                   )}
-                </div>
-              )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </section>
 
             {/* Chat-Analysen Prompt */}
             <section className="glass-card rounded-xl overflow-hidden">
               <button
                 onClick={() => setAnalysisPromptOpen(!analysisPromptOpen)}
-                className="w-full px-4 py-3 border-b border-border flex items-center justify-between hover:bg-secondary/30 transition-colors"
+                className="w-full px-4 py-3 flex items-center justify-between hover:bg-secondary/20 transition-colors cursor-pointer"
               >
                 <div className="flex items-center gap-2">
+                  <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform duration-200", !analysisPromptOpen && "-rotate-90")} />
                   <Sparkles className="h-4 w-4 text-accent" />
-                  <h2 className="text-sm font-semibold text-foreground">Chat-Analysen Prompt</h2>
+                  <h2 className="text-sm font-bold text-foreground">Chat-Analysen Prompt</h2>
                   {analysisPrompt !== analysisPromptOriginal && (
                     <Badge className="text-[10px] bg-accent/20 text-accent">Ungespeichert</Badge>
                   )}
                 </div>
-                <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${analysisPromptOpen ? "rotate-180" : ""}`} />
               </button>
-              {analysisPromptOpen && (
-                <div className="p-4 space-y-4">
+              <AnimatePresence initial={false}>
+                {analysisPromptOpen && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.25, ease: "easeInOut" }}
+                    className="overflow-hidden"
+                  >
+                    <div className="p-4 space-y-4 border-t border-border">
                   <p className="text-xs text-muted-foreground">
                     Dieser Prompt wird für die KI-gestützten Chat-Analysen der Chatter verwendet.
                   </p>
@@ -4084,8 +4102,10 @@ export default function AdminDashboard() {
                       </div>
                     </>
                   )}
-                </div>
-              )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </section>
           </div>
         )}
