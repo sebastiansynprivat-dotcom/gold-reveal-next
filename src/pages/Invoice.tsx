@@ -461,7 +461,7 @@ Mein Gruppenname ist: ${groupName || "[Bitte Gruppenname im Dashboard eintragen]
 
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Leistungsbeschreibung *</Label>
-                <Input value={description} onChange={(e) => setDescription(e.target.value)} className="h-9 text-sm bg-secondary border-border" />
+                <div className="input-gold-shimmer rounded-lg"><Input value={description} onChange={(e) => setDescription(e.target.value)} className="h-9 text-sm bg-secondary border-transparent" /></div>
               </div>
 
               <div className="space-y-1.5">
