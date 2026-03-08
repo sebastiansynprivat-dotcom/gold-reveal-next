@@ -4332,11 +4332,23 @@ export default function AdminDashboard() {
                       </button>
                     </div>
                   </div>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Model ist bei</label>
+                    <div className="flex gap-1.5">
+                      <button onClick={() => setNewAccModelAgency("shex")}
+                        className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", newAccModelAgency === "shex" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50 hover:border-accent/30")}>
+                        SheX
+                      </button>
+                      <button onClick={() => setNewAccModelAgency("syn")}
+                        className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", newAccModelAgency === "syn" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50 hover:border-accent/30")}>
+                        SYN
+                      </button>
+                    </div>
+                  </div>
                   <div className="flex items-center justify-between py-1">
                     <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Model aktiv</span>
                     <Switch checked={newAccModelActive} onCheckedChange={setNewAccModelActive} />
                   </div>
-                </div>
 
                 <Button onClick={addAccount} disabled={addingAccount || !newAccEmail.trim() || !newAccDomain.trim()} className="w-full" size="sm">
                   <Plus className="h-3.5 w-3.5 mr-1.5" />
