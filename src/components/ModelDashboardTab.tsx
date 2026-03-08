@@ -134,12 +134,17 @@ export default function ModelDashboardTab() {
   const [allBotMessages, setAllBotMessages] = useState<BotMessageRow[]>([]);
   
 
-  // Local form state
+  // Local form state – per-platform status
   const [fourbasedSubmitted, setFourbasedSubmitted] = useState(false);
   const [maloumSubmitted, setMaloumSubmitted] = useState(false);
   const [brezzelsSubmitted, setBrezzelsSubmitted] = useState(false);
-  const [botdmDone, setBotdmDone] = useState(false);
-  const [massdmDone, setMassdmDone] = useState(false);
+  const [fourbasedBotdm, setFourbasedBotdm] = useState(false);
+  const [fourbasedMassdm, setFourbasedMassdm] = useState(false);
+  const [maloumBotdm, setMaloumBotdm] = useState(false);
+  const [maloumMassdm, setMaloumMassdm] = useState(false);
+  const [brezzelsBotdm, setBrezzelsBotdm] = useState(false);
+  const [brezzelsMassdm, setBrezzelsMassdm] = useState(false);
+  const [openPlatformStatus, setOpenPlatformStatus] = useState<string | null>(null);
   const [notes, setNotes] = useState("");
   const [revenuePercentage, setRevenuePercentage] = useState(0);
   const [cryptoAddress, setCryptoAddress] = useState("");
