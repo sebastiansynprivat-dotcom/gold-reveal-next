@@ -162,12 +162,15 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
         <div className="space-y-4 pt-2">
           <div className="space-y-1.5">
             <Label className="text-xs text-foreground">Model Name aus dem Profil *</Label>
-            <Input
-              placeholder="z.B. Deborahsecret, Luisa.loves"
-              value={modelName}
-              onChange={(e) => setModelName(e.target.value)}
-              maxLength={100}
-            />
+            <div className="input-gold-shimmer rounded-lg">
+              <Input
+                placeholder="z.B. Deborahsecret, Luisa.loves"
+                value={modelName}
+                onChange={(e) => setModelName(e.target.value)}
+                maxLength={100}
+                className="border-transparent"
+              />
+            </div>
           </div>
 
           <div className="rounded-lg border border-border/50 bg-secondary/20 p-3">
