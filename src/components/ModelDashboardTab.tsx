@@ -191,6 +191,8 @@ export default function ModelDashboardTab() {
       setFourbasedSubmitted(false);
       setMaloumSubmitted(false);
       setBrezzelsSubmitted(false);
+      setBotdmDone(false);
+      setMassdmDone(false);
       setNotes("");
       setRevenuePercentage(0);
       setCryptoAddress("");
