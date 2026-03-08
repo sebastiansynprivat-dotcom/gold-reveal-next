@@ -5323,8 +5323,8 @@ export default function AdminDashboard() {
                 <div className="flex-1 overflow-hidden flex flex-col sm:flex-row gap-4 pt-3 min-h-0">
                   
                   {/* Left: Add Account Form */}
-                  <div className="sm:w-[280px] shrink-0">
-                    <div className="rounded-xl border border-accent/20 bg-accent/[0.03] p-4 space-y-3 h-full">
+                  <div className="sm:w-[280px] shrink-0 overflow-y-auto max-h-full">
+                    <div className="rounded-xl border border-accent/20 bg-accent/[0.03] p-4 space-y-3">
                       <div className="flex items-center gap-2 pb-1">
                         <div className="h-7 w-7 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center">
                           <Plus className="h-3.5 w-3.5 text-accent" />
