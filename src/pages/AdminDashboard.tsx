@@ -5864,13 +5864,13 @@ export default function AdminDashboard() {
           <div className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-muted-foreground">Plattform-Name</label>
-              <Input
+              <div className="input-gold-shimmer rounded-lg"><Input
                 value={newManualPlatformName}
                 onChange={(e) => setNewManualPlatformName(e.target.value)}
                 placeholder="z.B. OnlyFans, Fansly..."
-                className="text-sm"
+                className="text-sm border-transparent"
                 autoFocus
-              />
+              /></div>
             </div>
             <Button
               onClick={() => {
