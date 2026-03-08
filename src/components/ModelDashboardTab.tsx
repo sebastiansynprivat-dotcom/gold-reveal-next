@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -13,9 +13,10 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Upload, FileText, Trash2, Download, Save, Loader2, Star,
-  Percent, Wallet, StickyNote, CheckCircle2, FileDown, List, Filter, Search, ChevronRight
+  Percent, Wallet, StickyNote, CheckCircle2, FileDown, List, Filter, Search, ChevronRight, TrendingUp, CalendarDays, DollarSign
 } from "lucide-react";
 import jsPDF from "jspdf";
+import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
 
 interface Account {
   id: string;
