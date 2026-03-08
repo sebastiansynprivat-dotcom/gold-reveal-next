@@ -407,6 +407,35 @@ export type Database = {
         }
         Relationships: []
       }
+      model_users: {
+        Row: {
+          account_id: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "model_users_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_templates: {
         Row: {
           body: string
@@ -703,6 +732,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_model_revenue: {
+        Args: { p_account_id: string; p_date_from: string; p_date_to: string }
+        Returns: {
+          chatter_count: number
+          total_revenue: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -713,7 +749,7 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user"
+      app_role: "admin" | "moderator" | "user" | "model"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -841,7 +877,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator", "user"],
+      app_role: ["admin", "moderator", "user", "model"],
     },
   },
 } as const
