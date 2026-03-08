@@ -4303,9 +4303,9 @@ export default function AdminDashboard() {
                 <span className="text-muted-foreground">Vergeben: <span className="font-semibold">{assignedCount}</span></span>
               </div>
               {freeCount > 0 && (
-                <Button onClick={assignAccounts} disabled={assigning} size="sm" variant="default">
-                  <RefreshCw className={cn("h-3.5 w-3.5 mr-1.5", assigning && "animate-spin")} />
-                  {assigning ? "..." : "Auto-Zuweisen"}
+                <Button onClick={openAssignDialog} size="sm" variant="default">
+                  <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+                  Auto-Zuweisen
                 </Button>
               )}
             </div>
