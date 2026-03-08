@@ -124,6 +124,8 @@ export default function ModelDashboardTab() {
 
   // Local form state
   const [fourbasedSubmitted, setFourbasedSubmitted] = useState(false);
+  const [maloumSubmitted, setMaloumSubmitted] = useState(false);
+  const [brezzelsSubmitted, setBrezzelsSubmitted] = useState(false);
   const [notes, setNotes] = useState("");
   const [revenuePercentage, setRevenuePercentage] = useState(0);
   const [cryptoAddress, setCryptoAddress] = useState("");
