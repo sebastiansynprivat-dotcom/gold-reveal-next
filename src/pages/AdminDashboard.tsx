@@ -3339,14 +3339,14 @@ export default function AdminDashboard() {
 
               {/* Search */}
               <div className="px-3 pt-1 pb-2">
-                <div className="relative">
+                <div className="relative input-gold-shimmer rounded-lg">
                   <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                   <input
                     type="text"
                     value={botSearch}
                     onChange={(e) => setBotSearch(e.target.value)}
                     placeholder="Account suchen..."
-                    className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg bg-secondary/50 border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-accent"
+                    className="w-full pl-8 pr-3 py-1.5 text-xs rounded-lg bg-secondary/50 border border-transparent text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-0"
                   />
                 </div>
               </div>
