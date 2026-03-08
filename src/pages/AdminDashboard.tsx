@@ -4508,7 +4508,7 @@ export default function AdminDashboard() {
 
                 {/* Chatters without account */}
                 {(() => {
-                  const unassignedChatters = chatters.filter(c => c.offer === selectedPlatform && !c.account_email);
+                  const unassignedChatters = chatters.filter(c => !c.account_email);
                   return (
                     <div className="rounded-lg bg-secondary/30 border border-border/50 p-3 space-y-1">
                       <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Chatter ohne Account</p>
