@@ -174,6 +174,8 @@ function AnimatedNumber({ value, className, suffix = "€" }: { value: number; c
 function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { assignments: any[]; assignmentsLoading: boolean; chatters: ChatterProfile[] }) {
   const [overviewFilter, setOverviewFilter] = useState<"alle" | "aktiv" | "inaktiv">("alle");
   const [chatterSearch, setChatterSearch] = useState("");
+  const [collapsedAgencies, setCollapsedAgencies] = useState<Record<string, boolean>>({});
+  const toggleAgency = (key: string) => setCollapsedAgencies(prev => ({ ...prev, [key]: !prev[key] }));
 
   if (assignmentsLoading) {
     return (
