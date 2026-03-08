@@ -139,6 +139,8 @@ interface AccountEntry {
   drive_folder_id?: string | null;
   folder_name?: string | null;
   model_active?: boolean;
+  model_language?: string;
+  model_agency?: string;
 }
 
 function AnimatedNumber({ value, className, suffix = "€" }: { value: number; className?: string; suffix?: string }) {
@@ -170,6 +172,7 @@ function AnimatedNumber({ value, className, suffix = "€" }: { value: number; c
 
 function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { assignments: any[]; assignmentsLoading: boolean; chatters: ChatterProfile[] }) {
   const [overviewFilter, setOverviewFilter] = useState<"alle" | "aktiv" | "inaktiv">("alle");
+  const [agencyFilter, setAgencyFilter] = useState<"alle" | "shex" | "syn">("alle");
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [chatterSearch, setChatterSearch] = useState("");
 
@@ -191,7 +194,7 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
     );
   }
 
-  const grouped: Record<string, { account_email: string; account_domain: string; platform: string; folder_name: string; subfolder_name: string; entries: any[] }> = {};
+  const grouped: Record<string, { account_email: string; account_domain: string; platform: string; folder_name: string; subfolder_name: string; model_language: string; model_agency: string; entries: any[] }> = {};
   for (const a of assignments) {
     const key = a.account_id;
     if (!grouped[key]) {
@@ -201,6 +204,8 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
         platform: a.accounts?.platform || "",
         folder_name: (a.accounts as any)?.folder_name || "",
         subfolder_name: (a.accounts as any)?.subfolder_name || "",
+        model_language: (a.accounts as any)?.model_language || "de",
+        model_agency: (a.accounts as any)?.model_agency || "shex",
         entries: [],
       };
     }
@@ -226,6 +231,13 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
     for (const key of Object.keys(grouped)) {
       grouped[key].entries = grouped[key].entries.filter((e: any) => e.isActive === keepActive);
       if (grouped[key].entries.length === 0) delete grouped[key];
+    }
+  }
+
+  // Apply agency filter
+  if (agencyFilter !== "alle") {
+    for (const key of Object.keys(grouped)) {
+      if (grouped[key].model_agency !== agencyFilter) delete grouped[key];
     }
   }
 
@@ -306,6 +318,23 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
               className={cn(
                 "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
                 overviewFilter === opt.key
+                  ? "bg-accent text-accent-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+        {/* Agency filter */}
+        <div className="flex gap-1 p-1 bg-secondary/30 rounded-lg w-fit">
+          {([{ key: "alle" as const, label: "Alle" }, { key: "shex" as const, label: "SheX" }, { key: "syn" as const, label: "SYN" }]).map(opt => (
+            <button
+              key={opt.key}
+              onClick={() => setAgencyFilter(opt.key)}
+              className={cn(
+                "px-3 py-1.5 text-xs font-medium rounded-md transition-all",
+                agencyFilter === opt.key
                   ? "bg-accent text-accent-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
               )}
@@ -399,6 +428,12 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
                                       {g.platform}
                                     </span>
                                   )}
+                                  <span className="text-[10px] bg-secondary/50 text-muted-foreground border border-border/50 rounded px-1.5 py-0.5">
+                                    {g.model_language === "en" ? "🇬🇧 EN" : "🇩🇪 DE"}
+                                  </span>
+                                  <span className={cn("text-[10px] rounded px-1.5 py-0.5 border font-medium", g.model_agency === "syn" ? "bg-primary/10 text-primary border-primary/30" : "bg-accent/10 text-accent border-accent/30")}>
+                                    {g.model_agency === "syn" ? "SYN" : "SheX"}
+                                  </span>
                                 </div>
                                 {activeCount > 0 && (
                                   <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">
@@ -1008,7 +1043,7 @@ export default function AdminDashboard() {
     setAssignmentsLoading(true);
     const { data } = await supabase
       .from("account_assignments")
-      .select("*, accounts(account_email, account_domain, platform, folder_name, subfolder_name)")
+      .select("*, accounts(account_email, account_domain, platform, folder_name, subfolder_name, model_language, model_agency)")
       .order("assigned_at", { ascending: false });
     if (data) setAssignments(data);
     setAssignmentsLoaded(true);
@@ -4458,6 +4493,15 @@ export default function AdminDashboard() {
                           <ExternalLink className="h-3 w-3 shrink-0" /> Drive-Ordner
                         </a>
                       )}
+                      {/* Language & Agency badges */}
+                      <div className="flex items-center gap-1.5 mt-1.5">
+                        <span className="text-[9px] bg-secondary/50 text-muted-foreground border border-border/50 rounded px-1.5 py-0.5">
+                          {(acc as any).model_language === "en" ? "🇬🇧 EN" : "🇩🇪 DE"}
+                        </span>
+                        <span className={cn("text-[9px] rounded px-1.5 py-0.5 border font-medium", (acc as any).model_agency === "syn" ? "bg-primary/10 text-primary border-primary/30" : "bg-accent/10 text-accent border-accent/30")}>
+                          {(acc as any).model_agency === "syn" ? "SYN" : "SheX"}
+                        </span>
+                      </div>
                       <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/20">
                         <span className="text-[10px] text-muted-foreground">Model aktiv</span>
                         <Switch
@@ -5141,6 +5185,14 @@ export default function AdminDashboard() {
                           <ExternalLink className="h-2.5 w-2.5" /> Drive
                         </a>
                       )}
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <span className="text-[9px] bg-secondary/50 text-muted-foreground border border-border/50 rounded px-1.5 py-0.5">
+                        {(acc as any).model_language === "en" ? "🇬🇧 EN" : "🇩🇪 DE"}
+                      </span>
+                      <span className={cn("text-[9px] rounded px-1.5 py-0.5 border font-medium", (acc as any).model_agency === "syn" ? "bg-primary/10 text-primary border-primary/30" : "bg-accent/10 text-accent border-accent/30")}>
+                        {(acc as any).model_agency === "syn" ? "SYN" : "SheX"}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2 mt-1">
                       <span className="text-[9px] text-muted-foreground">Model aktiv</span>
