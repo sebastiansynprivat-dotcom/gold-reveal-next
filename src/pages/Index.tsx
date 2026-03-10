@@ -27,7 +27,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen md:min-h-screen h-[100dvh] md:h-auto flex flex-col items-center justify-start px-3 sm:px-4 py-8 md:py-20 relative overflow-hidden md:overflow-auto">
+    <div className="min-h-screen md:min-h-screen h-[100dvh] md:h-screen flex flex-col items-center justify-start px-3 sm:px-4 py-8 md:py-6 lg:py-8 relative overflow-hidden md:overflow-auto">
       <GoldParticles spawnRate={0.5} maxParticles={35} baseOpacity={0.3} />
       <ExitIntentPopup />
 
