@@ -1,41 +1,47 @@
 
-# Fortschrittsanzeige und Schritt-Nummerierung fur OfferB
 
-## Was wird gemacht
+# Plan: Bonus-Modell kompakt & animiert redesignen
 
-### 1. Alle Schritte als einheitliche Liste definieren
-Die Videos und Links werden zu einer gemeinsamen Schritt-Liste zusammengefasst:
-- Schritt 1: Plattform Erklärungs Video
-- Schritt 2: Telegram Nachrichten Video
-- Schritt 3: Brezzels Notifications aktivieren
-- Schritt 4: My ID Bot einrichten
-- Schritt 5: Tägliches Feedback
+## Problem
+Die 6 Stufen-Karten nehmen vertikal sehr viel Platz ein (6 große Karten untereinander). Das sieht überladen aus.
 
-### 2. Fortschritts-Bar oben auf der Seite
-Direkt unter dem Hero-Bereich wird eine Progress-Bar eingefügt, die den Gesamtfortschritt anzeigt (z.B. "2 von 5 Schritten erledigt"). Nutzt die vorhandene `Progress`-Komponente im Gold-Styling.
+## Lösung: Kompakter Tier-Stepper mit expandierbarem aktiven Tier
 
-### 3. Klickbare Checkliste
-Unter der Progress-Bar eine kompakte Checkliste mit allen 5 Schritten. Jeder Schritt hat:
-- Eine Checkbox zum Abhaken
-- Schritt-Nummer ("Schritt 1", "Schritt 2" etc.)
-- Kurzer Titel
+Statt 6 voller Karten → ein **horizontaler Stufen-Indikator** (wie ein Fortschritts-Stepper) + nur die **aktive Stufe** als expandierte Karte mit Details.
 
-Der Fortschritt wird im `localStorage` gespeichert, damit er beim Neuladen erhalten bleibt.
+### Design
 
-### 4. Schritt-Nummern bei den Sektionen
-Jede Video-/Link-/Feedback-Sektion bekommt eine prominente Schritt-Nummer als Badge (z.B. goldener Kreis mit "1" darin) neben dem Titel.
+```text
+  ⚡ ── 🥉 ── 🥈 ── 🏆 ── 💠 ── 💎
+  20%   21%   22%   23%   24%   25%
+         ▲ aktiv (leuchtet)
 
-## Technische Details
+  ┌─────────────────────────────┐
+  │ 🥉 Bronze – 21%            │  ← nur aktive Stufe als Karte
+  │ ████████░░░ 750€ / 1.000€  │
+  │ Noch 250€ bis Silber        │
+  └─────────────────────────────┘
+```
 
-**Datei: `src/pages/OfferB.tsx`**
+- **Horizontale Tier-Leiste**: Alle 6 Stufen als kleine Kreise/Punkte mit Emoji, verbunden durch Linien. Erledigte = gold gefüllt, aktive = pulsierend/glühend, kommende = grau.
+- **Aktive Stufe**: Einzige expandierte Karte mit Progress-Bar zur nächsten Stufe.
+- **Animationen**: Framer Motion für den Übergang zwischen Stufen, Glow-Pulse auf aktivem Punkt, Linie füllt sich golden bis zur aktuellen Stufe.
+- Spart ca. 70% vertikalen Platz.
 
-- Neue `steps`-Array-Konstante mit id, title, type fur alle 5 Schritte
-- `useState` + `localStorage` fur `completedSteps: Set<number>`
-- Progress-Bar-Sektion nach dem Hero mit `Progress`-Komponente (Wert = `completedSteps.size / steps.length * 100`)
-- Checkliste mit `Checkbox`-Komponenten, gestylt im bestehenden `glass-card-subtle` Look
-- Videos bekommen "Schritt 1" / "Schritt 2" als nummerierte Badge-Kreise
-- Links-Sektion wird zu Schritt 3 und 4 mit individuellen Nummern
-- Feedback wird Schritt 5
-- Erledigte Schritte bekommen eine subtile visuelle Markierung (leicht reduzierte Opazitat / Hakchen)
+### Änderungen
 
-Keine neuen Abhangigkeiten notwendig -- nutzt vorhandene `Progress`, `Checkbox` und `framer-motion`.
+**`src/pages/Dashboard.tsx`** (Zeilen ~1099-1159):
+- Ersetze das `[...BONUS_TIERS].reverse().map(...)` durch zwei neue Elemente:
+  1. **Tier-Stepper** (horizontale Leiste mit 6 Punkten + Verbindungslinien)
+  2. **Aktive-Tier-Karte** (einzelne Karte mit Details + Progress)
+- Framer Motion `layoutId` für smooth Tier-Wechsel-Animation
+- Streak-Karten (Account Upgrade + 30-Tage-Challenge) bleiben unverändert
+
+### Tier-Stepper Details
+- Jeder Punkt: 36px Kreis mit Emoji
+- Verbindungslinie zwischen Punkten: gold gefüllt bis zur aktiven Stufe, grau danach
+- Aktiver Punkt: `gold-glow` + `streak-circle-pulse` Klasse
+- Erledigte Punkte: Leicht golden getönt
+- Name + Rate unter jedem Punkt (text-[10px])
+- Responsive: Auf Mobile etwas kompakter (28px Kreise)
+
