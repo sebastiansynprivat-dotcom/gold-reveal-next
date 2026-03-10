@@ -53,13 +53,13 @@ const MAX_REVENUES = (() => {
   return [first, ...rest];
 })();
 
-// Pick 7 deterministic days where Sebastian's increment is reduced
+// Pick 5 deterministic days where Sebastian drops to rank 2–3
 const SEBASTIAN_SLOW_DAYS = (() => {
   const days = new Set<number>();
   let seed = 42;
-  while (days.size < 7) {
+  while (days.size < 5) {
     seed += 17;
-    const d = Math.floor(seededRandom(seed) * 28) + 2; // days 2–29
+    const d = Math.floor(seededRandom(seed) * 26) + 3; // days 3–28
     days.add(d);
   }
   return days;
