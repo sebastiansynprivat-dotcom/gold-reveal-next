@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Zap, FileText, HelpCircle, Trophy, User } from "lucide-react";
+import { Zap, FileText, HelpCircle, Trophy, User, Crown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface QuickActionBarProps {
