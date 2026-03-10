@@ -1261,7 +1261,7 @@ function BonusModelSection({
         <motion.div
           variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
         >
-          <div className="grid grid-cols-3 lg:grid-cols-7 gap-2 lg:gap-2.5">
+          <div data-tour="bonus-tiers" className="grid grid-cols-3 lg:grid-cols-7 gap-2 lg:gap-2.5">
             {BONUS_TIERS.map((tier, idx) => {
               const isActive = activeTier.name === tier.name;
               const isPassed = activeRevenue > tier.max;
