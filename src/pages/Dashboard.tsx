@@ -334,8 +334,9 @@ export default function Dashboard() {
     if (error) {
       toast.error("Fehler beim Speichern des Umsatzes");
     }
+    playCoinSound();
     setSavingRevenue(false);
-  }, [user]);
+  }, [user, playCoinSound]);
 
   const handleUmsatzChange = useCallback((val: number) => {
     setUmsatz(val);
