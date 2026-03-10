@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play } from "lucide-react";
+import videoThumbnail from "@/assets/video-thumbnail.jpg";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
