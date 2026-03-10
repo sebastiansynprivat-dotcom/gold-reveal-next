@@ -665,21 +665,7 @@ export default function Dashboard() {
           }}
         />
 
-        {/* 7-Day Revenue Chart */}
-        {user && <RevenueChart userId={user.id} />}
-
-        {/* Month Summary Widget */}
-        <MonthSummaryWidget
-          monthlyRevenue={monthlyRevenue}
-          rate={rate}
-          tierName={currentTier.name}
-          tierEmoji={currentTier.emoji}
-        />
-
-        {/* LootBox Milestone Rewards */}
-        <LootBoxReward monthlyRevenue={monthlyRevenue} />
-
-        {/* PWA Install To-Do – between Status and Account, non-dismissable, auto-hides when installed */}
+        {/* PWA Install To-Do */}
         {!isPwaInstalled &&
         <button
           onClick={() => setShowTutorial(true)}
@@ -694,6 +680,20 @@ export default function Dashboard() {
             </div>
           </button>
         }
+
+        {/* 7-Day Revenue Chart */}
+        {user && <RevenueChart userId={user.id} />}
+
+        {/* Month Summary Widget */}
+        <MonthSummaryWidget
+          monthlyRevenue={monthlyRevenue}
+          rate={rate}
+          tierName={currentTier.name}
+          tierEmoji={currentTier.emoji}
+        />
+
+        {/* LootBox Milestone Rewards */}
+        <LootBoxReward monthlyRevenue={monthlyRevenue} />
 
         {/* Frage stellen */}
         <button
