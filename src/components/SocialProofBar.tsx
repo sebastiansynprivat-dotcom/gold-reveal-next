@@ -1,18 +1,31 @@
 import { motion } from "framer-motion";
 import { Star, Users, TrendingUp } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
-const SocialProofBar = () => {
-  const [activeCount, setActiveCount] = useState(347);
+const CHATTERS_KEY = "social-proof-chatters";
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveCount((prev) => prev + (Math.random() > 0.5 ? 1 : -1));
-    }, 8000);
-    return () => clearInterval(interval);
-  }, []);
+const getPersistedChatters = (): number => {
+  try {
+    const stored = localStorage.getItem(CHATTERS_KEY);
+    if (stored === null) {
+      const initial = 347;
+      localStorage.setItem(CHATTERS_KEY, String(initial));
+      return initial;
+    }
+    const current = parseInt(stored, 10);
+    const added = Math.floor(Math.random() * 3) + 1;
+    const next = current + added;
+    localStorage.setItem(CHATTERS_KEY, String(next));
+    return next;
+  } catch {
+    return 347;
+  }
+};
+
+const SocialProofBar = () => {
+  const [activeCount] = useState(getPersistedChatters);
 
   return (
     <motion.div
