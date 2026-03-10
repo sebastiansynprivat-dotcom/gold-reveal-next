@@ -194,6 +194,7 @@ export default function Dashboard() {
   const [isFirstLogin, setIsFirstLogin] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [showMemo, setShowMemo] = useState(false);
   const [showFrageMemo, setShowFrageMemo] = useState(false);
   const [isPwaInstalled, setIsPwaInstalled] = useState(() => {
