@@ -5,20 +5,34 @@ import { useState } from "react";
 const ease = [0.16, 1, 0.3, 1] as const;
 
 const CHATTERS_KEY = "social-proof-chatters";
+const CHATTERS_LAST_SPOTS_KEY = "social-proof-last-spots";
 
 const getPersistedChatters = (): number => {
   try {
     const stored = localStorage.getItem(CHATTERS_KEY);
     if (stored === null) {
-      const initial = 347;
-      localStorage.setItem(CHATTERS_KEY, String(initial));
-      return initial;
+      localStorage.setItem(CHATTERS_KEY, "347");
+      return 347;
     }
-    const current = parseInt(stored, 10);
-    const added = Math.floor(Math.random() * 3) + 1;
-    const next = current + added;
-    localStorage.setItem(CHATTERS_KEY, String(next));
-    return next;
+    return parseInt(stored, 10);
+  } catch {
+    return 347;
+  }
+};
+
+const syncChattersWithSpots = (): number => {
+  try {
+    const currentSpots = parseInt(localStorage.getItem("urgency-spots") || "6", 10);
+    const lastSpots = parseInt(localStorage.getItem(CHATTERS_LAST_SPOTS_KEY) || String(currentSpots), 10);
+    let chatters = getPersistedChatters();
+
+    // If a spot was lost, add 1 chatter
+    if (currentSpots < lastSpots) {
+      chatters += 1;
+      localStorage.setItem(CHATTERS_KEY, String(chatters));
+    }
+    localStorage.setItem(CHATTERS_LAST_SPOTS_KEY, String(currentSpots));
+    return chatters;
   } catch {
     return 347;
   }
