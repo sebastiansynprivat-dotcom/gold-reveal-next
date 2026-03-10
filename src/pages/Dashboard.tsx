@@ -1161,13 +1161,14 @@ function BonusModelSection({
               const isPassed = activeRevenue > tier.max;
               const isLastOdd = idx === BONUS_TIERS.length - 1 && BONUS_TIERS.length % 3 === 1;
               return (
-                <motion.div
+                  <motion.div
                   key={tier.name}
                   animate={isActive ? { scale: 1 } : { scale: 1 }}
                   className={cn(
                     "relative rounded-xl overflow-hidden transition-all duration-300",
+                    isLastOdd && "col-start-2 lg:col-start-auto",
                     isActive
-                      ? tier.name === "Diamond"
+                      ? (tier.name === "Diamond" || tier.name === "Titan")
                         ? "gold-gradient-border-animated bg-[hsl(0_0%_8%/0.8)]"
                         : "border border-accent/50 bg-[hsl(0_0%_8%/0.8)] shadow-[0_0_24px_hsl(43_56%_52%/0.15)]"
                       : isPassed
