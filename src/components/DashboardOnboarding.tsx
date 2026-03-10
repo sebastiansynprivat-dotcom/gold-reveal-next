@@ -48,6 +48,7 @@ const TOUR_STEPS: TourStep[] = [
     title: "Bonusmodell",
     description: "Je mehr Umsatz du machst, desto höher steigt deine Rate. Hier siehst du alle Stufen und deinen Fortschritt.",
     icon: Trophy,
+    maxHeight: 120,
   },
 ];
 
