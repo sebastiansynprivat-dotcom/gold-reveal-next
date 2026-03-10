@@ -49,13 +49,23 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-start px-4 py-12 md:py-20 relative">
       <GoldParticles spawnRate={0.5} maxParticles={35} baseOpacity={0.3} />
-      <h1 className="text-3xl md:text-5xl font-bold text-center tracking-tight leading-tight mb-10 max-w-2xl">
+      <motion.h1
+        initial={{ opacity: 0, y: 20, filter: "blur(6px)" }}
+        animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+        transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+        className="text-3xl md:text-5xl font-bold text-center tracking-tight leading-tight mb-10 max-w-2xl"
+      >
         <span className="gold-gradient-text">Lerne </span>
         <span className="text-gold-gradient-shimmer">wie du mit Chatten Geld verdienen kannst</span>
-      </h1>
+      </motion.h1>
 
       <div className="w-full max-w-[1100px] flex flex-col lg:flex-row gap-6 mb-12 items-start justify-center">
-        <div className="w-full max-w-[800px] gold-border-glow rounded-xl overflow-hidden">
+        <motion.div
+          initial={{ opacity: 0, y: 24, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+          className="w-full max-w-[800px] gold-border-glow rounded-xl overflow-hidden"
+        >
           <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
             <iframe
               ref={iframeRef}
@@ -66,7 +76,7 @@ const Index = () => {
               allow="autoplay; fullscreen"
             />
           </div>
-        </div>
+        </motion.div>
 
         {showButton && (
           <div className="w-full lg:w-[280px] shrink-0 animate-fade-in">
