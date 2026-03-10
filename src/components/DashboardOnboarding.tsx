@@ -55,6 +55,7 @@ interface DashboardOnboardingProps {
   isFirstLogin: boolean;
   manualOpen?: boolean;
   onManualClose?: () => void;
+  waitForDismiss?: boolean;
 }
 
 // Smooth animated rect state using CSS transitions on a single overlay
