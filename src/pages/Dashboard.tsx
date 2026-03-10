@@ -29,6 +29,7 @@ import { format, endOfMonth, addMonths, differenceInDays } from "date-fns";
 import { de } from "date-fns/locale";
 import HomescreenTutorial from "@/components/HomescreenTutorial";
 import PushNotificationDialog from "@/components/PushNotificationDialog";
+import LootBoxReward from "@/components/LootBoxReward";
 import AccountMemoDialog from "@/components/AccountMemoDialog";
 import FrageMemoDialog from "@/components/FrageMemoDialog";
 import ModelRequestDialog, { EditRequestData } from "@/components/ModelRequestDialog";
