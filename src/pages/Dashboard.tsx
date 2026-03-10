@@ -387,6 +387,14 @@ export default function Dashboard() {
     if (!isTopTier) setHadConfetti(false);
   }, [isTopTier, hadConfetti, fireConfetti]);
 
+  // Tier change sound
+  useEffect(() => {
+    if (prevTierRef.current && prevTierRef.current !== currentTier.name) {
+      playLevelUpSound();
+    }
+    prevTierRef.current = currentTier.name;
+  }, [currentTier.name, playLevelUpSound]);
+
   return (
     <div className="min-h-screen bg-background pb-24">
       <GoldParticles spawnRate={0.25} maxParticles={20} baseOpacity={0.2} />
