@@ -1195,19 +1195,19 @@ function BonusModelSection({
                     </span>
                     <p className={cn(
                       "font-bold text-[10px] lg:text-xs leading-tight tracking-wide uppercase",
-                      isActive ? "text-gold-gradient" : isPassed ? "text-accent/40" : "text-muted-foreground/40"
+                      isActive ? "text-gold-gradient" : isPassed ? "text-accent/40" : "text-muted-foreground/60"
                     )}>
                       {tier.name}
                     </p>
                     <p className={cn(
                       "font-bold leading-none",
-                      isActive ? "text-lg lg:text-xl text-foreground" : isPassed ? "text-base lg:text-lg text-accent/30" : "text-base lg:text-lg text-muted-foreground/25"
+                      isActive ? "text-lg lg:text-xl text-foreground" : isPassed ? "text-base lg:text-lg text-accent/30" : "text-base lg:text-lg text-muted-foreground/50"
                     )}>
                       {tier.rate}%
                     </p>
                     <p className={cn(
-                      "text-[9px] lg:text-[10px] leading-tight",
-                      isActive ? "text-accent/70 font-medium" : "text-muted-foreground/30"
+                      "text-[10px] lg:text-xs leading-tight font-medium",
+                      isActive ? "text-accent/70" : isPassed ? "text-muted-foreground/40" : "text-muted-foreground/60"
                     )}>
                       ab {tier.min.toLocaleString("de-DE")}€
                     </p>
