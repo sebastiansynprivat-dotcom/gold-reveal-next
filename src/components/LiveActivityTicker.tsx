@@ -10,12 +10,14 @@ interface TickerEvent {
   timestamp: number;
 }
 
-// Realistic random amount: mostly 5-80€
+const NORMAL_AMOUNTS = [5, 10, 20, 30, 50, 100];
+
 function randomAmount(): number {
-  const base = Math.random();
-  if (base < 0.5) return Math.floor(Math.random() * 16) + 5;    // 5-20€
-  if (base < 0.8) return Math.floor(Math.random() * 25) + 21;   // 21-45€
-  return Math.floor(Math.random() * 35) + 46;                    // 46-80€
+  return NORMAL_AMOUNTS[Math.floor(Math.random() * NORMAL_AMOUNTS.length)];
+}
+
+function randomBigAmount(): number {
+  return Math.floor(Math.random() * 301) + 100; // 100-400€
 }
 
 let eventCounter = 0;
