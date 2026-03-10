@@ -1,7 +1,10 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState } from "react";
 import { useProgress } from "@/hooks/useProgress";
 import { motion } from "framer-motion";
 import GoldParticles from "@/components/GoldParticles";
+import SocialProofBar from "@/components/SocialProofBar";
+import UrgencyCountdown from "@/components/UrgencyCountdown";
+import VideoThumbnail from "@/components/VideoThumbnail";
 
 const Index = () => {
   const { updateProgress } = useProgress();
