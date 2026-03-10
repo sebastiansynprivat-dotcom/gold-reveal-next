@@ -3,7 +3,7 @@ import { useProgress } from "@/hooks/useProgress";
 import { motion } from "framer-motion";
 import GoldParticles from "@/components/GoldParticles";
 import SocialProofBar from "@/components/SocialProofBar";
-
+import UrgencySpots from "@/components/UrgencySpots";
 import VideoThumbnail from "@/components/VideoThumbnail";
 import LandingActivityTicker from "@/components/LandingActivityTicker";
 import ExitIntentPopup from "@/components/ExitIntentPopup";
@@ -42,7 +42,7 @@ const Index = () => {
       </motion.h1>
 
       <SocialProofBar />
-      
+      <UrgencySpots />
 
       <div className="w-full max-w-[1100px] flex flex-col lg:flex-row gap-4 md:gap-4 mb-2 md:mb-2 items-start justify-center">
         <motion.div
