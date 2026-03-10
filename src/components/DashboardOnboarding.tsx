@@ -151,6 +151,7 @@ export default function DashboardOnboarding({ isFirstLogin, manualOpen, onManual
   const handleClose = () => {
     localStorage.setItem(ONBOARDING_KEY, "true");
     setActive(false);
+    onManualClose?.();
     // Scroll to accounts section
     setTimeout(() => {
       const el = document.querySelector('[data-section="accounts"]');
