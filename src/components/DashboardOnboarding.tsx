@@ -15,13 +15,6 @@ interface TourStep {
 
 const TOUR_STEPS: TourStep[] = [
   {
-    selector: '[data-tour="revenue-input"]',
-    title: "Umsatz eintragen",
-    description: "Hier trägst du jeden Tag deinen Umsatz ein. Das ist die Grundlage für deine Vergütung und deinen Bonus-Status.",
-    icon: Zap,
-    position: "bottom",
-  },
-  {
     selector: '[data-tour="stats-cards"]',
     title: "Deine Statistiken",
     description: "Hier siehst du deinen gestrigen Umsatz, Monatsumsatz, Gesamtumsatz und deinen aktuellen Verdienst auf einen Blick.",
