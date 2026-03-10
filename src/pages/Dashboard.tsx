@@ -29,9 +29,23 @@ import AccountMemoDialog from "@/components/AccountMemoDialog";
 import FrageMemoDialog from "@/components/FrageMemoDialog";
 import ModelRequestDialog, { EditRequestData } from "@/components/ModelRequestDialog";
 
-const GOLD_THRESHOLD = 3000;
-const STARTER_RATE = 0.2;
-const GOLD_RATE = 0.25;
+const BONUS_TIERS = [
+  { name: "Starter", emoji: "⚡", min: 0, max: 499, rate: 20 },
+  { name: "Bronze", emoji: "🥉", min: 500, max: 999, rate: 21 },
+  { name: "Silber", emoji: "🥈", min: 1000, max: 1499, rate: 22 },
+  { name: "Platin", emoji: "💠", min: 1500, max: 1999, rate: 23 },
+  { name: "Diamond", emoji: "💎", min: 2000, max: Infinity, rate: 24 },
+] as const;
+
+function getCurrentTier(monthlyRevenue: number) {
+  return BONUS_TIERS.find(t => monthlyRevenue >= t.min && monthlyRevenue <= t.max) || BONUS_TIERS[0];
+}
+
+function getNextTier(monthlyRevenue: number) {
+  const currentIdx = BONUS_TIERS.findIndex(t => monthlyRevenue >= t.min && monthlyRevenue <= t.max);
+  if (currentIdx < BONUS_TIERS.length - 1) return BONUS_TIERS[currentIdx + 1];
+  return null;
+}
 
 // Animated counter hook
 function useAnimatedCounter(target: number, duration = 1200) {
