@@ -77,7 +77,7 @@ export default function RevenueChart({ userId }: RevenueChartProps) {
       </div>
       <div className="h-[120px] w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
+          <AreaChart data={data} margin={{ top: 4, right: 8, bottom: 0, left: 8 }}>
             <defs>
               <linearGradient id="goldGradient" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="0%" stopColor="hsl(43, 76%, 46%)" stopOpacity={0.4} />
@@ -93,8 +93,9 @@ export default function RevenueChart({ userId }: RevenueChartProps) {
             <YAxis
               axisLine={false}
               tickLine={false}
-              tick={{ fontSize: 10, fill: "hsl(0, 0%, 55%)" }}
-              tickFormatter={(v) => `${v}€`}
+              tick={{ fontSize: 9, fill: "hsl(0, 0%, 55%)" }}
+              tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toLocaleString("de-DE")}k` : `${v}€`}
+              width={35}
             />
             <Tooltip
               contentStyle={{
