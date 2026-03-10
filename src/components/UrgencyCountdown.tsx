@@ -37,11 +37,14 @@ const getPersistedSpots = (): number => {
     }
 
     const current = parseInt(stored, 10);
+    // Once at 1, stay at 1 forever
+    if (current <= 1) return 1;
+    
     // Every reload: 60% chance to lose a spot (min 1)
     const newVisits = visits + 1;
     localStorage.setItem(VISITS_KEY, String(newVisits));
 
-    if (current > 1 && Math.random() < 0.6) {
+    if (Math.random() < 0.6) {
       const next = current - 1;
       localStorage.setItem(SPOTS_KEY, String(next));
       return next;
