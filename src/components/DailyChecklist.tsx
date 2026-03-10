@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { ClipboardCheck, Copy, Check, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import GoldenAudioPlayer from "@/components/GoldenAudioPlayer";
+import { useSoundEffects } from "@/hooks/useSoundEffects";
 
 const TASKS = [
   { id: 1, label: "Hast du bis zu 6 MassDM's gemacht?", audioHint: "/audio/massdm-info.mp3", audioLabel: "Wieso ist das wichtig?", massDmPopup: true, massDmPopupLabel: "Muss ich 6 MassDMs machen?" },
