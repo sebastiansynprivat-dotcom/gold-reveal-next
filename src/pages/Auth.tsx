@@ -308,7 +308,7 @@ const Auth = () => {
             {isSignUp ? "Erstelle ein kostenloses Konto bei SheX" : "Willkommen zurück"}
           </h1>
           <p className="text-muted-foreground text-sm text-center mb-7">
-            {isSignUp ? "Erstelle dein Konto, um loszulegen" : "Melde dich an, um weiterzumachen"}
+            {isSignUp ? "Erstelle dein kostenloses Konto, um deinen Account zu bekommen und damit Geld zu verdienen." : "Melde dich an, um weiterzumachen"}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
