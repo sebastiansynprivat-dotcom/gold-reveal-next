@@ -9,45 +9,20 @@ import VideoThumbnail from "@/components/VideoThumbnail";
 const Index = () => {
   const { updateProgress } = useProgress();
   const [showButton, setShowButton] = useState(false);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-  const playerReadyRef = useRef(false);
 
-  const handleMessage = useCallback((event: MessageEvent) => {
-    if (!event.origin.includes("loom.com")) return;
-    try {
-      const data = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
-
-      if (data?.context === "player.js" && data?.event === "ready" && !playerReadyRef.current) {
-        playerReadyRef.current = true;
-        iframeRef.current?.contentWindow?.postMessage(
-          JSON.stringify({ context: "player.js", method: "addEventListener", value: "timeupdate" }), "*"
-        );
-        iframeRef.current?.contentWindow?.postMessage(
-          JSON.stringify({ context: "player.js", method: "addEventListener", value: "ended" }), "*"
-        );
-      }
-
-      if (data?.context === "player.js" && data?.event === "ended") {
-        setShowButton(true);
-        updateProgress({ video_completed: true, current_step: "quiz" });
-      }
-
-      if (data?.context === "player.js" && data?.event === "timeupdate" && data?.value) {
-        const { seconds, duration } = data.value;
-        if (duration > 0 && seconds / duration >= 0.9) {
-          setShowButton(true);
-          updateProgress({ video_completed: true, current_step: "quiz" });
-        }
-      }
-    } catch {
-      // Ignore non-JSON messages
+  const handleVideoProgress = (percent: number) => {
+    if (percent >= 0.9 && !showButton) {
+      setShowButton(true);
+      updateProgress({ video_completed: true, current_step: "quiz" });
     }
-  }, [updateProgress]);
+  };
 
-  useEffect(() => {
-    window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
-  }, [handleMessage]);
+  const handleVideoEnd = () => {
+    if (!showButton) {
+      setShowButton(true);
+      updateProgress({ video_completed: true, current_step: "quiz" });
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-start px-4 py-12 md:py-20 relative">
