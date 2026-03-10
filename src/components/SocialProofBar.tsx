@@ -39,7 +39,7 @@ const syncChattersWithSpots = (): number => {
 };
 
 const SocialProofBar = () => {
-  const [activeCount] = useState(getPersistedChatters);
+  const [activeCount] = useState(syncChattersWithSpots);
 
   return (
     <motion.div
