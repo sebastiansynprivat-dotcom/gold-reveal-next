@@ -663,6 +663,10 @@ export default function Dashboard() {
             const input = document.querySelector('input[placeholder="Umsatz €"], input[placeholder="€"]') as HTMLInputElement;
             if (input) { input.focus(); input.scrollIntoView({ behavior: "smooth", block: "center" }); }
           }}
+          onScrollToAccount={() => {
+            const el = document.querySelector('[data-section="accounts"]');
+            if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+          }}
         />
 
         {/* PWA Install To-Do */}
@@ -714,6 +718,7 @@ export default function Dashboard() {
           whileInView="visible"
           viewport={{ once: true, margin: "-50px" }}
           className="glass-card-subtle rounded-xl overflow-hidden card-inner-glow card-top-line"
+          data-section="accounts"
         >
           <button
             onClick={() => setAccountsOpen(!accountsOpen)}
