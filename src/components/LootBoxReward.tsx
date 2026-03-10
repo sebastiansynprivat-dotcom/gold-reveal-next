@@ -5,12 +5,12 @@ import confetti from "canvas-confetti";
 import { Gift } from "lucide-react";
 
 const MILESTONES = [
-  { amount: 500, tier: "Bronze 🥉", rate: "21%", rewards: ["Grind Starter 🔥", "First Blood 💪", "Hustle Rookie ⚡"] },
-  { amount: 1000, tier: "Silber 🥈", rate: "22%", rewards: ["Cash Hunter 💰", "Grind Master ⚡", "Money Maker 🔥"] },
-  { amount: 1500, tier: "Gold 🏆", rate: "23%", rewards: ["Gold Digger 👑", "Revenue King 💎", "Profit Machine 🚀"] },
-  { amount: 2000, tier: "Platin 💠", rate: "24%", rewards: ["Platin Player 💠", "Top Earner 🏅", "Elite Chatter 🎯"] },
-  { amount: 3000, tier: "Diamond 💎", rate: "25%", rewards: ["Diamond Hands 💎", "Legendary Grinder 🔱", "Cash Machine 🤑"] },
-  { amount: 50000, tier: "Titan 🔱", rate: "35%", rewards: ["Titan Lord 🔱", "Unstoppable 👑", "God Mode 🌟"] },
+  { amount: 500, tier: "Bronze", emoji: "🥉", rate: "21%" },
+  { amount: 1000, tier: "Silber", emoji: "🥈", rate: "22%" },
+  { amount: 1500, tier: "Gold", emoji: "🏆", rate: "23%" },
+  { amount: 2000, tier: "Platin", emoji: "💠", rate: "24%" },
+  { amount: 3000, tier: "Diamond", emoji: "💎", rate: "25%" },
+  { amount: 50000, tier: "Titan", emoji: "🔱", rate: "35%" },
 ];
 
 function getStorageKey() {
@@ -18,31 +18,74 @@ function getStorageKey() {
   return `lootbox_unlocked_${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 }
 
-function getUnlocked(): Record<number, string> {
+function getUnlocked(): Record<number, boolean> {
   try {
     return JSON.parse(localStorage.getItem(getStorageKey()) || "{}");
   } catch { return {}; }
 }
 
-function saveUnlocked(data: Record<number, string>) {
+function saveUnlocked(data: Record<number, boolean>) {
   localStorage.setItem(getStorageKey(), JSON.stringify(data));
 }
 
 type Phase = "idle" | "shake" | "open" | "reveal";
 
+// Radial light rays behind the emoji
+function LightRays() {
+  return (
+    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+      {Array.from({ length: 12 }).map((_, i) => (
+        <motion.div
+          key={i}
+          initial={{ opacity: 0, scaleY: 0 }}
+          animate={{ opacity: [0, 0.6, 0], scaleY: [0.3, 1, 0.3] }}
+          transition={{ duration: 2, repeat: Infinity, delay: i * 0.15, ease: "easeInOut" }}
+          className="absolute w-[2px] h-20 origin-bottom"
+          style={{
+            transform: `rotate(${i * 30}deg)`,
+            background: "linear-gradient(to top, hsl(43 76% 46% / 0.5), transparent)",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+// Floating particles on reveal
+function FloatingParticles() {
+  return (
+    <>
+      {Array.from({ length: 8 }).map((_, i) => (
+        <motion.div
+          key={i}
+          initial={{ opacity: 0, y: 0, x: 0, scale: 0 }}
+          animate={{
+            opacity: [0, 1, 0],
+            y: [0, -60 - Math.random() * 40],
+            x: [(Math.random() - 0.5) * 80],
+            scale: [0, 1, 0.5],
+          }}
+          transition={{ duration: 1.5 + Math.random(), delay: 0.2 + i * 0.1, ease: "easeOut" }}
+          className="absolute text-sm pointer-events-none"
+          style={{ bottom: "40%", left: `${30 + Math.random() * 40}%` }}
+        >
+          {["✨", "⭐", "💫", "🌟"][i % 4]}
+        </motion.div>
+      ))}
+    </>
+  );
+}
+
 export default function LootBoxReward({ monthlyRevenue }: { monthlyRevenue: number }) {
   const [phase, setPhase] = useState<Phase>("idle");
   const [currentMilestone, setCurrentMilestone] = useState<typeof MILESTONES[0] | null>(null);
-  const [reward, setReward] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
 
-  // Check for new milestones
   useEffect(() => {
     const unlocked = getUnlocked();
     for (const ms of MILESTONES) {
       if (monthlyRevenue >= ms.amount && !unlocked[ms.amount]) {
         setCurrentMilestone(ms);
-        setReward(ms.rewards[Math.floor(Math.random() * ms.rewards.length)]);
         setPhase("shake");
         setDialogOpen(true);
         break;
@@ -55,20 +98,27 @@ export default function LootBoxReward({ monthlyRevenue }: { monthlyRevenue: numb
     setPhase("open");
     setTimeout(() => {
       setPhase("reveal");
-      confetti({
-        particleCount: 200,
-        spread: 100,
-        origin: { y: 0.5 },
-        colors: ["#c4973b", "#e8c96b", "#a07c2a", "#f5d98a", "#ffffff"],
-      });
-      // Save as unlocked
+      // Gold confetti burst
+      const end = Date.now() + 1500;
+      const fire = () => {
+        confetti({
+          particleCount: 30,
+          spread: 70,
+          startVelocity: 40,
+          origin: { x: Math.random(), y: 0.5 },
+          colors: ["#c4973b", "#e8c96b", "#a07c2a", "#f5d98a", "#fff8e1"],
+          ticks: 100,
+        });
+        if (Date.now() < end) requestAnimationFrame(fire);
+      };
+      fire();
       if (currentMilestone) {
         const unlocked = getUnlocked();
-        unlocked[currentMilestone.amount] = reward;
+        unlocked[currentMilestone.amount] = true;
         saveUnlocked(unlocked);
       }
-    }, 600);
-  }, [phase, currentMilestone, reward]);
+    }, 700);
+  }, [phase, currentMilestone]);
 
   const handleClose = () => {
     setDialogOpen(false);
@@ -76,12 +126,11 @@ export default function LootBoxReward({ monthlyRevenue }: { monthlyRevenue: numb
     setCurrentMilestone(null);
   };
 
-  // Demo trigger
+  // Demo
   const [demoTriggered, setDemoTriggered] = useState(false);
   const triggerDemo = () => {
-    const demoMs = MILESTONES[0];
+    const demoMs = MILESTONES[Math.floor(Math.random() * MILESTONES.length)];
     setCurrentMilestone(demoMs);
-    setReward(demoMs.rewards[Math.floor(Math.random() * demoMs.rewards.length)]);
     setPhase("shake");
     setDialogOpen(true);
     setDemoTriggered(true);
@@ -89,7 +138,6 @@ export default function LootBoxReward({ monthlyRevenue }: { monthlyRevenue: numb
 
   return (
     <>
-      {/* Demo Button */}
       {!demoTriggered && (
         <button
           onClick={triggerDemo}
@@ -104,85 +152,148 @@ export default function LootBoxReward({ monthlyRevenue }: { monthlyRevenue: numb
       )}
 
       <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) handleClose(); }}>
-        <DialogContent className="max-w-sm text-center">
+        <DialogContent className="max-w-xs sm:max-w-sm text-center overflow-visible border-accent/30">
           <DialogTitle className="sr-only">Meilenstein erreicht</DialogTitle>
           <DialogDescription className="sr-only">Du hast einen neuen Meilenstein erreicht</DialogDescription>
-          
+
           <AnimatePresence mode="wait">
+            {/* PHASE 1: Shaking box */}
             {phase === "shake" && (
               <motion.div
                 key="shake"
-                className="flex flex-col items-center gap-4 py-6 cursor-pointer select-none"
+                className="flex flex-col items-center gap-5 py-8 cursor-pointer select-none"
                 onClick={handleBoxClick}
+                exit={{ opacity: 0, scale: 0.8 }}
               >
-                <p className="text-xs text-muted-foreground uppercase tracking-widest">Meilenstein erreicht!</p>
-                <motion.div
-                  animate={{
-                    rotate: [0, -5, 5, -5, 5, -3, 3, 0],
-                    scale: [1, 1.02, 1.02, 1.02, 1.02, 1.01, 1.01, 1],
-                  }}
-                  transition={{ duration: 0.6, repeat: Infinity, repeatDelay: 0.8 }}
-                  className="text-7xl"
-                >
-                  🎁
-                </motion.div>
                 <motion.p
-                  animate={{ opacity: [0.4, 1, 0.4] }}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-[10px] uppercase tracking-[0.25em] text-accent font-semibold"
+                >
+                  Neue Stufe freigeschaltet
+                </motion.p>
+
+                <div className="relative">
+                  {/* Glow ring behind box */}
+                  <motion.div
+                    animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="absolute inset-0 -m-6 rounded-full"
+                    style={{ background: "radial-gradient(circle, hsl(43 76% 46% / 0.2), transparent 70%)" }}
+                  />
+                  <motion.div
+                    animate={{
+                      rotate: [0, -8, 8, -8, 8, -4, 4, 0],
+                      scale: [1, 1.05, 1.05, 1.05, 1.05, 1.02, 1.02, 1],
+                    }}
+                    transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 1 }}
+                    className="text-8xl relative z-10 drop-shadow-[0_0_20px_hsl(43_76%_46%/0.4)]"
+                  >
+                    🎁
+                  </motion.div>
+                </div>
+
+                <motion.p
+                  animate={{ opacity: [0.3, 1, 0.3] }}
                   transition={{ duration: 1.5, repeat: Infinity }}
-                  className="text-sm text-accent font-medium"
+                  className="text-sm text-accent/80 font-medium"
                 >
                   Tippe um zu öffnen...
                 </motion.p>
               </motion.div>
             )}
 
+            {/* PHASE 2: Box explodes */}
             {phase === "open" && (
               <motion.div
                 key="open"
-                initial={{ scale: 1 }}
-                animate={{ scale: [1, 1.3, 0], rotate: [0, 0, 180] }}
-                transition={{ duration: 0.6 }}
-                className="flex items-center justify-center py-10"
+                className="flex items-center justify-center py-12 relative"
               >
-                <span className="text-7xl">🎁</span>
+                <motion.div
+                  initial={{ scale: 1, rotate: 0 }}
+                  animate={{
+                    scale: [1, 1.4, 1.6, 0],
+                    rotate: [0, -10, 10, 0],
+                    filter: ["brightness(1)", "brightness(1.5)", "brightness(2)", "brightness(3)"],
+                  }}
+                  transition={{ duration: 0.7, ease: "easeIn" }}
+                  className="text-8xl"
+                >
+                  🎁
+                </motion.div>
+                {/* Explosion ring */}
+                <motion.div
+                  initial={{ scale: 0, opacity: 0.8 }}
+                  animate={{ scale: 4, opacity: 0 }}
+                  transition={{ duration: 0.6, delay: 0.4 }}
+                  className="absolute w-16 h-16 rounded-full"
+                  style={{ background: "radial-gradient(circle, hsl(43 76% 46% / 0.6), transparent)" }}
+                />
               </motion.div>
             )}
 
+            {/* PHASE 3: Reveal */}
             {phase === "reveal" && currentMilestone && (
               <motion.div
                 key="reveal"
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                transition={{ type: "spring", damping: 12, stiffness: 200 }}
-                className="flex flex-col items-center gap-4 py-6"
+                transition={{ type: "spring", damping: 10, stiffness: 150 }}
+                className="flex flex-col items-center gap-3 py-6 relative"
               >
-                <motion.div
-                  initial={{ y: -20 }}
-                  animate={{ y: 0 }}
-                  className="text-5xl"
-                >
-                  🏆
-                </motion.div>
-                <div className="space-y-2">
-                  <p className="text-lg font-bold text-foreground">
-                    {currentMilestone.amount.toLocaleString("de-DE")}€ erreicht!
-                  </p>
-                  <div className="glass-card-subtle rounded-lg px-4 py-3 gold-glow">
-                    <p className="text-xs text-muted-foreground mb-1">Neuer Titel freigeschaltet</p>
-                    <p className="text-xl font-bold text-gold-gradient">{reward}</p>
-                  </div>
-                  <div className="glass-card-subtle rounded-lg px-4 py-2 mt-2">
-                    <p className="text-xs text-muted-foreground mb-0.5">Neue Stufe</p>
-                    <p className="text-lg font-bold text-foreground">{currentMilestone.tier}</p>
-                    <p className="text-sm text-accent font-semibold">{currentMilestone.rate} Revenue Share</p>
-                  </div>
+                <FloatingParticles />
+
+                {/* Big emoji with rays */}
+                <div className="relative w-32 h-32 flex items-center justify-center">
+                  <LightRays />
+                  <motion.div
+                    initial={{ scale: 0, rotate: -180 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ type: "spring", damping: 8, stiffness: 100, delay: 0.1 }}
+                    className="text-7xl relative z-10 drop-shadow-[0_0_30px_hsl(43_76%_46%/0.5)]"
+                  >
+                    {currentMilestone.emoji}
+                  </motion.div>
                 </div>
-                <button
+
+                {/* Tier name */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="space-y-1"
+                >
+                  <p className="text-2xl font-extrabold text-gold-gradient-shimmer tracking-wide">
+                    {currentMilestone.tier}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {currentMilestone.amount.toLocaleString("de-DE")}€ Monatsumsatz erreicht
+                  </p>
+                </motion.div>
+
+                {/* Rate card */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.5 }}
+                  className="gold-gradient-border-animated rounded-xl px-6 py-3 text-center mt-1"
+                >
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-0.5">Neue Rate</p>
+                  <p className="text-3xl font-extrabold text-gold-gradient">{currentMilestone.rate}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Revenue Share</p>
+                </motion.div>
+
+                {/* Close */}
+                <motion.button
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.8 }}
                   onClick={handleClose}
-                  className="mt-2 px-6 py-2 rounded-lg bg-accent/20 text-accent text-sm font-medium hover:bg-accent/30 transition-colors"
+                  className="mt-3 px-8 py-2.5 rounded-xl gold-glow text-sm font-semibold text-accent-foreground transition-all hover:scale-105"
+                  style={{ background: "linear-gradient(135deg, hsl(43 56% 52%), hsl(43 76% 46%))" }}
                 >
                   Weiter
-                </button>
+                </motion.button>
               </motion.div>
             )}
           </AnimatePresence>
