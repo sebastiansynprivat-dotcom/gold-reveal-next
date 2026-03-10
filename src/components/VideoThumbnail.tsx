@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import videoThumbnail from "@/assets/video-thumbnail.jpg";
+import videoThumbnail from "@/assets/video-thumbnail.png";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
