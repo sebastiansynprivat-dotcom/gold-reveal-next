@@ -12,9 +12,10 @@ interface QuickActionBarProps {
 const actions = [
   { icon: User, label: "Mein Account", action: "account" },
   { icon: Zap, label: "Umsatz", action: "revenue" },
+  { icon: Crown, label: "Bonusmodell", action: "bonus" },
   { icon: FileText, label: "Auszahlung", action: "invoice" },
   { icon: Trophy, label: "Bestenliste", action: "leaderboard" },
-  { icon: HelpCircle, label: "Frage", action: "question" },
+  { icon: HelpCircle, label: "Ich habe eine Frage", action: "question" },
 ] as const;
 
 export default function QuickActionBar({ onAskQuestion, onFocusRevenue, onScrollToAccount }: QuickActionBarProps) {
