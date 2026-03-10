@@ -1293,7 +1293,7 @@ function BonusModelSection({
                 <p className="text-[10px] lg:text-xs text-muted-foreground">30 Tage in Folge mind. 100€ Umsatz</p>
               </div>
             </div>
-            <span className="font-bold text-accent text-sm lg:text-base">Spezialbonus</span>
+            
           </div>
           <MonthlyStreakTracker dailyRevenue={umsatz} />
         </motion.div>
