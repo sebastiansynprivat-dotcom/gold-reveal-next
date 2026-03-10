@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Save, CheckCircle2, Award, Zap, HelpCircle, FileText, Clock, Users, Pencil, ChevronDown, ChevronLeft, ChevronRight, Copy, Smartphone, Mic, MessageSquare, ExternalLink, Gift, Crown, Diamond, Medal, Eye, EyeOff, Check, Trophy, Volume2, VolumeX } from "lucide-react";
+import { Save, CheckCircle2, Award, Zap, HelpCircle, FileText, Clock, Users, Pencil, ChevronDown, ChevronLeft, ChevronRight, Copy, Smartphone, Mic, MessageSquare, ExternalLink, Gift, Crown, Diamond, Medal, Eye, EyeOff, Check, Trophy } from "lucide-react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -282,8 +282,7 @@ export default function Dashboard() {
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [hadConfetti, setHadConfetti] = useState(false);
   const [savingRevenue, setSavingRevenue] = useState(false);
-  const { playCoinSound, playLevelUpSound, toggleMute, getMuted } = useSoundEffects();
-  const [sfxMuted, setSfxMuted] = useState(() => getMuted());
+  const { playCoinSound, playLevelUpSound } = useSoundEffects();
   const prevTierRef = useRef<string | null>(null);
 
   // Load revenue data
@@ -412,13 +411,6 @@ export default function Dashboard() {
             <div className="shrink-0">
               <h1 className="text-base lg:text-lg font-bold text-foreground leading-tight">Chatter Dashboard</h1>
             </div>
-            <button
-              onClick={() => { const m = toggleMute(); setSfxMuted(m); }}
-              className="shrink-0 p-1.5 rounded-lg hover:bg-secondary/80 transition-colors text-muted-foreground hover:text-accent"
-              title={sfxMuted ? "Sounds einschalten" : "Sounds ausschalten"}
-            >
-              {sfxMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-            </button>
             <div className="h-8 w-px bg-border shrink-0" />
             <div className="flex items-center gap-2">
               {telegramSaved ?
@@ -491,12 +483,6 @@ export default function Dashboard() {
               <div className="flex-1 min-w-0">
                 <h1 className="text-sm font-bold text-foreground leading-tight">Chatter Dashboard</h1>
               </div>
-              <button
-                onClick={() => { const m = toggleMute(); setSfxMuted(m); }}
-                className="shrink-0 p-1 rounded-lg hover:bg-secondary/80 transition-colors text-muted-foreground hover:text-accent"
-              >
-                {sfxMuted ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
-              </button>
               <Badge className={`shrink-0 text-[10px] ${isTopTier ? "bg-accent text-accent-foreground gold-glow" : "bg-secondary text-secondary-foreground"}`}>
                 <Award className="h-3 w-3 mr-1" />{currentTier.emoji} {currentTier.name}
               </Badge>
