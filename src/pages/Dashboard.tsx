@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Save, CheckCircle2, Award, Zap, HelpCircle, FileText, Clock, Users, Pencil, ChevronDown, ChevronLeft, ChevronRight, Copy, Smartphone, Mic, MessageSquare, ExternalLink, Gift, Crown, Diamond, Medal, Eye, EyeOff, Check, Trophy } from "lucide-react";
+import { Save, CheckCircle2, Award, Zap, HelpCircle, FileText, Clock, Users, Pencil, ChevronDown, ChevronLeft, ChevronRight, Copy, Smartphone, Mic, MessageSquare, ExternalLink, Gift, Crown, Diamond, Medal, Eye, EyeOff, Check, Trophy, Volume2, VolumeX } from "lucide-react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo.png";
 import GoldParticles from "@/components/GoldParticles";
+import LiveActivityTicker from "@/components/LiveActivityTicker";
+import { useSoundEffects } from "@/hooks/useSoundEffects";
 import { format, endOfMonth, addMonths, differenceInDays } from "date-fns";
 import { de } from "date-fns/locale";
 import HomescreenTutorial from "@/components/HomescreenTutorial";
@@ -280,6 +282,9 @@ export default function Dashboard() {
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [hadConfetti, setHadConfetti] = useState(false);
   const [savingRevenue, setSavingRevenue] = useState(false);
+  const { playCoinSound, playLevelUpSound, toggleMute, getMuted } = useSoundEffects();
+  const [sfxMuted, setSfxMuted] = useState(() => getMuted());
+  const prevTierRef = useRef<string | null>(null);
 
   // Load revenue data
   useEffect(() => {
@@ -329,8 +334,9 @@ export default function Dashboard() {
     if (error) {
       toast.error("Fehler beim Speichern des Umsatzes");
     }
+    playCoinSound();
     setSavingRevenue(false);
-  }, [user]);
+  }, [user, playCoinSound]);
 
   const handleUmsatzChange = useCallback((val: number) => {
     setUmsatz(val);
@@ -382,6 +388,14 @@ export default function Dashboard() {
     if (!isTopTier) setHadConfetti(false);
   }, [isTopTier, hadConfetti, fireConfetti]);
 
+  // Tier change sound
+  useEffect(() => {
+    if (prevTierRef.current && prevTierRef.current !== currentTier.name) {
+      playLevelUpSound();
+    }
+    prevTierRef.current = currentTier.name;
+  }, [currentTier.name, playLevelUpSound]);
+
   return (
     <div className="min-h-screen bg-background pb-24">
       <GoldParticles spawnRate={0.25} maxParticles={20} baseOpacity={0.2} />
@@ -398,6 +412,13 @@ export default function Dashboard() {
             <div className="shrink-0">
               <h1 className="text-base lg:text-lg font-bold text-foreground leading-tight">Chatter Dashboard</h1>
             </div>
+            <button
+              onClick={() => { const m = toggleMute(); setSfxMuted(m); }}
+              className="shrink-0 p-1.5 rounded-lg hover:bg-secondary/80 transition-colors text-muted-foreground hover:text-accent"
+              title={sfxMuted ? "Sounds einschalten" : "Sounds ausschalten"}
+            >
+              {sfxMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+            </button>
             <div className="h-8 w-px bg-border shrink-0" />
             <div className="flex items-center gap-2">
               {telegramSaved ?
@@ -470,6 +491,12 @@ export default function Dashboard() {
               <div className="flex-1 min-w-0">
                 <h1 className="text-sm font-bold text-foreground leading-tight">Chatter Dashboard</h1>
               </div>
+              <button
+                onClick={() => { const m = toggleMute(); setSfxMuted(m); }}
+                className="shrink-0 p-1 rounded-lg hover:bg-secondary/80 transition-colors text-muted-foreground hover:text-accent"
+              >
+                {sfxMuted ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
+              </button>
               <Badge className={`shrink-0 text-[10px] ${isTopTier ? "bg-accent text-accent-foreground gold-glow" : "bg-secondary text-secondary-foreground"}`}>
                 <Award className="h-3 w-3 mr-1" />{currentTier.emoji} {currentTier.name}
               </Badge>
@@ -540,6 +567,9 @@ export default function Dashboard() {
       <main className="container max-w-5xl mx-auto p-4 lg:px-8 lg:py-8 space-y-5 lg:space-y-6">
         {/* Notification Banner */}
         <NotificationBanner />
+
+        {/* Live Activity Ticker */}
+        <LiveActivityTicker />
 
         {/* Stats Cards */}
         {/* Mobile: 2-col grid with full-width status */}

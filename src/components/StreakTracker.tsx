@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Flame, Check, Trophy, Copy, Send, Play } from "lucide-react";
 import { toast } from "sonner";
+import { useSoundEffects } from "@/hooks/useSoundEffects";
 import confetti from "canvas-confetti";
 import {
   Dialog,
@@ -81,6 +82,7 @@ export default function StreakTracker({ dailyRevenue }: { dailyRevenue: number }
   const [showStreakDialog, setShowStreakDialog] = useState(false);
   const [demoMode, setDemoMode] = useState(false);
   const [copied, setCopied] = useState(false);
+  const { playStreakSound } = useSoundEffects();
 
   const today = getToday();
   const displayStreak = demoMode ? buildDemoStreak() : streak;
@@ -94,6 +96,7 @@ export default function StreakTracker({ dailyRevenue }: { dailyRevenue: number }
       setStreak(updated);
       saveStreak(updated);
       toast.success("🔥 Tagesziel erreicht! Streak +1");
+      playStreakSound();
 
       const newConsecutive = getConsecutiveDays(updated.dates);
       if (newConsecutive >= STREAK_GOAL) {

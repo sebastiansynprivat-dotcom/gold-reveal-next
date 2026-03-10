@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { ClipboardCheck, Copy, Check, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import GoldenAudioPlayer from "@/components/GoldenAudioPlayer";
+import { useSoundEffects } from "@/hooks/useSoundEffects";
 
 const TASKS = [
   { id: 1, label: "Hast du bis zu 6 MassDM's gemacht?", audioHint: "/audio/massdm-info.mp3", audioLabel: "Wieso ist das wichtig?", massDmPopup: true, massDmPopupLabel: "Muss ich 6 MassDMs machen?" },
@@ -74,6 +75,7 @@ export default function DailyChecklist() {
   const [openAudioId, setOpenAudioId] = useState<number | null>(null);
   const [feedbackPopupOpen, setFeedbackPopupOpen] = useState(false);
   const [massDmPopupOpen, setMassDmPopupOpen] = useState(false);
+  const { playCheckSound } = useSoundEffects();
 
   useEffect(() => {
     localStorage.setItem(getTodayKey(), JSON.stringify([...completed]));
@@ -82,7 +84,12 @@ export default function DailyChecklist() {
   const toggle = (id: number) => {
     setCompleted((prev) => {
       const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+        playCheckSound();
+      }
       return next;
     });
   };
