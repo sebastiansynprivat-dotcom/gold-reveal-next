@@ -718,6 +718,7 @@ export default function Dashboard() {
           whileInView="visible"
           viewport={{ once: true, margin: "-50px" }}
           className="glass-card-subtle rounded-xl overflow-hidden card-inner-glow card-top-line"
+          data-section="accounts"
         >
           <button
             onClick={() => setAccountsOpen(!accountsOpen)}
