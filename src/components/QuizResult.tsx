@@ -173,22 +173,9 @@ const WeightedRouteButton = () => {
         return;
       }
 
-      // Get and increment the global counter for deterministic distribution
-      const { data: counterRow } = await supabase
-        .from("route_counter")
-        .select("id, counter")
-        .limit(1)
-        .single();
-
-      const currentCounter = counterRow?.counter || 0;
-
-      // Increment counter
-      if (counterRow) {
-        await supabase
-          .from("route_counter")
-          .update({ counter: currentCounter + 1 })
-          .eq("id", counterRow.id);
-      }
+      // Atomic: increment counter and get previous value in one step
+      const { data: counterResult } = await supabase.rpc("increment_route_counter");
+      const currentCounter = counterResult ?? 0;
 
       // Deterministic: use counter modulo total weight to pick route
       const totalWeight = routes.reduce((sum, r) => sum + r.weight, 0);
