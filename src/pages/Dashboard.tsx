@@ -353,10 +353,14 @@ export default function Dashboard() {
     return monthlyRevenue;
   }, [monthlyRevenue]);
 
-  const isGold = umsatz >= GOLD_THRESHOLD;
-  const rate = isGold ? GOLD_RATE : STARTER_RATE;
-  const verdienst = umsatz * rate;
-  const progressPct = Math.min(umsatz / GOLD_THRESHOLD * 100, 100);
+  const currentTier = getCurrentTier(monthlyRevenue);
+  const nextTier = getNextTier(monthlyRevenue);
+  const rate = currentTier.rate / 100;
+  const verdienst = monthlyRevenue * rate;
+  const isTopTier = !nextTier;
+  const progressToNext = nextTier
+    ? Math.min(((monthlyRevenue - currentTier.min) / (nextTier.min - currentTier.min)) * 100, 100)
+    : 100;
 
   const fireConfetti = useCallback(() => {
     confetti({
