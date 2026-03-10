@@ -58,7 +58,7 @@ const UrgencyCountdown = () => {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setTimeLeft(formatTime(getEndOfWeek().getTime() - Date.now()));
+      setTimeLeft(formatTime(getEndOfDay().getTime() - Date.now()));
     }, 1000);
     return () => clearInterval(interval);
   }, []);
