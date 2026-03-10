@@ -1096,7 +1096,7 @@ export default function Dashboard() {
         <div data-tour="massdm"><MassDmGenerator /></div>
 
         {/* Tägliche Aufgaben */}
-        <DailyChecklist />
+        <div data-tour="checklist"><DailyChecklist /></div>
 
         {/* Bonus Model - alles in einer Karte */}
         <BonusModelSection
