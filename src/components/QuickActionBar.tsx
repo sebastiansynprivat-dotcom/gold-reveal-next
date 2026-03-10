@@ -16,7 +16,7 @@ const actions = [
   { icon: HelpCircle, label: "Frage", action: "question" },
 ] as const;
 
-export default function QuickActionBar({ onAskQuestion, onFocusRevenue }: QuickActionBarProps) {
+export default function QuickActionBar({ onAskQuestion, onFocusRevenue, onScrollToAccount }: QuickActionBarProps) {
   const navigate = useNavigate();
 
   const handleAction = (action: string) => {

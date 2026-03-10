@@ -663,6 +663,10 @@ export default function Dashboard() {
             const input = document.querySelector('input[placeholder="Umsatz €"], input[placeholder="€"]') as HTMLInputElement;
             if (input) { input.focus(); input.scrollIntoView({ behavior: "smooth", block: "center" }); }
           }}
+          onScrollToAccount={() => {
+            const el = document.querySelector('[data-section="accounts"]');
+            if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+          }}
         />
 
         {/* PWA Install To-Do */}
