@@ -1293,7 +1293,7 @@ function BonusModelSection({
                 <p className="text-[10px] lg:text-xs text-muted-foreground">30 Tage in Folge mind. 100€ Umsatz</p>
               </div>
             </div>
-            <span className="font-bold text-accent text-sm lg:text-base">Spezialbonus</span>
+            
           </div>
           <MonthlyStreakTracker dailyRevenue={umsatz} />
         </motion.div>
@@ -1303,7 +1303,7 @@ function BonusModelSection({
         Deine Rate gilt für den <strong className="text-foreground">gesamten Monatsumsatz</strong> und wird automatisch angepasst.
       </p>
       <p className="text-[10px] lg:text-xs text-muted-foreground">
-        7 Tage × 30€ = <strong className="text-foreground">Account Upgrade</strong> · 30 Tage × 100€ = <strong className="text-foreground">Spezialbonus</strong>
+        7 Tage × 30€ = <strong className="text-foreground">Account Upgrade</strong> · 30 Tage × 100€ = <strong className="text-foreground">Diamond Stufe 💎</strong>
       </p>
     </motion.section>
   );
