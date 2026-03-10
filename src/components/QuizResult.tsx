@@ -177,15 +177,14 @@ const WeightedRouteButton = () => {
       const { data: counterResult } = await supabase.rpc("increment_route_counter");
       const currentCounter = counterResult ?? 0;
 
-      // Deterministic: use counter modulo total weight to pick route
+      // Bresenham-style: pick the route whose "debt" increases at this counter
       const totalWeight = routes.reduce((sum, r) => sum + r.weight, 0);
-      const position = currentCounter % totalWeight;
-      let accumulated = 0;
       let selectedPath = routes[0].target_path;
 
       for (const route of routes) {
-        accumulated += route.weight;
-        if (position < accumulated) {
+        const prev = Math.floor(currentCounter * route.weight / totalWeight);
+        const next = Math.floor((currentCounter + 1) * route.weight / totalWeight);
+        if (next > prev) {
           selectedPath = route.target_path;
           break;
         }
