@@ -57,9 +57,11 @@ interface Rect { left: number; top: number; width: number; height: number; }
 
 interface DashboardOnboardingProps {
   isFirstLogin: boolean;
+  manualOpen?: boolean;
+  onManualClose?: () => void;
 }
 
-export default function DashboardOnboarding({ isFirstLogin }: DashboardOnboardingProps) {
+export default function DashboardOnboarding({ isFirstLogin, manualOpen, onManualClose }: DashboardOnboardingProps) {
   const [active, setActive] = useState(false);
   const [step, setStep] = useState(0);
   const [rect, setRect] = useState<Rect | null>(null);
@@ -74,6 +76,14 @@ export default function DashboardOnboarding({ isFirstLogin }: DashboardOnboardin
     const timer = setTimeout(() => setActive(true), 2000);
     return () => clearTimeout(timer);
   }, [isFirstLogin]);
+
+  useEffect(() => {
+    if (manualOpen) {
+      setStep(0);
+      setRect(null);
+      setActive(true);
+    }
+  }, [manualOpen]);
 
   const measureElement = useCallback((stepIndex: number) => {
     const s = TOUR_STEPS[stepIndex];
@@ -141,6 +151,7 @@ export default function DashboardOnboarding({ isFirstLogin }: DashboardOnboardin
   const handleClose = () => {
     localStorage.setItem(ONBOARDING_KEY, "true");
     setActive(false);
+    onManualClose?.();
     // Scroll to accounts section
     setTimeout(() => {
       const el = document.querySelector('[data-section="accounts"]');

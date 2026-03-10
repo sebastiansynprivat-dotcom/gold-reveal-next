@@ -194,6 +194,7 @@ export default function Dashboard() {
   const [isFirstLogin, setIsFirstLogin] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
   const [showMemo, setShowMemo] = useState(false);
   const [showFrageMemo, setShowFrageMemo] = useState(false);
   const [isPwaInstalled, setIsPwaInstalled] = useState(() => {
@@ -431,7 +432,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-background pb-24">
       <GoldParticles spawnRate={0.25} maxParticles={20} baseOpacity={0.2} />
       <HomescreenTutorial isFirstLogin={isFirstLogin} manualOpen={showTutorial} onManualClose={() => setShowTutorial(false)} />
-      <DashboardOnboarding isFirstLogin={isFirstLogin} />
+      <DashboardOnboarding isFirstLogin={isFirstLogin} manualOpen={showOnboarding} onManualClose={() => setShowOnboarding(false)} />
       <PushNotificationDialog />
       <AccountMemoDialog open={showMemo} onOpenChange={setShowMemo} />
       <FrageMemoDialog open={showFrageMemo} onOpenChange={setShowFrageMemo} />
@@ -714,6 +715,18 @@ export default function Dashboard() {
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-foreground">Ich habe eine Frage</p>
             <p className="text-xs text-accent mt-0.5">Wo kann ich diese Frage stellen?</p>
+          </div>
+        </button>
+
+        {/* Dashboard Tour Button */}
+        <button
+          onClick={() => setShowOnboarding(true)}
+          className="w-full flex items-center gap-3 glass-card-subtle rounded-xl p-3 lg:p-4 border border-border/30 text-left cursor-pointer hover:bg-secondary/30 hover:border-border/50 transition-all"
+        >
+          <Eye className="h-5 w-5 text-muted-foreground shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-foreground">Dashboard-Tour starten</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Alle Bereiche kurz erklärt</p>
           </div>
         </button>
 
