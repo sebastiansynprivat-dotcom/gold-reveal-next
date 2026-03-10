@@ -24,7 +24,12 @@ let eventCounter = 0;
 
 function generateFallbackEvent(): TickerEvent {
   eventCounter++;
-  // ~25% chance: general milestone event (no amounts)
+  // Every ~50 events: big sale
+  if (eventCounter % 50 === 0) {
+    const amt = randomBigAmount();
+    return { id: `f-${Date.now()}-${Math.random()}`, text: `Ein Chatter hat gerade ${amt}€ Umsatz gemacht`, emoji: "💎", timestamp: Date.now() };
+  }
+  // ~25% chance: general milestone event
   if (Math.random() < 0.25) {
     const milestones = [
       { text: "Ein Chatter hat sein Tagesziel erreicht!", emoji: "🎯" },
