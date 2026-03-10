@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import confetti from "canvas-confetti";
 import { Gift } from "lucide-react";
+import goldenBox from "@/assets/golden-lootbox.png";
 
 const MILESTONES = [
   { amount: 500, tier: "Bronze", emoji: "🥉", rate: "21%" },
@@ -84,40 +85,6 @@ function RevealSparkles() {
   );
 }
 
-// Gold-themed box SVG
-function GoldBox({ size = 96 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* Box shadow */}
-      <ellipse cx="50" cy="88" rx="30" ry="6" fill="hsl(43 56% 52% / 0.15)" />
-      {/* Box body */}
-      <rect x="20" y="45" width="60" height="40" rx="4" fill="url(#boxGrad)" stroke="hsl(43 76% 46% / 0.6)" strokeWidth="1.5" />
-      {/* Box lid */}
-      <rect x="16" y="35" width="68" height="14" rx="3" fill="url(#lidGrad)" stroke="hsl(43 76% 46% / 0.7)" strokeWidth="1.5" />
-      {/* Ribbon vertical */}
-      <rect x="45" y="35" width="10" height="50" fill="hsl(43 76% 46% / 0.4)" />
-      {/* Ribbon bow */}
-      <ellipse cx="50" cy="35" rx="14" ry="8" fill="hsl(43 76% 46% / 0.5)" stroke="hsl(43 76% 46% / 0.7)" strokeWidth="1" />
-      <circle cx="50" cy="35" r="4" fill="hsl(43 76% 46% / 0.8)" />
-      {/* Shine */}
-      <rect x="25" y="50" width="8" height="3" rx="1.5" fill="hsl(43 56% 72% / 0.5)" />
-      <rect x="25" y="56" width="5" height="2" rx="1" fill="hsl(43 56% 72% / 0.3)" />
-      <defs>
-        <linearGradient id="boxGrad" x1="20" y1="45" x2="80" y2="85" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="hsl(43 40% 18%)" />
-          <stop offset="50%" stopColor="hsl(43 50% 25%)" />
-          <stop offset="100%" stopColor="hsl(43 40% 15%)" />
-        </linearGradient>
-        <linearGradient id="lidGrad" x1="16" y1="35" x2="84" y2="49" gradientUnits="userSpaceOnUse">
-          <stop offset="0%" stopColor="hsl(43 50% 22%)" />
-          <stop offset="40%" stopColor="hsl(43 60% 30%)" />
-          <stop offset="100%" stopColor="hsl(43 50% 20%)" />
-        </linearGradient>
-      </defs>
-    </svg>
-  );
-}
-
 export default function LootBoxReward({ monthlyRevenue }: { monthlyRevenue: number }) {
   const [phase, setPhase] = useState<Phase>("idle");
   const [currentMilestone, setCurrentMilestone] = useState<typeof MILESTONES[0] | null>(null);
@@ -167,46 +134,43 @@ export default function LootBoxReward({ monthlyRevenue }: { monthlyRevenue: numb
     setCurrentMilestone(null);
   };
 
-  const [demoTriggered, setDemoTriggered] = useState(false);
   const triggerDemo = () => {
     const demoMs = MILESTONES[Math.floor(Math.random() * MILESTONES.length)];
     setCurrentMilestone(demoMs);
     setPhase("shake");
     setDialogOpen(true);
-    setDemoTriggered(true);
   };
 
   return (
     <>
-      {!demoTriggered && (
-        <button
-          onClick={triggerDemo}
-          className="w-full flex items-center gap-3 glass-card-subtle rounded-xl p-3 lg:p-4 border border-accent/30 bg-accent/5 text-left cursor-pointer hover:bg-accent/10 hover:border-accent/50 transition-all"
-        >
-          <Gift className="h-5 w-5 text-accent shrink-0 animate-pulse" />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-foreground">🧪 Demo: Loot-Box Meilenstein öffnen</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Klicke hier um die Loot-Box Animation zu testen</p>
-          </div>
-        </button>
-      )}
+      {/* Demo Button – always visible */}
+      <button
+        onClick={triggerDemo}
+        className="w-full flex items-center gap-3 glass-card-subtle rounded-xl p-3 lg:p-4 border border-accent/30 bg-accent/5 text-left cursor-pointer hover:bg-accent/10 hover:border-accent/50 transition-all"
+      >
+        <Gift className="h-5 w-5 text-accent shrink-0 animate-pulse" />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-foreground">🧪 Demo: Loot-Box Meilenstein öffnen</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Klicke hier um die Loot-Box Animation zu testen</p>
+        </div>
+      </button>
 
       <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) handleClose(); }}>
         <DialogContent className="max-w-xs sm:max-w-sm text-center overflow-visible border-accent/20 p-0">
           <DialogTitle className="sr-only">Meilenstein erreicht</DialogTitle>
           <DialogDescription className="sr-only">Du hast einen neuen Meilenstein erreicht</DialogDescription>
 
-          {/* Inner gold gradient overlay at top */}
-          <div className="absolute top-0 left-0 right-0 h-32 pointer-events-none rounded-t-lg" style={{
-            background: "radial-gradient(ellipse at 50% 0%, hsl(43 76% 46% / 0.08) 0%, transparent 70%)"
+          {/* Top gold radial glow */}
+          <div className="absolute top-0 left-0 right-0 h-40 pointer-events-none rounded-t-lg" style={{
+            background: "radial-gradient(ellipse at 50% 0%, hsl(43 76% 46% / 0.1) 0%, transparent 70%)"
           }} />
 
           <AnimatePresence mode="wait">
-            {/* PHASE 1: Shaking gold box */}
+            {/* PHASE 1: Rotating golden box */}
             {phase === "shake" && (
               <motion.div
                 key="shake"
-                className="flex flex-col items-center gap-4 py-10 px-6 cursor-pointer select-none relative"
+                className="flex flex-col items-center gap-3 py-8 px-6 cursor-pointer select-none relative"
                 onClick={handleBoxClick}
                 exit={{ opacity: 0, scale: 0.8 }}
               >
@@ -218,24 +182,31 @@ export default function LootBoxReward({ monthlyRevenue }: { monthlyRevenue: numb
                   ★ Neue Stufe ★
                 </motion.p>
 
-                <div className="relative">
-                  {/* Pulsing glow */}
+                <div className="relative my-2">
+                  {/* Pulsing floor glow */}
                   <motion.div
-                    animate={{ scale: [1, 1.3, 1], opacity: [0.15, 0.35, 0.15] }}
+                    animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.4, 0.2] }}
                     transition={{ duration: 2, repeat: Infinity }}
-                    className="absolute -inset-8 rounded-full"
-                    style={{ background: "radial-gradient(circle, hsl(43 76% 46% / 0.3), transparent 65%)" }}
+                    className="absolute -inset-6 rounded-full"
+                    style={{ background: "radial-gradient(circle, hsl(43 76% 46% / 0.25), transparent 60%)" }}
                   />
+                  {/* Rotating + bouncing box */}
                   <motion.div
                     animate={{
-                      rotate: [0, -6, 6, -6, 6, -3, 3, 0],
-                      y: [0, -3, 0, -3, 0, -1, 0, 0],
+                      rotateY: [0, 360],
+                      y: [0, -8, 0],
                     }}
-                    transition={{ duration: 0.6, repeat: Infinity, repeatDelay: 0.8 }}
+                    transition={{
+                      rotateY: { duration: 4, repeat: Infinity, ease: "linear" },
+                      y: { duration: 1.5, repeat: Infinity, ease: "easeInOut" },
+                    }}
                     className="relative z-10"
-                    style={{ filter: "drop-shadow(0 0 24px hsl(43 76% 46% / 0.35))" }}
+                    style={{
+                      perspective: "600px",
+                      filter: "drop-shadow(0 8px 24px hsl(43 76% 46% / 0.4))",
+                    }}
                   >
-                    <GoldBox size={110} />
+                    <img src={goldenBox} alt="Golden Loot Box" className="w-32 h-32 object-contain" />
                   </motion.div>
                 </div>
 
@@ -258,22 +229,22 @@ export default function LootBoxReward({ monthlyRevenue }: { monthlyRevenue: numb
                 <motion.div
                   initial={{ scale: 1, rotate: 0 }}
                   animate={{
-                    scale: [1, 1.2, 1.4, 0],
-                    rotate: [0, -5, 5, 0],
-                    opacity: [1, 1, 0.8, 0],
+                    scale: [1, 1.3, 1.5, 0],
+                    rotate: [0, -10, 10, 0],
+                    opacity: [1, 1, 0.6, 0],
                   }}
                   transition={{ duration: 0.7, ease: "easeIn" }}
                   style={{ filter: "drop-shadow(0 0 30px hsl(43 76% 46% / 0.5))" }}
                 >
-                  <GoldBox size={110} />
+                  <img src={goldenBox} alt="" className="w-32 h-32 object-contain" />
                 </motion.div>
                 {/* Explosion ring */}
                 <motion.div
                   initial={{ scale: 0, opacity: 0.9 }}
-                  animate={{ scale: 5, opacity: 0 }}
+                  animate={{ scale: 6, opacity: 0 }}
                   transition={{ duration: 0.7, delay: 0.3 }}
-                  className="absolute w-12 h-12 rounded-full"
-                  style={{ background: "radial-gradient(circle, hsl(43 76% 46% / 0.5), hsl(43 56% 52% / 0.2), transparent)" }}
+                  className="absolute w-10 h-10 rounded-full"
+                  style={{ background: "radial-gradient(circle, hsl(43 76% 46% / 0.6), hsl(43 56% 52% / 0.2), transparent)" }}
                 />
               </motion.div>
             )}
@@ -289,7 +260,7 @@ export default function LootBoxReward({ monthlyRevenue }: { monthlyRevenue: numb
               >
                 <RevealSparkles />
 
-                {/* Big emoji with light rays */}
+                {/* Big emoji with rays */}
                 <div className="relative w-28 h-28 flex items-center justify-center mb-1">
                   <LightRays />
                   <motion.div
@@ -304,16 +275,14 @@ export default function LootBoxReward({ monthlyRevenue }: { monthlyRevenue: numb
                 </div>
 
                 {/* Tier name */}
-                <motion.div
+                <motion.p
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="space-y-0.5"
+                  className="text-3xl font-extrabold text-gold-gradient-shimmer tracking-wide"
                 >
-                  <p className="text-3xl font-extrabold text-gold-gradient-shimmer tracking-wide">
-                    {currentMilestone.tier}
-                  </p>
-                </motion.div>
+                  {currentMilestone.tier}
+                </motion.p>
 
                 {/* Divider */}
                 <motion.div
@@ -346,7 +315,7 @@ export default function LootBoxReward({ monthlyRevenue }: { monthlyRevenue: numb
                   <p className="text-[10px] text-accent/60 mt-1 tracking-wide">Revenue Share</p>
                 </motion.div>
 
-                {/* Close button */}
+                {/* Close */}
                 <motion.button
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
