@@ -80,9 +80,9 @@ function buildCumulativeRevenues(daysInMonth: number) {
       const rand = seededRandom(d * 31 + i * 7 + 999);
       let increment = dailyBase * (0.6 + rand * 0.8);
 
-      // Sebastian (i=0): slightly reduce increment on slow days so rank 2–4 can briefly overtake
+      // Sebastian (i=0): slightly reduce on slow days so he drops to rank 2–3 briefly
       if (i === 0 && SEBASTIAN_SLOW_DAYS.has(d)) {
-        increment *= 0.55;
+        increment *= 0.75;
       }
 
       // Add small "uneven" jitter so numbers never look round
