@@ -42,11 +42,11 @@ function seededRandom(seed: number): number {
 // End-of-month maximums
 const MAX_REVENUES = (() => {
   const arr: number[] = [];
-  arr.push(98347); // Sebastian #1 potential
+  arr.push(98347); // Sebastian — significantly higher than rest
   for (let i = 1; i < 100; i++) {
-    const base = 93000 - (i - 1) * ((93000 - 29000) / 99);
-    const jitter = (seededRandom(i * 137) - 0.5) * 6000;
-    arr.push(Math.round(Math.max(27000, Math.min(94000, base + jitter))));
+    const base = 82000 - (i - 1) * ((82000 - 29000) / 99);
+    const jitter = (seededRandom(i * 137) - 0.5) * 5000;
+    arr.push(Math.round(Math.max(27000, Math.min(83000, base + jitter))));
   }
   const [first, ...rest] = arr;
   rest.sort((a, b) => b - a);
@@ -80,9 +80,9 @@ function buildCumulativeRevenues(daysInMonth: number) {
       const rand = seededRandom(d * 31 + i * 7 + 999);
       let increment = dailyBase * (0.6 + rand * 0.8);
 
-      // Sebastian (i=0): slightly reduce on slow days so he drops to rank 2–3 briefly
+      // Sebastian (i=0): minor dip on slow days — drops to rank 2–3 max
       if (i === 0 && SEBASTIAN_SLOW_DAYS.has(d)) {
-        increment *= 0.75;
+        increment *= 0.85;
       }
 
       // Add small "uneven" jitter so numbers never look round
