@@ -1245,27 +1245,45 @@ function BonusModelSection({
           </div>
 
           {/* Progress bar */}
-          {activeNextTier && (
-            <div className="mt-3 space-y-1.5">
-              <Progress value={activeProgress} className="h-2 [&>div]:bg-accent shimmer-bar" />
-              <div className="flex justify-between text-[9px] lg:text-[10px] text-muted-foreground">
-                <span>{activeTier.emoji} {activeRevenue.toLocaleString("de-DE")}€</span>
-                <span>Noch <span className="text-accent font-semibold">{(activeNextTier.min - activeRevenue).toLocaleString("de-DE")}€</span> bis {activeNextTier.emoji} {activeNextTier.name}</span>
+          {activeNextTier && (() => {
+            const isAlmostThere = activeProgress >= 85;
+            const remaining = activeNextTier.min - activeRevenue;
+            return (
+              <div className="mt-3 space-y-1.5">
+                <div className="relative">
+                  <Progress
+                    value={activeProgress}
+                    className={`h-2.5 [&>div]:bg-accent shimmer-bar transition-all duration-500 ${isAlmostThere ? "gold-glow [&>div]:animate-pulse" : ""}`}
+                  />
+                  {isAlmostThere && (
+                    <motion.div
+                      className="absolute -top-6 right-0 bg-accent text-accent-foreground text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg"
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: [1, 1.1, 1], opacity: 1 }}
+                      transition={{ duration: 0.6, repeat: Infinity, repeatDelay: 2 }}
+                    >
+                      🔥 Fast da! Nur noch {remaining.toLocaleString("de-DE")}€!
+                    </motion.div>
+                  )}
+                </div>
+                <div className="flex justify-between text-[9px] lg:text-[10px] text-muted-foreground">
+                  <span>{activeTier.emoji} {activeRevenue.toLocaleString("de-DE")}€</span>
+                  <span>Noch <span className="text-accent font-semibold">{remaining.toLocaleString("de-DE")}€</span> bis {activeNextTier.emoji} {activeNextTier.name}</span>
+                </div>
+                {(() => {
+                  const now = new Date();
+                  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+                  const daysLeft = Math.max(1, daysInMonth - now.getDate());
+                  const dailyAvg = Math.ceil(remaining / daysLeft);
+                  return (
+                    <p className="text-[9px] lg:text-[10px] text-muted-foreground text-center mt-1">
+                      ⌀ <span className="text-accent font-semibold">{dailyAvg.toLocaleString("de-DE")}€</span> pro Tag nötig für {activeNextTier.emoji} {activeNextTier.name}
+                    </p>
+                  );
+                })()}
               </div>
-              {(() => {
-                const now = new Date();
-                const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-                const daysLeft = Math.max(1, daysInMonth - now.getDate());
-                const remaining = Math.max(0, activeNextTier.min - activeRevenue);
-                const dailyAvg = Math.ceil(remaining / daysLeft);
-                return (
-                  <p className="text-[9px] lg:text-[10px] text-muted-foreground text-center mt-1">
-                    ⌀ <span className="text-accent font-semibold">{dailyAvg.toLocaleString("de-DE")}€</span> pro Tag nötig für {activeNextTier.emoji} {activeNextTier.name}
-                  </p>
-                );
-              })()}
-            </div>
-          )}
+            );
+          })()}
           {activeIsTop && (
             <p className="text-[10px] text-accent font-semibold mt-3 text-center">🏆 Höchste Stufe erreicht!</p>
           )}
