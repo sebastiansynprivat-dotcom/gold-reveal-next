@@ -261,16 +261,16 @@ export default function DashboardOnboarding({ isFirstLogin, manualOpen, onManual
         />
       </svg>
 
-      {/* Glow border around cutout */}
+      {/* Animated gold shimmer border around cutout */}
       {w > 0 && (
         <div
-          className="absolute pointer-events-none rounded-[14px] border-2 border-accent/70"
+          className="tour-gold-border rounded-[14px]"
           style={{
             left: x,
             top: y,
             width: w,
             height: h,
-            boxShadow: "0 0 20px hsl(var(--accent) / 0.3), 0 0 40px hsl(var(--accent) / 0.1)",
+            boxShadow: "0 0 24px hsl(43 56% 52% / 0.25), 0 0 48px hsl(43 56% 52% / 0.08)",
           }}
         />
       )}
