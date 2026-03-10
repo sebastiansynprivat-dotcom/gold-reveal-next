@@ -81,8 +81,7 @@ export default function DashboardOnboarding({ isFirstLogin }: DashboardOnboardin
     const el = document.querySelector(s.selector);
     if (!el) return null;
     const r = el.getBoundingClientRect();
-    // Clamp height for very tall sections (max ~60% of viewport)
-    const maxH = window.innerHeight * 0.55;
+    const maxH = s.maxHeight || window.innerHeight * 0.55;
     const clampedH = Math.min(r.height, maxH);
     return { left: r.left, top: r.top, width: r.width, height: clampedH };
   }, []);
