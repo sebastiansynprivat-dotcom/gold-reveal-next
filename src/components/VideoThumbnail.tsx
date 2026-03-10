@@ -63,16 +63,19 @@ const VideoThumbnail = ({ embedUrl, onVideoProgress, onVideoEnd }: VideoThumbnai
             exit={{ opacity: 0, scale: 1.05 }}
             transition={{ duration: 0.4, ease }}
             onClick={() => setPlaying(true)}
-            className="absolute inset-0 w-full h-full cursor-pointer border-0 outline-none group"
+            className="absolute inset-0 w-full h-full cursor-pointer border-0 outline-none group flex flex-col items-center justify-center"
           >
             <img
               src={videoThumbnail}
               alt="Video starten"
               className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
-            <div className="absolute inset-0 bg-background/20 group-hover:bg-background/10 transition-colors duration-300" />
-            <span className="absolute bottom-5 left-1/2 -translate-x-1/2 text-foreground/70 text-sm font-medium group-hover:text-foreground transition-colors">
-              ▶ Kostenloses Video starten
+            <div className="absolute inset-0 bg-background/30 group-hover:bg-background/15 transition-colors duration-300" />
+            <span className="relative z-10 gold-gradient-text text-base sm:text-lg md:text-xl font-bold text-center px-4 mb-16 sm:mb-20 leading-snug drop-shadow-lg">
+              Jetzt klicken, um das kostenlose<br />Video zu starten
+            </span>
+            <span className="relative z-10 text-foreground/60 text-xs sm:text-sm font-medium absolute bottom-4 sm:bottom-6 group-hover:text-foreground/80 transition-colors">
+              Sicher dir deinen Platz
             </span>
           </motion.button>
         ) : (
