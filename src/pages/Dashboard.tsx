@@ -562,6 +562,9 @@ export default function Dashboard() {
         {/* Notification Banner */}
         <NotificationBanner />
 
+        {/* Live Activity Ticker */}
+        <LiveActivityTicker />
+
         {/* Stats Cards */}
         {/* Mobile: 2-col grid with full-width status */}
         <motion.div
