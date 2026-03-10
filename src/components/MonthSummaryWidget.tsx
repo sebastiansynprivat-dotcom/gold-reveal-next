@@ -44,11 +44,6 @@ export default function MonthSummaryWidget({ monthlyRevenue, rate, tierName, tie
         <p className="text-xs font-medium text-muted-foreground">Dein Monat auf einen Blick</p>
         <p className="text-[10px] text-muted-foreground/70 mt-1 leading-relaxed">
           Diese Zahlen sind eine Vorausrechnung. Sie basiert auf deinem bisherigen Tagesdurchschnitt in diesem Monat.
-          Du hast bisher an {dayOfMonth} Tagen insgesamt {monthlyRevenue.toLocaleString("de-DE")}€ Umsatz gemacht – das ergibt
-          einen Durchschnitt von {dailyAverage.toLocaleString("de-DE")}€ pro Tag.
-          Wenn du diesen Durchschnitt für die restlichen {daysLeft} Tage beibehältst,
-          kommst du am Monatsende auf circa {projected.toLocaleString("de-DE")}€ Umsatz.
-          Bei deiner aktuellen Rate von {Math.round(rate * 100)}% wäre dein voraussichtlicher Verdienst dann {projectedEarnings.toLocaleString("de-DE")}€.
         </p>
       </div>
       <div className="flex items-center gap-5">
