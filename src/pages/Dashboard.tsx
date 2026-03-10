@@ -452,8 +452,8 @@ export default function Dashboard() {
                 <Zap className="h-3.5 w-3.5 text-accent shrink-0" />
                 <div className="input-gold-shimmer rounded-lg"><Input type="number" min={0} step={50} value={umsatz || ""} onChange={(e) => handleUmsatzChange(Number(e.target.value) || 0)} placeholder="Umsatz €" className="h-7 text-xs w-24 font-semibold border-transparent" /></div>
               </div>
-              <Badge className={isGold ? "bg-accent text-accent-foreground gold-glow" : "bg-secondary text-secondary-foreground"}>
-                <Award className="h-3 w-3 mr-1" />{isGold ? "Gold" : "Starter"}
+              <Badge className={isTopTier ? "bg-accent text-accent-foreground gold-glow" : "bg-secondary text-secondary-foreground"}>
+                <Award className="h-3 w-3 mr-1" />{currentTier.emoji} {currentTier.name}
               </Badge>
             </div>
           </div>
