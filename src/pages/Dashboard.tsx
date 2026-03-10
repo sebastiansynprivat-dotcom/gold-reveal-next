@@ -578,7 +578,7 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <main className="container max-w-5xl mx-auto p-4 lg:px-8 lg:py-8 space-y-5 lg:space-y-6">
+      <main className={`container max-w-5xl mx-auto p-4 lg:px-8 lg:py-8 space-y-5 lg:space-y-6 ${hotStreakClass}`}>
         {/* Notification Banner */}
         <NotificationBanner />
 
