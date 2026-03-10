@@ -82,6 +82,7 @@ export default function StreakTracker({ dailyRevenue }: { dailyRevenue: number }
   const [showStreakDialog, setShowStreakDialog] = useState(false);
   const [demoMode, setDemoMode] = useState(false);
   const [copied, setCopied] = useState(false);
+  const { playStreakSound } = useSoundEffects();
 
   const today = getToday();
   const displayStreak = demoMode ? buildDemoStreak() : streak;
