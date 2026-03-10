@@ -23,6 +23,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo.png";
 import GoldParticles from "@/components/GoldParticles";
+import LiveActivityTicker from "@/components/LiveActivityTicker";
+import { useSoundEffects } from "@/hooks/useSoundEffects";
 import { format, endOfMonth, addMonths, differenceInDays } from "date-fns";
 import { de } from "date-fns/locale";
 import HomescreenTutorial from "@/components/HomescreenTutorial";
