@@ -46,17 +46,17 @@ const SocialProofBar = () => {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease }}
-      className="w-full max-w-3xl mx-auto mb-8"
+      className="w-full max-w-3xl mx-auto mb-4 md:mb-8 px-1"
     >
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8">
+      <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 md:gap-8">
         {/* Trustpilot */}
         <a
           href="https://de.trustpilot.com/review/she-x.de"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2 glass-card-subtle rounded-xl px-4 py-2.5 hover:scale-[1.03] transition-transform cursor-pointer"
+          className="flex items-center gap-1.5 sm:gap-2 glass-card-subtle rounded-lg sm:rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 hover:scale-[1.03] transition-transform cursor-pointer"
         >
-          <Star className="w-4 h-4 text-emerald-400 fill-emerald-400" />
+          <Star className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400 fill-emerald-400" />
           <div className="flex items-center gap-1.5">
             <span className="text-foreground font-semibold text-sm">4.8</span>
             <div className="flex gap-0.5">
@@ -72,7 +72,7 @@ const SocialProofBar = () => {
         </a>
 
         {/* Active chatters */}
-        <div className="flex items-center gap-2 glass-card-subtle rounded-xl px-4 py-2.5">
+        <div className="flex items-center gap-1.5 sm:gap-2 glass-card-subtle rounded-lg sm:rounded-xl px-3 sm:px-4 py-2 sm:py-2.5">
           <div className="relative">
             <Users className="w-4 h-4 text-primary" />
             <span className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
@@ -82,7 +82,7 @@ const SocialProofBar = () => {
         </div>
 
         {/* Testimonial */}
-        <div className="flex items-center gap-2 glass-card-subtle rounded-xl px-4 py-2.5 max-w-[260px]">
+        <div className="flex items-center gap-1.5 sm:gap-2 glass-card-subtle rounded-lg sm:rounded-xl px-3 sm:px-4 py-2 sm:py-2.5 max-w-[220px] sm:max-w-[260px]">
           <TrendingUp className="w-4 h-4 text-primary shrink-0" />
           <p className="text-xs text-foreground/80 italic leading-snug">
             "Unglaublich das dieses Video kostenlos ist!"

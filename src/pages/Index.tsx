@@ -25,13 +25,13 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-start px-4 py-12 md:py-20 relative">
+    <div className="min-h-screen flex flex-col items-center justify-start px-3 sm:px-4 py-8 md:py-20 relative">
       <GoldParticles spawnRate={0.5} maxParticles={35} baseOpacity={0.3} />
       <motion.h1
         initial={{ opacity: 0, y: 20, filter: "blur(6px)" }}
         animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
         transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-        className="text-3xl md:text-5xl font-bold text-center tracking-tight leading-tight mb-6 max-w-2xl"
+        className="text-2xl sm:text-3xl md:text-5xl font-bold text-center tracking-tight leading-tight mb-5 md:mb-6 max-w-2xl px-1"
       >
         <span className="gold-gradient-text">Lerne </span>
         <span className="text-gold-gradient-shimmer">wie du mit Chatten Geld verdienen kannst</span>
@@ -40,7 +40,7 @@ const Index = () => {
       <SocialProofBar />
       <UrgencyCountdown />
 
-      <div className="w-full max-w-[1100px] flex flex-col lg:flex-row gap-6 mb-12 items-start justify-center">
+      <div className="w-full max-w-[1100px] flex flex-col lg:flex-row gap-4 md:gap-6 mb-8 md:mb-12 items-start justify-center">
         <motion.div
           initial={{ opacity: 0, y: 24, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -90,7 +90,7 @@ const Index = () => {
         )}
       </div>
 
-      <p className="text-muted-foreground text-sm text-center max-w-md mb-10">
+      <p className="text-muted-foreground text-xs sm:text-sm text-center max-w-sm sm:max-w-md mb-6 md:mb-10 px-2">
         Bitte schau das Video vollständig an. Erst danach erscheint der Button, der dich zum nächsten Schritt führt.
       </p>
 

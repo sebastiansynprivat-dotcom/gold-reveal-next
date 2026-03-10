@@ -70,9 +70,9 @@ const UrgencyCountdown = () => {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.15, ease }}
-      className="w-full max-w-xl mx-auto mb-10"
+      className="w-full max-w-xl mx-auto mb-6 md:mb-10 px-1"
     >
-      <div className="glass-card-subtle rounded-xl px-5 py-3 flex items-center justify-center gap-5 border border-primary/10">
+      <div className="glass-card-subtle rounded-xl px-3 sm:px-5 py-2.5 sm:py-3 flex items-center justify-center gap-3 sm:gap-5 border border-primary/10">
         <div className="flex items-center gap-2">
           <Flame className="w-4 h-4 text-orange-400 animate-pulse" />
           <span className="text-foreground text-sm font-semibold">
