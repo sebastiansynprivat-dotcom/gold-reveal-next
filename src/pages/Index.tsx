@@ -42,7 +42,7 @@ const Index = () => {
       </motion.h1>
 
       <SocialProofBar />
-      <UrgencyCountdown />
+      
 
       <div className="w-full max-w-[1100px] flex flex-col lg:flex-row gap-4 md:gap-4 mb-2 md:mb-2 items-start justify-center">
         <motion.div
