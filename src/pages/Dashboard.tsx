@@ -36,6 +36,7 @@ import ModelRequestDialog, { EditRequestData } from "@/components/ModelRequestDi
 import RevenueChart from "@/components/RevenueChart";
 import MonthSummaryWidget from "@/components/MonthSummaryWidget";
 import QuickActionBar from "@/components/QuickActionBar";
+import DashboardOnboarding from "@/components/DashboardOnboarding";
 
 // Streak helper (mirrors StreakTracker logic)
 function getStreakDays(): number {
