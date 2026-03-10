@@ -12,7 +12,7 @@ const actions = [
   { icon: User, label: "Mein Account", action: "account" },
   { icon: Zap, label: "Umsatz", action: "revenue" },
   { icon: FileText, label: "Rechnung", action: "invoice" },
-  { icon: Trophy, label: "Leaderboard", action: "leaderboard" },
+  { icon: Trophy, label: "Bestenliste", action: "leaderboard" },
   { icon: HelpCircle, label: "Frage", action: "question" },
 ] as const;
 
