@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, Lock } from "lucide-react";
+import { Clock, Lock, ChevronDown, ExternalLink } from "lucide-react";
 import logo from "@/assets/logo.png";
+import exampleNotifications from "@/assets/example-notifications.jpeg";
+import exampleMyIdBot from "@/assets/example-myidbot.jpeg";
 import GoldenAudioPlayer from "@/components/GoldenAudioPlayer";
 
 const ease = [0.16, 1, 0.3, 1] as const;
