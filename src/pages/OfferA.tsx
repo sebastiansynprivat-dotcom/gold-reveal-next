@@ -273,7 +273,7 @@ const OfferA = () => {
               >
                 <div className="glass-card-subtle rounded-xl p-5 mt-3 space-y-5">
                   <p className="text-sm text-foreground font-medium text-center">
-                    Bitte schicke folgendes in die Telegram-Gruppe:
+                    Bitte schicke folgendes in deine WhatsApp-Gruppe:
                   </p>
 
                   <div className="space-y-2">
