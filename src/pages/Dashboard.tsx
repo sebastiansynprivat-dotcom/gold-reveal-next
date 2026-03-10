@@ -431,8 +431,8 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background pb-24">
       <GoldParticles spawnRate={0.25} maxParticles={20} baseOpacity={0.2} />
-      <HomescreenTutorial isFirstLogin={isFirstLogin} manualOpen={showTutorial} onManualClose={() => setShowTutorial(false)} />
-      <DashboardOnboarding isFirstLogin={isFirstLogin} manualOpen={showOnboarding} onManualClose={() => setShowOnboarding(false)} />
+      <HomescreenTutorial isFirstLogin={isFirstLogin} manualOpen={showTutorial} onManualClose={() => { setShowTutorial(false); setHomescreenDismissed(true); }} onDismiss={() => setHomescreenDismissed(true)} />
+      <DashboardOnboarding isFirstLogin={isFirstLogin} manualOpen={showOnboarding} onManualClose={() => setShowOnboarding(false)} waitForDismiss={!homescreenDismissed} />
       <PushNotificationDialog />
       <AccountMemoDialog open={showMemo} onOpenChange={setShowMemo} />
       <FrageMemoDialog open={showFrageMemo} onOpenChange={setShowFrageMemo} />
