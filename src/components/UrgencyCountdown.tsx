@@ -72,25 +72,11 @@ const UrgencyCountdown = () => {
       transition={{ duration: 0.6, delay: 0.15, ease }}
       className="w-full max-w-xl mx-auto mb-10"
     >
-      <div className="glass-card-subtle rounded-xl px-5 py-3 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-5 border border-primary/10">
-        <div className="flex items-center gap-2">
-          <Flame className="w-4 h-4 text-orange-400 animate-pulse" />
-          <span className="text-foreground text-sm font-semibold">
-            Nur noch <span className="text-primary">{spots} Plätze</span> frei
-          </span>
-        </div>
-
-        <div className="flex items-center gap-1.5 text-muted-foreground">
-          <Clock className="w-3.5 h-3.5" />
-          <span className="text-xs text-foreground/70">Schau jetzt –</span>
-          <div className="flex items-center gap-1 font-mono text-xs">
-            <span className="bg-secondary px-1.5 py-0.5 rounded text-foreground font-semibold">{pad(timeLeft.hours)}h</span>
-            <span>:</span>
-            <span className="bg-secondary px-1.5 py-0.5 rounded text-foreground font-semibold">{pad(timeLeft.minutes)}m</span>
-            <span>:</span>
-            <span className="bg-secondary px-1.5 py-0.5 rounded text-foreground font-semibold">{pad(timeLeft.seconds)}s</span>
-          </div>
-        </div>
+      <div className="glass-card-subtle rounded-xl px-5 py-3 flex items-center justify-center gap-3 border border-primary/10">
+        <Flame className="w-4 h-4 text-orange-400 animate-pulse" />
+        <span className="text-foreground text-sm font-semibold">
+          Nur noch <span className="text-primary">{spots} Plätze</span> frei
+        </span>
       </div>
     </motion.div>
   );
