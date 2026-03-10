@@ -16,7 +16,7 @@ export default function MonthSummaryWidget({ monthlyRevenue, rate, tierName, tie
   const daysLeft = differenceInDays(monthEnd, today);
   const dayOfMonth = today.getDate();
   const totalDays = monthEnd.getDate();
-  const progressPercent = Math.round((dayOfMonth / totalDays) * 100);
+  const progressPercent = Math.round(dayOfMonth / totalDays * 100);
 
   const dailyAverage = useMemo(() => {
     if (dayOfMonth <= 1) return monthlyRevenue;
@@ -31,20 +31,20 @@ export default function MonthSummaryWidget({ monthlyRevenue, rate, tierName, tie
 
   const radius = 38;
   const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (progressPercent / 100) * circumference;
+  const strokeDashoffset = circumference - progressPercent / 100 * circumference;
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.4 }}
-      className="glass-card-subtle rounded-xl p-4 card-inner-glow"
-    >
+      className="glass-card-subtle rounded-xl p-4 card-inner-glow">
+      
       <div className="mb-3">
         <p className="text-xs font-medium text-muted-foreground">Dein Monat auf einen Blick</p>
-        <p className="text-[10px] text-muted-foreground/70 mt-1 leading-relaxed">
-          Diese Zahlen sind eine Vorausrechnung. Sie basiert auf deinem bisherigen Tagesdurchschnitt in diesem Monat.
-        </p>
+        <p className="text-[10px] text-muted-foreground/70 mt-1 leading-relaxed">Diese Zahlen sind eine Vorausrechnung. Sie basiert auf deinem bisherigen Tagesdurchschnitt in diesem Monat. 
+Arbeite weiterhin motiviert und du erreichst die Zahlen, oder sogar noch mehr 🚀
+</p>
       </div>
       <div className="flex items-center gap-5">
         {/* Progress Ring */}
@@ -54,8 +54,8 @@ export default function MonthSummaryWidget({ monthlyRevenue, rate, tierName, tie
               cx="44" cy="44" r={radius}
               fill="none"
               stroke="hsl(0, 0%, 12%)"
-              strokeWidth="6"
-            />
+              strokeWidth="6" />
+            
             <motion.circle
               cx="44" cy="44" r={radius}
               fill="none"
@@ -66,8 +66,8 @@ export default function MonthSummaryWidget({ monthlyRevenue, rate, tierName, tie
               initial={{ strokeDashoffset: circumference }}
               animate={{ strokeDashoffset }}
               transition={{ duration: 1, delay: 0.5, ease: "easeOut" }}
-              transform="rotate(-90 44 44)"
-            />
+              transform="rotate(-90 44 44)" />
+            
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <span className="text-lg font-bold text-foreground">{progressPercent}%</span>
@@ -99,6 +99,6 @@ export default function MonthSummaryWidget({ monthlyRevenue, rate, tierName, tie
           </div>
         </div>
       </div>
-    </motion.div>
-  );
+    </motion.div>);
+
 }
