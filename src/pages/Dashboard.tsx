@@ -466,8 +466,8 @@ export default function Dashboard() {
               <div className="flex-1 min-w-0">
                 <h1 className="text-sm font-bold text-foreground leading-tight">Chatter Dashboard</h1>
               </div>
-              <Badge className={`shrink-0 text-[10px] ${isGold ? "bg-accent text-accent-foreground gold-glow" : "bg-secondary text-secondary-foreground"}`}>
-                <Award className="h-3 w-3 mr-1" />{isGold ? "Gold" : "Starter"}
+              <Badge className={`shrink-0 text-[10px] ${isTopTier ? "bg-accent text-accent-foreground gold-glow" : "bg-secondary text-secondary-foreground"}`}>
+                <Award className="h-3 w-3 mr-1" />{currentTier.emoji} {currentTier.name}
               </Badge>
             </div>
 
