@@ -284,7 +284,7 @@ export default function Dashboard() {
   const [savingRevenue, setSavingRevenue] = useState(false);
   const { playCoinSound, playLevelUpSound, toggleMute, getMuted } = useSoundEffects();
   const [sfxMuted, setSfxMuted] = useState(() => getMuted());
-  const prevTierRef = useRef(currentTier?.name);
+  const prevTierRef = useRef<string | null>(null);
 
   // Load revenue data
   useEffect(() => {
