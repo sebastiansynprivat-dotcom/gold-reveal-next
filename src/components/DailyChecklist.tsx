@@ -75,6 +75,7 @@ export default function DailyChecklist() {
   const [openAudioId, setOpenAudioId] = useState<number | null>(null);
   const [feedbackPopupOpen, setFeedbackPopupOpen] = useState(false);
   const [massDmPopupOpen, setMassDmPopupOpen] = useState(false);
+  const { playCheckSound } = useSoundEffects();
 
   useEffect(() => {
     localStorage.setItem(getTodayKey(), JSON.stringify([...completed]));
