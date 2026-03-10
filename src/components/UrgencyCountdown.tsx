@@ -26,38 +26,47 @@ const VISITS_KEY = "urgency-visits";
 const getPersistedSpots = (): number => {
   try {
     const stored = localStorage.getItem(SPOTS_KEY);
-    const visits = parseInt(localStorage.getItem(VISITS_KEY) || "0", 10);
-
     if (stored === null) {
-      // First visit: 4-6 spots
       const initial = Math.floor(Math.random() * 3) + 4;
       localStorage.setItem(SPOTS_KEY, String(initial));
-      localStorage.setItem(VISITS_KEY, "1");
       return initial;
     }
-
-    const current = parseInt(stored, 10);
-    // Once at 1, stay at 1 forever
-    if (current <= 1) return 1;
-    
-    // Every reload: 60% chance to lose a spot (min 1)
-    const newVisits = visits + 1;
-    localStorage.setItem(VISITS_KEY, String(newVisits));
-
-    if (Math.random() < 0.6) {
-      const next = current - 1;
-      localStorage.setItem(SPOTS_KEY, String(next));
-      return next;
-    }
-    return current;
+    return parseInt(stored, 10);
   } catch {
     return 3;
   }
 };
 
+const tryDecreaseSpot = (): number | null => {
+  try {
+    const current = parseInt(localStorage.getItem(SPOTS_KEY) || "3", 10);
+    if (current <= 1) return null;
+    if (Math.random() < 0.6) {
+      const next = current - 1;
+      localStorage.setItem(SPOTS_KEY, String(next));
+      return next;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+};
+
 const UrgencyCountdown = () => {
   const [timeLeft, setTimeLeft] = useState(() => formatTime(getEndOfDay().getTime() - Date.now()));
-  const [spots] = useState(getPersistedSpots);
+  const [spots, setSpots] = useState(getPersistedSpots);
+
+  useEffect(() => {
+    // Random delay between 10-60 seconds to decrease a spot
+    const delay = Math.floor(Math.random() * 50000) + 10000;
+    const timeout = setTimeout(() => {
+      const newSpots = tryDecreaseSpot();
+      if (newSpots !== null) {
+        setSpots(newSpots);
+      }
+    }, delay);
+    return () => clearTimeout(timeout);
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
