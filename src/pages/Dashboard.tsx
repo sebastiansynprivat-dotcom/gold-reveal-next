@@ -1232,6 +1232,9 @@ function BonusModelSection({
           )}
         </motion.div>
 
+        {/* Spacer before streaks */}
+        <div className="h-6 lg:h-8" />
+
         {/* Account Upgrade - Streak */}
         <motion.div
           variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
