@@ -692,7 +692,7 @@ export default function Dashboard() {
         }
 
         {/* 7-Day Revenue Chart */}
-        {user && <RevenueChart userId={user.id} />}
+        <div data-tour="revenue-chart">{user && <RevenueChart userId={user.id} />}</div>
 
         {/* Month Summary Widget */}
         <MonthSummaryWidget
