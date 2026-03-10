@@ -29,6 +29,9 @@ export default function QuickActionBar({ onAskQuestion, onFocusRevenue, onScroll
       case "revenue":
         onFocusRevenue();
         break;
+      case "bonus":
+        onScrollToBonus();
+        break;
       case "invoice":
         navigate("/rechnung");
         break;
