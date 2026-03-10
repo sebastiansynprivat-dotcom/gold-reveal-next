@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useProgress } from "@/hooks/useProgress";
+import GoldParticles from "@/components/GoldParticles";
 
 const Index = () => {
   const { updateProgress } = useProgress();
@@ -46,8 +47,10 @@ const Index = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-start px-4 py-12 md:py-20 relative">
-      <h1 className="gold-gradient-text text-3xl md:text-5xl font-bold text-center tracking-tight leading-tight mb-10 max-w-2xl">
-        Lerne wie du mit Chatten Geld verdienen kannst
+      <GoldParticles spawnRate={0.5} maxParticles={35} baseOpacity={0.3} />
+      <h1 className="text-3xl md:text-5xl font-bold text-center tracking-tight leading-tight mb-10 max-w-2xl">
+        <span className="gold-gradient-text">Lerne </span>
+        <span className="text-gold-gradient-shimmer">wie du mit Chatten Geld verdienen kannst</span>
       </h1>
 
       <div className="w-full max-w-[1100px] flex flex-col lg:flex-row gap-6 mb-12 items-start justify-center">
