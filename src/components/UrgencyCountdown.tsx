@@ -4,11 +4,9 @@ import { useState, useEffect } from "react";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
-const getEndOfWeek = () => {
+const getEndOfDay = () => {
   const now = new Date();
-  const daysUntilSunday = 7 - now.getDay();
   const end = new Date(now);
-  end.setDate(now.getDate() + daysUntilSunday);
   end.setHours(23, 59, 59, 999);
   return end;
 };
