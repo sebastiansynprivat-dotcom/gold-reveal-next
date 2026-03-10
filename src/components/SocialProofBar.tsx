@@ -46,9 +46,9 @@ const SocialProofBar = () => {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, ease }}
-      className="w-full max-w-3xl mx-auto mb-8"
+      className="w-full max-w-3xl mx-auto mb-4 md:mb-8 px-1"
     >
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-8">
+      <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-4 md:gap-8">
         {/* Trustpilot */}
         <a
           href="https://de.trustpilot.com/review/she-x.de"
