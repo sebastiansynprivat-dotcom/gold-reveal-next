@@ -1105,7 +1105,7 @@ function BonusModelSection({
               className="flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-medium bg-secondary/50 text-muted-foreground border border-border/30 hover:border-accent/20 hover:text-foreground transition-all"
             >
               <Trophy className="h-3 w-3" />
-              Top 100
+              Zur Bestenliste
             </button>
             <button
               onClick={() => { setDemoMode(!demoMode); setDemoTierIndex(0); }}
