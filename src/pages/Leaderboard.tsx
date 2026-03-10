@@ -42,11 +42,11 @@ function seededRandom(seed: number): number {
 // End-of-month maximums
 const MAX_REVENUES = (() => {
   const arr: number[] = [];
-  arr.push(98347); // Sebastian #1 potential
+  arr.push(98347); // Sebastian — significantly higher than rest
   for (let i = 1; i < 100; i++) {
-    const base = 93000 - (i - 1) * ((93000 - 29000) / 99);
-    const jitter = (seededRandom(i * 137) - 0.5) * 6000;
-    arr.push(Math.round(Math.max(27000, Math.min(94000, base + jitter))));
+    const base = 82000 - (i - 1) * ((82000 - 29000) / 99);
+    const jitter = (seededRandom(i * 137) - 0.5) * 5000;
+    arr.push(Math.round(Math.max(27000, Math.min(83000, base + jitter))));
   }
   const [first, ...rest] = arr;
   rest.sort((a, b) => b - a);
