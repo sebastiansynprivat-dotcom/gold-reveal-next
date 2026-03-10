@@ -38,7 +38,10 @@ export default function MonthSummaryWidget({ monthlyRevenue, rate, tierName, tie
       transition={{ duration: 0.5, delay: 0.4 }}
       className="glass-card-subtle rounded-xl p-4 card-inner-glow"
     >
-      <p className="text-xs font-medium text-muted-foreground mb-3">Dein Monat auf einen Blick</p>
+      <div className="mb-3">
+        <p className="text-xs font-medium text-muted-foreground">Dein Monat auf einen Blick</p>
+        <p className="text-[10px] text-muted-foreground/70 mt-0.5">Hochrechnung basierend auf deinem bisherigen Tagesdurchschnitt – wenn du so weitermachst wie bisher.</p>
+      </div>
       <div className="flex items-center gap-5">
         {/* Progress Ring */}
         <div className="relative shrink-0">
