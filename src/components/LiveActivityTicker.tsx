@@ -88,6 +88,15 @@ export default function LiveActivityTicker() {
     };
   }, []);
 
+  // Inject a new generated event every 15-30s to keep it alive
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const evt = generateFallbackEvent();
+      setEvents((prev) => [evt, ...prev].slice(0, 8));
+    }, 15000 + Math.random() * 15000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Auto-rotate every 4 seconds
   useEffect(() => {
     const interval = setInterval(() => {
