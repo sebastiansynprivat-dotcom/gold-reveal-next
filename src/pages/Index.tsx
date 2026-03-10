@@ -44,7 +44,7 @@ const Index = () => {
       <SocialProofBar />
       <UrgencyCountdown />
 
-      <div className="w-full max-w-[1100px] flex flex-col lg:flex-row gap-4 md:gap-6 mb-2 md:mb-4 items-start justify-center">
+      <div className="w-full max-w-[1100px] flex flex-col lg:flex-row gap-4 md:gap-4 mb-2 md:mb-2 items-start justify-center">
         <motion.div
           initial={{ opacity: 0, y: 24, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
