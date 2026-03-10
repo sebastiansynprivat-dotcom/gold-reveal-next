@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Flame, Check, Trophy, Copy, Send, Play } from "lucide-react";
 import { toast } from "sonner";
+import { useSoundEffects } from "@/hooks/useSoundEffects";
 import confetti from "canvas-confetti";
 import {
   Dialog,
