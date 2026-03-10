@@ -55,10 +55,11 @@ interface DashboardOnboardingProps {
   isFirstLogin: boolean;
   manualOpen?: boolean;
   onManualClose?: () => void;
+  waitForDismiss?: boolean;
 }
 
 // Smooth animated rect state using CSS transitions on a single overlay
-export default function DashboardOnboarding({ isFirstLogin, manualOpen, onManualClose }: DashboardOnboardingProps) {
+export default function DashboardOnboarding({ isFirstLogin, manualOpen, onManualClose, waitForDismiss }: DashboardOnboardingProps) {
   const [active, setActive] = useState(false);
   const [step, setStep] = useState(0);
   // Animated rect (smoothly interpolated)
@@ -69,12 +70,12 @@ export default function DashboardOnboarding({ isFirstLogin, manualOpen, onManual
   const rafRef = useRef<number>();
 
   useEffect(() => {
-    if (!isFirstLogin) return;
+    if (!isFirstLogin || waitForDismiss) return;
     const seen = localStorage.getItem(ONBOARDING_KEY);
     if (seen) return;
     const timer = setTimeout(() => setActive(true), 2000);
     return () => clearTimeout(timer);
-  }, [isFirstLogin]);
+  }, [isFirstLogin, waitForDismiss]);
 
   useEffect(() => {
     if (manualOpen) {

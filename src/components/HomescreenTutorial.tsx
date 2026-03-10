@@ -30,9 +30,10 @@ interface HomescreenTutorialProps {
   isFirstLogin: boolean;
   manualOpen?: boolean;
   onManualClose?: () => void;
+  onDismiss?: () => void;
 }
 
-export default function HomescreenTutorial({ isFirstLogin, manualOpen, onManualClose }: HomescreenTutorialProps) {
+export default function HomescreenTutorial({ isFirstLogin, manualOpen, onManualClose, onDismiss }: HomescreenTutorialProps) {
   const [open, setOpen] = useState(false);
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
 
@@ -56,6 +57,7 @@ export default function HomescreenTutorial({ isFirstLogin, manualOpen, onManualC
     localStorage.setItem(TUTORIAL_KEY, "true");
     setOpen(false);
     onManualClose?.();
+    onDismiss?.();
   };
 
   return (

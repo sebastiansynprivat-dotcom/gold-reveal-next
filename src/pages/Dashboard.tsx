@@ -197,6 +197,12 @@ export default function Dashboard() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showMemo, setShowMemo] = useState(false);
   const [showFrageMemo, setShowFrageMemo] = useState(false);
+  const [homescreenDismissed, setHomescreenDismissed] = useState(() => {
+    // If PWA is already installed or tutorial was seen, no need to wait
+    const isStandalone = window.matchMedia("(display-mode: standalone)").matches || (window.navigator as any).standalone === true;
+    const seen = localStorage.getItem("homescreen_tutorial_seen");
+    return isStandalone || !!seen;
+  });
   const [isPwaInstalled, setIsPwaInstalled] = useState(() => {
     return window.matchMedia("(display-mode: standalone)").matches ||
     (window.navigator as any).standalone === true;
@@ -431,8 +437,8 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background pb-24">
       <GoldParticles spawnRate={0.25} maxParticles={20} baseOpacity={0.2} />
-      <HomescreenTutorial isFirstLogin={isFirstLogin} manualOpen={showTutorial} onManualClose={() => setShowTutorial(false)} />
-      <DashboardOnboarding isFirstLogin={isFirstLogin} manualOpen={showOnboarding} onManualClose={() => setShowOnboarding(false)} />
+      <HomescreenTutorial isFirstLogin={isFirstLogin} manualOpen={showTutorial} onManualClose={() => { setShowTutorial(false); setHomescreenDismissed(true); }} onDismiss={() => setHomescreenDismissed(true)} />
+      <DashboardOnboarding isFirstLogin={isFirstLogin} manualOpen={showOnboarding} onManualClose={() => setShowOnboarding(false)} waitForDismiss={!homescreenDismissed} />
       <PushNotificationDialog />
       <AccountMemoDialog open={showMemo} onOpenChange={setShowMemo} />
       <FrageMemoDialog open={showFrageMemo} onOpenChange={setShowFrageMemo} />
