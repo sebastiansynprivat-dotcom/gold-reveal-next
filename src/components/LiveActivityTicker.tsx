@@ -10,39 +10,31 @@ interface TickerEvent {
   timestamp: number;
 }
 
-// Realistic random amount: mostly 5-100€, rarely a big "custom sale"
-function randomAmount(allowBig = false): number {
-  if (allowBig) {
-    // Big sale: random uneven amount like 37€, 42€, 53€
-    return Math.floor(Math.random() * 30) + 25 + (Math.random() > 0.5 ? Math.floor(Math.random() * 15) : 0);
-  }
-  // Normal: 5-100€ range, weighted toward lower values
+// Realistic random amount: mostly 5-80€
+function randomAmount(): number {
   const base = Math.random();
-  if (base < 0.4) return Math.floor(Math.random() * 20) + 5;    // 5-24€
-  if (base < 0.75) return Math.floor(Math.random() * 30) + 25;  // 25-54€
-  return Math.floor(Math.random() * 46) + 55;                    // 55-100€
+  if (base < 0.5) return Math.floor(Math.random() * 16) + 5;    // 5-20€
+  if (base < 0.8) return Math.floor(Math.random() * 25) + 21;   // 21-45€
+  return Math.floor(Math.random() * 35) + 46;                    // 46-80€
 }
 
 let eventCounter = 0;
 
 function generateFallbackEvent(): TickerEvent {
   eventCounter++;
-  // Every ~50 events, a big "custom sale"
-  if (eventCounter % 50 === 0) {
-    const amt = randomAmount(true);
-    return { id: `f-${Date.now()}-${Math.random()}`, text: `Custom Sale! Ein Chatter hat ${amt}€ gemacht!`, emoji: "💎", timestamp: Date.now() };
-  }
-  // ~20% chance: general milestone event
-  if (Math.random() < 0.2) {
+  // ~25% chance: general milestone event (no amounts)
+  if (Math.random() < 0.25) {
     const milestones = [
       { text: "Ein Chatter hat sein Tagesziel erreicht!", emoji: "🎯" },
-      { text: "Streak fortgesetzt – weiter so!", emoji: "⚡" },
+      { text: "Ein Chatter hat seine Streak fortgesetzt!", emoji: "⚡" },
       { text: "Ein Chatter hat alle Aufgaben erledigt!", emoji: "✅" },
+      { text: "Ein Chatter hat gerade eine MassDM gesendet!", emoji: "📩" },
+      { text: "Ein neuer Chatter ist dem Team beigetreten!", emoji: "🙌" },
     ];
     const m = milestones[Math.floor(Math.random() * milestones.length)];
     return { id: `f-${Date.now()}-${Math.random()}`, text: m.text, emoji: m.emoji, timestamp: Date.now() };
   }
-  // Normal revenue event
+  // Normal revenue event (5-80€)
   const amt = randomAmount();
   return { id: `f-${Date.now()}-${Math.random()}`, text: `Ein Chatter hat gerade ${amt}€ Umsatz gemacht`, emoji: "🔥", timestamp: Date.now() };
 }
@@ -50,13 +42,10 @@ function generateFallbackEvent(): TickerEvent {
 const FALLBACK_EVENTS: TickerEvent[] = Array.from({ length: 6 }, () => generateFallbackEvent());
 
 function formatEvent(amount: number): TickerEvent {
-  const isHigh = amount >= 200;
   return {
     id: `rt-${Date.now()}-${Math.random()}`,
-    text: isHigh
-      ? `Großer Umsatz! Ein Chatter hat ${amount}€ gemacht!`
-      : `Ein Chatter hat gerade ${amount}€ Umsatz gemacht`,
-    emoji: isHigh ? "💎" : "🔥",
+    text: `Ein Chatter hat gerade ${Math.round(amount)}€ Umsatz gemacht`,
+    emoji: "🔥",
     timestamp: Date.now(),
   };
 }
