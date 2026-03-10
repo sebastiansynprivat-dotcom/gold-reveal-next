@@ -1,6 +1,5 @@
-import { useState, useRef, useCallback, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import videoThumbnail from "@/assets/video-thumbnail.png";
+import { useRef, useCallback, useEffect } from "react";
+import { motion } from "framer-motion";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -11,7 +10,6 @@ interface VideoThumbnailProps {
 }
 
 const VideoThumbnail = ({ embedUrl, onVideoProgress, onVideoEnd }: VideoThumbnailProps) => {
-  const [playing, setPlaying] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const playerReadyRef = useRef(false);
 
@@ -46,47 +44,23 @@ const VideoThumbnail = ({ embedUrl, onVideoProgress, onVideoEnd }: VideoThumbnai
   }, [onVideoProgress, onVideoEnd]);
 
   useEffect(() => {
-    if (playing) {
-      window.addEventListener("message", handleMessage);
-      return () => window.removeEventListener("message", handleMessage);
-    }
-  }, [playing, handleMessage]);
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [handleMessage]);
 
   return (
     <div className="relative w-full gold-border-glow rounded-xl overflow-hidden" style={{ paddingBottom: "56.25%" }}>
-      <AnimatePresence mode="wait">
-        {!playing ? (
-          <motion.button
-            key="thumbnail"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0, scale: 1.05 }}
-            transition={{ duration: 0.4, ease }}
-            onClick={() => setPlaying(true)}
-            className="absolute inset-0 w-full h-full cursor-pointer border-0 outline-none group"
-          >
-            <img
-              src={videoThumbnail}
-              alt="Video starten"
-              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            />
-            <div className="absolute inset-0 bg-background/10 group-hover:bg-background/0 transition-colors duration-300" />
-          </motion.button>
-        ) : (
-          <motion.iframe
-            key="video"
-            ref={iframeRef}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, ease }}
-            src={embedUrl}
-            frameBorder="0"
-            allowFullScreen
-            className="absolute inset-0 w-full h-full"
-            allow="autoplay; fullscreen"
-          />
-        )}
-      </AnimatePresence>
+      <motion.iframe
+        ref={iframeRef}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5, ease }}
+        src={embedUrl}
+        frameBorder="0"
+        allowFullScreen
+        className="absolute inset-0 w-full h-full"
+        allow="autoplay; fullscreen"
+      />
     </div>
   );
 };
