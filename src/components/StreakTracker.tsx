@@ -96,6 +96,7 @@ export default function StreakTracker({ dailyRevenue }: { dailyRevenue: number }
       setStreak(updated);
       saveStreak(updated);
       toast.success("🔥 Tagesziel erreicht! Streak +1");
+      playStreakSound();
 
       const newConsecutive = getConsecutiveDays(updated.dates);
       if (newConsecutive >= STREAK_GOAL) {
