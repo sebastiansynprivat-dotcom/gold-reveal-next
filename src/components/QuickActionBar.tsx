@@ -11,7 +11,7 @@ interface QuickActionBarProps {
 const actions = [
   { icon: User, label: "Mein Account", action: "account" },
   { icon: Zap, label: "Umsatz", action: "revenue" },
-  { icon: FileText, label: "Rechnung", action: "invoice" },
+  { icon: FileText, label: "Auszahlung", action: "invoice" },
   { icon: Trophy, label: "Bestenliste", action: "leaderboard" },
   { icon: HelpCircle, label: "Frage", action: "question" },
 ] as const;
