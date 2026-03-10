@@ -20,6 +20,7 @@ import NotFound from "./pages/NotFound";
 import Invoice from "./pages/Invoice";
 import ModelLogin from "./pages/ModelLogin";
 import ModelDashboard from "./pages/ModelDashboard";
+import Leaderboard from "./pages/Leaderboard";
 
 const queryClient = new QueryClient();
 
