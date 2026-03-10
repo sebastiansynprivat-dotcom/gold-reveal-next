@@ -17,6 +17,7 @@ import DailyChecklist from "@/components/DailyChecklist";
 import MassDmGenerator from "@/components/MassDmGenerator";
 import DailyGoal from "@/components/DailyGoal";
 import StreakTracker from "@/components/StreakTracker";
+import MonthlyStreakTracker from "@/components/MonthlyStreakTracker";
 import NotificationBanner from "@/components/NotificationBanner";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
