@@ -57,9 +57,11 @@ interface Rect { left: number; top: number; width: number; height: number; }
 
 interface DashboardOnboardingProps {
   isFirstLogin: boolean;
+  manualOpen?: boolean;
+  onManualClose?: () => void;
 }
 
-export default function DashboardOnboarding({ isFirstLogin }: DashboardOnboardingProps) {
+export default function DashboardOnboarding({ isFirstLogin, manualOpen, onManualClose }: DashboardOnboardingProps) {
   const [active, setActive] = useState(false);
   const [step, setStep] = useState(0);
   const [rect, setRect] = useState<Rect | null>(null);
