@@ -53,7 +53,7 @@ const getPersistedSpots = (): number => {
 };
 
 const UrgencyCountdown = () => {
-  const [timeLeft, setTimeLeft] = useState(() => formatTime(getEndOfWeek().getTime() - Date.now()));
+  const [timeLeft, setTimeLeft] = useState(() => formatTime(getEndOfDay().getTime() - Date.now()));
   const [spots] = useState(getPersistedSpots);
 
   useEffect(() => {
