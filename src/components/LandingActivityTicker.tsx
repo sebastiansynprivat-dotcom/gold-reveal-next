@@ -11,17 +11,6 @@ interface TickerEvent {
 const AMOUNTS = [5, 10, 20, 30, 50, 100];
 
 function randomEvent(): TickerEvent {
-  const rand = Math.random();
-  if (rand < 0.25) {
-    const milestones = [
-      { text: "Ein Chatter hat sein Tagesziel erreicht!", emoji: "🎯" },
-      { text: "Ein neuer Chatter ist dem Team beigetreten!", emoji: "🙌" },
-      { text: "Ein Chatter hat gerade eine MassDM gesendet!", emoji: "📩" },
-      { text: "Ein Chatter hat seine Streak fortgesetzt!", emoji: "⚡" },
-    ];
-    const m = milestones[Math.floor(Math.random() * milestones.length)];
-    return { id: `${Date.now()}-${Math.random()}`, ...m };
-  }
   const amt = AMOUNTS[Math.floor(Math.random() * AMOUNTS.length)];
   return { id: `${Date.now()}-${Math.random()}`, text: `Ein Chatter hat gerade ${amt}€ Umsatz gemacht`, emoji: "🔥" };
 }
