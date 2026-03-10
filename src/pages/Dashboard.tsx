@@ -36,6 +36,7 @@ import ModelRequestDialog, { EditRequestData } from "@/components/ModelRequestDi
 import RevenueChart from "@/components/RevenueChart";
 import MonthSummaryWidget from "@/components/MonthSummaryWidget";
 import QuickActionBar from "@/components/QuickActionBar";
+import DashboardOnboarding from "@/components/DashboardOnboarding";
 
 // Streak helper (mirrors StreakTracker logic)
 function getStreakDays(): number {
@@ -430,6 +431,7 @@ export default function Dashboard() {
     <div className="min-h-screen bg-background pb-24">
       <GoldParticles spawnRate={0.25} maxParticles={20} baseOpacity={0.2} />
       <HomescreenTutorial isFirstLogin={isFirstLogin} manualOpen={showTutorial} onManualClose={() => setShowTutorial(false)} />
+      <DashboardOnboarding isFirstLogin={isFirstLogin} />
       <PushNotificationDialog />
       <AccountMemoDialog open={showMemo} onOpenChange={setShowMemo} />
       <FrageMemoDialog open={showFrageMemo} onOpenChange={setShowFrageMemo} />
@@ -572,7 +574,7 @@ export default function Dashboard() {
                   </Dialog>
                 </div>
               }
-              <div className="shrink-0 flex items-center gap-1">
+              <div className="shrink-0 flex items-center gap-1" data-tour="revenue-input">
                 <Zap className="h-3 w-3 text-accent" />
                 <div className="input-gold-shimmer rounded-lg"><Input type="number" min={0} step={50} value={umsatz || ""} onChange={(e) => handleUmsatzChange(Number(e.target.value) || 0)} placeholder="€" className="h-7 text-xs w-20 font-semibold border-transparent" /></div>
               </div>
@@ -594,7 +596,7 @@ export default function Dashboard() {
           variants={staggerContainer}
           initial="hidden"
           animate="show"
-          className="grid grid-cols-2 gap-3 lg:hidden"
+          className="grid grid-cols-2 gap-3 lg:hidden" data-tour="stats-cards"
         >
           <motion.div variants={staggerItem} className="glass-card-subtle rounded-xl p-3 text-center card-hover-glow card-inner-glow group">
             <p className="text-[10px] text-muted-foreground mb-0.5">Umsatz gestern</p>
@@ -690,7 +692,7 @@ export default function Dashboard() {
         }
 
         {/* 7-Day Revenue Chart */}
-        {user && <RevenueChart userId={user.id} />}
+        <div data-tour="revenue-chart">{user && <RevenueChart userId={user.id} />}</div>
 
         {/* Month Summary Widget */}
         <MonthSummaryWidget
@@ -1091,10 +1093,10 @@ export default function Dashboard() {
         </motion.section>
 
         {/* MassDM Generator */}
-        <MassDmGenerator />
+        <div data-tour="massdm"><MassDmGenerator /></div>
 
         {/* Tägliche Aufgaben */}
-        <DailyChecklist />
+        <div data-tour="checklist"><DailyChecklist /></div>
 
         {/* Bonus Model - alles in einer Karte */}
         <BonusModelSection
