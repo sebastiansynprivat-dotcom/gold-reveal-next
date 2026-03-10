@@ -9,13 +9,18 @@ interface QuickActionBarProps {
   onScrollToBonus: () => void;
 }
 
-const actions = [
-  { icon: User, label: "Mein Account", action: "account" },
-  { icon: Crown, label: "Bonusmodell", action: "bonus" },
+const topActions = [
+  { icon: User, label: "Account", action: "account" },
+  { icon: Crown, label: "Bonus", action: "bonus" },
   { icon: FileText, label: "Auszahlung", action: "invoice" },
+] as const;
+
+const bottomActions = [
   { icon: Trophy, label: "Bestenliste", action: "leaderboard" },
   { icon: HelpCircle, label: "Ich habe eine Frage", action: "question" },
 ] as const;
+
+const allActions = [...topActions, ...bottomActions];
 
 export default function QuickActionBar({ onAskQuestion, onFocusRevenue, onScrollToAccount, onScrollToBonus }: QuickActionBarProps) {
   const navigate = useNavigate();
