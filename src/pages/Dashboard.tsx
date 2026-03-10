@@ -491,6 +491,12 @@ export default function Dashboard() {
               <div className="flex-1 min-w-0">
                 <h1 className="text-sm font-bold text-foreground leading-tight">Chatter Dashboard</h1>
               </div>
+              <button
+                onClick={() => { const m = toggleMute(); setSfxMuted(m); }}
+                className="shrink-0 p-1 rounded-lg hover:bg-secondary/80 transition-colors text-muted-foreground hover:text-accent"
+              >
+                {sfxMuted ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
+              </button>
               <Badge className={`shrink-0 text-[10px] ${isTopTier ? "bg-accent text-accent-foreground gold-glow" : "bg-secondary text-secondary-foreground"}`}>
                 <Award className="h-3 w-3 mr-1" />{currentTier.emoji} {currentTier.name}
               </Badge>
