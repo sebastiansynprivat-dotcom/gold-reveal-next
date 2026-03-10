@@ -97,6 +97,9 @@ function buildCumulativeRevenues(daysInMonth: number) {
   return result;
 }
 
+// Diamond chatters — deterministic set of top players
+const DIAMOND_PLAYERS = new Set([0, 2, 5]);
+
 function generateLeaderboard(day: number, cumulativeData: number[][]) {
   const entries = cumulativeData.map((dayRevenues, i) => ({
     playerIndex: i,
@@ -104,9 +107,9 @@ function generateLeaderboard(day: number, cumulativeData: number[][]) {
     lastInit: LAST_INITIALS[i % LAST_INITIALS.length],
     revenue: dayRevenues[day],
     rank: 0,
+    isDiamond: DIAMOND_PLAYERS.has(i),
   }));
 
-  // Sort all by revenue descending — no hardcoding
   entries.sort((a, b) => b.revenue - a.revenue);
   entries.forEach((e, idx) => { e.rank = idx + 1; });
 
