@@ -718,6 +718,18 @@ export default function Dashboard() {
           </div>
         </button>
 
+        {/* Dashboard Tour Button */}
+        <button
+          onClick={() => setShowOnboarding(true)}
+          className="w-full flex items-center gap-3 glass-card-subtle rounded-xl p-3 lg:p-4 border border-border/30 text-left cursor-pointer hover:bg-secondary/30 hover:border-border/50 transition-all"
+        >
+          <Eye className="h-5 w-5 text-muted-foreground shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-foreground">Dashboard-Tour starten</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Alle Bereiche kurz erklärt</p>
+          </div>
+        </button>
+
         {/* Account-Daten */}
         <motion.section
           variants={sectionVariants}
