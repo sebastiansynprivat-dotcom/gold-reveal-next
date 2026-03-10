@@ -84,9 +84,8 @@ const UrgencyCountdown = () => {
 
         <div className="flex items-center gap-1.5 text-muted-foreground">
           <Clock className="w-3.5 h-3.5" />
+          <span className="text-xs text-foreground/70">Angebot endet in</span>
           <div className="flex items-center gap-1 font-mono text-xs">
-            <span className="bg-secondary px-1.5 py-0.5 rounded text-foreground font-semibold">{timeLeft.days}T</span>
-            <span>:</span>
             <span className="bg-secondary px-1.5 py-0.5 rounded text-foreground font-semibold">{pad(timeLeft.hours)}h</span>
             <span>:</span>
             <span className="bg-secondary px-1.5 py-0.5 rounded text-foreground font-semibold">{pad(timeLeft.minutes)}m</span>
