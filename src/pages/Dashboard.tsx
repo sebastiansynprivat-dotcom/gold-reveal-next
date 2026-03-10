@@ -412,6 +412,13 @@ export default function Dashboard() {
             <div className="shrink-0">
               <h1 className="text-base lg:text-lg font-bold text-foreground leading-tight">Chatter Dashboard</h1>
             </div>
+            <button
+              onClick={() => { const m = toggleMute(); setSfxMuted(m); }}
+              className="shrink-0 p-1.5 rounded-lg hover:bg-secondary/80 transition-colors text-muted-foreground hover:text-accent"
+              title={sfxMuted ? "Sounds einschalten" : "Sounds ausschalten"}
+            >
+              {sfxMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+            </button>
             <div className="h-8 w-px bg-border shrink-0" />
             <div className="flex items-center gap-2">
               {telegramSaved ?
