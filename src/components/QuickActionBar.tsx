@@ -21,6 +21,9 @@ export default function QuickActionBar({ onAskQuestion, onFocusRevenue }: QuickA
 
   const handleAction = (action: string) => {
     switch (action) {
+      case "account":
+        onScrollToAccount();
+        break;
       case "revenue":
         onFocusRevenue();
         break;
