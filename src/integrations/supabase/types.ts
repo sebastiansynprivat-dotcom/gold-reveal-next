@@ -746,6 +746,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_route_counter: { Args: never; Returns: number }
       is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
