@@ -25,7 +25,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-start px-4 py-12 md:py-20 relative">
+    <div className="min-h-screen flex flex-col items-center justify-start px-3 sm:px-4 py-8 md:py-20 relative">
       <GoldParticles spawnRate={0.5} maxParticles={35} baseOpacity={0.3} />
       <motion.h1
         initial={{ opacity: 0, y: 20, filter: "blur(6px)" }}
