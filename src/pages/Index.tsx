@@ -3,7 +3,7 @@ import { useProgress } from "@/hooks/useProgress";
 import { motion } from "framer-motion";
 import GoldParticles from "@/components/GoldParticles";
 import SocialProofBar from "@/components/SocialProofBar";
-import UrgencyCountdown from "@/components/UrgencyCountdown";
+
 import VideoThumbnail from "@/components/VideoThumbnail";
 import LandingActivityTicker from "@/components/LandingActivityTicker";
 import ExitIntentPopup from "@/components/ExitIntentPopup";
