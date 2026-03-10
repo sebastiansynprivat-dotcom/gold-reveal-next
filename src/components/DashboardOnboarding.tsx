@@ -10,6 +10,7 @@ interface TourStep {
   title: string;
   description: string;
   icon: React.ElementType;
+  maxHeight?: number;
 }
 
 const TOUR_STEPS: TourStep[] = [
