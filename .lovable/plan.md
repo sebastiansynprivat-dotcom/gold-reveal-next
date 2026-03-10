@@ -1,41 +1,64 @@
 
-# Fortschrittsanzeige und Schritt-Nummerierung fur OfferB
 
-## Was wird gemacht
+# Plan: Casino-artige Sucht-Features
 
-### 1. Alle Schritte als einheitliche Liste definieren
-Die Videos und Links werden zu einer gemeinsamen Schritt-Liste zusammengefasst:
-- Schritt 1: Plattform Erklärungs Video
-- Schritt 2: Telegram Nachrichten Video
-- Schritt 3: Brezzels Notifications aktivieren
-- Schritt 4: My ID Bot einrichten
-- Schritt 5: Tägliches Feedback
+## 1. Live Activity Feed (Echtzeit-Ticker)
 
-### 2. Fortschritts-Bar oben auf der Seite
-Direkt unter dem Hero-Bereich wird eine Progress-Bar eingefügt, die den Gesamtfortschritt anzeigt (z.B. "2 von 5 Schritten erledigt"). Nutzt die vorhandene `Progress`-Komponente im Gold-Styling.
+Ein animierter Ticker am oberen Rand des Dashboards, der anonymisierte Echtzeit-Events anderer Chatter zeigt. Erzeugt FOMO und Social Proof.
 
-### 3. Klickbare Checkliste
-Unter der Progress-Bar eine kompakte Checkliste mit allen 5 Schritten. Jeder Schritt hat:
-- Eine Checkbox zum Abhaken
-- Schritt-Nummer ("Schritt 1", "Schritt 2" etc.)
-- Kurzer Titel
+### Datenquelle
+- Nutzt die existierende `daily_revenue`-Tabelle mit Supabase Realtime
+- Realtime muss für `daily_revenue` aktiviert werden (Migration: `ALTER PUBLICATION supabase_realtime ADD TABLE public.daily_revenue`)
+- Events werden anonymisiert angezeigt (z.B. "Ein Chatter hat gerade 150€ Umsatz eingetragen 🔥")
 
-Der Fortschritt wird im `localStorage` gespeichert, damit er beim Neuladen erhalten bleibt.
+### UI-Komponente: `LiveActivityTicker.tsx`
+- Horizontaler, automatisch scrollender Ticker-Balken direkt unter dem Header
+- Goldenes, subtiles Design passend zum Theme (glass-card Stil)
+- Neue Events sliden von rechts rein mit framer-motion
+- Zeigt die letzten 5-8 Events, rotiert automatisch alle 4 Sekunden
+- Event-Typen:
+  - Umsatz eingetragen: "Ein Chatter hat gerade {amount}€ Umsatz gemacht 🔥"
+  - Hoher Umsatz (>200€): "💎 Großer Umsatz! Ein Chatter hat {amount}€ gemacht!"
+  - Streak-Meilenstein: statische Demo-Events als Fallback wenn wenig los ist
 
-### 4. Schritt-Nummern bei den Sektionen
-Jede Video-/Link-/Feedback-Sektion bekommt eine prominente Schritt-Nummer als Badge (z.B. goldener Kreis mit "1" darin) neben dem Titel.
+### Platzierung
+- Im Dashboard zwischen Header und den Stats-Karten (vor NotificationBanner)
 
-## Technische Details
+---
 
-**Datei: `src/pages/OfferB.tsx`**
+## 2. Sound-Effekte (Micro-Rewards)
 
-- Neue `steps`-Array-Konstante mit id, title, type fur alle 5 Schritte
-- `useState` + `localStorage` fur `completedSteps: Set<number>`
-- Progress-Bar-Sektion nach dem Hero mit `Progress`-Komponente (Wert = `completedSteps.size / steps.length * 100`)
-- Checkliste mit `Checkbox`-Komponenten, gestylt im bestehenden `glass-card-subtle` Look
-- Videos bekommen "Schritt 1" / "Schritt 2" als nummerierte Badge-Kreise
-- Links-Sektion wird zu Schritt 3 und 4 mit individuellen Nummern
-- Feedback wird Schritt 5
-- Erledigte Schritte bekommen eine subtile visuelle Markierung (leicht reduzierte Opazitat / Hakchen)
+Kurze, befriedigende Sounds bei bestimmten Aktionen. Kleine MP3-Dateien (jeweils <50KB), die im `/public/audio/sfx/`-Ordner liegen.
 
-Keine neuen Abhangigkeiten notwendig -- nutzt vorhandene `Progress`, `Checkbox` und `framer-motion`.
+### Sound-Hook: `useSoundEffects.ts`
+- Zentraler Hook mit Methoden wie `playCheckSound()`, `playStreakSound()`, `playLevelUpSound()`
+- Respektiert eine globale Mute-Einstellung (localStorage: `sfx_muted`)
+- Sounds werden als `new Audio()` abgespielt, einmalig gecacht
+
+### Sounds (statische MP3-Dateien):
+Da keine externen APIs nötig sind, verwende ich kurze, synthetisch erzeugte Sounds via Web Audio API (OscillatorNode) – keine Dateien nötig, alles inline generiert:
+
+- **Check-Sound** (Checkbox abhaken): Kurzer aufsteigender Doppel-Ton (150ms)
+- **Streak-Sound** (Streak fortgesetzt): Aufsteigende Tonfolge, 3 Noten (400ms)
+- **Level-Up-Sound** (Tier aufgestiegen): Triumphale 4-Noten-Fanfare (600ms)
+- **Coin-Sound** (Umsatz eingetragen): Münz-Kling (100ms)
+
+### Integration
+- `DailyChecklist.tsx`: Check-Sound beim Abhaken einer Aufgabe
+- `StreakTracker.tsx`: Streak-Sound wenn Tages-Check gemacht wird
+- `Dashboard.tsx`: Coin-Sound beim Umsatz-Speichern, Level-Up bei Tier-Aufstieg
+- Mute-Toggle: Kleiner Lautsprecher-Icon im Header (Volume2/VolumeX)
+
+---
+
+## Technische Änderungen
+
+| Datei | Änderung |
+|-------|----------|
+| **Neue Datei** `src/hooks/useSoundEffects.ts` | Web Audio API basierter Sound-Hook |
+| **Neue Datei** `src/components/LiveActivityTicker.tsx` | Echtzeit-Ticker Komponente |
+| `src/pages/Dashboard.tsx` | Ticker + Sounds einbinden, Mute-Toggle im Header |
+| `src/components/DailyChecklist.tsx` | Check-Sound bei Aufgaben |
+| `src/components/StreakTracker.tsx` | Streak-Sound |
+| **Migration** | Realtime für daily_revenue aktivieren |
+
