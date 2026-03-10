@@ -177,14 +177,18 @@ const WeightedRouteButton = () => {
       const { data: counterResult } = await supabase.rpc("increment_route_counter");
       const currentCounter = counterResult ?? 0;
 
-      // Bresenham-style: pick the route whose "debt" increases at this counter
+      // Cumulative Bresenham: guarantees exact distribution with no gaps or ties
       const totalWeight = routes.reduce((sum, r) => sum + r.weight, 0);
-      let selectedPath = routes[0].target_path;
+      const pos = currentCounter % totalWeight;
+      let selectedPath = routes[routes.length - 1].target_path;
+      let cumWeight = 0;
 
       for (const route of routes) {
-        const prev = Math.floor(currentCounter * route.weight / totalWeight);
-        const next = Math.floor((currentCounter + 1) * route.weight / totalWeight);
-        if (next > prev) {
+        cumWeight += route.weight;
+        const prevCum = cumWeight - route.weight;
+        const cumCrossed = Math.floor((pos + 1) * cumWeight / totalWeight) > Math.floor(pos * cumWeight / totalWeight);
+        const prevCumSame = Math.floor((pos + 1) * prevCum / totalWeight) === Math.floor(pos * prevCum / totalWeight);
+        if (cumCrossed && prevCumSame) {
           selectedPath = route.target_path;
           break;
         }
