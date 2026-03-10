@@ -70,17 +70,7 @@ const VideoThumbnail = ({ embedUrl, onVideoProgress, onVideoEnd }: VideoThumbnai
               alt="Video starten"
               className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />
-            <div className="absolute inset-0 bg-background/30 group-hover:bg-background/15 transition-colors duration-300" />
-            
-            {/* Text overlay – positioned absolutely */}
-            <div className="absolute inset-0 z-10 flex flex-col items-center justify-between py-[12%] sm:py-[10%] pointer-events-none">
-              <span className="gold-gradient-text text-sm sm:text-lg md:text-xl font-bold text-center px-4 leading-snug drop-shadow-lg">
-                Jetzt klicken, um das kostenlose<br />Video zu starten
-              </span>
-              <span className="text-foreground/50 text-[10px] sm:text-xs font-medium group-hover:text-foreground/70 transition-colors">
-                Sicher dir deinen Platz
-              </span>
-            </div>
+            <div className="absolute inset-0 bg-background/10 group-hover:bg-background/0 transition-colors duration-300" />
           </motion.button>
         ) : (
           <motion.iframe
