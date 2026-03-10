@@ -142,11 +142,10 @@ export default function DashboardOnboarding({ isFirstLogin, manualOpen, onManual
       el.scrollIntoView({ behavior: "smooth", block: "center" });
     }
 
-    // Measure after scroll settles
-    const timer = setTimeout(() => {
+    // Measure after scroll + whileInView animations settle
+    const timer1 = setTimeout(() => {
       const measured = measureElement(step);
       if (measured) {
-        // On first step, jump immediately
         if (step === 0 && animRect.w === 0) {
           setAnimRect(measured);
           targetRect.current = measured;
@@ -154,11 +153,20 @@ export default function DashboardOnboarding({ isFirstLogin, manualOpen, onManual
           startAnimation(measured);
         }
       }
-      // Show tooltip slightly after animation starts
-      setTimeout(() => setShowTooltip(true), 200);
-    }, 450);
 
-    return () => clearTimeout(timer);
+      // Re-measure after whileInView animations complete (e.g. motion elements)
+      const timer2 = setTimeout(() => {
+        const remeasured = measureElement(step);
+        if (remeasured) {
+          startAnimation(remeasured);
+        }
+        setShowTooltip(true);
+      }, 350);
+
+      return () => clearTimeout(timer2);
+    }, 500);
+
+    return () => clearTimeout(timer1);
   }, [active, step, measureElement, startAnimation]);
 
   // Keep measuring on scroll/resize
