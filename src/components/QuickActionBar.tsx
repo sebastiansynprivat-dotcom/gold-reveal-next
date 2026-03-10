@@ -1,13 +1,15 @@
 import { motion } from "framer-motion";
-import { Zap, FileText, HelpCircle, Trophy } from "lucide-react";
+import { Zap, FileText, HelpCircle, Trophy, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface QuickActionBarProps {
   onAskQuestion: () => void;
   onFocusRevenue: () => void;
+  onScrollToAccount: () => void;
 }
 
 const actions = [
+  { icon: User, label: "Mein Account", action: "account" },
   { icon: Zap, label: "Umsatz", action: "revenue" },
   { icon: FileText, label: "Rechnung", action: "invoice" },
   { icon: Trophy, label: "Leaderboard", action: "leaderboard" },
