@@ -653,6 +653,26 @@ export default function Dashboard() {
           </motion.div>
         </motion.div>
 
+        {/* Streak Display + Loot Box */}
+        <div className="flex flex-col gap-3">
+          {/* Compact Streak under Status */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="glass-card-subtle rounded-xl px-4 py-2.5 flex items-center justify-center gap-2"
+          >
+            <span className="text-lg">🔥</span>
+            <span className="text-sm font-bold text-foreground">{streakDays}</span>
+            <span className="text-xs text-muted-foreground">/ 7 Tage Streak</span>
+            {streakDays >= 3 && (
+              <span className="ml-1 text-xs text-accent font-medium animate-pulse">Hot Streak!</span>
+            )}
+          </motion.div>
+
+          {/* LootBox Milestone Rewards */}
+          <LootBoxReward monthlyRevenue={monthlyRevenue} />
+        </div>
+
         {/* PWA Install To-Do – between Status and Account, non-dismissable, auto-hides when installed */}
         {!isPwaInstalled &&
         <button
