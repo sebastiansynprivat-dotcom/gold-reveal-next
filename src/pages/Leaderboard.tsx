@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, Trophy, Crown, Medal, Calendar } from "lucide-react";
+import { ChevronLeft, Trophy, Crown, Medal, Calendar, Gem } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import GoldParticles from "@/components/GoldParticles";
