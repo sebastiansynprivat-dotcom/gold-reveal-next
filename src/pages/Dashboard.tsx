@@ -1093,7 +1093,7 @@ export default function Dashboard() {
         </motion.section>
 
         {/* MassDM Generator */}
-        <MassDmGenerator />
+        <div data-tour="massdm"><MassDmGenerator /></div>
 
         {/* Tägliche Aufgaben */}
         <DailyChecklist />
