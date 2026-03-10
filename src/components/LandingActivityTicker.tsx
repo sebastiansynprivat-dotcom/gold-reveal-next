@@ -60,7 +60,7 @@ export default function LandingActivityTicker() {
         <div className="h-px bg-border/20" />
 
         {/* CTA row */}
-        <div className="flex items-center justify-center gap-1.5 px-3.5 py-2">
+        <div className="flex items-center gap-1.5 px-3.5 py-2">
           <span className="text-xs">🚀</span>
           <p className="text-[11px] text-muted-foreground/70 font-medium">
             Schau jetzt das Video und sichere dir deinen Platz – du bist schon bald dabei!
