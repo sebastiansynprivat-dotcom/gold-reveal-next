@@ -22,6 +22,7 @@ import NotificationBanner from "@/components/NotificationBanner";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo.png";
+import GoldParticles from "@/components/GoldParticles";
 import { format, endOfMonth, addMonths, differenceInDays } from "date-fns";
 import { de } from "date-fns/locale";
 import HomescreenTutorial from "@/components/HomescreenTutorial";
@@ -383,6 +384,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
+      <GoldParticles spawnRate={0.25} maxParticles={20} baseOpacity={0.2} />
       <HomescreenTutorial isFirstLogin={isFirstLogin} manualOpen={showTutorial} onManualClose={() => setShowTutorial(false)} />
       <PushNotificationDialog />
       <AccountMemoDialog open={showMemo} onOpenChange={setShowMemo} />
