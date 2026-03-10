@@ -35,7 +35,7 @@ const Index = () => {
         initial={{ opacity: 0, y: 20, filter: "blur(6px)" }}
         animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
         transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-        className="text-2xl sm:text-3xl md:text-5xl font-bold text-center tracking-tight leading-tight mb-5 md:mb-6 max-w-2xl px-1"
+        className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-center tracking-tight leading-tight mb-4 md:mb-3 max-w-2xl px-1"
       >
         <span className="gold-gradient-text">Lerne </span>
         <span className="text-gold-gradient-shimmer">wie du mit Chatten Geld verdienen kannst</span>
