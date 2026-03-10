@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Save, CheckCircle2, Award, Zap, HelpCircle, FileText, Clock, Users, Pencil, ChevronDown, Copy, Smartphone, Mic, MessageSquare, ExternalLink, Gift, Crown } from "lucide-react";
+import { Save, CheckCircle2, Award, Zap, HelpCircle, FileText, Clock, Users, Pencil, ChevronDown, Copy, Smartphone, Mic, MessageSquare, ExternalLink, Gift, Crown, Diamond, Medal } from "lucide-react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import DailyChecklist from "@/components/DailyChecklist";
 import MassDmGenerator from "@/components/MassDmGenerator";
 import DailyGoal from "@/components/DailyGoal";
 import StreakTracker from "@/components/StreakTracker";
+import MonthlyStreakTracker from "@/components/MonthlyStreakTracker";
 import NotificationBanner from "@/components/NotificationBanner";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,9 +30,23 @@ import AccountMemoDialog from "@/components/AccountMemoDialog";
 import FrageMemoDialog from "@/components/FrageMemoDialog";
 import ModelRequestDialog, { EditRequestData } from "@/components/ModelRequestDialog";
 
-const GOLD_THRESHOLD = 3000;
-const STARTER_RATE = 0.2;
-const GOLD_RATE = 0.25;
+const BONUS_TIERS = [
+  { name: "Starter", emoji: "⚡", min: 0, max: 499, rate: 20 },
+  { name: "Bronze", emoji: "🥉", min: 500, max: 999, rate: 21 },
+  { name: "Silber", emoji: "🥈", min: 1000, max: 1499, rate: 22 },
+  { name: "Platin", emoji: "💠", min: 1500, max: 1999, rate: 23 },
+  { name: "Diamond", emoji: "💎", min: 2000, max: Infinity, rate: 24 },
+] as const;
+
+function getCurrentTier(monthlyRevenue: number) {
+  return BONUS_TIERS.find(t => monthlyRevenue >= t.min && monthlyRevenue <= t.max) || BONUS_TIERS[0];
+}
+
+function getNextTier(monthlyRevenue: number) {
+  const currentIdx = BONUS_TIERS.findIndex(t => monthlyRevenue >= t.min && monthlyRevenue <= t.max);
+  if (currentIdx < BONUS_TIERS.length - 1) return BONUS_TIERS[currentIdx + 1];
+  return null;
+}
 
 // Animated counter hook
 function useAnimatedCounter(target: number, duration = 1200) {
@@ -338,10 +353,14 @@ export default function Dashboard() {
     return monthlyRevenue;
   }, [monthlyRevenue]);
 
-  const isGold = umsatz >= GOLD_THRESHOLD;
-  const rate = isGold ? GOLD_RATE : STARTER_RATE;
-  const verdienst = umsatz * rate;
-  const progressPct = Math.min(umsatz / GOLD_THRESHOLD * 100, 100);
+  const currentTier = getCurrentTier(monthlyRevenue);
+  const nextTier = getNextTier(monthlyRevenue);
+  const rate = currentTier.rate / 100;
+  const verdienst = monthlyRevenue * rate;
+  const isTopTier = !nextTier;
+  const progressToNext = nextTier
+    ? Math.min(((monthlyRevenue - currentTier.min) / (nextTier.min - currentTier.min)) * 100, 100)
+    : 100;
 
   const fireConfetti = useCallback(() => {
     confetti({
@@ -353,12 +372,12 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    if (isGold && !hadConfetti) {
+    if (isTopTier && !hadConfetti) {
       setHadConfetti(true);
       fireConfetti();
     }
-    if (!isGold) setHadConfetti(false);
-  }, [isGold, hadConfetti, fireConfetti]);
+    if (!isTopTier) setHadConfetti(false);
+  }, [isTopTier, hadConfetti, fireConfetti]);
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -433,8 +452,8 @@ export default function Dashboard() {
                 <Zap className="h-3.5 w-3.5 text-accent shrink-0" />
                 <div className="input-gold-shimmer rounded-lg"><Input type="number" min={0} step={50} value={umsatz || ""} onChange={(e) => handleUmsatzChange(Number(e.target.value) || 0)} placeholder="Umsatz €" className="h-7 text-xs w-24 font-semibold border-transparent" /></div>
               </div>
-              <Badge className={isGold ? "bg-accent text-accent-foreground gold-glow" : "bg-secondary text-secondary-foreground"}>
-                <Award className="h-3 w-3 mr-1" />{isGold ? "Gold" : "Starter"}
+              <Badge className={isTopTier ? "bg-accent text-accent-foreground gold-glow" : "bg-secondary text-secondary-foreground"}>
+                <Award className="h-3 w-3 mr-1" />{currentTier.emoji} {currentTier.name}
               </Badge>
             </div>
           </div>
@@ -447,8 +466,8 @@ export default function Dashboard() {
               <div className="flex-1 min-w-0">
                 <h1 className="text-sm font-bold text-foreground leading-tight">Chatter Dashboard</h1>
               </div>
-              <Badge className={`shrink-0 text-[10px] ${isGold ? "bg-accent text-accent-foreground gold-glow" : "bg-secondary text-secondary-foreground"}`}>
-                <Award className="h-3 w-3 mr-1" />{isGold ? "Gold" : "Starter"}
+              <Badge className={`shrink-0 text-[10px] ${isTopTier ? "bg-accent text-accent-foreground gold-glow" : "bg-secondary text-secondary-foreground"}`}>
+                <Award className="h-3 w-3 mr-1" />{currentTier.emoji} {currentTier.name}
               </Badge>
             </div>
 
@@ -549,7 +568,7 @@ export default function Dashboard() {
           <DailyGoal />
           <motion.div variants={staggerItem} className="gold-gradient-border-animated rounded-xl p-3 text-center col-span-2 pulse-glow">
             <p className="text-[10px] text-muted-foreground mb-0.5">Status</p>
-            <p className={`text-xl font-bold ${isGold ? "text-gold-gradient" : "text-muted-foreground"}`}>{isGold ? "Gold" : "Starter"}</p>
+            <p className={`text-xl font-bold ${isTopTier ? "text-gold-gradient" : "text-foreground"}`}>{currentTier.emoji} {currentTier.name}</p>
           </motion.div>
         </motion.div>
         {/* Desktop: Bento grid */}
@@ -582,7 +601,7 @@ export default function Dashboard() {
           <DailyGoal />
           <motion.div variants={staggerItem} className="gold-gradient-border-animated rounded-xl p-5 text-center col-span-4 pulse-glow">
             <p className="text-xs text-muted-foreground mb-0.5">Status</p>
-            <p className={`text-2xl font-bold ${isGold ? "text-gold-gradient" : "text-muted-foreground"}`}>{isGold ? "Gold" : "Starter"}</p>
+            <p className={`text-2xl font-bold ${isTopTier ? "text-gold-gradient" : "text-foreground"}`}>{currentTier.emoji} {currentTier.name}</p>
           </motion.div>
         </motion.div>
 
@@ -1036,7 +1055,7 @@ export default function Dashboard() {
             viewport={{ once: true }}
             variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.1 } } }}
           >
-            {/* Account Upgrade - Tier 1 */}
+            {/* Account Upgrade - Streak */}
             <motion.div
               variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
               className="relative rounded-xl overflow-hidden bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/30 p-4 lg:p-5 space-y-4 transition-transform duration-200 hover:scale-[1.01]"
@@ -1056,92 +1075,94 @@ export default function Dashboard() {
               <StreakTracker dailyRevenue={umsatz} />
             </motion.div>
 
-            {/* Gold - Tier 2 with progress bar */}
+            {/* 30-Tage-Challenge */}
             <motion.div
               variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
-              className={cn(
-                "relative rounded-xl overflow-hidden border p-4 lg:p-5 space-y-3 transition-all duration-300",
-                isGold
-                  ? "gold-gradient-border-animated pulse-glow bg-accent/10"
-                  : "border-border bg-secondary/30 hover:scale-[1.01] hover:border-border/80"
-              )}
+              className="relative rounded-xl overflow-hidden bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/20 p-4 lg:p-5 space-y-4 transition-transform duration-200 hover:scale-[1.01]"
             >
-              {isGold && <div className="absolute left-0 top-0 bottom-0 w-1 bg-accent" />}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className={cn("h-10 w-10 rounded-full flex items-center justify-center", isGold ? "bg-accent/20 gold-glow" : "bg-secondary")}>
-                    <Award className={cn("h-5 w-5", isGold ? "text-accent" : "text-muted-foreground")} />
+                  <div className="h-10 w-10 rounded-full bg-accent/15 flex items-center justify-center">
+                    <span className="text-lg">💎</span>
                   </div>
                   <div>
-                    <p className={cn("font-bold text-sm lg:text-base", isGold ? "text-gold-gradient-shimmer" : "text-muted-foreground")}>Gold-Status</p>
-                    <p className="text-[10px] lg:text-xs text-muted-foreground">Ab 3.000€ Monatsumsatz</p>
+                    <p className="font-bold text-accent text-sm lg:text-base">30-Tage-Challenge</p>
+                    <p className="text-[10px] lg:text-xs text-muted-foreground">30 Tage in Folge mind. 100€ Umsatz</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <span className={cn("font-bold text-lg lg:text-xl", isGold ? "text-gold-gradient" : "text-muted-foreground")}>25%</span>
-                  {isGold && (
-                    <motion.p
-                      initial={{ scale: 0.8, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      className="text-[10px] text-accent font-semibold gold-glow rounded-full px-2 py-0.5 bg-accent/10 mt-1 inline-block"
-                    >
-                      🏆 Gold aktiv
-                    </motion.p>
-                  )}
-                </div>
+                <span className="font-bold text-accent text-sm lg:text-base">Spezialbonus</span>
               </div>
-              {/* Gold progress bar */}
-              <div className="space-y-1.5">
-                <Progress value={progressPct} className={cn("h-2.5 [&>div]:bg-accent shimmer-bar", isGold && "[&>div]:bg-gradient-to-r [&>div]:from-accent [&>div]:to-gold-light")} />
-                <div className="flex justify-between text-[10px] text-muted-foreground">
-                  <motion.span
-                    key={umsatz}
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    {umsatz.toLocaleString("de-DE")}€
-                  </motion.span>
-                  <span>
-                    {isGold
-                      ? "Gold-Status aktiv 🎉"
-                      : `Noch ${(GOLD_THRESHOLD - umsatz).toLocaleString("de-DE")}€`}
-                  </span>
-                </div>
-              </div>
+              <MonthlyStreakTracker dailyRevenue={umsatz} />
             </motion.div>
 
-            {/* Starter - Tier 3 */}
-            <motion.div
-              variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
-              className={cn(
-                "relative rounded-xl overflow-hidden border p-4 lg:p-5 transition-all duration-200",
-                !isGold ? "border-border bg-secondary/50" : "border-border/50 bg-secondary/20 hover:scale-[1.01]"
-              )}
-            >
-              {!isGold && <div className="absolute left-0 top-0 bottom-0 w-1 bg-accent" />}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className={cn("h-10 w-10 rounded-full flex items-center justify-center", !isGold ? "bg-secondary" : "bg-secondary/50")}>
-                    <Zap className={cn("h-5 w-5", !isGold ? "text-foreground" : "text-muted-foreground/50")} />
+            {/* Bonus Tiers */}
+            {[...BONUS_TIERS].reverse().map((tier) => {
+              const isActive = currentTier.name === tier.name;
+              const isAbove = monthlyRevenue > tier.max;
+              return (
+                <motion.div
+                  key={tier.name}
+                  variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
+                  className={cn(
+                    "relative rounded-xl overflow-hidden border p-4 lg:p-5 transition-all duration-300",
+                    isActive
+                      ? tier.name === "Diamond"
+                        ? "gold-gradient-border-animated pulse-glow bg-accent/10"
+                        : "border-accent/50 bg-accent/5"
+                      : "border-border/50 bg-secondary/20 hover:scale-[1.01]"
+                  )}
+                >
+                  {isActive && <div className="absolute left-0 top-0 bottom-0 w-1 bg-accent" />}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={cn("h-10 w-10 rounded-full flex items-center justify-center", isActive ? "bg-accent/20" : isAbove ? "bg-accent/10" : "bg-secondary")}>
+                        <span className="text-lg">{tier.emoji}</span>
+                      </div>
+                      <div>
+                        <p className={cn("font-bold text-sm lg:text-base", isActive ? "text-gold-gradient-shimmer" : isAbove ? "text-accent/60" : "text-muted-foreground")}>{tier.name}</p>
+                        <p className="text-[10px] lg:text-xs text-muted-foreground">
+                          {tier.max === Infinity ? `Ab ${tier.min.toLocaleString("de-DE")}€` : `${tier.min.toLocaleString("de-DE")}€ – ${tier.max.toLocaleString("de-DE")}€`} Monatsumsatz
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className={cn("font-bold text-lg lg:text-xl", isActive ? "text-gold-gradient" : isAbove ? "text-accent/60" : "text-muted-foreground")}>{tier.rate}%</span>
+                      {isActive && (
+                        <motion.p
+                          initial={{ scale: 0.8, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          className="text-[10px] text-accent font-semibold gold-glow rounded-full px-2 py-0.5 bg-accent/10 mt-1 inline-block"
+                        >
+                          {tier.emoji} Aktiv
+                        </motion.p>
+                      )}
+                    </div>
                   </div>
-                  <div>
-                    <p className={cn("font-bold text-sm lg:text-base", !isGold ? "text-foreground" : "text-muted-foreground/50")}>Starter</p>
-                    <p className="text-[10px] lg:text-xs text-muted-foreground">0€ – 2.999€ Umsatz</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <span className={cn("font-bold text-lg lg:text-xl", !isGold ? "text-foreground" : "text-muted-foreground/50")}>20%</span>
-                </div>
-              </div>
-            </motion.div>
+                  {/* Progress bar for active tier toward next */}
+                  {isActive && nextTier && (
+                    <div className="space-y-1.5 mt-3">
+                      <Progress value={progressToNext} className="h-2.5 [&>div]:bg-accent shimmer-bar" />
+                      <div className="flex justify-between text-[10px] text-muted-foreground">
+                        <span>{monthlyRevenue.toLocaleString("de-DE")}€</span>
+                        <span>Noch {(nextTier.min - monthlyRevenue).toLocaleString("de-DE")}€ bis {nextTier.name}</span>
+                      </div>
+                    </div>
+                  )}
+                  {isActive && !nextTier && (
+                    <div className="mt-2">
+                      <p className="text-[10px] text-accent font-semibold">🏆 Höchste Stufe erreicht!</p>
+                    </div>
+                  )}
+                </motion.div>
+              );
+            })}
           </motion.div>
 
           <p className="text-[10px] lg:text-xs text-muted-foreground">
-            Ab 3.000€ Monatsumsatz gilt die 25%-Rate für diesen Monat auf den <strong className="text-foreground">gesamten Betrag</strong>.
+            Deine Rate gilt für den <strong className="text-foreground">gesamten Monatsumsatz</strong> und wird automatisch angepasst.
           </p>
           <p className="text-[10px] lg:text-xs text-muted-foreground">
-            7 Tage in Folge mind. 30€ = <strong className="text-foreground">Upgrade auf besseren Account</strong>.
+            7 Tage × 30€ = <strong className="text-foreground">Account Upgrade</strong> · 30 Tage × 100€ = <strong className="text-foreground">Spezialbonus</strong>
           </p>
         </motion.section>
 
