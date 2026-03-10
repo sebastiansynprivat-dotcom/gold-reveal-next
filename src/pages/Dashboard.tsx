@@ -1056,6 +1056,72 @@ export default function Dashboard() {
             viewport={{ once: true }}
             variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.1 } } }}
           >
+            {/* Tier Cards Grid */}
+            <motion.div
+              variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
+            >
+              <div className="grid grid-cols-6 gap-1.5 lg:gap-2">
+                {BONUS_TIERS.map((tier) => {
+                  const isActive = currentTier.name === tier.name;
+                  const isPassed = monthlyRevenue > tier.max;
+                  return (
+                    <div
+                      key={tier.name}
+                      className={cn(
+                        "relative rounded-lg overflow-hidden backdrop-blur-xl transition-all duration-300",
+                        isActive
+                          ? tier.name === "Diamond"
+                            ? "gold-gradient-border-animated bg-[hsl(0_0%_8%/0.7)]"
+                            : "border border-accent/40 bg-[hsl(0_0%_8%/0.7)] shadow-[0_0_20px_hsl(43_56%_52%/0.12)]"
+                          : isPassed
+                            ? "border border-accent/10 bg-[hsl(0_0%_8%/0.4)]"
+                            : "border border-border/20 bg-[hsl(0_0%_6%/0.4)]"
+                      )}
+                    >
+                      {isActive && (
+                        <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
+                      )}
+                      <div className="flex flex-col items-center text-center p-2 lg:p-3 gap-0.5">
+                        <span className="text-base lg:text-xl">{tier.emoji}</span>
+                        <p className={cn(
+                          "font-bold text-[9px] lg:text-[11px] leading-tight",
+                          isActive ? "text-gold-gradient" : isPassed ? "text-accent/40" : "text-muted-foreground/50"
+                        )}>
+                          {tier.name}
+                        </p>
+                        <p className={cn(
+                          "font-bold text-sm lg:text-lg leading-none",
+                          isActive ? "text-foreground" : isPassed ? "text-accent/30" : "text-muted-foreground/25"
+                        )}>
+                          {tier.rate}%
+                        </p>
+                        <p className={cn(
+                          "text-[7px] lg:text-[9px] leading-tight",
+                          isActive ? "text-accent/70 font-medium" : "text-muted-foreground/30"
+                        )}>
+                          {tier.max === Infinity
+                            ? `ab ${tier.min.toLocaleString("de-DE")}€`
+                            : `ab ${tier.min.toLocaleString("de-DE")}€`}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              {nextTier && (
+                <div className="mt-2 space-y-1">
+                  <Progress value={progressToNext} className="h-1.5 [&>div]:bg-accent shimmer-bar" />
+                  <div className="flex justify-between text-[9px] lg:text-[10px] text-muted-foreground">
+                    <span>{currentTier.emoji} {monthlyRevenue.toLocaleString("de-DE")}€</span>
+                    <span>Noch <span className="text-accent font-semibold">{(nextTier.min - monthlyRevenue).toLocaleString("de-DE")}€</span> bis {nextTier.emoji} {nextTier.name}</span>
+                  </div>
+                </div>
+              )}
+              {!nextTier && (
+                <p className="text-[9px] text-accent font-semibold mt-2">🏆 Höchste Stufe erreicht!</p>
+              )}
+            </motion.div>
+
             {/* Account Upgrade - Streak */}
             <motion.div
               variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
@@ -1094,94 +1160,6 @@ export default function Dashboard() {
                 <span className="font-bold text-accent text-sm lg:text-base">Spezialbonus</span>
               </div>
               <MonthlyStreakTracker dailyRevenue={umsatz} />
-            </motion.div>
-
-            {/* Horizontal Scroll Tier Cards */}
-            <motion.div
-              variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
-            >
-              <div className="flex gap-2.5 overflow-x-auto pb-3 snap-x snap-mandatory scrollbar-hide -mx-1 px-1">
-                {BONUS_TIERS.map((tier) => {
-                  const isActive = currentTier.name === tier.name;
-                  const isPassed = monthlyRevenue > tier.max;
-                  const isNextTarget = nextTier?.name === tier.name;
-                  return (
-                    <motion.div
-                      key={tier.name}
-                      animate={isActive ? { scale: 1 } : { scale: 0.95 }}
-                      transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                      className={cn(
-                        "relative flex-shrink-0 snap-center rounded-xl transition-all duration-300 overflow-hidden",
-                        isActive
-                          ? "w-[170px] lg:w-[190px]"
-                          : "w-[120px] lg:w-[135px]",
-                      )}
-                    >
-                      {/* Glass card */}
-                      <div className={cn(
-                        "h-full rounded-xl backdrop-blur-xl",
-                        isActive
-                          ? tier.name === "Diamond"
-                            ? "gold-gradient-border-animated bg-[hsl(0_0%_8%/0.7)]"
-                            : "border border-accent/40 bg-[hsl(0_0%_8%/0.7)] shadow-[0_0_25px_hsl(43_56%_52%/0.15),inset_0_1px_0_hsl(43_56%_52%/0.1)]"
-                          : isPassed
-                            ? "border border-accent/10 bg-[hsl(0_0%_8%/0.5)]"
-                            : "border border-border/20 bg-[hsl(0_0%_6%/0.5)]"
-                      )}>
-                        {/* Top shine */}
-                        {isActive && (
-                          <div className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
-                        )}
-
-                        <div className={cn(
-                          "flex flex-col items-center text-center gap-1",
-                          isActive ? "p-4 lg:p-5" : "p-3 lg:p-3.5"
-                        )}>
-                          <span className={cn(
-                            isActive ? "text-3xl" : "text-xl",
-                            "transition-all duration-300"
-                          )}>{tier.emoji}</span>
-                          <p className={cn(
-                            "font-bold",
-                            isActive ? "text-sm lg:text-base text-gold-gradient" : "text-[10px] lg:text-xs",
-                            isPassed ? "text-accent/40" : !isActive ? "text-muted-foreground/60" : ""
-                          )}>
-                            {tier.name}
-                          </p>
-                          <p className={cn(
-                            "font-bold leading-none",
-                            isActive ? "text-2xl lg:text-3xl text-foreground" : "text-base lg:text-lg",
-                            isPassed ? "text-accent/30" : !isActive ? "text-muted-foreground/30" : ""
-                          )}>
-                            {tier.rate}%
-                          </p>
-                          <p className={cn(
-                            "leading-tight mt-0.5",
-                            isActive ? "text-[10px] lg:text-[11px] text-accent/80 font-medium" : "text-[8px] lg:text-[9px] text-muted-foreground/40"
-                          )}>
-                            {tier.max === Infinity
-                              ? `ab ${tier.min.toLocaleString("de-DE")}€`
-                              : `${tier.min.toLocaleString("de-DE")}–${tier.max.toLocaleString("de-DE")}€`}
-                          </p>
-
-                          {/* Progress integrated into active card */}
-                          {isActive && nextTier && (
-                            <div className="w-full mt-2 space-y-1">
-                              <Progress value={progressToNext} className="h-1.5 [&>div]:bg-accent shimmer-bar" />
-                              <p className="text-[9px] text-muted-foreground">
-                                Noch <span className="text-accent font-semibold">{(nextTier.min - monthlyRevenue).toLocaleString("de-DE")}€</span> bis {nextTier.name}
-                              </p>
-                            </div>
-                          )}
-                          {isActive && !nextTier && (
-                            <p className="text-[9px] text-accent font-semibold mt-1">🏆 Max erreicht</p>
-                          )}
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
             </motion.div>
           </motion.div>
 
