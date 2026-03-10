@@ -1,41 +1,30 @@
+## Plan: 7. Bonus-Stufe + Spacing-Fix
 
-# Fortschrittsanzeige und Schritt-Nummerierung fur OfferB
+### 1. Neue Stufe hinzufügen
 
-## Was wird gemacht
+Eine 7. Stufe **"Titan"** mit 🔱 Emoji, ab 50.000€, Rate 35%.
 
-### 1. Alle Schritte als einheitliche Liste definieren
-Die Videos und Links werden zu einer gemeinsamen Schritt-Liste zusammengefasst:
-- Schritt 1: Plattform Erklärungs Video
-- Schritt 2: Telegram Nachrichten Video
-- Schritt 3: Brezzels Notifications aktivieren
-- Schritt 4: My ID Bot einrichten
-- Schritt 5: Tägliches Feedback
+Das `BONUS_TIERS` Array wird erweitert – Platin max wird auf 4999 angepasst, Diamond max auf 49999, und die neue Stufe bekommt `max: Infinity`.
 
-### 2. Fortschritts-Bar oben auf der Seite
-Direkt unter dem Hero-Bereich wird eine Progress-Bar eingefügt, die den Gesamtfortschritt anzeigt (z.B. "2 von 5 Schritten erledigt"). Nutzt die vorhandene `Progress`-Komponente im Gold-Styling.
+### 2. Grid-Layout anpassen
 
-### 3. Klickbare Checkliste
-Unter der Progress-Bar eine kompakte Checkliste mit allen 5 Schritten. Jeder Schritt hat:
-- Eine Checkbox zum Abhaken
-- Schritt-Nummer ("Schritt 1", "Schritt 2" etc.)
-- Kurzer Titel
+Mit 7 Karten passt `grid-cols-6` nicht mehr sauber. Lösung:
 
-Der Fortschritt wird im `localStorage` gespeichert, damit er beim Neuladen erhalten bleibt.
+- **Mobile**: `grid-cols-3` bleibt (3 Reihen: 3+3+1, letzte zentriert)
+- **Desktop**: `grid-cols-7` statt `grid-cols-6`
 
-### 4. Schritt-Nummern bei den Sektionen
-Jede Video-/Link-/Feedback-Sektion bekommt eine prominente Schritt-Nummer als Badge (z.B. goldener Kreis mit "1" darin) neben dem Titel.
+Die letzte Karte auf Mobile wird über eine Utility-Klasse zentriert (z.B. `col-start-2` für die 7. Karte oder ein Flex-Wrapper mit `justify-center` für die letzte Reihe).
 
-## Technische Details
+Alternativ: Auf Mobile `grid-cols-4` erste Reihe, `grid-cols-3` zweite – aber das wird kompliziert. Sauberer: **4 Karten oben, 3 unten zentriert** via Flex-Layout statt Grid, oder einfach die 7. Karte in der 3. Reihe links starten lassen.
 
-**Datei: `src/pages/OfferB.tsx`**
+### 3. Mehr Abstand vor Account Upgrade
 
-- Neue `steps`-Array-Konstante mit id, title, type fur alle 5 Schritte
-- `useState` + `localStorage` fur `completedSteps: Set<number>`
-- Progress-Bar-Sektion nach dem Hero mit `Progress`-Komponente (Wert = `completedSteps.size / steps.length * 100`)
-- Checkliste mit `Checkbox`-Komponenten, gestylt im bestehenden `glass-card-subtle` Look
-- Videos bekommen "Schritt 1" / "Schritt 2" als nummerierte Badge-Kreise
-- Links-Sektion wird zu Schritt 3 und 4 mit individuellen Nummern
-- Feedback wird Schritt 5
-- Erledigte Schritte bekommen eine subtile visuelle Markierung (leicht reduzierte Opazitat / Hakchen)
+Zwischen dem Progress-Bar-Block und dem "Account Upgrade" Block wird der Abstand von aktuell `space-y` auf deutlich mehr erhöht (z.B. `mt-8` oder `mt-10` statt dem impliziten Stagger-Gap).
 
-Keine neuen Abhangigkeiten notwendig -- nutzt vorhandene `Progress`, `Checkbox` und `framer-motion`.
+### 4. Legend-Stufe Styling
+
+Die Legend-Stufe bekommt wie Diamond ein besonderes Styling wenn aktiv – z.B. auch `gold-gradient-border-animated` oder einen eigenen visuellen Effekt.
+
+### Dateien
+
+- `src/pages/Dashboard.tsx` – BONUS_TIERS erweitern, Grid anpassen, Spacing erhöhen
