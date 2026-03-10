@@ -72,7 +72,7 @@ const SocialProofBar = () => {
         </a>
 
         {/* Active chatters */}
-        <div className="flex items-center gap-2 glass-card-subtle rounded-xl px-4 py-2.5">
+        <div className="flex items-center gap-1.5 sm:gap-2 glass-card-subtle rounded-lg sm:rounded-xl px-3 sm:px-4 py-2 sm:py-2.5">
           <div className="relative">
             <Users className="w-4 h-4 text-primary" />
             <span className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
