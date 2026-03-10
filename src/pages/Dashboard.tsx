@@ -34,6 +34,29 @@ import AccountMemoDialog from "@/components/AccountMemoDialog";
 import FrageMemoDialog from "@/components/FrageMemoDialog";
 import ModelRequestDialog, { EditRequestData } from "@/components/ModelRequestDialog";
 
+// Streak helper (mirrors StreakTracker logic)
+function getStreakDays(): number {
+  try {
+    const raw = localStorage.getItem("streak_data");
+    if (!raw) return 0;
+    const { dates } = JSON.parse(raw) as { dates: string[] };
+    if (!dates || dates.length === 0) return 0;
+    const sorted = [...new Set(dates)].sort().reverse();
+    const today = new Date().toISOString().split("T")[0];
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+    if (sorted[0] !== today && sorted[0] !== yesterday) return 0;
+    let count = 1;
+    for (let i = 1; i < sorted.length; i++) {
+      const prev = new Date(sorted[i - 1]);
+      const curr = new Date(sorted[i]);
+      const diff = (prev.getTime() - curr.getTime()) / 86400000;
+      if (diff === 1) count++;
+      else break;
+    }
+    return count;
+  } catch { return 0; }
+}
+
 const BONUS_TIERS = [
   { name: "Starter", emoji: "⚡", min: 0, max: 499, rate: 20 },
   { name: "Bronze", emoji: "🥉", min: 500, max: 999, rate: 21 },
