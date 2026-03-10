@@ -57,6 +57,7 @@ export default function HomescreenTutorial({ isFirstLogin, manualOpen, onManualC
     localStorage.setItem(TUTORIAL_KEY, "true");
     setOpen(false);
     onManualClose?.();
+    onDismiss?.();
   };
 
   return (

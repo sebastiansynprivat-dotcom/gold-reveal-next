@@ -70,12 +70,12 @@ export default function DashboardOnboarding({ isFirstLogin, manualOpen, onManual
   const rafRef = useRef<number>();
 
   useEffect(() => {
-    if (!isFirstLogin) return;
+    if (!isFirstLogin || waitForDismiss) return;
     const seen = localStorage.getItem(ONBOARDING_KEY);
     if (seen) return;
     const timer = setTimeout(() => setActive(true), 2000);
     return () => clearTimeout(timer);
-  }, [isFirstLogin]);
+  }, [isFirstLogin, waitForDismiss]);
 
   useEffect(() => {
     if (manualOpen) {

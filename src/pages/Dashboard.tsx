@@ -197,6 +197,12 @@ export default function Dashboard() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showMemo, setShowMemo] = useState(false);
   const [showFrageMemo, setShowFrageMemo] = useState(false);
+  const [homescreenDismissed, setHomescreenDismissed] = useState(() => {
+    // If PWA is already installed or tutorial was seen, no need to wait
+    const isStandalone = window.matchMedia("(display-mode: standalone)").matches || (window.navigator as any).standalone === true;
+    const seen = localStorage.getItem("homescreen_tutorial_seen");
+    return isStandalone || !!seen;
+  });
   const [isPwaInstalled, setIsPwaInstalled] = useState(() => {
     return window.matchMedia("(display-mode: standalone)").matches ||
     (window.navigator as any).standalone === true;
