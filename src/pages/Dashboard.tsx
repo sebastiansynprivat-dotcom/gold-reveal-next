@@ -659,6 +659,7 @@ export default function Dashboard() {
             <p className={`text-2xl font-bold ${isTopTier ? "text-gold-gradient" : "text-foreground"}`}>{currentTier.emoji} {currentTier.name}</p>
           </motion.div>
         </motion.div>
+        </div>
 
         {/* Quick Action Bar */}
         <QuickActionBar
