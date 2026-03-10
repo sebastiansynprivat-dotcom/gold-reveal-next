@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { endOfMonth, differenceInDays, format } from "date-fns";
-import { de } from "date-fns/locale";
+import { endOfMonth, differenceInDays } from "date-fns";
 import { Target, CalendarClock, TrendingUp } from "lucide-react";
 
 interface MonthSummaryWidgetProps {
@@ -19,14 +18,17 @@ export default function MonthSummaryWidget({ monthlyRevenue, rate, tierName, tie
   const totalDays = monthEnd.getDate();
   const progressPercent = Math.round((dayOfMonth / totalDays) * 100);
 
-  const projected = useMemo(() => {
+  const dailyAverage = useMemo(() => {
     if (dayOfMonth <= 1) return monthlyRevenue;
-    return Math.round((monthlyRevenue / dayOfMonth) * totalDays);
-  }, [monthlyRevenue, dayOfMonth, totalDays]);
+    return Math.round(monthlyRevenue / dayOfMonth);
+  }, [monthlyRevenue, dayOfMonth]);
+
+  const projected = useMemo(() => {
+    return dailyAverage * totalDays;
+  }, [dailyAverage, totalDays]);
 
   const projectedEarnings = Math.round(projected * rate);
 
-  // SVG circle progress
   const radius = 38;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (progressPercent / 100) * circumference;
@@ -40,7 +42,14 @@ export default function MonthSummaryWidget({ monthlyRevenue, rate, tierName, tie
     >
       <div className="mb-3">
         <p className="text-xs font-medium text-muted-foreground">Dein Monat auf einen Blick</p>
-        <p className="text-[10px] text-muted-foreground/70 mt-0.5">Hochrechnung basierend auf deinem bisherigen Tagesdurchschnitt – wenn du so weitermachst wie bisher.</p>
+        <p className="text-[10px] text-muted-foreground/70 mt-1 leading-relaxed">
+          Diese Zahlen sind eine Vorausrechnung. Sie basiert auf deinem bisherigen Tagesdurchschnitt in diesem Monat.
+          Du hast bisher an {dayOfMonth} Tagen insgesamt {monthlyRevenue.toLocaleString("de-DE")}€ Umsatz gemacht – das ergibt
+          einen Durchschnitt von {dailyAverage.toLocaleString("de-DE")}€ pro Tag.
+          Wenn du diesen Durchschnitt für die restlichen {daysLeft} Tage beibehältst,
+          kommst du am Monatsende auf circa {projected.toLocaleString("de-DE")}€ Umsatz.
+          Bei deiner aktuellen Rate von {Math.round(rate * 100)}% wäre dein voraussichtlicher Verdienst dann {projectedEarnings.toLocaleString("de-DE")}€.
+        </p>
       </div>
       <div className="flex items-center gap-5">
         {/* Progress Ring */}
@@ -76,14 +85,14 @@ export default function MonthSummaryWidget({ monthlyRevenue, rate, tierName, tie
           <div className="flex items-center gap-2">
             <TrendingUp className="h-3.5 w-3.5 text-accent shrink-0" />
             <div>
-              <p className="text-[10px] text-muted-foreground">Hochrechnung</p>
+              <p className="text-[10px] text-muted-foreground">Voraussichtlicher Monatsumsatz</p>
               <p className="text-sm font-bold text-foreground">{projected.toLocaleString("de-DE")}€</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <Target className="h-3.5 w-3.5 text-accent shrink-0" />
             <div>
-              <p className="text-[10px] text-muted-foreground">Proj. Verdienst</p>
+              <p className="text-[10px] text-muted-foreground">Voraussichtlicher Verdienst</p>
               <p className="text-sm font-bold text-gold-gradient">{projectedEarnings.toLocaleString("de-DE")}€</p>
             </div>
           </div>
