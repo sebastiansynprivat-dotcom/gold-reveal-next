@@ -1,27 +1,41 @@
 
+# Fortschrittsanzeige und Schritt-Nummerierung fur OfferB
 
-## Plan: Dynamische Tages-Bestenliste mit Demo-Slider
+## Was wird gemacht
 
-### Was wird gemacht
+### 1. Alle Schritte als einheitliche Liste definieren
+Die Videos und Links werden zu einer gemeinsamen Schritt-Liste zusammengefasst:
+- Schritt 1: Plattform Erklärungs Video
+- Schritt 2: Telegram Nachrichten Video
+- Schritt 3: Brezzels Notifications aktivieren
+- Schritt 4: My ID Bot einrichten
+- Schritt 5: Tägliches Feedback
 
-1. **Platz 1 realistischer machen** — Sebastian bekommt ~98.347€ statt glatte 100.000€. Alle Zahlen werden "krumm" (ungerade Hunderter/Zehner).
+### 2. Fortschritts-Bar oben auf der Seite
+Direkt unter dem Hero-Bereich wird eine Progress-Bar eingefügt, die den Gesamtfortschritt anzeigt (z.B. "2 von 5 Schritten erledigt"). Nutzt die vorhandene `Progress`-Komponente im Gold-Styling.
 
-2. **Tagesabhängige Daten** — Die Umsätze werden basierend auf dem aktuellen Tag im Monat berechnet. Am 1. sind alle niedrig, am 30./31. sind sie bei ihrem Monats-Maximum. Jeder Tag liefert deterministische aber unterschiedliche Zahlen (Seed = Tag + Spieler-Index).
+### 3. Klickbare Checkliste
+Unter der Progress-Bar eine kompakte Checkliste mit allen 5 Schritten. Jeder Schritt hat:
+- Eine Checkbox zum Abhaken
+- Schritt-Nummer ("Schritt 1", "Schritt 2" etc.)
+- Kurzer Titel
 
-3. **Demo-Slider zum Durchswipen** — Unter dem Header kommt ein horizontaler Tages-Slider (1–31), mit dem man durch den Monat navigieren kann. Zeigt den aktuellen Tag als Default. Beim Wischen ändern sich alle Zahlen live. Clean im Gold-Design integriert, z.B. als schmale Leiste mit Tageszahl und kleinem Kalender-Icon.
+Der Fortschritt wird im `localStorage` gespeichert, damit er beim Neuladen erhalten bleibt.
 
-4. **Design-Polish** — Feinschliff an Spacing, Border-Radien, Podium-Proportionen und Typografie für ein cleaneres Gesamtbild.
+### 4. Schritt-Nummern bei den Sektionen
+Jede Video-/Link-/Feedback-Sektion bekommt eine prominente Schritt-Nummer als Badge (z.B. goldener Kreis mit "1" darin) neben dem Titel.
 
-### Technische Umsetzung
+## Technische Details
 
-- **Seeded Random-Funktion** — Einfache deterministische Pseudo-Random basierend auf `(tag * 31 + playerIndex * 7)` damit die Zahlen pro Tag stabil sind aber zwischen Tagen variieren.
-- **Umsatz-Kurve** — Pro Spieler: `maxRevenue * (tag / daysInMonth) * (0.85 + seededRandom * 0.3)` — so steigen die Werte natürlich über den Monat, mit leichter Varianz.
-- **State** — `useState` für `selectedDay`, Default = `new Date().getDate()`. Die `generateLeaderboard(day)` Funktion wird bei jedem Tageswechsel neu berechnet via `useMemo`.
-- **Slider UI** — Radix Slider oder einfacher `<input type="range">` gestyled im Gold-Theme, mit Tagesanzeige (z.B. "Tag 14 / 31").
-- **Alles in `src/pages/Leaderboard.tsx`** — keine neuen Dateien nötig.
+**Datei: `src/pages/OfferB.tsx`**
 
-### Design-Verbesserungen
-- Podium-Cards: etwas mehr Padding, sauberere Abstände
-- Liste: leicht größere Schrift für bessere Lesbarkeit
-- Slider-Leiste: dezent, glass-morphism Hintergrund, Gold-Akzent für den aktiven Punkt
+- Neue `steps`-Array-Konstante mit id, title, type fur alle 5 Schritte
+- `useState` + `localStorage` fur `completedSteps: Set<number>`
+- Progress-Bar-Sektion nach dem Hero mit `Progress`-Komponente (Wert = `completedSteps.size / steps.length * 100`)
+- Checkliste mit `Checkbox`-Komponenten, gestylt im bestehenden `glass-card-subtle` Look
+- Videos bekommen "Schritt 1" / "Schritt 2" als nummerierte Badge-Kreise
+- Links-Sektion wird zu Schritt 3 und 4 mit individuellen Nummern
+- Feedback wird Schritt 5
+- Erledigte Schritte bekommen eine subtile visuelle Markierung (leicht reduzierte Opazitat / Hakchen)
 
+Keine neuen Abhangigkeiten notwendig -- nutzt vorhandene `Progress`, `Checkbox` und `framer-motion`.
