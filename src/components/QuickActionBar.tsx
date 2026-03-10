@@ -6,6 +6,7 @@ interface QuickActionBarProps {
   onAskQuestion: () => void;
   onFocusRevenue: () => void;
   onScrollToAccount: () => void;
+  onScrollToBonus: () => void;
 }
 
 const actions = [
