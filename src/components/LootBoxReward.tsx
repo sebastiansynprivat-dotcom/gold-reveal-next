@@ -197,7 +197,7 @@ export default function LootBoxReward({ monthlyRevenue }: { monthlyRevenue: numb
         </div>
       </button>
 
-      <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) handleClose(); }}>
+      <Dialog open={dialogOpen} onOpenChange={() => { /* prevent close via X/overlay/escape */ }}>
         <DialogContent className="max-w-xs sm:max-w-sm text-center overflow-visible border-accent/20 p-0">
           <DialogTitle className="sr-only">Meilenstein erreicht</DialogTitle>
           <DialogDescription className="sr-only">Du hast einen neuen Meilenstein erreicht</DialogDescription>
