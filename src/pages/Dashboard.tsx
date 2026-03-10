@@ -1078,19 +1078,19 @@ export default function Dashboard() {
             {/* 30-Tage-Challenge */}
             <motion.div
               variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
-              className="relative rounded-xl overflow-hidden bg-gradient-to-br from-blue-500/10 to-blue-500/5 border border-blue-500/30 p-4 lg:p-5 space-y-4 transition-transform duration-200 hover:scale-[1.01]"
+              className="relative rounded-xl overflow-hidden bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/20 p-4 lg:p-5 space-y-4 transition-transform duration-200 hover:scale-[1.01]"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-blue-500/20 flex items-center justify-center">
+                  <div className="h-10 w-10 rounded-full bg-accent/15 flex items-center justify-center">
                     <span className="text-lg">💎</span>
                   </div>
                   <div>
-                    <p className="font-bold text-blue-400 text-sm lg:text-base">30-Tage-Challenge</p>
+                    <p className="font-bold text-accent text-sm lg:text-base">30-Tage-Challenge</p>
                     <p className="text-[10px] lg:text-xs text-muted-foreground">30 Tage in Folge mind. 100€ Umsatz</p>
                   </div>
                 </div>
-                <span className="font-bold text-blue-400 text-sm lg:text-base">Spezialbonus</span>
+                <span className="font-bold text-accent text-sm lg:text-base">Spezialbonus</span>
               </div>
               <MonthlyStreakTracker dailyRevenue={umsatz} />
             </motion.div>
