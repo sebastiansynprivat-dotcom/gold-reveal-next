@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, Trophy, Crown, Medal, Calendar } from "lucide-react";
+import { ChevronLeft, Trophy, Crown, Medal, Calendar, Gem } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import GoldParticles from "@/components/GoldParticles";
@@ -97,6 +97,9 @@ function buildCumulativeRevenues(daysInMonth: number) {
   return result;
 }
 
+// Diamond chatters — deterministic set of top players
+const DIAMOND_PLAYERS = new Set([0, 2, 5]);
+
 function generateLeaderboard(day: number, cumulativeData: number[][]) {
   const entries = cumulativeData.map((dayRevenues, i) => ({
     playerIndex: i,
@@ -104,9 +107,9 @@ function generateLeaderboard(day: number, cumulativeData: number[][]) {
     lastInit: LAST_INITIALS[i % LAST_INITIALS.length],
     revenue: dayRevenues[day],
     rank: 0,
+    isDiamond: DIAMOND_PLAYERS.has(i),
   }));
 
-  // Sort all by revenue descending — no hardcoding
   entries.sort((a, b) => b.revenue - a.revenue);
   entries.forEach((e, idx) => { e.rank = idx + 1; });
 
@@ -220,8 +223,9 @@ export default function Leaderboard() {
               <div className="mx-auto h-9 w-9 rounded-full bg-muted/40 border border-border/30 flex items-center justify-center">
                 <Medal className="h-4 w-4 text-muted-foreground" />
               </div>
-              <p className="text-[10px] font-medium text-muted-foreground truncate leading-tight">
+              <p className="text-[10px] font-medium text-muted-foreground truncate leading-tight flex items-center justify-center gap-1">
                 {censorName(leaderboard[1].name, leaderboard[1].lastInit)}
+                {leaderboard[1].isDiamond && <Gem className="h-3 w-3 text-accent shrink-0" />}
               </p>
               <AnimatedNumber
                 value={leaderboard[1].revenue}
@@ -242,8 +246,9 @@ export default function Leaderboard() {
               >
                 <Crown className="h-5 w-5 text-accent" />
               </motion.div>
-              <p className="text-[10px] font-semibold text-accent truncate leading-tight">
+              <p className="text-[10px] font-semibold text-accent truncate leading-tight flex items-center justify-center gap-1">
                 {censorName(leaderboard[0].name, leaderboard[0].lastInit)}
+                {leaderboard[0].isDiamond && <Gem className="h-3 w-3 text-accent shrink-0" />}
               </p>
               <AnimatedNumber
                 value={leaderboard[0].revenue}
@@ -259,8 +264,9 @@ export default function Leaderboard() {
               <div className="mx-auto h-9 w-9 rounded-full bg-muted/30 border border-border/20 flex items-center justify-center">
                 <Medal className="h-4 w-4 text-muted-foreground/70" />
               </div>
-              <p className="text-[10px] font-medium text-muted-foreground truncate leading-tight">
+              <p className="text-[10px] font-medium text-muted-foreground truncate leading-tight flex items-center justify-center gap-1">
                 {censorName(leaderboard[2].name, leaderboard[2].lastInit)}
+                {leaderboard[2].isDiamond && <Gem className="h-3 w-3 text-accent shrink-0" />}
               </p>
               <AnimatedNumber
                 value={leaderboard[2].revenue}
@@ -292,8 +298,9 @@ export default function Leaderboard() {
                 #{entry.rank}
               </span>
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-medium text-foreground truncate">
+                <p className="text-[13px] font-medium text-foreground truncate flex items-center gap-1">
                   {censorName(entry.name, entry.lastInit)}
+                  {entry.isDiamond && <Gem className="h-3 w-3 text-accent shrink-0" />}
                 </p>
               </div>
               <AnimatedNumber
