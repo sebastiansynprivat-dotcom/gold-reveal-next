@@ -77,6 +77,14 @@ export default function DashboardOnboarding({ isFirstLogin, manualOpen, onManual
     return () => clearTimeout(timer);
   }, [isFirstLogin]);
 
+  useEffect(() => {
+    if (manualOpen) {
+      setStep(0);
+      setRect(null);
+      setActive(true);
+    }
+  }, [manualOpen]);
+
   const measureElement = useCallback((stepIndex: number) => {
     const s = TOUR_STEPS[stepIndex];
     if (!s) return null;
