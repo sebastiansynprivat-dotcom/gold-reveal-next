@@ -199,7 +199,7 @@ export default function LootBoxReward({ monthlyRevenue }: { monthlyRevenue: numb
 
       <Dialog open={dialogOpen} onOpenChange={() => { /* prevent close via X/overlay/escape */ }}>
         <DialogContent
-          className="max-w-xs sm:max-w-sm text-center overflow-visible border-accent/20 p-0 [&>button.absolute]:hidden"
+          className="max-w-xs sm:max-w-sm text-center overflow-visible border-accent/20 p-0 [&>button.absolute]:hidden outline-none focus:outline-none focus-visible:outline-none focus:ring-0 focus-visible:ring-0"
           onInteractOutside={(e) => e.preventDefault()}
           onEscapeKeyDown={(e) => e.preventDefault()}
         >
