@@ -29,9 +29,33 @@ import { format, endOfMonth, addMonths, differenceInDays } from "date-fns";
 import { de } from "date-fns/locale";
 import HomescreenTutorial from "@/components/HomescreenTutorial";
 import PushNotificationDialog from "@/components/PushNotificationDialog";
+import LootBoxReward from "@/components/LootBoxReward";
 import AccountMemoDialog from "@/components/AccountMemoDialog";
 import FrageMemoDialog from "@/components/FrageMemoDialog";
 import ModelRequestDialog, { EditRequestData } from "@/components/ModelRequestDialog";
+
+// Streak helper (mirrors StreakTracker logic)
+function getStreakDays(): number {
+  try {
+    const raw = localStorage.getItem("streak_data");
+    if (!raw) return 0;
+    const { dates } = JSON.parse(raw) as { dates: string[] };
+    if (!dates || dates.length === 0) return 0;
+    const sorted = [...new Set(dates)].sort().reverse();
+    const today = new Date().toISOString().split("T")[0];
+    const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+    if (sorted[0] !== today && sorted[0] !== yesterday) return 0;
+    let count = 1;
+    for (let i = 1; i < sorted.length; i++) {
+      const prev = new Date(sorted[i - 1]);
+      const curr = new Date(sorted[i]);
+      const diff = (prev.getTime() - curr.getTime()) / 86400000;
+      if (diff === 1) count++;
+      else break;
+    }
+    return count;
+  } catch { return 0; }
+}
 
 const BONUS_TIERS = [
   { name: "Starter", emoji: "⚡", min: 0, max: 499, rate: 20 },
@@ -395,6 +419,10 @@ export default function Dashboard() {
     prevTierRef.current = currentTier.name;
   }, [currentTier.name, playLevelUpSound]);
 
+  // Streak for hot-streak effect
+  const streakDays = useMemo(() => getStreakDays(), []);
+  const hotStreakClass = streakDays >= 7 ? "hot-streak-7" : streakDays >= 6 ? "hot-streak-6" : streakDays >= 5 ? "hot-streak-5" : streakDays >= 4 ? "hot-streak-4" : streakDays >= 3 ? "hot-streak-3" : "";
+
   return (
     <div className="min-h-screen bg-background pb-24">
       <GoldParticles spawnRate={0.25} maxParticles={20} baseOpacity={0.2} />
@@ -550,7 +578,7 @@ export default function Dashboard() {
         </div>
       </header>
 
-      <main className="container max-w-5xl mx-auto p-4 lg:px-8 lg:py-8 space-y-5 lg:space-y-6">
+      <main className={`container max-w-5xl mx-auto p-4 lg:px-8 lg:py-8 space-y-5 lg:space-y-6 ${hotStreakClass}`}>
         {/* Notification Banner */}
         <NotificationBanner />
 
@@ -624,6 +652,26 @@ export default function Dashboard() {
             <p className={`text-2xl font-bold ${isTopTier ? "text-gold-gradient" : "text-foreground"}`}>{currentTier.emoji} {currentTier.name}</p>
           </motion.div>
         </motion.div>
+
+        {/* Streak Display + Loot Box */}
+        <div className="flex flex-col gap-3">
+          {/* Compact Streak under Status */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="glass-card-subtle rounded-xl px-4 py-2.5 flex items-center justify-center gap-2"
+          >
+            <span className="text-lg">🔥</span>
+            <span className="text-sm font-bold text-foreground">{streakDays}</span>
+            <span className="text-xs text-muted-foreground">/ 7 Tage Streak</span>
+            {streakDays >= 3 && (
+              <span className="ml-1 text-xs text-accent font-medium animate-pulse">Hot Streak!</span>
+            )}
+          </motion.div>
+
+          {/* LootBox Milestone Rewards */}
+          <LootBoxReward monthlyRevenue={monthlyRevenue} />
+        </div>
 
         {/* PWA Install To-Do – between Status and Account, non-dismissable, auto-hides when installed */}
         {!isPwaInstalled &&
