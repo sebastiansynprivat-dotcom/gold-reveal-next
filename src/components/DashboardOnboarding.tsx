@@ -10,6 +10,7 @@ interface TourStep {
   title: string;
   description: string;
   icon: React.ElementType;
+  maxHeight?: number;
 }
 
 const TOUR_STEPS: TourStep[] = [
@@ -48,6 +49,7 @@ const TOUR_STEPS: TourStep[] = [
     title: "Bonusmodell",
     description: "Je mehr Umsatz du machst, desto höher steigt deine Rate. Hier siehst du alle Stufen und deinen Fortschritt.",
     icon: Trophy,
+    maxHeight: 120,
   },
 ];
 
@@ -79,8 +81,7 @@ export default function DashboardOnboarding({ isFirstLogin }: DashboardOnboardin
     const el = document.querySelector(s.selector);
     if (!el) return null;
     const r = el.getBoundingClientRect();
-    // Clamp height for very tall sections (max ~60% of viewport)
-    const maxH = window.innerHeight * 0.55;
+    const maxH = s.maxHeight || window.innerHeight * 0.55;
     const clampedH = Math.min(r.height, maxH);
     return { left: r.left, top: r.top, width: r.width, height: clampedH };
   }, []);
@@ -140,6 +141,11 @@ export default function DashboardOnboarding({ isFirstLogin }: DashboardOnboardin
   const handleClose = () => {
     localStorage.setItem(ONBOARDING_KEY, "true");
     setActive(false);
+    // Scroll to accounts section
+    setTimeout(() => {
+      const el = document.querySelector('[data-section="accounts"]');
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
   };
 
   if (!active) return null;
