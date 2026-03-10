@@ -43,8 +43,8 @@ export default function LandingActivityTicker() {
       transition={{ duration: 0.5, delay: 0.4 }}
       className="w-full max-w-[800px] mx-auto mt-2 mb-4"
     >
-      <div className="relative overflow-hidden rounded-lg bg-secondary/50 border border-border/30 px-3 py-2">
-        <div className="flex items-center gap-2">
+      <div className="rounded-lg bg-secondary/50 border border-border/30 px-3 py-2 space-y-1.5">
+        <div className="relative overflow-hidden flex items-center gap-2">
           <Activity className="h-3.5 w-3.5 text-accent shrink-0 animate-pulse" />
           <span className="text-[10px] text-accent font-semibold uppercase tracking-wider shrink-0">Live</span>
           <div className="h-3 w-px bg-border/50 shrink-0" />
@@ -65,6 +65,9 @@ export default function LandingActivityTicker() {
             </AnimatePresence>
           </div>
         </div>
+        <p className="text-[11px] text-muted-foreground/70 text-center leading-snug">
+          Schau jetzt das Video und sichere dir deinen Platz – du bist schon bald dabei! 🚀
+        </p>
       </div>
     </motion.div>
   );
