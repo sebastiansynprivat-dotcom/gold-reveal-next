@@ -372,12 +372,12 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    if (isGold && !hadConfetti) {
+    if (isTopTier && !hadConfetti) {
       setHadConfetti(true);
       fireConfetti();
     }
-    if (!isGold) setHadConfetti(false);
-  }, [isGold, hadConfetti, fireConfetti]);
+    if (!isTopTier) setHadConfetti(false);
+  }, [isTopTier, hadConfetti, fireConfetti]);
 
   return (
     <div className="min-h-screen bg-background pb-24">
