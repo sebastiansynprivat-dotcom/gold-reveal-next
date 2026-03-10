@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Star, Users, TrendingUp } from "lucide-react";
 import { useState } from "react";
+import TrustpilotReviewsDialog from "@/components/TrustpilotReviewsDialog";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
