@@ -30,6 +30,7 @@ interface HomescreenTutorialProps {
   isFirstLogin: boolean;
   manualOpen?: boolean;
   onManualClose?: () => void;
+  onDismiss?: () => void;
 }
 
 export default function HomescreenTutorial({ isFirstLogin, manualOpen, onManualClose }: HomescreenTutorialProps) {
