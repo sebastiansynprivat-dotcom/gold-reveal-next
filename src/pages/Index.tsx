@@ -123,7 +123,7 @@ const Index = () => {
       <div className={`transition-all duration-1000 ease-out md:mt-0 -mt-4 ${showButton ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}>
         <a
           href="/quiz"
-          className="inline-block px-10 py-4 rounded-lg bg-primary text-primary-foreground font-semibold text-lg tracking-wide gold-glow hover:gold-glow-strong hover:scale-105 transition-all duration-300"
+          className="inline-block px-10 py-4 rounded-lg bg-primary text-primary-foreground font-semibold text-lg tracking-wide gold-glow hover:gold-glow-strong hover:scale-105 transition-all duration-300 pulse-glow"
         >
           Weiter zum nächsten Schritt →
         </a>
