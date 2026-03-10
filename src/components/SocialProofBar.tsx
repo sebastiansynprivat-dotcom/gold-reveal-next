@@ -58,7 +58,7 @@ const SocialProofBar = () => {
         <div className="flex items-center gap-2 glass-card-subtle rounded-xl px-4 py-2.5 max-w-[260px]">
           <TrendingUp className="w-4 h-4 text-primary shrink-0" />
           <p className="text-xs text-foreground/80 italic leading-snug">
-            "Innerhalb von 2 Wochen meinen ersten Umsatz gemacht!"
+            "Unglaublich das dieses Video kostenlos ist!"
           </p>
         </div>
       </div>
