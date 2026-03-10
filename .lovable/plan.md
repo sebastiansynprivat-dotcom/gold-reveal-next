@@ -1,41 +1,52 @@
 
-# Fortschrittsanzeige und Schritt-Nummerierung fur OfferB
 
-## Was wird gemacht
+# Plan: Bonusmodell überarbeiten + 30-Tage-Streak
 
-### 1. Alle Schritte als einheitliche Liste definieren
-Die Videos und Links werden zu einer gemeinsamen Schritt-Liste zusammengefasst:
-- Schritt 1: Plattform Erklärungs Video
-- Schritt 2: Telegram Nachrichten Video
-- Schritt 3: Brezzels Notifications aktivieren
-- Schritt 4: My ID Bot einrichten
-- Schritt 5: Tägliches Feedback
+## Zusammenfassung
 
-### 2. Fortschritts-Bar oben auf der Seite
-Direkt unter dem Hero-Bereich wird eine Progress-Bar eingefügt, die den Gesamtfortschritt anzeigt (z.B. "2 von 5 Schritten erledigt"). Nutzt die vorhandene `Progress`-Komponente im Gold-Styling.
+Das bisherige 2-Stufen-System (Starter 20% / Gold 25% ab 3.000€) wird durch ein 5-Stufen-System mit kreativen Namen ersetzt. Zusätzlich wird das bestehende Streak-System von 7 Tagen / 30€ auf 30 Tage / 100€ erweitert.
 
-### 3. Klickbare Checkliste
-Unter der Progress-Bar eine kompakte Checkliste mit allen 5 Schritten. Jeder Schritt hat:
-- Eine Checkbox zum Abhaken
-- Schritt-Nummer ("Schritt 1", "Schritt 2" etc.)
-- Kurzer Titel
+## Neue Stufen
 
-Der Fortschritt wird im `localStorage` gespeichert, damit er beim Neuladen erhalten bleibt.
+| Stufe | Name | Umsatz | Rate |
+|-------|------|--------|------|
+| 1 | Starter | 0 – 499€ | 20% |
+| 2 | Bronze | 500 – 999€ | 21% |
+| 3 | Silber | 1.000 – 1.499€ | 22% |
+| 4 | Platin | 1.500 – 1.999€ | 23% |
+| 5 | Diamond | 2.000€+ | 24% |
 
-### 4. Schritt-Nummern bei den Sektionen
-Jede Video-/Link-/Feedback-Sektion bekommt eine prominente Schritt-Nummer als Badge (z.B. goldener Kreis mit "1" darin) neben dem Titel.
+**Hinweis:** Du hast gesagt "1500 bis 3000€ = 24%" und "ab 2000€ Goldstatus". Ich nehme an, die letzte Stufe beginnt bei 2.000€ mit 24% (= Diamond/Gold). Falls 3.000€ gemeint war, bitte korrigieren.
 
-## Technische Details
+## Streak-System
 
-**Datei: `src/pages/OfferB.tsx`**
+- Bestehender 7-Tage-Streak (Account Upgrade) bleibt erhalten
+- **Neuer 30-Tage-Streak**: 30 Tage in Folge mind. 100€ Umsatz = Spezialbonus
+- Anzeige: 30 Tage-Fortschrittsbalken statt Kreise (bei 30 passen keine Kreise mehr)
+- Bei Abschluss: Konfetti + Dialog mit Belohnungs-Info
 
-- Neue `steps`-Array-Konstante mit id, title, type fur alle 5 Schritte
-- `useState` + `localStorage` fur `completedSteps: Set<number>`
-- Progress-Bar-Sektion nach dem Hero mit `Progress`-Komponente (Wert = `completedSteps.size / steps.length * 100`)
-- Checkliste mit `Checkbox`-Komponenten, gestylt im bestehenden `glass-card-subtle` Look
-- Videos bekommen "Schritt 1" / "Schritt 2" als nummerierte Badge-Kreise
-- Links-Sektion wird zu Schritt 3 und 4 mit individuellen Nummern
-- Feedback wird Schritt 5
-- Erledigte Schritte bekommen eine subtile visuelle Markierung (leicht reduzierte Opazitat / Hakchen)
+## Änderungen
 
-Keine neuen Abhangigkeiten notwendig -- nutzt vorhandene `Progress`, `Checkbox` und `framer-motion`.
+### `src/pages/Dashboard.tsx`
+- Konstanten ersetzen: `GOLD_THRESHOLD`/`STARTER_RATE`/`GOLD_RATE` → Stufen-Array mit Name, min, max, Rate, Icon, Emoji
+- `rate`-Berechnung: Lookup in Stufen-Array basierend auf `monthlyRevenue` (nicht `umsatz` = Tagesumsatz)
+- `verdienst`-Berechnung anpassen
+- Badge im Header: zeigt aktuelle Stufe statt nur "Starter"/"Gold"
+- Stats-Karten: "Deine Rate" zeigt dynamisch die aktuelle Rate
+- **Bonus-Modell Sektion** komplett neu: Alle 5 Stufen als gestapelte Karten mit Fortschrittsbalken zur nächsten Stufe, aktive Stufe hervorgehoben
+- Bestehenden Account-Upgrade Streak behalten
+- Neuen 30-Tage-Streak hinzufügen (eigene Komponente)
+
+### `src/components/StreakTracker.tsx`
+- Bestehender 7-Tage-Streak bleibt unverändert
+
+### Neue Komponente: `src/components/MonthlyStreakTracker.tsx`
+- 30-Tage-Streak mit 100€/Tag Ziel
+- Fortschrittsbalken (kein Kreis-Grid bei 30 Tagen)
+- Konfetti + Dialog bei Abschluss
+- localStorage-basiert wie bestehender Streak
+- WhatsApp-Text für Bonus-Einlösung
+
+### Keine DB-Änderungen nötig
+Alles client-seitig berechenbar aus `daily_revenue`.
+
