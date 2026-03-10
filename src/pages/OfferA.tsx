@@ -66,6 +66,7 @@ const links = [
 
 const OfferA = () => {
   const [showPopup, setShowPopup] = useState(true);
+  const [showHowTo, setShowHowTo] = useState(false);
   const [timeLeft, setTimeLeft] = useState(getTimeLeft);
 
   useEffect(() => {
