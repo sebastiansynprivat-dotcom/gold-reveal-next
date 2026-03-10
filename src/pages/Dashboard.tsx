@@ -33,6 +33,9 @@ import LootBoxReward from "@/components/LootBoxReward";
 import AccountMemoDialog from "@/components/AccountMemoDialog";
 import FrageMemoDialog from "@/components/FrageMemoDialog";
 import ModelRequestDialog, { EditRequestData } from "@/components/ModelRequestDialog";
+import RevenueChart from "@/components/RevenueChart";
+import MonthSummaryWidget from "@/components/MonthSummaryWidget";
+import QuickActionBar from "@/components/QuickActionBar";
 
 // Streak helper (mirrors StreakTracker logic)
 function getStreakDays(): number {
@@ -652,6 +655,26 @@ export default function Dashboard() {
             <p className={`text-2xl font-bold ${isTopTier ? "text-gold-gradient" : "text-foreground"}`}>{currentTier.emoji} {currentTier.name}</p>
           </motion.div>
         </motion.div>
+
+        {/* Quick Action Bar */}
+        <QuickActionBar
+          onAskQuestion={() => setShowFrageMemo(true)}
+          onFocusRevenue={() => {
+            const input = document.querySelector('input[placeholder="Umsatz €"], input[placeholder="€"]') as HTMLInputElement;
+            if (input) { input.focus(); input.scrollIntoView({ behavior: "smooth", block: "center" }); }
+          }}
+        />
+
+        {/* 7-Day Revenue Chart */}
+        {user && <RevenueChart userId={user.id} />}
+
+        {/* Month Summary Widget */}
+        <MonthSummaryWidget
+          monthlyRevenue={monthlyRevenue}
+          rate={rate}
+          tierName={currentTier.name}
+          tierEmoji={currentTier.emoji}
+        />
 
         {/* LootBox Milestone Rewards */}
         <LootBoxReward monthlyRevenue={monthlyRevenue} />

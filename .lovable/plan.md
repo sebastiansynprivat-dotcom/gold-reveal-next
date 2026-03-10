@@ -1,38 +1,41 @@
 
+# Fortschrittsanzeige und Schritt-Nummerierung fur OfferB
 
-## Dashboard Upgrade: Premium Design + Nützliche Features
+## Was wird gemacht
 
-Basierend auf deinem Feedback (besseres Visuelles + nützlichere Features) hier ein konkreter Plan:
+### 1. Alle Schritte als einheitliche Liste definieren
+Die Videos und Links werden zu einer gemeinsamen Schritt-Liste zusammengefasst:
+- Schritt 1: Plattform Erklärungs Video
+- Schritt 2: Telegram Nachrichten Video
+- Schritt 3: Brezzels Notifications aktivieren
+- Schritt 4: My ID Bot einrichten
+- Schritt 5: Tägliches Feedback
 
-### 1. Revenue-Verlaufsgraph (7-Tage-Trend)
-Ein visuell ansprechender Bereichs-Chart direkt unter den Stats-Karten, der die letzten 7 Tage Umsatz zeigt. Gold-Gradient-Füllung, passend zum Design. Nutzt die vorhandenen `daily_revenue`-Daten und `recharts`.
+### 2. Fortschritts-Bar oben auf der Seite
+Direkt unter dem Hero-Bereich wird eine Progress-Bar eingefügt, die den Gesamtfortschritt anzeigt (z.B. "2 von 5 Schritten erledigt"). Nutzt die vorhandene `Progress`-Komponente im Gold-Styling.
 
-**Warum nützlich:** Du siehst sofort ob dein Umsatz steigt oder fällt, statt nur Einzelzahlen.
+### 3. Klickbare Checkliste
+Unter der Progress-Bar eine kompakte Checkliste mit allen 5 Schritten. Jeder Schritt hat:
+- Eine Checkbox zum Abhaken
+- Schritt-Nummer ("Schritt 1", "Schritt 2" etc.)
+- Kurzer Titel
 
-### 2. Stats-Karten visuell aufwerten
-- Subtile animierte Icons (Framer Motion Pulse) pro Karte
-- Farblich abgestufte Karten: Verdienst-Karte mit Gold-Gradient-Border, Rate-Karte mit Accent-Glow
-- Micro-Indikator auf der "Gestern"-Karte: kleiner Pfeil ↑/↓ im Vergleich zum Vortag
+Der Fortschritt wird im `localStorage` gespeichert, damit er beim Neuladen erhalten bleibt.
 
-### 3. "Dein Monat auf einen Blick" Summary-Widget
-Ein neues Premium-Widget zwischen Stats und Account-Daten:
-- Kreisförmiger Fortschrittsring (wie Apple Watch) der zeigt wie viel % des Monats geschafft
-- Projizierter Monatsverdienst basierend auf bisherigem Durchschnitt
-- Tage bis Auszahlung als Countdown
+### 4. Schritt-Nummern bei den Sektionen
+Jede Video-/Link-/Feedback-Sektion bekommt eine prominente Schritt-Nummer als Badge (z.B. goldener Kreis mit "1" darin) neben dem Titel.
 
-### 4. Schnellzugriff-Leiste
-Eine horizontale Scroll-Leiste mit den wichtigsten Aktionen als Chips:
-- "MassDM schreiben" → scrollt zur Sektion
-- "Umsatz eintragen" → fokussiert das Input
-- "Rechnung" → navigiert
-- "Frage stellen" → öffnet Chat
+## Technische Details
 
-Reduziert Scrollen und macht das Dashboard funktionaler.
+**Datei: `src/pages/OfferB.tsx`**
 
-### Technische Details
-- **Revenue-Chart:** Neue Komponente `RevenueChart.tsx`, liest `daily_revenue` der letzten 7 Tage via Supabase, rendert mit `recharts` AreaChart
-- **Summary-Widget:** Neue Komponente `MonthSummaryWidget.tsx`, berechnet Projektion aus vorhandenen State-Werten in `Dashboard.tsx`
-- **Schnellzugriff:** Inline in `Dashboard.tsx` mit `useRef` + `scrollIntoView` für die Sektionen
-- **Keine DB-Änderungen nötig** – alles basiert auf vorhandenen Daten
-- **Bestehende Libraries:** `recharts`, `framer-motion`, `date-fns` alle schon installiert
+- Neue `steps`-Array-Konstante mit id, title, type fur alle 5 Schritte
+- `useState` + `localStorage` fur `completedSteps: Set<number>`
+- Progress-Bar-Sektion nach dem Hero mit `Progress`-Komponente (Wert = `completedSteps.size / steps.length * 100`)
+- Checkliste mit `Checkbox`-Komponenten, gestylt im bestehenden `glass-card-subtle` Look
+- Videos bekommen "Schritt 1" / "Schritt 2" als nummerierte Badge-Kreise
+- Links-Sektion wird zu Schritt 3 und 4 mit individuellen Nummern
+- Feedback wird Schritt 5
+- Erledigte Schritte bekommen eine subtile visuelle Markierung (leicht reduzierte Opazitat / Hakchen)
 
+Keine neuen Abhangigkeiten notwendig -- nutzt vorhandene `Progress`, `Checkbox` und `framer-motion`.
