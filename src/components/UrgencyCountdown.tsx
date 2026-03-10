@@ -54,7 +54,19 @@ const tryDecreaseSpot = (): number | null => {
 
 const UrgencyCountdown = () => {
   const [timeLeft, setTimeLeft] = useState(() => formatTime(getEndOfDay().getTime() - Date.now()));
-  const [spots] = useState(getPersistedSpots);
+  const [spots, setSpots] = useState(getPersistedSpots);
+
+  useEffect(() => {
+    // Random delay between 10-60 seconds to decrease a spot
+    const delay = Math.floor(Math.random() * 50000) + 10000;
+    const timeout = setTimeout(() => {
+      const newSpots = tryDecreaseSpot();
+      if (newSpots !== null) {
+        setSpots(newSpots);
+      }
+    }, delay);
+    return () => clearTimeout(timeout);
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
