@@ -1096,67 +1096,92 @@ export default function Dashboard() {
               <MonthlyStreakTracker dailyRevenue={umsatz} />
             </motion.div>
 
-            {/* Bonus Tiers */}
-            {[...BONUS_TIERS].reverse().map((tier) => {
-              const isActive = currentTier.name === tier.name;
-              const isAbove = monthlyRevenue > tier.max;
-              return (
-                <motion.div
-                  key={tier.name}
-                  variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
-                  className={cn(
-                    "relative rounded-xl overflow-hidden border p-4 lg:p-5 transition-all duration-300",
-                    isActive
-                      ? tier.name === "Diamond"
-                        ? "gold-gradient-border-animated pulse-glow bg-accent/10"
-                        : "border-accent/50 bg-accent/5"
-                      : "border-border/50 bg-secondary/20 hover:scale-[1.01]"
-                  )}
-                >
-                  {isActive && <div className="absolute left-0 top-0 bottom-0 w-1 bg-accent" />}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className={cn("h-10 w-10 rounded-full flex items-center justify-center", isActive ? "bg-accent/20" : isAbove ? "bg-accent/10" : "bg-secondary")}>
-                        <span className="text-lg">{tier.emoji}</span>
-                      </div>
-                      <div>
-                        <p className={cn("font-bold text-sm lg:text-base", isActive ? "text-gold-gradient-shimmer" : isAbove ? "text-accent/60" : "text-muted-foreground")}>{tier.name}</p>
-                        <p className="text-[10px] lg:text-xs text-muted-foreground">
-                          {tier.max === Infinity ? `Ab ${tier.min.toLocaleString("de-DE")}€` : `${tier.min.toLocaleString("de-DE")}€ – ${tier.max.toLocaleString("de-DE")}€`} Monatsumsatz
-                        </p>
-                      </div>
+            {/* Tier Stepper */}
+            <motion.div
+              variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
+              className="relative rounded-xl border border-border/50 bg-secondary/20 p-4 lg:p-5"
+            >
+              {/* Horizontal stepper */}
+              <div className="relative flex items-start justify-between px-1">
+                {/* Background line */}
+                <div className="absolute top-[14px] lg:top-[18px] left-[14px] lg:left-[18px] right-[14px] lg:right-[18px] h-[2px] bg-muted rounded-full" />
+                {/* Gold filled line */}
+                <div
+                  className="absolute top-[14px] lg:top-[18px] left-[14px] lg:left-[18px] h-[2px] bg-accent rounded-full transition-all duration-700 ease-out"
+                  style={{
+                    width: `${(BONUS_TIERS.indexOf(currentTier) / (BONUS_TIERS.length - 1)) * (100 - (100 / BONUS_TIERS.length))}%`,
+                  }}
+                />
+                {BONUS_TIERS.map((tier, idx) => {
+                  const isActive = currentTier.name === tier.name;
+                  const isPassed = monthlyRevenue > tier.max;
+                  return (
+                    <div key={tier.name} className="relative z-10 flex flex-col items-center gap-1" style={{ width: `${100 / BONUS_TIERS.length}%` }}>
+                      <motion.div
+                        animate={isActive ? { scale: [1, 1.1, 1] } : {}}
+                        transition={isActive ? { duration: 2, repeat: Infinity, ease: "easeInOut" } : {}}
+                        className={cn(
+                          "h-7 w-7 lg:h-9 lg:w-9 rounded-full flex items-center justify-center text-sm lg:text-base transition-all duration-300",
+                          isActive
+                            ? "bg-accent/20 ring-2 ring-accent/50 shadow-[0_0_12px_hsl(43_56%_52%/0.4)]"
+                            : isPassed
+                              ? "bg-accent/15"
+                              : "bg-muted"
+                        )}
+                      >
+                        {tier.emoji}
+                      </motion.div>
+                      <span className={cn(
+                        "text-[8px] lg:text-[10px] font-semibold leading-tight text-center",
+                        isActive ? "text-accent" : isPassed ? "text-accent/50" : "text-muted-foreground"
+                      )}>
+                        {tier.name}
+                      </span>
+                      <span className={cn(
+                        "text-[8px] lg:text-[10px] leading-tight",
+                        isActive ? "text-foreground font-bold" : isPassed ? "text-accent/40" : "text-muted-foreground/60"
+                      )}>
+                        {tier.rate}%
+                      </span>
                     </div>
-                    <div className="text-right">
-                      <span className={cn("font-bold text-lg lg:text-xl", isActive ? "text-gold-gradient" : isAbove ? "text-accent/60" : "text-muted-foreground")}>{tier.rate}%</span>
-                      {isActive && (
-                        <motion.p
-                          initial={{ scale: 0.8, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          className="text-[10px] text-accent font-semibold gold-glow rounded-full px-2 py-0.5 bg-accent/10 mt-1 inline-block"
-                        >
-                          {tier.emoji} Aktiv
-                        </motion.p>
-                      )}
+                  );
+                })}
+              </div>
+
+              {/* Active tier detail */}
+              <motion.div
+                key={currentTier.name}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+                className={cn(
+                  "mt-4 rounded-lg p-3 lg:p-4 border",
+                  currentTier.name === "Diamond"
+                    ? "gold-gradient-border-animated bg-accent/10"
+                    : "border-accent/30 bg-accent/5"
+                )}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{currentTier.emoji}</span>
+                    <span className="font-bold text-sm lg:text-base text-gold-gradient">{currentTier.name}</span>
+                    <span className="text-[10px] text-accent font-semibold bg-accent/10 rounded-full px-2 py-0.5">Aktiv</span>
+                  </div>
+                  <span className="font-bold text-lg lg:text-xl text-gold-gradient">{currentTier.rate}%</span>
+                </div>
+                {nextTier ? (
+                  <div className="space-y-1.5">
+                    <Progress value={progressToNext} className="h-2.5 [&>div]:bg-accent shimmer-bar" />
+                    <div className="flex justify-between text-[10px] text-muted-foreground">
+                      <span>{monthlyRevenue.toLocaleString("de-DE")}€ / {nextTier.min.toLocaleString("de-DE")}€</span>
+                      <span>Noch {(nextTier.min - monthlyRevenue).toLocaleString("de-DE")}€ bis {nextTier.name}</span>
                     </div>
                   </div>
-                  {/* Progress bar for active tier toward next */}
-                  {isActive && nextTier && (
-                    <div className="space-y-1.5 mt-3">
-                      <Progress value={progressToNext} className="h-2.5 [&>div]:bg-accent shimmer-bar" />
-                      <div className="flex justify-between text-[10px] text-muted-foreground">
-                        <span>{monthlyRevenue.toLocaleString("de-DE")}€</span>
-                        <span>Noch {(nextTier.min - monthlyRevenue).toLocaleString("de-DE")}€ bis {nextTier.name}</span>
-                      </div>
-                    </div>
-                  )}
-                  {isActive && !nextTier && (
-                    <div className="mt-2">
-                      <p className="text-[10px] text-accent font-semibold">🏆 Höchste Stufe erreicht!</p>
-                    </div>
-                  )}
-                </motion.div>
-              );
-            })}
+                ) : (
+                  <p className="text-[10px] text-accent font-semibold">🏆 Höchste Stufe erreicht!</p>
+                )}
+              </motion.div>
+            </motion.div>
           </motion.div>
 
           <p className="text-[10px] lg:text-xs text-muted-foreground">
