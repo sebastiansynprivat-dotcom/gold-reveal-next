@@ -182,31 +182,32 @@ export default function LootBoxReward({ monthlyRevenue }: { monthlyRevenue: numb
                   ★ Neue Stufe ★
                 </motion.p>
 
-                <div className="relative my-2">
-                  {/* Pulsing floor glow */}
+                <div className="relative my-4">
+                  {/* Pulsing glow underneath */}
                   <motion.div
-                    animate={{ scale: [1, 1.2, 1], opacity: [0.2, 0.4, 0.2] }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                    className="absolute -inset-6 rounded-full"
-                    style={{ background: "radial-gradient(circle, hsl(43 76% 46% / 0.25), transparent 60%)" }}
+                    animate={{ scale: [1, 1.15, 1], opacity: [0.15, 0.35, 0.15] }}
+                    transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                    className="absolute -inset-8 rounded-full"
+                    style={{ background: "radial-gradient(circle, hsl(43 76% 46% / 0.3), transparent 60%)" }}
                   />
-                  {/* Rotating + bouncing box */}
+                  {/* Gentle float + shake */}
                   <motion.div
                     animate={{
-                      rotateY: [0, 360],
-                      y: [0, -8, 0],
+                      y: [0, -10, 0],
+                      rotate: [0, -3, 3, -3, 3, -1.5, 1.5, 0],
+                      scale: [1, 1.03, 1],
                     }}
                     transition={{
-                      rotateY: { duration: 4, repeat: Infinity, ease: "linear" },
-                      y: { duration: 1.5, repeat: Infinity, ease: "easeInOut" },
+                      y: { duration: 2, repeat: Infinity, ease: "easeInOut" },
+                      rotate: { duration: 0.6, repeat: Infinity, repeatDelay: 1.5 },
+                      scale: { duration: 2, repeat: Infinity, ease: "easeInOut" },
                     }}
                     className="relative z-10"
                     style={{
-                      perspective: "600px",
-                      filter: "drop-shadow(0 8px 24px hsl(43 76% 46% / 0.4))",
+                      filter: "drop-shadow(0 12px 28px hsl(43 76% 46% / 0.35))",
                     }}
                   >
-                    <img src={goldenBox} alt="Golden Loot Box" className="w-32 h-32 object-contain" />
+                    <img src={goldenBox} alt="Golden Loot Box" className="w-36 h-36 object-contain" />
                   </motion.div>
                 </div>
 
