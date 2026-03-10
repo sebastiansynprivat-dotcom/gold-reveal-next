@@ -34,7 +34,7 @@ const pad = (n: number) => String(n).padStart(2, "0");
 
 const videos = [
   {
-    title: "Mass DM System",
+    title: "Mass DM System: So hast du Leute zum schreiben mit denen du dann Geld verdienen kannst:",
     embedUrl: "https://www.loom.com/embed/ffb4a4cd46ef49d1be746a9161d5f21c?hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true",
   },
   {
