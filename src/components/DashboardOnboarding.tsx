@@ -59,7 +59,7 @@ interface DashboardOnboardingProps {
 }
 
 // Smooth animated rect state using CSS transitions on a single overlay
-export default function DashboardOnboarding({ isFirstLogin, manualOpen, onManualClose }: DashboardOnboardingProps) {
+export default function DashboardOnboarding({ isFirstLogin, manualOpen, onManualClose, waitForDismiss }: DashboardOnboardingProps) {
   const [active, setActive] = useState(false);
   const [step, setStep] = useState(0);
   // Animated rect (smoothly interpolated)
