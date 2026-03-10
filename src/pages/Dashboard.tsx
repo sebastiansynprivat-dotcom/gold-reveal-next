@@ -601,7 +601,7 @@ export default function Dashboard() {
           <DailyGoal />
           <motion.div variants={staggerItem} className="gold-gradient-border-animated rounded-xl p-5 text-center col-span-4 pulse-glow">
             <p className="text-xs text-muted-foreground mb-0.5">Status</p>
-            <p className={`text-2xl font-bold ${isGold ? "text-gold-gradient" : "text-muted-foreground"}`}>{isGold ? "Gold" : "Starter"}</p>
+            <p className={`text-2xl font-bold ${isTopTier ? "text-gold-gradient" : "text-foreground"}`}>{currentTier.emoji} {currentTier.name}</p>
           </motion.div>
         </motion.div>
 
