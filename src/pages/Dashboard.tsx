@@ -419,6 +419,10 @@ export default function Dashboard() {
     prevTierRef.current = currentTier.name;
   }, [currentTier.name, playLevelUpSound]);
 
+  // Streak for hot-streak effect
+  const streakDays = useMemo(() => getStreakDays(), []);
+  const hotStreakClass = streakDays >= 7 ? "hot-streak-7" : streakDays >= 6 ? "hot-streak-6" : streakDays >= 5 ? "hot-streak-5" : streakDays >= 4 ? "hot-streak-4" : streakDays >= 3 ? "hot-streak-3" : "";
+
   return (
     <div className="min-h-screen bg-background pb-24">
       <GoldParticles spawnRate={0.25} maxParticles={20} baseOpacity={0.2} />
