@@ -62,7 +62,7 @@ function formatEvent(amount: number): TickerEvent {
 }
 
 export default function LiveActivityTicker() {
-  const [events, setEvents] = useState<TickerEvent[]>(FALLBACK_EVENTS);
+  const [events, setEvents] = useState<TickerEvent[]>(() => Array.from({ length: 6 }, () => generateFallbackEvent()));
   const [currentIndex, setCurrentIndex] = useState(0);
 
   // Subscribe to realtime revenue inserts/updates
