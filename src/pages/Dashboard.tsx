@@ -667,6 +667,10 @@ export default function Dashboard() {
             const el = document.querySelector('[data-section="accounts"]');
             if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
           }}
+          onScrollToBonus={() => {
+            const el = document.querySelector('[data-section="bonus"]');
+            if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+          }}
         />
 
         {/* PWA Install To-Do */}
@@ -1148,6 +1152,7 @@ function BonusModelSection({
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, margin: "-50px" }}
+      data-section="bonus"
       className="glass-card rounded-xl p-4 lg:p-6 space-y-4 relative overflow-hidden card-inner-glow"
     >
       {/* Animated gold shimmer sweep */}

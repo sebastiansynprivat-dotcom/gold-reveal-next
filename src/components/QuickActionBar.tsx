@@ -1,22 +1,24 @@
 import { motion } from "framer-motion";
-import { Zap, FileText, HelpCircle, Trophy, User } from "lucide-react";
+import { Zap, FileText, HelpCircle, Trophy, User, Crown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface QuickActionBarProps {
   onAskQuestion: () => void;
   onFocusRevenue: () => void;
   onScrollToAccount: () => void;
+  onScrollToBonus: () => void;
 }
 
 const actions = [
   { icon: User, label: "Mein Account", action: "account" },
   { icon: Zap, label: "Umsatz", action: "revenue" },
+  { icon: Crown, label: "Bonusmodell", action: "bonus" },
   { icon: FileText, label: "Auszahlung", action: "invoice" },
   { icon: Trophy, label: "Bestenliste", action: "leaderboard" },
-  { icon: HelpCircle, label: "Frage", action: "question" },
+  { icon: HelpCircle, label: "Ich habe eine Frage", action: "question" },
 ] as const;
 
-export default function QuickActionBar({ onAskQuestion, onFocusRevenue, onScrollToAccount }: QuickActionBarProps) {
+export default function QuickActionBar({ onAskQuestion, onFocusRevenue, onScrollToAccount, onScrollToBonus }: QuickActionBarProps) {
   const navigate = useNavigate();
 
   const handleAction = (action: string) => {
@@ -26,6 +28,9 @@ export default function QuickActionBar({ onAskQuestion, onFocusRevenue, onScroll
         break;
       case "revenue":
         onFocusRevenue();
+        break;
+      case "bonus":
+        onScrollToBonus();
         break;
       case "invoice":
         navigate("/rechnung");
