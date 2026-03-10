@@ -1055,7 +1055,7 @@ export default function Dashboard() {
             viewport={{ once: true }}
             variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.1 } } }}
           >
-            {/* Account Upgrade - Tier 1 */}
+            {/* Account Upgrade - Streak */}
             <motion.div
               variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
               className="relative rounded-xl overflow-hidden bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/30 p-4 lg:p-5 space-y-4 transition-transform duration-200 hover:scale-[1.01]"
@@ -1075,92 +1075,94 @@ export default function Dashboard() {
               <StreakTracker dailyRevenue={umsatz} />
             </motion.div>
 
-            {/* Gold - Tier 2 with progress bar */}
+            {/* 30-Tage-Challenge */}
             <motion.div
               variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
-              className={cn(
-                "relative rounded-xl overflow-hidden border p-4 lg:p-5 space-y-3 transition-all duration-300",
-                isGold
-                  ? "gold-gradient-border-animated pulse-glow bg-accent/10"
-                  : "border-border bg-secondary/30 hover:scale-[1.01] hover:border-border/80"
-              )}
+              className="relative rounded-xl overflow-hidden bg-gradient-to-br from-blue-500/10 to-blue-500/5 border border-blue-500/30 p-4 lg:p-5 space-y-4 transition-transform duration-200 hover:scale-[1.01]"
             >
-              {isGold && <div className="absolute left-0 top-0 bottom-0 w-1 bg-accent" />}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className={cn("h-10 w-10 rounded-full flex items-center justify-center", isGold ? "bg-accent/20 gold-glow" : "bg-secondary")}>
-                    <Award className={cn("h-5 w-5", isGold ? "text-accent" : "text-muted-foreground")} />
+                  <div className="h-10 w-10 rounded-full bg-blue-500/20 flex items-center justify-center">
+                    <span className="text-lg">💎</span>
                   </div>
                   <div>
-                    <p className={cn("font-bold text-sm lg:text-base", isGold ? "text-gold-gradient-shimmer" : "text-muted-foreground")}>Gold-Status</p>
-                    <p className="text-[10px] lg:text-xs text-muted-foreground">Ab 3.000€ Monatsumsatz</p>
+                    <p className="font-bold text-blue-400 text-sm lg:text-base">30-Tage-Challenge</p>
+                    <p className="text-[10px] lg:text-xs text-muted-foreground">30 Tage in Folge mind. 100€ Umsatz</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <span className={cn("font-bold text-lg lg:text-xl", isGold ? "text-gold-gradient" : "text-muted-foreground")}>25%</span>
-                  {isGold && (
-                    <motion.p
-                      initial={{ scale: 0.8, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      className="text-[10px] text-accent font-semibold gold-glow rounded-full px-2 py-0.5 bg-accent/10 mt-1 inline-block"
-                    >
-                      🏆 Gold aktiv
-                    </motion.p>
-                  )}
-                </div>
+                <span className="font-bold text-blue-400 text-sm lg:text-base">Spezialbonus</span>
               </div>
-              {/* Gold progress bar */}
-              <div className="space-y-1.5">
-                <Progress value={progressPct} className={cn("h-2.5 [&>div]:bg-accent shimmer-bar", isGold && "[&>div]:bg-gradient-to-r [&>div]:from-accent [&>div]:to-gold-light")} />
-                <div className="flex justify-between text-[10px] text-muted-foreground">
-                  <motion.span
-                    key={umsatz}
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    {umsatz.toLocaleString("de-DE")}€
-                  </motion.span>
-                  <span>
-                    {isGold
-                      ? "Gold-Status aktiv 🎉"
-                      : `Noch ${(GOLD_THRESHOLD - umsatz).toLocaleString("de-DE")}€`}
-                  </span>
-                </div>
-              </div>
+              <MonthlyStreakTracker dailyRevenue={umsatz} />
             </motion.div>
 
-            {/* Starter - Tier 3 */}
-            <motion.div
-              variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
-              className={cn(
-                "relative rounded-xl overflow-hidden border p-4 lg:p-5 transition-all duration-200",
-                !isGold ? "border-border bg-secondary/50" : "border-border/50 bg-secondary/20 hover:scale-[1.01]"
-              )}
-            >
-              {!isGold && <div className="absolute left-0 top-0 bottom-0 w-1 bg-accent" />}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className={cn("h-10 w-10 rounded-full flex items-center justify-center", !isGold ? "bg-secondary" : "bg-secondary/50")}>
-                    <Zap className={cn("h-5 w-5", !isGold ? "text-foreground" : "text-muted-foreground/50")} />
+            {/* Bonus Tiers */}
+            {[...BONUS_TIERS].reverse().map((tier) => {
+              const isActive = currentTier.name === tier.name;
+              const isAbove = monthlyRevenue > tier.max;
+              return (
+                <motion.div
+                  key={tier.name}
+                  variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
+                  className={cn(
+                    "relative rounded-xl overflow-hidden border p-4 lg:p-5 transition-all duration-300",
+                    isActive
+                      ? tier.name === "Diamond"
+                        ? "gold-gradient-border-animated pulse-glow bg-accent/10"
+                        : "border-accent/50 bg-accent/5"
+                      : "border-border/50 bg-secondary/20 hover:scale-[1.01]"
+                  )}
+                >
+                  {isActive && <div className="absolute left-0 top-0 bottom-0 w-1 bg-accent" />}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={cn("h-10 w-10 rounded-full flex items-center justify-center", isActive ? "bg-accent/20" : isAbove ? "bg-accent/10" : "bg-secondary")}>
+                        <span className="text-lg">{tier.emoji}</span>
+                      </div>
+                      <div>
+                        <p className={cn("font-bold text-sm lg:text-base", isActive ? "text-gold-gradient-shimmer" : isAbove ? "text-accent/60" : "text-muted-foreground")}>{tier.name}</p>
+                        <p className="text-[10px] lg:text-xs text-muted-foreground">
+                          {tier.max === Infinity ? `Ab ${tier.min.toLocaleString("de-DE")}€` : `${tier.min.toLocaleString("de-DE")}€ – ${tier.max.toLocaleString("de-DE")}€`} Monatsumsatz
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className={cn("font-bold text-lg lg:text-xl", isActive ? "text-gold-gradient" : isAbove ? "text-accent/60" : "text-muted-foreground")}>{tier.rate}%</span>
+                      {isActive && (
+                        <motion.p
+                          initial={{ scale: 0.8, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          className="text-[10px] text-accent font-semibold gold-glow rounded-full px-2 py-0.5 bg-accent/10 mt-1 inline-block"
+                        >
+                          {tier.emoji} Aktiv
+                        </motion.p>
+                      )}
+                    </div>
                   </div>
-                  <div>
-                    <p className={cn("font-bold text-sm lg:text-base", !isGold ? "text-foreground" : "text-muted-foreground/50")}>Starter</p>
-                    <p className="text-[10px] lg:text-xs text-muted-foreground">0€ – 2.999€ Umsatz</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <span className={cn("font-bold text-lg lg:text-xl", !isGold ? "text-foreground" : "text-muted-foreground/50")}>20%</span>
-                </div>
-              </div>
-            </motion.div>
+                  {/* Progress bar for active tier toward next */}
+                  {isActive && nextTier && (
+                    <div className="space-y-1.5 mt-3">
+                      <Progress value={progressToNext} className="h-2.5 [&>div]:bg-accent shimmer-bar" />
+                      <div className="flex justify-between text-[10px] text-muted-foreground">
+                        <span>{monthlyRevenue.toLocaleString("de-DE")}€</span>
+                        <span>Noch {(nextTier.min - monthlyRevenue).toLocaleString("de-DE")}€ bis {nextTier.name}</span>
+                      </div>
+                    </div>
+                  )}
+                  {isActive && !nextTier && (
+                    <div className="mt-2">
+                      <p className="text-[10px] text-accent font-semibold">🏆 Höchste Stufe erreicht!</p>
+                    </div>
+                  )}
+                </motion.div>
+              );
+            })}
           </motion.div>
 
           <p className="text-[10px] lg:text-xs text-muted-foreground">
-            Ab 3.000€ Monatsumsatz gilt die 25%-Rate für diesen Monat auf den <strong className="text-foreground">gesamten Betrag</strong>.
+            Deine Rate gilt für den <strong className="text-foreground">gesamten Monatsumsatz</strong> und wird automatisch angepasst.
           </p>
           <p className="text-[10px] lg:text-xs text-muted-foreground">
-            7 Tage in Folge mind. 30€ = <strong className="text-foreground">Upgrade auf besseren Account</strong>.
+            7 Tage × 30€ = <strong className="text-foreground">Account Upgrade</strong> · 30 Tage × 100€ = <strong className="text-foreground">Spezialbonus</strong>
           </p>
         </motion.section>
 
