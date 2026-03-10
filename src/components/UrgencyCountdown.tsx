@@ -78,7 +78,7 @@ const UrgencyCountdown = () => {
         <div className="flex items-center gap-2">
           <Flame className="w-4 h-4 text-orange-400 animate-pulse" />
           <span className="text-foreground text-sm font-semibold">
-            Nur noch <span className="text-primary">{spots} Plätze</span> diese Woche frei
+            Nur noch <span className="text-primary">{spots} Plätze</span> frei
           </span>
         </div>
 
