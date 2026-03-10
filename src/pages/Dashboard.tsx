@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Save, CheckCircle2, Award, Zap, HelpCircle, FileText, Clock, Users, Pencil, ChevronDown, ChevronLeft, ChevronRight, Copy, Smartphone, Mic, MessageSquare, ExternalLink, Gift, Crown, Diamond, Medal, Eye, EyeOff, Check, Trophy } from "lucide-react";
+import { Save, CheckCircle2, Award, Zap, HelpCircle, FileText, Clock, Users, Pencil, ChevronDown, ChevronLeft, ChevronRight, Copy, Smartphone, Mic, MessageSquare, ExternalLink, Gift, Crown, Diamond, Medal, Eye, EyeOff, Check, Trophy, Volume2, VolumeX } from "lucide-react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
