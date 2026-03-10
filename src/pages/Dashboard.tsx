@@ -1236,6 +1236,18 @@ function BonusModelSection({
                 <span>{activeTier.emoji} {activeRevenue.toLocaleString("de-DE")}€</span>
                 <span>Noch <span className="text-accent font-semibold">{(activeNextTier.min - activeRevenue).toLocaleString("de-DE")}€</span> bis {activeNextTier.emoji} {activeNextTier.name}</span>
               </div>
+              {(() => {
+                const now = new Date();
+                const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+                const daysLeft = Math.max(1, daysInMonth - now.getDate());
+                const remaining = Math.max(0, activeNextTier.min - activeRevenue);
+                const dailyAvg = Math.ceil(remaining / daysLeft);
+                return (
+                  <p className="text-[9px] lg:text-[10px] text-muted-foreground text-center mt-1">
+                    ⌀ <span className="text-accent font-semibold">{dailyAvg.toLocaleString("de-DE")}€</span> pro Tag nötig für {activeNextTier.emoji} {activeNextTier.name}
+                  </p>
+                );
+              })()}
             </div>
           )}
           {activeIsTop && (
