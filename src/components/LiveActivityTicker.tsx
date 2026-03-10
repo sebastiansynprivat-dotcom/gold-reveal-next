@@ -24,8 +24,8 @@ let eventCounter = 0;
 
 function generateFallbackEvent(): TickerEvent {
   eventCounter++;
-  // Every ~50 events: big sale
-  if (eventCounter % 50 === 0) {
+  // Every 200 events: big sale
+  if (eventCounter % 200 === 0) {
     const amt = randomBigAmount();
     return { id: `f-${Date.now()}-${Math.random()}`, text: `Ein Chatter hat gerade ${amt}€ Umsatz gemacht`, emoji: "💎", timestamp: Date.now() };
   }
