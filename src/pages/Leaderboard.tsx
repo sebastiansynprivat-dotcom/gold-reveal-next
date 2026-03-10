@@ -298,8 +298,9 @@ export default function Leaderboard() {
                 #{entry.rank}
               </span>
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-medium text-foreground truncate">
+                <p className="text-[13px] font-medium text-foreground truncate flex items-center gap-1">
                   {censorName(entry.name, entry.lastInit)}
+                  {entry.isDiamond && <Gem className="h-3 w-3 text-accent shrink-0" />}
                 </p>
               </div>
               <AnimatedNumber
