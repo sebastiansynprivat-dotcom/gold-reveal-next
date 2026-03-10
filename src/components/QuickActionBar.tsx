@@ -48,16 +48,16 @@ export default function QuickActionBar({ onAskQuestion, onFocusRevenue, onScroll
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: 0.2 }}
-      className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 -mx-1 px-1"
+      className="grid grid-cols-3 gap-1.5 md:flex md:gap-2 md:overflow-x-auto md:scrollbar-hide md:pb-1 md:-mx-1 md:px-1"
     >
       {actions.map(({ icon: Icon, label, action }) => (
         <button
           key={action}
           onClick={() => handleAction(action)}
-          className="flex items-center gap-1.5 shrink-0 rounded-full border border-border bg-secondary/60 px-3.5 py-1.5 text-xs font-medium text-foreground hover:border-accent/50 hover:bg-accent/10 hover:text-accent active:scale-95 transition-all"
+          className="flex items-center justify-center gap-1 md:gap-1.5 shrink-0 rounded-full border border-border bg-secondary/60 px-2 py-1.5 md:px-3.5 text-[10px] md:text-xs font-medium text-foreground hover:border-accent/50 hover:bg-accent/10 hover:text-accent active:scale-95 transition-all"
         >
-          <Icon className="h-3 w-3" />
-          {label}
+          <Icon className="h-3 w-3 shrink-0" />
+          <span className="truncate">{label}</span>
         </button>
       ))}
     </motion.div>
