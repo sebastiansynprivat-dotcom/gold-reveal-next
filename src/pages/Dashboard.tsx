@@ -574,7 +574,7 @@ export default function Dashboard() {
                   </Dialog>
                 </div>
               }
-              <div className="shrink-0 flex items-center gap-1">
+              <div className="shrink-0 flex items-center gap-1" data-tour="revenue-input">
                 <Zap className="h-3 w-3 text-accent" />
                 <div className="input-gold-shimmer rounded-lg"><Input type="number" min={0} step={50} value={umsatz || ""} onChange={(e) => handleUmsatzChange(Number(e.target.value) || 0)} placeholder="€" className="h-7 text-xs w-20 font-semibold border-transparent" /></div>
               </div>
