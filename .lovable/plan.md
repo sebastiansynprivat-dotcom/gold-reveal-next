@@ -1,37 +1,41 @@
 
+# Fortschrittsanzeige und Schritt-Nummerierung fur OfferB
 
-## Plan: Bonus-Modell Tier-Karten Redesign + Demo-Modus
+## Was wird gemacht
 
-### Probleme aktuell
-- 6 Karten in `grid-cols-6` sind auf Mobile sehr gequetscht (winzige Schrift)
-- Kein visueller "Wow"-Faktor, zu technisch/trocken
-- Keine Demo-Möglichkeit zum Durchklicken der Stufen
+### 1. Alle Schritte als einheitliche Liste definieren
+Die Videos und Links werden zu einer gemeinsamen Schritt-Liste zusammengefasst:
+- Schritt 1: Plattform Erklärungs Video
+- Schritt 2: Telegram Nachrichten Video
+- Schritt 3: Brezzels Notifications aktivieren
+- Schritt 4: My ID Bot einrichten
+- Schritt 5: Tägliches Feedback
 
-### Was wird umgesetzt
+### 2. Fortschritts-Bar oben auf der Seite
+Direkt unter dem Hero-Bereich wird eine Progress-Bar eingefügt, die den Gesamtfortschritt anzeigt (z.B. "2 von 5 Schritten erledigt"). Nutzt die vorhandene `Progress`-Komponente im Gold-Styling.
 
-**1. Neues Karten-Design (Premium & Clean)**
-- Auf Mobile: `grid-cols-3` (2 Reihen à 3 Karten) statt 6 in einer Reihe
-- Auf Desktop: `grid-cols-6` bleibt
-- Jede Karte bekommt mehr Padding, einen feinen inneren Glow, und die aktive Karte einen deutlicheren Gold-Border mit sanftem Schatten
-- Emoji größer, Prozent-Zahl prominent, Tier-Name und "ab X€" darunter
-- Durchlaufene Stufen bekommen ein dezentes Häkchen-Overlay
-- Progress-Bar bleibt unter dem Grid
+### 3. Klickbare Checkliste
+Unter der Progress-Bar eine kompakte Checkliste mit allen 5 Schritten. Jeder Schritt hat:
+- Eine Checkbox zum Abhaken
+- Schritt-Nummer ("Schritt 1", "Schritt 2" etc.)
+- Kurzer Titel
 
-**2. Demo-Modus (Stufen durchklicken)**
-- Ein Toggle/Button "Demo anzeigen" unter dem Bonus-Modell Header
-- Im Demo-Modus: Ein Slider oder Buttons (Pfeile links/rechts) um durch die Stufen zu navigieren
-- Die aktive Stufe wechselt visuell, die Progress-Bar passt sich an, der Verdienst-Wert ändert sich
-- Demo-State ist rein lokal (useState), überschreibt nicht die echten Daten
-- Kleiner Hinweis-Badge "Demo" damit klar ist, dass es nicht der echte Stand ist
-- Button "Demo beenden" setzt zurück auf echte Werte
+Der Fortschritt wird im `localStorage` gespeichert, damit er beim Neuladen erhalten bleibt.
 
-### Technische Umsetzung
+### 4. Schritt-Nummern bei den Sektionen
+Jede Video-/Link-/Feedback-Sektion bekommt eine prominente Schritt-Nummer als Badge (z.B. goldener Kreis mit "1" darin) neben dem Titel.
 
-**Datei:** `src/pages/Dashboard.tsx`
+## Technische Details
 
-- Neuer State: `demoMode: boolean`, `demoTierIndex: number`
-- Wenn `demoMode` aktiv: `currentTier` und `monthlyRevenue` werden durch Demo-Werte ersetzt (z.B. Mitte des jeweiligen Tier-Bereichs)
-- Karten-Grid: `grid-cols-3 lg:grid-cols-6` mit verbessertem Styling
-- Jede Karte: mehr Höhe, größeres Emoji, klarere Typografie-Hierarchie
-- Demo-Controls: Zwei Chevron-Buttons + aktueller Tier-Name in der Mitte
+**Datei: `src/pages/OfferB.tsx`**
 
+- Neue `steps`-Array-Konstante mit id, title, type fur alle 5 Schritte
+- `useState` + `localStorage` fur `completedSteps: Set<number>`
+- Progress-Bar-Sektion nach dem Hero mit `Progress`-Komponente (Wert = `completedSteps.size / steps.length * 100`)
+- Checkliste mit `Checkbox`-Komponenten, gestylt im bestehenden `glass-card-subtle` Look
+- Videos bekommen "Schritt 1" / "Schritt 2" als nummerierte Badge-Kreise
+- Links-Sektion wird zu Schritt 3 und 4 mit individuellen Nummern
+- Feedback wird Schritt 5
+- Erledigte Schritte bekommen eine subtile visuelle Markierung (leicht reduzierte Opazitat / Hakchen)
+
+Keine neuen Abhangigkeiten notwendig -- nutzt vorhandene `Progress`, `Checkbox` und `framer-motion`.
