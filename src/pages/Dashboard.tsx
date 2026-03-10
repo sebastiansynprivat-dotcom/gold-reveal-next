@@ -1031,7 +1031,256 @@ export default function Dashboard() {
       <DashboardChat externalOpen={chatOpen} onExternalOpenChange={setChatOpen} />
     </div>);}
 
-const REFERRAL_LINKEDIN_URL = "LINKEDIN_URL";
+function BonusModelSection({
+  monthlyRevenue,
+  currentTier,
+  nextTier,
+  progressToNext,
+  isTopTier,
+  umsatz,
+}: {
+  monthlyRevenue: number;
+  currentTier: (typeof BONUS_TIERS)[number];
+  nextTier: (typeof BONUS_TIERS)[number] | null;
+  progressToNext: number;
+  isTopTier: boolean;
+  umsatz: number;
+}) {
+  const [demoMode, setDemoMode] = useState(false);
+  const [demoTierIndex, setDemoTierIndex] = useState(0);
+
+  // Demo values
+  const demoTier = BONUS_TIERS[demoTierIndex];
+  const demoRevenue = demoTier.max === Infinity ? demoTier.min + 500 : Math.round((demoTier.min + demoTier.max) / 2);
+  const demoNextTier = demoTierIndex < BONUS_TIERS.length - 1 ? BONUS_TIERS[demoTierIndex + 1] : null;
+  const demoProgress = demoNextTier
+    ? Math.min(((demoRevenue - demoTier.min) / (demoNextTier.min - demoTier.min)) * 100, 100)
+    : 100;
+
+  // Use demo or real values
+  const activeTier = demoMode ? demoTier : currentTier;
+  const activeRevenue = demoMode ? demoRevenue : monthlyRevenue;
+  const activeNextTier = demoMode ? demoNextTier : nextTier;
+  const activeProgress = demoMode ? demoProgress : progressToNext;
+  const activeIsTop = demoMode ? !demoNextTier : isTopTier;
+
+  return (
+    <motion.section
+      variants={sectionVariants}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, margin: "-50px" }}
+      className="glass-card rounded-xl p-4 lg:p-6 space-y-4 relative overflow-hidden card-inner-glow"
+    >
+      {/* Animated gold shimmer sweep */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-xl">
+        <div
+          className="absolute inset-0 opacity-[0.04]"
+          style={{
+            background: 'linear-gradient(105deg, transparent 40%, hsl(43 56% 52%) 50%, transparent 60%)',
+            backgroundSize: '200% 100%',
+            animation: 'bonus-sweep 14s ease-in-out infinite',
+          }}
+        />
+      </div>
+
+      {/* Header with Demo Toggle */}
+      <div className="relative">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <motion.div
+              animate={{ scale: [1, 1.12, 1], opacity: [0.85, 1, 0.85] }}
+              transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+            >
+              <Crown className="h-4 w-4 lg:h-5 lg:w-5 text-accent" />
+            </motion.div>
+            <h2 className="text-sm lg:text-base font-bold text-gold-gradient-shimmer">Bonus-Modell</h2>
+          </div>
+          <button
+            onClick={() => { setDemoMode(!demoMode); setDemoTierIndex(0); }}
+            className={cn(
+              "flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-medium transition-all",
+              demoMode
+                ? "bg-accent/20 text-accent border border-accent/30"
+                : "bg-secondary/50 text-muted-foreground border border-border/30 hover:border-accent/20 hover:text-foreground"
+            )}
+          >
+            {demoMode ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+            {demoMode ? "Demo beenden" : "Demo"}
+          </button>
+        </div>
+        <div className="mt-2 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
+      </div>
+
+      {/* Demo Controls */}
+      {demoMode && (
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          exit={{ opacity: 0, height: 0 }}
+          className="flex items-center justify-center gap-4"
+        >
+          <Badge variant="outline" className="text-[10px] border-accent/30 text-accent bg-accent/5">
+            Demo
+          </Badge>
+          <button
+            onClick={() => setDemoTierIndex(Math.max(0, demoTierIndex - 1))}
+            disabled={demoTierIndex === 0}
+            className="h-7 w-7 rounded-full border border-border/40 bg-secondary/40 flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-accent/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+          >
+            <ChevronLeft className="h-3.5 w-3.5" />
+          </button>
+          <span className="text-xs font-semibold text-foreground min-w-[80px] text-center">
+            {demoTier.emoji} {demoTier.name}
+          </span>
+          <button
+            onClick={() => setDemoTierIndex(Math.min(BONUS_TIERS.length - 1, demoTierIndex + 1))}
+            disabled={demoTierIndex === BONUS_TIERS.length - 1}
+            className="h-7 w-7 rounded-full border border-border/40 bg-secondary/40 flex items-center justify-center text-muted-foreground hover:text-foreground hover:border-accent/30 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+          >
+            <ChevronRight className="h-3.5 w-3.5" />
+          </button>
+        </motion.div>
+      )}
+
+      <motion.div
+        className="space-y-2"
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true }}
+        variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.1 } } }}
+      >
+        {/* Tier Cards Grid – 3-col mobile, 6-col desktop */}
+        <motion.div
+          variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
+        >
+          <div className="grid grid-cols-3 lg:grid-cols-6 gap-2 lg:gap-2.5">
+            {BONUS_TIERS.map((tier, idx) => {
+              const isActive = activeTier.name === tier.name;
+              const isPassed = activeRevenue > tier.max;
+              return (
+                <motion.div
+                  key={tier.name}
+                  animate={isActive ? { scale: 1 } : { scale: 1 }}
+                  className={cn(
+                    "relative rounded-xl overflow-hidden transition-all duration-300",
+                    isActive
+                      ? tier.name === "Diamond"
+                        ? "gold-gradient-border-animated bg-[hsl(0_0%_8%/0.8)]"
+                        : "border border-accent/50 bg-[hsl(0_0%_8%/0.8)] shadow-[0_0_24px_hsl(43_56%_52%/0.15)]"
+                      : isPassed
+                        ? "border border-accent/15 bg-[hsl(0_0%_7%/0.5)]"
+                        : "border border-border/20 bg-[hsl(0_0%_6%/0.4)]"
+                  )}
+                >
+                  {/* Active top shine */}
+                  {isActive && (
+                    <div className="absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-accent/10 to-transparent pointer-events-none" />
+                  )}
+                  {/* Passed checkmark */}
+                  {isPassed && (
+                    <div className="absolute top-1 right-1 h-4 w-4 rounded-full bg-accent/20 flex items-center justify-center">
+                      <Check className="h-2.5 w-2.5 text-accent/60" />
+                    </div>
+                  )}
+                  <div className="relative flex flex-col items-center text-center p-3 lg:p-4 gap-1">
+                    <span className={cn(
+                      "transition-all duration-300",
+                      isActive ? "text-2xl lg:text-3xl" : "text-xl lg:text-2xl"
+                    )}>
+                      {tier.emoji}
+                    </span>
+                    <p className={cn(
+                      "font-bold text-[10px] lg:text-xs leading-tight tracking-wide uppercase",
+                      isActive ? "text-gold-gradient" : isPassed ? "text-accent/40" : "text-muted-foreground/40"
+                    )}>
+                      {tier.name}
+                    </p>
+                    <p className={cn(
+                      "font-bold leading-none",
+                      isActive ? "text-lg lg:text-xl text-foreground" : isPassed ? "text-base lg:text-lg text-accent/30" : "text-base lg:text-lg text-muted-foreground/25"
+                    )}>
+                      {tier.rate}%
+                    </p>
+                    <p className={cn(
+                      "text-[9px] lg:text-[10px] leading-tight",
+                      isActive ? "text-accent/70 font-medium" : "text-muted-foreground/30"
+                    )}>
+                      ab {tier.min.toLocaleString("de-DE")}€
+                    </p>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+
+          {/* Progress bar */}
+          {activeNextTier && (
+            <div className="mt-3 space-y-1.5">
+              <Progress value={activeProgress} className="h-2 [&>div]:bg-accent shimmer-bar" />
+              <div className="flex justify-between text-[9px] lg:text-[10px] text-muted-foreground">
+                <span>{activeTier.emoji} {activeRevenue.toLocaleString("de-DE")}€</span>
+                <span>Noch <span className="text-accent font-semibold">{(activeNextTier.min - activeRevenue).toLocaleString("de-DE")}€</span> bis {activeNextTier.emoji} {activeNextTier.name}</span>
+              </div>
+            </div>
+          )}
+          {activeIsTop && (
+            <p className="text-[10px] text-accent font-semibold mt-3 text-center">🏆 Höchste Stufe erreicht!</p>
+          )}
+        </motion.div>
+
+        {/* Account Upgrade - Streak */}
+        <motion.div
+          variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
+          className="relative rounded-xl overflow-hidden bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/30 p-4 lg:p-5 space-y-4 transition-transform duration-200 hover:scale-[1.01]"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-accent/20 flex items-center justify-center">
+                <span className="text-lg">⬆</span>
+              </div>
+              <div>
+                <p className="font-bold text-accent text-sm lg:text-base">Account Upgrade</p>
+                <p className="text-[10px] lg:text-xs text-muted-foreground">7 Tage in Folge mind. 30€ Umsatz</p>
+              </div>
+            </div>
+            <span className="font-bold text-accent text-sm lg:text-base">Besserer Account</span>
+          </div>
+          <StreakTracker dailyRevenue={umsatz} />
+        </motion.div>
+
+        {/* 30-Tage-Challenge */}
+        <motion.div
+          variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
+          className="relative rounded-xl overflow-hidden bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/20 p-4 lg:p-5 space-y-4 transition-transform duration-200 hover:scale-[1.01]"
+        >
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-accent/15 flex items-center justify-center">
+                <span className="text-lg">💎</span>
+              </div>
+              <div>
+                <p className="font-bold text-accent text-sm lg:text-base">30-Tage-Challenge</p>
+                <p className="text-[10px] lg:text-xs text-muted-foreground">30 Tage in Folge mind. 100€ Umsatz</p>
+              </div>
+            </div>
+            <span className="font-bold text-accent text-sm lg:text-base">Spezialbonus</span>
+          </div>
+          <MonthlyStreakTracker dailyRevenue={umsatz} />
+        </motion.div>
+      </motion.div>
+
+      <p className="text-[10px] lg:text-xs text-muted-foreground">
+        Deine Rate gilt für den <strong className="text-foreground">gesamten Monatsumsatz</strong> und wird automatisch angepasst.
+      </p>
+      <p className="text-[10px] lg:text-xs text-muted-foreground">
+        7 Tage × 30€ = <strong className="text-foreground">Account Upgrade</strong> · 30 Tage × 100€ = <strong className="text-foreground">Spezialbonus</strong>
+      </p>
+    </motion.section>
+  );
+}
+
+
 
 function DashboardBillingInfo({ onNavigate, groupName }: {onNavigate: () => void; groupName: string;}) {
   const now = new Date();
