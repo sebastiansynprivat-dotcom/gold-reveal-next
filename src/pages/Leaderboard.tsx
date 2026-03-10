@@ -223,8 +223,9 @@ export default function Leaderboard() {
               <div className="mx-auto h-9 w-9 rounded-full bg-muted/40 border border-border/30 flex items-center justify-center">
                 <Medal className="h-4 w-4 text-muted-foreground" />
               </div>
-              <p className="text-[10px] font-medium text-muted-foreground truncate leading-tight">
+              <p className="text-[10px] font-medium text-muted-foreground truncate leading-tight flex items-center justify-center gap-1">
                 {censorName(leaderboard[1].name, leaderboard[1].lastInit)}
+                {leaderboard[1].isDiamond && <Gem className="h-3 w-3 text-accent shrink-0" />}
               </p>
               <AnimatedNumber
                 value={leaderboard[1].revenue}
