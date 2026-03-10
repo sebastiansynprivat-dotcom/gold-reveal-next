@@ -246,8 +246,9 @@ export default function Leaderboard() {
               >
                 <Crown className="h-5 w-5 text-accent" />
               </motion.div>
-              <p className="text-[10px] font-semibold text-accent truncate leading-tight">
+              <p className="text-[10px] font-semibold text-accent truncate leading-tight flex items-center justify-center gap-1">
                 {censorName(leaderboard[0].name, leaderboard[0].lastInit)}
+                {leaderboard[0].isDiamond && <Gem className="h-3 w-3 text-accent shrink-0" />}
               </p>
               <AnimatedNumber
                 value={leaderboard[0].revenue}
