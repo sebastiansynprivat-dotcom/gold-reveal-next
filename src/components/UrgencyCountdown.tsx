@@ -4,11 +4,9 @@ import { useState, useEffect } from "react";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
-const getEndOfWeek = () => {
+const getEndOfDay = () => {
   const now = new Date();
-  const daysUntilSunday = 7 - now.getDay();
   const end = new Date(now);
-  end.setDate(now.getDate() + daysUntilSunday);
   end.setHours(23, 59, 59, 999);
   return end;
 };
@@ -55,12 +53,12 @@ const getPersistedSpots = (): number => {
 };
 
 const UrgencyCountdown = () => {
-  const [timeLeft, setTimeLeft] = useState(() => formatTime(getEndOfWeek().getTime() - Date.now()));
+  const [timeLeft, setTimeLeft] = useState(() => formatTime(getEndOfDay().getTime() - Date.now()));
   const [spots] = useState(getPersistedSpots);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setTimeLeft(formatTime(getEndOfWeek().getTime() - Date.now()));
+      setTimeLeft(formatTime(getEndOfDay().getTime() - Date.now()));
     }, 1000);
     return () => clearInterval(interval);
   }, []);
@@ -78,15 +76,14 @@ const UrgencyCountdown = () => {
         <div className="flex items-center gap-2">
           <Flame className="w-4 h-4 text-orange-400 animate-pulse" />
           <span className="text-foreground text-sm font-semibold">
-            Nur noch <span className="text-primary">{spots} Plätze</span> diese Woche frei
+            Nur noch <span className="text-primary">{spots} Plätze</span> frei
           </span>
         </div>
 
         <div className="flex items-center gap-1.5 text-muted-foreground">
           <Clock className="w-3.5 h-3.5" />
+          <span className="text-xs text-foreground/70">Angebot endet in</span>
           <div className="flex items-center gap-1 font-mono text-xs">
-            <span className="bg-secondary px-1.5 py-0.5 rounded text-foreground font-semibold">{timeLeft.days}T</span>
-            <span>:</span>
             <span className="bg-secondary px-1.5 py-0.5 rounded text-foreground font-semibold">{pad(timeLeft.hours)}h</span>
             <span>:</span>
             <span className="bg-secondary px-1.5 py-0.5 rounded text-foreground font-semibold">{pad(timeLeft.minutes)}m</span>
