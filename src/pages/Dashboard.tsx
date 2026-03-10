@@ -35,8 +35,9 @@ const BONUS_TIERS = [
   { name: "Bronze", emoji: "🥉", min: 500, max: 999, rate: 21 },
   { name: "Silber", emoji: "🥈", min: 1000, max: 1499, rate: 22 },
   { name: "Gold", emoji: "🏆", min: 1500, max: 1999, rate: 23 },
-  { name: "Platin", emoji: "💠", min: 2000, max: 2999, rate: 24 },
-  { name: "Diamond", emoji: "💎", min: 3000, max: Infinity, rate: 25 },
+  { name: "Platin", emoji: "💠", min: 2000, max: 4999, rate: 24 },
+  { name: "Diamond", emoji: "💎", min: 5000, max: 49999, rate: 25 },
+  { name: "Titan", emoji: "🔱", min: 50000, max: Infinity, rate: 35 },
 ] as const;
 
 function getCurrentTier(monthlyRevenue: number) {
@@ -1154,18 +1155,20 @@ function BonusModelSection({
         <motion.div
           variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
         >
-          <div className="grid grid-cols-3 lg:grid-cols-6 gap-2 lg:gap-2.5">
+          <div className="grid grid-cols-3 lg:grid-cols-7 gap-2 lg:gap-2.5">
             {BONUS_TIERS.map((tier, idx) => {
               const isActive = activeTier.name === tier.name;
               const isPassed = activeRevenue > tier.max;
+              const isLastOdd = idx === BONUS_TIERS.length - 1 && BONUS_TIERS.length % 3 === 1;
               return (
-                <motion.div
+                  <motion.div
                   key={tier.name}
                   animate={isActive ? { scale: 1 } : { scale: 1 }}
                   className={cn(
                     "relative rounded-xl overflow-hidden transition-all duration-300",
+                    isLastOdd && "col-start-2 lg:col-start-auto",
                     isActive
-                      ? tier.name === "Diamond"
+                      ? (tier.name === "Diamond" || tier.name === "Titan")
                         ? "gold-gradient-border-animated bg-[hsl(0_0%_8%/0.8)]"
                         : "border border-accent/50 bg-[hsl(0_0%_8%/0.8)] shadow-[0_0_24px_hsl(43_56%_52%/0.15)]"
                       : isPassed
@@ -1228,6 +1231,9 @@ function BonusModelSection({
             <p className="text-[10px] text-accent font-semibold mt-3 text-center">🏆 Höchste Stufe erreicht!</p>
           )}
         </motion.div>
+
+        {/* Spacer before streaks */}
+        <div className="h-6 lg:h-8" />
 
         {/* Account Upgrade - Streak */}
         <motion.div
