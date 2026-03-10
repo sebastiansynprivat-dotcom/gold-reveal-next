@@ -1096,66 +1096,117 @@ export default function Dashboard() {
               <MonthlyStreakTracker dailyRevenue={umsatz} />
             </motion.div>
 
-            {/* Tier Stepper */}
+            {/* Tier Cards with Rocket */}
             <motion.div
               variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
-              className="relative rounded-xl border border-border/50 bg-secondary/20 p-4 lg:p-5"
+              className="relative rounded-xl border border-border/50 bg-secondary/20 p-4 lg:p-5 space-y-4"
             >
-              {/* Horizontal stepper */}
-              <div className="relative flex items-start justify-between px-1">
-                {/* Background line */}
-                <div className="absolute top-[14px] lg:top-[18px] left-[14px] lg:left-[18px] right-[14px] lg:right-[18px] h-[2px] bg-muted rounded-full" />
-                {/* Gold filled line */}
-                <div
-                  className="absolute top-[14px] lg:top-[18px] left-[14px] lg:left-[18px] h-[2px] bg-accent rounded-full transition-all duration-700 ease-out"
-                  style={{
-                    width: `${(BONUS_TIERS.indexOf(currentTier) / (BONUS_TIERS.length - 1)) * (100 - (100 / BONUS_TIERS.length))}%`,
-                  }}
+              {/* Animated rocket track */}
+              <div className="relative h-8 mb-2">
+                {/* Track line */}
+                <div className="absolute top-1/2 left-4 right-4 h-[2px] bg-muted -translate-y-1/2 rounded-full" />
+                {/* Gold filled track */}
+                <motion.div
+                  className="absolute top-1/2 left-4 h-[2px] bg-gradient-to-r from-accent to-accent/60 -translate-y-1/2 rounded-full"
+                  initial={{ width: "0%" }}
+                  animate={{ width: `${Math.min((BONUS_TIERS.indexOf(currentTier) / (BONUS_TIERS.length - 1)) * 100, 100)}%` }}
+                  transition={{ duration: 1.2, ease: "easeOut" }}
                 />
+                {/* Rocket */}
+                <motion.div
+                  className="absolute top-1/2 -translate-y-1/2 z-10"
+                  initial={{ left: "0%" }}
+                  animate={{ left: `calc(${Math.min((BONUS_TIERS.indexOf(currentTier) / (BONUS_TIERS.length - 1)) * 100, 100)}% + 4px)` }}
+                  transition={{ duration: 1.2, ease: "easeOut" }}
+                >
+                  <motion.span
+                    className="text-xl drop-shadow-[0_0_8px_hsl(43_56%_52%/0.6)]"
+                    animate={{ x: [0, 3, 0], rotate: [0, -5, 0] }}
+                    transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                  >
+                    🚀
+                  </motion.span>
+                </motion.div>
+                {/* Tier dots on track */}
                 {BONUS_TIERS.map((tier, idx) => {
-                  const isActive = currentTier.name === tier.name;
                   const isPassed = monthlyRevenue > tier.max;
+                  const isActive = currentTier.name === tier.name;
                   return (
-                    <div key={tier.name} className="relative z-10 flex flex-col items-center gap-1" style={{ width: `${100 / BONUS_TIERS.length}%` }}>
-                      <motion.div
-                        animate={isActive ? { scale: [1, 1.1, 1] } : {}}
-                        transition={isActive ? { duration: 2, repeat: Infinity, ease: "easeInOut" } : {}}
-                        className={cn(
-                          "h-7 w-7 lg:h-9 lg:w-9 rounded-full flex items-center justify-center text-sm lg:text-base transition-all duration-300",
-                          isActive
-                            ? "bg-accent/20 ring-2 ring-accent/50 shadow-[0_0_12px_hsl(43_56%_52%/0.4)]"
-                            : isPassed
-                              ? "bg-accent/15"
-                              : "bg-muted"
-                        )}
-                      >
-                        {tier.emoji}
-                      </motion.div>
-                      <span className={cn(
-                        "text-[8px] lg:text-[10px] font-semibold leading-tight text-center",
-                        isActive ? "text-accent" : isPassed ? "text-accent/50" : "text-muted-foreground"
-                      )}>
-                        {tier.name}
-                      </span>
-                      <span className={cn(
-                        "text-[8px] lg:text-[10px] leading-tight",
-                        isActive ? "text-foreground font-bold" : isPassed ? "text-accent/40" : "text-muted-foreground/60"
-                      )}>
-                        {tier.rate}%
-                      </span>
-                    </div>
+                    <div
+                      key={tier.name}
+                      className={cn(
+                        "absolute top-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full border-2 transition-all duration-500",
+                        isPassed || isActive
+                          ? "bg-accent border-accent shadow-[0_0_6px_hsl(43_56%_52%/0.5)]"
+                          : "bg-muted border-border"
+                      )}
+                      style={{ left: `calc(${(idx / (BONUS_TIERS.length - 1)) * 100}% + ${idx === 0 ? 4 : idx === BONUS_TIERS.length - 1 ? -4 : 0}px)` }}
+                    />
                   );
                 })}
               </div>
 
-              {/* Active tier detail */}
+              {/* Tier grid */}
+              <div className="grid grid-cols-3 gap-2 lg:gap-3">
+                {BONUS_TIERS.map((tier) => {
+                  const isActive = currentTier.name === tier.name;
+                  const isPassed = monthlyRevenue > tier.max;
+                  return (
+                    <motion.div
+                      key={tier.name}
+                      whileHover={{ scale: 1.03 }}
+                      className={cn(
+                        "relative rounded-lg p-2.5 lg:p-3 text-center transition-all duration-300 border",
+                        isActive
+                          ? tier.name === "Diamond"
+                            ? "gold-gradient-border-animated bg-accent/10"
+                            : "border-accent/50 bg-accent/5 shadow-[0_0_15px_hsl(43_56%_52%/0.15)]"
+                          : isPassed
+                            ? "border-accent/20 bg-accent/5"
+                            : "border-border/30 bg-muted/30"
+                      )}
+                    >
+                      {isActive && (
+                        <motion.div
+                          className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-accent"
+                          animate={{ scale: [1, 1.3, 1], opacity: [1, 0.7, 1] }}
+                          transition={{ duration: 1.5, repeat: Infinity }}
+                        />
+                      )}
+                      <span className="text-lg lg:text-xl block">{tier.emoji}</span>
+                      <p className={cn(
+                        "font-bold text-[10px] lg:text-xs mt-1",
+                        isActive ? "text-gold-gradient" : isPassed ? "text-accent/60" : "text-muted-foreground"
+                      )}>
+                        {tier.name}
+                      </p>
+                      <p className={cn(
+                        "font-bold text-sm lg:text-base",
+                        isActive ? "text-foreground" : isPassed ? "text-accent/50" : "text-muted-foreground/60"
+                      )}>
+                        {tier.rate}%
+                      </p>
+                      <p className={cn(
+                        "text-[8px] lg:text-[9px] mt-0.5 leading-tight",
+                        isActive ? "text-accent" : "text-muted-foreground/50"
+                      )}>
+                        {tier.max === Infinity
+                          ? `ab ${tier.min.toLocaleString("de-DE")}€`
+                          : `${tier.min.toLocaleString("de-DE")}€ – ${tier.max.toLocaleString("de-DE")}€`}
+                      </p>
+                    </motion.div>
+                  );
+                })}
+              </div>
+
+              {/* Active tier progress */}
               <motion.div
                 key={currentTier.name}
-                initial={{ opacity: 0, y: 8 }}
+                initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
                 className={cn(
-                  "mt-4 rounded-lg p-3 lg:p-4 border",
+                  "rounded-lg p-3 lg:p-4 border",
                   currentTier.name === "Diamond"
                     ? "gold-gradient-border-animated bg-accent/10"
                     : "border-accent/30 bg-accent/5"
