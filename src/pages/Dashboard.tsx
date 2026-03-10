@@ -596,7 +596,7 @@ export default function Dashboard() {
           variants={staggerContainer}
           initial="hidden"
           animate="show"
-          className="grid grid-cols-2 gap-3 lg:hidden"
+          className="grid grid-cols-2 gap-3 lg:hidden" data-tour="stats-cards"
         >
           <motion.div variants={staggerItem} className="glass-card-subtle rounded-xl p-3 text-center card-hover-glow card-inner-glow group">
             <p className="text-[10px] text-muted-foreground mb-0.5">Umsatz gestern</p>
