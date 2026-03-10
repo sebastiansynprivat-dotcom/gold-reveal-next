@@ -10,7 +10,6 @@ interface TourStep {
   title: string;
   description: string;
   icon: React.ElementType;
-  maxHeight?: number;
 }
 
 const TOUR_STEPS: TourStep[] = [
@@ -45,15 +44,12 @@ const TOUR_STEPS: TourStep[] = [
     icon: ListChecks,
   },
   {
-    selector: '[data-section="bonus"]',
+    selector: '[data-tour="bonus-tiers"]',
     title: "Bonusmodell",
     description: "Je mehr Umsatz du machst, desto höher steigt deine Rate. Hier siehst du alle Stufen und deinen Fortschritt.",
     icon: Trophy,
-    maxHeight: 120,
   },
 ];
-
-interface Rect { left: number; top: number; width: number; height: number; }
 
 interface DashboardOnboardingProps {
   isFirstLogin: boolean;
@@ -61,13 +57,16 @@ interface DashboardOnboardingProps {
   onManualClose?: () => void;
 }
 
+// Smooth animated rect state using CSS transitions on a single overlay
 export default function DashboardOnboarding({ isFirstLogin, manualOpen, onManualClose }: DashboardOnboardingProps) {
   const [active, setActive] = useState(false);
   const [step, setStep] = useState(0);
-  const [rect, setRect] = useState<Rect | null>(null);
-  const [isTransitioning, setIsTransitioning] = useState(false);
+  // Animated rect (smoothly interpolated)
+  const [animRect, setAnimRect] = useState({ x: 0, y: 0, w: 0, h: 0 });
+  const [showTooltip, setShowTooltip] = useState(false);
+  const targetRect = useRef({ x: 0, y: 0, w: 0, h: 0 });
+  const animating = useRef(false);
   const rafRef = useRef<number>();
-  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!isFirstLogin) return;
@@ -80,10 +79,12 @@ export default function DashboardOnboarding({ isFirstLogin, manualOpen, onManual
   useEffect(() => {
     if (manualOpen) {
       setStep(0);
-      setRect(null);
+      setShowTooltip(false);
       setActive(true);
     }
   }, [manualOpen]);
+
+  const pad = 12;
 
   const measureElement = useCallback((stepIndex: number) => {
     const s = TOUR_STEPS[stepIndex];
@@ -91,54 +92,101 @@ export default function DashboardOnboarding({ isFirstLogin, manualOpen, onManual
     const el = document.querySelector(s.selector);
     if (!el) return null;
     const r = el.getBoundingClientRect();
-    const maxH = s.maxHeight || window.innerHeight * 0.55;
-    const clampedH = Math.min(r.height, maxH);
-    return { left: r.left, top: r.top, width: r.width, height: clampedH };
+    return {
+      x: r.left - pad,
+      y: r.top - pad,
+      w: r.width + pad * 2,
+      h: r.height + pad * 2,
+    };
   }, []);
 
-  const scrollToStep = useCallback((stepIndex: number) => {
-    const s = TOUR_STEPS[stepIndex];
-    if (!s) return;
-    const el = document.querySelector(s.selector);
-    if (!el) return;
-    el.scrollIntoView({ behavior: "smooth", block: "center" });
+  // Smooth lerp animation for the cutout rect
+  const startAnimation = useCallback((target: { x: number; y: number; w: number; h: number }) => {
+    targetRect.current = target;
+    if (animating.current) return;
+    animating.current = true;
+
+    const animate = () => {
+      setAnimRect(prev => {
+        const lerp = 0.12;
+        const t = targetRect.current;
+        const nx = prev.x + (t.x - prev.x) * lerp;
+        const ny = prev.y + (t.y - prev.y) * lerp;
+        const nw = prev.w + (t.w - prev.w) * lerp;
+        const nh = prev.h + (t.h - prev.h) * lerp;
+
+        const done = Math.abs(t.x - nx) < 0.5 && Math.abs(t.y - ny) < 0.5 &&
+                     Math.abs(t.w - nw) < 0.5 && Math.abs(t.h - nh) < 0.5;
+
+        if (done) {
+          animating.current = false;
+          return t;
+        }
+
+        rafRef.current = requestAnimationFrame(animate);
+        return { x: nx, y: ny, w: nw, h: nh };
+      });
+    };
+    rafRef.current = requestAnimationFrame(animate);
   }, []);
 
-  // On step change: scroll first, then measure after scroll settles
+  // On step change: scroll, wait, measure, animate
   useEffect(() => {
     if (!active) return;
-    setIsTransitioning(true);
+    setShowTooltip(false);
 
-    scrollToStep(step);
+    const s = TOUR_STEPS[step];
+    if (!s) return;
+    const el = document.querySelector(s.selector);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
 
-    // Wait for scroll to settle, then measure
+    // Measure after scroll settles
     const timer = setTimeout(() => {
       const measured = measureElement(step);
-      if (measured) setRect(measured);
-      setIsTransitioning(false);
-    }, 500);
+      if (measured) {
+        // On first step, jump immediately
+        if (step === 0 && animRect.w === 0) {
+          setAnimRect(measured);
+          targetRect.current = measured;
+        } else {
+          startAnimation(measured);
+        }
+      }
+      // Show tooltip slightly after animation starts
+      setTimeout(() => setShowTooltip(true), 200);
+    }, 450);
 
     return () => clearTimeout(timer);
-  }, [active, step, scrollToStep, measureElement]);
+  }, [active, step, measureElement, startAnimation]);
 
-  // Keep rect updated on scroll/resize
+  // Keep measuring on scroll/resize
   useEffect(() => {
     if (!active) return;
     const onUpdate = () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      rafRef.current = requestAnimationFrame(() => {
-        const measured = measureElement(step);
-        if (measured) setRect(measured);
-      });
+      const measured = measureElement(step);
+      if (measured) {
+        targetRect.current = measured;
+        if (!animating.current) {
+          setAnimRect(measured);
+        }
+      }
     };
     window.addEventListener("scroll", onUpdate, true);
     window.addEventListener("resize", onUpdate);
     return () => {
       window.removeEventListener("scroll", onUpdate, true);
       window.removeEventListener("resize", onUpdate);
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
   }, [active, step, measureElement]);
+
+  // Cleanup
+  useEffect(() => {
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, []);
 
   const handleNext = () => {
     if (step < TOUR_STEPS.length - 1) {
@@ -152,7 +200,6 @@ export default function DashboardOnboarding({ isFirstLogin, manualOpen, onManual
     localStorage.setItem(ONBOARDING_KEY, "true");
     setActive(false);
     onManualClose?.();
-    // Scroll to accounts section
     setTimeout(() => {
       const el = document.querySelector('[data-section="accounts"]');
       if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -163,110 +210,91 @@ export default function DashboardOnboarding({ isFirstLogin, manualOpen, onManual
 
   const currentStep = TOUR_STEPS[step];
   const Icon = currentStep.icon;
-  const pad = 10;
+  const { x, y, w, h } = animRect;
+  const r = 14; // border radius for cutout
 
-  // Calculate tooltip position: prefer below, if not enough space go above
+  // Calculate tooltip position
   const getTooltipStyle = (): React.CSSProperties => {
-    if (!rect) return { opacity: 0 };
+    if (w === 0) return { opacity: 0 };
     const tooltipH = 200;
-    const spaceBelow = window.innerHeight - (rect.top + rect.height + pad);
-    const spaceAbove = rect.top - pad;
-    const leftPos = Math.max(12, Math.min(rect.left + rect.width / 2 - 170, window.innerWidth - 352));
+    const spaceBelow = window.innerHeight - (y + h);
+    const spaceAbove = y;
+    const leftPos = Math.max(12, Math.min(x + w / 2 - 170, window.innerWidth - 352));
 
-    if (spaceBelow >= tooltipH + 20) {
-      return { left: leftPos, top: rect.top + rect.height + pad + 12 };
-    } else if (spaceAbove >= tooltipH + 20) {
-      return { left: leftPos, bottom: window.innerHeight - rect.top + pad + 12 };
+    if (spaceBelow >= tooltipH + 16) {
+      return { left: leftPos, top: y + h + 12 };
+    } else if (spaceAbove >= tooltipH + 16) {
+      return { left: leftPos, bottom: window.innerHeight - y + 12 };
     }
-    // Fallback: center vertically
-    return { left: leftPos, top: Math.max(20, window.innerHeight / 2 - tooltipH / 2) };
+    return { left: leftPos, top: Math.max(16, window.innerHeight / 2 - tooltipH / 2) };
   };
 
-  return (
-    <div ref={containerRef} className="fixed inset-0 z-[9999]" style={{ pointerEvents: "auto" }}>
-      {/* 4 overlay panels around the highlight – smooth CSS transitions */}
-      {rect ? (
-        <>
-          {/* Top */}
-          <div
-            className="absolute left-0 right-0 top-0 bg-black/70 backdrop-blur-[1px]"
-            style={{ height: Math.max(0, rect.top - pad), transition: "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)" }}
-            onClick={handleClose}
-          />
-          {/* Bottom */}
-          <div
-            className="absolute left-0 right-0 bottom-0 bg-black/70 backdrop-blur-[1px]"
-            style={{ height: Math.max(0, window.innerHeight - rect.top - rect.height - pad), transition: "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)" }}
-            onClick={handleClose}
-          />
-          {/* Left */}
-          <div
-            className="absolute left-0 bg-black/70 backdrop-blur-[1px]"
-            style={{
-              top: rect.top - pad,
-              height: rect.height + pad * 2,
-              width: Math.max(0, rect.left - pad),
-              transition: "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
-            }}
-            onClick={handleClose}
-          />
-          {/* Right */}
-          <div
-            className="absolute right-0 bg-black/70 backdrop-blur-[1px]"
-            style={{
-              top: rect.top - pad,
-              height: rect.height + pad * 2,
-              left: rect.left + rect.width + pad,
-              transition: "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
-            }}
-            onClick={handleClose}
-          />
+  // SVG path for overlay with rounded-rect cutout
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const overlayPath = w > 0
+    ? `M0,0 L${vw},0 L${vw},${vh} L0,${vh} Z ` +
+      `M${x + r},${y} L${x + w - r},${y} Q${x + w},${y} ${x + w},${y + r} ` +
+      `L${x + w},${y + h - r} Q${x + w},${y + h} ${x + w - r},${y + h} ` +
+      `L${x + r},${y + h} Q${x},${y + h} ${x},${y + h - r} ` +
+      `L${x},${y + r} Q${x},${y} ${x + r},${y} Z`
+    : `M0,0 L${vw},0 L${vw},${vh} L0,${vh} Z`;
 
-          {/* Highlight border */}
-          <div
-            className="absolute rounded-xl border-2 border-accent/80 pointer-events-none"
-            style={{
-              left: rect.left - pad,
-              top: rect.top - pad,
-              width: rect.width + pad * 2,
-              height: rect.height + pad * 2,
-              boxShadow: "0 0 24px hsl(var(--accent) / 0.35), inset 0 0 24px hsl(var(--accent) / 0.08)",
-              transition: "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
-            }}
-          />
-        </>
-      ) : (
-        <div className="absolute inset-0 bg-black/70 backdrop-blur-[1px]" onClick={handleClose} />
+  return (
+    <div className="fixed inset-0 z-[9999]">
+      {/* Single SVG overlay with animated cutout */}
+      <svg className="absolute inset-0 w-full h-full" style={{ pointerEvents: "none" }}>
+        <path
+          d={overlayPath}
+          fill="rgba(0,0,0,0.72)"
+          fillRule="evenodd"
+          style={{ pointerEvents: "all", cursor: "pointer" }}
+          onClick={handleClose}
+        />
+      </svg>
+
+      {/* Glow border around cutout */}
+      {w > 0 && (
+        <div
+          className="absolute pointer-events-none rounded-[14px] border-2 border-accent/70"
+          style={{
+            left: x,
+            top: y,
+            width: w,
+            height: h,
+            boxShadow: "0 0 20px hsl(var(--accent) / 0.3), 0 0 40px hsl(var(--accent) / 0.1)",
+          }}
+        />
       )}
 
       {/* Tooltip */}
       <AnimatePresence mode="wait">
-        {rect && !isTransitioning && (
+        {showTooltip && w > 0 && (
           <motion.div
             key={step}
-            initial={{ opacity: 0, y: 8, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -8, scale: 0.97 }}
-            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1], delay: 0.05 }}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
             className="absolute z-10 w-[min(340px,calc(100vw-1.5rem))]"
             style={getTooltipStyle()}
           >
             <div className="glass-card border-accent/30 rounded-2xl p-5 shadow-[0_8px_40px_rgba(0,0,0,0.5)]">
-              {/* Progress bar */}
+              {/* Progress dots */}
               <div className="flex items-center gap-1.5 mb-3">
                 {TOUR_STEPS.map((_, i) => (
-                  <div
+                  <motion.div
                     key={i}
-                    className="h-1.5 rounded-full"
-                    style={{
+                    animate={{
                       width: i === step ? 24 : 6,
                       backgroundColor: i === step
-                        ? "hsl(var(--accent))"
+                        ? "hsl(43, 56%, 52%)"
                         : i < step
-                        ? "hsl(var(--accent) / 0.5)"
-                        : "hsl(var(--muted-foreground) / 0.25)",
-                      transition: "all 0.4s ease",
+                        ? "hsl(43, 56%, 52%, 0.5)"
+                        : "hsl(0, 0%, 40%, 0.25)",
                     }}
+                    transition={{ duration: 0.3 }}
+                    className="h-1.5 rounded-full"
                   />
                 ))}
                 <span className="text-[10px] text-muted-foreground ml-auto">
@@ -277,16 +305,32 @@ export default function DashboardOnboarding({ isFirstLogin, manualOpen, onManual
               <div className="flex items-start gap-3">
                 <motion.div
                   key={step}
-                  initial={{ scale: 0.5, rotate: -10 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.1 }}
+                  initial={{ scale: 0.6, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 22, delay: 0.08 }}
                   className="w-9 h-9 rounded-xl bg-accent/15 border border-accent/25 flex items-center justify-center shrink-0"
                 >
                   <Icon className="h-4 w-4 text-accent" />
                 </motion.div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-bold text-foreground mb-1">{currentStep.title}</h3>
-                  <p className="text-xs text-muted-foreground leading-relaxed">{currentStep.description}</p>
+                  <motion.h3
+                    key={step + "-title"}
+                    initial={{ opacity: 0, x: 8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.25, delay: 0.1 }}
+                    className="text-sm font-bold text-foreground mb-1"
+                  >
+                    {currentStep.title}
+                  </motion.h3>
+                  <motion.p
+                    key={step + "-desc"}
+                    initial={{ opacity: 0, x: 8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.25, delay: 0.15 }}
+                    className="text-xs text-muted-foreground leading-relaxed"
+                  >
+                    {currentStep.description}
+                  </motion.p>
                 </div>
               </div>
 
@@ -305,13 +349,9 @@ export default function DashboardOnboarding({ isFirstLogin, manualOpen, onManual
                   className="ml-auto h-8 text-xs gap-1.5 min-w-[100px]"
                 >
                   {step < TOUR_STEPS.length - 1 ? (
-                    <>
-                      Weiter <ArrowRight className="h-3 w-3" />
-                    </>
+                    <>Weiter <ArrowRight className="h-3 w-3" /></>
                   ) : (
-                    <>
-                      <Sparkles className="h-3 w-3" /> Los geht's!
-                    </>
+                    <><Sparkles className="h-3 w-3" /> Los geht's!</>
                   )}
                 </Button>
               </div>
