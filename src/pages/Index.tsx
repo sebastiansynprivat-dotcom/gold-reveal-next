@@ -5,6 +5,8 @@ import GoldParticles from "@/components/GoldParticles";
 import SocialProofBar from "@/components/SocialProofBar";
 import UrgencyCountdown from "@/components/UrgencyCountdown";
 import VideoThumbnail from "@/components/VideoThumbnail";
+import LandingActivityTicker from "@/components/LandingActivityTicker";
+import ExitIntentPopup from "@/components/ExitIntentPopup";
 
 const Index = () => {
   const { updateProgress } = useProgress();
@@ -27,6 +29,8 @@ const Index = () => {
   return (
     <div className="min-h-screen md:min-h-screen h-[100dvh] md:h-auto flex flex-col items-center justify-start px-3 sm:px-4 py-8 md:py-20 relative overflow-hidden md:overflow-auto">
       <GoldParticles spawnRate={0.5} maxParticles={35} baseOpacity={0.3} />
+      <ExitIntentPopup />
+
       <motion.h1
         initial={{ opacity: 0, y: 20, filter: "blur(6px)" }}
         animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
@@ -40,7 +44,7 @@ const Index = () => {
       <SocialProofBar />
       <UrgencyCountdown />
 
-      <div className="w-full max-w-[1100px] flex flex-col lg:flex-row gap-4 md:gap-6 mb-8 md:mb-12 items-start justify-center">
+      <div className="w-full max-w-[1100px] flex flex-col lg:flex-row gap-4 md:gap-6 mb-2 md:mb-4 items-start justify-center">
         <motion.div
           initial={{ opacity: 0, y: 24, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -52,6 +56,7 @@ const Index = () => {
             onVideoProgress={handleVideoProgress}
             onVideoEnd={handleVideoEnd}
           />
+          <LandingActivityTicker />
         </motion.div>
 
         {showButton && (
@@ -96,7 +101,20 @@ const Index = () => {
         </p>
       )}
 
-      <div className={`transition-all duration-1000 ease-out md:mt-0 -mt-4 ${showButton ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"}`}>
+      {/* Sticky CTA on mobile when button is visible */}
+      {showButton && (
+        <div className="fixed bottom-0 left-0 right-0 z-50 p-3 bg-gradient-to-t from-background via-background/95 to-transparent md:hidden">
+          <a
+            href="/quiz"
+            className="block w-full text-center px-8 py-3.5 rounded-lg bg-primary text-primary-foreground font-semibold text-base tracking-wide gold-glow hover:gold-glow-strong transition-all duration-300 pulse-glow"
+          >
+            Weiter zum nächsten Schritt →
+          </a>
+        </div>
+      )}
+
+      {/* Desktop CTA (inline) */}
+      <div className={`transition-all duration-1000 ease-out md:mt-0 -mt-4 ${showButton ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4 pointer-events-none"} ${showButton ? "mb-20 md:mb-0" : ""}`}>
         <a
           href="/quiz"
           className="inline-block px-10 py-4 rounded-lg bg-primary text-primary-foreground font-semibold text-lg tracking-wide gold-glow hover:gold-glow-strong hover:scale-105 transition-all duration-300 pulse-glow"
