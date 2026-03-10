@@ -1,50 +1,28 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState } from "react";
 import { useProgress } from "@/hooks/useProgress";
 import { motion } from "framer-motion";
 import GoldParticles from "@/components/GoldParticles";
+import SocialProofBar from "@/components/SocialProofBar";
+import UrgencyCountdown from "@/components/UrgencyCountdown";
+import VideoThumbnail from "@/components/VideoThumbnail";
 
 const Index = () => {
   const { updateProgress } = useProgress();
   const [showButton, setShowButton] = useState(false);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-  const playerReadyRef = useRef(false);
 
-  const handleMessage = useCallback((event: MessageEvent) => {
-    if (!event.origin.includes("loom.com")) return;
-    try {
-      const data = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
-
-      if (data?.context === "player.js" && data?.event === "ready" && !playerReadyRef.current) {
-        playerReadyRef.current = true;
-        iframeRef.current?.contentWindow?.postMessage(
-          JSON.stringify({ context: "player.js", method: "addEventListener", value: "timeupdate" }), "*"
-        );
-        iframeRef.current?.contentWindow?.postMessage(
-          JSON.stringify({ context: "player.js", method: "addEventListener", value: "ended" }), "*"
-        );
-      }
-
-      if (data?.context === "player.js" && data?.event === "ended") {
-        setShowButton(true);
-        updateProgress({ video_completed: true, current_step: "quiz" });
-      }
-
-      if (data?.context === "player.js" && data?.event === "timeupdate" && data?.value) {
-        const { seconds, duration } = data.value;
-        if (duration > 0 && seconds / duration >= 0.9) {
-          setShowButton(true);
-          updateProgress({ video_completed: true, current_step: "quiz" });
-        }
-      }
-    } catch {
-      // Ignore non-JSON messages
+  const handleVideoProgress = (percent: number) => {
+    if (percent >= 0.9 && !showButton) {
+      setShowButton(true);
+      updateProgress({ video_completed: true, current_step: "quiz" });
     }
-  }, [updateProgress]);
+  };
 
-  useEffect(() => {
-    window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
-  }, [handleMessage]);
+  const handleVideoEnd = () => {
+    if (!showButton) {
+      setShowButton(true);
+      updateProgress({ video_completed: true, current_step: "quiz" });
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-start px-4 py-12 md:py-20 relative">
@@ -53,29 +31,27 @@ const Index = () => {
         initial={{ opacity: 0, y: 20, filter: "blur(6px)" }}
         animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
         transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-        className="text-3xl md:text-5xl font-bold text-center tracking-tight leading-tight mb-10 max-w-2xl"
+        className="text-3xl md:text-5xl font-bold text-center tracking-tight leading-tight mb-6 max-w-2xl"
       >
         <span className="gold-gradient-text">Lerne </span>
         <span className="text-gold-gradient-shimmer">wie du mit Chatten Geld verdienen kannst</span>
       </motion.h1>
+
+      <SocialProofBar />
+      <UrgencyCountdown />
 
       <div className="w-full max-w-[1100px] flex flex-col lg:flex-row gap-6 mb-12 items-start justify-center">
         <motion.div
           initial={{ opacity: 0, y: 24, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-          className="w-full max-w-[800px] gold-border-glow rounded-xl overflow-hidden"
+          className="w-full max-w-[800px]"
         >
-          <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
-            <iframe
-              ref={iframeRef}
-              src="https://www.loom.com/embed/9f2ffec1693c47d0b05bd787a96b1292?sid=auto&hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true"
-              frameBorder="0"
-              allowFullScreen
-              className="absolute inset-0 w-full h-full"
-              allow="autoplay; fullscreen"
-            />
-          </div>
+          <VideoThumbnail
+            embedUrl="https://www.loom.com/embed/9f2ffec1693c47d0b05bd787a96b1292?sid=auto&hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true"
+            onVideoProgress={handleVideoProgress}
+            onVideoEnd={handleVideoEnd}
+          />
         </motion.div>
 
         {showButton && (
