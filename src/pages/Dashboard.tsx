@@ -1099,18 +1099,27 @@ function BonusModelSection({
             </motion.div>
             <h2 className="text-sm lg:text-base font-bold text-gold-gradient-shimmer">Bonus-Modell</h2>
           </div>
-          <button
-            onClick={() => { setDemoMode(!demoMode); setDemoTierIndex(0); }}
-            className={cn(
-              "flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-medium transition-all",
-              demoMode
-                ? "bg-accent/20 text-accent border border-accent/30"
-                : "bg-secondary/50 text-muted-foreground border border-border/30 hover:border-accent/20 hover:text-foreground"
-            )}
-          >
-            {demoMode ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-            {demoMode ? "Demo beenden" : "Demo"}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => window.location.href = "/leaderboard"}
+              className="flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-medium bg-secondary/50 text-muted-foreground border border-border/30 hover:border-accent/20 hover:text-foreground transition-all"
+            >
+              <Trophy className="h-3 w-3" />
+              Top 100
+            </button>
+            <button
+              onClick={() => { setDemoMode(!demoMode); setDemoTierIndex(0); }}
+              className={cn(
+                "flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-medium transition-all",
+                demoMode
+                  ? "bg-accent/20 text-accent border border-accent/30"
+                  : "bg-secondary/50 text-muted-foreground border border-border/30 hover:border-accent/20 hover:text-foreground"
+              )}
+            >
+              {demoMode ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+              {demoMode ? "Demo beenden" : "Demo"}
+            </button>
+          </div>
         </div>
         <div className="mt-2 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
       </div>
