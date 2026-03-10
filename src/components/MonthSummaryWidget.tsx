@@ -43,8 +43,8 @@ export default function MonthSummaryWidget({ monthlyRevenue, rate, tierName, tie
       <div className="mb-3">
         <p className="text-xs font-medium text-muted-foreground">Dein Monat auf einen Blick</p>
         <p className="text-[10px] text-muted-foreground/70 mt-1 leading-relaxed">Diese Zahlen sind eine Vorausrechnung. Sie basiert auf deinem bisherigen Tagesdurchschnitt in diesem Monat. 
-Arbeite weiterhin motiviert und du erreichst die Zahlen, oder sogar noch mehr 🚀
-</p>
+
+        </p>
       </div>
       <div className="flex items-center gap-5">
         {/* Progress Ring */}
