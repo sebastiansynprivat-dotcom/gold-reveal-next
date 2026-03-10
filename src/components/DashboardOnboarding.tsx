@@ -141,6 +141,11 @@ export default function DashboardOnboarding({ isFirstLogin }: DashboardOnboardin
   const handleClose = () => {
     localStorage.setItem(ONBOARDING_KEY, "true");
     setActive(false);
+    // Scroll to accounts section
+    setTimeout(() => {
+      const el = document.querySelector('[data-section="accounts"]');
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
   };
 
   if (!active) return null;
