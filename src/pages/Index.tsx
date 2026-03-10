@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useProgress } from "@/hooks/useProgress";
+import { motion } from "framer-motion";
 import GoldParticles from "@/components/GoldParticles";
 
 const Index = () => {
