@@ -90,7 +90,7 @@ const Index = () => {
         )}
       </div>
 
-      <p className="text-muted-foreground text-sm text-center max-w-md mb-10">
+      <p className="text-muted-foreground text-xs sm:text-sm text-center max-w-sm sm:max-w-md mb-6 md:mb-10 px-2">
         Bitte schau das Video vollständig an. Erst danach erscheint der Button, der dich zum nächsten Schritt führt.
       </p>
 
