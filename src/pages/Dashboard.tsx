@@ -1279,7 +1279,7 @@ function BonusModelSection({
     </motion.section>
   );
 }
-
+const REFERRAL_LINKEDIN_URL = "LINKEDIN_URL";
 
 
 function DashboardBillingInfo({ onNavigate, groupName }: {onNavigate: () => void; groupName: string;}) {
