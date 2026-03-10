@@ -27,7 +27,7 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen md:min-h-screen h-[100dvh] md:h-auto flex flex-col items-center justify-start px-3 sm:px-4 py-8 md:py-20 relative overflow-hidden md:overflow-auto">
+    <div className="min-h-screen md:min-h-screen h-[100dvh] md:h-screen flex flex-col items-center justify-start px-3 sm:px-4 py-8 md:py-6 lg:py-8 relative overflow-hidden md:overflow-auto">
       <GoldParticles spawnRate={0.5} maxParticles={35} baseOpacity={0.3} />
       <ExitIntentPopup />
 
@@ -35,7 +35,7 @@ const Index = () => {
         initial={{ opacity: 0, y: 20, filter: "blur(6px)" }}
         animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
         transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-        className="text-2xl sm:text-3xl md:text-5xl font-bold text-center tracking-tight leading-tight mb-5 md:mb-6 max-w-2xl px-1"
+        className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-center tracking-tight leading-tight mb-4 md:mb-3 max-w-2xl px-1"
       >
         <span className="gold-gradient-text">Lerne </span>
         <span className="text-gold-gradient-shimmer">wie du mit Chatten Geld verdienen kannst</span>
@@ -44,12 +44,12 @@ const Index = () => {
       <SocialProofBar />
       <UrgencyCountdown />
 
-      <div className="w-full max-w-[1100px] flex flex-col lg:flex-row gap-4 md:gap-6 mb-2 md:mb-4 items-start justify-center">
+      <div className="w-full max-w-[1100px] flex flex-col lg:flex-row gap-4 md:gap-4 mb-2 md:mb-2 items-start justify-center">
         <motion.div
           initial={{ opacity: 0, y: 24, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-          className="w-full max-w-[800px]"
+          className="w-full max-w-[700px] lg:max-w-[800px]"
         >
           <VideoThumbnail
             embedUrl="https://www.loom.com/embed/9f2ffec1693c47d0b05bd787a96b1292?sid=auto&hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true"
@@ -96,7 +96,7 @@ const Index = () => {
       </div>
 
       {!showButton && (
-        <p className="text-muted-foreground text-xs sm:text-sm text-center max-w-sm sm:max-w-md mb-6 md:mb-10 px-2">
+        <p className="text-muted-foreground text-xs sm:text-sm text-center max-w-sm sm:max-w-md mb-4 md:mb-4 px-2">
           Bitte schau das Video vollständig an. Erst danach erscheint der Button, der dich zum nächsten Schritt führt.
         </p>
       )}
