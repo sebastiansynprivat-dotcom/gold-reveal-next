@@ -49,7 +49,7 @@ const Index = () => {
           initial={{ opacity: 0, y: 24, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: 0.7, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-          className="w-full max-w-[800px]"
+          className="w-full max-w-[700px] lg:max-w-[800px]"
         >
           <VideoThumbnail
             embedUrl="https://www.loom.com/embed/9f2ffec1693c47d0b05bd787a96b1292?sid=auto&hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true"
