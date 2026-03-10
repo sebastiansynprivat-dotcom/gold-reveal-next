@@ -107,19 +107,61 @@ export default function LootBoxReward({ monthlyRevenue }: { monthlyRevenue: numb
     setPhase("open");
     setTimeout(() => {
       setPhase("reveal");
-      const end = Date.now() + 2000;
-      const fire = () => {
-        confetti({
-          particleCount: 25,
-          spread: 60,
-          startVelocity: 35,
-          origin: { x: 0.3 + Math.random() * 0.4, y: 0.45 },
-          colors: ["#c4973b", "#e8c96b", "#a07c2a", "#f5d98a", "#fff8e1"],
-          ticks: 80,
-        });
-        if (Date.now() < end) requestAnimationFrame(fire);
-      };
-      fire();
+      // Big initial burst from center
+      confetti({
+        particleCount: 100,
+        spread: 100,
+        startVelocity: 45,
+        origin: { x: 0.5, y: 0.45 },
+        colors: ["#c4973b", "#e8c96b", "#a07c2a", "#f5d98a", "#fff8e1"],
+        ticks: 120,
+        gravity: 0.8,
+        scalar: 1.2,
+      });
+      // Left cannon
+      setTimeout(() => confetti({
+        particleCount: 60,
+        angle: 60,
+        spread: 50,
+        startVelocity: 50,
+        origin: { x: 0, y: 0.6 },
+        colors: ["#c4973b", "#e8c96b", "#f5d98a", "#ffffff"],
+        ticks: 100,
+        gravity: 0.9,
+      }), 200);
+      // Right cannon
+      setTimeout(() => confetti({
+        particleCount: 60,
+        angle: 120,
+        spread: 50,
+        startVelocity: 50,
+        origin: { x: 1, y: 0.6 },
+        colors: ["#c4973b", "#e8c96b", "#f5d98a", "#ffffff"],
+        ticks: 100,
+        gravity: 0.9,
+      }), 200);
+      // Delayed second burst
+      setTimeout(() => confetti({
+        particleCount: 80,
+        spread: 120,
+        startVelocity: 30,
+        origin: { x: 0.5, y: 0.4 },
+        colors: ["#e8c96b", "#f5d98a", "#fff8e1", "#c4973b"],
+        ticks: 140,
+        gravity: 0.6,
+        scalar: 0.9,
+      }), 500);
+      // Final shimmer
+      setTimeout(() => confetti({
+        particleCount: 40,
+        spread: 160,
+        startVelocity: 15,
+        origin: { x: 0.5, y: 0.3 },
+        colors: ["#f5d98a", "#fff8e1", "#e8c96b"],
+        ticks: 200,
+        gravity: 0.4,
+        scalar: 0.7,
+      }), 900);
       if (currentMilestone) {
         const unlocked = getUnlocked();
         unlocked[currentMilestone.amount] = true;
