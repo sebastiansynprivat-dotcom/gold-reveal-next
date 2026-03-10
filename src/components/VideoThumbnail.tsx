@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play } from "lucide-react";
+import videoThumbnail from "@/assets/video-thumbnail.jpg";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -63,28 +63,16 @@ const VideoThumbnail = ({ embedUrl, onVideoProgress, onVideoEnd }: VideoThumbnai
             exit={{ opacity: 0, scale: 1.05 }}
             transition={{ duration: 0.4, ease }}
             onClick={() => setPlaying(true)}
-            className="absolute inset-0 w-full h-full bg-gradient-to-br from-secondary via-background to-secondary flex items-center justify-center group cursor-pointer border-0 outline-none"
+            className="absolute inset-0 w-full h-full cursor-pointer border-0 outline-none group"
           >
-            {/* Decorative circles */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-32 h-32 rounded-full bg-primary/5 animate-pulse" />
-            </div>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-48 h-48 rounded-full bg-primary/[0.03]" />
-            </div>
-
-            {/* Play button */}
-            <motion.div
-              className="relative z-10 w-20 h-20 md:w-24 md:h-24 rounded-full bg-primary/90 flex items-center justify-center gold-glow group-hover:gold-glow-strong group-hover:scale-110 transition-all duration-300"
-              animate={{ scale: [1, 1.06, 1] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <Play className="w-8 h-8 md:w-10 md:h-10 text-primary-foreground ml-1" fill="currentColor" />
-            </motion.div>
-
-            {/* Text below button */}
-            <span className="absolute bottom-6 text-muted-foreground text-sm font-medium">
-              ▶ Video starten
+            <img
+              src={videoThumbnail}
+              alt="Video starten"
+              className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            />
+            <div className="absolute inset-0 bg-background/20 group-hover:bg-background/10 transition-colors duration-300" />
+            <span className="absolute bottom-5 left-1/2 -translate-x-1/2 text-foreground/70 text-sm font-medium group-hover:text-foreground transition-colors">
+              ▶ Kostenloses Video starten
             </span>
           </motion.button>
         ) : (
