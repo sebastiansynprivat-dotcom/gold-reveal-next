@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, Lock } from "lucide-react";
+import { Clock, Lock, ChevronDown, ExternalLink } from "lucide-react";
 import logo from "@/assets/logo.png";
+import exampleNotifications from "@/assets/example-notifications.jpeg";
+import exampleMyIdBot from "@/assets/example-myidbot.jpeg";
 import GoldenAudioPlayer from "@/components/GoldenAudioPlayer";
 
 const ease = [0.16, 1, 0.3, 1] as const;
@@ -64,6 +66,7 @@ const links = [
 
 const OfferA = () => {
   const [showPopup, setShowPopup] = useState(true);
+  const [showHowTo, setShowHowTo] = useState(false);
   const [timeLeft, setTimeLeft] = useState(getTimeLeft);
 
   useEffect(() => {
@@ -250,6 +253,80 @@ const OfferA = () => {
               </a>
             ))}
           </div>
+          {/* How-To Hint */}
+          <button
+            onClick={() => setShowHowTo(!showHowTo)}
+            className="mt-6 w-full flex items-center justify-center gap-2 text-sm text-primary/80 hover:text-primary transition-colors py-2"
+          >
+            <span className="font-medium">Wie schicke ich das in die Gruppe?</span>
+            <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${showHowTo ? "rotate-180" : ""}`} />
+          </button>
+
+          <AnimatePresence>
+            {showHowTo && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3, ease }}
+                className="overflow-hidden"
+              >
+                <div className="glass-card-subtle rounded-xl p-5 mt-3 space-y-5">
+                  <p className="text-sm text-foreground font-medium text-center">
+                    Bitte schicke folgendes in die Telegram-Gruppe:
+                  </p>
+
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">
+                      1️⃣ Einen <span className="text-foreground font-semibold">Screenshot</span>, wie du <span className="font-mono text-primary">/start</span> im Notifications-Bot geschickt hast
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      2️⃣ Deine <span className="text-foreground font-semibold">kopierte Nummer</span> vom My ID Bot
+                    </p>
+                  </div>
+
+                  <div className="border-t border-primary/10 pt-4">
+                    <p className="text-xs text-muted-foreground text-center mb-4 font-medium uppercase tracking-wide">
+                      Hier ist ein Beispiel
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* Notifications Bot Example */}
+                      <div className="space-y-3">
+                        <div className="rounded-lg overflow-hidden border border-primary/10">
+                          <img src={exampleNotifications} alt="Beispiel Notifications Bot" className="w-full" />
+                        </div>
+                        <a
+                          href="https://t.me/Xalvebot"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors font-medium"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          Maloum Notifications öffnen
+                        </a>
+                      </div>
+
+                      {/* My ID Bot Example */}
+                      <div className="space-y-3">
+                        <div className="rounded-lg overflow-hidden border border-primary/10">
+                          <img src={exampleMyIdBot} alt="Beispiel My ID Bot" className="w-full" />
+                        </div>
+                        <a
+                          href="https://t.me/myidbot"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors font-medium"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          My ID Bot öffnen
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
       </div>
     </div>
