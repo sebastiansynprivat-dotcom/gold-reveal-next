@@ -283,6 +283,9 @@ const OfferA = () => {
                     <p className="text-sm text-muted-foreground">
                       2️⃣ Deine <span className="text-foreground font-semibold">kopierte Nummer</span> vom My ID Bot
                     </p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      ⚠️ <span className="text-foreground font-semibold">Wichtig:</span> Es sind zwei Screenshots von zwei verschiedenen Bots. Bitte beachten!
+                    </p>
                   </div>
 
                   <div className="border-t border-primary/10 pt-4">
