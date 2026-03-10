@@ -34,8 +34,9 @@ const BONUS_TIERS = [
   { name: "Starter", emoji: "⚡", min: 0, max: 499, rate: 20 },
   { name: "Bronze", emoji: "🥉", min: 500, max: 999, rate: 21 },
   { name: "Silber", emoji: "🥈", min: 1000, max: 1499, rate: 22 },
-  { name: "Platin", emoji: "💠", min: 1500, max: 1999, rate: 23 },
-  { name: "Diamond", emoji: "💎", min: 2000, max: Infinity, rate: 24 },
+  { name: "Gold", emoji: "🏆", min: 1500, max: 1999, rate: 23 },
+  { name: "Platin", emoji: "💠", min: 2000, max: 2999, rate: 24 },
+  { name: "Diamond", emoji: "💎", min: 3000, max: Infinity, rate: 25 },
 ] as const;
 
 function getCurrentTier(monthlyRevenue: number) {
