@@ -49,6 +49,7 @@ export default function ModelDashboard() {
   const [yesterdayRevenue, setYesterdayRevenue] = useState(0);
   const [monthlyRevenue, setMonthlyRevenue] = useState(0);
   const [totalRevenue, setTotalRevenue] = useState(0);
+  const [cryptoAddress, setCryptoAddress] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
