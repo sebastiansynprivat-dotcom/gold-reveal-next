@@ -510,16 +510,37 @@ export default function ModelDashboardTab() {
     doc.setTextColor(150, 150, 150);
     doc.text(`${SENDER.company} · Gutschrift für ${selectedAccount.account_email}`, pageWidth / 2, 285, { align: "center" });
 
+    const filename = `Gutschrift_${selectedAccount.account_email.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`;
     const blob = doc.output("blob");
     const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `Gutschrift_${selectedAccount.account_email.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    toast.success("Gutschrift-PDF erstellt ✅");
+
+    let downloadTriggered = false;
+    try {
+      const link = document.createElement("a");
+      if (typeof link.download !== "undefined") {
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        downloadTriggered = true;
+      }
+    } catch {
+      // fallback below
+    }
+
+    if (!downloadTriggered) {
+      const opened = window.open(url, "_blank", "noopener,noreferrer");
+      if (opened) {
+        toast.success("PDF wurde im neuen Tab geöffnet. Bitte dort speichern ✅");
+      } else {
+        toast.error("Popup blockiert – bitte Popups erlauben und erneut versuchen.");
+      }
+    } else {
+      toast.success("Gutschrift-PDF erstellt ✅");
+    }
+
+    setTimeout(() => URL.revokeObjectURL(url), 15000);
   };
 
   return (
