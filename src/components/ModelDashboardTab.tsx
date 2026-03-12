@@ -755,44 +755,26 @@ export default function ModelDashboardTab() {
             </Dialog>
             <Section icon={TrendingUp} title="Einnahmen (manuell)" delay={0.05}>
               <div className="space-y-4">
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Gestern</Label>
-                    <Input
-                      type="number"
-                      value={manualYesterday || ""}
-                      onChange={e => setManualYesterday(Number(e.target.value) || 0)}
-                      className="input-gold-shimmer h-9 text-sm"
-                      placeholder="0"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Monat</Label>
-                    <Input
-                      type="number"
-                      value={manualMonthly || ""}
-                      onChange={e => setManualMonthly(Number(e.target.value) || 0)}
-                      className="input-gold-shimmer h-9 text-sm"
-                      placeholder="0"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Gesamt</Label>
-                    <Input
-                      type="number"
-                      value={manualTotal || ""}
-                      onChange={e => setManualTotal(Number(e.target.value) || 0)}
-                      className="input-gold-shimmer h-9 text-sm"
-                      placeholder="0"
-                    />
-                  </div>
+                {/* Big golden number */}
+                <div className="text-center py-3">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Monatsumsatz</p>
+                  <p className="text-4xl font-black text-gold-gradient tabular-nums">
+                    {manualMonthly.toLocaleString("de-DE")} €
+                  </p>
                 </div>
+                <Input
+                  type="number"
+                  value={manualMonthly || ""}
+                  onChange={e => setManualMonthly(Number(e.target.value) || 0)}
+                  className="input-gold-shimmer h-10 text-center text-lg font-semibold"
+                  placeholder="Betrag eingeben..."
+                />
                 {revenuePercentage > 0 && manualMonthly > 0 && (
-                  <div className="rounded-xl border border-accent/20 bg-accent/5 p-3 space-y-1">
+                  <div className="rounded-xl border border-accent/20 bg-accent/5 p-3 text-center space-y-1">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
                       Verdienst Model ({revenuePercentage}%)
                     </p>
-                    <p className="text-lg font-bold text-accent tabular-nums">
+                    <p className="text-2xl font-bold text-accent tabular-nums">
                       {Math.round(manualMonthly * revenuePercentage / 100).toLocaleString("de-DE")} €
                     </p>
                   </div>
