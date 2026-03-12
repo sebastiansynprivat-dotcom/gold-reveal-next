@@ -69,16 +69,14 @@ export default function ModelDashboard() {
 
       const { data: md } = await supabase
         .from("model_dashboard")
-        .select("revenue_percentage, crypto_address, yesterday_revenue, monthly_revenue, total_revenue")
+        .select("revenue_percentage, crypto_address, monthly_revenue")
         .eq("account_id", mu.account_id)
         .maybeSingle();
 
       if (md) {
         setRevenuePercentage(md.revenue_percentage || 0);
         setCryptoAddress(md.crypto_address || "");
-        setYesterdayRevenue(Number(md.yesterday_revenue) || 0);
         setMonthlyRevenue(Number(md.monthly_revenue) || 0);
-        setTotalRevenue(Number(md.total_revenue) || 0);
       }
 
       setLoading(false);
