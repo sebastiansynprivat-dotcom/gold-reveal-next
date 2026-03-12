@@ -115,60 +115,39 @@ export default function ModelDashboard() {
       </header>
 
       <div className="container max-w-5xl mx-auto px-4 pt-6 space-y-5">
-        <motion.div variants={staggerContainer} initial="hidden" animate="show" className="grid grid-cols-2 gap-3">
-          <motion.div variants={staggerItem} className="glass-card rounded-xl p-4 space-y-1">
-            <div className="flex items-center gap-1.5 text-muted-foreground">
-              <Calendar className="h-3.5 w-3.5" />
-              <span className="text-[10px] font-medium uppercase tracking-wider">Gestern</span>
-            </div>
-            <AnimatedValue value={yesterdayRevenue} className="text-xl font-bold text-foreground" />
-          </motion.div>
-
-          <motion.div variants={staggerItem} className="glass-card rounded-xl p-4 space-y-1">
-            <div className="flex items-center gap-1.5 text-muted-foreground">
-              <TrendingUp className="h-3.5 w-3.5" />
-              <span className="text-[10px] font-medium uppercase tracking-wider">Monat</span>
-            </div>
-            <AnimatedValue value={monthlyRevenue} className="text-xl font-bold text-foreground" />
-          </motion.div>
-
-          <motion.div variants={staggerItem} className="glass-card rounded-xl p-4 space-y-1">
-            <div className="flex items-center gap-1.5 text-muted-foreground">
-              <DollarSign className="h-3.5 w-3.5" />
-              <span className="text-[10px] font-medium uppercase tracking-wider">Gesamt</span>
-            </div>
-            <AnimatedValue value={totalRevenue} className="text-xl font-bold text-foreground" />
-          </motion.div>
-
-          <motion.div variants={staggerItem} className="glass-card rounded-xl p-4 space-y-1">
-            <div className="flex items-center gap-1.5 text-accent">
-              <Wallet className="h-3.5 w-3.5" />
-              <span className="text-[10px] font-medium uppercase tracking-wider">Verdienst</span>
-            </div>
-            <AnimatedValue value={verdienst} className="text-xl font-bold text-accent" />
-            {revenuePercentage > 0 && (
-              <p className="text-[9px] text-muted-foreground">{revenuePercentage}% Anteil</p>
-            )}
-          </motion.div>
-        </motion.div>
-
+        {/* Big golden revenue card */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.5 }}
-          className="gold-gradient-border-animated pulse-glow rounded-xl p-5 text-center space-y-2"
+          initial={{ opacity: 0, y: 20, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
+          className="gold-gradient-border-animated pulse-glow rounded-xl p-6 text-center space-y-3"
         >
           <Crown className="h-8 w-8 text-accent mx-auto" />
-          <h2 className="text-lg font-bold text-gold-gradient">Einnahmen All-Time</h2>
-          <p className="text-2xl font-bold text-foreground">
-            <AnimatedValue value={totalRevenue} />
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Monatsumsatz</p>
+          <p className="text-5xl font-black text-gold-gradient tabular-nums leading-none">
+            <AnimatedValue value={monthlyRevenue} />
           </p>
-          {revenuePercentage > 0 && (
-            <p className="text-sm text-muted-foreground">
-              Dein Anteil: <span className="text-accent font-semibold">{revenuePercentage}%</span>
-            </p>
-          )}
         </motion.div>
+
+        {/* Verdienst card */}
+        {revenuePercentage > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className="glass-card rounded-xl p-5 flex items-center gap-4"
+          >
+            <div className="h-12 w-12 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
+              <Wallet className="h-5 w-5 text-accent" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Dein Verdienst ({revenuePercentage}%)</p>
+              <p className="text-2xl font-bold text-accent tabular-nums">
+                <AnimatedValue value={verdienst} />
+              </p>
+            </div>
+          </motion.div>
+        )}
 
         <ModelBillingInfo
           accountName={accountName}
