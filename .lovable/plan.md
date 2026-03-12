@@ -1,41 +1,38 @@
 
-# Fortschrittsanzeige und Schritt-Nummerierung fur OfferB
 
-## Was wird gemacht
+# Chatter-Dashboard Tab im Admin-Bereich
 
-### 1. Alle Schritte als einheitliche Liste definieren
-Die Videos und Links werden zu einer gemeinsamen Schritt-Liste zusammengefasst:
-- Schritt 1: Plattform Erklärungs Video
-- Schritt 2: Telegram Nachrichten Video
-- Schritt 3: Brezzels Notifications aktivieren
-- Schritt 4: My ID Bot einrichten
-- Schritt 5: Tägliches Feedback
+## Überblick
+Neuer Tab "Chatter-Dashboard" im Admin-Dashboard — rein lokal/optisch, keine Backend-Verknüpfung. Erlaubt das manuelle Eintragen von Chatter-Daten und das Generieren von Gutschrift-PDFs, analog zum Model-Dashboard.
 
-### 2. Fortschritts-Bar oben auf der Seite
-Direkt unter dem Hero-Bereich wird eine Progress-Bar eingefügt, die den Gesamtfortschritt anzeigt (z.B. "2 von 5 Schritten erledigt"). Nutzt die vorhandene `Progress`-Komponente im Gold-Styling.
+## Was gebaut wird
 
-### 3. Klickbare Checkliste
-Unter der Progress-Bar eine kompakte Checkliste mit allen 5 Schritten. Jeder Schritt hat:
-- Eine Checkbox zum Abhaken
-- Schritt-Nummer ("Schritt 1", "Schritt 2" etc.)
-- Kurzer Titel
+**Neue Datei: `src/components/ChatterDashboardTab.tsx`**
 
-Der Fortschritt wird im `localStorage` gespeichert, damit er beim Neuladen erhalten bleibt.
+Komplett lokaler State (localStorage-Persistierung), keine Supabase-Tabellen. Folgende Funktionen:
 
-### 4. Schritt-Nummern bei den Sektionen
-Jede Video-/Link-/Feedback-Sektion bekommt eine prominente Schritt-Nummer als Badge (z.B. goldener Kreis mit "1" darin) neben dem Titel.
+1. **Chatter-Liste verwalten** — Button "Chatter hinzufügen" öffnet Eingabe für Name + Plattform. Liste wird in localStorage gespeichert. Chatters können gelöscht werden.
+
+2. **Chatter auswählen** — Gleiche collapsible Liste wie im Model-Dashboard (Gold-Styling, Suchfeld, animierte Übergänge).
+
+3. **Detail-Ansicht pro Chatter:**
+   - Name (editierbar)
+   - Plattform (editierbar)
+   - Monatsumsatz — manuelles Eingabefeld mit großer goldener animierter Zahl darüber (gleicher Style wie Model-Dashboard)
+   - Prozent-Slider für Anteil
+   - Verdienst-Anzeige (automatisch berechnet)
+
+4. **Gutschrift-PDF generieren** — Gleiche PDF-Logik wie im Model-Dashboard (jsPDF), mit Chatter-Name statt Account-Email. Beschreibung + Betrag Felder, Auto-Fill aus berechneter Gutschrift.
+
+**Änderung: `src/pages/AdminDashboard.tsx`**
+- Neuen Tab `chatter_dashboard` zum Tab-Array hinzufügen (Icon: `Users`, Label: "Chatter-Dashboard")
+- Import und Rendering von `ChatterDashboardTab`
 
 ## Technische Details
 
-**Datei: `src/pages/OfferB.tsx`**
+- State-Persistierung via `localStorage` (Key: `admin-chatter-dashboard`)
+- Datenstruktur pro Chatter: `{ id, name, platform, monthlyRevenue, revenuePercentage }`
+- Wiederverwendung der gleichen UI-Patterns: `Section`-Wrapper, `AnimatedGoldValue`, `input-gold-shimmer`, `glass-card`, `gold-gradient-border-animated`
+- PDF-Generierung: identische SENDER-Konstante und jsPDF-Layout, Blob-Download mit Fallback
+- Keine DB-Migration nötig
 
-- Neue `steps`-Array-Konstante mit id, title, type fur alle 5 Schritte
-- `useState` + `localStorage` fur `completedSteps: Set<number>`
-- Progress-Bar-Sektion nach dem Hero mit `Progress`-Komponente (Wert = `completedSteps.size / steps.length * 100`)
-- Checkliste mit `Checkbox`-Komponenten, gestylt im bestehenden `glass-card-subtle` Look
-- Videos bekommen "Schritt 1" / "Schritt 2" als nummerierte Badge-Kreise
-- Links-Sektion wird zu Schritt 3 und 4 mit individuellen Nummern
-- Feedback wird Schritt 5
-- Erledigte Schritte bekommen eine subtile visuelle Markierung (leicht reduzierte Opazitat / Hakchen)
-
-Keine neuen Abhangigkeiten notwendig -- nutzt vorhandene `Progress`, `Checkbox` und `framer-motion`.
