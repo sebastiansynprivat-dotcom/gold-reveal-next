@@ -6,6 +6,7 @@ import { TrendingUp, Calendar, DollarSign, Wallet, Crown, LogOut } from "lucide-
 import { Button } from "@/components/ui/button";
 import logo from "@/assets/logo.png";
 import { format, subDays, startOfMonth, endOfMonth } from "date-fns";
+import ModelBillingInfo from "@/components/ModelBillingInfo";
 
 function useAnimatedCounter(target: number, duration = 1200) {
   const [value, setValue] = useState(0);
