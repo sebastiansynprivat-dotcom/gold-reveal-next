@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus, Trash2, Search, ChevronDown, Wallet, Percent, FileDown, Save, Users, Crown
@@ -92,6 +93,10 @@ export default function ChatterDashboardTab() {
   // Gutschrift
   const [gutschriftAmount, setGutschriftAmount] = useState("");
   const [gutschriftDescription, setGutschriftDescription] = useState("Gutschrift für erbrachte Leistungen");
+  const [paidVia, setPaidVia] = useState("");
+  const [cryptoCoin, setCryptoCoin] = useState("USDT");
+  const [txHash, setTxHash] = useState("");
+  const [exchangeRate, setExchangeRate] = useState("");
 
   // Persist
   useEffect(() => {
@@ -199,7 +204,19 @@ export default function ChatterDashboardTab() {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
     doc.text("Gesamtbetrag:", margin + 2, y);
-    doc.text(formatted, rightCol - 2, y, { align: "right" }); y += 16;
+    doc.text(formatted, rightCol - 2, y, { align: "right" }); y += 12;
+
+    // Payment details
+    if (paidVia || txHash || exchangeRate) {
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(80, 80, 80);
+      if (paidVia) { doc.text(`Paid Via: ${paidVia} (${cryptoCoin})`, margin + 2, y); y += 5; }
+      if (txHash) { doc.text(`TxHash: ${txHash}`, margin + 2, y); y += 5; }
+      if (exchangeRate) { doc.text(`Exchange Rate: ${exchangeRate}`, margin + 2, y); y += 5; }
+      doc.setTextColor(0, 0, 0);
+    }
+    y += 8;
 
     doc.setFontSize(7);
     doc.setTextColor(150, 150, 150);
@@ -446,6 +463,58 @@ export default function ChatterDashboardTab() {
                   </button>
                 )}
               </div>
+
+              {/* Paid Via */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Paid Via</label>
+                <div className="flex gap-2">
+                  <div className="flex-1 input-gold-shimmer rounded-lg">
+                    <Input
+                      value={paidVia}
+                      onChange={e => setPaidVia(e.target.value)}
+                      placeholder="z.B. Binance, Coinbase…"
+                      className="text-sm border-transparent"
+                    />
+                  </div>
+                  <Select value={cryptoCoin} onValueChange={setCryptoCoin}>
+                    <SelectTrigger className="w-[110px] text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {["USDT", "USDC", "BTC", "ETH", "SOL", "BNB", "XRP", "TRX", "LTC"].map(coin => (
+                        <SelectItem key={coin} value={coin}>{coin}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* TxHash */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">TxHash</label>
+                <div className="input-gold-shimmer rounded-lg">
+                  <Input
+                    value={txHash}
+                    onChange={e => setTxHash(e.target.value)}
+                    placeholder="Transaktions-Hash"
+                    className="text-sm border-transparent font-mono text-xs"
+                  />
+                </div>
+              </div>
+
+              {/* Exchange Rate */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Exchange Rate</label>
+                <div className="input-gold-shimmer rounded-lg">
+                  <Input
+                    value={exchangeRate}
+                    onChange={e => setExchangeRate(e.target.value)}
+                    placeholder="z.B. 1 USDT = 0.92€"
+                    className="text-sm border-transparent"
+                  />
+                </div>
+              </div>
+
               <Button onClick={generateGutschrift} className="w-full gap-2">
                 <FileDown className="h-4 w-4" /> Gutschrift als PDF erstellen
               </Button>
