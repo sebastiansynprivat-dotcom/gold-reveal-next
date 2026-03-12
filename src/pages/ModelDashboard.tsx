@@ -6,6 +6,7 @@ import { TrendingUp, Calendar, DollarSign, Wallet, Crown, LogOut } from "lucide-
 import { Button } from "@/components/ui/button";
 import logo from "@/assets/logo.png";
 import { format, subDays, startOfMonth, endOfMonth } from "date-fns";
+import ModelBillingInfo from "@/components/ModelBillingInfo";
 
 function useAnimatedCounter(target: number, duration = 1200) {
   const [value, setValue] = useState(0);
@@ -48,6 +49,7 @@ export default function ModelDashboard() {
   const [yesterdayRevenue, setYesterdayRevenue] = useState(0);
   const [monthlyRevenue, setMonthlyRevenue] = useState(0);
   const [totalRevenue, setTotalRevenue] = useState(0);
+  const [cryptoAddress, setCryptoAddress] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -75,11 +77,14 @@ export default function ModelDashboard() {
       // Get revenue percentage
       const { data: md } = await supabase
         .from("model_dashboard")
-        .select("revenue_percentage")
+        .select("revenue_percentage, crypto_address")
         .eq("account_id", mu.account_id)
         .maybeSingle();
 
-      if (md) setRevenuePercentage(md.revenue_percentage || 0);
+      if (md) {
+        setRevenuePercentage(md.revenue_percentage || 0);
+        setCryptoAddress(md.crypto_address || "");
+      }
 
       // Get chatter user IDs assigned to this account
       const { data: assignments } = await supabase
@@ -202,6 +207,15 @@ export default function ModelDashboard() {
             </p>
           )}
         </motion.div>
+
+        {/* Billing Info */}
+        <ModelBillingInfo
+          accountName={accountName}
+          monthlyRevenue={monthlyRevenue}
+          revenuePercentage={revenuePercentage}
+          verdienst={verdienst}
+          cryptoAddress={cryptoAddress}
+        />
       </div>
     </div>
   );
