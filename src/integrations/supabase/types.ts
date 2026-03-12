@@ -306,9 +306,12 @@ export type Database = {
           maloum_massdm_done: boolean
           maloum_submitted: boolean
           massdm_done: boolean
+          monthly_revenue: number | null
           notes: string | null
           revenue_percentage: number | null
+          total_revenue: number | null
           updated_at: string
+          yesterday_revenue: number | null
         }
         Insert: {
           account_id: string
@@ -327,9 +330,12 @@ export type Database = {
           maloum_massdm_done?: boolean
           maloum_submitted?: boolean
           massdm_done?: boolean
+          monthly_revenue?: number | null
           notes?: string | null
           revenue_percentage?: number | null
+          total_revenue?: number | null
           updated_at?: string
+          yesterday_revenue?: number | null
         }
         Update: {
           account_id?: string
@@ -348,9 +354,12 @@ export type Database = {
           maloum_massdm_done?: boolean
           maloum_submitted?: boolean
           massdm_done?: boolean
+          monthly_revenue?: number | null
           notes?: string | null
           revenue_percentage?: number | null
+          total_revenue?: number | null
           updated_at?: string
+          yesterday_revenue?: number | null
         }
         Relationships: [
           {
