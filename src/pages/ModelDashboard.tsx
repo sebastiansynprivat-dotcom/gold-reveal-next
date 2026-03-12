@@ -1,11 +1,10 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import { TrendingUp, Calendar, DollarSign, Wallet, Crown, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import logo from "@/assets/logo.png";
-import { format, subDays, startOfMonth, endOfMonth } from "date-fns";
 import ModelBillingInfo from "@/components/ModelBillingInfo";
 
 function useAnimatedCounter(target: number, duration = 1200) {
@@ -44,7 +43,6 @@ const staggerItem = {
 export default function ModelDashboard() {
   const { user, signOut } = useAuth();
   const [accountName, setAccountName] = useState("");
-  const [accountId, setAccountId] = useState("");
   const [revenuePercentage, setRevenuePercentage] = useState(0);
   const [yesterdayRevenue, setYesterdayRevenue] = useState(0);
   const [monthlyRevenue, setMonthlyRevenue] = useState(0);
@@ -55,7 +53,6 @@ export default function ModelDashboard() {
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      // Get model_users link
       const { data: mu } = await supabase
         .from("model_users")
         .select("account_id")
@@ -63,9 +60,7 @@ export default function ModelDashboard() {
         .maybeSingle();
 
       if (!mu) { setLoading(false); return; }
-      setAccountId(mu.account_id);
 
-      // Get account info
       const { data: acc } = await supabase
         .from("accounts")
         .select("account_email, account_domain")
@@ -74,44 +69,18 @@ export default function ModelDashboard() {
 
       if (acc) setAccountName(acc.account_email || acc.account_domain);
 
-      // Get revenue percentage
       const { data: md } = await supabase
         .from("model_dashboard")
-        .select("revenue_percentage, crypto_address")
+        .select("revenue_percentage, crypto_address, yesterday_revenue, monthly_revenue, total_revenue")
         .eq("account_id", mu.account_id)
         .maybeSingle();
 
       if (md) {
         setRevenuePercentage(md.revenue_percentage || 0);
         setCryptoAddress(md.crypto_address || "");
-      }
-
-      // Get chatter user IDs assigned to this account
-      const { data: assignments } = await supabase
-        .from("account_assignments")
-        .select("user_id")
-        .eq("account_id", mu.account_id);
-
-      const userIds = [...new Set((assignments || []).map(a => a.user_id))];
-      if (userIds.length === 0) { setLoading(false); return; }
-
-      // Get all revenue
-      const { data: revenue } = await supabase
-        .from("daily_revenue")
-        .select("date, amount")
-        .in("user_id", userIds);
-
-      if (revenue) {
-        const yesterday = format(subDays(new Date(), 1), "yyyy-MM-dd");
-        const monthStart = format(startOfMonth(new Date()), "yyyy-MM-dd");
-
-        const yRev = revenue.filter(r => r.date === yesterday).reduce((s, r) => s + Number(r.amount), 0);
-        const mRev = revenue.filter(r => r.date >= monthStart).reduce((s, r) => s + Number(r.amount), 0);
-        const tRev = revenue.reduce((s, r) => s + Number(r.amount), 0);
-
-        setYesterdayRevenue(yRev);
-        setMonthlyRevenue(mRev);
-        setTotalRevenue(tRev);
+        setYesterdayRevenue(Number(md.yesterday_revenue) || 0);
+        setMonthlyRevenue(Number(md.monthly_revenue) || 0);
+        setTotalRevenue(Number(md.total_revenue) || 0);
       }
 
       setLoading(false);
@@ -134,7 +103,6 @@ export default function ModelDashboard() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      {/* Header */}
       <header className="header-gradient-border">
         <div className="container max-w-5xl mx-auto px-4 py-3">
           <div className="flex items-center gap-3">
@@ -151,7 +119,6 @@ export default function ModelDashboard() {
       </header>
 
       <div className="container max-w-5xl mx-auto px-4 pt-6 space-y-5">
-        {/* Revenue Stats */}
         <motion.div variants={staggerContainer} initial="hidden" animate="show" className="grid grid-cols-2 gap-3">
           <motion.div variants={staggerItem} className="glass-card rounded-xl p-4 space-y-1">
             <div className="flex items-center gap-1.5 text-muted-foreground">
@@ -189,7 +156,6 @@ export default function ModelDashboard() {
           </motion.div>
         </motion.div>
 
-        {/* Status Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -208,7 +174,6 @@ export default function ModelDashboard() {
           )}
         </motion.div>
 
-        {/* Billing Info */}
         <ModelBillingInfo
           accountName={accountName}
           monthlyRevenue={monthlyRevenue}
