@@ -92,6 +92,10 @@ export default function ChatterDashboardTab() {
   // Gutschrift
   const [gutschriftAmount, setGutschriftAmount] = useState("");
   const [gutschriftDescription, setGutschriftDescription] = useState("Gutschrift für erbrachte Leistungen");
+  const [paidVia, setPaidVia] = useState("");
+  const [cryptoCoin, setCryptoCoin] = useState("USDT");
+  const [txHash, setTxHash] = useState("");
+  const [exchangeRate, setExchangeRate] = useState("");
 
   // Persist
   useEffect(() => {
