@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
-import { TrendingUp, Calendar, DollarSign, Wallet, Crown, LogOut } from "lucide-react";
+import { TrendingUp, Wallet, Crown, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import logo from "@/assets/logo.png";
 import ModelBillingInfo from "@/components/ModelBillingInfo";
