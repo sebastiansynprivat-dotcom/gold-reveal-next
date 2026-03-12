@@ -153,9 +153,7 @@ export default function ModelDashboardTab() {
   const [revenuePercentage, setRevenuePercentage] = useState(0);
   const [cryptoAddress, setCryptoAddress] = useState("");
   const [contractPath, setContractPath] = useState("");
-  const [manualYesterday, setManualYesterday] = useState(0);
   const [manualMonthly, setManualMonthly] = useState(0);
-  const [manualTotal, setManualTotal] = useState(0);
 
   // Gutschrift
   const [gutschriftAmount, setGutschriftAmount] = useState("");
