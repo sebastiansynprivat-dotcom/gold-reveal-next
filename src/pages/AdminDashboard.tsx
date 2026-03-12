@@ -22,6 +22,7 @@ import logo from "@/assets/logo.png";
 import ChatterStatsCard from "@/components/ChatterStatsCard";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import ModelDashboardTab from "@/components/ModelDashboardTab";
+import ChatterDashboardTab from "@/components/ChatterDashboardTab";
 import GoldParticles from "@/components/GoldParticles";
 
 // Extract folder ID from a full Google Drive URL or return as-is if already an ID
@@ -496,7 +497,7 @@ export default function AdminDashboard() {
   const [goalAmount, setGoalAmount] = useState("");
   const [goalSaving, setGoalSaving] = useState(false);
   const [expandedChatter, setExpandedChatter] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"einnahmen" | "chatter" | "anfragen" | "botdms" | "notifications" | "kiprompt" | "chatter_overview" | "platzhalter" | "gdrive">("einnahmen");
+  const [activeTab, setActiveTab] = useState<"einnahmen" | "chatter" | "anfragen" | "botdms" | "notifications" | "kiprompt" | "chatter_overview" | "platzhalter" | "chatter_dash" | "gdrive">("einnahmen");
   const [assignments, setAssignments] = useState<any[]>([]);
   const [assignmentsLoaded, setAssignmentsLoaded] = useState(false);
   const [assignmentsLoading, setAssignmentsLoading] = useState(false);
@@ -1791,6 +1792,7 @@ export default function AdminDashboard() {
     { key: "kiprompt" as const, label: "KI Prompt", icon: Brain, onClick: () => { setActiveTab("kiprompt"); if (!kiPromptLoaded) loadKiPrompt(); } },
     { key: "chatter_overview" as const, label: "Chatter-Übersicht", icon: Users, onClick: () => { setActiveTab("chatter_overview"); if (!assignmentsLoaded) loadAssignments(); } },
     { key: "platzhalter" as const, label: "Model-Dashboard", icon: Star, onClick: () => setActiveTab("platzhalter") },
+    { key: "chatter_dash" as const, label: "Chatter-Dashboard", icon: Users, onClick: () => setActiveTab("chatter_dash") },
     { key: "gdrive" as const, label: "Google Drive", icon: ExternalLink, onClick: () => setActiveTab("gdrive") },
   ];
 
@@ -4119,6 +4121,8 @@ export default function AdminDashboard() {
         )}
 
         {activeTab === "platzhalter" && <ModelDashboardTab />}
+
+        {activeTab === "chatter_dash" && <ChatterDashboardTab />}
 
         {activeTab === "gdrive" && (
           <div className="space-y-4">
