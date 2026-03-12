@@ -204,7 +204,19 @@ export default function ChatterDashboardTab() {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
     doc.text("Gesamtbetrag:", margin + 2, y);
-    doc.text(formatted, rightCol - 2, y, { align: "right" }); y += 16;
+    doc.text(formatted, rightCol - 2, y, { align: "right" }); y += 12;
+
+    // Payment details
+    if (paidVia || txHash || exchangeRate) {
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(80, 80, 80);
+      if (paidVia) { doc.text(`Paid Via: ${paidVia} (${cryptoCoin})`, margin + 2, y); y += 5; }
+      if (txHash) { doc.text(`TxHash: ${txHash}`, margin + 2, y); y += 5; }
+      if (exchangeRate) { doc.text(`Exchange Rate: ${exchangeRate}`, margin + 2, y); y += 5; }
+      doc.setTextColor(0, 0, 0);
+    }
+    y += 8;
 
     doc.setFontSize(7);
     doc.setTextColor(150, 150, 150);
