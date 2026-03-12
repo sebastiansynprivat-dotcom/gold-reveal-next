@@ -75,7 +75,29 @@ const SUB_FILTERS: { label: string; value: SubFilter }[] = [
   { label: "Account Setup vorhanden", value: "setup_vorhanden" },
 ];
 
-// ─── Animated counter ───
+// ─── Animated counter (count-up) ───
+function useAnimatedCounter(target: number, duration = 1200) {
+  const [value, setValue] = useState(0);
+  const prevTarget = useRef(0);
+  useEffect(() => {
+    const start = prevTarget.current;
+    prevTarget.current = target;
+    if (start === target) { setValue(target); return; }
+    const startTime = performance.now();
+    let raf: number;
+    const anim = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setValue(Math.round(start + (target - start) * eased));
+      if (progress < 1) raf = requestAnimationFrame(anim);
+    };
+    raf = requestAnimationFrame(anim);
+    return () => cancelAnimationFrame(raf);
+  }, [target, duration]);
+  return value;
+}
+
 function AnimatedNumber({ value }: { value: number }) {
   return (
     <motion.span
@@ -88,6 +110,11 @@ function AnimatedNumber({ value }: { value: number }) {
       {value}
     </motion.span>
   );
+}
+
+function AnimatedGoldValue({ value, suffix = "€", className }: { value: number; suffix?: string; className?: string }) {
+  const animated = useAnimatedCounter(value);
+  return <span className={className}>{animated.toLocaleString("de-DE")}{suffix}</span>;
 }
 
 // ─── Section wrapper ───
