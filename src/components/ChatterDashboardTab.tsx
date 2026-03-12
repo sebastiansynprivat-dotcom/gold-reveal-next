@@ -463,6 +463,58 @@ export default function ChatterDashboardTab() {
                   </button>
                 )}
               </div>
+
+              {/* Paid Via */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Paid Via</label>
+                <div className="flex gap-2">
+                  <div className="flex-1 input-gold-shimmer rounded-lg">
+                    <Input
+                      value={paidVia}
+                      onChange={e => setPaidVia(e.target.value)}
+                      placeholder="z.B. Binance, Coinbase…"
+                      className="text-sm border-transparent"
+                    />
+                  </div>
+                  <Select value={cryptoCoin} onValueChange={setCryptoCoin}>
+                    <SelectTrigger className="w-[110px] text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {["USDT", "USDC", "BTC", "ETH", "SOL", "BNB", "XRP", "TRX", "LTC"].map(coin => (
+                        <SelectItem key={coin} value={coin}>{coin}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              {/* TxHash */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">TxHash</label>
+                <div className="input-gold-shimmer rounded-lg">
+                  <Input
+                    value={txHash}
+                    onChange={e => setTxHash(e.target.value)}
+                    placeholder="Transaktions-Hash"
+                    className="text-sm border-transparent font-mono text-xs"
+                  />
+                </div>
+              </div>
+
+              {/* Exchange Rate */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Exchange Rate</label>
+                <div className="input-gold-shimmer rounded-lg">
+                  <Input
+                    value={exchangeRate}
+                    onChange={e => setExchangeRate(e.target.value)}
+                    placeholder="z.B. 1 USDT = 0.92€"
+                    className="text-sm border-transparent"
+                  />
+                </div>
+              </div>
+
               <Button onClick={generateGutschrift} className="w-full gap-2">
                 <FileDown className="h-4 w-4" /> Gutschrift als PDF erstellen
               </Button>
