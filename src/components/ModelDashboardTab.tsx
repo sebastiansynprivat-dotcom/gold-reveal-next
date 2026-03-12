@@ -352,6 +352,9 @@ export default function ModelDashboardTab() {
       revenue_percentage: revenuePercentage,
       crypto_address: cryptoAddress,
       contract_file_path: contractPath,
+      yesterday_revenue: manualYesterday,
+      monthly_revenue: manualMonthly,
+      total_revenue: manualTotal,
     };
     if (data?.id) {
       await supabase.from("model_dashboard").update(payload).eq("id", data.id);
