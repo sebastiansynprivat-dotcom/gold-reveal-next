@@ -269,11 +269,11 @@ export default function ModelDashboardTab() {
   }, [selectedAccountId, loadModelData, loadModelRevenue, revenueMonth]);
 
   // Revenue calculations
-  const totalMonthRevenue = useMemo(() => modelRevenue.reduce((sum, r) => sum + r.amount, 0), [modelRevenue]);
+  const totalMonthRevenue = manualMonthly;
   const gutschriftFromRevenue = useMemo(() => {
-    if (revenuePercentage <= 0 || totalMonthRevenue <= 0) return 0;
-    return (totalMonthRevenue * revenuePercentage) / 100;
-  }, [totalMonthRevenue, revenuePercentage]);
+    if (revenuePercentage <= 0 || manualMonthly <= 0) return 0;
+    return (manualMonthly * revenuePercentage) / 100;
+  }, [manualMonthly, revenuePercentage]);
 
   // Available months for selection (last 12 months)
   const availableMonths = useMemo(() => {
