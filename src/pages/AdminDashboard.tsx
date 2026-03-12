@@ -4122,6 +4122,8 @@ export default function AdminDashboard() {
 
         {activeTab === "platzhalter" && <ModelDashboardTab />}
 
+        {activeTab === "chatter_dash" && <ChatterDashboardTab />}
+
         {activeTab === "gdrive" && (
           <div className="space-y-4">
             <section className="glass-card rounded-xl overflow-hidden">
