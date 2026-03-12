@@ -226,6 +226,9 @@ export default function ModelDashboardTab() {
       setRevenuePercentage(0);
       setCryptoAddress("");
       setContractPath("");
+      setManualYesterday(0);
+      setManualMonthly(0);
+      setManualTotal(0);
     }
     setLoading(false);
   }, []);
