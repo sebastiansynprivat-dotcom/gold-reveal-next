@@ -786,7 +786,7 @@ export default function ModelDashboardTab() {
                 <div className="text-center py-3">
                   <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Monatsumsatz</p>
                   <p className="text-4xl font-black text-gold-gradient tabular-nums">
-                    {manualMonthly.toLocaleString("de-DE")} €
+                    <AnimatedGoldValue value={manualMonthly} suffix=" €" />
                   </p>
                 </div>
                 <Input
