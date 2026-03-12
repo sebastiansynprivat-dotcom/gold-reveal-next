@@ -802,7 +802,7 @@ export default function ModelDashboardTab() {
                       Verdienst Model ({revenuePercentage}%)
                     </p>
                     <p className="text-2xl font-bold text-accent tabular-nums">
-                      {Math.round(manualMonthly * revenuePercentage / 100).toLocaleString("de-DE")} €
+                      <AnimatedGoldValue value={Math.round(manualMonthly * revenuePercentage / 100)} suffix=" €" />
                     </p>
                   </div>
                 )}
