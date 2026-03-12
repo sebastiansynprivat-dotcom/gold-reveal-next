@@ -77,7 +77,7 @@ export default function ModelDashboard() {
       // Get revenue percentage
       const { data: md } = await supabase
         .from("model_dashboard")
-        .select("revenue_percentage")
+        .select("revenue_percentage, crypto_address")
         .eq("account_id", mu.account_id)
         .maybeSingle();
 
