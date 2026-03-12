@@ -185,6 +185,10 @@ export default function ModelDashboardTab() {
   // Gutschrift
   const [gutschriftAmount, setGutschriftAmount] = useState("");
   const [gutschriftDescription, setGutschriftDescription] = useState("Gutschrift für erbrachte Leistungen");
+  const [paidVia, setPaidVia] = useState("");
+  const [cryptoCoin, setCryptoCoin] = useState("USDT");
+  const [txHash, setTxHash] = useState("");
+  const [exchangeRate, setExchangeRate] = useState("");
 
   // Revenue per model
   const [modelRevenue, setModelRevenue] = useState<{ date: string; amount: number; user_id: string }[]>([]);
