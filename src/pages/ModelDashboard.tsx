@@ -207,6 +207,15 @@ export default function ModelDashboard() {
             </p>
           )}
         </motion.div>
+
+        {/* Billing Info */}
+        <ModelBillingInfo
+          accountName={accountName}
+          monthlyRevenue={monthlyRevenue}
+          revenuePercentage={revenuePercentage}
+          verdienst={verdienst}
+          cryptoAddress={cryptoAddress}
+        />
       </div>
     </div>
   );
