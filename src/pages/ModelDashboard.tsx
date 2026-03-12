@@ -81,7 +81,10 @@ export default function ModelDashboard() {
         .eq("account_id", mu.account_id)
         .maybeSingle();
 
-      if (md) setRevenuePercentage(md.revenue_percentage || 0);
+      if (md) {
+        setRevenuePercentage(md.revenue_percentage || 0);
+        setCryptoAddress(md.crypto_address || "");
+      }
 
       // Get chatter user IDs assigned to this account
       const { data: assignments } = await supabase
