@@ -185,6 +185,10 @@ export default function ModelDashboardTab() {
   // Gutschrift
   const [gutschriftAmount, setGutschriftAmount] = useState("");
   const [gutschriftDescription, setGutschriftDescription] = useState("Gutschrift für erbrachte Leistungen");
+  const [paidVia, setPaidVia] = useState("");
+  const [cryptoCoin, setCryptoCoin] = useState("USDT");
+  const [txHash, setTxHash] = useState("");
+  const [exchangeRate, setExchangeRate] = useState("");
 
   // Revenue per model
   const [modelRevenue, setModelRevenue] = useState<{ date: string; amount: number; user_id: string }[]>([]);
@@ -504,7 +508,19 @@ export default function ModelDashboardTab() {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
     doc.text("Gesamtbetrag:", margin + 2, y);
-    doc.text(formatted, rightCol - 2, y, { align: "right" }); y += 16;
+    doc.text(formatted, rightCol - 2, y, { align: "right" }); y += 12;
+
+    // Payment details
+    if (paidVia || txHash || exchangeRate) {
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(80, 80, 80);
+      if (paidVia) { doc.text(`Paid Via: ${paidVia} (${cryptoCoin})`, margin + 2, y); y += 5; }
+      if (txHash) { doc.text(`TxHash: ${txHash}`, margin + 2, y); y += 5; }
+      if (exchangeRate) { doc.text(`Exchange Rate: ${exchangeRate}`, margin + 2, y); y += 5; }
+      doc.setTextColor(0, 0, 0);
+    }
+    y += 8;
 
     doc.setFontSize(7);
     doc.setTextColor(150, 150, 150);
@@ -1090,6 +1106,58 @@ export default function ModelDashboardTab() {
                     />
                   </div>
                 </div>
+
+                {/* Paid Via */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Paid Via</Label>
+                  <div className="flex gap-2">
+                    <div className="flex-1 input-gold-shimmer rounded-lg">
+                      <Input
+                        value={paidVia}
+                        onChange={e => setPaidVia(e.target.value)}
+                        placeholder="z.B. Binance, Coinbase…"
+                        className="bg-secondary/40 border-transparent text-sm"
+                      />
+                    </div>
+                    <Select value={cryptoCoin} onValueChange={setCryptoCoin}>
+                      <SelectTrigger className="w-[110px] text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {["USDT", "USDC", "BTC", "ETH", "SOL", "BNB", "XRP", "TRX", "LTC"].map(coin => (
+                          <SelectItem key={coin} value={coin}>{coin}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* TxHash */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">TxHash</Label>
+                  <div className="input-gold-shimmer rounded-lg">
+                    <Input
+                      value={txHash}
+                      onChange={e => setTxHash(e.target.value)}
+                      placeholder="Transaktions-Hash"
+                      className="bg-secondary/40 border-transparent text-sm font-mono text-xs"
+                    />
+                  </div>
+                </div>
+
+                {/* Exchange Rate */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Exchange Rate</Label>
+                  <div className="input-gold-shimmer rounded-lg">
+                    <Input
+                      value={exchangeRate}
+                      onChange={e => setExchangeRate(e.target.value)}
+                      placeholder="z.B. 1 USDT = 0.92€"
+                      className="bg-secondary/40 border-transparent text-sm"
+                    />
+                  </div>
+                </div>
+
                 <Button
                   onClick={generateGutschrift}
                   variant="outline"
