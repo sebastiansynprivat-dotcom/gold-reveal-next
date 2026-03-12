@@ -206,9 +206,7 @@ export default function ModelDashboardTab() {
       setRevenuePercentage(d.revenue_percentage || 0);
       setCryptoAddress(d.crypto_address || "");
       setContractPath(d.contract_file_path || "");
-      setManualYesterday(Number((d as any).yesterday_revenue) || 0);
       setManualMonthly(Number((d as any).monthly_revenue) || 0);
-      setManualTotal(Number((d as any).total_revenue) || 0);
     } else {
       setData(null);
       setFourbasedSubmitted(false);
