@@ -1106,6 +1106,58 @@ export default function ModelDashboardTab() {
                     />
                   </div>
                 </div>
+
+                {/* Paid Via */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Paid Via</Label>
+                  <div className="flex gap-2">
+                    <div className="flex-1 input-gold-shimmer rounded-lg">
+                      <Input
+                        value={paidVia}
+                        onChange={e => setPaidVia(e.target.value)}
+                        placeholder="z.B. Binance, Coinbase…"
+                        className="bg-secondary/40 border-transparent text-sm"
+                      />
+                    </div>
+                    <Select value={cryptoCoin} onValueChange={setCryptoCoin}>
+                      <SelectTrigger className="w-[110px] text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {["USDT", "USDC", "BTC", "ETH", "SOL", "BNB", "XRP", "TRX", "LTC"].map(coin => (
+                          <SelectItem key={coin} value={coin}>{coin}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {/* TxHash */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">TxHash</Label>
+                  <div className="input-gold-shimmer rounded-lg">
+                    <Input
+                      value={txHash}
+                      onChange={e => setTxHash(e.target.value)}
+                      placeholder="Transaktions-Hash"
+                      className="bg-secondary/40 border-transparent text-sm font-mono text-xs"
+                    />
+                  </div>
+                </div>
+
+                {/* Exchange Rate */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Exchange Rate</Label>
+                  <div className="input-gold-shimmer rounded-lg">
+                    <Input
+                      value={exchangeRate}
+                      onChange={e => setExchangeRate(e.target.value)}
+                      placeholder="z.B. 1 USDT = 0.92€"
+                      className="bg-secondary/40 border-transparent text-sm"
+                    />
+                  </div>
+                </div>
+
                 <Button
                   onClick={generateGutschrift}
                   variant="outline"
