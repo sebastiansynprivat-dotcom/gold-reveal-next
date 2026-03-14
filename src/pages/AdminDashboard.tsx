@@ -1822,7 +1822,7 @@ export default function AdminDashboard() {
 
        <main className="container max-w-4xl mx-auto p-4 space-y-5">
          {/* Premium Tab Navigation */}
-         <div className="overflow-x-auto -mx-4 px-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+         <div className="overflow-x-auto -mx-4 px-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch', touchAction: 'pan-x' }}>
            <style>{`
              div:has(> .inline-flex)::-webkit-scrollbar {
                display: none;
