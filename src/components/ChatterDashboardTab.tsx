@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus, Trash2, Search, ChevronDown, Wallet, Percent, FileDown, Save, Users, Crown
 } from "lucide-react";
-import jsPDF from "jspdf";
+import CreditNoteForm from "@/components/CreditNoteForm";
 
 interface Chatter {
   id: string;
@@ -90,13 +90,7 @@ export default function ChatterDashboardTab() {
   const [newName, setNewName] = useState("");
   const [newPlatform, setNewPlatform] = useState("");
 
-  // Gutschrift
-  const [gutschriftAmount, setGutschriftAmount] = useState("");
-  const [gutschriftDescription, setGutschriftDescription] = useState("Gutschrift für erbrachte Leistungen");
-  const [paidVia, setPaidVia] = useState("");
-  const [cryptoCoin, setCryptoCoin] = useState("USDT");
-  const [txHash, setTxHash] = useState("");
-  const [exchangeRate, setExchangeRate] = useState("");
+  // (Gutschrift state removed – now uses CreditNoteForm component)
 
   // Persist
   useEffect(() => {
@@ -145,109 +139,7 @@ export default function ChatterDashboardTab() {
     toast.success("Chatter gelöscht");
   };
 
-  const generateGutschrift = () => {
-    if (!selected || !gutschriftAmount.trim()) {
-      toast.error("Bitte Chatter auswählen und Betrag eingeben.");
-      return;
-    }
-    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-    const pageWidth = 210;
-    const margin = 25;
-    const contentWidth = pageWidth - margin * 2;
-    const rightCol = pageWidth - margin;
-    let y = 25;
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
-    doc.text(SENDER.company, margin, y); y += 5;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    doc.text(SENDER.line1, margin, y); y += 4;
-    doc.text(SENDER.line2, margin, y); y += 4;
-    doc.text(SENDER.line3, margin, y); y += 4;
-    doc.text(`Tax ID: ${SENDER.taxId}`, margin, y); y += 10;
-
-    doc.setFontSize(10);
-    doc.text(`Chatter: ${selected.name}`, margin, y); y += 5;
-    if (selected.platform) { doc.text(`Plattform: ${selected.platform}`, margin, y); y += 5; }
-    y += 5;
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(18);
-    doc.text("GUTSCHRIFT", margin, y); y += 10;
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.text(`Datum: ${new Date().toLocaleDateString("de-DE")}`, rightCol, y - 8, { align: "right" });
-    if (selected.revenuePercentage > 0) doc.text(`Anteil: ${selected.revenuePercentage}%`, rightCol, y - 3, { align: "right" });
-    y += 4;
-
-    doc.setDrawColor(200, 180, 120);
-    doc.setLineWidth(0.5);
-    doc.line(margin, y, pageWidth - margin, y); y += 8;
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
-    doc.setFillColor(245, 240, 230);
-    doc.rect(margin, y - 4, contentWidth, 8, "F");
-    doc.text("Beschreibung", margin + 2, y);
-    doc.text("Betrag", rightCol - 2, y, { align: "right" }); y += 8;
-
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.text(gutschriftDescription, margin + 2, y);
-    const numAmount = parseFloat(gutschriftAmount.replace(",", "."));
-    const formatted = isNaN(numAmount) ? gutschriftAmount + " €" : numAmount.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
-    doc.text(formatted, rightCol - 2, y, { align: "right" }); y += 8;
-
-    doc.line(margin, y, pageWidth - margin, y); y += 6;
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
-    doc.text("Gesamtbetrag:", margin + 2, y);
-    doc.text(formatted, rightCol - 2, y, { align: "right" }); y += 12;
-
-    // Payment details
-    if (paidVia || txHash || exchangeRate) {
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(9);
-      doc.setTextColor(80, 80, 80);
-      if (paidVia) { doc.text(`Paid Via: ${paidVia} (${cryptoCoin})`, margin + 2, y); y += 5; }
-      if (txHash) { doc.text(`TxHash: ${txHash}`, margin + 2, y); y += 5; }
-      if (exchangeRate) { doc.text(`Exchange Rate: ${exchangeRate}`, margin + 2, y); y += 5; }
-      doc.setTextColor(0, 0, 0);
-    }
-    y += 8;
-
-    doc.setFontSize(7);
-    doc.setTextColor(150, 150, 150);
-    doc.text(`${SENDER.company} · Gutschrift für ${selected.name}`, pageWidth / 2, 285, { align: "center" });
-
-    const filename = `Gutschrift_${selected.name.replace(/[^a-zA-Z0-9]/g, "_")}.pdf`;
-    const blob = doc.output("blob");
-    const url = URL.createObjectURL(blob);
-
-    let downloadTriggered = false;
-    try {
-      const link = document.createElement("a");
-      if (typeof link.download !== "undefined") {
-        link.href = url;
-        link.download = filename;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        downloadTriggered = true;
-      }
-    } catch { /* fallback */ }
-
-    if (!downloadTriggered) {
-      const opened = window.open(url, "_blank", "noopener,noreferrer");
-      if (opened) toast.success("PDF im neuen Tab geöffnet ✅");
-      else toast.error("Popup blockiert – bitte Popups erlauben.");
-    } else {
-      toast.success("Gutschrift-PDF erstellt ✅");
-    }
-    setTimeout(() => URL.revokeObjectURL(url), 15000);
-  };
+  // generateGutschrift removed – now uses CreditNoteForm component
 
   return (
     <div className="space-y-5">
@@ -438,87 +330,14 @@ export default function ChatterDashboardTab() {
             </div>
           </Section>
 
-          {/* Gutschrift */}
-          <Section icon={FileDown} title="Gutschrift erstellen" delay={0.2}>
-            <div className="space-y-3">
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground">Beschreibung</label>
-                <div className="input-gold-shimmer rounded-lg">
-                  <Input value={gutschriftDescription} onChange={e => setGutschriftDescription(e.target.value)} className="text-sm border-transparent" />
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground">Betrag (€)</label>
-                <div className="input-gold-shimmer rounded-lg">
-                  <Input
-                    value={gutschriftAmount}
-                    onChange={e => setGutschriftAmount(e.target.value)}
-                    placeholder={verdienst > 0 ? verdienst.toLocaleString("de-DE") : "0"}
-                    className="text-sm border-transparent"
-                  />
-                </div>
-                {verdienst > 0 && !gutschriftAmount && (
-                  <button onClick={() => setGutschriftAmount(verdienst.toString())} className="text-[10px] text-accent hover:underline">
-                    Vorschlag übernehmen: {verdienst.toLocaleString("de-DE")}€
-                  </button>
-                )}
-              </div>
-
-              {/* Paid Via */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground">Paid Via</label>
-                <div className="flex gap-2">
-                  <div className="flex-1 input-gold-shimmer rounded-lg">
-                    <Input
-                      value={paidVia}
-                      onChange={e => setPaidVia(e.target.value)}
-                      placeholder="z.B. Binance, Coinbase…"
-                      className="text-sm border-transparent"
-                    />
-                  </div>
-                  <Select value={cryptoCoin} onValueChange={setCryptoCoin}>
-                    <SelectTrigger className="w-[110px] text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {["USDT", "USDC", "BTC", "ETH", "SOL", "BNB", "XRP", "TRX", "LTC"].map(coin => (
-                        <SelectItem key={coin} value={coin}>{coin}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* TxHash */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground">TxHash</label>
-                <div className="input-gold-shimmer rounded-lg">
-                  <Input
-                    value={txHash}
-                    onChange={e => setTxHash(e.target.value)}
-                    placeholder="Transaktions-Hash"
-                    className="text-sm border-transparent font-mono text-xs"
-                  />
-                </div>
-              </div>
-
-              {/* Exchange Rate */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground">Exchange Rate</label>
-                <div className="input-gold-shimmer rounded-lg">
-                  <Input
-                    value={exchangeRate}
-                    onChange={e => setExchangeRate(e.target.value)}
-                    placeholder="z.B. 1 USDT = 0.92€"
-                    className="text-sm border-transparent"
-                  />
-                </div>
-              </div>
-
-              <Button onClick={generateGutschrift} className="w-full gap-2">
-                <FileDown className="h-4 w-4" /> Gutschrift als PDF erstellen
-              </Button>
-            </div>
+          {/* Credit Note */}
+          <Section icon={FileDown} title="Credit Note erstellen" delay={0.2}>
+            <CreditNoteForm
+              suggestedAmount={verdienst}
+              providerName={selected.name}
+              chatterName={selected.name}
+              revenuePercentage={selected.revenuePercentage}
+            />
           </Section>
         </>
       )}
