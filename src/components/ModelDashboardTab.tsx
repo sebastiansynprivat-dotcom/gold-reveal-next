@@ -182,13 +182,7 @@ export default function ModelDashboardTab() {
   const [contractPath, setContractPath] = useState("");
   const [manualMonthly, setManualMonthly] = useState(0);
 
-  // Gutschrift
-  const [gutschriftAmount, setGutschriftAmount] = useState("");
-  const [gutschriftDescription, setGutschriftDescription] = useState("Gutschrift für erbrachte Leistungen");
-  const [paidVia, setPaidVia] = useState("");
-  const [cryptoCoin, setCryptoCoin] = useState("USDT");
-  const [txHash, setTxHash] = useState("");
-  const [exchangeRate, setExchangeRate] = useState("");
+  // (Gutschrift state removed – now uses CreditNoteForm component)
 
   // Revenue per model
   const [modelRevenue, setModelRevenue] = useState<{ date: string; amount: number; user_id: string }[]>([]);
