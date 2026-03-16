@@ -1822,7 +1822,14 @@ export default function AdminDashboard() {
 
        <main className="container max-w-4xl mx-auto p-4 space-y-5">
          {/* Premium Tab Navigation */}
-         <div className="overflow-x-auto -mx-4 px-4" onWheel={(e) => { if (Math.abs(e.deltaX) < Math.abs(e.deltaY)) { e.currentTarget.scrollLeft += e.deltaY; e.preventDefault(); } }} style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch', touchAction: 'pan-x' }}>
+          <div
+            className="overflow-x-auto -mx-4 px-4 cursor-grab active:cursor-grabbing select-none"
+            onWheel={(e) => { if (Math.abs(e.deltaX) < Math.abs(e.deltaY)) { e.currentTarget.scrollLeft += e.deltaY; e.preventDefault(); } }}
+            onMouseDown={(e) => { const el = e.currentTarget; el.dataset.dragging = "true"; el.dataset.startX = String(e.pageX); el.dataset.scrollLeft = String(el.scrollLeft); }}
+            onMouseMove={(e) => { const el = e.currentTarget; if (el.dataset.dragging !== "true") return; e.preventDefault(); el.scrollLeft = Number(el.dataset.scrollLeft) - (e.pageX - Number(el.dataset.startX)); }}
+            onMouseUp={(e) => { e.currentTarget.dataset.dragging = "false"; }}
+            onMouseLeave={(e) => { e.currentTarget.dataset.dragging = "false"; }}
+            style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch', touchAction: 'pan-x' }}>
            <style>{`
              div:has(> .inline-flex)::-webkit-scrollbar {
                display: none;
