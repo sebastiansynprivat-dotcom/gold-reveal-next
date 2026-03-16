@@ -216,6 +216,92 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_notes: {
+        Row: {
+          account_id: string | null
+          chatter_name: string | null
+          created_at: string
+          created_by: string
+          credit_note_date: string
+          credit_note_number: string
+          crypto_coin: string | null
+          description: string
+          exchange_rate: string | null
+          gross_amount: number
+          id: string
+          net_amount: number
+          payment_date: string | null
+          payment_method: string | null
+          provider_address: string
+          provider_is_business: boolean
+          provider_name: string
+          provider_vat_id: string | null
+          service_period_end: string
+          service_period_start: string
+          tx_hash: string | null
+          vat_amount: number
+          vat_rate: number
+        }
+        Insert: {
+          account_id?: string | null
+          chatter_name?: string | null
+          created_at?: string
+          created_by: string
+          credit_note_date?: string
+          credit_note_number: string
+          crypto_coin?: string | null
+          description?: string
+          exchange_rate?: string | null
+          gross_amount?: number
+          id?: string
+          net_amount?: number
+          payment_date?: string | null
+          payment_method?: string | null
+          provider_address?: string
+          provider_is_business?: boolean
+          provider_name?: string
+          provider_vat_id?: string | null
+          service_period_end?: string
+          service_period_start?: string
+          tx_hash?: string | null
+          vat_amount?: number
+          vat_rate?: number
+        }
+        Update: {
+          account_id?: string | null
+          chatter_name?: string | null
+          created_at?: string
+          created_by?: string
+          credit_note_date?: string
+          credit_note_number?: string
+          crypto_coin?: string | null
+          description?: string
+          exchange_rate?: string | null
+          gross_amount?: number
+          id?: string
+          net_amount?: number
+          payment_date?: string | null
+          payment_method?: string | null
+          provider_address?: string
+          provider_is_business?: boolean
+          provider_name?: string
+          provider_vat_id?: string | null
+          service_period_end?: string
+          service_period_start?: string
+          tx_hash?: string | null
+          vat_amount?: number
+          vat_rate?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_notes_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_goals: {
         Row: {
           created_at: string
@@ -757,6 +843,7 @@ export type Database = {
       }
       increment_route_counter: { Args: never; Returns: number }
       is_admin: { Args: never; Returns: boolean }
+      next_credit_note_number: { Args: never; Returns: string }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user" | "model"
