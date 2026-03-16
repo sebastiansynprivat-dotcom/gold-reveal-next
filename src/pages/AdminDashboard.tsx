@@ -852,6 +852,11 @@ export default function AdminDashboard() {
     setAdminListLoading(false);
   };
 
+  const openAdminSection = () => {
+    setAdminSectionOpen(true);
+    void loadAdmins();
+  };
+
   const addAdmin = async () => {
     if (!newAdminEmail.trim()) return;
     setAddingAdmin(true);
