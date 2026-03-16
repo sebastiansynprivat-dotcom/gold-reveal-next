@@ -955,103 +955,15 @@ export default function ModelDashboardTab() {
 
 
 
-            {/* Gutschrift */}
-            <Section icon={FileDown} title="Gutschrift generieren" delay={0.4}>
-              <div className="space-y-3">
-                {/* Auto-fill hint */}
-                {gutschriftFromRevenue > 0 && gutschriftAmount !== gutschriftFromRevenue.toFixed(2).replace(".", ",") && (
-                  <button
-                    onClick={() => setGutschriftAmount(gutschriftFromRevenue.toFixed(2).replace(".", ","))}
-                    className="w-full flex items-center gap-2 p-2.5 rounded-lg border border-accent/20 bg-accent/5 hover:bg-accent/10 transition-colors text-left"
-                  >
-                    <DollarSign className="h-3.5 w-3.5 text-accent shrink-0" />
-                    <span className="text-[11px] text-foreground">
-                      Automatisch aus Einnahmen: <span className="font-bold text-accent">{gutschriftFromRevenue.toLocaleString("de-DE", { minimumFractionDigits: 2 })} €</span> ({revenuePercentage}% von {totalMonthRevenue.toLocaleString("de-DE", { minimumFractionDigits: 2 })} €)
-                    </span>
-                  </button>
-                )}
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Beschreibung</Label>
-                  <div className="input-gold-shimmer rounded-lg">
-                    <Input
-                      value={gutschriftDescription}
-                      onChange={e => setGutschriftDescription(e.target.value)}
-                      className="bg-secondary/40 border-transparent text-sm"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Betrag (€)</Label>
-                  <div className="input-gold-shimmer rounded-lg">
-                    <Input
-                      value={gutschriftAmount}
-                      onChange={e => setGutschriftAmount(e.target.value)}
-                      placeholder="z.B. 500,00"
-                      className="bg-secondary/40 border-transparent text-sm font-mono"
-                    />
-                  </div>
-                </div>
-
-                {/* Paid Via */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Paid Via</Label>
-                  <div className="flex gap-2">
-                    <div className="flex-1 input-gold-shimmer rounded-lg">
-                      <Input
-                        value={paidVia}
-                        onChange={e => setPaidVia(e.target.value)}
-                        placeholder="z.B. Binance, Coinbase…"
-                        className="bg-secondary/40 border-transparent text-sm"
-                      />
-                    </div>
-                    <Select value={cryptoCoin} onValueChange={setCryptoCoin}>
-                      <SelectTrigger className="w-[110px] text-sm">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {["USDT", "USDC", "BTC", "ETH", "SOL", "BNB", "XRP", "TRX", "LTC"].map(coin => (
-                          <SelectItem key={coin} value={coin}>{coin}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {/* TxHash */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">TxHash</Label>
-                  <div className="input-gold-shimmer rounded-lg">
-                    <Input
-                      value={txHash}
-                      onChange={e => setTxHash(e.target.value)}
-                      placeholder="Transaktions-Hash"
-                      className="bg-secondary/40 border-transparent text-sm font-mono text-xs"
-                    />
-                  </div>
-                </div>
-
-                {/* Exchange Rate */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Exchange Rate</Label>
-                  <div className="input-gold-shimmer rounded-lg">
-                    <Input
-                      value={exchangeRate}
-                      onChange={e => setExchangeRate(e.target.value)}
-                      placeholder="z.B. 1 USDT = 0.92€"
-                      className="bg-secondary/40 border-transparent text-sm"
-                    />
-                  </div>
-                </div>
-
-                <Button
-                  onClick={generateGutschrift}
-                  variant="outline"
-                  className="w-full gap-2 border-accent/30 text-accent hover:bg-accent/10 hover:scale-[1.01] active:scale-[0.99] transition-all"
-                >
-                  <FileDown className="h-4 w-4" />
-                  Gutschrift als PDF erstellen
-                </Button>
-              </div>
+            {/* Credit Note */}
+            <Section icon={FileDown} title="Credit Note erstellen" delay={0.4}>
+              <CreditNoteForm
+                suggestedAmount={gutschriftFromRevenue}
+                providerName={selectedAccount?.account_email || ""}
+                accountId={selectedAccountId}
+                cryptoAddress={cryptoAddress}
+                revenuePercentage={revenuePercentage}
+              />
             </Section>
           </motion.div>
         )}
