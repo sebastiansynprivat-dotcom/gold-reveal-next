@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Plus, Trash2, Search, ChevronDown, Wallet, Percent, FileDown, Save, Users, Crown
 } from "lucide-react";
-import jsPDF from "jspdf";
+import CreditNoteForm from "@/components/CreditNoteForm";
 
 interface Chatter {
   id: string;
