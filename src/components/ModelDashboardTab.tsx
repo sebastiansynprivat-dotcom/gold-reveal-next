@@ -17,7 +17,7 @@ import {
   Upload, FileText, Trash2, Download, Save, Loader2, Star,
   Percent, Wallet, StickyNote, CheckCircle2, FileDown, List, Filter, Search, ChevronRight, ChevronDown, TrendingUp, CalendarDays, DollarSign, KeyRound, Copy, Eye, EyeOff
 } from "lucide-react";
-import jsPDF from "jspdf";
+import CreditNoteForm from "@/components/CreditNoteForm";
 import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
 
 interface Account {
