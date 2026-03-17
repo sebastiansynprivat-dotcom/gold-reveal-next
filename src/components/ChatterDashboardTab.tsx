@@ -354,6 +354,7 @@ export default function ChatterDashboardTab() {
               providerName={selected.name}
               chatterName={selected.name}
               revenuePercentage={selected.revenuePercentage}
+              currency={selected.currency || "EUR"}
             />
           </Section>
         </>
