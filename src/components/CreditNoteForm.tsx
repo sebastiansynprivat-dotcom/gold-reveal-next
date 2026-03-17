@@ -41,11 +41,24 @@ export default function CreditNoteForm({
   revenuePercentage = 0,
   currency = "EUR",
 }: CreditNoteFormProps) {
+  // localStorage key for persisting form fields
+  const storageKey = `credit-note-form-${accountId || chatterName || "default"}`;
+
+  // Load persisted values
+  const loadSaved = () => {
+    try {
+      const saved = localStorage.getItem(storageKey);
+      return saved ? JSON.parse(saved) : {};
+    } catch { return {}; }
+  };
+
+  const saved = loadSaved();
+
   // Provider
-  const [providerName, setProviderName] = useState(initialProviderName);
-  const [providerAddress, setProviderAddress] = useState("");
-  const [isBusiness, setIsBusiness] = useState(false);
-  const [providerVatId, setProviderVatId] = useState("");
+  const [providerName, setProviderName] = useState(saved.providerName || initialProviderName);
+  const [providerAddress, setProviderAddress] = useState(saved.providerAddress || "");
+  const [isBusiness, setIsBusiness] = useState(saved.isBusiness || false);
+  const [providerVatId, setProviderVatId] = useState(saved.providerVatId || "");
 
   // Metadata
   const [creditNoteDate, setCreditNoteDate] = useState(format(new Date(), "yyyy-MM-dd"));
@@ -53,17 +66,28 @@ export default function CreditNoteForm({
   const [servicePeriodEnd, setServicePeriodEnd] = useState(format(new Date(), "yyyy-MM-dd"));
 
   // Line item
-  const [description, setDescription] = useState(defaultDescription);
+  const [description, setDescription] = useState(saved.description || defaultDescription);
   const [netAmount, setNetAmount] = useState(suggestedAmount > 0 ? suggestedAmount.toFixed(2) : "");
 
   // Payment
-  const [paymentMethod, setPaymentMethod] = useState(cryptoAddress ? "Crypto" : "");
-  const [cryptoCoin, setCryptoCoin] = useState("USDT");
-  const [txHash, setTxHash] = useState("");
-  const [exchangeRate, setExchangeRate] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState(saved.paymentMethod || (cryptoAddress ? "Crypto" : ""));
+  const [cryptoCoin, setCryptoCoin] = useState(saved.cryptoCoin || "USDT");
+  const [txHash, setTxHash] = useState(saved.txHash || "");
+  const [exchangeRate, setExchangeRate] = useState(saved.exchangeRate || "");
   const [paymentDate, setPaymentDate] = useState(format(new Date(), "yyyy-MM-dd"));
 
   const [generating, setGenerating] = useState(false);
+
+  // Auto-save form fields to localStorage
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      localStorage.setItem(storageKey, JSON.stringify({
+        providerName, providerAddress, isBusiness, providerVatId,
+        description, paymentMethod, cryptoCoin, txHash, exchangeRate,
+      }));
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [providerName, providerAddress, isBusiness, providerVatId, description, paymentMethod, cryptoCoin, txHash, exchangeRate, storageKey]);
 
   // Update provider name when prop changes
   useEffect(() => {
