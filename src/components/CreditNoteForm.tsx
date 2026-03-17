@@ -8,15 +8,17 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { motion } from "framer-motion";
 import { FileDown, Building2, User, Calendar, Hash } from "lucide-react";
-import { format } from "date-fns";
+import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
 import jsPDF from "jspdf";
 
-const ISSUER = {
+const ISSUER_DEFAULTS = {
   name: "Tapyn B.V.",
   address: "Daalwijkdreef 47, 1103AD, Amsterdam, Netherlands",
   kvk: "95097821",
   vatId: "NL867000533B01",
 };
+
+const CRYPTO_NETWORKS = ["TRC20", "ERC20", "BEP20", "SOL", "BTC", "LTC"];
 
 const CRYPTO_COINS = ["USDT", "USDC", "BTC", "ETH", "SOL", "BNB", "XRP", "TRX", "LTC"];
 
