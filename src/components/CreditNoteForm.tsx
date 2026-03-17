@@ -56,23 +56,30 @@ export default function CreditNoteForm({
 
   const saved = loadSaved();
 
+  // Issuer (editable)
+  const [issuerName, setIssuerName] = useState(saved.issuerName || ISSUER_DEFAULTS.name);
+  const [issuerAddress, setIssuerAddress] = useState(saved.issuerAddress || ISSUER_DEFAULTS.address);
+  const [issuerKvk, setIssuerKvk] = useState(saved.issuerKvk || ISSUER_DEFAULTS.kvk);
+  const [issuerVatId, setIssuerVatId] = useState(saved.issuerVatId || ISSUER_DEFAULTS.vatId);
+
   // Provider
   const [providerName, setProviderName] = useState(saved.providerName || initialProviderName);
   const [providerAddress, setProviderAddress] = useState(saved.providerAddress || "");
   const [isBusiness, setIsBusiness] = useState(saved.isBusiness || false);
   const [providerVatId, setProviderVatId] = useState(saved.providerVatId || "");
 
-  // Metadata
+  // Metadata – default service period = previous month
+  const lastMonth = subMonths(new Date(), 1);
   const [creditNoteDate, setCreditNoteDate] = useState(format(new Date(), "yyyy-MM-dd"));
-  const [servicePeriodStart, setServicePeriodStart] = useState(format(new Date(new Date().getFullYear(), new Date().getMonth(), 1), "yyyy-MM-dd"));
-  const [servicePeriodEnd, setServicePeriodEnd] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [servicePeriodStart, setServicePeriodStart] = useState(format(startOfMonth(lastMonth), "yyyy-MM-dd"));
+  const [servicePeriodEnd, setServicePeriodEnd] = useState(format(endOfMonth(lastMonth), "yyyy-MM-dd"));
 
   // Line item
   const [description, setDescription] = useState(saved.description || defaultDescription);
   const [netAmount, setNetAmount] = useState(suggestedAmount > 0 ? suggestedAmount.toFixed(2) : "");
 
   // Payment
-  const [paymentMethod, setPaymentMethod] = useState(saved.paymentMethod || (cryptoAddress ? "Crypto" : ""));
+  const [cryptoNetwork, setCryptoNetwork] = useState(saved.cryptoNetwork || "TRC20");
   const [cryptoCoin, setCryptoCoin] = useState(saved.cryptoCoin || "USDT");
   const [txHash, setTxHash] = useState(saved.txHash || "");
   const [exchangeRate, setExchangeRate] = useState(saved.exchangeRate || "");
@@ -84,12 +91,13 @@ export default function CreditNoteForm({
   useEffect(() => {
     const timer = setTimeout(() => {
       localStorage.setItem(storageKey, JSON.stringify({
+        issuerName, issuerAddress, issuerKvk, issuerVatId,
         providerName, providerAddress, isBusiness, providerVatId,
-        description, paymentMethod, cryptoCoin, txHash, exchangeRate,
+        description, cryptoNetwork, cryptoCoin, txHash, exchangeRate,
       }));
     }, 500);
     return () => clearTimeout(timer);
-  }, [providerName, providerAddress, isBusiness, providerVatId, description, paymentMethod, cryptoCoin, txHash, exchangeRate, storageKey]);
+  }, [issuerName, issuerAddress, issuerKvk, issuerVatId, providerName, providerAddress, isBusiness, providerVatId, description, cryptoNetwork, cryptoCoin, txHash, exchangeRate, storageKey]);
 
   // Update provider name when prop changes
   useEffect(() => {
