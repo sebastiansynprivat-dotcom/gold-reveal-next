@@ -124,12 +124,15 @@ export default function CreditNoteForm({
     doc.text(issuerName, m, y);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
-    y += 4.5;
-    doc.text(issuerAddress, m, y);
-    y += 4;
+    y += 5;
+    // Split address in case it's long
+    const issuerAddrLines = doc.splitTextToSize(issuerAddress, cw / 2 - 5);
+    issuerAddrLines.forEach((line: string) => { doc.text(line, m, y); y += 4; });
     doc.text(`KvK: ${issuerKvk}`, m, y);
     y += 4;
     doc.text(`VAT ID: ${issuerVatId}`, m, y);
+    y += 4;
+    const leftEndY = y;
 
     // Right side: credit note details
     let ry = 22;
@@ -148,8 +151,10 @@ export default function CreditNoteForm({
     doc.text("Service Period:", rCol - 50, ry);
     doc.setFont("helvetica", "normal");
     doc.text(`${format(new Date(servicePeriodStart), "dd.MM.yyyy")} – ${format(new Date(servicePeriodEnd), "dd.MM.yyyy")}`, rCol, ry, { align: "right" });
+    ry += 4.5;
 
-    y += 10;
+    // Continue from whichever column is lower
+    y = Math.max(leftEndY, ry) + 6;
 
     // ── Title ──
     doc.setDrawColor(40, 40, 40);
