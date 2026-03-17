@@ -932,28 +932,15 @@ export default function ModelDashboardTab() {
 
             {/* Notizen */}
             <Section icon={StickyNote} title="Model Daten" delay={0.15}>
-              <div className="space-y-4">
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Währung</Label>
-                  <Select value={currency} onValueChange={setCurrency}>
-                    <SelectTrigger className="text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CURRENCIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Notizen / Freitext</Label>
-                  <div className="input-gold-shimmer rounded-lg">
-                    <Textarea
-                      value={notes}
-                      onChange={e => setNotes(e.target.value)}
-                      placeholder="Notizen zum Model…"
-                      className="bg-secondary/40 border-transparent min-h-[100px] text-sm"
-                    />
-                  </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Notizen / Freitext</Label>
+                <div className="input-gold-shimmer rounded-lg">
+                  <Textarea
+                    value={notes}
+                    onChange={e => setNotes(e.target.value)}
+                    placeholder="Notizen zum Model…"
+                    className="bg-secondary/40 border-transparent min-h-[100px] text-sm"
+                  />
                 </div>
               </div>
             </Section>
