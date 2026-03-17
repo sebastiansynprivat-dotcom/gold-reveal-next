@@ -235,6 +235,7 @@ export default function ModelDashboardTab() {
       setCryptoAddress(d.crypto_address || "");
       setContractPath(d.contract_file_path || "");
       setManualMonthly(Number((d as any).monthly_revenue) || 0);
+      setCurrency((d as any).currency || "EUR");
     } else {
       setData(null);
       setFourbasedSubmitted(false);
