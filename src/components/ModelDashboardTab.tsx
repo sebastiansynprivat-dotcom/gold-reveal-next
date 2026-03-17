@@ -377,6 +377,7 @@ export default function ModelDashboardTab() {
       crypto_address: cryptoAddress,
       contract_file_path: contractPath,
       monthly_revenue: manualMonthly,
+      currency,
     };
     if (data?.id) {
       await supabase.from("model_dashboard").update(payload).eq("id", data.id);
