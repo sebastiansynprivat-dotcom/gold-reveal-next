@@ -20,6 +20,7 @@ interface Chatter {
   monthlyRevenue: number;
   revenuePercentage: number;
   currency: string;
+  cryptoAddress: string;
 }
 
 const STORAGE_KEY = "admin-chatter-dashboard";
