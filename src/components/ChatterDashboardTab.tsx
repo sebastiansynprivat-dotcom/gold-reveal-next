@@ -123,6 +123,7 @@ export default function ChatterDashboardTab() {
       monthlyRevenue: 0,
       revenuePercentage: 0,
       currency: "EUR",
+      cryptoAddress: "",
     };
     setChatters(prev => [...prev, chatter]);
     setSelectedId(chatter.id);
