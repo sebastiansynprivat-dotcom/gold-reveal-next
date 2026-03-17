@@ -339,7 +339,7 @@ export default function ChatterDashboardTab() {
                   <div>
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Verdienst ({selected.revenuePercentage}%)</p>
                     <p className="text-xl font-bold text-accent tabular-nums">
-                      <AnimatedGoldValue value={verdienst} />
+                      <AnimatedGoldValue value={verdienst} suffix={` ${selected.currency || "EUR"}`} />
                     </p>
                   </div>
                 </motion.div>
