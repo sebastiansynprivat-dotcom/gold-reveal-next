@@ -8,15 +8,17 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { motion } from "framer-motion";
 import { FileDown, Building2, User, Calendar, Hash } from "lucide-react";
-import { format } from "date-fns";
+import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
 import jsPDF from "jspdf";
 
-const ISSUER = {
+const ISSUER_DEFAULTS = {
   name: "Tapyn B.V.",
   address: "Daalwijkdreef 47, 1103AD, Amsterdam, Netherlands",
   kvk: "95097821",
   vatId: "NL867000533B01",
 };
+
+const CRYPTO_NETWORKS = ["TRC20", "ERC20", "BEP20", "SOL", "BTC", "LTC"];
 
 const CRYPTO_COINS = ["USDT", "USDC", "BTC", "ETH", "SOL", "BNB", "XRP", "TRX", "LTC"];
 
@@ -54,23 +56,30 @@ export default function CreditNoteForm({
 
   const saved = loadSaved();
 
+  // Issuer (editable)
+  const [issuerName, setIssuerName] = useState(saved.issuerName || ISSUER_DEFAULTS.name);
+  const [issuerAddress, setIssuerAddress] = useState(saved.issuerAddress || ISSUER_DEFAULTS.address);
+  const [issuerKvk, setIssuerKvk] = useState(saved.issuerKvk || ISSUER_DEFAULTS.kvk);
+  const [issuerVatId, setIssuerVatId] = useState(saved.issuerVatId || ISSUER_DEFAULTS.vatId);
+
   // Provider
   const [providerName, setProviderName] = useState(saved.providerName || initialProviderName);
   const [providerAddress, setProviderAddress] = useState(saved.providerAddress || "");
   const [isBusiness, setIsBusiness] = useState(saved.isBusiness || false);
   const [providerVatId, setProviderVatId] = useState(saved.providerVatId || "");
 
-  // Metadata
+  // Metadata – default service period = previous month
+  const lastMonth = subMonths(new Date(), 1);
   const [creditNoteDate, setCreditNoteDate] = useState(format(new Date(), "yyyy-MM-dd"));
-  const [servicePeriodStart, setServicePeriodStart] = useState(format(new Date(new Date().getFullYear(), new Date().getMonth(), 1), "yyyy-MM-dd"));
-  const [servicePeriodEnd, setServicePeriodEnd] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [servicePeriodStart, setServicePeriodStart] = useState(format(startOfMonth(lastMonth), "yyyy-MM-dd"));
+  const [servicePeriodEnd, setServicePeriodEnd] = useState(format(endOfMonth(lastMonth), "yyyy-MM-dd"));
 
   // Line item
   const [description, setDescription] = useState(saved.description || defaultDescription);
   const [netAmount, setNetAmount] = useState(suggestedAmount > 0 ? suggestedAmount.toFixed(2) : "");
 
   // Payment
-  const [paymentMethod, setPaymentMethod] = useState(saved.paymentMethod || (cryptoAddress ? "Crypto" : ""));
+  const [cryptoNetwork, setCryptoNetwork] = useState(saved.cryptoNetwork || "TRC20");
   const [cryptoCoin, setCryptoCoin] = useState(saved.cryptoCoin || "USDT");
   const [txHash, setTxHash] = useState(saved.txHash || "");
   const [exchangeRate, setExchangeRate] = useState(saved.exchangeRate || "");
@@ -82,12 +91,13 @@ export default function CreditNoteForm({
   useEffect(() => {
     const timer = setTimeout(() => {
       localStorage.setItem(storageKey, JSON.stringify({
+        issuerName, issuerAddress, issuerKvk, issuerVatId,
         providerName, providerAddress, isBusiness, providerVatId,
-        description, paymentMethod, cryptoCoin, txHash, exchangeRate,
+        description, cryptoNetwork, cryptoCoin, txHash, exchangeRate,
       }));
     }, 500);
     return () => clearTimeout(timer);
-  }, [providerName, providerAddress, isBusiness, providerVatId, description, paymentMethod, cryptoCoin, txHash, exchangeRate, storageKey]);
+  }, [issuerName, issuerAddress, issuerKvk, issuerVatId, providerName, providerAddress, isBusiness, providerVatId, description, cryptoNetwork, cryptoCoin, txHash, exchangeRate, storageKey]);
 
   // Update provider name when prop changes
   useEffect(() => {
@@ -111,15 +121,15 @@ export default function CreditNoteForm({
     // ── Header: Issuer left, Credit Note details right ──
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
-    doc.text(ISSUER.name, m, y);
+    doc.text(issuerName, m, y);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
     y += 4.5;
-    doc.text(ISSUER.address, m, y);
+    doc.text(issuerAddress, m, y);
     y += 4;
-    doc.text(`KvK: ${ISSUER.kvk}`, m, y);
+    doc.text(`KvK: ${issuerKvk}`, m, y);
     y += 4;
-    doc.text(`VAT ID: ${ISSUER.vatId}`, m, y);
+    doc.text(`VAT ID: ${issuerVatId}`, m, y);
 
     // Right side: credit note details
     let ry = 22;
@@ -261,14 +271,14 @@ export default function CreditNoteForm({
     }
 
     // ── Payment Information ──
-    if (paymentMethod || txHash || exchangeRate) {
+    if (cryptoCoin || txHash || exchangeRate) {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(9);
       doc.text("Payment Information", m, y);
       y += 5;
       doc.setFont("helvetica", "normal");
       doc.setFontSize(8.5);
-      if (paymentMethod) { doc.text(`Payment Method: ${paymentMethod} (${cryptoCoin})`, m, y); y += 4.5; }
+      if (cryptoCoin) { doc.text(`Payment Method: ${cryptoCoin} (${cryptoNetwork})`, m, y); y += 4.5; }
       if (txHash) { doc.text(`Transaction Hash: ${txHash}`, m, y); y += 4.5; }
       if (exchangeRate) { doc.text(`Exchange Rate: ${exchangeRate}`, m, y); y += 4.5; }
       if (paymentDate) { doc.text(`Payment Date: ${format(new Date(paymentDate), "dd.MM.yyyy")}`, m, y); y += 4.5; }
@@ -301,7 +311,7 @@ export default function CreditNoteForm({
     // Footer
     doc.setFontSize(6.5);
     doc.setTextColor(150, 150, 150);
-    doc.text(`${ISSUER.name} · ${ISSUER.address} · KvK ${ISSUER.kvk} · VAT ${ISSUER.vatId}`, pw / 2, 287, { align: "center" });
+    doc.text(`${issuerName} · ${issuerAddress} · KvK ${issuerKvk} · VAT ${issuerVatId}`, pw / 2, 287, { align: "center" });
     doc.text(creditNoteNumber, pw / 2, 291, { align: "center" });
 
     return doc;
@@ -340,7 +350,7 @@ export default function CreditNoteForm({
         vat_rate: vatRate,
         vat_amount: vatAmount,
         gross_amount: grossAmount,
-        payment_method: paymentMethod,
+        payment_method: `${cryptoCoin} (${cryptoNetwork})`,
         crypto_coin: cryptoCoin,
         tx_hash: txHash,
         exchange_rate: exchangeRate,
@@ -394,6 +404,40 @@ export default function CreditNoteForm({
       transition={{ duration: 0.35 }}
       className="space-y-5"
     >
+      {/* Issuer (Absender) */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+          <Building2 className="h-3.5 w-3.5" />
+          Issuer (Absender)
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">Firmenname</Label>
+            <div className="input-gold-shimmer rounded-lg">
+              <Input value={issuerName} onChange={e => setIssuerName(e.target.value)} className="text-sm border-transparent" />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">Adresse</Label>
+            <div className="input-gold-shimmer rounded-lg">
+              <Input value={issuerAddress} onChange={e => setIssuerAddress(e.target.value)} className="text-sm border-transparent" />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">KvK</Label>
+            <div className="input-gold-shimmer rounded-lg">
+              <Input value={issuerKvk} onChange={e => setIssuerKvk(e.target.value)} className="text-sm border-transparent" />
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">VAT ID</Label>
+            <div className="input-gold-shimmer rounded-lg">
+              <Input value={issuerVatId} onChange={e => setIssuerVatId(e.target.value)} className="text-sm border-transparent" />
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Service Provider */}
       <div className="space-y-3">
         <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
@@ -535,17 +579,22 @@ export default function CreditNoteForm({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">Payment Method</Label>
+            <Label className="text-xs text-muted-foreground">Coin</Label>
             <div className="flex gap-2">
-              <div className="flex-1 input-gold-shimmer rounded-lg">
-                <Input value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)} placeholder="z.B. Binance" className="text-sm border-transparent" />
-              </div>
               <Select value={cryptoCoin} onValueChange={setCryptoCoin}>
-                <SelectTrigger className="w-[100px] text-sm">
+                <SelectTrigger className="flex-1 text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {CRYPTO_COINS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select value={cryptoNetwork} onValueChange={setCryptoNetwork}>
+                <SelectTrigger className="w-[110px] text-sm">
+                  <SelectValue placeholder="Netzwerk" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CRYPTO_NETWORKS.map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -585,7 +634,7 @@ export default function CreditNoteForm({
 
       {/* Legal notice */}
       <p className="text-[9px] text-muted-foreground/60 text-center leading-relaxed">
-        Issued by {ISSUER.name} · KvK {ISSUER.kvk} · VAT {ISSUER.vatId}<br />
+        Issued by {issuerName} · KvK {issuerKvk} · VAT {issuerVatId}<br />
         Self-billing procedure – document valid without signature
       </p>
     </motion.div>
