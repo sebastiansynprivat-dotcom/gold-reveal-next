@@ -50,7 +50,7 @@ interface ModelDashboardRow {
 type PlatformFilter = "all" | "4Based" | "Maloum" | "Brezzels";
 type SubFilter = "none" | "botdm_fehlt" | "botdm_vorhanden" | "massdm_fehlt" | "massdm_vorhanden" | "setup_fehlt" | "setup_vorhanden";
 
-const CURRENCIES = ["EUR", "USD", "USDT", "USDC", "BTC", "ETH"] as const;
+const CURRENCIES = ["EUR", "USD", "GBP", "CHF", "AED"] as const;
 
 interface BotMessageRow {
   account_id: string | null;
