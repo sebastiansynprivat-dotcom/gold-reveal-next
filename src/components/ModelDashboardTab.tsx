@@ -50,7 +50,7 @@ interface ModelDashboardRow {
 type PlatformFilter = "all" | "4Based" | "Maloum" | "Brezzels";
 type SubFilter = "none" | "botdm_fehlt" | "botdm_vorhanden" | "massdm_fehlt" | "massdm_vorhanden" | "setup_fehlt" | "setup_vorhanden";
 
-const CURRENCIES = ["EUR", "USD", "USDT", "USDC", "BTC", "ETH"] as const;
+const CURRENCIES = ["EUR", "USD", "GBP", "CHF", "AED"] as const;
 
 interface BotMessageRow {
   account_id: string | null;
@@ -959,22 +959,15 @@ export default function ModelDashboardTab() {
             </Section>
 
             {/* Crypto */}
-            <Section icon={Wallet} title="Crypto Address" delay={0.25}>
-              <div className="space-y-3">
-                <div className="input-gold-shimmer rounded-lg">
-                  <Input
-                    value={cryptoAddress}
-                    onChange={e => setCryptoAddress(e.target.value)}
-                    placeholder="0x… / bc1… / T…"
-                    className="bg-secondary/40 border-transparent text-sm font-mono"
-                  />
-                </div>
+            <Section icon={Wallet} title="Crypto / Auszahlung" delay={0.25}>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Crypto-Infos (Adresse, Coin, Netzwerk, Notizen…)</Label>
                 <div className="input-gold-shimmer rounded-lg">
                   <Textarea
-                    value={notes}
-                    onChange={e => setNotes(e.target.value)}
-                    placeholder="Notiz zur Crypto-Adresse…"
-                    className="bg-secondary/40 border-transparent text-xs min-h-[60px] resize-none"
+                    value={cryptoAddress}
+                    onChange={e => setCryptoAddress(e.target.value)}
+                    placeholder="z.B. USDT TRC20 – TXyz…&#10;Netzwerk: Tron&#10;Weitere Infos…"
+                    className="bg-secondary/40 border-transparent text-sm min-h-[100px]"
                   />
                 </div>
               </div>
