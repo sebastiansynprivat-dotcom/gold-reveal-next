@@ -1,0 +1,1 @@
+ALTER TABLE public.model_dashboard ADD COLUMN IF NOT EXISTS currency TEXT DEFAULT 'EUR';

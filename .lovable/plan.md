@@ -1,42 +1,41 @@
 
+# Fortschrittsanzeige und Schritt-Nummerierung fur OfferB
 
-## Plan: Währungsfeld + Auto-Save für Dashboards & Gutschrift
+## Was wird gemacht
 
-### Was wird gebaut
+### 1. Alle Schritte als einheitliche Liste definieren
+Die Videos und Links werden zu einer gemeinsamen Schritt-Liste zusammengefasst:
+- Schritt 1: Plattform Erklärungs Video
+- Schritt 2: Telegram Nachrichten Video
+- Schritt 3: Brezzels Notifications aktivieren
+- Schritt 4: My ID Bot einrichten
+- Schritt 5: Tägliches Feedback
 
-1. **Währungsfeld** in beiden Dashboards (Model + Chatter) — ein Dropdown (EUR, USD, USDT, etc.) das pro Model/Chatter gesetzt wird und überall in Anzeigen + Credit Note durchgereicht wird.
+### 2. Fortschritts-Bar oben auf der Seite
+Direkt unter dem Hero-Bereich wird eine Progress-Bar eingefügt, die den Gesamtfortschritt anzeigt (z.B. "2 von 5 Schritten erledigt"). Nutzt die vorhandene `Progress`-Komponente im Gold-Styling.
 
-2. **Auto-Save** für alle Texteingaben in beiden Dashboards — Änderungen werden nach kurzer Verzögerung (debounce ~1s) automatisch gespeichert, kein manueller "Speichern"-Button mehr nötig.
+### 3. Klickbare Checkliste
+Unter der Progress-Bar eine kompakte Checkliste mit allen 5 Schritten. Jeder Schritt hat:
+- Eine Checkbox zum Abhaken
+- Schritt-Nummer ("Schritt 1", "Schritt 2" etc.)
+- Kurzer Titel
 
-3. **Credit Note Formular**: Alle eingegebenen Felder (Provider-Name, Adresse, Payment Method, TxHash, etc.) werden persistent gespeichert und beim nächsten Öffnen vorausgefüllt.
+Der Fortschritt wird im `localStorage` gespeichert, damit er beim Neuladen erhalten bleibt.
 
----
+### 4. Schritt-Nummern bei den Sektionen
+Jede Video-/Link-/Feedback-Sektion bekommt eine prominente Schritt-Nummer als Badge (z.B. goldener Kreis mit "1" darin) neben dem Titel.
 
-### Technische Umsetzung
+## Technische Details
 
-#### 1. Datenbank-Migration
-- `model_dashboard` Tabelle: Neue Spalte `currency TEXT DEFAULT 'EUR'` hinzufügen.
+**Datei: `src/pages/OfferB.tsx`**
 
-#### 2. ChatterDashboardTab
-- `Chatter`-Interface um `currency: string` erweitern (Default `"EUR"`).
-- Neues Currency-Dropdown (Select) in der "Chatter-Daten"-Sektion.
-- Wird automatisch via bestehender localStorage-Persistenz gespeichert (bereits implementiert).
-- Currency wird an `CreditNoteForm` durchgereicht.
+- Neue `steps`-Array-Konstante mit id, title, type fur alle 5 Schritte
+- `useState` + `localStorage` fur `completedSteps: Set<number>`
+- Progress-Bar-Sektion nach dem Hero mit `Progress`-Komponente (Wert = `completedSteps.size / steps.length * 100`)
+- Checkliste mit `Checkbox`-Komponenten, gestylt im bestehenden `glass-card-subtle` Look
+- Videos bekommen "Schritt 1" / "Schritt 2" als nummerierte Badge-Kreise
+- Links-Sektion wird zu Schritt 3 und 4 mit individuellen Nummern
+- Feedback wird Schritt 5
+- Erledigte Schritte bekommen eine subtile visuelle Markierung (leicht reduzierte Opazitat / Hakchen)
 
-#### 3. ModelDashboardTab
-- Neues Currency-Dropdown in der Model-Daten-Sektion.
-- **Auto-Save**: `useEffect` mit Debounce (~1s) auf alle editierbaren Felder. Bei Änderung wird `saveData()` automatisch aufgerufen. Der manuelle "Alles speichern"-Button bleibt als Fallback.
-- Currency-Wert wird geladen/gespeichert wie andere Felder und an `CreditNoteForm` übergeben.
-
-#### 4. CreditNoteForm
-- Neues Prop `currency` für die Währungsanzeige im PDF.
-- **Persistenz**: Alle Formularfelder (Provider-Name, Adresse, isBusiness, VAT-ID, Payment Method, Crypto Coin, Exchange Rate, Description) werden via localStorage gespeichert, gekeys auf `accountId` oder `chatterName`. Beim Öffnen werden gespeicherte Werte geladen.
-- PDF-Ausgabe nutzt die übergebene Währung statt hartkodiertem "€".
-
-#### 5. Dateien die geändert werden
-- `supabase/migrations/` — neue Migration für `currency` Spalte
-- `src/components/ChatterDashboardTab.tsx` — Currency-Feld + Interface-Erweiterung
-- `src/components/ModelDashboardTab.tsx` — Currency-Feld + Auto-Save-Logik
-- `src/components/CreditNoteForm.tsx` — Currency-Prop + localStorage-Persistenz
-- `src/pages/ModelDashboard.tsx` — Currency aus DB laden und anzeigen
-
+Keine neuen Abhangigkeiten notwendig -- nutzt vorhandene `Progress`, `Checkbox` und `framer-motion`.

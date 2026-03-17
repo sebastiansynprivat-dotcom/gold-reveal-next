@@ -11,12 +11,15 @@ import {
 } from "lucide-react";
 import CreditNoteForm from "@/components/CreditNoteForm";
 
+const CURRENCIES = ["EUR", "USD", "USDT", "USDC", "BTC", "ETH"] as const;
+
 interface Chatter {
   id: string;
   name: string;
   platform: string;
   monthlyRevenue: number;
   revenuePercentage: number;
+  currency: string;
 }
 
 const STORAGE_KEY = "admin-chatter-dashboard";
@@ -118,6 +121,7 @@ export default function ChatterDashboardTab() {
       platform: newPlatform.trim() || "–",
       monthlyRevenue: 0,
       revenuePercentage: 0,
+      currency: "EUR",
     };
     setChatters(prev => [...prev, chatter]);
     setSelectedId(chatter.id);
@@ -280,16 +284,29 @@ export default function ChatterDashboardTab() {
                 </div>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground">Monatsumsatz (€)</label>
-                <div className="input-gold-shimmer rounded-lg">
-                  <Input
-                    type="number"
-                    value={selected.monthlyRevenue || ""}
-                    onChange={e => updateSelected({ monthlyRevenue: Number(e.target.value) || 0 })}
-                    className="text-sm border-transparent"
-                    placeholder="0"
-                  />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Monatsumsatz</label>
+                  <div className="input-gold-shimmer rounded-lg">
+                    <Input
+                      type="number"
+                      value={selected.monthlyRevenue || ""}
+                      onChange={e => updateSelected({ monthlyRevenue: Number(e.target.value) || 0 })}
+                      className="text-sm border-transparent"
+                      placeholder="0"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Währung</label>
+                  <Select value={selected.currency || "EUR"} onValueChange={v => updateSelected({ currency: v })}>
+                    <SelectTrigger className="text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CURRENCIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </div>
@@ -337,6 +354,7 @@ export default function ChatterDashboardTab() {
               providerName={selected.name}
               chatterName={selected.name}
               revenuePercentage={selected.revenuePercentage}
+              currency={selected.currency || "EUR"}
             />
           </Section>
         </>

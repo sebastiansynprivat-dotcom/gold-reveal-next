@@ -46,6 +46,7 @@ export default function ModelDashboard() {
   const [revenuePercentage, setRevenuePercentage] = useState(0);
   const [monthlyRevenue, setMonthlyRevenue] = useState(0);
   const [cryptoAddress, setCryptoAddress] = useState("");
+  const [currency, setCurrency] = useState("EUR");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -77,6 +78,7 @@ export default function ModelDashboard() {
         setRevenuePercentage(md.revenue_percentage || 0);
         setCryptoAddress(md.crypto_address || "");
         setMonthlyRevenue(Number(md.monthly_revenue) || 0);
+        setCurrency((md as any).currency || "EUR");
       }
 
       setLoading(false);
@@ -125,7 +127,7 @@ export default function ModelDashboard() {
           <Crown className="h-8 w-8 text-accent mx-auto" />
           <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Monatsumsatz</p>
           <p className="text-5xl font-black text-gold-gradient tabular-nums leading-none">
-            <AnimatedValue value={monthlyRevenue} />
+            <AnimatedValue value={monthlyRevenue} suffix={` ${currency}`} />
           </p>
         </motion.div>
 
@@ -143,7 +145,7 @@ export default function ModelDashboard() {
             <div className="flex-1 min-w-0">
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Dein Verdienst ({revenuePercentage}%)</p>
               <p className="text-2xl font-bold text-accent tabular-nums">
-                <AnimatedValue value={verdienst} />
+                <AnimatedValue value={verdienst} suffix={` ${currency}`} />
               </p>
             </div>
           </motion.div>

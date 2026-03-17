@@ -50,6 +50,8 @@ interface ModelDashboardRow {
 type PlatformFilter = "all" | "4Based" | "Maloum" | "Brezzels";
 type SubFilter = "none" | "botdm_fehlt" | "botdm_vorhanden" | "massdm_fehlt" | "massdm_vorhanden" | "setup_fehlt" | "setup_vorhanden";
 
+const CURRENCIES = ["EUR", "USD", "USDT", "USDC", "BTC", "ETH"] as const;
+
 interface BotMessageRow {
   account_id: string | null;
   message: string;
@@ -181,6 +183,7 @@ export default function ModelDashboardTab() {
   const [cryptoAddress, setCryptoAddress] = useState("");
   const [contractPath, setContractPath] = useState("");
   const [manualMonthly, setManualMonthly] = useState(0);
+  const [currency, setCurrency] = useState("EUR");
 
   // (Gutschrift state removed – now uses CreditNoteForm component)
 
@@ -232,6 +235,7 @@ export default function ModelDashboardTab() {
       setCryptoAddress(d.crypto_address || "");
       setContractPath(d.contract_file_path || "");
       setManualMonthly(Number((d as any).monthly_revenue) || 0);
+      setCurrency((d as any).currency || "EUR");
     } else {
       setData(null);
       setFourbasedSubmitted(false);
@@ -248,6 +252,7 @@ export default function ModelDashboardTab() {
       setCryptoAddress("");
       setContractPath("");
       setManualMonthly(0);
+      setCurrency("EUR");
     }
     setLoading(false);
   }, []);
@@ -286,6 +291,31 @@ export default function ModelDashboardTab() {
       loadModelRevenue(selectedAccountId, revenueMonth);
     }
   }, [selectedAccountId, loadModelData, loadModelRevenue, revenueMonth]);
+
+  // Auto-save with debounce
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout>>();
+  const initialLoadDone = useRef(false);
+  
+  useEffect(() => {
+    if (!selectedAccountId || loading) return;
+    // Skip auto-save on initial load
+    if (!initialLoadDone.current) {
+      initialLoadDone.current = true;
+      return;
+    }
+    clearTimeout(autoSaveTimer.current);
+    autoSaveTimer.current = setTimeout(() => {
+      saveData();
+    }, 1200);
+    return () => clearTimeout(autoSaveTimer.current);
+  }, [notes, cryptoAddress, manualMonthly, revenuePercentage, currency,
+      fourbasedSubmitted, maloumSubmitted, brezzelsSubmitted,
+      fourbasedBotdm, fourbasedMassdm, maloumBotdm, maloumMassdm, brezzelsBotdm, brezzelsMassdm]);
+
+  // Reset initialLoadDone when account changes
+  useEffect(() => {
+    initialLoadDone.current = false;
+  }, [selectedAccountId]);
 
   // Revenue calculations
   const totalMonthRevenue = manualMonthly;
@@ -372,6 +402,7 @@ export default function ModelDashboardTab() {
       crypto_address: cryptoAddress,
       contract_file_path: contractPath,
       monthly_revenue: manualMonthly,
+      currency,
     };
     if (data?.id) {
       await supabase.from("model_dashboard").update(payload).eq("id", data.id);
@@ -889,15 +920,28 @@ export default function ModelDashboardTab() {
 
             {/* Notizen */}
             <Section icon={StickyNote} title="Model Daten" delay={0.15}>
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Notizen / Freitext</Label>
-                <div className="input-gold-shimmer rounded-lg">
-                  <Textarea
-                    value={notes}
-                    onChange={e => setNotes(e.target.value)}
-                    placeholder="Notizen zum Model…"
-                    className="bg-secondary/40 border-transparent min-h-[100px] text-sm"
-                  />
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Währung</Label>
+                  <Select value={currency} onValueChange={setCurrency}>
+                    <SelectTrigger className="text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CURRENCIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Notizen / Freitext</Label>
+                  <div className="input-gold-shimmer rounded-lg">
+                    <Textarea
+                      value={notes}
+                      onChange={e => setNotes(e.target.value)}
+                      placeholder="Notizen zum Model…"
+                      className="bg-secondary/40 border-transparent min-h-[100px] text-sm"
+                    />
+                  </div>
                 </div>
               </div>
             </Section>
@@ -963,6 +1007,7 @@ export default function ModelDashboardTab() {
                 accountId={selectedAccountId}
                 cryptoAddress={cryptoAddress}
                 revenuePercentage={revenuePercentage}
+                currency={currency}
               />
             </Section>
           </motion.div>

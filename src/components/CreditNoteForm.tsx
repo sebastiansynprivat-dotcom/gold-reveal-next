@@ -21,20 +21,14 @@ const ISSUER = {
 const CRYPTO_COINS = ["USDT", "USDC", "BTC", "ETH", "SOL", "BNB", "XRP", "TRX", "LTC"];
 
 interface CreditNoteFormProps {
-  /** Pre-fill net amount */
   suggestedAmount?: number;
-  /** Pre-fill description */
   defaultDescription?: string;
-  /** Pre-fill provider name */
   providerName?: string;
-  /** Pre-fill crypto address for payment method */
   cryptoAddress?: string;
-  /** Account ID for DB storage */
   accountId?: string;
-  /** Chatter name (for chatter dashboard, not DB-linked) */
   chatterName?: string;
-  /** Revenue percentage for display */
   revenuePercentage?: number;
+  currency?: string;
 }
 
 export default function CreditNoteForm({
@@ -45,12 +39,26 @@ export default function CreditNoteForm({
   accountId,
   chatterName = "",
   revenuePercentage = 0,
+  currency = "EUR",
 }: CreditNoteFormProps) {
+  // localStorage key for persisting form fields
+  const storageKey = `credit-note-form-${accountId || chatterName || "default"}`;
+
+  // Load persisted values
+  const loadSaved = () => {
+    try {
+      const saved = localStorage.getItem(storageKey);
+      return saved ? JSON.parse(saved) : {};
+    } catch { return {}; }
+  };
+
+  const saved = loadSaved();
+
   // Provider
-  const [providerName, setProviderName] = useState(initialProviderName);
-  const [providerAddress, setProviderAddress] = useState("");
-  const [isBusiness, setIsBusiness] = useState(false);
-  const [providerVatId, setProviderVatId] = useState("");
+  const [providerName, setProviderName] = useState(saved.providerName || initialProviderName);
+  const [providerAddress, setProviderAddress] = useState(saved.providerAddress || "");
+  const [isBusiness, setIsBusiness] = useState(saved.isBusiness || false);
+  const [providerVatId, setProviderVatId] = useState(saved.providerVatId || "");
 
   // Metadata
   const [creditNoteDate, setCreditNoteDate] = useState(format(new Date(), "yyyy-MM-dd"));
@@ -58,17 +66,28 @@ export default function CreditNoteForm({
   const [servicePeriodEnd, setServicePeriodEnd] = useState(format(new Date(), "yyyy-MM-dd"));
 
   // Line item
-  const [description, setDescription] = useState(defaultDescription);
+  const [description, setDescription] = useState(saved.description || defaultDescription);
   const [netAmount, setNetAmount] = useState(suggestedAmount > 0 ? suggestedAmount.toFixed(2) : "");
 
   // Payment
-  const [paymentMethod, setPaymentMethod] = useState(cryptoAddress ? "Crypto" : "");
-  const [cryptoCoin, setCryptoCoin] = useState("USDT");
-  const [txHash, setTxHash] = useState("");
-  const [exchangeRate, setExchangeRate] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState(saved.paymentMethod || (cryptoAddress ? "Crypto" : ""));
+  const [cryptoCoin, setCryptoCoin] = useState(saved.cryptoCoin || "USDT");
+  const [txHash, setTxHash] = useState(saved.txHash || "");
+  const [exchangeRate, setExchangeRate] = useState(saved.exchangeRate || "");
   const [paymentDate, setPaymentDate] = useState(format(new Date(), "yyyy-MM-dd"));
 
   const [generating, setGenerating] = useState(false);
+
+  // Auto-save form fields to localStorage
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      localStorage.setItem(storageKey, JSON.stringify({
+        providerName, providerAddress, isBusiness, providerVatId,
+        description, paymentMethod, cryptoCoin, txHash, exchangeRate,
+      }));
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [providerName, providerAddress, isBusiness, providerVatId, description, paymentMethod, cryptoCoin, txHash, exchangeRate, storageKey]);
 
   // Update provider name when prop changes
   useEffect(() => {
@@ -184,7 +203,7 @@ export default function CreditNoteForm({
     doc.setFontSize(8);
     doc.text("Pos.", m + 2, y);
     doc.text("Description", m + 15, y);
-    doc.text("Amount (€)", rCol - 2, y, { align: "right" });
+    doc.text(`Amount (${currency})`, rCol - 2, y, { align: "right" });
     y += 7;
 
     // Table row
@@ -207,7 +226,7 @@ export default function CreditNoteForm({
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
     doc.text("Net Amount:", rCol - 45, y);
-    doc.text(`${formattedNet} €`, rCol - 2, y, { align: "right" });
+    doc.text(`${formattedNet} ${currency}`, rCol - 2, y, { align: "right" });
     y += 5;
 
     // VAT
@@ -215,7 +234,7 @@ export default function CreditNoteForm({
       ? "VAT (0% – private individual not subject to VAT):"
       : `VAT (${vatRate}%):`;
     doc.text(vatLabel, rCol - 80, y);
-    doc.text(`${vatAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} €`, rCol - 2, y, { align: "right" });
+    doc.text(`${vatAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} ${currency}`, rCol - 2, y, { align: "right" });
     y += 5;
 
     // Gross total
@@ -225,7 +244,7 @@ export default function CreditNoteForm({
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
     doc.text("Total Amount:", rCol - 45, y);
-    doc.text(`${grossAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} €`, rCol - 2, y, { align: "right" });
+    doc.text(`${grossAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} ${currency}`, rCol - 2, y, { align: "right" });
     y += 5;
     doc.setLineWidth(0.5);
     doc.line(rCol - 80, y - 1, rCol, y - 1);
@@ -470,7 +489,7 @@ export default function CreditNoteForm({
         </div>
 
         <div className="space-y-1.5">
-          <Label className="text-xs text-muted-foreground">Netto-Betrag (€) *</Label>
+          <Label className="text-xs text-muted-foreground">Netto-Betrag ({currency}) *</Label>
           <div className="input-gold-shimmer rounded-lg">
             <Input
               value={netAmount}
@@ -484,7 +503,7 @@ export default function CreditNoteForm({
               onClick={() => setNetAmount(suggestedAmount.toFixed(2))}
               className="text-[10px] text-accent hover:underline"
             >
-              Vorschlag übernehmen: {suggestedAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })}€
+              Vorschlag übernehmen: {suggestedAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}
               {revenuePercentage > 0 && ` (${revenuePercentage}%)`}
             </button>
           )}
@@ -494,15 +513,15 @@ export default function CreditNoteForm({
         <div className="rounded-lg bg-secondary/30 border border-border/50 p-3 space-y-1.5">
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>Netto</span>
-            <span className="font-mono">{net.toLocaleString("de-DE", { minimumFractionDigits: 2 })} €</span>
+            <span className="font-mono">{net.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}</span>
           </div>
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>MwSt. ({vatRate}%)</span>
-            <span className="font-mono">{vatAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} €</span>
+            <span className="font-mono">{vatAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}</span>
           </div>
           <div className="border-t border-border/30 pt-1.5 flex justify-between text-sm font-bold text-foreground">
             <span>Gesamt</span>
-            <span className="font-mono text-accent">{grossAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} €</span>
+            <span className="font-mono text-accent">{grossAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}</span>
           </div>
         </div>
       </div>
