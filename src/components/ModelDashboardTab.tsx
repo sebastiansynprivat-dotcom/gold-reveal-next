@@ -1007,6 +1007,7 @@ export default function ModelDashboardTab() {
                 accountId={selectedAccountId}
                 cryptoAddress={cryptoAddress}
                 revenuePercentage={revenuePercentage}
+                currency={currency}
               />
             </Section>
           </motion.div>
