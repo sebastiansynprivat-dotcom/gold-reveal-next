@@ -747,23 +747,35 @@ export default function ModelDashboardTab() {
                 <div className="text-center py-3">
                   <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Monatsumsatz</p>
                   <p className="text-4xl font-black text-gold-gradient tabular-nums">
-                    <AnimatedGoldValue value={manualMonthly} suffix=" €" />
+                    <AnimatedGoldValue value={manualMonthly} suffix={` ${currency}`} />
                   </p>
                 </div>
-                <Input
-                  type="number"
-                  value={manualMonthly || ""}
-                  onChange={e => setManualMonthly(Number(e.target.value) || 0)}
-                  className="input-gold-shimmer h-10 text-center text-lg font-semibold"
-                  placeholder="Betrag eingeben..."
-                />
+                <div className="flex gap-2">
+                  <div className="flex-1 input-gold-shimmer rounded-lg">
+                    <Input
+                      type="number"
+                      value={manualMonthly || ""}
+                      onChange={e => setManualMonthly(Number(e.target.value) || 0)}
+                      className="h-10 text-center text-lg font-semibold border-transparent"
+                      placeholder="Betrag eingeben..."
+                    />
+                  </div>
+                  <Select value={currency} onValueChange={setCurrency}>
+                    <SelectTrigger className="w-[100px] text-sm h-10">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CURRENCIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
                 {revenuePercentage > 0 && manualMonthly > 0 && (
                   <div className="rounded-xl border border-accent/20 bg-accent/5 p-3 text-center space-y-1">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
                       Verdienst Model ({revenuePercentage}%)
                     </p>
                     <p className="text-2xl font-bold text-accent tabular-nums">
-                      <AnimatedGoldValue value={Math.round(manualMonthly * revenuePercentage / 100)} suffix=" €" />
+                      <AnimatedGoldValue value={Math.round(manualMonthly * revenuePercentage / 100)} suffix={` ${currency}`} />
                     </p>
                   </div>
                 )}
