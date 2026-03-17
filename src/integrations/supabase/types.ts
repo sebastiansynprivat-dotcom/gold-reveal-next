@@ -384,6 +384,7 @@ export type Database = {
           contract_file_path: string | null
           created_at: string
           crypto_address: string | null
+          currency: string | null
           fourbased_botdm_done: boolean
           fourbased_massdm_done: boolean
           fourbased_submitted: boolean
@@ -408,6 +409,7 @@ export type Database = {
           contract_file_path?: string | null
           created_at?: string
           crypto_address?: string | null
+          currency?: string | null
           fourbased_botdm_done?: boolean
           fourbased_massdm_done?: boolean
           fourbased_submitted?: boolean
@@ -432,6 +434,7 @@ export type Database = {
           contract_file_path?: string | null
           created_at?: string
           crypto_address?: string | null
+          currency?: string | null
           fourbased_botdm_done?: boolean
           fourbased_massdm_done?: boolean
           fourbased_submitted?: boolean
