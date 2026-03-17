@@ -234,7 +234,7 @@ export default function CreditNoteForm({
       ? "VAT (0% – private individual not subject to VAT):"
       : `VAT (${vatRate}%):`;
     doc.text(vatLabel, rCol - 80, y);
-    doc.text(`${vatAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} €`, rCol - 2, y, { align: "right" });
+    doc.text(`${vatAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} ${currency}`, rCol - 2, y, { align: "right" });
     y += 5;
 
     // Gross total
