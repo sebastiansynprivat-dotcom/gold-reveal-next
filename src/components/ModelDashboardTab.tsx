@@ -252,6 +252,7 @@ export default function ModelDashboardTab() {
       setCryptoAddress("");
       setContractPath("");
       setManualMonthly(0);
+      setCurrency("EUR");
     }
     setLoading(false);
   }, []);
