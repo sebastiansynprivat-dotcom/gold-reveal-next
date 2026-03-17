@@ -489,7 +489,7 @@ export default function CreditNoteForm({
         </div>
 
         <div className="space-y-1.5">
-          <Label className="text-xs text-muted-foreground">Netto-Betrag (€) *</Label>
+          <Label className="text-xs text-muted-foreground">Netto-Betrag ({currency}) *</Label>
           <div className="input-gold-shimmer rounded-lg">
             <Input
               value={netAmount}
