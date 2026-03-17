@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import CreditNoteForm from "@/components/CreditNoteForm";
 
-const CURRENCIES = ["EUR", "USD", "USDT", "USDC", "BTC", "ETH"] as const;
+const CURRENCIES = ["EUR", "USD", "GBP", "CHF", "AED"] as const;
 
 interface Chatter {
   id: string;
