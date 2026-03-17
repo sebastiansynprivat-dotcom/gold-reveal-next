@@ -513,7 +513,7 @@ export default function CreditNoteForm({
         <div className="rounded-lg bg-secondary/30 border border-border/50 p-3 space-y-1.5">
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>Netto</span>
-            <span className="font-mono">{net.toLocaleString("de-DE", { minimumFractionDigits: 2 })} €</span>
+            <span className="font-mono">{net.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}</span>
           </div>
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>MwSt. ({vatRate}%)</span>
