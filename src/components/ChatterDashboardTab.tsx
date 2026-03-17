@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -20,6 +21,7 @@ interface Chatter {
   monthlyRevenue: number;
   revenuePercentage: number;
   currency: string;
+  cryptoAddress: string;
 }
 
 const STORAGE_KEY = "admin-chatter-dashboard";
@@ -122,6 +124,7 @@ export default function ChatterDashboardTab() {
       monthlyRevenue: 0,
       revenuePercentage: 0,
       currency: "EUR",
+      cryptoAddress: "",
     };
     setChatters(prev => [...prev, chatter]);
     setSelectedId(chatter.id);
@@ -347,14 +350,30 @@ export default function ChatterDashboardTab() {
             </div>
           </Section>
 
+          {/* Crypto */}
+          <Section icon={Wallet} title="Crypto / Auszahlung" delay={0.18}>
+            <div className="space-y-1.5">
+              <label className="text-xs font-medium text-muted-foreground">Crypto-Infos (Adresse, Coin, Netzwerk, Notizen…)</label>
+              <div className="input-gold-shimmer rounded-lg">
+                <Textarea
+                  value={selected.cryptoAddress || ""}
+                  onChange={e => updateSelected({ cryptoAddress: e.target.value })}
+                  placeholder={"z.B. USDT TRC20 – TXyz…\nNetzwerk: Tron\nWeitere Infos…"}
+                  className="bg-secondary/40 border-transparent text-sm min-h-[100px]"
+                />
+              </div>
+            </div>
+          </Section>
+
           {/* Credit Note */}
-          <Section icon={FileDown} title="Credit Note erstellen" delay={0.2}>
+          <Section icon={FileDown} title="Credit Note erstellen" delay={0.22}>
             <CreditNoteForm
               suggestedAmount={verdienst}
               providerName={selected.name}
               chatterName={selected.name}
               revenuePercentage={selected.revenuePercentage}
               currency={selected.currency || "EUR"}
+              cryptoAddress={selected.cryptoAddress || ""}
             />
           </Section>
         </>
