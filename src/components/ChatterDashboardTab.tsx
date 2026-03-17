@@ -226,7 +226,7 @@ export default function ChatterDashboardTab() {
                         <span className="text-[10px] bg-secondary/50 text-muted-foreground border border-border/50 rounded px-1.5 py-0.5 capitalize shrink-0">{c.platform}</span>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-xs text-muted-foreground">{c.monthlyRevenue.toLocaleString("de-DE")}€</span>
+                        <span className="text-xs text-muted-foreground">{c.monthlyRevenue.toLocaleString("de-DE")} {c.currency || "EUR"}</span>
                         <button
                           onClick={e => { e.stopPropagation(); deleteChatter(c.id); }}
                           className="p-1 rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors"
@@ -262,7 +262,7 @@ export default function ChatterDashboardTab() {
             <Crown className="h-8 w-8 text-accent mx-auto" />
             <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Monatsumsatz</p>
             <p className="text-5xl font-black text-gold-gradient tabular-nums leading-none">
-              <AnimatedGoldValue value={selected.monthlyRevenue} />
+              <AnimatedGoldValue value={selected.monthlyRevenue} suffix={` ${selected.currency || "EUR"}`} />
             </p>
           </motion.div>
 
@@ -339,7 +339,7 @@ export default function ChatterDashboardTab() {
                   <div>
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Verdienst ({selected.revenuePercentage}%)</p>
                     <p className="text-xl font-bold text-accent tabular-nums">
-                      <AnimatedGoldValue value={verdienst} />
+                      <AnimatedGoldValue value={verdienst} suffix={` ${selected.currency || "EUR"}`} />
                     </p>
                   </div>
                 </motion.div>
