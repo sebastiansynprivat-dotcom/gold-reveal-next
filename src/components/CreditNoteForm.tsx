@@ -121,15 +121,15 @@ export default function CreditNoteForm({
     // ── Header: Issuer left, Credit Note details right ──
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
-    doc.text(ISSUER.name, m, y);
+    doc.text(issuerName, m, y);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
     y += 4.5;
-    doc.text(ISSUER.address, m, y);
+    doc.text(issuerAddress, m, y);
     y += 4;
-    doc.text(`KvK: ${ISSUER.kvk}`, m, y);
+    doc.text(`KvK: ${issuerKvk}`, m, y);
     y += 4;
-    doc.text(`VAT ID: ${ISSUER.vatId}`, m, y);
+    doc.text(`VAT ID: ${issuerVatId}`, m, y);
 
     // Right side: credit note details
     let ry = 22;
