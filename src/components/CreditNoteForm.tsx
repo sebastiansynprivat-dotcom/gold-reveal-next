@@ -517,7 +517,7 @@ export default function CreditNoteForm({
           </div>
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>MwSt. ({vatRate}%)</span>
-            <span className="font-mono">{vatAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} €</span>
+            <span className="font-mono">{vatAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}</span>
           </div>
           <div className="border-t border-border/30 pt-1.5 flex justify-between text-sm font-bold text-foreground">
             <span>Gesamt</span>
