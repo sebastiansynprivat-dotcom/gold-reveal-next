@@ -78,6 +78,7 @@ export default function ModelDashboard() {
         setRevenuePercentage(md.revenue_percentage || 0);
         setCryptoAddress(md.crypto_address || "");
         setMonthlyRevenue(Number(md.monthly_revenue) || 0);
+        setCurrency((md as any).currency || "EUR");
       }
 
       setLoading(false);
