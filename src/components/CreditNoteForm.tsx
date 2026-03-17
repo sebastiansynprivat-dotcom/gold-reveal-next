@@ -350,7 +350,7 @@ export default function CreditNoteForm({
         vat_rate: vatRate,
         vat_amount: vatAmount,
         gross_amount: grossAmount,
-        payment_method: paymentMethod,
+        payment_method: `${cryptoCoin} (${cryptoNetwork})`,
         crypto_coin: cryptoCoin,
         tx_hash: txHash,
         exchange_rate: exchangeRate,
