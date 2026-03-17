@@ -579,17 +579,22 @@ export default function CreditNoteForm({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">Payment Method</Label>
+            <Label className="text-xs text-muted-foreground">Coin</Label>
             <div className="flex gap-2">
-              <div className="flex-1 input-gold-shimmer rounded-lg">
-                <Input value={paymentMethod} onChange={e => setPaymentMethod(e.target.value)} placeholder="z.B. Binance" className="text-sm border-transparent" />
-              </div>
               <Select value={cryptoCoin} onValueChange={setCryptoCoin}>
-                <SelectTrigger className="w-[100px] text-sm">
+                <SelectTrigger className="flex-1 text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   {CRYPTO_COINS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select value={cryptoNetwork} onValueChange={setCryptoNetwork}>
+                <SelectTrigger className="w-[110px] text-sm">
+                  <SelectValue placeholder="Netzwerk" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CRYPTO_NETWORKS.map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
