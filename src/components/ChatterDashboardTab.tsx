@@ -121,6 +121,7 @@ export default function ChatterDashboardTab() {
       platform: newPlatform.trim() || "–",
       monthlyRevenue: 0,
       revenuePercentage: 0,
+      currency: "EUR",
     };
     setChatters(prev => [...prev, chatter]);
     setSelectedId(chatter.id);
