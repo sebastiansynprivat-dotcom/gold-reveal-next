@@ -113,191 +113,243 @@ export default function CreditNoteForm({
   const generatePDF = (creditNoteNumber: string) => {
     const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
     const pw = 210;
-    const m = 20; // margin
+    const ph = 297;
+    const m = 18;
     const rCol = pw - m;
     const cw = pw - 2 * m;
-    let y = 22;
 
-    // ── Header: Issuer left, Credit Note details right ──
+    // Colors
+    const black: [number, number, number] = [15, 15, 15];
+    const darkGray: [number, number, number] = [30, 30, 30];
+    const gold: [number, number, number] = [212, 175, 55];
+    const goldLight: [number, number, number] = [232, 205, 115];
+    const white: [number, number, number] = [255, 255, 255];
+    const muted: [number, number, number] = [160, 160, 160];
+    const softWhite: [number, number, number] = [220, 220, 220];
+
+    // ── Full page dark background ──
+    doc.setFillColor(...black);
+    doc.rect(0, 0, pw, ph, "F");
+
+    // ── Top gold accent line ──
+    doc.setFillColor(...gold);
+    doc.rect(0, 0, pw, 1.5, "F");
+
+    let y = 14;
+
+    // ── Header: Issuer left ──
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
+    doc.setFontSize(12);
+    doc.setTextColor(...gold);
     doc.text(issuerName, m, y);
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    y += 5;
-    // Split address in case it's long
+    doc.setFontSize(7.5);
+    doc.setTextColor(...muted);
+    y += 5.5;
     const issuerAddrLines = doc.splitTextToSize(issuerAddress, cw / 2 - 5);
-    issuerAddrLines.forEach((line: string) => { doc.text(line, m, y); y += 4; });
-    doc.text(`KvK: ${issuerKvk}`, m, y);
-    y += 4;
-    doc.text(`VAT ID: ${issuerVatId}`, m, y);
+    issuerAddrLines.forEach((line: string) => { doc.text(line, m, y); y += 3.8; });
+    doc.text(`KvK: ${issuerKvk}  ·  VAT: ${issuerVatId}`, m, y);
     y += 4;
     const leftEndY = y;
 
-    // Right side: credit note details
-    let ry = 22;
+    // ── Header: Credit Note details right ──
+    let ry = 14;
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(8);
-    doc.text("Credit Note No:", rCol - 50, ry);
+    doc.setFontSize(7.5);
+    doc.setTextColor(...goldLight);
+    doc.text("CREDIT NOTE NO", rCol, ry, { align: "right" });
+    ry += 4;
     doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(...white);
     doc.text(creditNoteNumber, rCol, ry, { align: "right" });
-    ry += 4.5;
+    ry += 6;
     doc.setFont("helvetica", "bold");
-    doc.text("Date:", rCol - 50, ry);
+    doc.setFontSize(7.5);
+    doc.setTextColor(...goldLight);
+    doc.text("DATE", rCol, ry, { align: "right" });
+    ry += 4;
     doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(...white);
     doc.text(format(new Date(creditNoteDate), "dd.MM.yyyy"), rCol, ry, { align: "right" });
-    ry += 4.5;
+    ry += 6;
     doc.setFont("helvetica", "bold");
-    doc.text("Service Period:", rCol - 50, ry);
+    doc.setFontSize(7.5);
+    doc.setTextColor(...goldLight);
+    doc.text("SERVICE PERIOD", rCol, ry, { align: "right" });
+    ry += 4;
     doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(...white);
     doc.text(`${format(new Date(servicePeriodStart), "dd.MM.yyyy")} – ${format(new Date(servicePeriodEnd), "dd.MM.yyyy")}`, rCol, ry, { align: "right" });
-    ry += 4.5;
+    ry += 4;
 
-    // Continue from whichever column is lower
     y = Math.max(leftEndY, ry) + 6;
 
-    // ── Title ──
-    doc.setDrawColor(40, 40, 40);
-    doc.setLineWidth(0.4);
+    // ── Gold divider ──
+    doc.setDrawColor(...gold);
+    doc.setLineWidth(0.5);
     doc.line(m, y, rCol, y);
-    y += 8;
+    y += 9;
 
+    // ── Title ──
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(14);
-    doc.text("CREDIT NOTE / SELF-BILLING STATEMENT", m, y);
-    y += 8;
-    doc.setLineWidth(0.4);
+    doc.setFontSize(16);
+    doc.setTextColor(...gold);
+    doc.text("CREDIT NOTE", m, y);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(...muted);
+    doc.text("SELF-BILLING STATEMENT", m + 62, y);
+    y += 4;
+
+    // Thin gold line
+    doc.setDrawColor(...gold);
+    doc.setLineWidth(0.2);
     doc.line(m, y, rCol, y);
-    y += 8;
+    y += 6;
 
     // ── Self-billing notice ──
     doc.setFont("helvetica", "italic");
-    doc.setFontSize(7.5);
-    doc.setTextColor(100, 100, 100);
+    doc.setFontSize(7);
+    doc.setTextColor(...muted);
     doc.text("This credit note is issued under the self-billing procedure. The service provider does not issue an invoice.", m, y);
-    doc.setTextColor(0, 0, 0);
     y += 8;
 
-    // ── Service Provider ──
+    // ── Service Provider section ──
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
-    doc.text("Service Provider:", m, y);
+    doc.setFontSize(7.5);
+    doc.setTextColor(...goldLight);
+    doc.text("SERVICE PROVIDER", m, y);
     y += 5;
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
+    doc.setTextColor(...white);
     if (providerName) { doc.text(providerName, m, y); y += 4.5; }
+    doc.setFontSize(8);
+    doc.setTextColor(...softWhite);
     if (providerAddress) {
       const addrLines = doc.splitTextToSize(providerAddress, cw);
-      addrLines.forEach((line: string) => { doc.text(line, m, y); y += 4.5; });
+      addrLines.forEach((line: string) => { doc.text(line, m, y); y += 4; });
     }
     if (isBusiness && providerVatId) {
-      doc.text(`VAT ID: ${providerVatId}`, m, y); y += 4.5;
+      doc.text(`VAT ID: ${providerVatId}`, m, y); y += 4;
     }
     if (!isBusiness) {
       doc.setFont("helvetica", "italic");
-      doc.setFontSize(8);
-      doc.setTextColor(100, 100, 100);
+      doc.setFontSize(7);
+      doc.setTextColor(...muted);
       doc.text("Private individual – not VAT registered", m, y);
-      doc.setTextColor(0, 0, 0);
-      y += 4.5;
+      y += 4;
     }
-    y += 6;
+    y += 7;
 
     // ── Description of Service table ──
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
-    doc.text("Description of Service", m, y);
+    doc.setFontSize(7.5);
+    doc.setTextColor(...goldLight);
+    doc.text("DESCRIPTION OF SERVICE", m, y);
     y += 5;
 
-    // Table header
-    doc.setFillColor(245, 245, 245);
+    // Table header – dark gold bar
+    doc.setFillColor(...darkGray);
     doc.rect(m, y - 3.5, cw, 7, "F");
-    doc.setDrawColor(200, 200, 200);
+    doc.setDrawColor(...gold);
+    doc.setLineWidth(0.15);
     doc.rect(m, y - 3.5, cw, 7, "S");
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(8);
+    doc.setFontSize(7.5);
+    doc.setTextColor(...gold);
     doc.text("Pos.", m + 2, y);
     doc.text("Description", m + 15, y);
     doc.text(`Amount (${currency})`, rCol - 2, y, { align: "right" });
     y += 7;
 
     // Table row
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
+    doc.setFillColor(20, 20, 20);
+    doc.rect(m, y - 3.5, cw, 7, "F");
+    doc.setDrawColor(50, 50, 50);
     doc.rect(m, y - 3.5, cw, 7, "S");
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8.5);
+    doc.setTextColor(...white);
     doc.text("1", m + 2, y);
-
     const descLines = doc.splitTextToSize(description, 100);
     doc.text(descLines[0] || description, m + 15, y);
-
     const formattedNet = net.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     doc.text(formattedNet, rCol - 2, y, { align: "right" });
-    y += 7;
+    y += 10;
 
-    // Subtotal area
-    doc.setDrawColor(200, 200, 200);
-    y += 2;
-    // Net
+    // Subtotals – right-aligned block
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
+    doc.setFontSize(8.5);
+    doc.setTextColor(...softWhite);
     doc.text("Net Amount:", rCol - 45, y);
     doc.text(`${formattedNet} ${currency}`, rCol - 2, y, { align: "right" });
     y += 5;
 
-    // VAT
     const vatLabel = !isBusiness
-      ? "VAT (0% – private individual not subject to VAT):"
+      ? "VAT (0% – not subject to VAT):"
       : `VAT (${vatRate}%):`;
-    doc.text(vatLabel, rCol - 80, y);
+    doc.text(vatLabel, rCol - 65, y);
     doc.text(`${vatAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} ${currency}`, rCol - 2, y, { align: "right" });
     y += 5;
 
-    // Gross total
-    doc.setLineWidth(0.5);
-    doc.line(rCol - 80, y - 1, rCol, y - 1);
-    y += 3;
+    // Total line
+    doc.setDrawColor(...gold);
+    doc.setLineWidth(0.4);
+    doc.line(rCol - 65, y - 1, rCol, y - 1);
+    y += 4;
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
-    doc.text("Total Amount:", rCol - 45, y);
+    doc.setFontSize(11);
+    doc.setTextColor(...gold);
+    doc.text("Total:", rCol - 45, y);
     doc.text(`${grossAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} ${currency}`, rCol - 2, y, { align: "right" });
-    y += 5;
-    doc.setLineWidth(0.5);
-    doc.line(rCol - 80, y - 1, rCol, y - 1);
+    y += 2;
+    doc.setLineWidth(0.4);
+    doc.line(rCol - 65, y, rCol, y);
     y += 10;
 
     // VAT note
     if (!isBusiness) {
       doc.setFont("helvetica", "italic");
-      doc.setFontSize(7.5);
-      doc.setTextColor(100, 100, 100);
+      doc.setFontSize(7);
+      doc.setTextColor(...muted);
       doc.text("No VAT charged – private individual not subject to VAT.", m, y);
-      doc.setTextColor(0, 0, 0);
-      y += 8;
+      y += 7;
     }
 
     // ── Payment Information ──
     if (cryptoCoin || txHash || exchangeRate) {
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(9);
-      doc.text("Payment Information", m, y);
+      doc.setFontSize(7.5);
+      doc.setTextColor(...goldLight);
+      doc.text("PAYMENT INFORMATION", m, y);
       y += 5;
       doc.setFont("helvetica", "normal");
       doc.setFontSize(8.5);
+      doc.setTextColor(...white);
       if (cryptoCoin) { doc.text(`Payment Method: ${cryptoCoin} (${cryptoNetwork})`, m, y); y += 4.5; }
-      if (txHash) { doc.text(`Transaction Hash: ${txHash}`, m, y); y += 4.5; }
+      if (txHash) {
+        doc.setFontSize(7.5);
+        doc.text(`TxHash: ${txHash}`, m, y); y += 4.5;
+        doc.setFontSize(8.5);
+      }
       if (exchangeRate) { doc.text(`Exchange Rate: ${exchangeRate}`, m, y); y += 4.5; }
       if (paymentDate) { doc.text(`Payment Date: ${format(new Date(paymentDate), "dd.MM.yyyy")}`, m, y); y += 4.5; }
       y += 6;
     }
 
     // ── Legal clauses ──
-    doc.setDrawColor(200, 200, 200);
+    doc.setDrawColor(50, 50, 50);
+    doc.setLineWidth(0.2);
     doc.line(m, y, rCol, y);
-    y += 6;
+    y += 5;
 
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(7);
-    doc.setTextColor(100, 100, 100);
+    doc.setFontSize(6.5);
+    doc.setTextColor(...muted);
 
     const legalTexts = [
       "This credit note has been issued under the self-billing procedure with the consent of the service provider.",
@@ -307,17 +359,21 @@ export default function CreditNoteForm({
 
     legalTexts.forEach(text => {
       const lines = doc.splitTextToSize(`• ${text}`, cw);
-      lines.forEach((line: string) => { doc.text(line, m, y); y += 3.5; });
-      y += 1;
+      lines.forEach((line: string) => { doc.text(line, m, y); y += 3.2; });
+      y += 0.8;
     });
 
-    doc.setTextColor(0, 0, 0);
+    // ── Footer ──
+    // Bottom gold accent line
+    doc.setFillColor(...gold);
+    doc.rect(0, ph - 1.5, pw, 1.5, "F");
 
-    // Footer
-    doc.setFontSize(6.5);
-    doc.setTextColor(150, 150, 150);
-    doc.text(`${issuerName} · ${issuerAddress} · KvK ${issuerKvk} · VAT ${issuerVatId}`, pw / 2, 287, { align: "center" });
-    doc.text(creditNoteNumber, pw / 2, 291, { align: "center" });
+    // Footer text
+    doc.setFontSize(6);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`${issuerName}  ·  ${issuerAddress}  ·  KvK ${issuerKvk}  ·  VAT ${issuerVatId}`, pw / 2, ph - 6, { align: "center" });
+    doc.setTextColor(...goldLight);
+    doc.text(creditNoteNumber, pw / 2, ph - 3, { align: "center" });
 
     return doc;
   };
