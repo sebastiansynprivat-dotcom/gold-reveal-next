@@ -262,7 +262,7 @@ export default function ChatterDashboardTab() {
             <Crown className="h-8 w-8 text-accent mx-auto" />
             <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Monatsumsatz</p>
             <p className="text-5xl font-black text-gold-gradient tabular-nums leading-none">
-              <AnimatedGoldValue value={selected.monthlyRevenue} />
+              <AnimatedGoldValue value={selected.monthlyRevenue} suffix={` ${selected.currency || "EUR"}`} />
             </p>
           </motion.div>
 
