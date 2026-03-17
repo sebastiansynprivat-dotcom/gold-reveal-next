@@ -226,7 +226,7 @@ export default function CreditNoteForm({
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
     doc.text("Net Amount:", rCol - 45, y);
-    doc.text(`${formattedNet} €`, rCol - 2, y, { align: "right" });
+    doc.text(`${formattedNet} ${currency}`, rCol - 2, y, { align: "right" });
     y += 5;
 
     // VAT
