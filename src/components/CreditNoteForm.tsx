@@ -244,7 +244,7 @@ export default function CreditNoteForm({
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
     doc.text("Total Amount:", rCol - 45, y);
-    doc.text(`${grossAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} €`, rCol - 2, y, { align: "right" });
+    doc.text(`${grossAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} ${currency}`, rCol - 2, y, { align: "right" });
     y += 5;
     doc.setLineWidth(0.5);
     doc.line(rCol - 80, y - 1, rCol, y - 1);
