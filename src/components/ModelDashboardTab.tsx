@@ -292,6 +292,31 @@ export default function ModelDashboardTab() {
     }
   }, [selectedAccountId, loadModelData, loadModelRevenue, revenueMonth]);
 
+  // Auto-save with debounce
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout>>();
+  const initialLoadDone = useRef(false);
+  
+  useEffect(() => {
+    if (!selectedAccountId || loading) return;
+    // Skip auto-save on initial load
+    if (!initialLoadDone.current) {
+      initialLoadDone.current = true;
+      return;
+    }
+    clearTimeout(autoSaveTimer.current);
+    autoSaveTimer.current = setTimeout(() => {
+      saveData();
+    }, 1200);
+    return () => clearTimeout(autoSaveTimer.current);
+  }, [notes, cryptoAddress, manualMonthly, revenuePercentage, currency,
+      fourbasedSubmitted, maloumSubmitted, brezzelsSubmitted,
+      fourbasedBotdm, fourbasedMassdm, maloumBotdm, maloumMassdm, brezzelsBotdm, brezzelsMassdm]);
+
+  // Reset initialLoadDone when account changes
+  useEffect(() => {
+    initialLoadDone.current = false;
+  }, [selectedAccountId]);
+
   // Revenue calculations
   const totalMonthRevenue = manualMonthly;
   const gutschriftFromRevenue = useMemo(() => {
