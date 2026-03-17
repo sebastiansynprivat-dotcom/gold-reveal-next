@@ -271,14 +271,14 @@ export default function CreditNoteForm({
     }
 
     // ── Payment Information ──
-    if (paymentMethod || txHash || exchangeRate) {
+    if (cryptoCoin || txHash || exchangeRate) {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(9);
       doc.text("Payment Information", m, y);
       y += 5;
       doc.setFont("helvetica", "normal");
       doc.setFontSize(8.5);
-      if (paymentMethod) { doc.text(`Payment Method: ${paymentMethod} (${cryptoCoin})`, m, y); y += 4.5; }
+      if (cryptoCoin) { doc.text(`Payment Method: ${cryptoCoin} (${cryptoNetwork})`, m, y); y += 4.5; }
       if (txHash) { doc.text(`Transaction Hash: ${txHash}`, m, y); y += 4.5; }
       if (exchangeRate) { doc.text(`Exchange Rate: ${exchangeRate}`, m, y); y += 4.5; }
       if (paymentDate) { doc.text(`Payment Date: ${format(new Date(paymentDate), "dd.MM.yyyy")}`, m, y); y += 4.5; }
