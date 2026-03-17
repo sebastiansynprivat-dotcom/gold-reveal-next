@@ -145,7 +145,7 @@ export default function ModelDashboard() {
             <div className="flex-1 min-w-0">
               <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Dein Verdienst ({revenuePercentage}%)</p>
               <p className="text-2xl font-bold text-accent tabular-nums">
-                <AnimatedValue value={verdienst} />
+                <AnimatedValue value={verdienst} suffix={` ${currency}`} />
               </p>
             </div>
           </motion.div>
