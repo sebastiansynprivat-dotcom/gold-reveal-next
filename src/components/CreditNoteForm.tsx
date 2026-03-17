@@ -311,7 +311,7 @@ export default function CreditNoteForm({
     // Footer
     doc.setFontSize(6.5);
     doc.setTextColor(150, 150, 150);
-    doc.text(`${ISSUER.name} · ${ISSUER.address} · KvK ${ISSUER.kvk} · VAT ${ISSUER.vatId}`, pw / 2, 287, { align: "center" });
+    doc.text(`${issuerName} · ${issuerAddress} · KvK ${issuerKvk} · VAT ${issuerVatId}`, pw / 2, 287, { align: "center" });
     doc.text(creditNoteNumber, pw / 2, 291, { align: "center" });
 
     return doc;
