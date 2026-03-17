@@ -11,12 +11,15 @@ import {
 } from "lucide-react";
 import CreditNoteForm from "@/components/CreditNoteForm";
 
+const CURRENCIES = ["EUR", "USD", "USDT", "USDC", "BTC", "ETH"] as const;
+
 interface Chatter {
   id: string;
   name: string;
   platform: string;
   monthlyRevenue: number;
   revenuePercentage: number;
+  currency: string;
 }
 
 const STORAGE_KEY = "admin-chatter-dashboard";
