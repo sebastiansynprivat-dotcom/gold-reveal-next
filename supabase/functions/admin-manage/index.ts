@@ -105,9 +105,17 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Find user by email
-      const { data: { users } } = await serviceClient.auth.admin.listUsers();
-      const targetUser = users?.find(u => u.email === email);
+      // Find user by email – paginate through all users
+      let targetUser = null;
+      let page = 1;
+      const perPage = 1000;
+      while (!targetUser) {
+        const { data: { users }, error: listErr } = await serviceClient.auth.admin.listUsers({ page, perPage });
+        if (listErr || !users || users.length === 0) break;
+        targetUser = users.find(u => u.email?.toLowerCase() === email.toLowerCase()) || null;
+        if (users.length < perPage) break;
+        page++;
+      }
 
       if (!targetUser) {
         return new Response(
