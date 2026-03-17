@@ -203,7 +203,7 @@ export default function CreditNoteForm({
     doc.setFontSize(8);
     doc.text("Pos.", m + 2, y);
     doc.text("Description", m + 15, y);
-    doc.text("Amount (€)", rCol - 2, y, { align: "right" });
+    doc.text(`Amount (${currency})`, rCol - 2, y, { align: "right" });
     y += 7;
 
     // Table row
