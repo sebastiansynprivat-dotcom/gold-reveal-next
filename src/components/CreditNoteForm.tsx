@@ -21,20 +21,14 @@ const ISSUER = {
 const CRYPTO_COINS = ["USDT", "USDC", "BTC", "ETH", "SOL", "BNB", "XRP", "TRX", "LTC"];
 
 interface CreditNoteFormProps {
-  /** Pre-fill net amount */
   suggestedAmount?: number;
-  /** Pre-fill description */
   defaultDescription?: string;
-  /** Pre-fill provider name */
   providerName?: string;
-  /** Pre-fill crypto address for payment method */
   cryptoAddress?: string;
-  /** Account ID for DB storage */
   accountId?: string;
-  /** Chatter name (for chatter dashboard, not DB-linked) */
   chatterName?: string;
-  /** Revenue percentage for display */
   revenuePercentage?: number;
+  currency?: string;
 }
 
 export default function CreditNoteForm({
@@ -45,6 +39,7 @@ export default function CreditNoteForm({
   accountId,
   chatterName = "",
   revenuePercentage = 0,
+  currency = "EUR",
 }: CreditNoteFormProps) {
   // Provider
   const [providerName, setProviderName] = useState(initialProviderName);
