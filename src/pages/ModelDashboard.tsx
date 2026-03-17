@@ -127,7 +127,7 @@ export default function ModelDashboard() {
           <Crown className="h-8 w-8 text-accent mx-auto" />
           <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Monatsumsatz</p>
           <p className="text-5xl font-black text-gold-gradient tabular-nums leading-none">
-            <AnimatedValue value={monthlyRevenue} />
+            <AnimatedValue value={monthlyRevenue} suffix={` ${currency}`} />
           </p>
         </motion.div>
 
