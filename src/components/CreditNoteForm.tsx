@@ -474,7 +474,7 @@ export default function CreditNoteForm({
     // Footer text
     doc.setFontSize(6);
     doc.setTextColor(100, 100, 100);
-    doc.text(`${issuerName}  ·  ${issuerAddress}  ·  KvK ${issuerKvk}  ·  VAT ${issuerVatId}`, pw / 2, ph - 6, { align: "center" });
+    doc.text(`${issuerName}  ·  ${issuerAddress}  ·  VAT ${issuerVatId}`, pw / 2, ph - 6, { align: "center" });
     doc.setTextColor(...goldLight);
     doc.text(creditNoteNumber, pw / 2, ph - 3, { align: "center" });
 
