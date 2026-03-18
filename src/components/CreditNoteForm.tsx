@@ -300,75 +300,108 @@ export default function CreditNoteForm({
     doc.text(`Amount (${currency})`, rCol - 2, y, { align: "right" });
     y += 7;
 
-    // Table row
-    doc.setFillColor(20, 20, 20);
-    doc.rect(m, y - 3.5, cw, 7, "F");
-    doc.setDrawColor(50, 50, 50);
-    doc.rect(m, y - 3.5, cw, 7, "S");
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8.5);
-    doc.setTextColor(...white);
-    doc.text("1", m + 2, y);
-    const descLines = doc.splitTextToSize(description, 100);
-    doc.text(descLines[0] || description, m + 15, y);
-    const formattedNet = net.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    doc.text(formattedNet, rCol - 2, y, { align: "right" });
-    y += 3;
+    // Table row(s) – one per platform if breakdown exists, otherwise single row
+    const hasPlatformBreakdown = platformRevenue && revenuePercentage > 0 && (platformRevenue.fourbased > 0 || platformRevenue.maloum > 0 || platformRevenue.brezzels > 0);
+    const platforms = hasPlatformBreakdown
+      ? [
+          { name: "4Based", rev: platformRevenue!.fourbased },
+          { name: "Maloum", rev: platformRevenue!.maloum },
+          { name: "Brezzels", rev: platformRevenue!.brezzels },
+        ].filter(p => p.rev > 0)
+      : [];
 
-    // Platform breakdown in PDF
-    const hasPlatformBreakdown = platformRevenue && (platformRevenue.fourbased > 0 || platformRevenue.maloum > 0 || platformRevenue.brezzels > 0);
-    if (hasPlatformBreakdown && revenuePercentage > 0) {
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(7);
-      doc.setTextColor(...goldLight);
-      doc.text("PLATFORM BREAKDOWN", m + 15, y);
-      y += 4;
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(7.5);
-      doc.setTextColor(...softWhite);
-      const platforms = [
-        { name: "4Based", rev: platformRevenue.fourbased },
-        { name: "Maloum", rev: platformRevenue.maloum },
-        { name: "Brezzels", rev: platformRevenue.brezzels },
-      ].filter(p => p.rev > 0);
-      platforms.forEach(p => {
+    if (hasPlatformBreakdown) {
+      // Multi-row: one per platform
+      platforms.forEach((p, i) => {
+        const rowBg: [number, number, number] = i % 2 === 0 ? [20, 20, 20] : [25, 25, 25];
         const payout = (p.rev * revenuePercentage / 100);
-        doc.text(`${p.name}: ${p.rev.toLocaleString("de-DE", { minimumFractionDigits: 2 })} ${currency}  →  Payout: ${payout.toLocaleString("de-DE", { minimumFractionDigits: 2 })} ${currency}`, m + 15, y);
-        y += 4;
+        const rowH = 7;
+        doc.setFillColor(...rowBg);
+        doc.rect(m, y - 3.5, cw, rowH, "F");
+        doc.setDrawColor(50, 50, 50);
+        doc.rect(m, y - 3.5, cw, rowH, "S");
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        doc.setTextColor(...white);
+        doc.text(`${i + 1}`, m + 2, y);
+        doc.text(`${description} – ${p.name}`, m + 15, y);
+        doc.text(payout.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), rCol - 2, y, { align: "right" });
+        y += rowH;
       });
-      y += 3;
+
+      // Revenue subtotal row (lighter)
+      doc.setFillColor(18, 18, 18);
+      doc.rect(m, y - 3.5, cw, 7, "F");
+      doc.setDrawColor(50, 50, 50);
+      doc.rect(m, y - 3.5, cw, 7, "S");
+      doc.setFont("helvetica", "italic");
+      doc.setFontSize(7);
+      doc.setTextColor(...muted);
+      doc.text("Platform Revenue Total:", m + 15, y);
+      const totalRev = platforms.reduce((s, p) => s + p.rev, 0);
+      doc.text(`${totalRev.toLocaleString("de-DE", { minimumFractionDigits: 2 })} ${currency}`, rCol - 2, y, { align: "right" });
+      y += 7;
+
+    } else {
+      // Single row
+      doc.setFillColor(20, 20, 20);
+      doc.rect(m, y - 3.5, cw, 7, "F");
+      doc.setDrawColor(50, 50, 50);
+      doc.rect(m, y - 3.5, cw, 7, "S");
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8.5);
+      doc.setTextColor(...white);
+      doc.text("1", m + 2, y);
+      const descLines = doc.splitTextToSize(description, 100);
+      doc.text(descLines[0] || description, m + 15, y);
+      doc.text(formattedNet, rCol - 2, y, { align: "right" });
+      y += 7;
     }
 
+    y += 4;
 
     // Subtotals – right-aligned block
+    const subtotalX = rCol - 55;
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8.5);
     doc.setTextColor(...softWhite);
-    doc.text("Net Amount:", rCol - 45, y);
+    doc.text("Net Amount:", subtotalX, y);
     doc.text(`${formattedNet} ${currency}`, rCol - 2, y, { align: "right" });
     y += 5;
 
     const vatLabel = !isBusiness
       ? "VAT (0% – not subject to VAT):"
       : `VAT (${vatRate}%):`;
-    doc.text(vatLabel, rCol - 65, y);
+    doc.text(vatLabel, subtotalX - 15, y);
     doc.text(`${vatAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} ${currency}`, rCol - 2, y, { align: "right" });
     y += 5;
 
     // Total line
     doc.setDrawColor(...gold);
     doc.setLineWidth(0.4);
-    doc.line(rCol - 65, y - 1, rCol, y - 1);
+    doc.line(subtotalX - 15, y - 1, rCol, y - 1);
     y += 4;
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
     doc.setTextColor(...gold);
-    doc.text("Total:", rCol - 45, y);
+    doc.text("Total:", subtotalX, y);
     doc.text(`${grossAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} ${currency}`, rCol - 2, y, { align: "right" });
+
+    // EUR equivalent right below total if applicable
+    if (currency !== "EUR" && liveExchangeRate && grossAmount > 0) {
+      y += 5;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(...muted);
+      const eurVal = (grossAmount * liveExchangeRate).toLocaleString("de-DE", { minimumFractionDigits: 2 });
+      doc.text(`≈ ${eurVal} EUR`, rCol - 2, y, { align: "right" });
+    }
+
     y += 2;
+    doc.setDrawColor(...gold);
     doc.setLineWidth(0.4);
-    doc.line(rCol - 65, y, rCol, y);
-    y += 10;
+    doc.line(subtotalX - 15, y, rCol, y);
+    y += 8;
 
     // VAT note
     if (!isBusiness) {
@@ -389,17 +422,31 @@ export default function CreditNoteForm({
       doc.setFont("helvetica", "normal");
       doc.setFontSize(8.5);
       doc.setTextColor(...white);
-      if (cryptoCoin) { doc.text(`Payment Method: ${cryptoCoin} (${cryptoNetwork})`, m, y); y += 4.5; }
+
+      if (cryptoCoin) {
+        doc.text(`Payment Method: ${cryptoCoin} (${cryptoNetwork})`, m, y);
+        y += 4.5;
+      }
       if (txHash) {
         doc.setFontSize(7.5);
-        doc.text(`TxHash: ${txHash}`, m, y); y += 4.5;
+        doc.text(`TxHash: ${txHash}`, m, y);
+        y += 4.5;
         doc.setFontSize(8.5);
       }
-      if (exchangeRate) { doc.text(`Exchange Rate: ${exchangeRate}`, m, y); y += 4.5; }
-      if (currency !== "EUR" && liveExchangeRate && grossAmount > 0) {
-        doc.text(`EUR Equivalent: ≈ ${(grossAmount * liveExchangeRate).toLocaleString("de-DE", { minimumFractionDigits: 2 })} EUR (Rate: 1 ${currency} = ${liveExchangeRate.toFixed(4)} EUR)`, m, y); y += 4.5;
+      if (exchangeRate) {
+        doc.text(`Exchange Rate: ${exchangeRate}`, m, y);
+        y += 4.5;
       }
-      if (paymentDate) { doc.text(`Payment Date: ${format(new Date(paymentDate), "dd.MM.yyyy")}`, m, y); y += 4.5; }
+      if (currency !== "EUR" && liveExchangeRate) {
+        doc.setFontSize(8);
+        doc.text(`Rate: 1 ${currency} = ${liveExchangeRate.toFixed(4)} EUR`, m, y);
+        y += 4.5;
+      }
+      if (paymentDate) {
+        doc.setFontSize(8.5);
+        doc.text(`Payment Date: ${format(new Date(paymentDate), "dd.MM.yyyy")}`, m, y);
+        y += 4.5;
+      }
       y += 6;
     }
 
