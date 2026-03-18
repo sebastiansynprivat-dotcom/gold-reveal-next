@@ -22,6 +22,12 @@ const CRYPTO_NETWORKS = ["TRC20", "ERC20", "BEP20", "SOL", "BTC", "LTC"];
 
 const CRYPTO_COINS = ["USDT", "USDC", "BTC", "ETH", "SOL", "BNB", "XRP", "TRX", "LTC"];
 
+interface PlatformRevenue {
+  fourbased: number;
+  maloum: number;
+  brezzels: number;
+}
+
 interface CreditNoteFormProps {
   suggestedAmount?: number;
   defaultDescription?: string;
@@ -31,6 +37,7 @@ interface CreditNoteFormProps {
   chatterName?: string;
   revenuePercentage?: number;
   currency?: string;
+  platformRevenue?: PlatformRevenue;
 }
 
 export default function CreditNoteForm({
