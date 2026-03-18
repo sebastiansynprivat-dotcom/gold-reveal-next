@@ -258,6 +258,9 @@ export default function ModelDashboardTab() {
       setCryptoAddress("");
       setContractPath("");
       setManualMonthly(0);
+      setFourbasedRevenue(0);
+      setMaloumRevenue(0);
+      setBrezzelsRevenue(0);
       setCurrency("EUR");
     }
     setLoading(false);
