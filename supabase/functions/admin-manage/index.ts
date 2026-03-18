@@ -6,6 +6,15 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+function generatePassword(length = 14): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$";
+  let pw = "";
+  const arr = new Uint8Array(length);
+  crypto.getRandomValues(arr);
+  for (let i = 0; i < length; i++) pw += chars[arr[i] % chars.length];
+  return pw;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -56,7 +65,6 @@ Deno.serve(async (req) => {
     const { action, email, target_user_id } = await req.json();
 
     if (action === "list") {
-      // List all admins with their emails
       const { data: roles } = await serviceClient
         .from("user_roles")
         .select("user_id, role")
@@ -68,7 +76,6 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Get emails from auth.users
       const admins = [];
       for (const role of roles) {
         const { data: { user: adminUser } } = await serviceClient.auth.admin.getUserById(role.user_id);
@@ -81,7 +88,6 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Check TOTP status
       const { data: totpData } = await serviceClient
         .from("admin_totp_secrets")
         .select("user_id, is_verified")
@@ -117,14 +123,24 @@ Deno.serve(async (req) => {
         page++;
       }
 
+      // If user doesn't exist, create them with a generated password
+      let created = false;
+      let generatedPassword = "";
       if (!targetUser) {
-        return new Response(
-          JSON.stringify({ error: "Kein Benutzer mit dieser E-Mail gefunden. Der Benutzer muss sich zuerst registrieren." }),
-          {
-            status: 404,
+        generatedPassword = generatePassword(14);
+        const { data: authData, error: authError } = await serviceClient.auth.admin.createUser({
+          email: email.toLowerCase().trim(),
+          password: generatedPassword,
+          email_confirm: true,
+        });
+        if (authError) {
+          return new Response(JSON.stringify({ error: authError.message }), {
+            status: 400,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
-          }
-        );
+          });
+        }
+        targetUser = authData.user;
+        created = true;
       }
 
       // Check if already admin
@@ -149,7 +165,13 @@ Deno.serve(async (req) => {
         .from("user_roles")
         .insert({ user_id: targetUser.id, role: "admin" });
 
-      return new Response(JSON.stringify({ success: true }), {
+      const response: Record<string, any> = { success: true, created };
+      if (created) {
+        response.generated_password = generatedPassword;
+        response.email = email.toLowerCase().trim();
+      }
+
+      return new Response(JSON.stringify(response), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -162,7 +184,6 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Can't remove yourself
       if (target_user_id === user.id) {
         return new Response(
           JSON.stringify({ error: "Du kannst dich nicht selbst als Admin entfernen." }),
@@ -179,7 +200,6 @@ Deno.serve(async (req) => {
         .eq("user_id", target_user_id)
         .eq("role", "admin");
 
-      // Also remove TOTP secret
       await serviceClient
         .from("admin_totp_secrets")
         .delete()
