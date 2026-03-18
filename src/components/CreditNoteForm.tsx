@@ -86,6 +86,32 @@ export default function CreditNoteForm({
   const [paymentDate, setPaymentDate] = useState(format(new Date(), "yyyy-MM-dd"));
 
   const [generating, setGenerating] = useState(false);
+  const [liveExchangeRate, setLiveExchangeRate] = useState<number | null>(null);
+  const [rateLoading, setRateLoading] = useState(false);
+
+  // Fetch live exchange rate to EUR when currency is not EUR
+  useEffect(() => {
+    if (currency === "EUR") {
+      setLiveExchangeRate(null);
+      return;
+    }
+    let cancelled = false;
+    setRateLoading(true);
+    fetch(`https://api.frankfurter.app/latest?from=${currency}&to=EUR`)
+      .then(r => r.json())
+      .then(data => {
+        if (!cancelled && data?.rates?.EUR) {
+          setLiveExchangeRate(data.rates.EUR);
+          // Auto-fill exchange rate field if empty
+          if (!exchangeRate) {
+            setExchangeRate(`1 ${currency} = ${data.rates.EUR.toFixed(4)} EUR`);
+          }
+        }
+      })
+      .catch(() => { if (!cancelled) setLiveExchangeRate(null); })
+      .finally(() => { if (!cancelled) setRateLoading(false); });
+    return () => { cancelled = true; };
+  }, [currency]);
 
   // Auto-save form fields to localStorage
   useEffect(() => {
@@ -337,6 +363,9 @@ export default function CreditNoteForm({
         doc.setFontSize(8.5);
       }
       if (exchangeRate) { doc.text(`Exchange Rate: ${exchangeRate}`, m, y); y += 4.5; }
+      if (currency !== "EUR" && liveExchangeRate && grossAmount > 0) {
+        doc.text(`EUR Equivalent: ≈ ${(grossAmount * liveExchangeRate).toLocaleString("de-DE", { minimumFractionDigits: 2 })} EUR (Rate: 1 ${currency} = ${liveExchangeRate.toFixed(4)} EUR)`, m, y); y += 4.5;
+      }
       if (paymentDate) { doc.text(`Payment Date: ${format(new Date(paymentDate), "dd.MM.yyyy")}`, m, y); y += 4.5; }
       y += 6;
     }
@@ -628,6 +657,19 @@ export default function CreditNoteForm({
             <span>Gesamt</span>
             <span className="font-mono text-accent">{grossAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}</span>
           </div>
+          {currency !== "EUR" && liveExchangeRate && net > 0 && (
+            <div className="border-t border-border/30 pt-1.5 flex justify-between text-xs text-muted-foreground">
+              <span>≈ in EUR</span>
+              <span className="font-mono text-accent/70">
+                {rateLoading ? "…" : `≈ ${(grossAmount * liveExchangeRate).toLocaleString("de-DE", { minimumFractionDigits: 2 })} EUR`}
+              </span>
+            </div>
+          )}
+          {currency !== "EUR" && liveExchangeRate && (
+            <div className="text-[10px] text-muted-foreground/60 text-right">
+              Kurs: 1 {currency} = {liveExchangeRate.toFixed(4)} EUR (live)
+            </div>
+          )}
         </div>
       </div>
 
