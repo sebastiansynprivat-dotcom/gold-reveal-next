@@ -767,25 +767,18 @@ export default function ModelDashboardTab() {
             </Dialog>
             <Section icon={TrendingUp} title="Einnahmen (manuell)" delay={0.05}>
               <div className="space-y-4">
-                {/* Big golden number */}
+                {/* Big golden number – total */}
                 <div className="text-center py-3">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Monatsumsatz</p>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Gesamtumsatz</p>
                   <p className="text-4xl font-black text-gold-gradient tabular-nums">
-                    <AnimatedGoldValue value={manualMonthly} suffix={` ${currency}`} />
+                    <AnimatedGoldValue value={effectiveMonthly} suffix={` ${currency}`} />
                   </p>
                 </div>
-                <div className="flex gap-2">
-                  <div className="flex-1 input-gold-shimmer rounded-lg">
-                    <Input
-                      type="number"
-                      value={manualMonthly || ""}
-                      onChange={e => setManualMonthly(Number(e.target.value) || 0)}
-                      className="h-10 text-center text-lg font-semibold border-transparent"
-                      placeholder="Betrag eingeben..."
-                    />
-                  </div>
+
+                {/* Currency selector */}
+                <div className="flex justify-end">
                   <Select value={currency} onValueChange={setCurrency}>
-                    <SelectTrigger className="w-[100px] text-sm h-10">
+                    <SelectTrigger className="w-[100px] text-sm h-9">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -793,14 +786,66 @@ export default function ModelDashboardTab() {
                     </SelectContent>
                   </Select>
                 </div>
-                {revenuePercentage > 0 && manualMonthly > 0 && (
-                  <div className="rounded-xl border border-accent/20 bg-accent/5 p-3 text-center space-y-1">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                      Verdienst Model ({revenuePercentage}%)
-                    </p>
-                    <p className="text-2xl font-bold text-accent tabular-nums">
-                      <AnimatedGoldValue value={Math.round(manualMonthly * revenuePercentage / 100)} suffix={` ${currency}`} />
-                    </p>
+
+                {/* Per-platform revenue inputs */}
+                <div className="space-y-2">
+                  {([
+                    { label: "4Based", value: fourbasedRevenue, onChange: setFourbasedRevenue },
+                    { label: "Maloum", value: maloumRevenue, onChange: setMaloumRevenue },
+                    { label: "Brezzels", value: brezzelsRevenue, onChange: setBrezzelsRevenue },
+                  ] as const).map(p => (
+                    <div key={p.label} className="flex items-center gap-3 p-2.5 rounded-lg bg-secondary/30 border border-border/50">
+                      <span className="text-xs font-medium text-foreground w-16 shrink-0">{p.label}</span>
+                      <div className="flex-1 input-gold-shimmer rounded-lg">
+                        <Input
+                          type="number"
+                          value={p.value || ""}
+                          onChange={e => p.onChange(Number(e.target.value) || 0)}
+                          className="h-9 text-center text-sm font-semibold border-transparent"
+                          placeholder="0"
+                        />
+                      </div>
+                      <span className="text-xs text-muted-foreground w-10 shrink-0">{currency}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Payout calculation */}
+                {revenuePercentage > 0 && effectiveMonthly > 0 && (
+                  <div className="space-y-2">
+                    <div className="rounded-xl border border-accent/20 bg-accent/5 p-3 text-center space-y-1">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                        Verdienst Model ({revenuePercentage}%)
+                      </p>
+                      <p className="text-2xl font-bold text-accent tabular-nums">
+                        <AnimatedGoldValue value={Math.round(effectiveMonthly * revenuePercentage / 100)} suffix={` ${currency}`} />
+                      </p>
+                    </div>
+
+                    {/* Per-platform payout breakdown */}
+                    {totalPlatformRevenue > 0 && (
+                      <div className="rounded-lg bg-secondary/20 border border-border/40 p-2.5 space-y-1.5">
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Aufschlüsselung Payout</p>
+                        {fourbasedRevenue > 0 && (
+                          <div className="flex justify-between text-xs">
+                            <span className="text-muted-foreground">4Based</span>
+                            <span className="font-mono text-foreground">{Math.round(fourbasedRevenue * revenuePercentage / 100).toLocaleString("de-DE")} {currency}</span>
+                          </div>
+                        )}
+                        {maloumRevenue > 0 && (
+                          <div className="flex justify-between text-xs">
+                            <span className="text-muted-foreground">Maloum</span>
+                            <span className="font-mono text-foreground">{Math.round(maloumRevenue * revenuePercentage / 100).toLocaleString("de-DE")} {currency}</span>
+                          </div>
+                        )}
+                        {brezzelsRevenue > 0 && (
+                          <div className="flex justify-between text-xs">
+                            <span className="text-muted-foreground">Brezzels</span>
+                            <span className="font-mono text-foreground">{Math.round(brezzelsRevenue * revenuePercentage / 100).toLocaleString("de-DE")} {currency}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
