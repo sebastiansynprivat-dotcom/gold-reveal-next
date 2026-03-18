@@ -427,8 +427,8 @@ export default function CreditNoteForm({
         y += 4.5;
         doc.setFontSize(8.5);
       }
-      if (exchangeRate) {
-        doc.text(`Exchange Rate: ${exchangeRate}`, m, y);
+      if (currency !== "EUR" && liveExchangeRate) {
+        doc.text(`Exchange Rate: 1 ${currency} = ${liveExchangeRate.toFixed(4)} EUR`, m, y);
         y += 4.5;
       }
       if (paymentDate) {
