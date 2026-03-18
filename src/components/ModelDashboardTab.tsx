@@ -423,6 +423,9 @@ export default function ModelDashboardTab() {
       crypto_address: cryptoAddress,
       contract_file_path: contractPath,
       monthly_revenue: manualMonthly,
+      fourbased_revenue: fourbasedRevenue,
+      maloum_revenue: maloumRevenue,
+      brezzels_revenue: brezzelsRevenue,
       currency,
     };
     if (data?.id) {
