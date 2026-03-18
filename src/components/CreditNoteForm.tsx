@@ -86,6 +86,32 @@ export default function CreditNoteForm({
   const [paymentDate, setPaymentDate] = useState(format(new Date(), "yyyy-MM-dd"));
 
   const [generating, setGenerating] = useState(false);
+  const [liveExchangeRate, setLiveExchangeRate] = useState<number | null>(null);
+  const [rateLoading, setRateLoading] = useState(false);
+
+  // Fetch live exchange rate to EUR when currency is not EUR
+  useEffect(() => {
+    if (currency === "EUR") {
+      setLiveExchangeRate(null);
+      return;
+    }
+    let cancelled = false;
+    setRateLoading(true);
+    fetch(`https://api.frankfurter.app/latest?from=${currency}&to=EUR`)
+      .then(r => r.json())
+      .then(data => {
+        if (!cancelled && data?.rates?.EUR) {
+          setLiveExchangeRate(data.rates.EUR);
+          // Auto-fill exchange rate field if empty
+          if (!exchangeRate) {
+            setExchangeRate(`1 ${currency} = ${data.rates.EUR.toFixed(4)} EUR`);
+          }
+        }
+      })
+      .catch(() => { if (!cancelled) setLiveExchangeRate(null); })
+      .finally(() => { if (!cancelled) setRateLoading(false); });
+    return () => { cancelled = true; };
+  }, [currency]);
 
   // Auto-save form fields to localStorage
   useEffect(() => {
