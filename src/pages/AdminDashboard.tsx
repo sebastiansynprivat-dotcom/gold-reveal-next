@@ -870,6 +870,11 @@ export default function AdminDashboard() {
       });
       if (res.data?.error) {
         toast.error(res.data.error);
+      } else if (res.data?.created && res.data?.generated_password) {
+        setNewAdminCredentials({ email: res.data.email, password: res.data.generated_password });
+        toast.success("Neuer Admin erstellt! Zugangsdaten wurden generiert.");
+        setNewAdminEmail("");
+        loadAdmins();
       } else {
         toast.success("Admin hinzugefügt!");
         setNewAdminEmail("");
