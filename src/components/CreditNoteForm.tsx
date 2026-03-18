@@ -431,11 +431,6 @@ export default function CreditNoteForm({
         doc.text(`Exchange Rate: ${exchangeRate}`, m, y);
         y += 4.5;
       }
-      if (currency !== "EUR" && liveExchangeRate) {
-        doc.setFontSize(8);
-        doc.text(`Rate: 1 ${currency} = ${liveExchangeRate.toFixed(4)} EUR`, m, y);
-        y += 4.5;
-      }
       if (paymentDate) {
         doc.setFontSize(8.5);
         doc.text(`Payment Date: ${format(new Date(paymentDate), "dd.MM.yyyy")}`, m, y);
