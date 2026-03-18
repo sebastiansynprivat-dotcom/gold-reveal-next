@@ -389,15 +389,7 @@ export default function CreditNoteForm({
     doc.text("Total:", subtotalX, y);
     doc.text(`${grossAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} ${currency}`, rCol - 2, y, { align: "right" });
 
-    // EUR equivalent right below total if applicable
-    if (currency !== "EUR" && liveExchangeRate && grossAmount > 0) {
-      y += 5;
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(8);
-      doc.setTextColor(...muted);
-      const eurVal = (grossAmount * liveExchangeRate).toLocaleString("de-DE", { minimumFractionDigits: 2 });
-      doc.text(`≈ ${eurVal} EUR`, rCol - 2, y, { align: "right" });
-    }
+
 
     y += 2;
     doc.setDrawColor(...gold);
