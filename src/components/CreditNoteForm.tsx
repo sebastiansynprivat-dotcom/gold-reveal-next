@@ -182,7 +182,7 @@ export default function CreditNoteForm({
     y += 5.5;
     const issuerAddrLines = doc.splitTextToSize(issuerAddress, cw / 2 - 5);
     issuerAddrLines.forEach((line: string) => { doc.text(line, m, y); y += 3.8; });
-    doc.text(`KvK: ${issuerKvk}  ·  VAT: ${issuerVatId}`, m, y);
+    doc.text(`VAT: ${issuerVatId}`, m, y);
     y += 4;
     const leftEndY = y;
 
@@ -474,7 +474,7 @@ export default function CreditNoteForm({
     // Footer text
     doc.setFontSize(6);
     doc.setTextColor(100, 100, 100);
-    doc.text(`${issuerName}  ·  ${issuerAddress}  ·  KvK ${issuerKvk}  ·  VAT ${issuerVatId}`, pw / 2, ph - 6, { align: "center" });
+    doc.text(`${issuerName}  ·  ${issuerAddress}  ·  VAT ${issuerVatId}`, pw / 2, ph - 6, { align: "center" });
     doc.setTextColor(...goldLight);
     doc.text(creditNoteNumber, pw / 2, ph - 3, { align: "center" });
 
@@ -585,12 +585,6 @@ export default function CreditNoteForm({
             <Label className="text-xs text-muted-foreground">Adresse</Label>
             <div className="input-gold-shimmer rounded-lg">
               <Input value={issuerAddress} onChange={e => setIssuerAddress(e.target.value)} className="text-sm border-transparent" />
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">KvK</Label>
-            <div className="input-gold-shimmer rounded-lg">
-              <Input value={issuerKvk} onChange={e => setIssuerKvk(e.target.value)} className="text-sm border-transparent" />
             </div>
           </div>
           <div className="space-y-1.5">
@@ -845,7 +839,7 @@ export default function CreditNoteForm({
 
       {/* Legal notice */}
       <p className="text-[9px] text-muted-foreground/60 text-center leading-relaxed">
-        Issued by {issuerName} · KvK {issuerKvk} · VAT {issuerVatId}<br />
+        Issued by {issuerName} · VAT {issuerVatId}<br />
         Self-billing procedure – document valid without signature
       </p>
     </motion.div>
