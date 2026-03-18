@@ -4,6 +4,15 @@ import App from "./App.tsx";
 import "./index.css";
 
 // Register service worker for PWA + Push Notifications
-registerSW({ immediate: true });
+const updateSW = registerSW({
+  immediate: true,
+  onNeedRefresh() {
+    updateSW(true);
+    window.location.reload();
+  },
+  onOfflineReady() {
+    console.info("App ready for offline use.");
+  },
+});
 
 createRoot(document.getElementById("root")!).render(<App />);
