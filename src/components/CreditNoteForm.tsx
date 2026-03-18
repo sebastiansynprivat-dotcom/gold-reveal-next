@@ -300,6 +300,8 @@ export default function CreditNoteForm({
     doc.text(`Amount (${currency})`, rCol - 2, y, { align: "right" });
     y += 7;
 
+    const formattedNet = net.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
     // Table row(s) – one per platform if breakdown exists, otherwise single row
     const hasPlatformBreakdown = platformRevenue && revenuePercentage > 0 && (platformRevenue.fourbased > 0 || platformRevenue.maloum > 0 || platformRevenue.brezzels > 0);
     const platforms = hasPlatformBreakdown
