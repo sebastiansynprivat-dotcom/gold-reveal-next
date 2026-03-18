@@ -1069,6 +1069,11 @@ export default function ModelDashboardTab() {
                 cryptoAddress={cryptoAddress}
                 revenuePercentage={revenuePercentage}
                 currency={currency}
+                platformRevenue={{
+                  fourbased: fourbasedRevenue,
+                  maloum: maloumRevenue,
+                  brezzels: brezzelsRevenue,
+                }}
               />
             </Section>
           </motion.div>
