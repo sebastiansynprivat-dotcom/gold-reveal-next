@@ -363,6 +363,9 @@ export default function CreditNoteForm({
         doc.setFontSize(8.5);
       }
       if (exchangeRate) { doc.text(`Exchange Rate: ${exchangeRate}`, m, y); y += 4.5; }
+      if (currency !== "EUR" && liveExchangeRate && grossAmount > 0) {
+        doc.text(`EUR Equivalent: ≈ ${(grossAmount * liveExchangeRate).toLocaleString("de-DE", { minimumFractionDigits: 2 })} EUR (Rate: 1 ${currency} = ${liveExchangeRate.toFixed(4)} EUR)`, m, y); y += 4.5;
+      }
       if (paymentDate) { doc.text(`Payment Date: ${format(new Date(paymentDate), "dd.MM.yyyy")}`, m, y); y += 4.5; }
       y += 6;
     }
