@@ -380,6 +380,7 @@ export type Database = {
           botdm_done: boolean
           brezzels_botdm_done: boolean
           brezzels_massdm_done: boolean
+          brezzels_revenue: number | null
           brezzels_submitted: boolean
           contract_file_path: string | null
           created_at: string
@@ -387,10 +388,12 @@ export type Database = {
           currency: string | null
           fourbased_botdm_done: boolean
           fourbased_massdm_done: boolean
+          fourbased_revenue: number | null
           fourbased_submitted: boolean
           id: string
           maloum_botdm_done: boolean
           maloum_massdm_done: boolean
+          maloum_revenue: number | null
           maloum_submitted: boolean
           massdm_done: boolean
           monthly_revenue: number | null
@@ -405,6 +408,7 @@ export type Database = {
           botdm_done?: boolean
           brezzels_botdm_done?: boolean
           brezzels_massdm_done?: boolean
+          brezzels_revenue?: number | null
           brezzels_submitted?: boolean
           contract_file_path?: string | null
           created_at?: string
@@ -412,10 +416,12 @@ export type Database = {
           currency?: string | null
           fourbased_botdm_done?: boolean
           fourbased_massdm_done?: boolean
+          fourbased_revenue?: number | null
           fourbased_submitted?: boolean
           id?: string
           maloum_botdm_done?: boolean
           maloum_massdm_done?: boolean
+          maloum_revenue?: number | null
           maloum_submitted?: boolean
           massdm_done?: boolean
           monthly_revenue?: number | null
@@ -430,6 +436,7 @@ export type Database = {
           botdm_done?: boolean
           brezzels_botdm_done?: boolean
           brezzels_massdm_done?: boolean
+          brezzels_revenue?: number | null
           brezzels_submitted?: boolean
           contract_file_path?: string | null
           created_at?: string
@@ -437,10 +444,12 @@ export type Database = {
           currency?: string | null
           fourbased_botdm_done?: boolean
           fourbased_massdm_done?: boolean
+          fourbased_revenue?: number | null
           fourbased_submitted?: boolean
           id?: string
           maloum_botdm_done?: boolean
           maloum_massdm_done?: boolean
+          maloum_revenue?: number | null
           maloum_submitted?: boolean
           massdm_done?: boolean
           monthly_revenue?: number | null
