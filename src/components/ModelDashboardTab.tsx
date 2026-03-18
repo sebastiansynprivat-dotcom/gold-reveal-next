@@ -317,7 +317,7 @@ export default function ModelDashboardTab() {
       saveData();
     }, 1200);
     return () => clearTimeout(autoSaveTimer.current);
-  }, [notes, cryptoAddress, manualMonthly, revenuePercentage, currency,
+  }, [notes, cryptoAddress, manualMonthly, fourbasedRevenue, maloumRevenue, brezzelsRevenue, revenuePercentage, currency,
       fourbasedSubmitted, maloumSubmitted, brezzelsSubmitted,
       fourbasedBotdm, fourbasedMassdm, maloumBotdm, maloumMassdm, brezzelsBotdm, brezzelsMassdm]);
 
