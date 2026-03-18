@@ -654,6 +654,19 @@ export default function CreditNoteForm({
             <span>Gesamt</span>
             <span className="font-mono text-accent">{grossAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}</span>
           </div>
+          {currency !== "EUR" && liveExchangeRate && net > 0 && (
+            <div className="border-t border-border/30 pt-1.5 flex justify-between text-xs text-muted-foreground">
+              <span>≈ in EUR</span>
+              <span className="font-mono text-accent/70">
+                {rateLoading ? "…" : `≈ ${(grossAmount * liveExchangeRate).toLocaleString("de-DE", { minimumFractionDigits: 2 })} EUR`}
+              </span>
+            </div>
+          )}
+          {currency !== "EUR" && liveExchangeRate && (
+            <div className="text-[10px] text-muted-foreground/60 text-right">
+              Kurs: 1 {currency} = {liveExchangeRate.toFixed(4)} EUR (live)
+            </div>
+          )}
         </div>
       </div>
 
