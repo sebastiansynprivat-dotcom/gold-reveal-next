@@ -313,7 +313,32 @@ export default function CreditNoteForm({
     doc.text(descLines[0] || description, m + 15, y);
     const formattedNet = net.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     doc.text(formattedNet, rCol - 2, y, { align: "right" });
-    y += 10;
+    y += 3;
+
+    // Platform breakdown in PDF
+    const hasPlatformBreakdown = platformRevenue && (platformRevenue.fourbased > 0 || platformRevenue.maloum > 0 || platformRevenue.brezzels > 0);
+    if (hasPlatformBreakdown && revenuePercentage > 0) {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7);
+      doc.setTextColor(...goldLight);
+      doc.text("PLATFORM BREAKDOWN", m + 15, y);
+      y += 4;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7.5);
+      doc.setTextColor(...softWhite);
+      const platforms = [
+        { name: "4Based", rev: platformRevenue.fourbased },
+        { name: "Maloum", rev: platformRevenue.maloum },
+        { name: "Brezzels", rev: platformRevenue.brezzels },
+      ].filter(p => p.rev > 0);
+      platforms.forEach(p => {
+        const payout = (p.rev * revenuePercentage / 100);
+        doc.text(`${p.name}: ${p.rev.toLocaleString("de-DE", { minimumFractionDigits: 2 })} ${currency}  →  Payout: ${payout.toLocaleString("de-DE", { minimumFractionDigits: 2 })} ${currency}`, m + 15, y);
+        y += 4;
+      });
+      y += 3;
+    }
+
 
     // Subtotals – right-aligned block
     doc.setFont("helvetica", "normal");
