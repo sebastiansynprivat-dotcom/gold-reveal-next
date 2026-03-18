@@ -407,7 +407,7 @@ export default function CreditNoteForm({
     }
 
     // ── Payment Information ──
-    if (cryptoCoin || txHash || exchangeRate) {
+    if (cryptoCoin || txHash || (currency !== "EUR" && liveExchangeRate)) {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(7.5);
       doc.setTextColor(...goldLight);
