@@ -238,6 +238,9 @@ export default function ModelDashboardTab() {
       setCryptoAddress(d.crypto_address || "");
       setContractPath(d.contract_file_path || "");
       setManualMonthly(Number((d as any).monthly_revenue) || 0);
+      setFourbasedRevenue(Number((d as any).fourbased_revenue) || 0);
+      setMaloumRevenue(Number((d as any).maloum_revenue) || 0);
+      setBrezzelsRevenue(Number((d as any).brezzels_revenue) || 0);
       setCurrency((d as any).currency || "EUR");
     } else {
       setData(null);
