@@ -407,7 +407,7 @@ export default function CreditNoteForm({
     }
 
     // ── Payment Information ──
-    if (cryptoCoin || txHash || exchangeRate) {
+    if (cryptoCoin || txHash || (currency !== "EUR" && liveExchangeRate)) {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(7.5);
       doc.setTextColor(...goldLight);
@@ -427,8 +427,8 @@ export default function CreditNoteForm({
         y += 4.5;
         doc.setFontSize(8.5);
       }
-      if (exchangeRate) {
-        doc.text(`Exchange Rate: ${exchangeRate}`, m, y);
+      if (currency !== "EUR" && liveExchangeRate) {
+        doc.text(`Exchange Rate: 1 ${currency} = ${liveExchangeRate.toFixed(4)} EUR`, m, y);
         y += 4.5;
       }
       if (paymentDate) {
@@ -811,13 +811,6 @@ export default function CreditNoteForm({
           <Label className="text-xs text-muted-foreground">TxHash</Label>
           <div className="input-gold-shimmer rounded-lg">
             <Input value={txHash} onChange={e => setTxHash(e.target.value)} placeholder="Transaction Hash" className="text-sm border-transparent font-mono text-xs" />
-          </div>
-        </div>
-
-        <div className="space-y-1.5">
-          <Label className="text-xs text-muted-foreground">Exchange Rate</Label>
-          <div className="input-gold-shimmer rounded-lg">
-            <Input value={exchangeRate} onChange={e => setExchangeRate(e.target.value)} placeholder="z.B. 1 USDT = 0.92€" className="text-sm border-transparent" />
           </div>
         </div>
       </div>
