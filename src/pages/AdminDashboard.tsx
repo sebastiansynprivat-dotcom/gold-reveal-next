@@ -567,6 +567,7 @@ export default function AdminDashboard() {
   const [newAdminEmail, setNewAdminEmail] = useState("");
   const [addingAdmin, setAddingAdmin] = useState(false);
   const [removeAdminConfirm, setRemoveAdminConfirm] = useState<string | null>(null);
+  const [newAdminCredentials, setNewAdminCredentials] = useState<{ email: string; password: string } | null>(null);
   const [chatterSummaries, setChatterSummaries] = useState<Record<string, { summary: string; date: string }>>({});
   const [summaryLoading, setSummaryLoading] = useState<Record<string, boolean>>({});
   const [showAiSummaries, setShowAiSummaries] = useState(false);
