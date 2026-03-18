@@ -327,11 +327,23 @@ export default function ModelDashboardTab() {
   }, [selectedAccountId]);
 
   // Revenue calculations
-  const totalMonthRevenue = manualMonthly;
+  // Auto-calculate total from platform revenues
+  const totalPlatformRevenue = fourbasedRevenue + maloumRevenue + brezzelsRevenue;
+  // Use platform sum if any platform has a value, otherwise fall back to manual
+  const effectiveMonthly = totalPlatformRevenue > 0 ? totalPlatformRevenue : manualMonthly;
+  
+  // Sync manualMonthly with platform sum
+  useEffect(() => {
+    if (totalPlatformRevenue > 0) {
+      setManualMonthly(totalPlatformRevenue);
+    }
+  }, [totalPlatformRevenue]);
+
+  const totalMonthRevenue = effectiveMonthly;
   const gutschriftFromRevenue = useMemo(() => {
-    if (revenuePercentage <= 0 || manualMonthly <= 0) return 0;
-    return (manualMonthly * revenuePercentage) / 100;
-  }, [manualMonthly, revenuePercentage]);
+    if (revenuePercentage <= 0 || effectiveMonthly <= 0) return 0;
+    return (effectiveMonthly * revenuePercentage) / 100;
+  }, [effectiveMonthly, revenuePercentage]);
 
   // Available months for selection (last 12 months)
   const availableMonths = useMemo(() => {
