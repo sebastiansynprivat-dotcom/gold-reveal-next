@@ -2498,6 +2498,47 @@ export default function AdminDashboard() {
           </AlertDialogContent>
         </AlertDialog>
 
+        {/* New Admin Credentials Dialog */}
+        <Dialog open={!!newAdminCredentials} onOpenChange={() => setNewAdminCredentials(null)}>
+          <DialogContent className="glass-card border-border sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-foreground flex items-center gap-2">
+                <UserPlus className="h-5 w-5 text-accent" />
+                Neuer Admin erstellt
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Ein neues Konto wurde erstellt. Teile diese Zugangsdaten mit dem neuen Admin – das Passwort wird nur einmal angezeigt!
+              </p>
+              <div className="space-y-3 bg-muted/50 rounded-lg p-4">
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">E-Mail</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-mono text-foreground select-all break-all">{newAdminCredentials?.email}</p>
+                    <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => { navigator.clipboard.writeText(newAdminCredentials?.email || ""); toast.success("E-Mail kopiert"); }}>
+                      <Copy className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Passwort</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-mono text-foreground select-all break-all">{newAdminCredentials?.password}</p>
+                    <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => { navigator.clipboard.writeText(newAdminCredentials?.password || ""); toast.success("Passwort kopiert"); }}>
+                      <Copy className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+              <p className="text-xs text-accent">
+                ⚠️ Der neue Admin muss sich über <span className="font-semibold">/admin/login</span> einloggen und dort 2FA einrichten.
+              </p>
+              <Button className="w-full" onClick={() => setNewAdminCredentials(null)}>Verstanden</Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         {/* Search & Filters Group */}
         <div className="space-y-3">
           <div className="relative input-gold-shimmer rounded-lg">
