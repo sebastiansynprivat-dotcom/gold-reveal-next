@@ -813,7 +813,7 @@ export default function CreditNoteForm({
             <Input value={txHash} onChange={e => setTxHash(e.target.value)} placeholder="Transaction Hash" className="text-sm border-transparent font-mono text-xs" />
           </div>
         </div>
-
+      </div>
 
       {/* Generate Button */}
       <Button
