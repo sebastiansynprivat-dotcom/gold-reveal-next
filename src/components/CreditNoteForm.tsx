@@ -839,7 +839,7 @@ export default function CreditNoteForm({
 
       {/* Legal notice */}
       <p className="text-[9px] text-muted-foreground/60 text-center leading-relaxed">
-        Issued by {issuerName} · KvK {issuerKvk} · VAT {issuerVatId}<br />
+        Issued by {issuerName} · VAT {issuerVatId}<br />
         Self-billing procedure – document valid without signature
       </p>
     </motion.div>
