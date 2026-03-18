@@ -297,7 +297,8 @@ export default function CreditNoteForm({
     doc.setTextColor(...gold);
     doc.text("Pos.", m + 2, y);
     doc.text("Description", m + 15, y);
-    doc.text(`Amount (${currency})`, rCol - 2, y, { align: "right" });
+    doc.text(`Revenue (${currency})`, rCol - 52, y, { align: "right" });
+    doc.text(`Share ${revenuePercentage}% (${currency})`, rCol - 2, y, { align: "right" });
     y += 7;
 
     const formattedNet = net.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -313,7 +314,7 @@ export default function CreditNoteForm({
       : [];
 
     if (hasPlatformBreakdown) {
-      // Multi-row: one per platform
+      // Multi-row: one per platform with revenue + share
       platforms.forEach((p, i) => {
         const rowBg: [number, number, number] = i % 2 === 0 ? [20, 20, 20] : [25, 25, 25];
         const payout = (p.rev * revenuePercentage / 100);
@@ -327,25 +328,30 @@ export default function CreditNoteForm({
         doc.setTextColor(...white);
         doc.text(`${i + 1}`, m + 2, y);
         doc.text(`${description} – ${p.name}`, m + 15, y);
+        doc.setTextColor(...muted);
+        doc.text(p.rev.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), rCol - 52, y, { align: "right" });
+        doc.setTextColor(...white);
         doc.text(payout.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), rCol - 2, y, { align: "right" });
         y += rowH;
       });
 
-      // Revenue subtotal row (lighter)
+      // Totals row
+      const totalRev = platforms.reduce((s, p) => s + p.rev, 0);
       doc.setFillColor(18, 18, 18);
       doc.rect(m, y - 3.5, cw, 7, "F");
       doc.setDrawColor(50, 50, 50);
       doc.rect(m, y - 3.5, cw, 7, "S");
-      doc.setFont("helvetica", "italic");
-      doc.setFontSize(7);
-      doc.setTextColor(...muted);
-      doc.text("Platform Revenue Total:", m + 15, y);
-      const totalRev = platforms.reduce((s, p) => s + p.rev, 0);
-      doc.text(`${totalRev.toLocaleString("de-DE", { minimumFractionDigits: 2 })} ${currency}`, rCol - 2, y, { align: "right" });
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7.5);
+      doc.setTextColor(...goldLight);
+      doc.text("Total", m + 15, y);
+      doc.text(totalRev.toLocaleString("de-DE", { minimumFractionDigits: 2 }), rCol - 52, y, { align: "right" });
+      doc.setTextColor(...gold);
+      doc.text(formattedNet, rCol - 2, y, { align: "right" });
       y += 7;
 
     } else {
-      // Single row
+      // Single row (no platform breakdown)
       doc.setFillColor(20, 20, 20);
       doc.rect(m, y - 3.5, cw, 7, "F");
       doc.setDrawColor(50, 50, 50);
