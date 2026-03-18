@@ -183,6 +183,9 @@ export default function ModelDashboardTab() {
   const [cryptoAddress, setCryptoAddress] = useState("");
   const [contractPath, setContractPath] = useState("");
   const [manualMonthly, setManualMonthly] = useState(0);
+  const [fourbasedRevenue, setFourbasedRevenue] = useState(0);
+  const [maloumRevenue, setMaloumRevenue] = useState(0);
+  const [brezzelsRevenue, setBrezzelsRevenue] = useState(0);
   const [currency, setCurrency] = useState("EUR");
 
   // (Gutschrift state removed – now uses CreditNoteForm component)
