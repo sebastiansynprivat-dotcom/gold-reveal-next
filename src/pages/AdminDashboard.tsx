@@ -842,15 +842,26 @@ export default function AdminDashboard() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
-      const res = await supabase.functions.invoke("admin-manage", {
+
+      const { data, error } = await supabase.functions.invoke("admin-manage", {
         body: { action: "list" },
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
-      if (res.data?.admins) setAdminList(res.data.admins);
-    } catch (err) {
-      toast.error("Fehler beim Laden der Admins");
+
+      if (error) {
+        throw new Error(error.message || "Fehler beim Laden der Admins");
+      }
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      setAdminList(data?.admins ?? []);
+    } catch (err: any) {
+      toast.error(err.message || "Fehler beim Laden der Admins");
+    } finally {
+      setAdminListLoading(false);
     }
-    setAdminListLoading(false);
   };
 
   const openAdminSection = () => {
@@ -864,46 +875,61 @@ export default function AdminDashboard() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
-      const res = await supabase.functions.invoke("admin-manage", {
+
+      const { data, error } = await supabase.functions.invoke("admin-manage", {
         body: { action: "add", email: newAdminEmail.trim() },
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
-      if (res.data?.error) {
-        toast.error(res.data.error);
-      } else if (res.data?.created && res.data?.generated_password) {
-        setNewAdminCredentials({ email: res.data.email, password: res.data.generated_password });
+
+      if (error) {
+        throw new Error(error.message || "Admin konnte nicht hinzugefügt werden");
+      }
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      if (data?.created && data?.generated_password) {
+        setNewAdminCredentials({ email: data.email, password: data.generated_password });
         toast.success("Neuer Admin erstellt! Zugangsdaten wurden generiert.");
-        setNewAdminEmail("");
-        loadAdmins();
       } else {
         toast.success("Admin hinzugefügt!");
-        setNewAdminEmail("");
-        loadAdmins();
       }
+
+      setNewAdminEmail("");
+      await loadAdmins();
     } catch (err: any) {
-      toast.error(err.message);
+      toast.error(err.message || "Admin konnte nicht hinzugefügt werden");
+    } finally {
+      setAddingAdmin(false);
     }
-    setAddingAdmin(false);
   };
 
   const removeAdmin = async (targetUserId: string) => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
-      const res = await supabase.functions.invoke("admin-manage", {
+
+      const { data, error } = await supabase.functions.invoke("admin-manage", {
         body: { action: "remove", target_user_id: targetUserId },
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
-      if (res.data?.error) {
-        toast.error(res.data.error);
-      } else {
-        toast.success("Admin entfernt");
-        loadAdmins();
+
+      if (error) {
+        throw new Error(error.message || "Admin konnte nicht entfernt werden");
       }
+
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      toast.success("Admin entfernt");
+      await loadAdmins();
     } catch (err: any) {
-      toast.error(err.message);
+      toast.error(err.message || "Admin konnte nicht entfernt werden");
+    } finally {
+      setRemoveAdminConfirm(null);
     }
-    setRemoveAdminConfirm(null);
   };
 
   const loadChatters = async () => {
