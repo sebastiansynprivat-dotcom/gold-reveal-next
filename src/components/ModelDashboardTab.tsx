@@ -183,6 +183,9 @@ export default function ModelDashboardTab() {
   const [cryptoAddress, setCryptoAddress] = useState("");
   const [contractPath, setContractPath] = useState("");
   const [manualMonthly, setManualMonthly] = useState(0);
+  const [fourbasedRevenue, setFourbasedRevenue] = useState(0);
+  const [maloumRevenue, setMaloumRevenue] = useState(0);
+  const [brezzelsRevenue, setBrezzelsRevenue] = useState(0);
   const [currency, setCurrency] = useState("EUR");
 
   // (Gutschrift state removed – now uses CreditNoteForm component)
@@ -235,6 +238,9 @@ export default function ModelDashboardTab() {
       setCryptoAddress(d.crypto_address || "");
       setContractPath(d.contract_file_path || "");
       setManualMonthly(Number((d as any).monthly_revenue) || 0);
+      setFourbasedRevenue(Number((d as any).fourbased_revenue) || 0);
+      setMaloumRevenue(Number((d as any).maloum_revenue) || 0);
+      setBrezzelsRevenue(Number((d as any).brezzels_revenue) || 0);
       setCurrency((d as any).currency || "EUR");
     } else {
       setData(null);
@@ -252,6 +258,9 @@ export default function ModelDashboardTab() {
       setCryptoAddress("");
       setContractPath("");
       setManualMonthly(0);
+      setFourbasedRevenue(0);
+      setMaloumRevenue(0);
+      setBrezzelsRevenue(0);
       setCurrency("EUR");
     }
     setLoading(false);
@@ -308,7 +317,7 @@ export default function ModelDashboardTab() {
       saveData();
     }, 1200);
     return () => clearTimeout(autoSaveTimer.current);
-  }, [notes, cryptoAddress, manualMonthly, revenuePercentage, currency,
+  }, [notes, cryptoAddress, manualMonthly, fourbasedRevenue, maloumRevenue, brezzelsRevenue, revenuePercentage, currency,
       fourbasedSubmitted, maloumSubmitted, brezzelsSubmitted,
       fourbasedBotdm, fourbasedMassdm, maloumBotdm, maloumMassdm, brezzelsBotdm, brezzelsMassdm]);
 
@@ -318,11 +327,23 @@ export default function ModelDashboardTab() {
   }, [selectedAccountId]);
 
   // Revenue calculations
-  const totalMonthRevenue = manualMonthly;
+  // Auto-calculate total from platform revenues
+  const totalPlatformRevenue = fourbasedRevenue + maloumRevenue + brezzelsRevenue;
+  // Use platform sum if any platform has a value, otherwise fall back to manual
+  const effectiveMonthly = totalPlatformRevenue > 0 ? totalPlatformRevenue : manualMonthly;
+  
+  // Sync manualMonthly with platform sum
+  useEffect(() => {
+    if (totalPlatformRevenue > 0) {
+      setManualMonthly(totalPlatformRevenue);
+    }
+  }, [totalPlatformRevenue]);
+
+  const totalMonthRevenue = effectiveMonthly;
   const gutschriftFromRevenue = useMemo(() => {
-    if (revenuePercentage <= 0 || manualMonthly <= 0) return 0;
-    return (manualMonthly * revenuePercentage) / 100;
-  }, [manualMonthly, revenuePercentage]);
+    if (revenuePercentage <= 0 || effectiveMonthly <= 0) return 0;
+    return (effectiveMonthly * revenuePercentage) / 100;
+  }, [effectiveMonthly, revenuePercentage]);
 
   // Available months for selection (last 12 months)
   const availableMonths = useMemo(() => {
@@ -402,6 +423,9 @@ export default function ModelDashboardTab() {
       crypto_address: cryptoAddress,
       contract_file_path: contractPath,
       monthly_revenue: manualMonthly,
+      fourbased_revenue: fourbasedRevenue,
+      maloum_revenue: maloumRevenue,
+      brezzels_revenue: brezzelsRevenue,
       currency,
     };
     if (data?.id) {
@@ -743,25 +767,18 @@ export default function ModelDashboardTab() {
             </Dialog>
             <Section icon={TrendingUp} title="Einnahmen (manuell)" delay={0.05}>
               <div className="space-y-4">
-                {/* Big golden number */}
+                {/* Big golden number – total */}
                 <div className="text-center py-3">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Monatsumsatz</p>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Gesamtumsatz</p>
                   <p className="text-4xl font-black text-gold-gradient tabular-nums">
-                    <AnimatedGoldValue value={manualMonthly} suffix={` ${currency}`} />
+                    <AnimatedGoldValue value={effectiveMonthly} suffix={` ${currency}`} />
                   </p>
                 </div>
-                <div className="flex gap-2">
-                  <div className="flex-1 input-gold-shimmer rounded-lg">
-                    <Input
-                      type="number"
-                      value={manualMonthly || ""}
-                      onChange={e => setManualMonthly(Number(e.target.value) || 0)}
-                      className="h-10 text-center text-lg font-semibold border-transparent"
-                      placeholder="Betrag eingeben..."
-                    />
-                  </div>
+
+                {/* Currency selector */}
+                <div className="flex justify-end">
                   <Select value={currency} onValueChange={setCurrency}>
-                    <SelectTrigger className="w-[100px] text-sm h-10">
+                    <SelectTrigger className="w-[100px] text-sm h-9">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -769,14 +786,66 @@ export default function ModelDashboardTab() {
                     </SelectContent>
                   </Select>
                 </div>
-                {revenuePercentage > 0 && manualMonthly > 0 && (
-                  <div className="rounded-xl border border-accent/20 bg-accent/5 p-3 text-center space-y-1">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                      Verdienst Model ({revenuePercentage}%)
-                    </p>
-                    <p className="text-2xl font-bold text-accent tabular-nums">
-                      <AnimatedGoldValue value={Math.round(manualMonthly * revenuePercentage / 100)} suffix={` ${currency}`} />
-                    </p>
+
+                {/* Per-platform revenue inputs */}
+                <div className="space-y-2">
+                  {([
+                    { label: "4Based", value: fourbasedRevenue, onChange: setFourbasedRevenue },
+                    { label: "Maloum", value: maloumRevenue, onChange: setMaloumRevenue },
+                    { label: "Brezzels", value: brezzelsRevenue, onChange: setBrezzelsRevenue },
+                  ] as const).map(p => (
+                    <div key={p.label} className="flex items-center gap-3 p-2.5 rounded-lg bg-secondary/30 border border-border/50">
+                      <span className="text-xs font-medium text-foreground w-16 shrink-0">{p.label}</span>
+                      <div className="flex-1 input-gold-shimmer rounded-lg">
+                        <Input
+                          type="number"
+                          value={p.value || ""}
+                          onChange={e => p.onChange(Number(e.target.value) || 0)}
+                          className="h-9 text-center text-sm font-semibold border-transparent"
+                          placeholder="0"
+                        />
+                      </div>
+                      <span className="text-xs text-muted-foreground w-10 shrink-0">{currency}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Payout calculation */}
+                {revenuePercentage > 0 && effectiveMonthly > 0 && (
+                  <div className="space-y-2">
+                    <div className="rounded-xl border border-accent/20 bg-accent/5 p-3 text-center space-y-1">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                        Verdienst Model ({revenuePercentage}%)
+                      </p>
+                      <p className="text-2xl font-bold text-accent tabular-nums">
+                        <AnimatedGoldValue value={Math.round(effectiveMonthly * revenuePercentage / 100)} suffix={` ${currency}`} />
+                      </p>
+                    </div>
+
+                    {/* Per-platform payout breakdown */}
+                    {totalPlatformRevenue > 0 && (
+                      <div className="rounded-lg bg-secondary/20 border border-border/40 p-2.5 space-y-1.5">
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Aufschlüsselung Payout</p>
+                        {fourbasedRevenue > 0 && (
+                          <div className="flex justify-between text-xs">
+                            <span className="text-muted-foreground">4Based</span>
+                            <span className="font-mono text-foreground">{Math.round(fourbasedRevenue * revenuePercentage / 100).toLocaleString("de-DE")} {currency}</span>
+                          </div>
+                        )}
+                        {maloumRevenue > 0 && (
+                          <div className="flex justify-between text-xs">
+                            <span className="text-muted-foreground">Maloum</span>
+                            <span className="font-mono text-foreground">{Math.round(maloumRevenue * revenuePercentage / 100).toLocaleString("de-DE")} {currency}</span>
+                          </div>
+                        )}
+                        {brezzelsRevenue > 0 && (
+                          <div className="flex justify-between text-xs">
+                            <span className="text-muted-foreground">Brezzels</span>
+                            <span className="font-mono text-foreground">{Math.round(brezzelsRevenue * revenuePercentage / 100).toLocaleString("de-DE")} {currency}</span>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -1000,6 +1069,11 @@ export default function ModelDashboardTab() {
                 cryptoAddress={cryptoAddress}
                 revenuePercentage={revenuePercentage}
                 currency={currency}
+                platformRevenue={{
+                  fourbased: fourbasedRevenue,
+                  maloum: maloumRevenue,
+                  brezzels: brezzelsRevenue,
+                }}
               />
             </Section>
           </motion.div>

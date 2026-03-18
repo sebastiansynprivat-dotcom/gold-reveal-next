@@ -22,6 +22,12 @@ const CRYPTO_NETWORKS = ["TRC20", "ERC20", "BEP20", "SOL", "BTC", "LTC"];
 
 const CRYPTO_COINS = ["USDT", "USDC", "BTC", "ETH", "SOL", "BNB", "XRP", "TRX", "LTC"];
 
+interface PlatformRevenue {
+  fourbased: number;
+  maloum: number;
+  brezzels: number;
+}
+
 interface CreditNoteFormProps {
   suggestedAmount?: number;
   defaultDescription?: string;
@@ -31,6 +37,7 @@ interface CreditNoteFormProps {
   chatterName?: string;
   revenuePercentage?: number;
   currency?: string;
+  platformRevenue?: PlatformRevenue;
 }
 
 export default function CreditNoteForm({
@@ -42,6 +49,7 @@ export default function CreditNoteForm({
   chatterName = "",
   revenuePercentage = 0,
   currency = "EUR",
+  platformRevenue,
 }: CreditNoteFormProps) {
   // localStorage key for persisting form fields
   const storageKey = `credit-note-form-${accountId || chatterName || "default"}`;
@@ -305,7 +313,32 @@ export default function CreditNoteForm({
     doc.text(descLines[0] || description, m + 15, y);
     const formattedNet = net.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     doc.text(formattedNet, rCol - 2, y, { align: "right" });
-    y += 10;
+    y += 3;
+
+    // Platform breakdown in PDF
+    const hasPlatformBreakdown = platformRevenue && (platformRevenue.fourbased > 0 || platformRevenue.maloum > 0 || platformRevenue.brezzels > 0);
+    if (hasPlatformBreakdown && revenuePercentage > 0) {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7);
+      doc.setTextColor(...goldLight);
+      doc.text("PLATFORM BREAKDOWN", m + 15, y);
+      y += 4;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7.5);
+      doc.setTextColor(...softWhite);
+      const platforms = [
+        { name: "4Based", rev: platformRevenue.fourbased },
+        { name: "Maloum", rev: platformRevenue.maloum },
+        { name: "Brezzels", rev: platformRevenue.brezzels },
+      ].filter(p => p.rev > 0);
+      platforms.forEach(p => {
+        const payout = (p.rev * revenuePercentage / 100);
+        doc.text(`${p.name}: ${p.rev.toLocaleString("de-DE", { minimumFractionDigits: 2 })} ${currency}  →  Payout: ${payout.toLocaleString("de-DE", { minimumFractionDigits: 2 })} ${currency}`, m + 15, y);
+        y += 4;
+      });
+      y += 3;
+    }
+
 
     // Subtotals – right-aligned block
     doc.setFont("helvetica", "normal");
@@ -642,6 +675,40 @@ export default function CreditNoteForm({
             </button>
           )}
         </div>
+
+        {/* Platform Breakdown */}
+        {platformRevenue && (platformRevenue.fourbased > 0 || platformRevenue.maloum > 0 || platformRevenue.brezzels > 0) && revenuePercentage > 0 && (
+          <div className="rounded-lg bg-secondary/20 border border-border/40 p-3 space-y-1.5">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Plattform-Aufschlüsselung</p>
+            {platformRevenue.fourbased > 0 && (
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">4Based</span>
+                <span className="font-mono text-foreground">
+                  {platformRevenue.fourbased.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}
+                  <span className="text-muted-foreground ml-1.5">→ {(platformRevenue.fourbased * revenuePercentage / 100).toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}</span>
+                </span>
+              </div>
+            )}
+            {platformRevenue.maloum > 0 && (
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Maloum</span>
+                <span className="font-mono text-foreground">
+                  {platformRevenue.maloum.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}
+                  <span className="text-muted-foreground ml-1.5">→ {(platformRevenue.maloum * revenuePercentage / 100).toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}</span>
+                </span>
+              </div>
+            )}
+            {platformRevenue.brezzels > 0 && (
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Brezzels</span>
+                <span className="font-mono text-foreground">
+                  {platformRevenue.brezzels.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}
+                  <span className="text-muted-foreground ml-1.5">→ {(platformRevenue.brezzels * revenuePercentage / 100).toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}</span>
+                </span>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Summary */}
         <div className="rounded-lg bg-secondary/30 border border-border/50 p-3 space-y-1.5">
