@@ -588,12 +588,6 @@ export default function CreditNoteForm({
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">KvK</Label>
-            <div className="input-gold-shimmer rounded-lg">
-              <Input value={issuerKvk} onChange={e => setIssuerKvk(e.target.value)} className="text-sm border-transparent" />
-            </div>
-          </div>
-          <div className="space-y-1.5">
             <Label className="text-xs text-muted-foreground">VAT ID</Label>
             <div className="input-gold-shimmer rounded-lg">
               <Input value={issuerVatId} onChange={e => setIssuerVatId(e.target.value)} className="text-sm border-transparent" />
