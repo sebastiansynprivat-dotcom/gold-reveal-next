@@ -12,10 +12,10 @@ import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
 import jsPDF from "jspdf";
 
 const ISSUER_DEFAULTS = {
-  name: "Tapyn B.V.",
-  address: "Daalwijkdreef 47, 1103AD, Amsterdam, Netherlands",
-  kvk: "95097821",
-  vatId: "NL867000533B01",
+  name: "Sharify Media Limited",
+  address: "Palaion Patron Germanou 11, 8011, Paphos, Cyprus",
+  kvk: "",
+  vatId: "",
 };
 
 const CRYPTO_NETWORKS = ["TRC20", "ERC20", "BEP20", "SOL", "BTC", "LTC"];
