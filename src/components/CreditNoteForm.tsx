@@ -182,7 +182,7 @@ export default function CreditNoteForm({
     y += 5.5;
     const issuerAddrLines = doc.splitTextToSize(issuerAddress, cw / 2 - 5);
     issuerAddrLines.forEach((line: string) => { doc.text(line, m, y); y += 3.8; });
-    doc.text(`KvK: ${issuerKvk}  ·  VAT: ${issuerVatId}`, m, y);
+    doc.text(`VAT: ${issuerVatId}`, m, y);
     y += 4;
     const leftEndY = y;
 
