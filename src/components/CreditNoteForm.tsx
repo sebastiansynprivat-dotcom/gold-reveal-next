@@ -651,6 +651,40 @@ export default function CreditNoteForm({
           )}
         </div>
 
+        {/* Platform Breakdown */}
+        {platformRevenue && (platformRevenue.fourbased > 0 || platformRevenue.maloum > 0 || platformRevenue.brezzels > 0) && revenuePercentage > 0 && (
+          <div className="rounded-lg bg-secondary/20 border border-border/40 p-3 space-y-1.5">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Plattform-Aufschlüsselung</p>
+            {platformRevenue.fourbased > 0 && (
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">4Based</span>
+                <span className="font-mono text-foreground">
+                  {platformRevenue.fourbased.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}
+                  <span className="text-muted-foreground ml-1.5">→ {(platformRevenue.fourbased * revenuePercentage / 100).toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}</span>
+                </span>
+              </div>
+            )}
+            {platformRevenue.maloum > 0 && (
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Maloum</span>
+                <span className="font-mono text-foreground">
+                  {platformRevenue.maloum.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}
+                  <span className="text-muted-foreground ml-1.5">→ {(platformRevenue.maloum * revenuePercentage / 100).toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}</span>
+                </span>
+              </div>
+            )}
+            {platformRevenue.brezzels > 0 && (
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Brezzels</span>
+                <span className="font-mono text-foreground">
+                  {platformRevenue.brezzels.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}
+                  <span className="text-muted-foreground ml-1.5">→ {(platformRevenue.brezzels * revenuePercentage / 100).toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}</span>
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Summary */}
         <div className="rounded-lg bg-secondary/30 border border-border/50 p-3 space-y-1.5">
           <div className="flex justify-between text-xs text-muted-foreground">
