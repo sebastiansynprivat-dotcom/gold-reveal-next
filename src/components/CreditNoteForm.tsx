@@ -814,13 +814,6 @@ export default function CreditNoteForm({
           </div>
         </div>
 
-        <div className="space-y-1.5">
-          <Label className="text-xs text-muted-foreground">Exchange Rate</Label>
-          <div className="input-gold-shimmer rounded-lg">
-            <Input value={exchangeRate} onChange={e => setExchangeRate(e.target.value)} placeholder="z.B. 1 USDT = 0.92€" className="text-sm border-transparent" />
-          </div>
-        </div>
-      </div>
 
       {/* Generate Button */}
       <Button
