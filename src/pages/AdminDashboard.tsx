@@ -485,8 +485,8 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
                                       <span className="font-medium text-foreground text-xs">{entry.name}</span>
                                     </div>
                                     <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                      {/* Billing checkbox for active chatters */}
-                                      {entry.isActive && (
+                                      {/* Billing checkbox – only for billing-eligible entries */}
+                                      {entry.billingEligible && (
                                         <button
                                           onClick={(e) => toggleBilling(entry.user_id, e)}
                                           className={cn(
