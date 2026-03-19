@@ -173,8 +173,8 @@ export default function ChatterDashboardTab() {
         </div>
       </motion.div>
 
-      {/* Chatter Selection */}
-      <Section icon={Users} title="Chatter auswählen">
+      {/* Chatter Table – Google Sheets Style */}
+      <Section icon={Users} title="Alle Chatter">
         <div className="space-y-3">
           <div className="flex gap-2">
             <div className="flex-1 input-gold-shimmer rounded-xl">
@@ -183,8 +183,7 @@ export default function ChatterDashboardTab() {
                 <Input
                   placeholder="Chatter suchen…"
                   value={searchQuery}
-                  onChange={e => { setSearchQuery(e.target.value); setListOpen(true); }}
-                  onFocus={() => setListOpen(true)}
+                  onChange={e => setSearchQuery(e.target.value)}
                   className="pl-8 text-sm border-transparent"
                 />
               </div>
@@ -219,29 +218,59 @@ export default function ChatterDashboardTab() {
             )}
           </AnimatePresence>
 
-          {/* Chatter list */}
-          <AnimatePresence>
-            {listOpen && filteredChatters.length > 0 && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-                className="overflow-hidden"
-              >
-                <div className="rounded-lg border border-border/50 divide-y divide-border/30 max-h-64 overflow-y-auto">
-                  {filteredChatters.map(c => (
-                    <button
+          {/* Permanent Table */}
+          {filteredChatters.length > 0 ? (
+            <div className="rounded-lg border border-border/50 overflow-hidden">
+              {/* Sticky Header */}
+              <div className="grid grid-cols-[1fr_70px_65px_65px_65px_75px_50px_32px] gap-0 bg-accent/10 border-b border-accent/20">
+                <div className="px-3 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold">Name</div>
+                <div className="px-2 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">Plattform</div>
+                <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-right">4Based</div>
+                <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-right">Maloum</div>
+                <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-right">Brezzels</div>
+                <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-right">Gesamt</div>
+                <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-right">%</div>
+                <div className="py-2" />
+              </div>
+
+              {/* Rows */}
+              <div className="max-h-[400px] overflow-y-auto">
+                {filteredChatters.map((c, i) => {
+                  const total = (c.fourbasedRevenue || 0) + (c.maloumRevenue || 0) + (c.brezzelsRevenue || 0);
+                  const isSelected = c.id === selectedId;
+                  return (
+                    <div
                       key={c.id}
-                      onClick={() => { setSelectedId(c.id); setListOpen(false); setSearchQuery(""); }}
+                      onClick={() => setSelectedId(c.id)}
                       className={cn(
-                        "w-full flex items-center justify-between px-3 py-2.5 text-sm transition-colors hover:bg-accent/10",
-                        selectedId === c.id && "bg-accent/15 text-accent"
+                        "grid grid-cols-[1fr_70px_65px_65px_65px_75px_50px_32px] gap-0 items-center border-b border-border/30 cursor-pointer transition-colors",
+                        isSelected
+                          ? "bg-accent/15 border-l-2 border-l-accent"
+                          : i % 2 === 0 ? "bg-card/40 hover:bg-accent/5" : "bg-card/20 hover:bg-accent/5"
                       )}
                     >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <span className="font-medium truncate">{c.name}</span>
-                        <span className="text-[10px] bg-secondary/50 text-muted-foreground border border-border/50 rounded px-1.5 py-0.5 capitalize shrink-0">{c.platform}</span>
+                      <div className="px-3 py-2 min-w-0">
+                        <p className={cn("text-xs font-medium truncate", isSelected ? "text-accent" : "text-foreground")}>{c.name}</p>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-xs text-muted-foreground">{((c.fourbasedRevenue || 0) + (c.maloumRevenue || 0) + (c.brezzelsRevenue || 0)).toLocaleString("de-DE")} {c.currency || "EUR"}</span>
+                      <div className="px-2 py-2 flex justify-center">
+                        <span className="text-[9px] bg-secondary/50 text-muted-foreground border border-border/30 rounded px-1.5 py-0.5 capitalize">{c.platform}</span>
+                      </div>
+                      <div className="px-1 py-2 text-right">
+                        <span className="text-[11px] tabular-nums text-muted-foreground">{(c.fourbasedRevenue || 0).toLocaleString("de-DE")}</span>
+                      </div>
+                      <div className="px-1 py-2 text-right">
+                        <span className="text-[11px] tabular-nums text-muted-foreground">{(c.maloumRevenue || 0).toLocaleString("de-DE")}</span>
+                      </div>
+                      <div className="px-1 py-2 text-right">
+                        <span className="text-[11px] tabular-nums text-muted-foreground">{(c.brezzelsRevenue || 0).toLocaleString("de-DE")}</span>
+                      </div>
+                      <div className="px-1 py-2 text-right">
+                        <span className="text-[11px] tabular-nums font-semibold text-foreground">{total.toLocaleString("de-DE")}</span>
+                      </div>
+                      <div className="px-1 py-2 text-right">
+                        <span className="text-[11px] tabular-nums text-muted-foreground">{c.revenuePercentage}%</span>
+                      </div>
+                      <div className="flex justify-center py-2">
                         <button
                           onClick={e => { e.stopPropagation(); deleteChatter(c.id); }}
                           className="p-1 rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors"
@@ -249,19 +278,19 @@ export default function ChatterDashboardTab() {
                           <Trash2 className="h-3 w-3" />
                         </button>
                       </div>
-                    </button>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                    </div>
+                  );
+                })}
+              </div>
 
-          {selected && (
-            <div className="text-xs text-muted-foreground flex items-center gap-1.5">
-              <ChevronDown className="h-3 w-3 text-accent" />
-              Ausgewählt: <span className="text-accent font-medium">{selected.name}</span>
+              {/* Footer */}
+              <div className="px-3 py-1.5 bg-secondary/20 border-t border-border/30">
+                <span className="text-[10px] text-muted-foreground">{filteredChatters.length} Chatter</span>
+              </div>
             </div>
-          )}
+          ) : chatters.length > 0 ? (
+            <p className="text-xs text-muted-foreground text-center py-4">Keine Treffer für "{searchQuery}"</p>
+          ) : null}
         </div>
       </Section>
 
