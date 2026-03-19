@@ -19,6 +19,9 @@ interface Chatter {
   name: string;
   platform: string;
   monthlyRevenue: number;
+  fourbasedRevenue: number;
+  maloumRevenue: number;
+  brezzelsRevenue: number;
   revenuePercentage: number;
   currency: string;
   cryptoAddress: string;
@@ -26,13 +29,14 @@ interface Chatter {
 
 const STORAGE_KEY = "admin-chatter-dashboard";
 
-const SENDER = {
-  company: "Sharify Media FZCO",
-  line1: "IFZA Business Park DDP 21236-001",
-  line2: "Silicon Oasis",
-  line3: "00000, United Arab Emirates",
-  taxId: "1041507169",
-};
+function migrateChatters(chatters: Chatter[]): Chatter[] {
+  return chatters.map(c => ({
+    ...c,
+    fourbasedRevenue: c.fourbasedRevenue ?? c.monthlyRevenue ?? 0,
+    maloumRevenue: c.maloumRevenue ?? 0,
+    brezzelsRevenue: c.brezzelsRevenue ?? 0,
+  }));
+}
 
 function useAnimatedCounter(target: number, duration = 1200) {
   const [value, setValue] = useState(0);
