@@ -3109,7 +3109,7 @@ export default function AdminDashboard() {
 
                         {/* Content */}
                         <div className="px-4 pb-3 space-y-2.5">
-                          <div className="h-px bg-border/30" />
+                          <div className="h-px bg-gradient-to-r from-transparent via-accent/20 to-transparent" />
 
                           {/* Model Name */}
                           <button
