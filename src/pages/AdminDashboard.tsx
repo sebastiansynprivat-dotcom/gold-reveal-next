@@ -3433,7 +3433,156 @@ export default function AdminDashboard() {
               );
             })()}
 
+            {/* Setup Status Table */}
             <section className="glass-card rounded-xl overflow-hidden">
+              <div className="px-4 py-3 border-b border-border flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-accent" />
+                <h2 className="text-sm font-semibold text-foreground">Status-Übersicht</h2>
+                <Badge variant="secondary" className="text-[10px] ml-auto">
+                  {accounts.length} Accounts
+                </Badge>
+              </div>
+              {(() => {
+                const [setupSearch, setSetupSearch] = React.useState("");
+                const [setupPlatform, setSetupPlatform] = React.useState<"all" | "4Based" | "Maloum" | "Brezzels">("all");
+
+                const getDash = (accId: string) => setupDashboards.find((d: any) => d.account_id === accId);
+
+                const getField = (platform: string, type: "botdm" | "welcome" | "massdm") => {
+                  if (type === "botdm") return platform === "Maloum" ? "maloum_botdm_done" : platform === "Brezzels" ? "brezzels_botdm_done" : "fourbased_botdm_done";
+                  if (type === "welcome") return platform === "Maloum" ? "maloum_submitted" : platform === "Brezzels" ? "brezzels_submitted" : "fourbased_submitted";
+                  return platform === "Maloum" ? "maloum_massdm_done" : platform === "Brezzels" ? "brezzels_massdm_done" : "fourbased_massdm_done";
+                };
+
+                const filteredSetupAccounts = accounts.filter(acc => {
+                  if (setupPlatform !== "all" && acc.platform !== setupPlatform) return false;
+                  if (setupSearch) {
+                    const q = setupSearch.toLowerCase();
+                    return acc.account_email.toLowerCase().includes(q) || acc.account_domain.toLowerCase().includes(q);
+                  }
+                  return true;
+                });
+
+                const toggleSetupField = async (accountId: string, field: string, currentVal: boolean) => {
+                  const dash = getDash(accountId);
+                  if (dash) {
+                    await supabase.from("model_dashboard").update({ [field]: !currentVal }).eq("id", dash.id);
+                  } else {
+                    await supabase.from("model_dashboard").insert({ account_id: accountId, [field]: !currentVal } as any);
+                  }
+                  await loadSetupDashboards();
+                };
+
+                const platformColors: Record<string, string> = {
+                  "4Based": "bg-blue-500/15 text-blue-400 border-blue-500/30",
+                  "Maloum": "bg-purple-500/15 text-purple-400 border-purple-500/30",
+                  "Brezzels": "bg-orange-500/15 text-orange-400 border-orange-500/30",
+                };
+
+                return (
+                  <div className="p-3 space-y-3">
+                    {/* Search + Platform filter */}
+                    <div className="flex flex-col gap-2">
+                      <div className="relative input-gold-shimmer rounded-lg">
+                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                        <Input
+                          value={setupSearch}
+                          onChange={e => setSetupSearch(e.target.value)}
+                          placeholder="Account suchen…"
+                          className="pl-8 text-xs h-8 border-transparent"
+                        />
+                      </div>
+                      <div className="flex gap-1 p-1 rounded-lg bg-secondary/30">
+                        {(["all", "4Based", "Maloum", "Brezzels"] as const).map(p => (
+                          <button
+                            key={p}
+                            onClick={() => setSetupPlatform(p)}
+                            className={cn(
+                              "flex-1 text-[11px] font-medium py-1.5 rounded-md transition-all duration-200",
+                              setupPlatform === p
+                                ? "bg-accent/20 text-accent border border-accent/30"
+                                : "text-muted-foreground hover:text-foreground border border-transparent"
+                            )}
+                          >
+                            {p === "all" ? "Alle" : p}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Table */}
+                    <div className="rounded-lg border border-border/50 overflow-hidden">
+                      <div className="grid grid-cols-[1fr_80px_50px_50px_50px] gap-0 bg-accent/10 border-b border-accent/20">
+                        <div className="px-3 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold">Account</div>
+                        <div className="px-2 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">Plattform</div>
+                        <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">Bot</div>
+                        <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">Setup</div>
+                        <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">Mass</div>
+                      </div>
+
+                      <div className="max-h-[400px] overflow-y-auto">
+                        {filteredSetupAccounts.length === 0 ? (
+                          <p className="text-xs text-muted-foreground text-center py-8">Keine Accounts gefunden.</p>
+                        ) : (
+                          filteredSetupAccounts.map((acc, i) => {
+                            const dash = getDash(acc.id);
+                            const botdmField = getField(acc.platform, "botdm");
+                            const welcomeField = getField(acc.platform, "welcome");
+                            const massdmField = getField(acc.platform, "massdm");
+                            const botdmVal = !!(dash as any)?.[botdmField];
+                            const welcomeVal = !!(dash as any)?.[welcomeField];
+                            const massdmVal = !!(dash as any)?.[massdmField];
+
+                            return (
+                              <div
+                                key={acc.id}
+                                className={cn(
+                                  "grid grid-cols-[1fr_80px_50px_50px_50px] gap-0 items-center border-b border-border/30 transition-colors hover:bg-accent/5",
+                                  i % 2 === 0 ? "bg-card/40" : "bg-card/20"
+                                )}
+                              >
+                                <div className="px-3 py-2 min-w-0">
+                                  <p className="text-xs font-medium text-foreground truncate">{acc.account_email}</p>
+                                  {acc.account_domain && <p className="text-[10px] text-muted-foreground truncate">{acc.account_domain}</p>}
+                                </div>
+                                <div className="px-2 py-2 flex justify-center">
+                                  <span className={cn(
+                                    "text-[9px] font-medium px-2 py-0.5 rounded-full border",
+                                    platformColors[acc.platform] || "bg-secondary/50 text-muted-foreground border-border/30"
+                                  )}>
+                                    {acc.platform}
+                                  </span>
+                                </div>
+                                {[{ field: botdmField, val: botdmVal }, { field: welcomeField, val: welcomeVal }, { field: massdmField, val: massdmVal }].map(({ field, val }) => (
+                                  <div key={field} className="flex justify-center py-2">
+                                    <button
+                                      onClick={() => toggleSetupField(acc.id, field, val)}
+                                      className={cn(
+                                        "h-5 w-5 rounded border-2 flex items-center justify-center transition-all duration-200",
+                                        val
+                                          ? "border-accent bg-accent/20"
+                                          : "border-muted-foreground/30 bg-transparent hover:border-accent/50"
+                                      )}
+                                    >
+                                      {val && <CheckCircle2 className="h-3 w-3 text-accent" />}
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between px-1">
+                      <span className="text-[10px] text-muted-foreground">{filteredSetupAccounts.length} Accounts</span>
+                    </div>
+                  </div>
+                );
+              })()}
+            </section>
+
               <div className="px-4 py-3 border-b border-border flex items-center gap-2">
                 <Bot className="h-4 w-4 text-accent" />
                 <h2 className="text-sm font-semibold text-foreground">Bot DMs</h2>
