@@ -325,10 +325,10 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
     });
   }
 
-  // Count billing stats for active chatters
-  const allActiveEntries = Object.values(grouped).flatMap(g => g.entries.filter((e: any) => e.isActive));
-  const billingDoneCount = allActiveEntries.filter((e: any) => isBillingDone(e.user_id)).length;
-  const billingDueCount = allActiveEntries.length - billingDoneCount;
+  // Count billing stats – only for billing-eligible entries (assigned during billing period)
+  const allEligibleEntries = Object.values(grouped).flatMap(g => g.entries.filter((e: any) => e.billingEligible));
+  const billingDoneCount = allEligibleEntries.filter((e: any) => isBillingDone(e.user_id)).length;
+  const billingDueCount = allEligibleEntries.length - billingDoneCount;
 
   const filterOptions = [
     { key: "alle" as const, label: "Alle" },
