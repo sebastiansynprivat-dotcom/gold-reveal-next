@@ -3351,7 +3351,10 @@ export default function AdminDashboard() {
                             )}
                           </div>
                         </div>
-                      </div>
+                        {idx < arr.length - 1 && (
+                          <div className="h-px bg-gradient-to-r from-transparent via-accent/15 to-transparent mx-4" />
+                        )}
+                      </React.Fragment>
                     );
                   })}
                 </div>
