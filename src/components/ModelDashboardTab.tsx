@@ -149,7 +149,225 @@ function Section({
   );
 }
 
-export default function ModelDashboardTab() {
+// ─── BotDM Table Component ───
+function BotDmTable({
+  rows,
+  allDashboards,
+  onToggle,
+}: {
+  rows: { acc: Account; dash: ModelDashboardRow | undefined; botMsg: BotMessageRow | undefined }[];
+  allDashboards: ModelDashboardRow[];
+  onToggle: (accountId: string, field: string, value: boolean) => Promise<void>;
+}) {
+  const [tableSearch, setTableSearch] = useState("");
+  const [tablePlatform, setTablePlatform] = useState<"all" | "4Based" | "Maloum" | "Brezzels">("all");
+  const [expandedFollowUp, setExpandedFollowUp] = useState<string | null>(null);
+  const [toggling, setToggling] = useState<string | null>(null);
+
+  const filtered = rows.filter(({ acc }) => {
+    if (tablePlatform !== "all" && acc.platform !== tablePlatform) return false;
+    if (tableSearch) {
+      const q = tableSearch.toLowerCase();
+      return acc.account_email.toLowerCase().includes(q) || acc.account_domain.toLowerCase().includes(q);
+    }
+    return true;
+  });
+
+  const getField = (acc: Account, type: "botdm" | "welcome" | "massdm") => {
+    const p = acc.platform;
+    if (type === "botdm") return p === "Maloum" ? "maloum_botdm_done" : p === "Brezzels" ? "brezzels_botdm_done" : "fourbased_botdm_done";
+    if (type === "welcome") return p === "Maloum" ? "maloum_submitted" : p === "Brezzels" ? "brezzels_submitted" : "fourbased_submitted";
+    return p === "Maloum" ? "maloum_massdm_done" : p === "Brezzels" ? "brezzels_massdm_done" : "fourbased_massdm_done";
+  };
+
+  const handleToggle = async (accountId: string, field: string, current: boolean) => {
+    const key = `${accountId}-${field}`;
+    setToggling(key);
+    await onToggle(accountId, field, !current);
+    setToggling(null);
+  };
+
+  const platformColors: Record<string, string> = {
+    "4Based": "bg-blue-500/15 text-blue-400 border-blue-500/30",
+    "Maloum": "bg-purple-500/15 text-purple-400 border-purple-500/30",
+    "Brezzels": "bg-orange-500/15 text-orange-400 border-orange-500/30",
+  };
+
+  return (
+    <div className="space-y-3">
+      {/* Search + Filter */}
+      <div className="flex flex-col gap-2">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+          <div className="input-gold-shimmer rounded-lg">
+            <Input
+              value={tableSearch}
+              onChange={e => setTableSearch(e.target.value)}
+              placeholder="Account suchen…"
+              className="pl-9 bg-secondary/50 border-transparent text-sm h-9"
+            />
+          </div>
+        </div>
+        <div className="flex gap-1 p-1 rounded-lg bg-secondary/30">
+          {(["all", "4Based", "Maloum", "Brezzels"] as const).map(p => (
+            <button
+              key={p}
+              onClick={() => setTablePlatform(p)}
+              className={cn(
+                "flex-1 text-[11px] font-medium py-1.5 rounded-md transition-all duration-200",
+                tablePlatform === p
+                  ? "bg-accent/20 text-accent border border-accent/30"
+                  : "text-muted-foreground hover:text-foreground border border-transparent"
+              )}
+            >
+              {p === "all" ? "Alle" : p}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="rounded-lg border border-border/50 overflow-hidden">
+        {/* Header */}
+        <div className="grid grid-cols-[1fr_80px_50px_50px_50px] gap-0 bg-accent/10 border-b border-accent/20">
+          <div className="px-3 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold">Account</div>
+          <div className="px-2 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">Plattform</div>
+          <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">Bot</div>
+          <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">Setup</div>
+          <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">Mass</div>
+        </div>
+
+        {/* Rows */}
+        <ScrollArea className="max-h-[400px]">
+          {filtered.length === 0 ? (
+            <p className="text-xs text-muted-foreground text-center py-8">Keine Accounts gefunden.</p>
+          ) : (
+            filtered.map(({ acc, dash }, i) => {
+              const botdmField = getField(acc, "botdm");
+              const welcomeField = getField(acc, "welcome");
+              const massdmField = getField(acc, "massdm");
+              const botdmVal = !!(dash as any)?.[botdmField];
+              const welcomeVal = !!(dash as any)?.[welcomeField];
+              const massdmVal = !!(dash as any)?.[massdmField];
+              const isMaloum = acc.platform === "Maloum";
+              const botMsg = rows.find(r => r.acc.id === acc.id)?.botMsg;
+              const isExpanded = expandedFollowUp === acc.id;
+
+              return (
+                <div key={acc.id}>
+                  <div className={cn(
+                    "grid grid-cols-[1fr_80px_50px_50px_50px] gap-0 items-center border-b border-border/30 transition-colors hover:bg-accent/5",
+                    i % 2 === 0 ? "bg-card/40" : "bg-card/20"
+                  )}>
+                    {/* Account */}
+                    <div className="px-3 py-2 min-w-0">
+                      <p className="text-xs font-medium text-foreground truncate">{acc.account_email}</p>
+                      {acc.account_domain && (
+                        <p className="text-[10px] text-muted-foreground truncate">{acc.account_domain}</p>
+                      )}
+                      {isMaloum && botMsg?.follow_up_message && (
+                        <button
+                          onClick={() => setExpandedFollowUp(isExpanded ? null : acc.id)}
+                          className="text-[10px] text-accent hover:underline mt-0.5 flex items-center gap-1"
+                        >
+                          <ChevronDown className={cn("h-2.5 w-2.5 transition-transform", isExpanded && "rotate-180")} />
+                          Follow-Up
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Platform badge */}
+                    <div className="px-2 py-2 flex justify-center">
+                      <span className={cn(
+                        "text-[9px] font-medium px-2 py-0.5 rounded-full border",
+                        platformColors[acc.platform] || "bg-secondary/50 text-muted-foreground border-border/30"
+                      )}>
+                        {acc.platform}
+                      </span>
+                    </div>
+
+                    {/* BotDM checkbox */}
+                    <div className="flex justify-center py-2">
+                      <button
+                        onClick={() => handleToggle(acc.id, botdmField, botdmVal)}
+                        disabled={toggling === `${acc.id}-${botdmField}`}
+                        className={cn(
+                          "h-5 w-5 rounded border-2 flex items-center justify-center transition-all duration-200",
+                          botdmVal
+                            ? "border-accent bg-accent/20"
+                            : "border-muted-foreground/30 bg-transparent hover:border-accent/50"
+                        )}
+                      >
+                        {botdmVal && <CheckCircle2 className="h-3 w-3 text-accent" />}
+                      </button>
+                    </div>
+
+                    {/* Welcome/Setup checkbox */}
+                    <div className="flex justify-center py-2">
+                      <button
+                        onClick={() => handleToggle(acc.id, welcomeField, welcomeVal)}
+                        disabled={toggling === `${acc.id}-${welcomeField}`}
+                        className={cn(
+                          "h-5 w-5 rounded border-2 flex items-center justify-center transition-all duration-200",
+                          welcomeVal
+                            ? "border-accent bg-accent/20"
+                            : "border-muted-foreground/30 bg-transparent hover:border-accent/50"
+                        )}
+                      >
+                        {welcomeVal && <CheckCircle2 className="h-3 w-3 text-accent" />}
+                      </button>
+                    </div>
+
+                    {/* MassDM checkbox */}
+                    <div className="flex justify-center py-2">
+                      <button
+                        onClick={() => handleToggle(acc.id, massdmField, massdmVal)}
+                        disabled={toggling === `${acc.id}-${massdmField}`}
+                        className={cn(
+                          "h-5 w-5 rounded border-2 flex items-center justify-center transition-all duration-200",
+                          massdmVal
+                            ? "border-accent bg-accent/20"
+                            : "border-muted-foreground/30 bg-transparent hover:border-accent/50"
+                        )}
+                      >
+                        {massdmVal && <CheckCircle2 className="h-3 w-3 text-accent" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Maloum Follow-Up expandable */}
+                  <AnimatePresence>
+                    {isMaloum && isExpanded && botMsg?.follow_up_message && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden border-b border-border/30 bg-accent/5"
+                      >
+                        <div className="px-4 py-2.5">
+                          <p className="text-[10px] uppercase tracking-wider text-accent font-medium mb-1">Follow-Up Nachricht</p>
+                          <p className="text-xs text-foreground/80 whitespace-pre-wrap">{botMsg.follow_up_message}</p>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            })
+          )}
+        </ScrollArea>
+      </div>
+
+      {/* Summary */}
+      <div className="flex items-center justify-between px-1">
+        <span className="text-[10px] text-muted-foreground">{filtered.length} Accounts</span>
+      </div>
+    </div>
+  );
+}
+
+
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [allDashboards, setAllDashboards] = useState<ModelDashboardRow[]>([]);
   const [selectedAccountId, setSelectedAccountId] = useState<string>("");
