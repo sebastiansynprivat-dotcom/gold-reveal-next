@@ -3655,26 +3655,24 @@ export default function AdminDashboard() {
                                 </div>
                               </div>
 
-                              {/* Follow-up (only for Maloum) */}
-                              {acc.platform === "Maloum" && (
-                                <div className="space-y-1.5">
-                                  <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Follow-up Nachricht</label>
-                                  <div className="input-gold-shimmer rounded-lg">
-                                    <Textarea
-                                      value={entry.followUp}
-                                      onChange={(e) =>
-                                        setBotMessages((prev) => ({
-                                          ...prev,
-                                          [acc.id]: { ...entry, followUp: e.target.value },
-                                        }))
-                                      }
-                                      placeholder="Na, hast du meine letzte Nachricht gelesen? 😏"
-                                      className="text-sm min-h-[60px] resize-none bg-background/50 border-transparent"
-                                      onClick={e => e.stopPropagation()}
-                                    />
-                                  </div>
+                              {/* Follow-up */}
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Follow-up Nachricht</label>
+                                <div className="input-gold-shimmer rounded-lg">
+                                  <Textarea
+                                    value={entry.followUp}
+                                    onChange={(e) =>
+                                      setBotMessages((prev) => ({
+                                        ...prev,
+                                        [acc.id]: { ...entry, followUp: e.target.value },
+                                      }))
+                                    }
+                                    placeholder="Na, hast du meine letzte Nachricht gelesen? 😏"
+                                    className="text-sm min-h-[60px] resize-none bg-background/50 border-transparent"
+                                    onClick={e => e.stopPropagation()}
+                                  />
                                 </div>
-                              )}
+                              </div>
 
                               {/* Save */}
                               <Button
