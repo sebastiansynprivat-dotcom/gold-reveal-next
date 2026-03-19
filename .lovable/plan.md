@@ -1,43 +1,63 @@
 
 
-# Google Sheets-Style Liste fur Chatter- & Model-Dashboard
+# Chatter-Dashboard → Mitarbeiter-Dashboard Umbau
 
-## Uberblick
+## Überblick
 
-Beide Dashboards (Chatter & Model) bekommen eine permanente, tabellarische Ubersicht im Google Sheets-Stil, die alle Eintrage auf einen Blick zeigt. Klick auf einen Namen offnet die Detail-Ansicht darunter.
+Das "Chatter-Dashboard" im Admin-Bereich wird zum **Mitarbeiter-Dashboard** umbenannt. Beim Hinzufügen wird eine Rolle (Chatter / Mitarbeiter) vergeben. Oben kann nach Rolle gefiltert werden. Mitarbeiter erhalten eine Stundenlohn-Vergütung statt Prozente. Die Tabelle wird vereinfacht (keine Einzel-Plattform-Spalten).
 
-## Anderungen
+## Änderungen
 
-### 1. ChatterDashboardTab — Sheets-Tabelle statt Suchfeld-Auswahl
+### 1. Datenmodell erweitern (Chatter Interface)
 
-- Ersetze die aktuelle Suchfeld + aufklappbare Liste durch eine permanente Tabelle mit Spalten: **Name | Plattform | 4Based | Maloum | Brezzels | Gesamt | Anteil**
-- Jede Zeile ist klickbar, selektierte Zeile wird gold hervorgehoben
-- Suchfeld bleibt oben uber der Tabelle
-- "Neu"-Button bleibt erhalten
-- Delete-Icon pro Zeile am Ende
-- Tabelle hat alternating row colors, sticky header, horizontales Scrollen auf Mobile
-- Detail-Ansicht (Revenue Card, Daten, Anteil, Crypto, Credit Note) erscheint unterhalb der Tabelle wenn ein Chatter ausgewahlt ist
+- Neues Feld `role: "chatter" | "mitarbeiter"` (Default: `"chatter"`)
+- Neues Feld `compensationType: "percentage" | "hourly"` (Default: `"percentage"`)
+- Neues Feld `hourlyRate: number` (Default: 0)
+- Neues Feld `hoursWorked: number` (Default: 0)
+- Migration-Funktion aktualisieren für bestehende localStorage-Daten
 
-### 2. ModelDashboardTab — Sheets-Tabelle statt Collapsible-Liste
+### 2. Umbenennung
 
-- Ersetze die eingeklappte "Alle Models"-Liste durch eine permanente Tabelle mit Spalten: **Model (Email) | Plattform | 4Based Rev | Maloum Rev | Brezzels Rev | Gesamt | Anteil %**
-- Klick auf eine Zeile ladt die Detail-Ansicht darunter (bestehendes Verhalten bleibt)
-- Platform-Filter und Sub-Filter Slider bleiben oben
-- Suchfeld bleibt
-- Selektierte Zeile bekommt gold-Highlight
-- Sticky Header, alternating rows
+- Header: "Chatter-Dashboard" → "Mitarbeiter-Dashboard"
+- Subtitle: "Mitarbeiter & Chatter verwalten & Gutschriften erstellen"
+- Section-Title: "Alle Chatter" → "Alle Mitarbeiter"
+- Tab-Label in AdminDashboard.tsx: "Chatter-Dashboard" → "Mitarbeiter-Dashboard"
+- Toasts und Footer-Text entsprechend anpassen
 
-### 3. Styling
+### 3. Rollen-Filter oben
 
-- Nutze bestehende Tailwind-Klassen + `glass-card` Design-System
-- Sticky `thead` mit `bg-accent/10` Header
-- Hover: `bg-accent/5`, Selected: `bg-accent/15 border-l-2 border-accent`
-- Kompakte Zeilen (`py-2 px-3 text-xs`)
-- Responsive: horizontales Scrollen auf kleinen Bildschirmen
+- Über der Suchleiste: Drei Filter-Pills: **Alle | Chatter | Mitarbeiter**
+- Gold-Highlight für aktiven Filter
+- Filtert `filteredChatters` zusätzlich nach `role`
+
+### 4. Rolle beim Hinzufügen
+
+- Im "Neu"-Formular ein Toggle/Select für Rolle: Chatter oder Mitarbeiter
+- Default: Chatter
+
+### 5. Tabelle vereinfachen
+
+- Spalten werden: **Name | Plattform | Rolle | Gesamt | Verdienst | 🗑**
+- Grid: `grid-cols-[1fr_80px_80px_80px_80px_32px]`
+- Einzelne Plattform-Revenue-Spalten (4Based, Maloum, Brezzels) entfernt
+- "Verdienst" Spalte zeigt den errechneten Betrag (% oder Stunden × Rate)
+
+### 6. Vergütungsmodell in Detail-Ansicht
+
+- Wenn ein Eintrag ausgewählt ist, zeigt die "Anteil & Verdienst" Section:
+  - **Toggle**: "Prozent-Beteiligung" vs "Stundenlohn"
+  - Bei **Prozent**: Slider wie bisher (0–100%), Verdienst = Gesamt × %
+  - Bei **Stundenlohn**: Eingabefeld "Stundensatz (€)" + Eingabefeld "Stunden gearbeitet" → Verdienst = Rate × Stunden
+- Die Revenue-Eingabefelder (4Based, Maloum, Brezzels) bleiben in der Detail-Ansicht bestehen, damit der Gesamtumsatz berechnet werden kann
+
+### 7. AdminDashboard.tsx
+
+- Tab-Label von "Chatter-Dashboard" → "Mitarbeiter-Dashboard" ändern
 
 ## Technische Details
 
-- **ChatterDashboardTab.tsx**: Refactor der Render-Logik. Die "Chatter auswahlen" Section wird durch eine Tabellen-Section ersetzt. Daten kommen weiterhin aus localStorage.
-- **ModelDashboardTab.tsx**: Die collapsible `Alle Models` Section + `ScrollArea` wird durch eine permanente Tabelle ersetzt. Datenquellen (accounts, allDashboards) bleiben identisch. `filteredAccounts` wird direkt in Tabellenzeilen gerendert. Revenue-Werte pro Model werden aus `allDashboards` gelesen.
-- Beide Tabellen nutzen native HTML `table` oder das bestehende Grid-Layout mit `grid-cols-[...]` fur konsistentes Spalten-Alignment.
+- **Datei**: `src/components/ChatterDashboardTab.tsx` — Hauptänderungen
+- **Datei**: `src/pages/AdminDashboard.tsx` — Tab-Label umbenennen (Zeile ~1843)
+- localStorage-Key bleibt gleich (`admin-chatter-dashboard`) für Rückwärtskompatibilität
+- Migration füllt `role: "chatter"`, `compensationType: "percentage"`, `hourlyRate: 0`, `hoursWorked: 0` für bestehende Einträge
 
