@@ -3072,7 +3072,7 @@ export default function AdminDashboard() {
                       <React.Fragment key={req.id}>
                         <div
                           className={cn(
-                            "relative glass-card-subtle rounded-xl overflow-hidden transition-all duration-300 card-hover-glow border-l-2",
+                            "relative rounded-xl overflow-hidden transition-all duration-300 card-hover-glow border border-border/60 bg-card/60 backdrop-blur-sm border-l-[3px]",
                             statusConfig.border,
                             req.status === "pending" && "ring-1 ring-yellow-500/20"
                           )}
