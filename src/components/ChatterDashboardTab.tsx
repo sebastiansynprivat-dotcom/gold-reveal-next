@@ -234,7 +234,7 @@ export default function ChatterDashboardTab() {
               </div>
 
               {/* Rows */}
-              <div className="max-h-[400px] overflow-y-auto">
+              <div>
                 {filteredChatters.map((c, i) => {
                   const total = (c.fourbasedRevenue || 0) + (c.maloumRevenue || 0) + (c.brezzelsRevenue || 0);
                   const isSelected = c.id === selectedId;
