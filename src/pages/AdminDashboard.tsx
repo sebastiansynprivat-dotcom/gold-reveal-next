@@ -3083,9 +3083,9 @@ export default function AdminDashboard() {
                           {/* Header */}
                           <div className="px-4 py-3 flex items-center gap-3">
                             <div className="h-9 w-9 rounded-lg bg-accent/10 flex items-center justify-center shrink-0 ring-1 ring-accent/20 shadow-[0_0_8px_hsl(43_56%_52%/0.1)]">
-                            <span className="text-sm font-bold text-accent">{chatterName.charAt(0).toUpperCase()}</span>
-                          </div>
-                          <div className="flex-1 min-w-0">
+                              <span className="text-sm font-bold text-accent">{chatterName.charAt(0).toUpperCase()}</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2">
                               <span className="text-sm font-semibold text-foreground truncate">{chatterName}</span>
                               <span className={cn("flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full", statusConfig.bg, statusConfig.text)}>
