@@ -1,0 +1,1 @@
+ALTER SEQUENCE public.credit_note_seq RESTART WITH 1;
