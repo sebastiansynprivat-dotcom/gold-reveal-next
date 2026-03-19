@@ -114,10 +114,15 @@ export default function ChatterDashboardTab() {
     return c.name.toLowerCase().includes(q) || c.platform.toLowerCase().includes(q);
   });
 
+  const totalRevenue = useMemo(() => {
+    if (!selected) return 0;
+    return (selected.fourbasedRevenue || 0) + (selected.maloumRevenue || 0) + (selected.brezzelsRevenue || 0);
+  }, [selected]);
+
   const verdienst = useMemo(() => {
     if (!selected || selected.revenuePercentage <= 0) return 0;
-    return Math.round(selected.monthlyRevenue * selected.revenuePercentage / 100);
-  }, [selected]);
+    return Math.round(totalRevenue * selected.revenuePercentage / 100);
+  }, [selected, totalRevenue]);
 
   const addChatter = () => {
     if (!newName.trim()) return;
