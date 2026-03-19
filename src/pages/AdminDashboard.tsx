@@ -3456,17 +3456,24 @@ export default function AdminDashboard() {
                       key={p}
                       onClick={() => setSetupPlatform(p)}
                       className={cn(
-                        "flex-1 text-[11px] font-medium py-1.5 rounded-md transition-all duration-200",
+                        "relative flex-1 text-[11px] font-medium py-1.5 rounded-md transition-colors duration-200 z-10",
                         setupPlatform === p
-                          ? "bg-accent/20 text-accent border border-accent/30"
-                          : "text-muted-foreground hover:text-foreground border border-transparent"
+                          ? "text-accent"
+                          : "text-muted-foreground hover:text-foreground"
                       )}
                     >
-                      {p === "all" ? "Alle" : p}
+                      {setupPlatform === p && (
+                        <motion.div
+                          layoutId="activeSetupPlatform"
+                          className="absolute inset-0 bg-accent/15 rounded-md shadow-sm border border-accent/30"
+                          transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                        />
+                      )}
+                      <span className="relative z-10">{p === "all" ? "Alle" : p}</span>
                     </button>
                   ))}
                 </div>
-                <div className="flex gap-1 flex-wrap">
+                <div className="flex gap-1 p-1 rounded-lg bg-secondary/30 flex-wrap">
                   {([
                     { key: "alle", label: "Alle" },
                     { key: "botdm_missing", label: "Bot DM fehlt" },
@@ -3479,13 +3486,20 @@ export default function AdminDashboard() {
                       key={f.key}
                       onClick={() => setSetupStatusFilter(f.key)}
                       className={cn(
-                        "text-[10px] font-medium px-2.5 py-1 rounded-full border transition-all duration-200",
+                        "relative text-[10px] font-medium px-2.5 py-1.5 rounded-md transition-colors duration-200 z-10",
                         setupStatusFilter === f.key
-                          ? "bg-accent/20 text-accent border-accent/30"
-                          : "text-muted-foreground hover:text-foreground border-border/30 hover:border-accent/30"
+                          ? "text-accent"
+                          : "text-muted-foreground hover:text-foreground"
                       )}
                     >
-                      {f.label}
+                      {setupStatusFilter === f.key && (
+                        <motion.div
+                          layoutId="activeSetupStatus"
+                          className="absolute inset-0 bg-accent/15 rounded-md shadow-sm border border-accent/30"
+                          transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                        />
+                      )}
+                      <span className="relative z-10">{f.label}</span>
                     </button>
                   ))}
                 </div>
