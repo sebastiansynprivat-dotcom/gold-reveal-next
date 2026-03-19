@@ -3466,6 +3466,29 @@ export default function AdminDashboard() {
                     </button>
                   ))}
                 </div>
+                <div className="flex gap-1 flex-wrap">
+                  {([
+                    { key: "alle", label: "Alle" },
+                    { key: "botdm_missing", label: "Bot DM fehlt" },
+                    { key: "setup_missing", label: "Setup fehlt" },
+                    { key: "massdm_missing", label: "MassDM fehlt" },
+                    { key: "bot_active", label: "Bot aktiv" },
+                    { key: "bot_inactive", label: "Bot inaktiv" },
+                  ] as const).map(f => (
+                    <button
+                      key={f.key}
+                      onClick={() => setSetupStatusFilter(f.key)}
+                      className={cn(
+                        "text-[10px] font-medium px-2.5 py-1 rounded-full border transition-all duration-200",
+                        setupStatusFilter === f.key
+                          ? "bg-accent/20 text-accent border-accent/30"
+                          : "text-muted-foreground hover:text-foreground border-border/30 hover:border-accent/30"
+                      )}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Table Header */}
