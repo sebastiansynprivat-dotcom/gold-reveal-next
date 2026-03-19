@@ -837,7 +837,7 @@ export default function ModelDashboardTab() {
           </Badge>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto scrollbar-none">
           {/* Sticky Header */}
           <div className="grid grid-cols-[1fr_80px_80px_50px] gap-0 bg-accent/10 border-b border-accent/20">
             <div className="px-3 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold">Model</div>
