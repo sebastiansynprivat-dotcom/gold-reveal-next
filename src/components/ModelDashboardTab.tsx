@@ -760,46 +760,7 @@ export default function ModelDashboardTab() {
         ))}
       </motion.div>
 
-      {/* ── Sub Filter (appears when platform selected) ── */}
-      <AnimatePresence>
-        {platformFilter !== "all" && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="overflow-hidden"
-          >
-            <div className="flex flex-wrap gap-1.5 p-1.5 rounded-xl bg-secondary/30 border border-border/50">
-              <button
-                onClick={() => setSubFilter("none")}
-                className={`relative text-[10px] font-medium px-2.5 py-1.5 rounded-lg transition-colors duration-200 ${
-                  subFilter === "none" ? "text-accent-foreground" : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {subFilter === "none" && (
-                  <motion.div layoutId="sub-pill" className="absolute inset-0 rounded-lg bg-accent/20 border border-accent/30" transition={{ type: "spring", stiffness: 400, damping: 30 }} />
-                )}
-                <span className="relative z-10">Alle</span>
-              </button>
-              {SUB_FILTERS.map(f => (
-                <button
-                  key={f.value}
-                  onClick={() => setSubFilter(subFilter === f.value ? "none" : f.value)}
-                  className={`relative text-[10px] font-medium px-2.5 py-1.5 rounded-lg transition-colors duration-200 ${
-                    subFilter === f.value ? "text-accent-foreground" : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {subFilter === f.value && (
-                    <motion.div layoutId="sub-pill" className="absolute inset-0 rounded-lg bg-accent/20 border border-accent/30" transition={{ type: "spring", stiffness: 400, damping: 30 }} />
-                  )}
-                  <span className="relative z-10">{f.label}</span>
-                </button>
-              ))}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Sub-Filter entfernt – Plattform-Filter oben reicht */}
 
       {/* ── Search ── */}
       <motion.div
