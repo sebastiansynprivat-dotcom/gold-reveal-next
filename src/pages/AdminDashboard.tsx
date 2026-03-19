@@ -3433,7 +3433,7 @@ export default function AdminDashboard() {
             <section className="glass-card rounded-xl overflow-hidden">
               <div className="px-4 py-3 border-b border-border flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-accent" />
-                <h2 className="text-sm font-semibold text-foreground">BotDMs & Setup</h2>
+                <h2 className="text-sm font-semibold text-foreground">Setup</h2>
                 <Badge variant="secondary" className="text-[10px] ml-auto">
                   {accounts.length} Accounts
                 </Badge>
