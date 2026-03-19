@@ -3086,26 +3086,26 @@ export default function AdminDashboard() {
                               <span className="text-sm font-bold text-accent">{chatterName.charAt(0).toUpperCase()}</span>
                             </div>
                             <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-semibold text-foreground truncate">{chatterName}</span>
-                              <span className={cn("flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full", statusConfig.bg, statusConfig.text)}>
-                                <span className={cn("h-1.5 w-1.5 rounded-full", statusConfig.dot, req.status === "pending" && "animate-pulse")} />
-                                {statusConfig.label}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              <Badge variant="outline" className="text-[10px] h-4 px-1.5 border-border/50">
-                                {req.request_type === "individual" ? "Individuell" : "Allgemein"}
-                              </Badge>
-                              {req.request_type === "individual" && req.price != null && (
-                                <span className="text-[10px] text-accent font-bold">{req.price}€</span>
-                              )}
-                              <span className="text-[10px] text-muted-foreground ml-auto">
-                                {new Date(req.created_at).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit" })}
-                              </span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-semibold text-foreground truncate">{chatterName}</span>
+                                <span className={cn("flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full", statusConfig.bg, statusConfig.text)}>
+                                  <span className={cn("h-1.5 w-1.5 rounded-full", statusConfig.dot, req.status === "pending" && "animate-pulse")} />
+                                  {statusConfig.label}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <Badge variant="outline" className="text-[10px] h-4 px-1.5 border-border/50">
+                                  {req.request_type === "individual" ? "Individuell" : "Allgemein"}
+                                </Badge>
+                                {req.request_type === "individual" && req.price != null && (
+                                  <span className="text-[10px] text-accent font-bold">{req.price}€</span>
+                                )}
+                                <span className="text-[10px] text-muted-foreground ml-auto">
+                                  {new Date(req.created_at).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit" })}
+                                </span>
+                              </div>
                             </div>
                           </div>
-                        </div>
 
                         {/* Content */}
                         <div className="px-4 pb-3 space-y-2.5">
