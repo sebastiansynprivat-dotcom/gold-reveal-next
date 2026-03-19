@@ -216,6 +216,16 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
     });
   };
 
+  // A chatter is billing-eligible if they were assigned before or during the billing period
+  // (i.e. assigned_at <= periodEnd) and still active or unassigned after periodStart
+  const isBillingEligible = (assignedAt: Date | null, unassignedAt: Date | null) => {
+    if (!assignedAt) return false;
+    // Must have been assigned before end of billing period
+    if (assignedAt > billing.periodEnd) return false;
+    // If unassigned, must have been active during at least part of the period
+    if (unassignedAt && unassignedAt < billing.periodStart) return false;
+    return true;
+  };
   const isBillingDone = (userId: string) => billingStatus[`${userId}_${billing.periodKey}`] || false;
 
   if (assignmentsLoading) {
