@@ -182,7 +182,10 @@ function getBillingPeriod() {
   const isDue = now.getDate() >= 20;
   const periodKey = `${prevYear}-${String(prevMonth + 1).padStart(2, "0")}`;
   const periodLabel = new Date(prevYear, prevMonth).toLocaleString("de-DE", { month: "long", year: "numeric" });
-  return { periodKey, periodLabel, isDue };
+  // The billing period covers the previous month (1st to last day)
+  const periodStart = new Date(prevYear, prevMonth, 1);
+  const periodEnd = new Date(year, month, 0, 23, 59, 59); // last day of prev month
+  return { periodKey, periodLabel, isDue, periodStart, periodEnd };
 }
 
 const BILLING_STORAGE_KEY = "admin-billing-tracker";
