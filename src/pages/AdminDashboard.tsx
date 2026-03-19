@@ -3390,13 +3390,10 @@ export default function AdminDashboard() {
 
               return (
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {/* Models gesamt */}
                   <div className="glass-card-subtle rounded-xl p-4 flex flex-col items-center justify-center">
                     <p className="text-[9px] text-muted-foreground mb-1 tracking-wide uppercase">Models gesamt</p>
                     <p className="text-3xl font-bold text-gold-gradient">{allAssignedAccounts.length}</p>
                   </div>
-
-                  {/* Bot-DM fehlt */}
                   <button
                     onClick={() => setBotFilter(botFilter === "missing" ? "alle" : "missing")}
                     className={cn(
@@ -3407,8 +3404,6 @@ export default function AdminDashboard() {
                     <p className="text-[9px] text-muted-foreground mb-1 tracking-wide uppercase">Bot-DM fehlt</p>
                     <p className={cn("text-3xl font-bold", botMissing === 0 ? "text-gold-gradient" : botFilter === "missing" ? "text-destructive" : "text-destructive/80")}>{botMissing}</p>
                   </button>
-
-                  {/* Bot aktiv */}
                   <button
                     onClick={() => setBotFilter(botFilter === "active" ? "alle" : "active")}
                     className={cn(
@@ -3419,8 +3414,6 @@ export default function AdminDashboard() {
                     <p className="text-[9px] text-muted-foreground mb-1 tracking-wide uppercase">Bot aktiv</p>
                     <p className={cn("text-3xl font-bold", botFilter === "active" ? "text-accent" : "text-gold-gradient")}>{botActive}</p>
                   </button>
-
-                  {/* Bot inaktiv */}
                   <button
                     onClick={() => setBotFilter(botFilter === "inactive" ? "alle" : "inactive")}
                     className={cn(
@@ -3435,15 +3428,56 @@ export default function AdminDashboard() {
               );
             })()}
 
-            {/* Setup Status Table */}
+            {/* Unified BotDMs & Setup Table */}
             <section className="glass-card rounded-xl overflow-hidden">
               <div className="px-4 py-3 border-b border-border flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-accent" />
-                <h2 className="text-sm font-semibold text-foreground">Status-Übersicht</h2>
+                <h2 className="text-sm font-semibold text-foreground">BotDMs & Setup</h2>
                 <Badge variant="secondary" className="text-[10px] ml-auto">
                   {accounts.length} Accounts
                 </Badge>
               </div>
+
+              {/* Search + Platform filter */}
+              <div className="p-3 space-y-2 border-b border-border/50">
+                <div className="relative input-gold-shimmer rounded-lg">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input
+                    value={setupSearch}
+                    onChange={e => setSetupSearch(e.target.value)}
+                    placeholder="Account suchen…"
+                    className="pl-8 text-xs h-8 border-transparent"
+                  />
+                </div>
+                <div className="flex gap-1 p-1 rounded-lg bg-secondary/30">
+                  {(["all", "4Based", "Maloum", "Brezzels"] as const).map(p => (
+                    <button
+                      key={p}
+                      onClick={() => setSetupPlatform(p)}
+                      className={cn(
+                        "flex-1 text-[11px] font-medium py-1.5 rounded-md transition-all duration-200",
+                        setupPlatform === p
+                          ? "bg-accent/20 text-accent border border-accent/30"
+                          : "text-muted-foreground hover:text-foreground border border-transparent"
+                      )}
+                    >
+                      {p === "all" ? "Alle" : p}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Table Header */}
+              <div className="grid grid-cols-[1fr_72px_44px_44px_44px_44px] gap-0 bg-accent/10 border-b border-accent/20">
+                <div className="px-3 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold">Account</div>
+                <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">Plattform</div>
+                <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">Bot</div>
+                <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">Setup</div>
+                <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">Mass</div>
+                <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">Aktiv</div>
+              </div>
+
+              {/* Table Body */}
               {(() => {
                 const getDash = (accId: string) => setupDashboards.find((d: any) => d.account_id === accId);
 
@@ -3452,15 +3486,6 @@ export default function AdminDashboard() {
                   if (type === "welcome") return platform === "Maloum" ? "maloum_submitted" : platform === "Brezzels" ? "brezzels_submitted" : "fourbased_submitted";
                   return platform === "Maloum" ? "maloum_massdm_done" : platform === "Brezzels" ? "brezzels_massdm_done" : "fourbased_massdm_done";
                 };
-
-                const filteredSetupAccounts = accounts.filter(acc => {
-                  if (setupPlatform !== "all" && acc.platform !== setupPlatform) return false;
-                  if (setupSearch) {
-                    const q = setupSearch.toLowerCase();
-                    return acc.account_email.toLowerCase().includes(q) || acc.account_domain.toLowerCase().includes(q);
-                  }
-                  return true;
-                });
 
                 const toggleSetupField = async (accountId: string, field: string, currentVal: boolean) => {
                   const dash = getDash(accountId);
@@ -3478,334 +3503,219 @@ export default function AdminDashboard() {
                   "Brezzels": "bg-orange-500/15 text-orange-400 border-orange-500/30",
                 };
 
+                // Filter accounts
+                let filteredSetupAccounts = accounts.filter(acc => {
+                  if (setupPlatform !== "all" && acc.platform !== setupPlatform) return false;
+                  if (setupSearch) {
+                    const q = setupSearch.toLowerCase();
+                    return acc.account_email.toLowerCase().includes(q) || acc.account_domain.toLowerCase().includes(q);
+                  }
+                  return true;
+                });
+
+                // Apply bot filter from stats cards
+                if (botFilter !== "alle") {
+                  filteredSetupAccounts = filteredSetupAccounts.filter(acc => {
+                    const entry = botMessages[acc.id];
+                    const saved = savedBotState[acc.id];
+                    if (botFilter === "missing") return !saved || (!saved.message.trim() && !saved.followUp.trim());
+                    if (botFilter === "active") return saved && saved.isActive;
+                    if (botFilter === "inactive") return !saved || !saved.isActive;
+                    return true;
+                  });
+                }
+
+                if (filteredSetupAccounts.length === 0) {
+                  return <p className="text-xs text-muted-foreground text-center py-8">Keine Accounts gefunden.</p>;
+                }
+
                 return (
-                  <div className="p-3 space-y-3">
-                    <div className="flex flex-col gap-2">
-                      <div className="relative input-gold-shimmer rounded-lg">
-                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                        <Input
-                          value={setupSearch}
-                          onChange={e => setSetupSearch(e.target.value)}
-                          placeholder="Account suchen…"
-                          className="pl-8 text-xs h-8 border-transparent"
-                        />
-                      </div>
-                      <div className="flex gap-1 p-1 rounded-lg bg-secondary/30">
-                        {(["all", "4Based", "Maloum", "Brezzels"] as const).map(p => (
-                          <button
-                            key={p}
-                            onClick={() => setSetupPlatform(p)}
+                  <div className="divide-y divide-border/30">
+                    {filteredSetupAccounts.map((acc, i) => {
+                      const dash = getDash(acc.id);
+                      const botdmField = getField(acc.platform, "botdm");
+                      const welcomeField = getField(acc.platform, "welcome");
+                      const massdmField = getField(acc.platform, "massdm");
+                      const botdmVal = !!(dash as any)?.[botdmField];
+                      const welcomeVal = !!(dash as any)?.[welcomeField];
+                      const massdmVal = !!(dash as any)?.[massdmField];
+                      const entry = botMessages[acc.id] || { message: "", followUp: "", isActive: false, saving: false };
+                      const saved = savedBotState[acc.id];
+                      const hasChanges = !saved || entry.message !== saved.message || entry.followUp !== saved.followUp || entry.isActive !== saved.isActive;
+                      const isExpanded = expandedBot === acc.id;
+
+                      return (
+                        <div key={acc.id}>
+                          {/* Row */}
+                          <div
                             className={cn(
-                              "flex-1 text-[11px] font-medium py-1.5 rounded-md transition-all duration-200",
-                              setupPlatform === p
-                                ? "bg-accent/20 text-accent border border-accent/30"
-                                : "text-muted-foreground hover:text-foreground border border-transparent"
+                              "grid grid-cols-[1fr_72px_44px_44px_44px_44px] gap-0 items-center transition-colors cursor-pointer hover:bg-accent/5",
+                              i % 2 === 0 ? "bg-card/40" : "bg-card/20",
+                              isExpanded && "bg-accent/5"
                             )}
+                            onClick={() => setExpandedBot(isExpanded ? null : acc.id)}
                           >
-                            {p === "all" ? "Alle" : p}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="rounded-lg border border-border/50 overflow-hidden">
-                      <div className="grid grid-cols-[1fr_80px_50px_50px_50px] gap-0 bg-accent/10 border-b border-accent/20">
-                        <div className="px-3 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold">Account</div>
-                        <div className="px-2 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">Plattform</div>
-                        <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">Bot</div>
-                        <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">Setup</div>
-                        <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">Mass</div>
-                      </div>
-
-                      <div className="max-h-[400px] overflow-y-auto">
-                        {filteredSetupAccounts.length === 0 ? (
-                          <p className="text-xs text-muted-foreground text-center py-8">Keine Accounts gefunden.</p>
-                        ) : (
-                          filteredSetupAccounts.map((acc, i) => {
-                            const dash = getDash(acc.id);
-                            const botdmField = getField(acc.platform, "botdm");
-                            const welcomeField = getField(acc.platform, "welcome");
-                            const massdmField = getField(acc.platform, "massdm");
-                            const botdmVal = !!(dash as any)?.[botdmField];
-                            const welcomeVal = !!(dash as any)?.[welcomeField];
-                            const massdmVal = !!(dash as any)?.[massdmField];
-
-                            return (
-                              <div
-                                key={acc.id}
+                            <div className="px-3 py-2.5 min-w-0 flex items-center gap-2">
+                              <ChevronDown className={cn(
+                                "h-3 w-3 text-muted-foreground shrink-0 transition-transform duration-200",
+                                isExpanded ? "rotate-0" : "-rotate-90"
+                              )} />
+                              <div className="min-w-0">
+                                <p className="text-xs font-medium text-foreground truncate">{acc.account_email}</p>
+                                {acc.account_domain && <p className="text-[10px] text-muted-foreground truncate">{acc.account_domain}</p>}
+                              </div>
+                            </div>
+                            <div className="px-1 py-2 flex justify-center">
+                              <span className={cn(
+                                "text-[9px] font-medium px-2 py-0.5 rounded-full border",
+                                setupPlatformColors[acc.platform] || "bg-secondary/50 text-muted-foreground border-border/30"
+                              )}>
+                                {acc.platform}
+                              </span>
+                            </div>
+                            {[{ field: botdmField, val: botdmVal }, { field: welcomeField, val: welcomeVal }, { field: massdmField, val: massdmVal }].map(({ field, val }) => (
+                              <div key={field} className="flex justify-center py-2" onClick={e => e.stopPropagation()}>
+                                <button
+                                  onClick={() => toggleSetupField(acc.id, field, val)}
+                                  className={cn(
+                                    "h-5 w-5 rounded border-2 flex items-center justify-center transition-all duration-200",
+                                    val
+                                      ? "border-accent bg-accent/20"
+                                      : "border-muted-foreground/30 bg-transparent hover:border-accent/50"
+                                  )}
+                                >
+                                  {val && <CheckCircle2 className="h-3 w-3 text-accent" />}
+                                </button>
+                              </div>
+                            ))}
+                            {/* Active indicator */}
+                            <div className="flex justify-center py-2" onClick={e => e.stopPropagation()}>
+                              <button
+                                onClick={() => {
+                                  setBotMessages((prev) => ({
+                                    ...prev,
+                                    [acc.id]: { ...entry, isActive: !entry.isActive },
+                                  }));
+                                }}
                                 className={cn(
-                                  "grid grid-cols-[1fr_80px_50px_50px_50px] gap-0 items-center border-b border-border/30 transition-colors hover:bg-accent/5",
-                                  i % 2 === 0 ? "bg-card/40" : "bg-card/20"
+                                  "h-5 w-5 rounded-full border-2 flex items-center justify-center transition-all duration-200",
+                                  entry.isActive
+                                    ? "border-accent bg-accent/20"
+                                    : "border-muted-foreground/30 bg-transparent hover:border-accent/50"
                                 )}
                               >
-                                <div className="px-3 py-2 min-w-0">
-                                  <p className="text-xs font-medium text-foreground truncate">{acc.account_email}</p>
-                                  {acc.account_domain && <p className="text-[10px] text-muted-foreground truncate">{acc.account_domain}</p>}
-                                </div>
-                                <div className="px-2 py-2 flex justify-center">
-                                  <span className={cn(
-                                    "text-[9px] font-medium px-2 py-0.5 rounded-full border",
-                                    setupPlatformColors[acc.platform] || "bg-secondary/50 text-muted-foreground border-border/30"
-                                  )}>
-                                    {acc.platform}
-                                  </span>
-                                </div>
-                                {[{ field: botdmField, val: botdmVal }, { field: welcomeField, val: welcomeVal }, { field: massdmField, val: massdmVal }].map(({ field, val }) => (
-                                  <div key={field} className="flex justify-center py-2">
-                                    <button
-                                      onClick={() => toggleSetupField(acc.id, field, val)}
-                                      className={cn(
-                                        "h-5 w-5 rounded border-2 flex items-center justify-center transition-all duration-200",
-                                        val
-                                          ? "border-accent bg-accent/20"
-                                          : "border-muted-foreground/30 bg-transparent hover:border-accent/50"
-                                      )}
-                                    >
-                                      {val && <CheckCircle2 className="h-3 w-3 text-accent" />}
-                                    </button>
-                                  </div>
-                                ))}
-                              </div>
-                            );
-                          })
-                        )}
-                      </div>
-                    </div>
+                                {entry.isActive && <span className="h-2 w-2 rounded-full bg-accent" />}
+                              </button>
+                            </div>
+                          </div>
 
-                    <div className="flex items-center justify-between px-1">
-                      <span className="text-[10px] text-muted-foreground">{filteredSetupAccounts.length} Accounts</span>
-                    </div>
+                          {/* Expanded: Bot Message + Follow-Up editing */}
+                          {isExpanded && (
+                            <div className="px-4 py-3 bg-secondary/10 border-t border-border/30 space-y-3 animate-in slide-in-from-top-1 fade-in duration-200">
+                              {/* Credentials copy row */}
+                              <div className="grid grid-cols-2 gap-2">
+                                <button
+                                  onClick={() => { navigator.clipboard.writeText(acc.account_email); toast.success("E-Mail kopiert"); }}
+                                  className="glass-card-subtle rounded-lg px-3 py-2 text-left hover:bg-accent/5 transition-colors group"
+                                >
+                                  <p className="text-[10px] text-muted-foreground mb-0.5">E-Mail</p>
+                                  <div className="flex items-center gap-1.5">
+                                    <p className="text-xs font-medium text-foreground truncate flex-1">{acc.account_email}</p>
+                                    <Copy className="h-3 w-3 text-muted-foreground group-hover:text-accent shrink-0" />
+                                  </div>
+                                </button>
+                                <button
+                                  onClick={() => { navigator.clipboard.writeText(acc.account_password); toast.success("Passwort kopiert"); }}
+                                  className="glass-card-subtle rounded-lg px-3 py-2 text-left hover:bg-accent/5 transition-colors group"
+                                >
+                                  <p className="text-[10px] text-muted-foreground mb-0.5">Passwort</p>
+                                  <div className="flex items-center gap-1.5">
+                                    <p className="text-xs font-medium text-foreground truncate flex-1">••••••••</p>
+                                    <Copy className="h-3 w-3 text-muted-foreground group-hover:text-accent shrink-0" />
+                                  </div>
+                                </button>
+                              </div>
+
+                              {/* Bot Message */}
+                              <div className="space-y-1.5">
+                                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Bot-Nachricht</label>
+                                <div className="input-gold-shimmer rounded-lg">
+                                  <Textarea
+                                    value={entry.message}
+                                    onChange={(e) =>
+                                      setBotMessages((prev) => ({
+                                        ...prev,
+                                        [acc.id]: { ...entry, message: e.target.value },
+                                      }))
+                                    }
+                                    placeholder="Hey! Schreib mir gerne eine Nachricht 💋"
+                                    className="text-sm min-h-[60px] resize-none bg-background/50 border-transparent"
+                                    onClick={e => e.stopPropagation()}
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Follow-up (only for Maloum) */}
+                              {acc.platform === "Maloum" && (
+                                <div className="space-y-1.5">
+                                  <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Follow-up Nachricht</label>
+                                  <div className="input-gold-shimmer rounded-lg">
+                                    <Textarea
+                                      value={entry.followUp}
+                                      onChange={(e) =>
+                                        setBotMessages((prev) => ({
+                                          ...prev,
+                                          [acc.id]: { ...entry, followUp: e.target.value },
+                                        }))
+                                      }
+                                      placeholder="Na, hast du meine letzte Nachricht gelesen? 😏"
+                                      className="text-sm min-h-[60px] resize-none bg-background/50 border-transparent"
+                                      onClick={e => e.stopPropagation()}
+                                    />
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Save */}
+                              <Button
+                                onClick={() => saveBotMessage(acc.id)}
+                                disabled={entry.saving || !hasChanges}
+                                variant={hasChanges ? "default" : "secondary"}
+                                className="w-full"
+                                size="sm"
+                              >
+                                {entry.saving ? (
+                                  <>
+                                    <div className="h-3.5 w-3.5 border-2 border-current border-t-transparent rounded-full animate-spin mr-1.5" />
+                                    Wird gespeichert...
+                                  </>
+                                ) : hasChanges ? (
+                                  <>
+                                    <Save className="h-3.5 w-3.5 mr-1.5" />
+                                    Speichern
+                                  </>
+                                ) : (
+                                  <>
+                                    <svg className="h-3.5 w-3.5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    Gespeichert
+                                  </>
+                                )}
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 );
               })()}
-            </section>
 
-            <section className="glass-card rounded-xl overflow-hidden">
-              <div className="px-4 py-3 border-b border-border flex items-center gap-2">
-                <Bot className="h-4 w-4 text-accent" />
-                <h2 className="text-sm font-semibold text-foreground">Bot DMs</h2>
-                <Badge variant="secondary" className="text-[10px] ml-auto">
-                  {allAssignedAccounts.length} Model{allAssignedAccounts.length !== 1 ? "s" : ""}
-                </Badge>
+              {/* Footer */}
+              <div className="px-3 py-2 border-t border-border/50 flex items-center justify-between">
+                <span className="text-[10px] text-muted-foreground">{accounts.length} Accounts</span>
               </div>
-
-              {/* Platform filters row */}
-              <div className="px-3 pt-3 flex gap-2 overflow-x-auto scrollbar-none pb-1">
-                <button
-                  onClick={() => { setBotFilter("alle"); setBotPlatformFilter("alle"); }}
-                  className={cn(
-                    "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium transition-colors shrink-0",
-                    botPlatformFilter === "alle" ? "bg-accent text-accent-foreground" : "bg-secondary/50 text-muted-foreground hover:bg-secondary"
-                  )}
-                >
-                  <Bot className="h-3 w-3" />
-                  Alle
-                </button>
-                {botPlatforms.map((p) => (
-                  <button
-                    key={p}
-                    onClick={() => setBotPlatformFilter(botPlatformFilter === p ? "alle" : p)}
-                    className={cn(
-                      "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium transition-colors shrink-0",
-                      botPlatformFilter === p ? "bg-accent text-accent-foreground" : "bg-secondary/50 text-muted-foreground hover:bg-secondary"
-                    )}
-                  >
-                    <Package className="h-3 w-3" />
-                    {p}
-                  </button>
-                ))}
-              </div>
-
-              {/* Search */}
-              <div className="px-3 pt-1 pb-2">
-                <div className="relative input-gold-shimmer rounded-lg">
-                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                  <Input
-                    value={botSearch}
-                    onChange={(e) => setBotSearch(e.target.value)}
-                    placeholder="Account suchen..."
-                    className="pl-8 text-xs h-8 border-transparent"
-                  />
-                </div>
-              </div>
-
-              {filteredBotAccounts.length === 0 ? (
-                <div className="p-8 text-center text-sm text-muted-foreground">
-                  {botFilter === "missing" ? "Alle Models haben Bot-DMs hinterlegt." : "Keine Accounts gefunden."}
-                </div>
-              ) : (
-                <div className="p-3 space-y-2">
-                  {filteredBotAccounts.map((acc) => {
-                    const entry = botMessages[acc.id] || { message: "", followUp: "", isActive: false, saving: false };
-                    const saved = savedBotState[acc.id];
-                    const hasChanges = !saved || entry.message !== saved.message || entry.followUp !== saved.followUp || entry.isActive !== saved.isActive;
-                    const isExpanded = expandedBot === acc.id;
-                    return (
-                      <div
-                        key={acc.id}
-                        className={cn(
-                          "glass-card-subtle rounded-xl overflow-hidden transition-all duration-200",
-                          isExpanded && "ring-1 ring-accent/30"
-                        )}
-                      >
-                        {/* Header Row */}
-                        <button
-                          className="w-full px-4 py-3 flex items-center gap-3 hover:bg-accent/5 transition-colors text-left"
-                          onClick={() => setExpandedBot(isExpanded ? null : acc.id)}
-                        >
-                          <div className={cn(
-                            "h-9 w-9 rounded-lg flex items-center justify-center shrink-0 transition-colors",
-                            entry.isActive ? "bg-accent/15" : "bg-secondary/50"
-                          )}>
-                            <Bot className={cn(
-                              "h-4 w-4 transition-colors",
-                              entry.isActive ? "text-accent" : "text-muted-foreground"
-                            )} />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate">{acc.account_email}</p>
-                            <p className="text-[10px] text-muted-foreground">{acc.platform}</p>
-                          </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            {entry.isActive ? (
-                              <span className="flex items-center gap-1">
-                                <span className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
-                                <span className="text-[10px] font-medium text-accent">Aktiv</span>
-                              </span>
-                            ) : (
-                              <span className="text-[10px] text-muted-foreground">Inaktiv</span>
-                            )}
-                            <svg
-                              className={cn(
-                                "h-3.5 w-3.5 text-muted-foreground transition-transform duration-200",
-                                isExpanded && "rotate-180"
-                              )}
-                              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
-                            >
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                            </svg>
-                          </div>
-                        </button>
-
-                        {/* Expanded Content */}
-                        {isExpanded && (
-                          <div className="px-4 pb-4 space-y-4 animate-in slide-in-from-top-2 fade-in duration-200">
-                            <div className="h-px bg-border" />
-
-                            {/* Credentials */}
-                            <div className="grid grid-cols-2 gap-2">
-                              <button
-                                onClick={() => { navigator.clipboard.writeText(acc.account_email); toast.success("E-Mail kopiert"); }}
-                                className="glass-card-subtle rounded-lg px-3 py-2 text-left hover:bg-accent/5 transition-colors group"
-                              >
-                                <p className="text-[10px] text-muted-foreground mb-0.5">E-Mail</p>
-                                <div className="flex items-center gap-1.5">
-                                  <p className="text-xs font-medium text-foreground truncate flex-1">{acc.account_email}</p>
-                                  <Copy className="h-3 w-3 text-muted-foreground group-hover:text-accent shrink-0" />
-                                </div>
-                              </button>
-                              <button
-                                onClick={() => { navigator.clipboard.writeText(acc.account_password); toast.success("Passwort kopiert"); }}
-                                className="glass-card-subtle rounded-lg px-3 py-2 text-left hover:bg-accent/5 transition-colors group"
-                              >
-                                <p className="text-[10px] text-muted-foreground mb-0.5">Passwort</p>
-                                <div className="flex items-center gap-1.5">
-                                  <p className="text-xs font-medium text-foreground truncate flex-1">••••••••</p>
-                                  <Copy className="h-3 w-3 text-muted-foreground group-hover:text-accent shrink-0" />
-                                </div>
-                              </button>
-                            </div>
-
-                            <div className="flex items-center justify-between glass-card-subtle rounded-lg px-3 py-2.5">
-                              <div className="flex items-center gap-2">
-                                <Power className={cn("h-3.5 w-3.5", entry.isActive ? "text-accent" : "text-muted-foreground")} />
-                                <span className="text-xs font-medium text-foreground">Bot aktivieren</span>
-                              </div>
-                              <Switch
-                                checked={entry.isActive}
-                                onCheckedChange={(checked) =>
-                                  setBotMessages((prev) => ({
-                                    ...prev,
-                                    [acc.id]: { ...entry, isActive: checked },
-                                  }))
-                                }
-                              />
-                            </div>
-
-                            {/* Bot Message */}
-                            <div className="space-y-1.5">
-                              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                Bot-Nachricht
-                              </label>
-                              <div className="input-gold-shimmer rounded-lg">
-                              <Textarea
-                                value={entry.message}
-                                onChange={(e) =>
-                                  setBotMessages((prev) => ({
-                                    ...prev,
-                                    [acc.id]: { ...entry, message: e.target.value },
-                                  }))
-                                }
-                                placeholder="Hey! Schreib mir gerne eine Nachricht 💋"
-                                className="text-sm min-h-[70px] resize-none bg-background/50 border-transparent"
-                              />
-                              </div>
-                            </div>
-
-                            {/* Follow-up Message */}
-                            <div className="space-y-1.5">
-                              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                Follow-up Nachricht
-                              </label>
-                              <div className="input-gold-shimmer rounded-lg">
-                              <Textarea
-                                value={entry.followUp}
-                                onChange={(e) =>
-                                  setBotMessages((prev) => ({
-                                    ...prev,
-                                    [acc.id]: { ...entry, followUp: e.target.value },
-                                  }))
-                                }
-                                placeholder="Na, hast du meine letzte Nachricht gelesen? 😏"
-                                className="text-sm min-h-[70px] resize-none bg-background/50 border-transparent"
-                              />
-                              </div>
-                            </div>
-
-                            {/* Save Button */}
-                            <Button
-                              onClick={() => saveBotMessage(acc.id)}
-                              disabled={entry.saving || !hasChanges}
-                              variant={hasChanges ? "default" : "secondary"}
-                              className="w-full"
-                              size="sm"
-                            >
-                              {entry.saving ? (
-                                <>
-                                  <div className="h-3.5 w-3.5 border-2 border-current border-t-transparent rounded-full animate-spin mr-1.5" />
-                                  Wird gespeichert...
-                                </>
-                              ) : hasChanges ? (
-                                <>
-                                  <Save className="h-3.5 w-3.5 mr-1.5" />
-                                  Speichern
-                                </>
-                              ) : (
-                                <>
-                                  <svg className="h-3.5 w-3.5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                  </svg>
-                                  Gespeichert
-                                </>
-                              )}
-                            </Button>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
             </section>
           </div>
         )}
