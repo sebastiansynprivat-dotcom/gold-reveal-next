@@ -277,12 +277,12 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
     }
   }
 
-  // Apply billing filter
+  // Apply billing filter (only billing-eligible entries)
   if (overviewFilter === "billing_due" || overviewFilter === "billing_done") {
     const wantDone = overviewFilter === "billing_done";
     for (const key of Object.keys(grouped)) {
       grouped[key].entries = grouped[key].entries.filter((e: any) => {
-        if (!e.isActive) return false;
+        if (!e.billingEligible) return false;
         return isBillingDone(e.user_id) === wantDone;
       });
       if (grouped[key].entries.length === 0) delete grouped[key];
