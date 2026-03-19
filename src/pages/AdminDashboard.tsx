@@ -3495,10 +3495,10 @@ export default function AdminDashboard() {
               <div className="grid grid-cols-[1fr_72px_44px_44px_44px_44px] gap-0 bg-accent/10 border-b border-accent/20">
                 <div className="px-3 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold">Account</div>
                 <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">Plattform</div>
-                <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">Bot</div>
+                <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">{setupPlatform === "all" || setupPlatform === "Maloum" ? "Bot" : ""}</div>
                 <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">Setup</div>
                 <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">Mass</div>
-                <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">Aktiv</div>
+                <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">{setupPlatform === "all" || setupPlatform === "Maloum" ? "Aktiv" : ""}</div>
               </div>
 
               {/* Table Body */}
