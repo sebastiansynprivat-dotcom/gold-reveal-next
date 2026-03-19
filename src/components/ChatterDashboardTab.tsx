@@ -19,6 +19,9 @@ interface Chatter {
   name: string;
   platform: string;
   monthlyRevenue: number;
+  fourbasedRevenue: number;
+  maloumRevenue: number;
+  brezzelsRevenue: number;
   revenuePercentage: number;
   currency: string;
   cryptoAddress: string;
@@ -26,13 +29,14 @@ interface Chatter {
 
 const STORAGE_KEY = "admin-chatter-dashboard";
 
-const SENDER = {
-  company: "Sharify Media FZCO",
-  line1: "IFZA Business Park DDP 21236-001",
-  line2: "Silicon Oasis",
-  line3: "00000, United Arab Emirates",
-  taxId: "1041507169",
-};
+function migrateChatters(chatters: Chatter[]): Chatter[] {
+  return chatters.map(c => ({
+    ...c,
+    fourbasedRevenue: c.fourbasedRevenue ?? c.monthlyRevenue ?? 0,
+    maloumRevenue: c.maloumRevenue ?? 0,
+    brezzelsRevenue: c.brezzelsRevenue ?? 0,
+  }));
+}
 
 function useAnimatedCounter(target: number, duration = 1200) {
   const [value, setValue] = useState(0);
@@ -84,7 +88,7 @@ export default function ChatterDashboardTab() {
   const [chatters, setChatters] = useState<Chatter[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved) : [];
+      return saved ? migrateChatters(JSON.parse(saved)) : [];
     } catch { return []; }
   });
 
@@ -110,10 +114,15 @@ export default function ChatterDashboardTab() {
     return c.name.toLowerCase().includes(q) || c.platform.toLowerCase().includes(q);
   });
 
+  const totalRevenue = useMemo(() => {
+    if (!selected) return 0;
+    return (selected.fourbasedRevenue || 0) + (selected.maloumRevenue || 0) + (selected.brezzelsRevenue || 0);
+  }, [selected]);
+
   const verdienst = useMemo(() => {
     if (!selected || selected.revenuePercentage <= 0) return 0;
-    return Math.round(selected.monthlyRevenue * selected.revenuePercentage / 100);
-  }, [selected]);
+    return Math.round(totalRevenue * selected.revenuePercentage / 100);
+  }, [selected, totalRevenue]);
 
   const addChatter = () => {
     if (!newName.trim()) return;
@@ -122,6 +131,9 @@ export default function ChatterDashboardTab() {
       name: newName.trim(),
       platform: newPlatform.trim() || "–",
       monthlyRevenue: 0,
+      fourbasedRevenue: 0,
+      maloumRevenue: 0,
+      brezzelsRevenue: 0,
       revenuePercentage: 0,
       currency: "EUR",
       cryptoAddress: "",
@@ -229,7 +241,7 @@ export default function ChatterDashboardTab() {
                         <span className="text-[10px] bg-secondary/50 text-muted-foreground border border-border/50 rounded px-1.5 py-0.5 capitalize shrink-0">{c.platform}</span>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        <span className="text-xs text-muted-foreground">{c.monthlyRevenue.toLocaleString("de-DE")} {c.currency || "EUR"}</span>
+                        <span className="text-xs text-muted-foreground">{((c.fourbasedRevenue || 0) + (c.maloumRevenue || 0) + (c.brezzelsRevenue || 0)).toLocaleString("de-DE")} {c.currency || "EUR"}</span>
                         <button
                           onClick={e => { e.stopPropagation(); deleteChatter(c.id); }}
                           className="p-1 rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors"
@@ -263,10 +275,15 @@ export default function ChatterDashboardTab() {
             className="gold-gradient-border-animated pulse-glow rounded-xl p-6 text-center space-y-3"
           >
             <Crown className="h-8 w-8 text-accent mx-auto" />
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Monatsumsatz</p>
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Gesamtumsatz</p>
             <p className="text-5xl font-black text-gold-gradient tabular-nums leading-none">
-              <AnimatedGoldValue value={selected.monthlyRevenue} suffix={` ${selected.currency || "EUR"}`} />
+              <AnimatedGoldValue value={totalRevenue} suffix={` ${selected.currency || "EUR"}`} />
             </p>
+            <div className="flex justify-center gap-4 text-xs text-muted-foreground mt-2">
+              <span>4Based: {(selected.fourbasedRevenue || 0).toLocaleString("de-DE")}</span>
+              <span>Maloum: {(selected.maloumRevenue || 0).toLocaleString("de-DE")}</span>
+              <span>Brezzels: {(selected.brezzelsRevenue || 0).toLocaleString("de-DE")}</span>
+            </div>
           </motion.div>
 
           {/* Details */}
@@ -287,18 +304,31 @@ export default function ChatterDashboardTab() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">Monatsumsatz</label>
+                  <label className="text-xs font-medium text-muted-foreground">4Based Revenue</label>
                   <div className="input-gold-shimmer rounded-lg">
-                    <Input
-                      type="number"
-                      value={selected.monthlyRevenue || ""}
-                      onChange={e => updateSelected({ monthlyRevenue: Number(e.target.value) || 0 })}
-                      className="text-sm border-transparent"
-                      placeholder="0"
-                    />
+                    <Input type="number" value={selected.fourbasedRevenue || ""} onChange={e => updateSelected({ fourbasedRevenue: Number(e.target.value) || 0 })} className="text-sm border-transparent" placeholder="0" />
                   </div>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Maloum Revenue</label>
+                  <div className="input-gold-shimmer rounded-lg">
+                    <Input type="number" value={selected.maloumRevenue || ""} onChange={e => updateSelected({ maloumRevenue: Number(e.target.value) || 0 })} className="text-sm border-transparent" placeholder="0" />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Brezzels Revenue</label>
+                  <div className="input-gold-shimmer rounded-lg">
+                    <Input type="number" value={selected.brezzelsRevenue || ""} onChange={e => updateSelected({ brezzelsRevenue: Number(e.target.value) || 0 })} className="text-sm border-transparent" placeholder="0" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="glass-card rounded-lg p-3 flex items-center justify-between">
+                  <span className="text-xs font-medium text-muted-foreground">Gesamt</span>
+                  <span className="text-sm font-bold text-accent tabular-nums">{totalRevenue.toLocaleString("de-DE")} {selected.currency || "EUR"}</span>
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-muted-foreground">Währung</label>
@@ -374,6 +404,11 @@ export default function ChatterDashboardTab() {
               revenuePercentage={selected.revenuePercentage}
               currency={selected.currency || "EUR"}
               cryptoAddress={selected.cryptoAddress || ""}
+              platformRevenue={{
+                fourbased: selected.fourbasedRevenue || 0,
+                maloum: selected.maloumRevenue || 0,
+                brezzels: selected.brezzelsRevenue || 0,
+              }}
             />
           </Section>
         </>
