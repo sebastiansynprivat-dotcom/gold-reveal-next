@@ -3608,8 +3608,8 @@ export default function AdminDashboard() {
                               </span>
                             </div>
                             {/* Bot DM checkbox — only Maloum */}
-                            <div className="flex justify-center py-2" onClick={e => e.stopPropagation()}>
-                              {acc.platform === "Maloum" ? (
+                            {acc.platform === "Maloum" && (
+                              <div className="flex justify-center py-2" onClick={e => e.stopPropagation()}>
                                 <button
                                   onClick={() => toggleSetupField(acc.id, botdmField, botdmVal)}
                                   className={cn(
@@ -3619,8 +3619,9 @@ export default function AdminDashboard() {
                                 >
                                   {botdmVal && <CheckCircle2 className="h-3 w-3 text-accent" />}
                                 </button>
-                              ) : <span className="text-[10px] text-muted-foreground/30">—</span>}
-                            </div>
+                              </div>
+                            )}
+                            {acc.platform !== "Maloum" && <div />}
                             {/* Setup checkbox — all platforms */}
                             <div className="flex justify-center py-2" onClick={e => e.stopPropagation()}>
                               <button
@@ -3645,9 +3646,9 @@ export default function AdminDashboard() {
                                 {massdmVal && <CheckCircle2 className="h-3 w-3 text-accent" />}
                               </button>
                             </div>
-                            {/* Active indicator (read-only) — only Maloum */}
-                            <div className="flex justify-center py-2">
-                              {acc.platform === "Maloum" ? (
+                            {/* Active indicator — only Maloum */}
+                            {acc.platform === "Maloum" && (
+                              <div className="flex justify-center py-2">
                                 <div
                                   className={cn(
                                     "h-5 w-5 rounded-full border-2 flex items-center justify-center",
@@ -3656,8 +3657,9 @@ export default function AdminDashboard() {
                                 >
                                   {entry.isActive && <span className="h-2 w-2 rounded-full bg-accent" />}
                                 </div>
-                              ) : <span className="text-[10px] text-muted-foreground/30">—</span>}
-                            </div>
+                              </div>
+                            )}
+                            {acc.platform !== "Maloum" && <div />}
                           </div>
 
                           {/* Expanded: Bot Message + Follow-Up editing */}
