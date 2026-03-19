@@ -3607,33 +3607,56 @@ export default function AdminDashboard() {
                                 {acc.platform}
                               </span>
                             </div>
-                            {[{ field: botdmField, val: botdmVal }, { field: welcomeField, val: welcomeVal }, { field: massdmField, val: massdmVal }].map(({ field, val }) => (
-                              <div key={field} className="flex justify-center py-2" onClick={e => e.stopPropagation()}>
+                            {/* Bot DM checkbox — only Maloum */}
+                            <div className="flex justify-center py-2" onClick={e => e.stopPropagation()}>
+                              {acc.platform === "Maloum" ? (
                                 <button
-                                  onClick={() => toggleSetupField(acc.id, field, val)}
+                                  onClick={() => toggleSetupField(acc.id, botdmField, botdmVal)}
                                   className={cn(
                                     "h-5 w-5 rounded border-2 flex items-center justify-center transition-all duration-200",
-                                    val
-                                      ? "border-accent bg-accent/20"
-                                      : "border-muted-foreground/30 bg-transparent hover:border-accent/50"
+                                    botdmVal ? "border-accent bg-accent/20" : "border-muted-foreground/30 bg-transparent hover:border-accent/50"
                                   )}
                                 >
-                                  {val && <CheckCircle2 className="h-3 w-3 text-accent" />}
+                                  {botdmVal && <CheckCircle2 className="h-3 w-3 text-accent" />}
                                 </button>
-                              </div>
-                            ))}
-                            {/* Active indicator (read-only in row) */}
-                            <div className="flex justify-center py-2">
-                              <div
+                              ) : <span className="text-[10px] text-muted-foreground/30">—</span>}
+                            </div>
+                            {/* Setup checkbox — all platforms */}
+                            <div className="flex justify-center py-2" onClick={e => e.stopPropagation()}>
+                              <button
+                                onClick={() => toggleSetupField(acc.id, welcomeField, welcomeVal)}
                                 className={cn(
-                                  "h-5 w-5 rounded-full border-2 flex items-center justify-center",
-                                  entry.isActive
-                                    ? "border-accent bg-accent/20"
-                                    : "border-muted-foreground/30 bg-transparent"
+                                  "h-5 w-5 rounded border-2 flex items-center justify-center transition-all duration-200",
+                                  welcomeVal ? "border-accent bg-accent/20" : "border-muted-foreground/30 bg-transparent hover:border-accent/50"
                                 )}
                               >
-                                {entry.isActive && <span className="h-2 w-2 rounded-full bg-accent" />}
-                              </div>
+                                {welcomeVal && <CheckCircle2 className="h-3 w-3 text-accent" />}
+                              </button>
+                            </div>
+                            {/* MassDM checkbox — all platforms */}
+                            <div className="flex justify-center py-2" onClick={e => e.stopPropagation()}>
+                              <button
+                                onClick={() => toggleSetupField(acc.id, massdmField, massdmVal)}
+                                className={cn(
+                                  "h-5 w-5 rounded border-2 flex items-center justify-center transition-all duration-200",
+                                  massdmVal ? "border-accent bg-accent/20" : "border-muted-foreground/30 bg-transparent hover:border-accent/50"
+                                )}
+                              >
+                                {massdmVal && <CheckCircle2 className="h-3 w-3 text-accent" />}
+                              </button>
+                            </div>
+                            {/* Active indicator (read-only) — only Maloum */}
+                            <div className="flex justify-center py-2">
+                              {acc.platform === "Maloum" ? (
+                                <div
+                                  className={cn(
+                                    "h-5 w-5 rounded-full border-2 flex items-center justify-center",
+                                    entry.isActive ? "border-accent bg-accent/20" : "border-muted-foreground/30 bg-transparent"
+                                  )}
+                                >
+                                  {entry.isActive && <span className="h-2 w-2 rounded-full bg-accent" />}
+                                </div>
+                              ) : <span className="text-[10px] text-muted-foreground/30">—</span>}
                             </div>
                           </div>
 
