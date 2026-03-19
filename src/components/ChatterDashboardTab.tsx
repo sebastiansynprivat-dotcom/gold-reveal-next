@@ -94,7 +94,7 @@ export default function ChatterDashboardTab() {
 
   const [selectedId, setSelectedId] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [listOpen, setListOpen] = useState(false);
+  const [listOpen, setListOpen] = useState(false); // kept for compat
   const [addingNew, setAddingNew] = useState(false);
   const [newName, setNewName] = useState("");
   const [newPlatform, setNewPlatform] = useState("");
