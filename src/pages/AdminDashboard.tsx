@@ -182,7 +182,10 @@ function getBillingPeriod() {
   const isDue = now.getDate() >= 20;
   const periodKey = `${prevYear}-${String(prevMonth + 1).padStart(2, "0")}`;
   const periodLabel = new Date(prevYear, prevMonth).toLocaleString("de-DE", { month: "long", year: "numeric" });
-  return { periodKey, periodLabel, isDue };
+  // The billing period covers the previous month (1st to last day)
+  const periodStart = new Date(prevYear, prevMonth, 1);
+  const periodEnd = new Date(year, month, 0, 23, 59, 59); // last day of prev month
+  return { periodKey, periodLabel, isDue, periodStart, periodEnd };
 }
 
 const BILLING_STORAGE_KEY = "admin-billing-tracker";
@@ -197,7 +200,7 @@ function loadBillingStatus(): Record<string, boolean> {
 function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { assignments: any[]; assignmentsLoading: boolean; chatters: ChatterProfile[] }) {
   const [overviewFilter, setOverviewFilter] = useState<"alle" | "aktiv" | "inaktiv" | "billing_due" | "billing_done">("alle");
   const [chatterSearch, setChatterSearch] = useState("");
-  const [collapsedAgencies, setCollapsedAgencies] = useState<Record<string, boolean>>({ shex: true, syn: true });
+  const [collapsedAgencies, setCollapsedAgencies] = useState<Record<string, boolean>>({ shex: false, syn: false });
   const toggleAgency = (key: string) => setCollapsedAgencies(prev => ({ ...prev, [key]: !prev[key] }));
   const [billingStatus, setBillingStatus] = useState<Record<string, boolean>>(loadBillingStatus);
 
@@ -213,6 +216,16 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
     });
   };
 
+  // A chatter is billing-eligible if they were assigned before or during the billing period
+  // (i.e. assigned_at <= periodEnd) and still active or unassigned after periodStart
+  const isBillingEligible = (assignedAt: Date | null, unassignedAt: Date | null) => {
+    if (!assignedAt) return false;
+    // Must have been assigned before end of billing period
+    if (assignedAt > billing.periodEnd) return false;
+    // If unassigned, must have been active during at least part of the period
+    if (unassignedAt && unassignedAt < billing.periodStart) return false;
+    return true;
+  };
   const isBillingDone = (userId: string) => billingStatus[`${userId}_${billing.periodKey}`] || false;
 
   if (assignmentsLoading) {
@@ -251,7 +264,8 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
       const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
       duration = days > 0 ? `${days}d ${hours}h` : `${hours}h`;
     }
-    grouped[key].entries.push({ ...a, name, assignedAt, unassignedAt, isActive, duration });
+    const billingEligible = isBillingEligible(assignedAt, unassignedAt);
+    grouped[key].entries.push({ ...a, name, assignedAt, unassignedAt, isActive, duration, billingEligible });
   }
 
   // Apply status filter
@@ -263,12 +277,12 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
     }
   }
 
-  // Apply billing filter
+  // Apply billing filter (only billing-eligible entries)
   if (overviewFilter === "billing_due" || overviewFilter === "billing_done") {
     const wantDone = overviewFilter === "billing_done";
     for (const key of Object.keys(grouped)) {
       grouped[key].entries = grouped[key].entries.filter((e: any) => {
-        if (!e.isActive) return false;
+        if (!e.billingEligible) return false;
         return isBillingDone(e.user_id) === wantDone;
       });
       if (grouped[key].entries.length === 0) delete grouped[key];
@@ -311,10 +325,10 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
     });
   }
 
-  // Count billing stats for active chatters
-  const allActiveEntries = Object.values(grouped).flatMap(g => g.entries.filter((e: any) => e.isActive));
-  const billingDoneCount = allActiveEntries.filter((e: any) => isBillingDone(e.user_id)).length;
-  const billingDueCount = allActiveEntries.length - billingDoneCount;
+  // Count billing stats – only for billing-eligible entries (assigned during billing period)
+  const allEligibleEntries = Object.values(grouped).flatMap(g => g.entries.filter((e: any) => e.billingEligible));
+  const billingDoneCount = allEligibleEntries.filter((e: any) => isBillingDone(e.user_id)).length;
+  const billingDueCount = allEligibleEntries.length - billingDoneCount;
 
   const filterOptions = [
     { key: "alle" as const, label: "Alle" },
@@ -357,7 +371,7 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
               Fällig ab 20. {new Date().toLocaleString("de-DE", { month: "long" })}
             </Badge>
           )}
-          <span className="text-[10px] text-muted-foreground">{billingDoneCount}/{allActiveEntries.length} erledigt</span>
+          <span className="text-[10px] text-muted-foreground">{billingDoneCount}/{allEligibleEntries.length} erledigt</span>
         </div>
       </div>
 
@@ -471,8 +485,8 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
                                       <span className="font-medium text-foreground text-xs">{entry.name}</span>
                                     </div>
                                     <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                      {/* Billing checkbox for active chatters */}
-                                      {entry.isActive && (
+                                      {/* Billing checkbox – only for billing-eligible entries */}
+                                      {entry.billingEligible && (
                                         <button
                                           onClick={(e) => toggleBilling(entry.user_id, e)}
                                           className={cn(
