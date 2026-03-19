@@ -3069,16 +3069,20 @@ export default function AdminDashboard() {
                       rejected: { dot: "bg-red-400", bg: "bg-red-500/10", text: "text-red-400", label: "Abgelehnt", border: "border-l-red-500/50" },
                     }[req.status as string] || { dot: "bg-muted-foreground", bg: "bg-secondary", text: "text-muted-foreground", label: req.status, border: "border-l-border" };
                     return (
-                      <div
-                        key={req.id}
-                        className={cn(
-                          "glass-card-subtle rounded-xl overflow-hidden transition-all duration-200",
-                          req.status === "pending" && "ring-1 ring-yellow-500/20"
-                        )}
-                      >
-                        {/* Header */}
-                        <div className="px-4 py-3 flex items-center gap-3">
-                          <div className="h-9 w-9 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
+                      <React.Fragment key={req.id}>
+                        <div
+                          className={cn(
+                            "relative glass-card-subtle rounded-xl overflow-hidden transition-all duration-300 card-hover-glow border-l-2",
+                            statusConfig.border,
+                            req.status === "pending" && "ring-1 ring-yellow-500/20"
+                          )}
+                        >
+                          {/* Gold top accent line */}
+                          <div className="absolute top-0 left-[10%] right-[10%] h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
+
+                          {/* Header */}
+                          <div className="px-4 py-3 flex items-center gap-3">
+                            <div className="h-9 w-9 rounded-lg bg-accent/10 flex items-center justify-center shrink-0 ring-1 ring-accent/20 shadow-[0_0_8px_hsl(43_56%_52%/0.1)]">
                             <span className="text-sm font-bold text-accent">{chatterName.charAt(0).toUpperCase()}</span>
                           </div>
                           <div className="flex-1 min-w-0">
