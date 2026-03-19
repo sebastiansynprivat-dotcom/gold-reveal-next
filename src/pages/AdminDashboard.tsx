@@ -3053,7 +3053,7 @@ export default function AdminDashboard() {
                   <p className="text-sm text-muted-foreground">Keine Anfragen in dieser Kategorie.</p>
                 </div>
               ) : (
-                <div className="p-3 space-y-2">
+                <div className="p-3 space-y-4">
                   {modelRequests.filter(r => {
                     if (requestFilter !== "all" && r.status !== requestFilter) return false;
                     if (requestFilter === "accepted" && contentLinkFilter === "with_link" && !r.content_link) return false;
