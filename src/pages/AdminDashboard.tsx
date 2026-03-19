@@ -3537,14 +3537,24 @@ export default function AdminDashboard() {
                   return true;
                 });
 
-                // Apply bot filter from stats cards
-                if (botFilter !== "alle") {
+                // Apply status filter
+                if (setupStatusFilter !== "alle") {
                   filteredSetupAccounts = filteredSetupAccounts.filter(acc => {
+                    const d = getDash(acc.id);
+                    const botdmF = getField(acc.platform, "botdm");
+                    const welcomeF = getField(acc.platform, "welcome");
+                    const massdmF = getField(acc.platform, "massdm");
+                    const botdmDone = !!(d as any)?.[botdmF];
+                    const welcomeDone = !!(d as any)?.[welcomeF];
+                    const massdmDone = !!(d as any)?.[massdmF];
                     const entry = botMessages[acc.id];
                     const saved = savedBotState[acc.id];
-                    if (botFilter === "missing") return !saved || (!saved.message.trim() && !saved.followUp.trim());
-                    if (botFilter === "active") return saved && saved.isActive;
-                    if (botFilter === "inactive") return !saved || !saved.isActive;
+
+                    if (setupStatusFilter === "botdm_missing") return !botdmDone;
+                    if (setupStatusFilter === "setup_missing") return !welcomeDone;
+                    if (setupStatusFilter === "massdm_missing") return !massdmDone;
+                    if (setupStatusFilter === "bot_active") return saved && saved.isActive;
+                    if (setupStatusFilter === "bot_inactive") return !saved || !saved.isActive;
                     return true;
                   });
                 }
