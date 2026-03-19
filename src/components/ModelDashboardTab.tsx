@@ -847,7 +847,7 @@ export default function ModelDashboardTab() {
           </div>
 
           {/* Rows */}
-          <div className="max-h-[400px] overflow-y-auto">
+          <div>
             {filteredAccounts.length === 0 ? (
               <p className="text-xs text-muted-foreground text-center py-8">Keine Models gefunden.</p>
             ) : (
