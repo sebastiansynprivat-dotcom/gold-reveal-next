@@ -3664,6 +3664,20 @@ export default function AdminDashboard() {
                                 </button>
                               </div>
 
+                              {/* Aktiv Toggle */}
+                              <div className="flex items-center justify-between glass-card-subtle rounded-lg px-3 py-2">
+                                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Bot aktiv</span>
+                                <Switch
+                                  checked={entry.isActive}
+                                  onCheckedChange={(checked) => {
+                                    setBotMessages((prev) => ({
+                                      ...prev,
+                                      [acc.id]: { ...entry, isActive: checked },
+                                    }));
+                                  }}
+                                />
+                              </div>
+
                               {/* Bot Message + Follow-up + Save — only for Maloum */}
                               {acc.platform === "Maloum" && (
                                 <>
