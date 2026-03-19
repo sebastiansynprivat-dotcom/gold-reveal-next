@@ -3622,24 +3622,18 @@ export default function AdminDashboard() {
                                 </button>
                               </div>
                             ))}
-                            {/* Active indicator */}
-                            <div className="flex justify-center py-2" onClick={e => e.stopPropagation()}>
-                              <button
-                                onClick={() => {
-                                  setBotMessages((prev) => ({
-                                    ...prev,
-                                    [acc.id]: { ...entry, isActive: !entry.isActive },
-                                  }));
-                                }}
+                            {/* Active indicator (read-only in row) */}
+                            <div className="flex justify-center py-2">
+                              <div
                                 className={cn(
-                                  "h-5 w-5 rounded-full border-2 flex items-center justify-center transition-all duration-200",
+                                  "h-5 w-5 rounded-full border-2 flex items-center justify-center",
                                   entry.isActive
                                     ? "border-accent bg-accent/20"
-                                    : "border-muted-foreground/30 bg-transparent hover:border-accent/50"
+                                    : "border-muted-foreground/30 bg-transparent"
                                 )}
                               >
                                 {entry.isActive && <span className="h-2 w-2 rounded-full bg-accent" />}
-                              </button>
+                              </div>
                             </div>
                           </div>
 
