@@ -404,6 +404,11 @@ export default function ChatterDashboardTab() {
               revenuePercentage={selected.revenuePercentage}
               currency={selected.currency || "EUR"}
               cryptoAddress={selected.cryptoAddress || ""}
+              platformRevenue={{
+                fourbased: selected.fourbasedRevenue || 0,
+                maloum: selected.maloumRevenue || 0,
+                brezzels: selected.brezzelsRevenue || 0,
+              }}
             />
           </Section>
         </>
