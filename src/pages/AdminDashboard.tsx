@@ -264,7 +264,8 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
       const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
       duration = days > 0 ? `${days}d ${hours}h` : `${hours}h`;
     }
-    grouped[key].entries.push({ ...a, name, assignedAt, unassignedAt, isActive, duration });
+    const billingEligible = isBillingEligible(assignedAt, unassignedAt);
+    grouped[key].entries.push({ ...a, name, assignedAt, unassignedAt, isActive, duration, billingEligible });
   }
 
   // Apply status filter
