@@ -88,7 +88,7 @@ export default function ChatterDashboardTab() {
   const [chatters, setChatters] = useState<Chatter[]>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? JSON.parse(saved) : [];
+      return saved ? migrateChatters(JSON.parse(saved)) : [];
     } catch { return []; }
   });
 
