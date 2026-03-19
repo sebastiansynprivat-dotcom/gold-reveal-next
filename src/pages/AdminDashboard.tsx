@@ -1840,7 +1840,7 @@ export default function AdminDashboard() {
     { key: "kiprompt" as const, label: "KI Prompt", icon: Brain, onClick: () => { setActiveTab("kiprompt"); if (!kiPromptLoaded) loadKiPrompt(); } },
     { key: "chatter_overview" as const, label: "Chatter-Übersicht", icon: Users, onClick: () => { setActiveTab("chatter_overview"); if (!assignmentsLoaded) loadAssignments(); } },
     { key: "platzhalter" as const, label: "Model-Dashboard", icon: Star, onClick: () => setActiveTab("platzhalter") },
-    { key: "chatter_dash" as const, label: "Chatter-Dashboard", icon: Users, onClick: () => setActiveTab("chatter_dash") },
+    { key: "chatter_dash" as const, label: "Mitarbeiter-Dashboard", icon: Users, onClick: () => setActiveTab("chatter_dash") },
     { key: "gdrive" as const, label: "Google Drive", icon: ExternalLink, onClick: () => setActiveTab("gdrive") },
   ];
 
