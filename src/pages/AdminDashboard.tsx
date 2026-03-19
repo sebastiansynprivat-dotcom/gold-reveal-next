@@ -3063,11 +3063,11 @@ export default function AdminDashboard() {
                     const chatter = chatters.find(c => c.user_id === req.user_id);
                     const chatterName = chatter?.group_name || req.user_id.slice(0, 8);
                     const statusConfig = {
-                      pending: { dot: "bg-yellow-400", bg: "bg-yellow-500/10", text: "text-yellow-400", label: "Offen" },
-                      accepted: { dot: "bg-emerald-400", bg: "bg-emerald-500/10", text: "text-emerald-400", label: "Angenommen" },
-                      in_progress: { dot: "bg-blue-400", bg: "bg-blue-500/10", text: "text-blue-400", label: "In Arbeit" },
-                      rejected: { dot: "bg-red-400", bg: "bg-red-500/10", text: "text-red-400", label: "Abgelehnt" },
-                    }[req.status as string] || { dot: "bg-muted-foreground", bg: "bg-secondary", text: "text-muted-foreground", label: req.status };
+                      pending: { dot: "bg-yellow-400", bg: "bg-yellow-500/10", text: "text-yellow-400", label: "Offen", border: "border-l-yellow-500/50" },
+                      accepted: { dot: "bg-emerald-400", bg: "bg-emerald-500/10", text: "text-emerald-400", label: "Angenommen", border: "border-l-emerald-500/50" },
+                      in_progress: { dot: "bg-blue-400", bg: "bg-blue-500/10", text: "text-blue-400", label: "In Arbeit", border: "border-l-blue-500/50" },
+                      rejected: { dot: "bg-red-400", bg: "bg-red-500/10", text: "text-red-400", label: "Abgelehnt", border: "border-l-red-500/50" },
+                    }[req.status as string] || { dot: "bg-muted-foreground", bg: "bg-secondary", text: "text-muted-foreground", label: req.status, border: "border-l-border" };
                     return (
                       <div
                         key={req.id}
