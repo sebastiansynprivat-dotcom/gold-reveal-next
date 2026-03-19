@@ -8,11 +8,14 @@ import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Plus, Trash2, Search, ChevronDown, Wallet, Percent, FileDown, Save, Users, Crown
+  Plus, Trash2, Search, Wallet, Percent, FileDown, Save, Users, Crown, Clock
 } from "lucide-react";
 import CreditNoteForm from "@/components/CreditNoteForm";
 
 const CURRENCIES = ["EUR", "USD", "GBP", "CHF", "AED"] as const;
+
+type ChatterRole = "chatter" | "mitarbeiter";
+type CompensationType = "percentage" | "hourly";
 
 interface Chatter {
   id: string;
@@ -25,6 +28,10 @@ interface Chatter {
   revenuePercentage: number;
   currency: string;
   cryptoAddress: string;
+  role: ChatterRole;
+  compensationType: CompensationType;
+  hourlyRate: number;
+  hoursWorked: number;
 }
 
 const STORAGE_KEY = "admin-chatter-dashboard";
@@ -35,6 +42,10 @@ function migrateChatters(chatters: Chatter[]): Chatter[] {
     fourbasedRevenue: c.fourbasedRevenue ?? c.monthlyRevenue ?? 0,
     maloumRevenue: c.maloumRevenue ?? 0,
     brezzelsRevenue: c.brezzelsRevenue ?? 0,
+    role: c.role ?? "chatter",
+    compensationType: c.compensationType ?? "percentage",
+    hourlyRate: c.hourlyRate ?? 0,
+    hoursWorked: c.hoursWorked ?? 0,
   }));
 }
 
@@ -84,6 +95,12 @@ function Section({ icon: Icon, title, children, delay = 0 }: { icon: React.Eleme
   );
 }
 
+const ROLE_FILTERS: { label: string; value: "all" | ChatterRole }[] = [
+  { label: "Alle", value: "all" },
+  { label: "Chatter", value: "chatter" },
+  { label: "Mitarbeiter", value: "mitarbeiter" },
+];
+
 export default function ChatterDashboardTab() {
   const [chatters, setChatters] = useState<Chatter[]>(() => {
     try {
@@ -94,12 +111,11 @@ export default function ChatterDashboardTab() {
 
   const [selectedId, setSelectedId] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [listOpen, setListOpen] = useState(false); // kept for compat
+  const [roleFilter, setRoleFilter] = useState<"all" | ChatterRole>("all");
   const [addingNew, setAddingNew] = useState(false);
   const [newName, setNewName] = useState("");
   const [newPlatform, setNewPlatform] = useState("");
-
-  // (Gutschrift state removed – now uses CreditNoteForm component)
+  const [newRole, setNewRole] = useState<ChatterRole>("chatter");
 
   // Persist
   useEffect(() => {
@@ -108,11 +124,14 @@ export default function ChatterDashboardTab() {
 
   const selected = chatters.find(c => c.id === selectedId) || null;
 
-  const filteredChatters = chatters.filter(c => {
-    if (!searchQuery) return true;
-    const q = searchQuery.toLowerCase();
-    return c.name.toLowerCase().includes(q) || c.platform.toLowerCase().includes(q);
-  });
+  const filteredChatters = useMemo(() => {
+    return chatters.filter(c => {
+      if (roleFilter !== "all" && c.role !== roleFilter) return false;
+      if (!searchQuery) return true;
+      const q = searchQuery.toLowerCase();
+      return c.name.toLowerCase().includes(q) || c.platform.toLowerCase().includes(q);
+    });
+  }, [chatters, searchQuery, roleFilter]);
 
   const totalRevenue = useMemo(() => {
     if (!selected) return 0;
@@ -120,7 +139,11 @@ export default function ChatterDashboardTab() {
   }, [selected]);
 
   const verdienst = useMemo(() => {
-    if (!selected || selected.revenuePercentage <= 0) return 0;
+    if (!selected) return 0;
+    if (selected.compensationType === "hourly") {
+      return Math.round(selected.hourlyRate * selected.hoursWorked);
+    }
+    if (selected.revenuePercentage <= 0) return 0;
     return Math.round(totalRevenue * selected.revenuePercentage / 100);
   }, [selected, totalRevenue]);
 
@@ -137,14 +160,18 @@ export default function ChatterDashboardTab() {
       revenuePercentage: 0,
       currency: "EUR",
       cryptoAddress: "",
+      role: newRole,
+      compensationType: newRole === "mitarbeiter" ? "hourly" : "percentage",
+      hourlyRate: 0,
+      hoursWorked: 0,
     };
     setChatters(prev => [...prev, chatter]);
     setSelectedId(chatter.id);
     setNewName("");
     setNewPlatform("");
+    setNewRole("chatter");
     setAddingNew(false);
-    setListOpen(false);
-    toast.success("Chatter hinzugefügt ✅");
+    toast.success("Mitarbeiter hinzugefügt ✅");
   };
 
   const updateSelected = (patch: Partial<Chatter>) => {
@@ -155,10 +182,15 @@ export default function ChatterDashboardTab() {
   const deleteChatter = (id: string) => {
     setChatters(prev => prev.filter(c => c.id !== id));
     if (selectedId === id) setSelectedId("");
-    toast.success("Chatter gelöscht");
+    toast.success("Eintrag gelöscht");
   };
 
-  // generateGutschrift removed – now uses CreditNoteForm component
+  const getVerdienst = (c: Chatter) => {
+    const total = (c.fourbasedRevenue || 0) + (c.maloumRevenue || 0) + (c.brezzelsRevenue || 0);
+    if (c.compensationType === "hourly") return Math.round(c.hourlyRate * c.hoursWorked);
+    if (c.revenuePercentage <= 0) return 0;
+    return Math.round(total * c.revenuePercentage / 100);
+  };
 
   return (
     <div className="space-y-5">
@@ -168,20 +200,39 @@ export default function ChatterDashboardTab() {
           <Users className="h-5 w-5 text-accent" />
         </div>
         <div>
-          <h2 className="text-lg font-bold text-foreground">Chatter-Dashboard</h2>
-          <p className="text-xs text-muted-foreground">Chatter manuell verwalten & Gutschriften erstellen</p>
+          <h2 className="text-lg font-bold text-foreground">Mitarbeiter-Dashboard</h2>
+          <p className="text-xs text-muted-foreground">Mitarbeiter & Chatter verwalten & Gutschriften erstellen</p>
         </div>
       </motion.div>
 
-      {/* Chatter Table – Google Sheets Style */}
-      <Section icon={Users} title="Alle Chatter">
+      {/* Table Section */}
+      <Section icon={Users} title="Alle Mitarbeiter">
         <div className="space-y-3">
+          {/* Role Filter Pills */}
+          <div className="flex gap-1.5">
+            {ROLE_FILTERS.map(f => (
+              <button
+                key={f.value}
+                onClick={() => setRoleFilter(f.value)}
+                className={cn(
+                  "px-3 py-1 rounded-full text-xs font-medium transition-colors border",
+                  roleFilter === f.value
+                    ? "bg-accent/15 text-accent border-accent/30"
+                    : "bg-secondary/30 text-muted-foreground border-border/30 hover:bg-accent/5"
+                )}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Search + Add */}
           <div className="flex gap-2">
             <div className="flex-1 input-gold-shimmer rounded-xl">
               <div className="relative">
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                 <Input
-                  placeholder="Chatter suchen…"
+                  placeholder="Suchen…"
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   className="pl-8 text-sm border-transparent"
@@ -193,7 +244,7 @@ export default function ChatterDashboardTab() {
             </Button>
           </div>
 
-          {/* Add new chatter inline */}
+          {/* Add new inline */}
           <AnimatePresence>
             {addingNew && (
               <motion.div
@@ -205,31 +256,52 @@ export default function ChatterDashboardTab() {
                     <Input placeholder="Name" value={newName} onChange={e => setNewName(e.target.value)} className="text-sm border-transparent" autoFocus />
                   </div>
                   <div className="input-gold-shimmer rounded-lg">
-                    <Input placeholder="Plattform (optional)" value={newPlatform} onChange={e => setNewPlatform(e.target.value)} className="text-sm border-transparent"
-                      onKeyDown={e => { if (e.key === "Enter") addChatter(); }}
-                    />
+                    <Input placeholder="Plattform (optional)" value={newPlatform} onChange={e => setNewPlatform(e.target.value)} className="text-sm border-transparent" />
+                  </div>
+                  {/* Role selection */}
+                  <div className="flex gap-1.5">
+                    <button
+                      onClick={() => setNewRole("chatter")}
+                      className={cn(
+                        "flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border",
+                        newRole === "chatter"
+                          ? "bg-accent/15 text-accent border-accent/30"
+                          : "bg-secondary/30 text-muted-foreground border-border/30"
+                      )}
+                    >
+                      Chatter
+                    </button>
+                    <button
+                      onClick={() => setNewRole("mitarbeiter")}
+                      className={cn(
+                        "flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border",
+                        newRole === "mitarbeiter"
+                          ? "bg-accent/15 text-accent border-accent/30"
+                          : "bg-secondary/30 text-muted-foreground border-border/30"
+                      )}
+                    >
+                      Mitarbeiter
+                    </button>
                   </div>
                   <div className="flex gap-2">
                     <Button size="sm" onClick={addChatter} disabled={!newName.trim()} className="flex-1 gap-1.5"><Plus className="h-3 w-3" /> Hinzufügen</Button>
-                    <Button size="sm" variant="ghost" onClick={() => { setAddingNew(false); setNewName(""); setNewPlatform(""); }}>Abbrechen</Button>
+                    <Button size="sm" variant="ghost" onClick={() => { setAddingNew(false); setNewName(""); setNewPlatform(""); setNewRole("chatter"); }}>Abbrechen</Button>
                   </div>
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
 
-          {/* Permanent Table */}
+          {/* Table */}
           {filteredChatters.length > 0 ? (
             <div className="rounded-lg border border-border/50 overflow-hidden">
-              {/* Sticky Header */}
-              <div className="grid grid-cols-[1fr_70px_65px_65px_65px_75px_50px_32px] gap-0 bg-accent/10 border-b border-accent/20">
+              {/* Header */}
+              <div className="grid grid-cols-[1fr_80px_80px_80px_80px_32px] gap-0 bg-accent/10 border-b border-accent/20">
                 <div className="px-3 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold">Name</div>
                 <div className="px-2 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">Plattform</div>
-                <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-right">4Based</div>
-                <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-right">Maloum</div>
-                <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-right">Brezzels</div>
+                <div className="px-2 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">Rolle</div>
                 <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-right">Gesamt</div>
-                <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-right">%</div>
+                <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-right">Verdienst</div>
                 <div className="py-2" />
               </div>
 
@@ -237,13 +309,14 @@ export default function ChatterDashboardTab() {
               <div>
                 {filteredChatters.map((c, i) => {
                   const total = (c.fourbasedRevenue || 0) + (c.maloumRevenue || 0) + (c.brezzelsRevenue || 0);
+                  const earnings = getVerdienst(c);
                   const isSelected = c.id === selectedId;
                   return (
                     <div
                       key={c.id}
                       onClick={() => setSelectedId(c.id)}
                       className={cn(
-                        "grid grid-cols-[1fr_70px_65px_65px_65px_75px_50px_32px] gap-0 items-center border-b border-border/30 cursor-pointer transition-colors",
+                        "grid grid-cols-[1fr_80px_80px_80px_80px_32px] gap-0 items-center border-b border-border/30 cursor-pointer transition-colors",
                         isSelected
                           ? "bg-accent/15 border-l-2 border-l-accent"
                           : i % 2 === 0 ? "bg-card/40 hover:bg-accent/5" : "bg-card/20 hover:bg-accent/5"
@@ -253,22 +326,21 @@ export default function ChatterDashboardTab() {
                         <p className={cn("text-xs font-medium truncate", isSelected ? "text-accent" : "text-foreground")}>{c.name}</p>
                       </div>
                       <div className="px-2 py-2 flex justify-center">
-                        <span className="text-[9px] bg-secondary/50 text-muted-foreground border border-border/30 rounded px-1.5 py-0.5 capitalize">{c.platform}</span>
+                        <span className="text-[9px] bg-secondary/50 text-muted-foreground border border-border/30 rounded px-1.5 py-0.5 capitalize truncate max-w-[70px]">{c.platform}</span>
                       </div>
-                      <div className="px-1 py-2 text-right">
-                        <span className="text-[11px] tabular-nums text-muted-foreground">{(c.fourbasedRevenue || 0).toLocaleString("de-DE")}</span>
-                      </div>
-                      <div className="px-1 py-2 text-right">
-                        <span className="text-[11px] tabular-nums text-muted-foreground">{(c.maloumRevenue || 0).toLocaleString("de-DE")}</span>
-                      </div>
-                      <div className="px-1 py-2 text-right">
-                        <span className="text-[11px] tabular-nums text-muted-foreground">{(c.brezzelsRevenue || 0).toLocaleString("de-DE")}</span>
+                      <div className="px-2 py-2 flex justify-center">
+                        <span className={cn(
+                          "text-[9px] border rounded px-1.5 py-0.5 capitalize",
+                          c.role === "mitarbeiter"
+                            ? "bg-primary/10 text-primary border-primary/30"
+                            : "bg-accent/10 text-accent border-accent/30"
+                        )}>{c.role}</span>
                       </div>
                       <div className="px-1 py-2 text-right">
                         <span className="text-[11px] tabular-nums font-semibold text-foreground">{total.toLocaleString("de-DE")}</span>
                       </div>
                       <div className="px-1 py-2 text-right">
-                        <span className="text-[11px] tabular-nums text-muted-foreground">{c.revenuePercentage}%</span>
+                        <span className="text-[11px] tabular-nums text-accent font-medium">{earnings.toLocaleString("de-DE")}</span>
                       </div>
                       <div className="flex justify-center py-2">
                         <button
@@ -285,7 +357,7 @@ export default function ChatterDashboardTab() {
 
               {/* Footer */}
               <div className="px-3 py-1.5 bg-secondary/20 border-t border-border/30">
-                <span className="text-[10px] text-muted-foreground">{filteredChatters.length} Chatter</span>
+                <span className="text-[10px] text-muted-foreground">{filteredChatters.length} Einträge</span>
               </div>
             </div>
           ) : chatters.length > 0 ? (
@@ -316,7 +388,7 @@ export default function ChatterDashboardTab() {
           </motion.div>
 
           {/* Details */}
-          <Section icon={Save} title="Chatter-Daten" delay={0.1}>
+          <Section icon={Save} title="Mitarbeiter-Daten" delay={0.1}>
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
@@ -330,6 +402,35 @@ export default function ChatterDashboardTab() {
                   <div className="input-gold-shimmer rounded-lg">
                     <Input value={selected.platform} onChange={e => updateSelected({ platform: e.target.value })} className="text-sm border-transparent" />
                   </div>
+                </div>
+              </div>
+
+              {/* Role toggle in detail */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Rolle</label>
+                <div className="flex gap-1.5">
+                  <button
+                    onClick={() => updateSelected({ role: "chatter", compensationType: "percentage" })}
+                    className={cn(
+                      "flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border",
+                      selected.role === "chatter"
+                        ? "bg-accent/15 text-accent border-accent/30"
+                        : "bg-secondary/30 text-muted-foreground border-border/30"
+                    )}
+                  >
+                    Chatter
+                  </button>
+                  <button
+                    onClick={() => updateSelected({ role: "mitarbeiter", compensationType: "hourly" })}
+                    className={cn(
+                      "flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border",
+                      selected.role === "mitarbeiter"
+                        ? "bg-accent/15 text-accent border-accent/30"
+                        : "bg-secondary/30 text-muted-foreground border-border/30"
+                    )}
+                  >
+                    Mitarbeiter
+                  </button>
                 </div>
               </div>
 
@@ -374,21 +475,76 @@ export default function ChatterDashboardTab() {
             </div>
           </Section>
 
-          {/* Revenue share */}
-          <Section icon={Percent} title="Anteil & Verdienst" delay={0.15}>
+          {/* Compensation */}
+          <Section icon={selected.compensationType === "hourly" ? Clock : Percent} title="Anteil & Verdienst" delay={0.15}>
             <div className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-medium text-muted-foreground">Anteil</label>
-                  <span className="text-sm font-bold text-accent">{selected.revenuePercentage}%</span>
-                </div>
-                <Slider
-                  value={[selected.revenuePercentage]}
-                  onValueChange={([v]) => updateSelected({ revenuePercentage: v })}
-                  min={0} max={100} step={1}
-                  className="py-2"
-                />
+              {/* Compensation type toggle */}
+              <div className="flex gap-1.5">
+                <button
+                  onClick={() => updateSelected({ compensationType: "percentage" })}
+                  className={cn(
+                    "flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border flex items-center justify-center gap-1.5",
+                    selected.compensationType === "percentage"
+                      ? "bg-accent/15 text-accent border-accent/30"
+                      : "bg-secondary/30 text-muted-foreground border-border/30"
+                  )}
+                >
+                  <Percent className="h-3 w-3" /> Prozent-Beteiligung
+                </button>
+                <button
+                  onClick={() => updateSelected({ compensationType: "hourly" })}
+                  className={cn(
+                    "flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border flex items-center justify-center gap-1.5",
+                    selected.compensationType === "hourly"
+                      ? "bg-accent/15 text-accent border-accent/30"
+                      : "bg-secondary/30 text-muted-foreground border-border/30"
+                  )}
+                >
+                  <Clock className="h-3 w-3" /> Stundenlohn
+                </button>
               </div>
+
+              {selected.compensationType === "percentage" ? (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-medium text-muted-foreground">Anteil</label>
+                    <span className="text-sm font-bold text-accent">{selected.revenuePercentage}%</span>
+                  </div>
+                  <Slider
+                    value={[selected.revenuePercentage]}
+                    onValueChange={([v]) => updateSelected({ revenuePercentage: v })}
+                    min={0} max={100} step={1}
+                    className="py-2"
+                  />
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Stundensatz (€)</label>
+                    <div className="input-gold-shimmer rounded-lg">
+                      <Input
+                        type="number"
+                        value={selected.hourlyRate || ""}
+                        onChange={e => updateSelected({ hourlyRate: Number(e.target.value) || 0 })}
+                        className="text-sm border-transparent"
+                        placeholder="0"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Stunden gearbeitet</label>
+                    <div className="input-gold-shimmer rounded-lg">
+                      <Input
+                        type="number"
+                        value={selected.hoursWorked || ""}
+                        onChange={e => updateSelected({ hoursWorked: Number(e.target.value) || 0 })}
+                        className="text-sm border-transparent"
+                        placeholder="0"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {verdienst > 0 && (
                 <motion.div
@@ -399,7 +555,11 @@ export default function ChatterDashboardTab() {
                     <Wallet className="h-4 w-4 text-accent" />
                   </div>
                   <div>
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Verdienst ({selected.revenuePercentage}%)</p>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                      Verdienst {selected.compensationType === "percentage"
+                        ? `(${selected.revenuePercentage}%)`
+                        : `(${selected.hourlyRate}€ × ${selected.hoursWorked}h)`}
+                    </p>
                     <p className="text-xl font-bold text-accent tabular-nums">
                       <AnimatedGoldValue value={verdienst} suffix={` ${selected.currency || "EUR"}`} />
                     </p>
@@ -430,7 +590,7 @@ export default function ChatterDashboardTab() {
               suggestedAmount={verdienst}
               providerName={selected.name}
               chatterName={selected.name}
-              revenuePercentage={selected.revenuePercentage}
+              revenuePercentage={selected.compensationType === "percentage" ? selected.revenuePercentage : 0}
               currency={selected.currency || "EUR"}
               cryptoAddress={selected.cryptoAddress || ""}
               platformRevenue={{
@@ -446,9 +606,9 @@ export default function ChatterDashboardTab() {
       {!selected && chatters.length === 0 && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12 space-y-3">
           <Users className="h-10 w-10 text-muted-foreground/30 mx-auto" />
-          <p className="text-sm text-muted-foreground">Noch keine Chatter angelegt.</p>
+          <p className="text-sm text-muted-foreground">Noch keine Mitarbeiter angelegt.</p>
           <Button size="sm" onClick={() => setAddingNew(true)} className="gap-1.5">
-            <Plus className="h-3.5 w-3.5" /> Ersten Chatter hinzufügen
+            <Plus className="h-3.5 w-3.5" /> Ersten Eintrag hinzufügen
           </Button>
         </motion.div>
       )}
