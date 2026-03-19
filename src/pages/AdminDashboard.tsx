@@ -3059,7 +3059,7 @@ export default function AdminDashboard() {
                     if (requestFilter === "accepted" && contentLinkFilter === "with_link" && !r.content_link) return false;
                     if (requestFilter === "accepted" && contentLinkFilter === "without_link" && r.content_link) return false;
                     return true;
-                  }).map((req) => {
+                  }).map((req, idx, arr) => {
                     const chatter = chatters.find(c => c.user_id === req.user_id);
                     const chatterName = chatter?.group_name || req.user_id.slice(0, 8);
                     const statusConfig = {
