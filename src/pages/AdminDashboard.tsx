@@ -551,6 +551,7 @@ export default function AdminDashboard() {
   const [setupDashboardsLoaded, setSetupDashboardsLoaded] = useState(false);
   const [setupSearch, setSetupSearch] = useState("");
   const [setupPlatform, setSetupPlatform] = useState<"all" | "4Based" | "Maloum" | "Brezzels">("all");
+  const [setupStatusFilter, setSetupStatusFilter] = useState<"alle" | "botdm_missing" | "setup_missing" | "massdm_missing" | "bot_active" | "bot_inactive">("alle");
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("30");
   const [newPlatformOpen, setNewPlatformOpen] = useState(false);
   const [newPlatformName, setNewPlatformName] = useState("");
@@ -3465,6 +3466,29 @@ export default function AdminDashboard() {
                     </button>
                   ))}
                 </div>
+                <div className="flex gap-1 flex-wrap">
+                  {([
+                    { key: "alle", label: "Alle" },
+                    { key: "botdm_missing", label: "Bot DM fehlt" },
+                    { key: "setup_missing", label: "Setup fehlt" },
+                    { key: "massdm_missing", label: "MassDM fehlt" },
+                    { key: "bot_active", label: "Bot aktiv" },
+                    { key: "bot_inactive", label: "Bot inaktiv" },
+                  ] as const).map(f => (
+                    <button
+                      key={f.key}
+                      onClick={() => setSetupStatusFilter(f.key)}
+                      className={cn(
+                        "text-[10px] font-medium px-2.5 py-1 rounded-full border transition-all duration-200",
+                        setupStatusFilter === f.key
+                          ? "bg-accent/20 text-accent border-accent/30"
+                          : "text-muted-foreground hover:text-foreground border-border/30 hover:border-accent/30"
+                      )}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Table Header */}
@@ -3513,14 +3537,24 @@ export default function AdminDashboard() {
                   return true;
                 });
 
-                // Apply bot filter from stats cards
-                if (botFilter !== "alle") {
+                // Apply status filter
+                if (setupStatusFilter !== "alle") {
                   filteredSetupAccounts = filteredSetupAccounts.filter(acc => {
+                    const d = getDash(acc.id);
+                    const botdmF = getField(acc.platform, "botdm");
+                    const welcomeF = getField(acc.platform, "welcome");
+                    const massdmF = getField(acc.platform, "massdm");
+                    const botdmDone = !!(d as any)?.[botdmF];
+                    const welcomeDone = !!(d as any)?.[welcomeF];
+                    const massdmDone = !!(d as any)?.[massdmF];
                     const entry = botMessages[acc.id];
                     const saved = savedBotState[acc.id];
-                    if (botFilter === "missing") return !saved || (!saved.message.trim() && !saved.followUp.trim());
-                    if (botFilter === "active") return saved && saved.isActive;
-                    if (botFilter === "inactive") return !saved || !saved.isActive;
+
+                    if (setupStatusFilter === "botdm_missing") return !botdmDone;
+                    if (setupStatusFilter === "setup_missing") return !welcomeDone;
+                    if (setupStatusFilter === "massdm_missing") return !massdmDone;
+                    if (setupStatusFilter === "bot_active") return saved && saved.isActive;
+                    if (setupStatusFilter === "bot_inactive") return !saved || !saved.isActive;
                     return true;
                   });
                 }
@@ -3588,24 +3622,18 @@ export default function AdminDashboard() {
                                 </button>
                               </div>
                             ))}
-                            {/* Active indicator */}
-                            <div className="flex justify-center py-2" onClick={e => e.stopPropagation()}>
-                              <button
-                                onClick={() => {
-                                  setBotMessages((prev) => ({
-                                    ...prev,
-                                    [acc.id]: { ...entry, isActive: !entry.isActive },
-                                  }));
-                                }}
+                            {/* Active indicator (read-only in row) */}
+                            <div className="flex justify-center py-2">
+                              <div
                                 className={cn(
-                                  "h-5 w-5 rounded-full border-2 flex items-center justify-center transition-all duration-200",
+                                  "h-5 w-5 rounded-full border-2 flex items-center justify-center",
                                   entry.isActive
                                     ? "border-accent bg-accent/20"
-                                    : "border-muted-foreground/30 bg-transparent hover:border-accent/50"
+                                    : "border-muted-foreground/30 bg-transparent"
                                 )}
                               >
                                 {entry.isActive && <span className="h-2 w-2 rounded-full bg-accent" />}
-                              </button>
+                              </div>
                             </div>
                           </div>
 
@@ -3634,6 +3662,20 @@ export default function AdminDashboard() {
                                     <Copy className="h-3 w-3 text-muted-foreground group-hover:text-accent shrink-0" />
                                   </div>
                                 </button>
+                              </div>
+
+                              {/* Aktiv Toggle */}
+                              <div className="flex items-center justify-between glass-card-subtle rounded-lg px-3 py-2">
+                                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Bot aktiv</span>
+                                <Switch
+                                  checked={entry.isActive}
+                                  onCheckedChange={(checked) => {
+                                    setBotMessages((prev) => ({
+                                      ...prev,
+                                      [acc.id]: { ...entry, isActive: checked },
+                                    }));
+                                  }}
+                                />
                               </div>
 
                               {/* Bot Message + Follow-up + Save — only for Maloum */}
