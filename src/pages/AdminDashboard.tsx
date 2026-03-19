@@ -551,6 +551,7 @@ export default function AdminDashboard() {
   const [setupDashboardsLoaded, setSetupDashboardsLoaded] = useState(false);
   const [setupSearch, setSetupSearch] = useState("");
   const [setupPlatform, setSetupPlatform] = useState<"all" | "4Based" | "Maloum" | "Brezzels">("all");
+  const [setupStatusFilter, setSetupStatusFilter] = useState<"alle" | "botdm_missing" | "setup_missing" | "massdm_missing" | "bot_active" | "bot_inactive">("alle");
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("30");
   const [newPlatformOpen, setNewPlatformOpen] = useState(false);
   const [newPlatformName, setNewPlatformName] = useState("");
