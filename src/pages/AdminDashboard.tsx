@@ -200,7 +200,7 @@ function loadBillingStatus(): Record<string, boolean> {
 function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { assignments: any[]; assignmentsLoading: boolean; chatters: ChatterProfile[] }) {
   const [overviewFilter, setOverviewFilter] = useState<"alle" | "aktiv" | "inaktiv" | "billing_due" | "billing_done">("alle");
   const [chatterSearch, setChatterSearch] = useState("");
-  const [collapsedAgencies, setCollapsedAgencies] = useState<Record<string, boolean>>({ shex: true, syn: true });
+  const [collapsedAgencies, setCollapsedAgencies] = useState<Record<string, boolean>>({ shex: false, syn: false });
   const toggleAgency = (key: string) => setCollapsedAgencies(prev => ({ ...prev, [key]: !prev[key] }));
   const [billingStatus, setBillingStatus] = useState<Record<string, boolean>>(loadBillingStatus);
 
