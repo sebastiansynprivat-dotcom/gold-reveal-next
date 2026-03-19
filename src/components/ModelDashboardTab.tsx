@@ -366,8 +366,7 @@ function BotDmTable({
     </div>
   );
 }
-
-
+export default function ModelDashboardTab() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [allDashboards, setAllDashboards] = useState<ModelDashboardRow[]>([]);
   const [selectedAccountId, setSelectedAccountId] = useState<string>("");
