@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Users, Send, Bell, BellOff, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, CalendarDays, CalendarRange, Filter, MessageSquare, Star, AlertTriangle, Bot, Save, Power, Copy, Smartphone, Percent, ChevronRight, ChevronDown, Shield, UserPlus, UserMinus, Check, XCircle, Sparkles, Loader2, ExternalLink, Brain, CheckCircle2, Clock, Repeat, Pause, Play, FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -3053,59 +3053,63 @@ export default function AdminDashboard() {
                   <p className="text-sm text-muted-foreground">Keine Anfragen in dieser Kategorie.</p>
                 </div>
               ) : (
-                <div className="p-3 space-y-2">
+                <div className="p-3 space-y-4">
                   {modelRequests.filter(r => {
                     if (requestFilter !== "all" && r.status !== requestFilter) return false;
                     if (requestFilter === "accepted" && contentLinkFilter === "with_link" && !r.content_link) return false;
                     if (requestFilter === "accepted" && contentLinkFilter === "without_link" && r.content_link) return false;
                     return true;
-                  }).map((req) => {
+                  }).map((req, idx, arr) => {
                     const chatter = chatters.find(c => c.user_id === req.user_id);
                     const chatterName = chatter?.group_name || req.user_id.slice(0, 8);
                     const statusConfig = {
-                      pending: { dot: "bg-yellow-400", bg: "bg-yellow-500/10", text: "text-yellow-400", label: "Offen" },
-                      accepted: { dot: "bg-emerald-400", bg: "bg-emerald-500/10", text: "text-emerald-400", label: "Angenommen" },
-                      in_progress: { dot: "bg-blue-400", bg: "bg-blue-500/10", text: "text-blue-400", label: "In Arbeit" },
-                      rejected: { dot: "bg-red-400", bg: "bg-red-500/10", text: "text-red-400", label: "Abgelehnt" },
-                    }[req.status as string] || { dot: "bg-muted-foreground", bg: "bg-secondary", text: "text-muted-foreground", label: req.status };
+                      pending: { dot: "bg-yellow-400", bg: "bg-yellow-500/10", text: "text-yellow-400", label: "Offen", border: "border-l-yellow-500/50" },
+                      accepted: { dot: "bg-emerald-400", bg: "bg-emerald-500/10", text: "text-emerald-400", label: "Angenommen", border: "border-l-emerald-500/50" },
+                      in_progress: { dot: "bg-blue-400", bg: "bg-blue-500/10", text: "text-blue-400", label: "In Arbeit", border: "border-l-blue-500/50" },
+                      rejected: { dot: "bg-red-400", bg: "bg-red-500/10", text: "text-red-400", label: "Abgelehnt", border: "border-l-red-500/50" },
+                    }[req.status as string] || { dot: "bg-muted-foreground", bg: "bg-secondary", text: "text-muted-foreground", label: req.status, border: "border-l-border" };
                     return (
-                      <div
-                        key={req.id}
-                        className={cn(
-                          "glass-card-subtle rounded-xl overflow-hidden transition-all duration-200",
-                          req.status === "pending" && "ring-1 ring-yellow-500/20"
-                        )}
-                      >
-                        {/* Header */}
-                        <div className="px-4 py-3 flex items-center gap-3">
-                          <div className="h-9 w-9 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
-                            <span className="text-sm font-bold text-accent">{chatterName.charAt(0).toUpperCase()}</span>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-semibold text-foreground truncate">{chatterName}</span>
-                              <span className={cn("flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full", statusConfig.bg, statusConfig.text)}>
-                                <span className={cn("h-1.5 w-1.5 rounded-full", statusConfig.dot, req.status === "pending" && "animate-pulse")} />
-                                {statusConfig.label}
-                              </span>
+                      <React.Fragment key={req.id}>
+                        <div
+                          className={cn(
+                            "relative glass-card-subtle rounded-xl overflow-hidden transition-all duration-300 card-hover-glow border-l-2",
+                            statusConfig.border,
+                            req.status === "pending" && "ring-1 ring-yellow-500/20"
+                          )}
+                        >
+                          {/* Gold top accent line */}
+                          <div className="absolute top-0 left-[10%] right-[10%] h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
+
+                          {/* Header */}
+                          <div className="px-4 py-3 flex items-center gap-3">
+                            <div className="h-9 w-9 rounded-lg bg-accent/10 flex items-center justify-center shrink-0 ring-1 ring-accent/20 shadow-[0_0_8px_hsl(43_56%_52%/0.1)]">
+                              <span className="text-sm font-bold text-accent">{chatterName.charAt(0).toUpperCase()}</span>
                             </div>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              <Badge variant="outline" className="text-[10px] h-4 px-1.5 border-border/50">
-                                {req.request_type === "individual" ? "Individuell" : "Allgemein"}
-                              </Badge>
-                              {req.request_type === "individual" && req.price != null && (
-                                <span className="text-[10px] text-accent font-bold">{req.price}€</span>
-                              )}
-                              <span className="text-[10px] text-muted-foreground ml-auto">
-                                {new Date(req.created_at).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit" })}
-                              </span>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-semibold text-foreground truncate">{chatterName}</span>
+                                <span className={cn("flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full", statusConfig.bg, statusConfig.text)}>
+                                  <span className={cn("h-1.5 w-1.5 rounded-full", statusConfig.dot, req.status === "pending" && "animate-pulse")} />
+                                  {statusConfig.label}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                <Badge variant="outline" className="text-[10px] h-4 px-1.5 border-border/50">
+                                  {req.request_type === "individual" ? "Individuell" : "Allgemein"}
+                                </Badge>
+                                {req.request_type === "individual" && req.price != null && (
+                                  <span className="text-[10px] text-accent font-bold">{req.price}€</span>
+                                )}
+                                <span className="text-[10px] text-muted-foreground ml-auto">
+                                  {new Date(req.created_at).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit" })}
+                                </span>
+                              </div>
                             </div>
                           </div>
-                        </div>
 
                         {/* Content */}
                         <div className="px-4 pb-3 space-y-2.5">
-                          <div className="h-px bg-border/30" />
+                          <div className="h-px bg-gradient-to-r from-transparent via-accent/20 to-transparent" />
 
                           {/* Model Name */}
                           <button
@@ -3347,7 +3351,11 @@ export default function AdminDashboard() {
                             )}
                           </div>
                         </div>
-                      </div>
+                        </div>
+                        {idx < arr.length - 1 && (
+                          <div className="h-px bg-gradient-to-r from-transparent via-accent/15 to-transparent mx-4" />
+                        )}
+                      </React.Fragment>
                     );
                   })}
                 </div>
