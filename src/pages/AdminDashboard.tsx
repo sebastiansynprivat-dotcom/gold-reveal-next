@@ -172,11 +172,48 @@ function AnimatedNumber({ value, className, suffix = "€" }: { value: number; c
   return <span ref={spanRef} className={className}>{value.toLocaleString("de-DE")}{suffix}</span>;
 }
 
+function getBillingPeriod() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth(); // 0-based
+  // Billing for previous month, due on 20th of current month
+  const prevMonth = month === 0 ? 11 : month - 1;
+  const prevYear = month === 0 ? year - 1 : year;
+  const isDue = now.getDate() >= 20;
+  const periodKey = `${prevYear}-${String(prevMonth + 1).padStart(2, "0")}`;
+  const periodLabel = new Date(prevYear, prevMonth).toLocaleString("de-DE", { month: "long", year: "numeric" });
+  return { periodKey, periodLabel, isDue };
+}
+
+const BILLING_STORAGE_KEY = "admin-billing-tracker";
+
+function loadBillingStatus(): Record<string, boolean> {
+  try {
+    const saved = localStorage.getItem(BILLING_STORAGE_KEY);
+    return saved ? JSON.parse(saved) : {};
+  } catch { return {}; }
+}
+
 function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { assignments: any[]; assignmentsLoading: boolean; chatters: ChatterProfile[] }) {
-  const [overviewFilter, setOverviewFilter] = useState<"alle" | "aktiv" | "inaktiv">("alle");
+  const [overviewFilter, setOverviewFilter] = useState<"alle" | "aktiv" | "inaktiv" | "billing_due" | "billing_done">("alle");
   const [chatterSearch, setChatterSearch] = useState("");
   const [collapsedAgencies, setCollapsedAgencies] = useState<Record<string, boolean>>({ shex: true, syn: true });
   const toggleAgency = (key: string) => setCollapsedAgencies(prev => ({ ...prev, [key]: !prev[key] }));
+  const [billingStatus, setBillingStatus] = useState<Record<string, boolean>>(loadBillingStatus);
+
+  const billing = useMemo(() => getBillingPeriod(), []);
+
+  const toggleBilling = (userId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const key = `${userId}_${billing.periodKey}`;
+    setBillingStatus(prev => {
+      const next = { ...prev, [key]: !prev[key] };
+      localStorage.setItem(BILLING_STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const isBillingDone = (userId: string) => billingStatus[`${userId}_${billing.periodKey}`] || false;
 
   if (assignmentsLoading) {
     return (
@@ -218,10 +255,22 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
   }
 
   // Apply status filter
-  if (overviewFilter !== "alle") {
+  if (overviewFilter === "aktiv" || overviewFilter === "inaktiv") {
     const keepActive = overviewFilter === "aktiv";
     for (const key of Object.keys(grouped)) {
       grouped[key].entries = grouped[key].entries.filter((e: any) => e.isActive === keepActive);
+      if (grouped[key].entries.length === 0) delete grouped[key];
+    }
+  }
+
+  // Apply billing filter
+  if (overviewFilter === "billing_due" || overviewFilter === "billing_done") {
+    const wantDone = overviewFilter === "billing_done";
+    for (const key of Object.keys(grouped)) {
+      grouped[key].entries = grouped[key].entries.filter((e: any) => {
+        if (!e.isActive) return false;
+        return isBillingDone(e.user_id) === wantDone;
+      });
       if (grouped[key].entries.length === 0) delete grouped[key];
     }
   }
@@ -262,10 +311,17 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
     });
   }
 
+  // Count billing stats for active chatters
+  const allActiveEntries = Object.values(grouped).flatMap(g => g.entries.filter((e: any) => e.isActive));
+  const billingDoneCount = allActiveEntries.filter((e: any) => isBillingDone(e.user_id)).length;
+  const billingDueCount = allActiveEntries.length - billingDoneCount;
+
   const filterOptions = [
     { key: "alle" as const, label: "Alle" },
     { key: "aktiv" as const, label: "Aktiv" },
     { key: "inaktiv" as const, label: "Inaktiv" },
+    { key: "billing_due" as const, label: `Abr. fällig (${billingDueCount})`, highlight: billingDueCount > 0 },
+    { key: "billing_done" as const, label: `Abr. erledigt (${billingDoneCount})` },
   ];
 
   const getAgencyStats = (agency: string) => {
@@ -284,16 +340,40 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
 
   return (
     <div className="space-y-4">
+      {/* Billing period info */}
+      <div className="glass-card rounded-lg px-4 py-2.5 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <CalendarIcon className="h-3.5 w-3.5 text-accent" />
+          <span className="text-xs text-muted-foreground">Abrechnungszeitraum:</span>
+          <span className="text-xs font-semibold text-foreground">{billing.periodLabel}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          {billing.isDue ? (
+            <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-[10px]">
+              Fällig seit {new Date().getDate() - 20 + 1}. Tag
+            </Badge>
+          ) : (
+            <Badge variant="outline" className="text-[10px]">
+              Fällig ab 20. {new Date().toLocaleString("de-DE", { month: "long" })}
+            </Badge>
+          )}
+          <span className="text-[10px] text-muted-foreground">{billingDoneCount}/{allActiveEntries.length} erledigt</span>
+        </div>
+      </div>
+
       {/* Filter & Search */}
       <div className="flex items-center gap-3 flex-wrap">
-        <div className="flex gap-1 p-1 bg-secondary/30 rounded-lg border border-border/50 w-fit relative">
+        <div className="flex gap-1 p-1 bg-secondary/30 rounded-lg border border-border/50 w-fit relative flex-wrap">
           {filterOptions.map(opt => (
             <button
               key={opt.key}
               onClick={() => setOverviewFilter(opt.key)}
               className="relative px-3 py-1.5 text-xs font-medium rounded-md transition-colors z-10"
             >
-              <span className={overviewFilter === opt.key ? "text-accent" : "text-muted-foreground hover:text-foreground"}>
+              <span className={cn(
+                overviewFilter === opt.key ? "text-accent" : "text-muted-foreground hover:text-foreground",
+                "highlight" in opt && opt.highlight && overviewFilter !== opt.key && "text-amber-400"
+              )}>
                 {opt.label}
               </span>
               {overviewFilter === opt.key && (
@@ -382,24 +462,43 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
                               )}
                             </div>
                             <div className="divide-y divide-border/50">
-                              {g.entries.map((entry: any) => (
-                                <div key={entry.id} className="px-6 py-2 flex items-center justify-between text-sm">
-                                  <div className="flex items-center gap-3">
-                                    <div className={cn("w-2 h-2 rounded-full", entry.isActive ? "bg-emerald-400 animate-pulse" : "bg-muted-foreground/30")} />
-                                    <span className="font-medium text-foreground text-xs">{entry.name}</span>
+                              {g.entries.map((entry: any) => {
+                                const done = isBillingDone(entry.user_id);
+                                return (
+                                  <div key={entry.id} className="px-6 py-2 flex items-center justify-between text-sm">
+                                    <div className="flex items-center gap-3">
+                                      <div className={cn("w-2 h-2 rounded-full", entry.isActive ? "bg-emerald-400 animate-pulse" : "bg-muted-foreground/30")} />
+                                      <span className="font-medium text-foreground text-xs">{entry.name}</span>
+                                    </div>
+                                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                                      {/* Billing checkbox for active chatters */}
+                                      {entry.isActive && (
+                                        <button
+                                          onClick={(e) => toggleBilling(entry.user_id, e)}
+                                          className={cn(
+                                            "flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border transition-colors",
+                                            done
+                                              ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+                                              : "bg-amber-500/10 text-amber-400 border-amber-500/30 hover:bg-amber-500/20"
+                                          )}
+                                          title={done ? "Abrechnung erledigt" : "Abrechnung fällig – klicken zum Abhaken"}
+                                        >
+                                          {done ? <CheckCircle2 className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
+                                          {done ? "Erledigt" : "Fällig"}
+                                        </button>
+                                      )}
+                                      <span>{entry.assignedAt ? format(entry.assignedAt, "dd.MM.yyyy HH:mm") : "–"}</span>
+                                      <span>→</span>
+                                      {entry.isActive ? (
+                                        <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">Aktiv</Badge>
+                                      ) : (
+                                        <span>{entry.unassignedAt ? format(entry.unassignedAt, "dd.MM.yyyy HH:mm") : "–"}</span>
+                                      )}
+                                      <span className="text-accent font-medium ml-1">{entry.duration}</span>
+                                    </div>
                                   </div>
-                                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                    <span>{entry.assignedAt ? format(entry.assignedAt, "dd.MM.yyyy HH:mm") : "–"}</span>
-                                    <span>→</span>
-                                    {entry.isActive ? (
-                                      <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">Aktiv</Badge>
-                                    ) : (
-                                      <span>{entry.unassignedAt ? format(entry.unassignedAt, "dd.MM.yyyy HH:mm") : "–"}</span>
-                                    )}
-                                    <span className="text-accent font-medium ml-1">{entry.duration}</span>
-                                  </div>
-                                </div>
-                              ))}
+                                );
+                              })}
                             </div>
                           </div>
                         );
