@@ -1,27 +1,26 @@
 
 
-## Plan: Chatter Dashboard — Plattform-Aufschlüsselung & Credit Note Angleichung
+## Plan: Custom Anfragen visuell besser unterteilen
 
-### Was wird gemacht
+### Problem
+Die einzelnen Anfragen-Karten im Admin Dashboard sind visuell zu ähnlich und verschmelzen optisch — besonders bei vielen Einträgen schwer zu unterscheiden.
 
-Das Chatter-Dashboard bekommt dieselbe Logik wie das Model-Dashboard:
-- Statt eines einzelnen "Monatsumsatz"-Feldes gibt es drei Plattform-Felder (4Based, Maloum, Brezzels), die automatisch zum Gesamtumsatz aufsummiert werden
-- Die Credit Note erhält die Plattform-Aufschlüsselung (Revenue + Share pro Plattform)
-- Der Firmenname wird auf "Sharify Media Limited" (Zypern-Adresse) gesetzt — identisch zum Model Dashboard
+### Änderungen in `src/pages/AdminDashboard.tsx`
 
-### Technische Umsetzung
+1. **Gold-Akzent-Linie oben an jeder Karte**: Jede Anfrage-Karte bekommt eine goldene Top-Border-Linie (gradient von transparent → gold → transparent), ähnlich dem bestehenden `card-top-line` Pattern.
 
-**Datei: `src/components/ChatterDashboardTab.tsx`**
+2. **Mehr Abstand zwischen Karten**: `space-y-2` → `space-y-4` für deutlichere Trennung.
 
-1. **Chatter-Interface erweitern**: Drei neue Felder `fourbasedRevenue`, `maloumRevenue`, `brezzelsRevenue` zum `Chatter`-Interface hinzufügen. `monthlyRevenue` wird zum berechneten Wert (Summe der drei Plattformen).
+3. **Subtiler Gold-Hover-Glow**: `card-hover-glow` CSS-Klasse auf jede Karte, damit beim Hovern ein goldener Top-Glow erscheint.
 
-2. **UI "Chatter-Daten" Section umbauen**: Das einzelne "Monatsumsatz"-Feld durch drei Plattform-Eingabefelder ersetzen (4Based, Maloum, Brezzels) mit automatischer Summenberechnung — exakt wie im Model Dashboard.
+4. **Gold-Akzent auf dem Avatar-Initial**: Das Buchstaben-Icon links bekommt einen dezenten goldenen Ring/Glow statt nur `bg-accent/10`.
 
-3. **Goldene Gesamtumsatz-Karte**: Zeigt weiterhin den Gesamtumsatz, jetzt als Summe der drei Plattformen.
+5. **Trennlinie zwischen Karten**: Statt nur Spacing eine feine horizontale Gold-Gradient-Linie als Separator zwischen den Karten (außer nach der letzten).
 
-4. **CreditNoteForm-Aufruf anpassen**: `platformRevenue`-Prop übergeben mit den drei Plattform-Werten (identisch zum Model Dashboard).
+6. **Status-abhängiger linker Rand**: Jede Karte bekommt einen 2px `border-left` in der jeweiligen Status-Farbe (gelb für offen, grün für angenommen, blau für in Arbeit, rot für abgelehnt) — so erkennt man den Status sofort auf einen Blick.
 
-5. **SENDER-Konstante entfernen**: Wird nicht mehr benötigt, da CreditNoteForm die Issuer-Daten (Sharify Media Limited, Zypern) bereits korrekt vorbelegt hat.
-
-6. **Migration bestehender Daten**: Bestehende Chatter im localStorage, die nur `monthlyRevenue` haben, werden automatisch migriert — der alte Wert wird als `fourbasedRevenue` übernommen, damit nichts verloren geht.
+### Betroffene Stelle
+- Zeilen ~3056-3072: Container `space-y` und Karten-Wrapper mit zusätzlichen CSS-Klassen
+- Zeilen ~3078-3082: Avatar-Styling aufwerten
+- Zeile ~3108: Bestehende `h-px bg-border/30` Trennlinie durch goldene Variante ersetzen
 
