@@ -371,7 +371,7 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
               Fällig ab 20. {new Date().toLocaleString("de-DE", { month: "long" })}
             </Badge>
           )}
-          <span className="text-[10px] text-muted-foreground">{billingDoneCount}/{allActiveEntries.length} erledigt</span>
+          <span className="text-[10px] text-muted-foreground">{billingDoneCount}/{allEligibleEntries.length} erledigt</span>
         </div>
       </div>
 
