@@ -876,127 +876,35 @@ export default function ModelDashboardTab() {
               </div>
             </Section>
 
-            {/* Status-Übersicht – per platform collapsible */}
-            <Section icon={CheckCircle2} title="Status-Übersicht" delay={0.1}>
-              <div className="space-y-1.5">
-                {([
-                  {
-                    platform: "4Based",
-                    items: [
-                      { label: "BotDM", value: fourbasedBotdm, onChange: setFourbasedBotdm },
-                      { label: "MassDM", value: fourbasedMassdm, onChange: setFourbasedMassdm },
-                      { label: "Account Setup", value: fourbasedSubmitted, onChange: setFourbasedSubmitted },
-                    ],
-                  },
-                  {
-                    platform: "Maloum",
-                    items: [
-                      { label: "BotDM", value: maloumBotdm, onChange: setMaloumBotdm },
-                      { label: "MassDM", value: maloumMassdm, onChange: setMaloumMassdm },
-                      { label: "Account Setup", value: maloumSubmitted, onChange: setMaloumSubmitted },
-                    ],
-                  },
-                  {
-                    platform: "Brezzels",
-                    items: [
-                      { label: "BotDM", value: brezzelsBotdm, onChange: setBrezzelsBotdm },
-                      { label: "MassDM", value: brezzelsMassdm, onChange: setBrezzelsMassdm },
-                      { label: "Account Setup", value: brezzelsSubmitted, onChange: setBrezzelsSubmitted },
-                    ],
-                  },
-                ] as const).map(group => {
-                  const doneCount = group.items.filter(i => i.value).length;
-                  const isOpen = openPlatformStatus === group.platform;
-                  return (
-                    <div key={group.platform} className="rounded-lg overflow-hidden border border-border/50">
-                      <button
-                        type="button"
-                        onClick={() => setOpenPlatformStatus(isOpen ? null : group.platform)}
-                        className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-secondary/30 transition-colors"
-                      >
-                        <ChevronDown className={cn(
-                          "h-3.5 w-3.5 text-accent transition-transform duration-200",
-                          !isOpen && "-rotate-90"
-                        )} />
-                        <span className="text-sm font-medium text-foreground">{group.platform}</span>
-                        <span className={cn(
-                          "ml-auto text-[10px] font-medium px-2 py-0.5 rounded-full",
-                          doneCount === 3
-                            ? "bg-accent/15 text-accent"
-                            : doneCount > 0
-                              ? "bg-accent/10 text-accent/70"
-                              : "bg-destructive/10 text-destructive"
-                        )}>
-                          {doneCount}/3
-                        </span>
-                      </button>
-                      <AnimatePresence initial={false}>
-                        {isOpen && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.2 }}
-                            className="overflow-hidden"
-                          >
-                            <div className="px-2 pb-2 space-y-0.5">
-                              {group.items.map(item => (
-                                <button
-                                  key={item.label}
-                                  type="button"
-                                  onClick={() => item.onChange(!item.value)}
-                                  className={cn(
-                                    "w-full flex items-center justify-between px-3 py-2.5 rounded-lg transition-all duration-200",
-                                    item.value
-                                      ? "bg-accent/8 hover:bg-accent/12"
-                                      : "bg-secondary/20 hover:bg-secondary/40"
-                                  )}
-                                >
-                                  <div className="flex items-center gap-3">
-                                    <div className={cn(
-                                      "h-4.5 w-4.5 rounded border-2 flex items-center justify-center transition-all duration-200",
-                                      item.value
-                                        ? "border-accent bg-accent/20"
-                                        : "border-muted-foreground/30 bg-transparent"
-                                    )}>
-                                      <AnimatePresence mode="wait">
-                                        {item.value && (
-                                          <motion.div
-                                            initial={{ scale: 0, opacity: 0 }}
-                                            animate={{ scale: 1, opacity: 1 }}
-                                            exit={{ scale: 0, opacity: 0 }}
-                                            transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                                          >
-                                            <CheckCircle2 className="h-2.5 w-2.5 text-accent" />
-                                          </motion.div>
-                                        )}
-                                      </AnimatePresence>
-                                    </div>
-                                    <span className={cn(
-                                      "text-xs font-medium transition-colors",
-                                      item.value ? "text-foreground" : "text-muted-foreground"
-                                    )}>
-                                      {item.label}
-                                    </span>
-                                  </div>
-                                  <span className={cn(
-                                    "text-[10px] font-medium px-1.5 py-0.5 rounded-full transition-all",
-                                    item.value
-                                      ? "bg-accent/15 text-accent"
-                                      : "bg-destructive/10 text-destructive"
-                                  )}>
-                                    {item.value ? "Erledigt" : "Fehlt"}
-                                  </span>
-                                </button>
-                              ))}
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  );
-                })}
-              </div>
+            {/* BotDMs & Setup – Google Sheets style table */}
+            <Section icon={CheckCircle2} title="BotDMs & Setup" delay={0.1}>
+              {(() => {
+                // Build rows: all accounts with their dashboard data
+                const allAccountRows = accounts.map(acc => {
+                  const dash = getDashboard(acc.id);
+                  const botMsg = getBotMessage(acc.id);
+                  return { acc, dash, botMsg };
+                });
+
+                return <BotDmTable
+                  rows={allAccountRows}
+                  allDashboards={allDashboards}
+                  onToggle={async (accountId: string, field: string, value: boolean) => {
+                    // Find or create dashboard row
+                    const dash = allDashboards.find(d => d.account_id === accountId);
+                    if (dash) {
+                      await supabase.from("model_dashboard").update({ [field]: value }).eq("id", dash.id);
+                    } else {
+                      await supabase.from("model_dashboard").insert({ account_id: accountId, [field]: value });
+                    }
+                    await loadAllDashboards();
+                    // If it's the selected account, reload its data too
+                    if (accountId === selectedAccountId) {
+                      await loadModelData(accountId);
+                    }
+                  }}
+                />;
+              })()}
             </Section>
 
             {/* Notizen */}
