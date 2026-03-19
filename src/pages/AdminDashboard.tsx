@@ -1835,7 +1835,7 @@ export default function AdminDashboard() {
     { key: "einnahmen" as const, label: "Einnahmen", icon: TrendingUp, onClick: () => setActiveTab("einnahmen") },
     { key: "chatter" as const, label: "Chatter", icon: Users, onClick: () => setActiveTab("chatter") },
     { key: "anfragen" as const, label: "Anfragen", icon: Send, onClick: () => { setActiveTab("anfragen"); if (!modelRequestsLoaded) loadModelRequests(); } },
-    { key: "botdms" as const, label: "BotDMs & Setup", icon: Bot, onClick: () => { setActiveTab("botdms"); if (!botMessagesLoaded) loadBotMessages(); if (!setupDashboardsLoaded) loadSetupDashboards(); } },
+    { key: "botdms" as const, label: "Setup", icon: Bot, onClick: () => { setActiveTab("botdms"); if (!botMessagesLoaded) loadBotMessages(); if (!setupDashboardsLoaded) loadSetupDashboards(); } },
     { key: "notifications" as const, label: "Benachrichtigungen", icon: Bell, onClick: () => { setActiveTab("notifications"); if (!notifHistoryLoaded) loadNotifHistory(); if (!schedulesLoaded) loadSchedules(); if (!notifTemplatesLoaded) loadNotifTemplates(); } },
     { key: "kiprompt" as const, label: "KI Prompt", icon: Brain, onClick: () => { setActiveTab("kiprompt"); if (!kiPromptLoaded) loadKiPrompt(); } },
     { key: "chatter_overview" as const, label: "Chatter-Übersicht", icon: Users, onClick: () => { setActiveTab("chatter_overview"); if (!assignmentsLoaded) loadAssignments(); } },
@@ -3433,7 +3433,7 @@ export default function AdminDashboard() {
             <section className="glass-card rounded-xl overflow-hidden">
               <div className="px-4 py-3 border-b border-border flex items-center gap-2">
                 <CheckCircle2 className="h-4 w-4 text-accent" />
-                <h2 className="text-sm font-semibold text-foreground">BotDMs & Setup</h2>
+                <h2 className="text-sm font-semibold text-foreground">Setup</h2>
                 <Badge variant="secondary" className="text-[10px] ml-auto">
                   {accounts.length} Accounts
                 </Badge>
