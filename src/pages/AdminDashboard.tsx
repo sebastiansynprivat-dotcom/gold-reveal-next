@@ -3636,71 +3636,73 @@ export default function AdminDashboard() {
                                 </button>
                               </div>
 
-                              {/* Bot Message */}
-                              <div className="space-y-1.5">
-                                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Bot-Nachricht</label>
-                                <div className="input-gold-shimmer rounded-lg">
-                                  <Textarea
-                                    value={entry.message}
-                                    onChange={(e) =>
-                                      setBotMessages((prev) => ({
-                                        ...prev,
-                                        [acc.id]: { ...entry, message: e.target.value },
-                                      }))
-                                    }
-                                    placeholder="Hey! Schreib mir gerne eine Nachricht 💋"
-                                    className="text-sm min-h-[60px] resize-none bg-background/50 border-transparent"
-                                    onClick={e => e.stopPropagation()}
-                                  />
-                                </div>
-                              </div>
+                              {/* Bot Message + Follow-up + Save — only for Maloum */}
+                              {acc.platform === "Maloum" && (
+                                <>
+                                  <div className="space-y-1.5">
+                                    <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Bot-Nachricht</label>
+                                    <div className="input-gold-shimmer rounded-lg">
+                                      <Textarea
+                                        value={entry.message}
+                                        onChange={(e) =>
+                                          setBotMessages((prev) => ({
+                                            ...prev,
+                                            [acc.id]: { ...entry, message: e.target.value },
+                                          }))
+                                        }
+                                        placeholder="Hey! Schreib mir gerne eine Nachricht 💋"
+                                        className="text-sm min-h-[60px] resize-none bg-background/50 border-transparent"
+                                        onClick={e => e.stopPropagation()}
+                                      />
+                                    </div>
+                                  </div>
 
-                              {/* Follow-up */}
-                              <div className="space-y-1.5">
-                                <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Follow-up Nachricht</label>
-                                <div className="input-gold-shimmer rounded-lg">
-                                  <Textarea
-                                    value={entry.followUp}
-                                    onChange={(e) =>
-                                      setBotMessages((prev) => ({
-                                        ...prev,
-                                        [acc.id]: { ...entry, followUp: e.target.value },
-                                      }))
-                                    }
-                                    placeholder="Na, hast du meine letzte Nachricht gelesen? 😏"
-                                    className="text-sm min-h-[60px] resize-none bg-background/50 border-transparent"
-                                    onClick={e => e.stopPropagation()}
-                                  />
-                                </div>
-                              </div>
+                                  <div className="space-y-1.5">
+                                    <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Follow-up Nachricht</label>
+                                    <div className="input-gold-shimmer rounded-lg">
+                                      <Textarea
+                                        value={entry.followUp}
+                                        onChange={(e) =>
+                                          setBotMessages((prev) => ({
+                                            ...prev,
+                                            [acc.id]: { ...entry, followUp: e.target.value },
+                                          }))
+                                        }
+                                        placeholder="Na, hast du meine letzte Nachricht gelesen? 😏"
+                                        className="text-sm min-h-[60px] resize-none bg-background/50 border-transparent"
+                                        onClick={e => e.stopPropagation()}
+                                      />
+                                    </div>
+                                  </div>
 
-                              {/* Save */}
-                              <Button
-                                onClick={() => saveBotMessage(acc.id)}
-                                disabled={entry.saving || !hasChanges}
-                                variant={hasChanges ? "default" : "secondary"}
-                                className="w-full"
-                                size="sm"
-                              >
-                                {entry.saving ? (
-                                  <>
-                                    <div className="h-3.5 w-3.5 border-2 border-current border-t-transparent rounded-full animate-spin mr-1.5" />
-                                    Wird gespeichert...
-                                  </>
-                                ) : hasChanges ? (
-                                  <>
-                                    <Save className="h-3.5 w-3.5 mr-1.5" />
-                                    Speichern
-                                  </>
-                                ) : (
-                                  <>
-                                    <svg className="h-3.5 w-3.5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                    </svg>
-                                    Gespeichert
-                                  </>
-                                )}
-                              </Button>
+                                  <Button
+                                    onClick={() => saveBotMessage(acc.id)}
+                                    disabled={entry.saving || !hasChanges}
+                                    variant={hasChanges ? "default" : "secondary"}
+                                    className="w-full"
+                                    size="sm"
+                                  >
+                                    {entry.saving ? (
+                                      <>
+                                        <div className="h-3.5 w-3.5 border-2 border-current border-t-transparent rounded-full animate-spin mr-1.5" />
+                                        Wird gespeichert...
+                                      </>
+                                    ) : hasChanges ? (
+                                      <>
+                                        <Save className="h-3.5 w-3.5 mr-1.5" />
+                                        Speichern
+                                      </>
+                                    ) : (
+                                      <>
+                                        <svg className="h-3.5 w-3.5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                        </svg>
+                                        Gespeichert
+                                      </>
+                                    )}
+                                  </Button>
+                                </>
+                              )}
                             </div>
                           )}
                         </div>
