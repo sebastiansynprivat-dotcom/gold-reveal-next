@@ -1281,6 +1281,12 @@ export default function AdminDashboard() {
     }
   };
 
+  const loadSetupDashboards = async () => {
+    const { data } = await supabase.from("model_dashboard").select("*");
+    if (data) setSetupDashboards(data);
+    setSetupDashboardsLoaded(true);
+  };
+
 
   const deletePool = async () => {
     if (!selectedPlatform) return;
