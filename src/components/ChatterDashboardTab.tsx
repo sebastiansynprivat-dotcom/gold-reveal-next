@@ -275,10 +275,15 @@ export default function ChatterDashboardTab() {
             className="gold-gradient-border-animated pulse-glow rounded-xl p-6 text-center space-y-3"
           >
             <Crown className="h-8 w-8 text-accent mx-auto" />
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Monatsumsatz</p>
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Gesamtumsatz</p>
             <p className="text-5xl font-black text-gold-gradient tabular-nums leading-none">
-              <AnimatedGoldValue value={selected.monthlyRevenue} suffix={` ${selected.currency || "EUR"}`} />
+              <AnimatedGoldValue value={totalRevenue} suffix={` ${selected.currency || "EUR"}`} />
             </p>
+            <div className="flex justify-center gap-4 text-xs text-muted-foreground mt-2">
+              <span>4Based: {(selected.fourbasedRevenue || 0).toLocaleString("de-DE")}</span>
+              <span>Maloum: {(selected.maloumRevenue || 0).toLocaleString("de-DE")}</span>
+              <span>Brezzels: {(selected.brezzelsRevenue || 0).toLocaleString("de-DE")}</span>
+            </div>
           </motion.div>
 
           {/* Details */}
