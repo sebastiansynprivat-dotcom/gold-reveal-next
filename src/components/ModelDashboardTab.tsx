@@ -839,18 +839,15 @@ export default function ModelDashboardTab() {
 
         <div className="overflow-x-auto">
           {/* Sticky Header */}
-          <div className="grid grid-cols-[1fr_70px_65px_65px_65px_70px_45px] gap-0 bg-accent/10 border-b border-accent/20 min-w-[520px]">
+          <div className="grid grid-cols-[1fr_80px_80px_50px] gap-0 bg-accent/10 border-b border-accent/20">
             <div className="px-3 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold">Model</div>
             <div className="px-2 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">Plattform</div>
-            <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-right">4Based</div>
-            <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-right">Maloum</div>
-            <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-right">Brezzels</div>
             <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-right">Gesamt</div>
             <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-right">%</div>
           </div>
 
           {/* Rows */}
-          <div className="max-h-[400px] overflow-y-auto min-w-[520px]">
+          <div className="max-h-[400px] overflow-y-auto">
             {filteredAccounts.length === 0 ? (
               <p className="text-xs text-muted-foreground text-center py-8">Keine Models gefunden.</p>
             ) : (
@@ -867,7 +864,7 @@ export default function ModelDashboardTab() {
                     key={acc.id}
                     onClick={() => setSelectedAccountId(acc.id)}
                     className={cn(
-                      "grid grid-cols-[1fr_70px_65px_65px_65px_70px_45px] gap-0 items-center border-b border-border/30 cursor-pointer transition-colors",
+                      "grid grid-cols-[1fr_80px_80px_50px] gap-0 items-center border-b border-border/30 cursor-pointer transition-colors",
                       isSelected
                         ? "bg-accent/15 border-l-2 border-l-accent"
                         : i % 2 === 0 ? "bg-card/40 hover:bg-accent/5" : "bg-card/20 hover:bg-accent/5"
@@ -889,15 +886,6 @@ export default function ModelDashboardTab() {
                       )}>
                         {acc.platform}
                       </span>
-                    </div>
-                    <div className="px-1 py-2 text-right">
-                      <span className="text-[11px] tabular-nums text-muted-foreground">{fb.toLocaleString("de-DE")}</span>
-                    </div>
-                    <div className="px-1 py-2 text-right">
-                      <span className="text-[11px] tabular-nums text-muted-foreground">{ml.toLocaleString("de-DE")}</span>
-                    </div>
-                    <div className="px-1 py-2 text-right">
-                      <span className="text-[11px] tabular-nums text-muted-foreground">{br.toLocaleString("de-DE")}</span>
                     </div>
                     <div className="px-1 py-2 text-right">
                       <span className="text-[11px] tabular-nums font-semibold text-foreground">{total.toLocaleString("de-DE")}</span>
