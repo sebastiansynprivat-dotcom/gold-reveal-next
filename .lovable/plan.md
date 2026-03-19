@@ -1,42 +1,43 @@
 
 
-## Plan: Status-Übersicht entfernen & neue BotDM-Tabelle im Google-Sheets-Stil
+# Google Sheets-Style Liste fur Chatter- & Model-Dashboard
 
-### Was passiert
+## Uberblick
 
-1. **Status-Übersicht Section entfernen** (Zeilen 879-1000 in `ModelDashboardTab.tsx`) — die drei Plattform-Collapsibles mit BotDM/MassDM/Account-Setup-Checkboxen werden komplett rausgenommen. Die zugehörigen State-Variablen und Save-Logic bleiben erhalten, da sie weiterhin von der neuen Tabelle genutzt werden.
+Beide Dashboards (Chatter & Model) bekommen eine permanente, tabellarische Ubersicht im Google Sheets-Stil, die alle Eintrage auf einen Blick zeigt. Klick auf einen Namen offnet die Detail-Ansicht darunter.
 
-2. **Neue "BotDMs & Setup" Section** — ersetzt die alte Status-Übersicht mit einem tabellarischen Google-Sheets-Layout:
+## Anderungen
 
-```text
-┌──────────────────────────────────────────────────────────┐
-│  🔍 Suche...          │ [Alle] [4Based] [Maloum] [Brezzels] │
-├──────────────────────────────────────────────────────────┤
-│  Account              │ Plattform │ BotDM │ Welcome │ MassDM │
-├──────────────────────────────────────────────────────────┤
-│  user@example.com     │ 4Based    │  ☑    │   ☑     │   ☐    │
-│  model@mail.de        │ Maloum    │  ☑    │   ☐     │   ☑    │
-│    └─ Follow-Up: ...  │           │       │         │        │
-│  xyz@test.com         │ Brezzels  │  ☐    │   ☑     │   ☑    │
-└──────────────────────────────────────────────────────────┘
-```
+### 1. ChatterDashboardTab — Sheets-Tabelle statt Suchfeld-Auswahl
 
-### Technische Details (Datei: `src/components/ModelDashboardTab.tsx`)
+- Ersetze die aktuelle Suchfeld + aufklappbare Liste durch eine permanente Tabelle mit Spalten: **Name | Plattform | 4Based | Maloum | Brezzels | Gesamt | Anteil**
+- Jede Zeile ist klickbar, selektierte Zeile wird gold hervorgehoben
+- Suchfeld bleibt oben uber der Tabelle
+- "Neu"-Button bleibt erhalten
+- Delete-Icon pro Zeile am Ende
+- Tabelle hat alternating row colors, sticky header, horizontales Scrollen auf Mobile
+- Detail-Ansicht (Revenue Card, Daten, Anteil, Crypto, Credit Note) erscheint unterhalb der Tabelle wenn ein Chatter ausgewahlt ist
 
-**Neue Section ersetzt Zeilen 879-1000:**
-- Eigener Plattform-Filter (Alle/4Based/Maloum/Brezzels) mit goldenen Pill-Buttons
-- Suchfeld mit `input-gold-shimmer` Effekt
-- Tabelle mit goldenem Header-Gradient und fixiertem Kopf
-- Jede Zeile zeigt: Account-Email, Plattform-Badge, drei Checkboxen (BotDM, Welcome/Account Setup, MassDM)
-- **Nur bei Maloum-Accounts**: Unterhalb der Zeile erscheint ein expandierbares Follow-Up-Feld (aus `bot_messages` Tabelle, `follow_up_message`)
-- Checkboxen togglen direkt die bestehenden State-Variablen und speichern per Auto-Save
-- Zeilen nutzen `bg-card/40` mit `border-border/30` Trennlinien und Hover-Highlight (`hover:bg-accent/5`)
-- Goldene Akzente: Header-Zeile mit `bg-accent/10`, Checkbox-Checks in `text-accent`
+### 2. ModelDashboardTab — Sheets-Tabelle statt Collapsible-Liste
 
-**Mapping der Spalten auf bestehende DB-Felder:**
-- "BotDM" → `fourbased_botdm_done` / `maloum_botdm_done` / `brezzels_botdm_done`
-- "Welcome" (= Account Setup) → `fourbased_submitted` / `maloum_submitted` / `brezzels_submitted`
-- "MassDM" → `fourbased_massdm_done` / `maloum_massdm_done` / `brezzels_massdm_done`
+- Ersetze die eingeklappte "Alle Models"-Liste durch eine permanente Tabelle mit Spalten: **Model (Email) | Plattform | 4Based Rev | Maloum Rev | Brezzels Rev | Gesamt | Anteil %**
+- Klick auf eine Zeile ladt die Detail-Ansicht darunter (bestehendes Verhalten bleibt)
+- Platform-Filter und Sub-Filter Slider bleiben oben
+- Suchfeld bleibt
+- Selektierte Zeile bekommt gold-Highlight
+- Sticky Header, alternating rows
 
-**Keine DB-Änderungen nötig** — alle Felder existieren bereits in `model_dashboard`.
+### 3. Styling
+
+- Nutze bestehende Tailwind-Klassen + `glass-card` Design-System
+- Sticky `thead` mit `bg-accent/10` Header
+- Hover: `bg-accent/5`, Selected: `bg-accent/15 border-l-2 border-accent`
+- Kompakte Zeilen (`py-2 px-3 text-xs`)
+- Responsive: horizontales Scrollen auf kleinen Bildschirmen
+
+## Technische Details
+
+- **ChatterDashboardTab.tsx**: Refactor der Render-Logik. Die "Chatter auswahlen" Section wird durch eine Tabellen-Section ersetzt. Daten kommen weiterhin aus localStorage.
+- **ModelDashboardTab.tsx**: Die collapsible `Alle Models` Section + `ScrollArea` wird durch eine permanente Tabelle ersetzt. Datenquellen (accounts, allDashboards) bleiben identisch. `filteredAccounts` wird direkt in Tabellenzeilen gerendert. Revenue-Werte pro Model werden aus `allDashboards` gelesen.
+- Beide Tabellen nutzen native HTML `table` oder das bestehende Grid-Layout mit `grid-cols-[...]` fur konsistentes Spalten-Alignment.
 
