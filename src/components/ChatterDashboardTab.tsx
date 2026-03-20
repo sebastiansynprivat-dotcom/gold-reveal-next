@@ -611,7 +611,10 @@ export default function ChatterDashboardTab() {
               revenuePercentage={selected.compensationType === "percentage" ? selected.revenuePercentage : 0}
               currency={selected.currency || "EUR"}
               cryptoAddress={selected.cryptoAddress || ""}
-              platformRevenue={{
+              compensationType={selected.compensationType}
+              hourlyRate={selected.hourlyRate}
+              hoursWorked={selected.hoursWorked}
+              platformRevenue={selected.compensationType === "hourly" ? undefined : {
                 fourbased: selected.fourbasedRevenue || 0,
                 maloum: selected.maloumRevenue || 0,
                 brezzels: selected.brezzelsRevenue || 0,
