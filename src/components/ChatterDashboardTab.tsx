@@ -311,6 +311,7 @@ export default function ChatterDashboardTab() {
                 {filteredChatters.map((c, i) => {
                   const total = (c.fourbasedRevenue || 0) + (c.maloumRevenue || 0) + (c.brezzelsRevenue || 0);
                   const earnings = getVerdienst(c);
+                  const isHourlyRow = c.compensationType === "hourly";
                   const isSelected = c.id === selectedId;
                   return (
                     <div
