@@ -110,6 +110,7 @@ export default function ChatterDashboardTab() {
   });
 
   const [selectedId, setSelectedId] = useState<string>("");
+  const chatterDetailRef = useRef<HTMLDivElement>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<"all" | ChatterRole>("all");
   const [addingNew, setAddingNew] = useState(false);

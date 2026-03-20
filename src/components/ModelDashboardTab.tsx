@@ -370,6 +370,7 @@ export default function ModelDashboardTab() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [allDashboards, setAllDashboards] = useState<ModelDashboardRow[]>([]);
   const [selectedAccountId, setSelectedAccountId] = useState<string>("");
+  const detailRef = useRef<HTMLDivElement>(null);
   const [data, setData] = useState<ModelDashboardRow | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
