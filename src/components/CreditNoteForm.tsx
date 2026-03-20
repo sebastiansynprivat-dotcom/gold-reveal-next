@@ -38,6 +38,9 @@ interface CreditNoteFormProps {
   revenuePercentage?: number;
   currency?: string;
   platformRevenue?: PlatformRevenue;
+  compensationType?: "percentage" | "hourly";
+  hourlyRate?: number;
+  hoursWorked?: number;
 }
 
 export default function CreditNoteForm({
