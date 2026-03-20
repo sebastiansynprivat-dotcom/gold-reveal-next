@@ -452,32 +452,50 @@ export default function ChatterDashboardTab() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">4Based Revenue</label>
-                  <div className="input-gold-shimmer rounded-lg">
-                    <Input type="number" value={selected.fourbasedRevenue || ""} onChange={e => updateSelected({ fourbasedRevenue: Number(e.target.value) || 0 })} className="text-sm border-transparent" placeholder="0" />
+              {selected.compensationType !== "hourly" && (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">4Based Revenue</label>
+                      <div className="input-gold-shimmer rounded-lg">
+                        <Input type="number" value={selected.fourbasedRevenue || ""} onChange={e => updateSelected({ fourbasedRevenue: Number(e.target.value) || 0 })} className="text-sm border-transparent" placeholder="0" />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">Maloum Revenue</label>
+                      <div className="input-gold-shimmer rounded-lg">
+                        <Input type="number" value={selected.maloumRevenue || ""} onChange={e => updateSelected({ maloumRevenue: Number(e.target.value) || 0 })} className="text-sm border-transparent" placeholder="0" />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">Brezzels Revenue</label>
+                      <div className="input-gold-shimmer rounded-lg">
+                        <Input type="number" value={selected.brezzelsRevenue || ""} onChange={e => updateSelected({ brezzelsRevenue: Number(e.target.value) || 0 })} className="text-sm border-transparent" placeholder="0" />
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">Maloum Revenue</label>
-                  <div className="input-gold-shimmer rounded-lg">
-                    <Input type="number" value={selected.maloumRevenue || ""} onChange={e => updateSelected({ maloumRevenue: Number(e.target.value) || 0 })} className="text-sm border-transparent" placeholder="0" />
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">Brezzels Revenue</label>
-                  <div className="input-gold-shimmer rounded-lg">
-                    <Input type="number" value={selected.brezzelsRevenue || ""} onChange={e => updateSelected({ brezzelsRevenue: Number(e.target.value) || 0 })} className="text-sm border-transparent" placeholder="0" />
-                  </div>
-                </div>
-              </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="glass-card rounded-lg p-3 flex items-center justify-between">
-                  <span className="text-xs font-medium text-muted-foreground">Gesamt</span>
-                  <span className="text-sm font-bold text-accent tabular-nums">{totalRevenue.toLocaleString("de-DE")} {selected.currency || "EUR"}</span>
-                </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="glass-card rounded-lg p-3 flex items-center justify-between">
+                      <span className="text-xs font-medium text-muted-foreground">Gesamt</span>
+                      <span className="text-sm font-bold text-accent tabular-nums">{totalRevenue.toLocaleString("de-DE")} {selected.currency || "EUR"}</span>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">Währung</label>
+                      <Select value={selected.currency || "EUR"} onValueChange={v => updateSelected({ currency: v })}>
+                        <SelectTrigger className="text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {CURRENCIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {selected.compensationType === "hourly" && (
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-muted-foreground">Währung</label>
                   <Select value={selected.currency || "EUR"} onValueChange={v => updateSelected({ currency: v })}>
@@ -489,7 +507,7 @@ export default function ChatterDashboardTab() {
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
+              )
             </div>
           </Section>
 
