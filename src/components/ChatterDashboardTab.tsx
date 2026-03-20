@@ -373,38 +373,25 @@ export default function ChatterDashboardTab() {
 
       {selected && (
         <div ref={chatterDetailRef}>
-          {/* Big golden revenue/earnings card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.6 }}
-            className="gold-gradient-border-animated pulse-glow rounded-xl p-6 text-center space-y-3"
-          >
-            <Crown className="h-8 w-8 text-accent mx-auto" />
-            {selected.compensationType === "hourly" ? (
-              <>
-                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Verdienst</p>
-                <p className="text-5xl font-black text-gold-gradient tabular-nums leading-none">
-                  <AnimatedGoldValue value={verdienst} suffix={` ${selected.currency || "EUR"}`} />
-                </p>
-                <div className="flex justify-center gap-4 text-xs text-muted-foreground mt-2">
-                  <span>{selected.hourlyRate || 0}€/h × {selected.hoursWorked || 0}h</span>
-                </div>
-              </>
-            ) : (
-              <>
-                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Gesamtumsatz</p>
-                <p className="text-5xl font-black text-gold-gradient tabular-nums leading-none">
-                  <AnimatedGoldValue value={totalRevenue} suffix={` ${selected.currency || "EUR"}`} />
-                </p>
-                <div className="flex justify-center gap-4 text-xs text-muted-foreground mt-2">
-                  <span>4Based: {(selected.fourbasedRevenue || 0).toLocaleString("de-DE")}</span>
-                  <span>Maloum: {(selected.maloumRevenue || 0).toLocaleString("de-DE")}</span>
-                  <span>Brezzels: {(selected.brezzelsRevenue || 0).toLocaleString("de-DE")}</span>
-                </div>
-              </>
-            )}
-          </motion.div>
+          {selected.compensationType !== "hourly" && (
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.6 }}
+              className="gold-gradient-border-animated pulse-glow rounded-xl p-6 text-center space-y-3"
+            >
+              <Crown className="h-8 w-8 text-accent mx-auto" />
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Gesamtumsatz</p>
+              <p className="text-5xl font-black text-gold-gradient tabular-nums leading-none">
+                <AnimatedGoldValue value={totalRevenue} suffix={` ${selected.currency || "EUR"}`} />
+              </p>
+              <div className="flex justify-center gap-4 text-xs text-muted-foreground mt-2">
+                <span>4Based: {(selected.fourbasedRevenue || 0).toLocaleString("de-DE")}</span>
+                <span>Maloum: {(selected.maloumRevenue || 0).toLocaleString("de-DE")}</span>
+                <span>Brezzels: {(selected.brezzelsRevenue || 0).toLocaleString("de-DE")}</span>
+              </div>
+            </motion.div>
+          )}
 
           {/* Details */}
           <Section icon={Save} title="Mitarbeiter-Daten" delay={0.1}>
