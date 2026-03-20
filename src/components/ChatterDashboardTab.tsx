@@ -503,31 +503,6 @@ export default function ChatterDashboardTab() {
           {selected.compensationType !== "hourly" && (
             <Section icon={Percent} title="Anteil & Verdienst" delay={0.15}>
               <div className="space-y-4">
-                <div className="flex gap-1.5">
-                  <button
-                    onClick={() => updateSelected({ compensationType: "percentage" })}
-                    className={cn(
-                      "flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border flex items-center justify-center gap-1.5",
-                      selected.compensationType === "percentage"
-                        ? "bg-accent/15 text-accent border-accent/30"
-                        : "bg-secondary/30 text-muted-foreground border-border/30"
-                    )}
-                  >
-                    <Percent className="h-3 w-3" /> Prozent-Beteiligung
-                  </button>
-                  <button
-                    onClick={() => updateSelected({ compensationType: "hourly" })}
-                    className={cn(
-                      "flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border flex items-center justify-center gap-1.5",
-                      selected.compensationType === "hourly"
-                        ? "bg-accent/15 text-accent border-accent/30"
-                        : "bg-secondary/30 text-muted-foreground border-border/30"
-                    )}
-                  >
-                    <Clock className="h-3 w-3" /> Stundenlohn
-                  </button>
-                </div>
-
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-medium text-muted-foreground">Anteil</label>
