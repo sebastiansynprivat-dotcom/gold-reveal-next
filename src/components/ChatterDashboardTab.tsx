@@ -507,7 +507,7 @@ export default function ChatterDashboardTab() {
                     </SelectContent>
                   </Select>
                 </div>
-              )
+              )}
             </div>
           </Section>
 
