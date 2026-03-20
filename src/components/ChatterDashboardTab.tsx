@@ -311,6 +311,7 @@ export default function ChatterDashboardTab() {
                 {filteredChatters.map((c, i) => {
                   const total = (c.fourbasedRevenue || 0) + (c.maloumRevenue || 0) + (c.brezzelsRevenue || 0);
                   const earnings = getVerdienst(c);
+                  const isHourlyRow = c.compensationType === "hourly";
                   const isSelected = c.id === selectedId;
                   return (
                     <div
@@ -341,10 +342,10 @@ export default function ChatterDashboardTab() {
                         )}>{c.role}</span>
                       </div>
                       <div className="px-1 py-2 text-right">
-                        <span className="text-[11px] tabular-nums font-semibold text-foreground">{total.toLocaleString("de-DE")}</span>
+                        <span className="text-[11px] tabular-nums font-semibold text-foreground">{isHourlyRow ? "–" : total.toLocaleString("de-DE")}</span>
                       </div>
                       <div className="px-1 py-2 text-right">
-                        <span className="text-[11px] tabular-nums text-accent font-medium">{earnings.toLocaleString("de-DE")}</span>
+                        <span className="text-[11px] tabular-nums text-accent font-medium">{isHourlyRow ? "–" : earnings.toLocaleString("de-DE")}</span>
                       </div>
                       <div className="flex justify-center py-2">
                         <button
@@ -372,38 +373,25 @@ export default function ChatterDashboardTab() {
 
       {selected && (
         <div ref={chatterDetailRef}>
-          {/* Big golden revenue/earnings card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.6 }}
-            className="gold-gradient-border-animated pulse-glow rounded-xl p-6 text-center space-y-3"
-          >
-            <Crown className="h-8 w-8 text-accent mx-auto" />
-            {selected.compensationType === "hourly" ? (
-              <>
-                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Verdienst</p>
-                <p className="text-5xl font-black text-gold-gradient tabular-nums leading-none">
-                  <AnimatedGoldValue value={verdienst} suffix={` ${selected.currency || "EUR"}`} />
-                </p>
-                <div className="flex justify-center gap-4 text-xs text-muted-foreground mt-2">
-                  <span>{selected.hourlyRate || 0}€/h × {selected.hoursWorked || 0}h</span>
-                </div>
-              </>
-            ) : (
-              <>
-                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Gesamtumsatz</p>
-                <p className="text-5xl font-black text-gold-gradient tabular-nums leading-none">
-                  <AnimatedGoldValue value={totalRevenue} suffix={` ${selected.currency || "EUR"}`} />
-                </p>
-                <div className="flex justify-center gap-4 text-xs text-muted-foreground mt-2">
-                  <span>4Based: {(selected.fourbasedRevenue || 0).toLocaleString("de-DE")}</span>
-                  <span>Maloum: {(selected.maloumRevenue || 0).toLocaleString("de-DE")}</span>
-                  <span>Brezzels: {(selected.brezzelsRevenue || 0).toLocaleString("de-DE")}</span>
-                </div>
-              </>
-            )}
-          </motion.div>
+          {selected.compensationType !== "hourly" && (
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.6 }}
+              className="gold-gradient-border-animated pulse-glow rounded-xl p-6 text-center space-y-3"
+            >
+              <Crown className="h-8 w-8 text-accent mx-auto" />
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Gesamtumsatz</p>
+              <p className="text-5xl font-black text-gold-gradient tabular-nums leading-none">
+                <AnimatedGoldValue value={totalRevenue} suffix={` ${selected.currency || "EUR"}`} />
+              </p>
+              <div className="flex justify-center gap-4 text-xs text-muted-foreground mt-2">
+                <span>4Based: {(selected.fourbasedRevenue || 0).toLocaleString("de-DE")}</span>
+                <span>Maloum: {(selected.maloumRevenue || 0).toLocaleString("de-DE")}</span>
+                <span>Brezzels: {(selected.brezzelsRevenue || 0).toLocaleString("de-DE")}</span>
+              </div>
+            </motion.div>
+          )}
 
           {/* Details */}
           <Section icon={Save} title="Mitarbeiter-Daten" delay={0.1}>
@@ -511,36 +499,10 @@ export default function ChatterDashboardTab() {
             </div>
           </Section>
 
-          {/* Compensation */}
-          <Section icon={selected.compensationType === "hourly" ? Clock : Percent} title="Anteil & Verdienst" delay={0.15}>
-            <div className="space-y-4">
-              {/* Compensation type toggle */}
-              <div className="flex gap-1.5">
-                <button
-                  onClick={() => updateSelected({ compensationType: "percentage" })}
-                  className={cn(
-                    "flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border flex items-center justify-center gap-1.5",
-                    selected.compensationType === "percentage"
-                      ? "bg-accent/15 text-accent border-accent/30"
-                      : "bg-secondary/30 text-muted-foreground border-border/30"
-                  )}
-                >
-                  <Percent className="h-3 w-3" /> Prozent-Beteiligung
-                </button>
-                <button
-                  onClick={() => updateSelected({ compensationType: "hourly" })}
-                  className={cn(
-                    "flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border flex items-center justify-center gap-1.5",
-                    selected.compensationType === "hourly"
-                      ? "bg-accent/15 text-accent border-accent/30"
-                      : "bg-secondary/30 text-muted-foreground border-border/30"
-                  )}
-                >
-                  <Clock className="h-3 w-3" /> Stundenlohn
-                </button>
-              </div>
-
-              {selected.compensationType === "percentage" ? (
+          {/* Compensation - only for percentage-based */}
+          {selected.compensationType !== "hourly" && (
+            <Section icon={Percent} title="Anteil & Verdienst" delay={0.15}>
+              <div className="space-y-4">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-medium text-muted-foreground">Anteil</label>
@@ -553,57 +515,28 @@ export default function ChatterDashboardTab() {
                     className="py-2"
                   />
                 </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-muted-foreground">Stundensatz (€)</label>
-                    <div className="input-gold-shimmer rounded-lg">
-                      <Input
-                        type="number"
-                        value={selected.hourlyRate || ""}
-                        onChange={e => updateSelected({ hourlyRate: Number(e.target.value) || 0 })}
-                        className="text-sm border-transparent"
-                        placeholder="0"
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-muted-foreground">Stunden gearbeitet</label>
-                    <div className="input-gold-shimmer rounded-lg">
-                      <Input
-                        type="number"
-                        value={selected.hoursWorked || ""}
-                        onChange={e => updateSelected({ hoursWorked: Number(e.target.value) || 0 })}
-                        className="text-sm border-transparent"
-                        placeholder="0"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
 
-              {verdienst > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                  className="glass-card rounded-xl p-4 flex items-center gap-4"
-                >
-                  <div className="h-10 w-10 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
-                    <Wallet className="h-4 w-4 text-accent" />
-                  </div>
-                  <div>
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                      Verdienst {selected.compensationType === "percentage"
-                        ? `(${selected.revenuePercentage}%)`
-                        : `(${selected.hourlyRate}€ × ${selected.hoursWorked}h)`}
-                    </p>
-                    <p className="text-xl font-bold text-accent tabular-nums">
-                      <AnimatedGoldValue value={verdienst} suffix={` ${selected.currency || "EUR"}`} />
-                    </p>
-                  </div>
-                </motion.div>
-              )}
-            </div>
-          </Section>
+                {verdienst > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                    className="glass-card rounded-xl p-4 flex items-center gap-4"
+                  >
+                    <div className="h-10 w-10 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
+                      <Wallet className="h-4 w-4 text-accent" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                        Verdienst ({selected.revenuePercentage}%)
+                      </p>
+                      <p className="text-xl font-bold text-accent tabular-nums">
+                        <AnimatedGoldValue value={verdienst} suffix={` ${selected.currency || "EUR"}`} />
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+              </div>
+            </Section>
+          )}
 
           {/* Crypto */}
           <Section icon={Wallet} title="Crypto / Auszahlung" delay={0.18}>
