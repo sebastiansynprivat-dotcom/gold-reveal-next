@@ -603,7 +603,7 @@ export default function ChatterDashboardTab() {
               }}
             />
           </Section>
-        </>
+        </div>
       )}
 
       {!selected && chatters.length === 0 && (
