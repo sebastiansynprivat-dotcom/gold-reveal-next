@@ -372,7 +372,7 @@ export default function ChatterDashboardTab() {
 
       {selected && (
         <div ref={chatterDetailRef}>
-          {/* Big golden revenue card */}
+          {/* Big golden revenue/earnings card */}
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -380,15 +380,29 @@ export default function ChatterDashboardTab() {
             className="gold-gradient-border-animated pulse-glow rounded-xl p-6 text-center space-y-3"
           >
             <Crown className="h-8 w-8 text-accent mx-auto" />
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Gesamtumsatz</p>
-            <p className="text-5xl font-black text-gold-gradient tabular-nums leading-none">
-              <AnimatedGoldValue value={totalRevenue} suffix={` ${selected.currency || "EUR"}`} />
-            </p>
-            <div className="flex justify-center gap-4 text-xs text-muted-foreground mt-2">
-              <span>4Based: {(selected.fourbasedRevenue || 0).toLocaleString("de-DE")}</span>
-              <span>Maloum: {(selected.maloumRevenue || 0).toLocaleString("de-DE")}</span>
-              <span>Brezzels: {(selected.brezzelsRevenue || 0).toLocaleString("de-DE")}</span>
-            </div>
+            {selected.compensationType === "hourly" ? (
+              <>
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Verdienst</p>
+                <p className="text-5xl font-black text-gold-gradient tabular-nums leading-none">
+                  <AnimatedGoldValue value={verdienst} suffix={` ${selected.currency || "EUR"}`} />
+                </p>
+                <div className="flex justify-center gap-4 text-xs text-muted-foreground mt-2">
+                  <span>{selected.hourlyRate || 0}€/h × {selected.hoursWorked || 0}h</span>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Gesamtumsatz</p>
+                <p className="text-5xl font-black text-gold-gradient tabular-nums leading-none">
+                  <AnimatedGoldValue value={totalRevenue} suffix={` ${selected.currency || "EUR"}`} />
+                </p>
+                <div className="flex justify-center gap-4 text-xs text-muted-foreground mt-2">
+                  <span>4Based: {(selected.fourbasedRevenue || 0).toLocaleString("de-DE")}</span>
+                  <span>Maloum: {(selected.maloumRevenue || 0).toLocaleString("de-DE")}</span>
+                  <span>Brezzels: {(selected.brezzelsRevenue || 0).toLocaleString("de-DE")}</span>
+                </div>
+              </>
+            )}
           </motion.div>
 
           {/* Details */}
@@ -438,32 +452,50 @@ export default function ChatterDashboardTab() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">4Based Revenue</label>
-                  <div className="input-gold-shimmer rounded-lg">
-                    <Input type="number" value={selected.fourbasedRevenue || ""} onChange={e => updateSelected({ fourbasedRevenue: Number(e.target.value) || 0 })} className="text-sm border-transparent" placeholder="0" />
+              {selected.compensationType !== "hourly" && (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">4Based Revenue</label>
+                      <div className="input-gold-shimmer rounded-lg">
+                        <Input type="number" value={selected.fourbasedRevenue || ""} onChange={e => updateSelected({ fourbasedRevenue: Number(e.target.value) || 0 })} className="text-sm border-transparent" placeholder="0" />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">Maloum Revenue</label>
+                      <div className="input-gold-shimmer rounded-lg">
+                        <Input type="number" value={selected.maloumRevenue || ""} onChange={e => updateSelected({ maloumRevenue: Number(e.target.value) || 0 })} className="text-sm border-transparent" placeholder="0" />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">Brezzels Revenue</label>
+                      <div className="input-gold-shimmer rounded-lg">
+                        <Input type="number" value={selected.brezzelsRevenue || ""} onChange={e => updateSelected({ brezzelsRevenue: Number(e.target.value) || 0 })} className="text-sm border-transparent" placeholder="0" />
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">Maloum Revenue</label>
-                  <div className="input-gold-shimmer rounded-lg">
-                    <Input type="number" value={selected.maloumRevenue || ""} onChange={e => updateSelected({ maloumRevenue: Number(e.target.value) || 0 })} className="text-sm border-transparent" placeholder="0" />
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">Brezzels Revenue</label>
-                  <div className="input-gold-shimmer rounded-lg">
-                    <Input type="number" value={selected.brezzelsRevenue || ""} onChange={e => updateSelected({ brezzelsRevenue: Number(e.target.value) || 0 })} className="text-sm border-transparent" placeholder="0" />
-                  </div>
-                </div>
-              </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="glass-card rounded-lg p-3 flex items-center justify-between">
-                  <span className="text-xs font-medium text-muted-foreground">Gesamt</span>
-                  <span className="text-sm font-bold text-accent tabular-nums">{totalRevenue.toLocaleString("de-DE")} {selected.currency || "EUR"}</span>
-                </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="glass-card rounded-lg p-3 flex items-center justify-between">
+                      <span className="text-xs font-medium text-muted-foreground">Gesamt</span>
+                      <span className="text-sm font-bold text-accent tabular-nums">{totalRevenue.toLocaleString("de-DE")} {selected.currency || "EUR"}</span>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">Währung</label>
+                      <Select value={selected.currency || "EUR"} onValueChange={v => updateSelected({ currency: v })}>
+                        <SelectTrigger className="text-sm">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {CURRENCIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {selected.compensationType === "hourly" && (
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-muted-foreground">Währung</label>
                   <Select value={selected.currency || "EUR"} onValueChange={v => updateSelected({ currency: v })}>
@@ -475,7 +507,7 @@ export default function ChatterDashboardTab() {
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
+              )}
             </div>
           </Section>
 
@@ -597,7 +629,10 @@ export default function ChatterDashboardTab() {
               revenuePercentage={selected.compensationType === "percentage" ? selected.revenuePercentage : 0}
               currency={selected.currency || "EUR"}
               cryptoAddress={selected.cryptoAddress || ""}
-              platformRevenue={{
+              compensationType={selected.compensationType}
+              hourlyRate={selected.hourlyRate}
+              hoursWorked={selected.hoursWorked}
+              platformRevenue={selected.compensationType === "hourly" ? undefined : {
                 fourbased: selected.fourbasedRevenue || 0,
                 maloum: selected.maloumRevenue || 0,
                 brezzels: selected.brezzelsRevenue || 0,
