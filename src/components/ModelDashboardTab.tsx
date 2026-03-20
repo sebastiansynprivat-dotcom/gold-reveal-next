@@ -880,7 +880,7 @@ export default function ModelDashboardTab() {
       {/* ── Detail View ── */}
       <AnimatePresence mode="wait">
         {selectedAccountId && !loading && (
-          <motion.div
+          <motion.div ref={detailRef}
             key={selectedAccountId}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

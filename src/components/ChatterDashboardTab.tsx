@@ -370,7 +370,7 @@ export default function ChatterDashboardTab() {
       </Section>
 
       {selected && (
-        <>
+        <div ref={chatterDetailRef}>
           {/* Big golden revenue card */}
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.97 }}
