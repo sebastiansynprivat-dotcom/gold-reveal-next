@@ -370,6 +370,7 @@ export default function ModelDashboardTab() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [allDashboards, setAllDashboards] = useState<ModelDashboardRow[]>([]);
   const [selectedAccountId, setSelectedAccountId] = useState<string>("");
+  const detailRef = useRef<HTMLDivElement>(null);
   const [data, setData] = useState<ModelDashboardRow | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -823,7 +824,10 @@ export default function ModelDashboardTab() {
                 return (
                   <div
                     key={acc.id}
-                    onClick={() => setSelectedAccountId(acc.id)}
+                    onClick={() => {
+                      setSelectedAccountId(acc.id);
+                      setTimeout(() => detailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+                    }}
                     className={cn(
                       "grid grid-cols-[1fr_80px_80px_50px] gap-0 items-center border-b border-border/30 cursor-pointer transition-colors",
                       isSelected
@@ -877,7 +881,7 @@ export default function ModelDashboardTab() {
       {/* ── Detail View ── */}
       <AnimatePresence mode="wait">
         {selectedAccountId && !loading && (
-          <motion.div
+          <motion.div ref={detailRef}
             key={selectedAccountId}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

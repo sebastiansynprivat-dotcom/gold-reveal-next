@@ -110,6 +110,7 @@ export default function ChatterDashboardTab() {
   });
 
   const [selectedId, setSelectedId] = useState<string>("");
+  const chatterDetailRef = useRef<HTMLDivElement>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<"all" | ChatterRole>("all");
   const [addingNew, setAddingNew] = useState(false);
@@ -314,7 +315,10 @@ export default function ChatterDashboardTab() {
                   return (
                     <div
                       key={c.id}
-                      onClick={() => setSelectedId(c.id)}
+                      onClick={() => {
+                        setSelectedId(c.id);
+                        setTimeout(() => chatterDetailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+                      }}
                       className={cn(
                         "grid grid-cols-[1fr_80px_80px_80px_80px_32px] gap-0 items-center border-b border-border/30 cursor-pointer transition-colors",
                         isSelected
@@ -367,7 +371,7 @@ export default function ChatterDashboardTab() {
       </Section>
 
       {selected && (
-        <>
+        <div ref={chatterDetailRef}>
           {/* Big golden revenue card */}
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.97 }}
@@ -600,7 +604,7 @@ export default function ChatterDashboardTab() {
               }}
             />
           </Section>
-        </>
+        </div>
       )}
 
       {!selected && chatters.length === 0 && (
