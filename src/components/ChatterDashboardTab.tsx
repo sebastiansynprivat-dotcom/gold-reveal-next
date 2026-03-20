@@ -314,7 +314,10 @@ export default function ChatterDashboardTab() {
                   return (
                     <div
                       key={c.id}
-                      onClick={() => setSelectedId(c.id)}
+                      onClick={() => {
+                        setSelectedId(c.id);
+                        setTimeout(() => chatterDetailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+                      }}
                       className={cn(
                         "grid grid-cols-[1fr_80px_80px_80px_80px_32px] gap-0 items-center border-b border-border/30 cursor-pointer transition-colors",
                         isSelected
