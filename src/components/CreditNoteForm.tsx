@@ -305,10 +305,13 @@ export default function CreditNoteForm({
     doc.text("Description", m + 15, y);
 
     const isHourly = compensationType === "hourly";
+    const hasHourlyDetails = isHourly && hourlyRate > 0 && hoursWorked > 0;
 
-    if (isHourly) {
+    if (hasHourlyDetails) {
       doc.text(`Rate (${currency})`, rCol - 70, y, { align: "right" });
       doc.text("Hours", rCol - 35, y, { align: "right" });
+      doc.text(`Amount (${currency})`, rCol - 2, y, { align: "right" });
+    } else if (isHourly) {
       doc.text(`Amount (${currency})`, rCol - 2, y, { align: "right" });
     } else {
       doc.text(`Revenue (${currency})`, rCol - 52, y, { align: "right" });
@@ -319,7 +322,6 @@ export default function CreditNoteForm({
     const formattedNet = net.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
     if (isHourly) {
-      // Single row for hourly: rate × hours = amount
       doc.setFillColor(20, 20, 20);
       doc.rect(m, y - 3.5, cw, 7, "F");
       doc.setDrawColor(50, 50, 50);
@@ -328,11 +330,13 @@ export default function CreditNoteForm({
       doc.setFontSize(8.5);
       doc.setTextColor(...white);
       doc.text("1", m + 2, y);
-      const descLines = doc.splitTextToSize(description, 80);
+      const descLines = doc.splitTextToSize(description, hasHourlyDetails ? 80 : 100);
       doc.text(descLines[0] || description, m + 15, y);
-      doc.setTextColor(...muted);
-      doc.text(hourlyRate.toLocaleString("de-DE", { minimumFractionDigits: 2 }), rCol - 70, y, { align: "right" });
-      doc.text(hoursWorked.toLocaleString("de-DE", { minimumFractionDigits: 1 }), rCol - 35, y, { align: "right" });
+      if (hasHourlyDetails) {
+        doc.setTextColor(...muted);
+        doc.text(hourlyRate.toLocaleString("de-DE", { minimumFractionDigits: 2 }), rCol - 70, y, { align: "right" });
+        doc.text(hoursWorked.toLocaleString("de-DE", { minimumFractionDigits: 1 }), rCol - 35, y, { align: "right" });
+      }
       doc.setTextColor(...white);
       doc.text(formattedNet, rCol - 2, y, { align: "right" });
       y += 7;
