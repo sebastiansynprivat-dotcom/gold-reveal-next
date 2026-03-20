@@ -823,7 +823,10 @@ export default function ModelDashboardTab() {
                 return (
                   <div
                     key={acc.id}
-                    onClick={() => setSelectedAccountId(acc.id)}
+                    onClick={() => {
+                      setSelectedAccountId(acc.id);
+                      setTimeout(() => detailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+                    }}
                     className={cn(
                       "grid grid-cols-[1fr_80px_80px_50px] gap-0 items-center border-b border-border/30 cursor-pointer transition-colors",
                       isSelected
