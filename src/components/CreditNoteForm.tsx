@@ -303,61 +303,23 @@ export default function CreditNoteForm({
     doc.setTextColor(...gold);
     doc.text("Pos.", m + 2, y);
     doc.text("Description", m + 15, y);
-    doc.text(`Revenue (${currency})`, rCol - 52, y, { align: "right" });
-    doc.text(`Share ${revenuePercentage}% (${currency})`, rCol - 2, y, { align: "right" });
+
+    const isHourly = compensationType === "hourly";
+
+    if (isHourly) {
+      doc.text(`Rate (${currency})`, rCol - 70, y, { align: "right" });
+      doc.text("Hours", rCol - 35, y, { align: "right" });
+      doc.text(`Amount (${currency})`, rCol - 2, y, { align: "right" });
+    } else {
+      doc.text(`Revenue (${currency})`, rCol - 52, y, { align: "right" });
+      doc.text(`Share ${revenuePercentage}% (${currency})`, rCol - 2, y, { align: "right" });
+    }
     y += 7;
 
     const formattedNet = net.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-    // Table row(s) – one per platform if breakdown exists, otherwise single row
-    const hasPlatformBreakdown = platformRevenue && revenuePercentage > 0 && (platformRevenue.fourbased > 0 || platformRevenue.maloum > 0 || platformRevenue.brezzels > 0);
-    const platforms = hasPlatformBreakdown
-      ? [
-          { name: "4Based", rev: platformRevenue!.fourbased },
-          { name: "Maloum", rev: platformRevenue!.maloum },
-          { name: "Brezzels", rev: platformRevenue!.brezzels },
-        ].filter(p => p.rev > 0)
-      : [];
-
-    if (hasPlatformBreakdown) {
-      // Multi-row: one per platform with revenue + share
-      platforms.forEach((p, i) => {
-        const rowBg: [number, number, number] = i % 2 === 0 ? [20, 20, 20] : [25, 25, 25];
-        const payout = (p.rev * revenuePercentage / 100);
-        const rowH = 7;
-        doc.setFillColor(...rowBg);
-        doc.rect(m, y - 3.5, cw, rowH, "F");
-        doc.setDrawColor(50, 50, 50);
-        doc.rect(m, y - 3.5, cw, rowH, "S");
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(8);
-        doc.setTextColor(...white);
-        doc.text(`${i + 1}`, m + 2, y);
-        doc.text(`${description} – ${p.name}`, m + 15, y);
-        doc.setTextColor(...muted);
-        doc.text(p.rev.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), rCol - 52, y, { align: "right" });
-        doc.setTextColor(...white);
-        doc.text(payout.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), rCol - 2, y, { align: "right" });
-        y += rowH;
-      });
-
-      // Totals row
-      const totalRev = platforms.reduce((s, p) => s + p.rev, 0);
-      doc.setFillColor(18, 18, 18);
-      doc.rect(m, y - 3.5, cw, 7, "F");
-      doc.setDrawColor(50, 50, 50);
-      doc.rect(m, y - 3.5, cw, 7, "S");
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(7.5);
-      doc.setTextColor(...goldLight);
-      doc.text("Total", m + 15, y);
-      doc.text(totalRev.toLocaleString("de-DE", { minimumFractionDigits: 2 }), rCol - 52, y, { align: "right" });
-      doc.setTextColor(...gold);
-      doc.text(formattedNet, rCol - 2, y, { align: "right" });
-      y += 7;
-
-    } else {
-      // Single row (no platform breakdown)
+    if (isHourly) {
+      // Single row for hourly: rate × hours = amount
       doc.setFillColor(20, 20, 20);
       doc.rect(m, y - 3.5, cw, 7, "F");
       doc.setDrawColor(50, 50, 50);
@@ -366,10 +328,73 @@ export default function CreditNoteForm({
       doc.setFontSize(8.5);
       doc.setTextColor(...white);
       doc.text("1", m + 2, y);
-      const descLines = doc.splitTextToSize(description, 100);
+      const descLines = doc.splitTextToSize(description, 80);
       doc.text(descLines[0] || description, m + 15, y);
+      doc.setTextColor(...muted);
+      doc.text(hourlyRate.toLocaleString("de-DE", { minimumFractionDigits: 2 }), rCol - 70, y, { align: "right" });
+      doc.text(hoursWorked.toLocaleString("de-DE", { minimumFractionDigits: 1 }), rCol - 35, y, { align: "right" });
+      doc.setTextColor(...white);
       doc.text(formattedNet, rCol - 2, y, { align: "right" });
       y += 7;
+    } else {
+      // Table row(s) – one per platform if breakdown exists, otherwise single row
+      const hasPlatformBreakdown = platformRevenue && revenuePercentage > 0 && (platformRevenue.fourbased > 0 || platformRevenue.maloum > 0 || platformRevenue.brezzels > 0);
+      const platforms = hasPlatformBreakdown
+        ? [
+            { name: "4Based", rev: platformRevenue!.fourbased },
+            { name: "Maloum", rev: platformRevenue!.maloum },
+            { name: "Brezzels", rev: platformRevenue!.brezzels },
+          ].filter(p => p.rev > 0)
+        : [];
+
+      if (hasPlatformBreakdown) {
+        platforms.forEach((p, i) => {
+          const rowBg: [number, number, number] = i % 2 === 0 ? [20, 20, 20] : [25, 25, 25];
+          const payout = (p.rev * revenuePercentage / 100);
+          const rowH = 7;
+          doc.setFillColor(...rowBg);
+          doc.rect(m, y - 3.5, cw, rowH, "F");
+          doc.setDrawColor(50, 50, 50);
+          doc.rect(m, y - 3.5, cw, rowH, "S");
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(8);
+          doc.setTextColor(...white);
+          doc.text(`${i + 1}`, m + 2, y);
+          doc.text(`${description} – ${p.name}`, m + 15, y);
+          doc.setTextColor(...muted);
+          doc.text(p.rev.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), rCol - 52, y, { align: "right" });
+          doc.setTextColor(...white);
+          doc.text(payout.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), rCol - 2, y, { align: "right" });
+          y += rowH;
+        });
+
+        const totalRev = platforms.reduce((s, p) => s + p.rev, 0);
+        doc.setFillColor(18, 18, 18);
+        doc.rect(m, y - 3.5, cw, 7, "F");
+        doc.setDrawColor(50, 50, 50);
+        doc.rect(m, y - 3.5, cw, 7, "S");
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(7.5);
+        doc.setTextColor(...goldLight);
+        doc.text("Total", m + 15, y);
+        doc.text(totalRev.toLocaleString("de-DE", { minimumFractionDigits: 2 }), rCol - 52, y, { align: "right" });
+        doc.setTextColor(...gold);
+        doc.text(formattedNet, rCol - 2, y, { align: "right" });
+        y += 7;
+      } else {
+        doc.setFillColor(20, 20, 20);
+        doc.rect(m, y - 3.5, cw, 7, "F");
+        doc.setDrawColor(50, 50, 50);
+        doc.rect(m, y - 3.5, cw, 7, "S");
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8.5);
+        doc.setTextColor(...white);
+        doc.text("1", m + 2, y);
+        const descLines = doc.splitTextToSize(description, 100);
+        doc.text(descLines[0] || description, m + 15, y);
+        doc.text(formattedNet, rCol - 2, y, { align: "right" });
+        y += 7;
+      }
     }
 
     y += 4;
