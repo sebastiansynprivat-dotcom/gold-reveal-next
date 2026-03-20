@@ -53,6 +53,9 @@ export default function CreditNoteForm({
   revenuePercentage = 0,
   currency = "EUR",
   platformRevenue,
+  compensationType = "percentage",
+  hourlyRate = 0,
+  hoursWorked = 0,
 }: CreditNoteFormProps) {
   // localStorage key for persisting form fields
   const storageKey = `credit-note-form-${accountId || chatterName || "default"}`;
