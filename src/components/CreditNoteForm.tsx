@@ -744,7 +744,7 @@ export default function CreditNoteForm({
         </div>
 
         {/* Platform Breakdown */}
-        {platformRevenue && (platformRevenue.fourbased > 0 || platformRevenue.maloum > 0 || platformRevenue.brezzels > 0) && revenuePercentage > 0 && (
+        {compensationType !== "hourly" && platformRevenue && (platformRevenue.fourbased > 0 || platformRevenue.maloum > 0 || platformRevenue.brezzels > 0) && revenuePercentage > 0 && (
           <div className="rounded-lg bg-secondary/20 border border-border/40 p-3 space-y-1.5">
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Plattform-Aufschlüsselung</p>
             {platformRevenue.fourbased > 0 && (
