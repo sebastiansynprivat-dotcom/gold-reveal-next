@@ -202,7 +202,7 @@ export default function ChatterDashboardTab() {
         </div>
         <div>
           <h2 className="text-lg font-bold text-foreground">Mitarbeiter-Dashboard</h2>
-          <p className="text-xs text-muted-foreground">Mitarbeiter & Chatter verwalten & Gutschriften erstellen</p>
+          <p className="text-xs text-muted-foreground">Mitarbeiter & Chatter verwalten & Provider Invoices erstellen</p>
         </div>
       </motion.div>
 
@@ -554,7 +554,7 @@ export default function ChatterDashboardTab() {
           </Section>
 
           {/* Credit Note */}
-          <Section icon={FileDown} title="Credit Note erstellen" delay={0.22}>
+          <Section icon={FileDown} title="Provider Invoice erstellen" delay={0.22}>
             <CreditNoteForm
               suggestedAmount={verdienst}
               providerName={selected.name}

@@ -198,7 +198,7 @@ export default function CreditNoteForm({
     doc.setFont("helvetica", "bold");
     doc.setFontSize(7.5);
     doc.setTextColor(...goldLight);
-    doc.text("CREDIT NOTE NO", rCol, ry, { align: "right" });
+    doc.text("INVOICE NO", rCol, ry, { align: "right" });
     ry += 4;
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
@@ -238,7 +238,7 @@ export default function CreditNoteForm({
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
     doc.setTextColor(...gold);
-    doc.text("CREDIT NOTE", m, y);
+    doc.text("PROVIDER INVOICE", m, y);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
     doc.setTextColor(...muted);
@@ -255,7 +255,7 @@ export default function CreditNoteForm({
     doc.setFont("helvetica", "italic");
     doc.setFontSize(7);
     doc.setTextColor(...muted);
-    doc.text("This credit note is issued under the self-billing procedure. The service provider does not issue an invoice.", m, y);
+    doc.text("This provider invoice is issued under the self-billing procedure. The service provider does not issue a separate invoice.", m, y);
     y += 8;
 
     // ── Service Provider section ──
@@ -494,7 +494,7 @@ export default function CreditNoteForm({
     doc.setTextColor(...muted);
 
     const legalTexts = [
-      "This credit note has been issued under the self-billing procedure with the consent of the service provider.",
+      "This provider invoice has been issued under the self-billing procedure with the consent of the service provider.",
       "The service provider agrees not to issue separate invoices for the above services.",
       "This document was generated electronically and is valid without signature.",
     ];
@@ -567,7 +567,7 @@ export default function CreditNoteForm({
 
       // Generate PDF
       const doc = generatePDF(creditNoteNumber);
-      const filename = `CreditNote_${creditNoteNumber.replace(/\//g, "-")}.pdf`;
+      const filename = `ProviderInvoice_${creditNoteNumber.replace(/\//g, "-")}.pdf`;
       const blob = doc.output("blob");
       const url = URL.createObjectURL(blob);
 
@@ -589,7 +589,7 @@ export default function CreditNoteForm({
         if (opened) toast.success("PDF im neuen Tab geöffnet ✅");
         else toast.error("Popup blockiert – bitte Popups erlauben.");
       } else {
-        toast.success(`Credit Note ${creditNoteNumber} erstellt ✅`);
+        toast.success(`Provider Invoice ${creditNoteNumber} erstellt ✅`);
       }
       setTimeout(() => URL.revokeObjectURL(url), 15000);
     } catch (err: any) {
@@ -683,12 +683,12 @@ export default function CreditNoteForm({
       <div className="space-y-3">
         <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
           <Calendar className="h-3.5 w-3.5" />
-          Credit Note Details
+          Provider Invoice Details
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">Credit Note Date</Label>
+            <Label className="text-xs text-muted-foreground">Invoice Date</Label>
             <div className="input-gold-shimmer rounded-lg">
               <Input type="date" value={creditNoteDate} onChange={e => setCreditNoteDate(e.target.value)} className="text-sm border-transparent" />
             </div>
@@ -710,7 +710,7 @@ export default function CreditNoteForm({
         <div className="flex items-center gap-2 p-2.5 rounded-lg bg-accent/5 border border-accent/15">
           <Hash className="h-3.5 w-3.5 text-accent shrink-0" />
           <span className="text-[11px] text-muted-foreground">
-            Credit Note Nr. wird beim Erstellen <span className="text-accent font-semibold">automatisch fortlaufend</span> generiert (z.B. GS-2026-0001)
+            Provider Invoice Nr. wird beim Erstellen <span className="text-accent font-semibold">automatisch fortlaufend</span> generiert (z.B. GS-2026-0001)
           </span>
         </div>
       </div>
@@ -873,7 +873,7 @@ export default function CreditNoteForm({
         className="w-full gap-2 h-11 text-sm font-semibold bg-accent hover:bg-accent/90 text-accent-foreground transition-all hover:scale-[1.01] active:scale-[0.99] gold-glow"
       >
         <FileDown className="h-4 w-4" />
-        {generating ? "Wird erstellt…" : "Credit Note als PDF erstellen"}
+        {generating ? "Wird erstellt…" : "Provider Invoice als PDF erstellen"}
       </Button>
 
       {/* Legal notice */}

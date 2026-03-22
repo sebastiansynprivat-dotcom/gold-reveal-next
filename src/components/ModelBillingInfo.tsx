@@ -78,11 +78,11 @@ Exchange Rate: 1 USDT = 0.999 €`;
             <div className="p-4 space-y-6">
               {/* Section 1: Self-Billing */}
               <div className="space-y-3">
-                <h3 className="text-base font-bold text-foreground">1. Gutschrift (Self-Billing)</h3>
+                <h3 className="text-base font-bold text-foreground">1. Provider Invoice (Self-Billing)</h3>
                 <p className="text-sm text-muted-foreground"><strong className="text-foreground">Das bedeutet:</strong></p>
                 <ul className="text-sm text-muted-foreground space-y-1.5 list-disc list-inside">
                   <li><strong className="text-foreground">Wir erstellen die Rechnung in deinem Namen</strong></li>
-                  <li>nennt sich <strong className="text-foreground">Gutschrift / Self-Billing Invoice</strong></li>
+                  <li>nennt sich <strong className="text-foreground">Provider Invoice / Self-Billing Invoice</strong></li>
                   <li>wir zahlen dann direkt aus</li>
                 </ul>
 
@@ -98,7 +98,7 @@ Exchange Rate: 1 USDT = 0.999 €`;
                   <pre className="text-xs text-accent/90 font-mono whitespace-pre-wrap leading-relaxed">{selfBillingText}</pre>
                 </div>
 
-                <p className="text-sm text-muted-foreground">Diese <strong className="text-foreground">Gutschrift ersetzt die Rechnung.</strong></p>
+                <p className="text-sm text-muted-foreground">Diese <strong className="text-foreground">Provider Invoice ersetzt die Rechnung.</strong></p>
                 <p className="text-sm text-muted-foreground">
                   Das ist <strong className="text-foreground">vollkommen legal</strong>, solange:
                 </p>
