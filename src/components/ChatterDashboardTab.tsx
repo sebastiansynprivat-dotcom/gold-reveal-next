@@ -554,7 +554,7 @@ export default function ChatterDashboardTab() {
           </Section>
 
           {/* Credit Note */}
-          <Section icon={FileDown} title="Credit Note erstellen" delay={0.22}>
+          <Section icon={FileDown} title="Provider Invoice erstellen" delay={0.22}>
             <CreditNoteForm
               suggestedAmount={verdienst}
               providerName={selected.name}

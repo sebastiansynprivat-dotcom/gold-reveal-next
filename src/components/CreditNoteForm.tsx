@@ -873,7 +873,7 @@ export default function CreditNoteForm({
         className="w-full gap-2 h-11 text-sm font-semibold bg-accent hover:bg-accent/90 text-accent-foreground transition-all hover:scale-[1.01] active:scale-[0.99] gold-glow"
       >
         <FileDown className="h-4 w-4" />
-        {generating ? "Wird erstellt…" : "Credit Note als PDF erstellen"}
+        {generating ? "Wird erstellt…" : "Provider Invoice als PDF erstellen"}
       </Button>
 
       {/* Legal notice */}

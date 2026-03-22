@@ -98,7 +98,7 @@ Exchange Rate: 1 USDT = 0.999 €`;
                   <pre className="text-xs text-accent/90 font-mono whitespace-pre-wrap leading-relaxed">{selfBillingText}</pre>
                 </div>
 
-                <p className="text-sm text-muted-foreground">Diese <strong className="text-foreground">Gutschrift ersetzt die Rechnung.</strong></p>
+                <p className="text-sm text-muted-foreground">Diese <strong className="text-foreground">Provider Invoice ersetzt die Rechnung.</strong></p>
                 <p className="text-sm text-muted-foreground">
                   Das ist <strong className="text-foreground">vollkommen legal</strong>, solange:
                 </p>
