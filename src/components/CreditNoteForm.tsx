@@ -852,6 +852,13 @@ export default function CreditNoteForm({
         </div>
 
         <div className="space-y-1.5">
+          <Label className="text-xs text-muted-foreground">Receiver Wallet</Label>
+          <div className="input-gold-shimmer rounded-lg">
+            <Input value={receiverWallet} onChange={e => setReceiverWallet(e.target.value)} placeholder="Wallet-Adresse des Empfängers" className="text-sm border-transparent font-mono text-xs" />
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
           <Label className="text-xs text-muted-foreground">TxHash</Label>
           <div className="input-gold-shimmer rounded-lg">
             <Input value={txHash} onChange={e => setTxHash(e.target.value)} placeholder="Transaction Hash" className="text-sm border-transparent font-mono text-xs" />
