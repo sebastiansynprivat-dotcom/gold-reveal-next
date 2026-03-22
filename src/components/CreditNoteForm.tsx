@@ -96,6 +96,7 @@ export default function CreditNoteForm({
   const [cryptoNetwork, setCryptoNetwork] = useState(saved.cryptoNetwork || "TRC20");
   const [cryptoCoin, setCryptoCoin] = useState(saved.cryptoCoin || "USDT");
   const [txHash, setTxHash] = useState(saved.txHash || "");
+  const [receiverWallet, setReceiverWallet] = useState(saved.receiverWallet || cryptoAddress || "");
   const [exchangeRate, setExchangeRate] = useState(saved.exchangeRate || "");
   const [paymentDate, setPaymentDate] = useState(format(new Date(), "yyyy-MM-dd"));
 
@@ -133,11 +134,11 @@ export default function CreditNoteForm({
       localStorage.setItem(storageKey, JSON.stringify({
         issuerName, issuerAddress, issuerKvk, issuerVatId,
         providerName, providerAddress, isBusiness, providerVatId,
-        description, cryptoNetwork, cryptoCoin, txHash, exchangeRate,
+        description, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet,
       }));
     }, 500);
     return () => clearTimeout(timer);
-  }, [issuerName, issuerAddress, issuerKvk, issuerVatId, providerName, providerAddress, isBusiness, providerVatId, description, cryptoNetwork, cryptoCoin, txHash, exchangeRate, storageKey]);
+  }, [issuerName, issuerAddress, issuerKvk, issuerVatId, providerName, providerAddress, isBusiness, providerVatId, description, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet, storageKey]);
 
   // Update provider name when prop changes
   useEffect(() => {
@@ -462,11 +463,13 @@ export default function CreditNoteForm({
         doc.text(`Payment Method: ${cryptoCoin} (${cryptoNetwork})`, m, y);
         y += 4.5;
       }
+      if (receiverWallet) {
+        doc.text(`Receiver Wallet: ${receiverWallet}`, m, y);
+        y += 4.5;
+      }
       if (txHash) {
-        doc.setFontSize(7.5);
         doc.text(`TxHash: ${txHash}`, m, y);
         y += 4.5;
-        doc.setFontSize(8.5);
       }
       if (currency !== "EUR" && liveExchangeRate) {
         doc.text(`Exchange Rate: 1 ${currency} = ${liveExchangeRate.toFixed(4)} EUR`, m, y);
@@ -845,6 +848,13 @@ export default function CreditNoteForm({
             <div className="input-gold-shimmer rounded-lg">
               <Input type="date" value={paymentDate} onChange={e => setPaymentDate(e.target.value)} className="text-sm border-transparent" />
             </div>
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label className="text-xs text-muted-foreground">Receiver Wallet</Label>
+          <div className="input-gold-shimmer rounded-lg">
+            <Input value={receiverWallet} onChange={e => setReceiverWallet(e.target.value)} placeholder="Wallet-Adresse des Empfängers" className="text-sm border-transparent font-mono text-xs" />
           </div>
         </div>
 
