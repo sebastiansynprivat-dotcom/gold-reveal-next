@@ -134,7 +134,7 @@ export default function CreditNoteForm({
       localStorage.setItem(storageKey, JSON.stringify({
         issuerName, issuerAddress, issuerKvk, issuerVatId,
         providerName, providerAddress, isBusiness, providerVatId,
-        description, cryptoNetwork, cryptoCoin, txHash, exchangeRate,
+        description, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet,
       }));
     }, 500);
     return () => clearTimeout(timer);
