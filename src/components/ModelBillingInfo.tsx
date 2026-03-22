@@ -78,7 +78,7 @@ Exchange Rate: 1 USDT = 0.999 €`;
             <div className="p-4 space-y-6">
               {/* Section 1: Self-Billing */}
               <div className="space-y-3">
-                <h3 className="text-base font-bold text-foreground">1. Gutschrift (Self-Billing)</h3>
+                <h3 className="text-base font-bold text-foreground">1. Provider Invoice (Self-Billing)</h3>
                 <p className="text-sm text-muted-foreground"><strong className="text-foreground">Das bedeutet:</strong></p>
                 <ul className="text-sm text-muted-foreground space-y-1.5 list-disc list-inside">
                   <li><strong className="text-foreground">Wir erstellen die Rechnung in deinem Namen</strong></li>
