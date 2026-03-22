@@ -96,6 +96,7 @@ export default function CreditNoteForm({
   const [cryptoNetwork, setCryptoNetwork] = useState(saved.cryptoNetwork || "TRC20");
   const [cryptoCoin, setCryptoCoin] = useState(saved.cryptoCoin || "USDT");
   const [txHash, setTxHash] = useState(saved.txHash || "");
+  const [receiverWallet, setReceiverWallet] = useState(saved.receiverWallet || cryptoAddress || "");
   const [exchangeRate, setExchangeRate] = useState(saved.exchangeRate || "");
   const [paymentDate, setPaymentDate] = useState(format(new Date(), "yyyy-MM-dd"));
 
