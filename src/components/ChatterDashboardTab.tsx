@@ -202,7 +202,7 @@ export default function ChatterDashboardTab() {
         </div>
         <div>
           <h2 className="text-lg font-bold text-foreground">Mitarbeiter-Dashboard</h2>
-          <p className="text-xs text-muted-foreground">Mitarbeiter & Chatter verwalten & Gutschriften erstellen</p>
+          <p className="text-xs text-muted-foreground">Mitarbeiter & Chatter verwalten & Provider Invoices erstellen</p>
         </div>
       </motion.div>
 
