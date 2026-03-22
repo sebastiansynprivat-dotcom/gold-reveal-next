@@ -463,11 +463,13 @@ export default function CreditNoteForm({
         doc.text(`Payment Method: ${cryptoCoin} (${cryptoNetwork})`, m, y);
         y += 4.5;
       }
+      if (receiverWallet) {
+        doc.text(`Receiver Wallet: ${receiverWallet}`, m, y);
+        y += 4.5;
+      }
       if (txHash) {
-        doc.setFontSize(7.5);
         doc.text(`TxHash: ${txHash}`, m, y);
         y += 4.5;
-        doc.setFontSize(8.5);
       }
       if (currency !== "EUR" && liveExchangeRate) {
         doc.text(`Exchange Rate: 1 ${currency} = ${liveExchangeRate.toFixed(4)} EUR`, m, y);
