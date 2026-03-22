@@ -255,7 +255,7 @@ export default function CreditNoteForm({
     doc.setFont("helvetica", "italic");
     doc.setFontSize(7);
     doc.setTextColor(...muted);
-    doc.text("This credit note is issued under the self-billing procedure. The service provider does not issue an invoice.", m, y);
+    doc.text("This provider invoice is issued under the self-billing procedure. The service provider does not issue a separate invoice.", m, y);
     y += 8;
 
     // ── Service Provider section ──
