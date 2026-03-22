@@ -567,7 +567,7 @@ export default function CreditNoteForm({
 
       // Generate PDF
       const doc = generatePDF(creditNoteNumber);
-      const filename = `CreditNote_${creditNoteNumber.replace(/\//g, "-")}.pdf`;
+      const filename = `ProviderInvoice_${creditNoteNumber.replace(/\//g, "-")}.pdf`;
       const blob = doc.output("blob");
       const url = URL.createObjectURL(blob);
 
