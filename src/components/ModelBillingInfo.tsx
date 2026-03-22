@@ -82,7 +82,7 @@ Exchange Rate: 1 USDT = 0.999 €`;
                 <p className="text-sm text-muted-foreground"><strong className="text-foreground">Das bedeutet:</strong></p>
                 <ul className="text-sm text-muted-foreground space-y-1.5 list-disc list-inside">
                   <li><strong className="text-foreground">Wir erstellen die Rechnung in deinem Namen</strong></li>
-                  <li>nennt sich <strong className="text-foreground">Gutschrift / Self-Billing Invoice</strong></li>
+                  <li>nennt sich <strong className="text-foreground">Provider Invoice / Self-Billing Invoice</strong></li>
                   <li>wir zahlen dann direkt aus</li>
                 </ul>
 
