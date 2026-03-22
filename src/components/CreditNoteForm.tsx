@@ -688,7 +688,7 @@ export default function CreditNoteForm({
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">Credit Note Date</Label>
+            <Label className="text-xs text-muted-foreground">Invoice Date</Label>
             <div className="input-gold-shimmer rounded-lg">
               <Input type="date" value={creditNoteDate} onChange={e => setCreditNoteDate(e.target.value)} className="text-sm border-transparent" />
             </div>
