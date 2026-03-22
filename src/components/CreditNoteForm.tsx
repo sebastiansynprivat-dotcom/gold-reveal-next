@@ -589,7 +589,7 @@ export default function CreditNoteForm({
         if (opened) toast.success("PDF im neuen Tab geöffnet ✅");
         else toast.error("Popup blockiert – bitte Popups erlauben.");
       } else {
-        toast.success(`Credit Note ${creditNoteNumber} erstellt ✅`);
+        toast.success(`Provider Invoice ${creditNoteNumber} erstellt ✅`);
       }
       setTimeout(() => URL.revokeObjectURL(url), 15000);
     } catch (err: any) {
