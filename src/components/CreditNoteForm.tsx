@@ -710,7 +710,7 @@ export default function CreditNoteForm({
         <div className="flex items-center gap-2 p-2.5 rounded-lg bg-accent/5 border border-accent/15">
           <Hash className="h-3.5 w-3.5 text-accent shrink-0" />
           <span className="text-[11px] text-muted-foreground">
-            Credit Note Nr. wird beim Erstellen <span className="text-accent font-semibold">automatisch fortlaufend</span> generiert (z.B. GS-2026-0001)
+            Provider Invoice Nr. wird beim Erstellen <span className="text-accent font-semibold">automatisch fortlaufend</span> generiert (z.B. GS-2026-0001)
           </span>
         </div>
       </div>
