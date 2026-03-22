@@ -138,7 +138,7 @@ export default function CreditNoteForm({
       }));
     }, 500);
     return () => clearTimeout(timer);
-  }, [issuerName, issuerAddress, issuerKvk, issuerVatId, providerName, providerAddress, isBusiness, providerVatId, description, cryptoNetwork, cryptoCoin, txHash, exchangeRate, storageKey]);
+  }, [issuerName, issuerAddress, issuerKvk, issuerVatId, providerName, providerAddress, isBusiness, providerVatId, description, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet, storageKey]);
 
   // Update provider name when prop changes
   useEffect(() => {
