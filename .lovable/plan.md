@@ -1,20 +1,22 @@
 
 
-# Auto-Scroll zur Detail-Ansicht
+# Credit Note: TxHash Schriftgröße + Receiver Wallet Feld
 
-## Was passiert
-Wenn man im **Model Dashboard** oder **Mitarbeiter Dashboard** einen Eintrag in der Tabelle anklickt, scrollt die Seite automatisch runter zur Detail-Ansicht.
+## Zusammenfassung
+1. **TxHash Schriftgröße im PDF anpassen** – aktuell wird die Schriftgröße auf 7.5 reduziert, dann aber nicht zurückgesetzt. Das passt nicht zum Rest (8.5). Die Schriftgröße soll gleich bleiben wie der Rest der Payment Information.
+2. **Receiver Wallet Feld hinzufügen** – ein neues Eingabefeld "Receiver Wallet" in der Credit Note Form (Payment Information Sektion), das auf dem PDF mit ausgegeben wird. Der `cryptoAddress`-Prop wird als Defaultwert genutzt.
 
-## Umsetzung
+## Änderungen
 
-### 1. `src/components/ModelDashboardTab.tsx`
-- `useRef` für die Detail-Section erstellen
-- Beim Klick auf einen Account (`setSelectedAccountId`) nach kurzem Delay (`setTimeout 100ms`) `ref.current.scrollIntoView({ behavior: "smooth", block: "start" })` aufrufen
-- Ref an das Detail-`motion.div` (Zeile ~880) anhängen
+### `src/components/CreditNoteForm.tsx`
 
-### 2. `src/components/ChatterDashboardTab.tsx`  
-- Gleiche Logik: `useRef` + `scrollIntoView` beim Klick auf einen Chatter/Mitarbeiter (`setSelectedId`)
-- Ref an die Detail-Section anhängen
+**PDF-Generierung (TxHash Schriftgröße):**
+- Zeile ~466: `doc.setFontSize(7.5)` entfernen – TxHash soll in derselben Größe (8.5) wie der Rest der Payment Info stehen
+- Die Zeile `doc.setFontSize(8.5)` danach (Zeile 469) ebenfalls entfernen, da nicht mehr nötig
 
-Beide Scrolls nutzen `behavior: "smooth"` und `block: "start"` für ein konsistentes UX-Erlebnis.
+**Neues Feld "Receiver Wallet":**
+- Neuen State `receiverWallet` mit Default aus `cryptoAddress`-Prop
+- In der Payment Information UI-Sektion: neues Input-Feld "Receiver Wallet" mit Placeholder "Wallet-Adresse des Empfängers"
+- Im PDF: unter Payment Method/vor TxHash eine Zeile `Receiver Wallet: <wallet>` ausgeben (nur wenn befüllt)
+- `receiverWallet` in localStorage-Persistierung aufnehmen
 
