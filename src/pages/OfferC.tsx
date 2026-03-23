@@ -1,30 +1,53 @@
 import { useState, useEffect, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
+import { Clock, Lock, ChevronDown, ExternalLink } from "lucide-react";
 import logo from "@/assets/logo.png";
-import ProgressChecklist from "@/components/ProgressChecklist";
+import exampleNotifications from "@/assets/example-brezzels-notifications.jpeg";
+import exampleMyIdBot from "@/assets/example-myidbot.jpeg";
+import GoldenAudioPlayer from "@/components/GoldenAudioPlayer";
 import StepBadge from "@/components/StepBadge";
 import LoomVideoStep from "@/components/LoomVideoStep";
-import GoldenAudioPlayer from "@/components/GoldenAudioPlayer";
 
 const ease = [0.16, 1, 0.3, 1] as const;
+
+const COUNTDOWN_KEY = "offerC-countdown-start";
+const COUNTDOWN_DURATION = 2 * 60 * 60 * 1000; // 2 hours
+
+const getTimeLeft = () => {
+  try {
+    let start = sessionStorage.getItem(COUNTDOWN_KEY);
+    if (!start) {
+      start = String(Date.now());
+      sessionStorage.setItem(COUNTDOWN_KEY, start);
+    }
+    const elapsed = Date.now() - parseInt(start, 10);
+    return Math.max(0, COUNTDOWN_DURATION - elapsed);
+  } catch {
+    return COUNTDOWN_DURATION;
+  }
+};
+
+const formatCountdown = (ms: number) => {
+  const h = Math.floor(ms / (1000 * 60 * 60));
+  const m = Math.floor((ms / (1000 * 60)) % 60);
+  const s = Math.floor((ms / 1000) % 60);
+  return { h, m, s };
+};
+
+const pad = (n: number) => String(n).padStart(2, "0");
 
 const steps = [
   { id: 1, title: "Plattform Erklärungs Video anschauen" },
   { id: 2, title: "Telegram Nachrichten Video anschauen" },
-  { id: 3, title: "Brezzels Notifications aktivieren" },
+  { id: 3, title: "FansyMe Notifications aktivieren" },
   { id: 4, title: "My ID Bot einrichten" },
-  { id: 5, title: "Tägliches Feedback einrichten" },
 ];
 
 const videos = [
   {
     step: 1,
     title: "Plattform Erklärungs Video",
-    embedUrl: "https://www.loom.com/embed/b161be42f5484688b862f8cd5753690b?sid=1&hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true",
+    embedUrl: "https://www.loom.com/embed/e05514625bb54af192324d6d51be1f27?sid=1&hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true",
   },
   {
     step: 2,
@@ -36,7 +59,7 @@ const videos = [
 const links = [
   {
     step: 3,
-    title: "Brezzels Notifications",
+    title: "FansyMe Notifications",
     description: "Aktiviere Benachrichtigungen damit du keine Nachricht verpasst",
     url: "https://t.me/Notifications_brezzels_bot",
     icon: "🔔",
@@ -50,14 +73,6 @@ const links = [
   },
 ];
 
-const feedbackTemplate = `Feedback zum heutigen Tag:
-
-Umsatz:
-MassDMs gesendet:
-Was lief gut?:
-Was lief schlecht?:
-Offene Fragen (optional)`;
-
 const STORAGE_KEY = "offerc-completed-steps";
 
 const loadCompleted = (): Set<number> => {
@@ -69,11 +84,17 @@ const loadCompleted = (): Set<number> => {
 };
 
 const OfferC = () => {
-  const navigate = useNavigate();
   const [showPopup, setShowPopup] = useState(true);
+  const [showHowTo, setShowHowTo] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(getTimeLeft);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(loadCompleted);
-  const [telegramId, setTelegramId] = useState("");
-  const [idSaved, setIdSaved] = useState(false);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimeLeft(getTimeLeft());
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify([...completedSteps]));
@@ -88,21 +109,40 @@ const OfferC = () => {
     });
   }, []);
 
-  const toggleStep = (id: number) => {
-    setCompletedSteps((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(feedbackTemplate);
-  };
+  const countdown = formatCountdown(timeLeft);
 
   return (
-    <div className="min-h-screen px-4 py-12 md:py-20">
+    <div className="min-h-screen">
+      {/* Sticky Urgency Bar */}
+      <AnimatePresence>
+        {!showPopup && timeLeft > 0 && (
+          <motion.div
+            className="fixed top-0 left-0 right-0 z-40"
+            initial={{ y: -60 }}
+            animate={{ y: 0 }}
+            exit={{ y: -60 }}
+            transition={{ duration: 0.5, ease }}
+          >
+            <div className="bg-background/80 backdrop-blur-xl border-b border-primary/15 px-4 py-2.5">
+              <div className="max-w-3xl mx-auto flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Lock className="w-3.5 h-3.5 text-primary" />
+                  <span className="text-sm font-semibold text-foreground">
+                    Dein Platz ist reserviert
+                  </span>
+                </div>
+                <div className="flex items-center gap-1.5 font-mono text-xs">
+                  <Clock className="w-3.5 h-3.5 text-primary/70" />
+                  <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded font-semibold">
+                    {pad(countdown.h)}:{pad(countdown.m)}:{pad(countdown.s)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Welcome Popup */}
       <AnimatePresence>
         {showPopup && (
@@ -124,15 +164,23 @@ const OfferC = () => {
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ duration: 0.5, ease }}
             >
-              <span className="text-4xl mb-4">👋</span>
-              <h2
-                className="gold-gradient-text text-xl md:text-2xl font-bold mb-2"
-              >
-                Eine kleine Nachricht von Sebastian an dich
+              <span className="text-4xl mb-3">🎉</span>
+              <h2 className="gold-gradient-text text-xl md:text-2xl font-bold mb-1">
+                Glückwunsch – dein Platz ist reserviert!
               </h2>
-              <p className="text-muted-foreground text-sm mb-6">
-                Hör dir kurz die Nachricht an, bevor du loslegst.
+              <p className="text-muted-foreground text-sm mb-4">
+                Schließe die Einrichtung ab, um deinen Platz zu sichern.
               </p>
+
+              {/* Countdown in Popup */}
+              <div className="flex items-center gap-2 mb-5 bg-primary/5 border border-primary/10 rounded-lg px-4 py-2">
+                <Clock className="w-4 h-4 text-primary/70" />
+                <span className="text-sm text-muted-foreground">Reserviert für</span>
+                <span className="font-mono font-bold text-primary text-sm">
+                  {pad(countdown.h)}:{pad(countdown.m)}:{pad(countdown.s)}
+                </span>
+              </div>
+
               <motion.div
                 className="w-full mb-6"
                 initial={{ opacity: 0, y: 10 }}
@@ -145,183 +193,172 @@ const OfferC = () => {
                 onClick={() => setShowPopup(false)}
                 className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors"
               >
-                Los geht's 🚀
+                Jetzt einrichten & Platz sichern 🔒
               </button>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Hero */}
-      <motion.div
-        className="flex flex-col items-center text-center mb-10"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, ease }}
-      >
-        <img src={logo} alt="SHE Logo" className="w-16 h-16 mb-6 opacity-80" />
-        <h1
-          className="text-3xl md:text-5xl font-bold tracking-tight leading-tight mb-3"
+      <div className={`px-4 py-12 md:py-20 ${!showPopup && timeLeft > 0 ? "pt-24 md:pt-28" : ""}`}>
+        {/* Hero */}
+        <motion.div
+          className="flex flex-col items-center text-center mb-8"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease }}
         >
-          <span className="text-foreground">Kurze Anleitung für deinen Start mit </span>
-          <span className="text-[hsl(210,100%,50%)]">Brezzels</span>
-        </h1>
-        <p className="text-muted-foreground text-base max-w-md">
-          Schau dir alle Videos an und richte alles Schritt für Schritt ein.
-        </p>
-      </motion.div>
+          <img src={logo} alt="SHE Logo" className="w-16 h-16 mb-6 opacity-80" />
+          <h1 className="text-3xl md:text-5xl font-bold tracking-tight leading-tight mb-3">
+            <span className="text-foreground">Kurze Anleitung für deinen Start mit </span>
+            <span className="text-[hsl(210,100%,50%)]">FansyMe</span>
+          </h1>
+          <p className="text-muted-foreground text-base max-w-md">
+            Schau dir alle Videos an und richte alles Schritt für Schritt ein.
+          </p>
+        </motion.div>
 
-      {/* Progress Checklist */}
-      <ProgressChecklist
-        steps={steps}
-        completedSteps={completedSteps}
-        onToggle={toggleStep}
-      />
+        {/* Motivation Banner */}
+        <motion.div
+          className="max-w-3xl mx-auto mb-14"
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25, duration: 0.7, ease }}
+        >
+          <div className="glass-card-subtle rounded-xl px-5 py-4 border border-primary/10 text-center">
+            <p className="text-sm md:text-base text-foreground font-medium">
+              ✅ Du hast es geschafft! Jetzt nur noch ein paar kurze Schritte und du kannst loslegen und{" "}
+              <span className="gold-gradient-text font-bold">Geld verdienen</span>.
+            </p>
+          </div>
+        </motion.div>
 
-      {/* Videos */}
-      <div className="max-w-3xl mx-auto space-y-14 mb-16">
-        {videos.map((video, i) => (
-          <LoomVideoStep
-            key={video.step}
-            step={video.step}
-            title={video.title}
-            embedUrl={video.embedUrl}
-            completed={completedSteps.has(video.step)}
-            onAutoComplete={markComplete}
-            animDelay={0.2 + i * 0.15}
-          />
-        ))}
-      </div>
-
-      {/* Links Section */}
-      <motion.div
-        className="max-w-3xl mx-auto mb-16"
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.7, duration: 0.8, ease }}
-      >
-        <h2
-          className="gold-gradient-text text-xl md:text-2xl font-bold mb-6 text-center"
-          >
-          Wichtige Links
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {links.map((link) => (
-            <a
-              key={link.title}
-              href={link.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`glass-card-subtle rounded-xl p-5 flex items-start gap-4 hover:scale-[1.02] transition-all duration-300 group ${
-                completedSteps.has(link.step) ? "opacity-60" : ""
-              }`}
-            >
-              <StepBadge step={link.step} completed={completedSteps.has(link.step)} />
-              <div className="flex-1">
-                <h3 className="text-foreground font-semibold group-hover:text-primary transition-colors">
-                  {link.title}
-                </h3>
-                <p className="text-muted-foreground text-sm mt-1">{link.description}</p>
-              </div>
-            </a>
+        {/* Videos */}
+        <div className="max-w-3xl mx-auto space-y-14 mb-16">
+          {videos.map((video, i) => (
+            <LoomVideoStep
+              key={video.step}
+              step={video.step}
+              title={video.title}
+              embedUrl={video.embedUrl}
+              completed={completedSteps.has(video.step)}
+              onAutoComplete={markComplete}
+              animDelay={0.2 + i * 0.15}
+            />
           ))}
         </div>
 
-        {/* Telegram ID – direkt unter Links */}
-        {(() => {
-          const videosWatched = completedSteps.has(1) && completedSteps.has(2);
-          return (
-            <div className={`glass-card-subtle rounded-xl p-5 text-center space-y-3 mt-6 relative transition-all duration-500 ${!videosWatched ? "opacity-50 select-none" : ""}`}>
-              {!videosWatched && (
-                <div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl backdrop-blur-[2px]">
-                  <p className="text-muted-foreground text-sm font-medium bg-background/80 px-4 py-2 rounded-lg">
-                    🔒 Verfügbar, wenn du beide Videos geschaut hast
-                  </p>
-                </div>
-              )}
-              <h3
-                className="gold-gradient-text text-lg font-bold"
-              >
-                🤖 Deine Telegram ID
-              </h3>
-              <p className="text-muted-foreground text-sm">
-                Trage hier deine Telegram ID ein.
-              </p>
-              <div className="max-w-[200px] mx-auto input-gold-shimmer rounded-lg">
-                <Input
-                  type="text"
-                  inputMode="numeric"
-                  placeholder=""
-                  value={telegramId}
-                  onChange={(e) => setTelegramId(e.target.value.replace(/\D/g, ""))}
-                  disabled={idSaved || !videosWatched}
-                  className="text-center text-sm border-transparent"
-                />
-              </div>
-              {!idSaved ? (
-                <Button
-                  onClick={() => {
-                    if (!telegramId.trim()) {
-                      toast.error("Bitte gib deine Telegram ID ein.");
-                      return;
-                    }
-                    localStorage.setItem("pending_telegram_id", telegramId.trim());
-                    localStorage.setItem("pending_offer", "Brezzels");
-                    setIdSaved(true);
-                    toast.success("Telegram ID gespeichert!");
-                  }}
-                  className="gold-glow hover:gold-glow-strong px-8"
-                  disabled={!telegramId.trim() || !videosWatched}
-                >
-                  ID speichern
-                </Button>
-              ) : (
-                <Button
-                  onClick={() => navigate("/auth")}
-                  size="lg"
-                  className="gold-glow hover:gold-glow-strong text-lg px-10"
-                >
-                  Zum Dashboard Login →
-                </Button>
-              )}
-            </div>
-          );
-        })()}
-      </motion.div>
-
-      {/* Feedback Section – Schritt 5 */}
-      <motion.div
-        className={`max-w-3xl mx-auto transition-opacity duration-300 ${completedSteps.has(5) ? "opacity-60" : ""}`}
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.9, duration: 0.8, ease }}
-      >
-        <div className="flex items-center justify-center gap-3 mb-2">
-          <StepBadge step={5} completed={completedSteps.has(5)} />
-          <h2
-            className="gold-gradient-text text-xl md:text-2xl font-bold"
-            >
-            Tägliches Feedback
+        {/* Links Section */}
+        <motion.div
+          className="max-w-3xl mx-auto mb-16"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7, duration: 0.8, ease }}
+        >
+          <h2 className="gold-gradient-text text-xl md:text-2xl font-bold mb-6 text-center">
+            Wichtige Links
           </h2>
-        </div>
-        <p className="text-muted-foreground text-sm text-center mb-6 max-w-md mx-auto">
-          Damit wir dich optimal unterstützen können, gib uns bitte 1x am Ende des Tages ein Feedback in folgendem Format:
-        </p>
-        <div className="glass-card-subtle rounded-xl p-6 relative">
-          <pre className="text-foreground/90 text-sm whitespace-pre-wrap leading-relaxed font-sans">
-            {feedbackTemplate}
-          </pre>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {links.map((link) => (
+              <a
+                key={link.title}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`glass-card-subtle rounded-xl p-5 flex items-start gap-4 hover:scale-[1.02] transition-all duration-300 group ${
+                  completedSteps.has(link.step) ? "opacity-60" : ""
+                }`}
+              >
+                <StepBadge step={link.step} completed={completedSteps.has(link.step)} />
+                <div className="flex-1">
+                  <h3 className="text-foreground font-semibold group-hover:text-primary transition-colors">
+                    {link.title}
+                  </h3>
+                  <p className="text-muted-foreground text-sm mt-1">{link.description}</p>
+                </div>
+              </a>
+            ))}
+          </div>
+
+          {/* How-To Hint */}
           <button
-            onClick={handleCopy}
-            className="absolute top-4 right-4 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors"
+            onClick={() => setShowHowTo(!showHowTo)}
+            className="mt-6 w-full flex items-center justify-center gap-2 text-sm text-primary/80 hover:text-primary transition-colors py-2"
           >
-            Kopieren
+            <span className="font-medium">Wie schicke ich das in die Gruppe?</span>
+            <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${showHowTo ? "rotate-180" : ""}`} />
           </button>
-        </div>
-        <p className="text-muted-foreground/60 text-xs text-center mt-3">
-          Kopiere einfach die Vorlage und fülle sie einmal am Tag aus
-        </p>
-      </motion.div>
+
+          <AnimatePresence>
+            {showHowTo && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3, ease }}
+                className="overflow-hidden"
+              >
+                <div className="glass-card-subtle rounded-xl p-5 mt-3 space-y-5">
+                  <p className="text-sm text-foreground font-medium text-center">
+                    Bitte schicke folgendes in deine WhatsApp-Gruppe:
+                  </p>
+
+                  <div className="space-y-2">
+                    <p className="text-sm text-muted-foreground">
+                      1️⃣ Einen <span className="text-foreground font-semibold">Screenshot</span>, wie du <span className="font-mono text-primary">/start</span> im Notifications-Bot geschickt hast
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      2️⃣ Deine <span className="text-foreground font-semibold">kopierte Nummer</span> vom My ID Bot
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      ⚠️ <span className="text-foreground font-semibold">Wichtig:</span> Es sind zwei Screenshots von zwei verschiedenen Bots. Bitte beachten!
+                    </p>
+                  </div>
+
+                  <div className="border-t border-primary/10 pt-4">
+                    <p className="text-xs text-muted-foreground text-center mb-4 font-medium uppercase tracking-wide">
+                      Hier ist ein Beispiel
+                    </p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {/* Notifications Bot Example */}
+                      <div className="space-y-3">
+                        <div className="rounded-lg overflow-hidden border border-primary/10">
+                          <img src={exampleNotifications} alt="Beispiel Notifications Bot" className="w-full" />
+                        </div>
+                        <a
+                          href="https://t.me/Notifications_brezzels_bot"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors font-medium"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          FansyMe Notifications öffnen
+                        </a>
+                      </div>
+
+                      {/* My ID Bot Example */}
+                      <div className="space-y-3">
+                        <div className="rounded-lg overflow-hidden border border-primary/10">
+                          <img src={exampleMyIdBot} alt="Beispiel My ID Bot" className="w-full" />
+                        </div>
+                        <a
+                          href="https://t.me/myidbot"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center justify-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors font-medium"
+                        >
+                          <ExternalLink className="w-3 h-3" />
+                          My ID Bot öffnen
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      </div>
     </div>
   );
 };
