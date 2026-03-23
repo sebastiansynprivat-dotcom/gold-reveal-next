@@ -1,25 +1,19 @@
 
 
-# Offer C: Neue Seite basierend auf Offer B für FansyMe
+# Offer C (FansyMe) zur Quiz-Verteilung hinzufügen
 
 ## Zusammenfassung
-- Bestehende `OfferC.tsx` löschen und durch eine Kopie von `OfferB.tsx` ersetzen
-- Plattformname ändern: "Brezzels" → "FansyMe"
-- Video 1 (Plattform Erklärungs Video) URL ändern auf: `https://www.loom.com/embed/e05514625bb54af192324d6d51be1f27?sid=1&hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true`
-- Video 2 (Telegram Video) bleibt gleich
-- Storage Keys anpassen (`offerC-countdown-start`, `offerc-completed-steps`)
+Ein neuer Eintrag "FansyMe" mit `target_path: /offer-c` wird in die `quiz_routes`-Tabelle eingefügt. Danach erscheint er automatisch im Admin-Dashboard unter "Offer-Verteilung" und kann per Slider gewichtet werden.
 
 ## Änderungen
 
-### 1. `src/pages/OfferC.tsx` — komplett ersetzen
-- Kopie von OfferB mit folgenden Anpassungen:
-  - Überschrift: "Kurze Anleitung für deinen Start mit **FansyMe**"
-  - `COUNTDOWN_KEY` → `"offerC-countdown-start"`
-  - `STORAGE_KEY` → `"offerc-completed-steps"`
-  - Video 1 embedUrl → Loom-Link `e05514625bb54af192324d6d51be1f27`
-  - Links-Sektion: Notification Bot und MyID Bot Links bleiben gleich (oder anpassen falls FansyMe eigene hat — erstmal gleich lassen)
-  - Export als `OfferC`
+### 1. Datenbank-Migration
+- Neuen Eintrag in `quiz_routes` einfügen:
+  - `name`: "FansyMe"
+  - `target_path`: "/offer-c"
+  - `weight`: 0 (startet deaktiviert, du kannst den Slider dann auf den gewünschten Wert stellen)
+  - `is_active`: true
 
-### 2. `src/App.tsx` — keine Änderung nötig
-Route `/offer-c` und Import existieren bereits.
+### 2. Keine Code-Änderungen nötig
+Das Admin-Dashboard lädt alle aktiven `quiz_routes` dynamisch. Der neue Eintrag erscheint sofort als dritter Slider in der Offer-Verteilung. Auch die QuizResult-Komponente berücksichtigt ihn automatisch bei der Weiterleitung.
 
