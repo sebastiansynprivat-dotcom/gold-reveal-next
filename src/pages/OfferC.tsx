@@ -211,7 +211,7 @@ const OfferC = () => {
           <img src={logo} alt="SHE Logo" className="w-16 h-16 mb-6 opacity-80" />
           <h1 className="text-3xl md:text-5xl font-bold tracking-tight leading-tight mb-3">
             <span className="text-foreground">Kurze Anleitung für deinen Start mit </span>
-            <span className="text-[hsl(210,100%,50%)]">FansyMe</span>
+            <span className="text-[hsl(270,80%,60%)]">FansyMe</span>
           </h1>
           <p className="text-muted-foreground text-base max-w-md">
             Schau dir alle Videos an und richte alles Schritt für Schritt ein.
