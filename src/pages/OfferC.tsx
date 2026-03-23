@@ -326,7 +326,7 @@ const OfferC = () => {
                           <img src={exampleNotifications} alt="Beispiel Notifications Bot" className="w-full" />
                         </div>
                         <a
-                          href="https://t.me/Notifications_brezzels_bot"
+                          href="https://t.me/notifications_fansyme_bot"
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex items-center justify-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors font-medium"
