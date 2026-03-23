@@ -61,7 +61,7 @@ const links = [
     step: 3,
     title: "FansyMe Notifications",
     description: "Aktiviere Benachrichtigungen damit du keine Nachricht verpasst",
-    url: "https://t.me/Notifications_brezzels_bot",
+    url: "https://t.me/notifications_fansyme_bot",
     icon: "🔔",
   },
   {
