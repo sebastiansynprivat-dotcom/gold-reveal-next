@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Clock, Lock, ChevronDown, ExternalLink } from "lucide-react";
 import logo from "@/assets/logo.png";
-import exampleNotifications from "@/assets/example-brezzels-notifications.jpeg";
+import exampleNotifications from "@/assets/example-fansyme-notifications.jpeg";
 import exampleMyIdBot from "@/assets/example-myidbot.jpeg";
 import GoldenAudioPlayer from "@/components/GoldenAudioPlayer";
 import StepBadge from "@/components/StepBadge";
