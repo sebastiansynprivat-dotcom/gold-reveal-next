@@ -1,22 +1,25 @@
 
 
-# Credit Note: TxHash Schriftgröße + Receiver Wallet Feld
+# Offer C: Neue Seite basierend auf Offer B für FansyMe
 
 ## Zusammenfassung
-1. **TxHash Schriftgröße im PDF anpassen** – aktuell wird die Schriftgröße auf 7.5 reduziert, dann aber nicht zurückgesetzt. Das passt nicht zum Rest (8.5). Die Schriftgröße soll gleich bleiben wie der Rest der Payment Information.
-2. **Receiver Wallet Feld hinzufügen** – ein neues Eingabefeld "Receiver Wallet" in der Credit Note Form (Payment Information Sektion), das auf dem PDF mit ausgegeben wird. Der `cryptoAddress`-Prop wird als Defaultwert genutzt.
+- Bestehende `OfferC.tsx` löschen und durch eine Kopie von `OfferB.tsx` ersetzen
+- Plattformname ändern: "Brezzels" → "FansyMe"
+- Video 1 (Plattform Erklärungs Video) URL ändern auf: `https://www.loom.com/embed/e05514625bb54af192324d6d51be1f27?sid=1&hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true`
+- Video 2 (Telegram Video) bleibt gleich
+- Storage Keys anpassen (`offerC-countdown-start`, `offerc-completed-steps`)
 
 ## Änderungen
 
-### `src/components/CreditNoteForm.tsx`
+### 1. `src/pages/OfferC.tsx` — komplett ersetzen
+- Kopie von OfferB mit folgenden Anpassungen:
+  - Überschrift: "Kurze Anleitung für deinen Start mit **FansyMe**"
+  - `COUNTDOWN_KEY` → `"offerC-countdown-start"`
+  - `STORAGE_KEY` → `"offerc-completed-steps"`
+  - Video 1 embedUrl → Loom-Link `e05514625bb54af192324d6d51be1f27`
+  - Links-Sektion: Notification Bot und MyID Bot Links bleiben gleich (oder anpassen falls FansyMe eigene hat — erstmal gleich lassen)
+  - Export als `OfferC`
 
-**PDF-Generierung (TxHash Schriftgröße):**
-- Zeile ~466: `doc.setFontSize(7.5)` entfernen – TxHash soll in derselben Größe (8.5) wie der Rest der Payment Info stehen
-- Die Zeile `doc.setFontSize(8.5)` danach (Zeile 469) ebenfalls entfernen, da nicht mehr nötig
-
-**Neues Feld "Receiver Wallet":**
-- Neuen State `receiverWallet` mit Default aus `cryptoAddress`-Prop
-- In der Payment Information UI-Sektion: neues Input-Feld "Receiver Wallet" mit Placeholder "Wallet-Adresse des Empfängers"
-- Im PDF: unter Payment Method/vor TxHash eine Zeile `Receiver Wallet: <wallet>` ausgeben (nur wenn befüllt)
-- `receiverWallet` in localStorage-Persistierung aufnehmen
+### 2. `src/App.tsx` — keine Änderung nötig
+Route `/offer-c` und Import existieren bereits.
 
