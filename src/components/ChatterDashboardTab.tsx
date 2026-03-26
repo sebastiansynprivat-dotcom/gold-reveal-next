@@ -201,7 +201,7 @@ export default function ChatterDashboardTab() {
           <Users className="h-5 w-5 text-accent" />
         </div>
         <div>
-          <h2 className="text-lg font-bold text-foreground">Provider Invoice</h2>
+          <h2 className="text-lg font-bold text-foreground">Mitarbeiter-Dashboard</h2>
           <p className="text-xs text-muted-foreground">Mitarbeiter & Chatter verwalten & Provider Invoices erstellen</p>
         </div>
       </motion.div>
