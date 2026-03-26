@@ -15,7 +15,7 @@ const ISSUER_DEFAULTS = {
   name: "Sharify Media Limited",
   address: "Palaion Patron Germanou 11, 8011, Paphos, Cyprus",
   kvk: "",
-  vatId: "60329590T",
+  vatId: "CY60329590T",
 };
 
 const CRYPTO_NETWORKS = ["TRC20", "ERC20", "BEP20", "SOL", "BTC", "LTC"];
