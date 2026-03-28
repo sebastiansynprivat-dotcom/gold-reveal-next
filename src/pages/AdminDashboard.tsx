@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Users, Send, Bell, BellOff, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, CalendarDays, CalendarRange, Filter, MessageSquare, Star, AlertTriangle, Bot, Save, Power, Copy, Smartphone, Percent, ChevronRight, ChevronDown, Shield, UserPlus, UserMinus, Check, XCircle, Sparkles, Loader2, ExternalLink, Brain, CheckCircle2, Clock, Repeat, Pause, Play, FolderOpen } from "lucide-react";
+import { Users, Send, Bell, BellOff, Search, KeyRound, Plus, Package, Trash2, RefreshCw, Target, TrendingUp, DollarSign, Calendar as CalendarIcon, CalendarDays, CalendarRange, Filter, MessageSquare, Star, AlertTriangle, Bot, Save, Power, Copy, Smartphone, Percent, ChevronRight, ChevronDown, Shield, UserPlus, UserMinus, Check, XCircle, Sparkles, Loader2, ExternalLink, Brain, CheckCircle2, Clock, Repeat, Pause, Play, FolderOpen, Settings, Building2, Hash, ArrowUp, ArrowDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -610,7 +610,14 @@ export default function AdminDashboard() {
   const [goalAmount, setGoalAmount] = useState("");
   const [goalSaving, setGoalSaving] = useState(false);
   const [expandedChatter, setExpandedChatter] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"einnahmen" | "chatter" | "anfragen" | "botdms" | "notifications" | "kiprompt" | "chatter_overview" | "platzhalter" | "chatter_dash" | "gdrive">("einnahmen");
+  const [activeTab, setActiveTab] = useState<"einnahmen" | "chatter" | "anfragen" | "botdms" | "notifications" | "kiprompt" | "chatter_overview" | "platzhalter" | "chatter_dash" | "gdrive" | "settings">("einnahmen");
+  const [settingsIssuer, setSettingsIssuer] = useState({ name: "", address: "", vat_id: "", kvk: "" });
+  const [settingsIssuerId, setSettingsIssuerId] = useState<string | null>(null);
+  const [settingsIssuerLoaded, setSettingsIssuerLoaded] = useState(false);
+  const [settingsSeqValue, setSettingsSeqValue] = useState<number | null>(null);
+  const [settingsSeqLoaded, setSettingsSeqLoaded] = useState(false);
+  const [settingsIssuerSaving, setSettingsIssuerSaving] = useState(false);
+  const settingsIssuerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [assignments, setAssignments] = useState<any[]>([]);
   const [assignmentsLoaded, setAssignmentsLoaded] = useState(false);
   const [assignmentsLoading, setAssignmentsLoading] = useState(false);
@@ -1937,7 +1944,47 @@ export default function AdminDashboard() {
   const freeCount = platformAccounts.filter((a) => !a.assigned_to).length;
   const assignedCount = platformAccounts.filter((a) => a.assigned_to).length;
 
-  // Find chatter name by user_id
+  // ─── Settings Tab: load issuer + sequence ───
+  const loadSettingsData = useCallback(async () => {
+    if (!settingsIssuerLoaded) {
+      const { data } = await (supabase.from("issuer_settings") as any).select("*").limit(1).single();
+      if (data) {
+        setSettingsIssuer({ name: data.name, address: data.address, vat_id: data.vat_id, kvk: data.kvk });
+        setSettingsIssuerId(data.id);
+      }
+      setSettingsIssuerLoaded(true);
+    }
+    if (!settingsSeqLoaded) {
+      const { data } = await supabase.rpc("get_credit_note_seq" as any);
+      if (data !== null) setSettingsSeqValue(Number(data));
+      setSettingsSeqLoaded(true);
+    }
+  }, [settingsIssuerLoaded, settingsSeqLoaded]);
+
+  const saveIssuerSettings = useCallback(async (patch: Partial<typeof settingsIssuer>) => {
+    const updated = { ...settingsIssuer, ...patch };
+    setSettingsIssuer(updated);
+    if (settingsIssuerTimerRef.current) clearTimeout(settingsIssuerTimerRef.current);
+    settingsIssuerTimerRef.current = setTimeout(async () => {
+      if (!settingsIssuerId) return;
+      setSettingsIssuerSaving(true);
+      await (supabase.from("issuer_settings") as any).update({
+        name: updated.name, address: updated.address, vat_id: updated.vat_id, kvk: updated.kvk,
+      }).eq("id", settingsIssuerId);
+      setSettingsIssuerSaving(false);
+      toast.success("Firmendaten gespeichert");
+    }, 1200);
+  }, [settingsIssuer, settingsIssuerId]);
+
+  const updateSeqValue = useCallback(async (newVal: number) => {
+    if (newVal < 0) return;
+    setSettingsSeqValue(newVal);
+    const { error } = await supabase.rpc("set_credit_note_seq" as any, { new_val: newVal });
+    if (error) { toast.error("Fehler: " + error.message); return; }
+    toast.success(`Invoice-Nummer auf GS-${new Date().getFullYear()}-${String(newVal + 1).padStart(4, "0")} gesetzt`);
+  }, []);
+
+
   const getChatterName = (userId: string | null) => {
     if (!userId) return null;
     const c = chatters.find((ch) => ch.user_id === userId);
@@ -1955,6 +2002,7 @@ export default function AdminDashboard() {
     { key: "platzhalter" as const, label: "Model-Dashboard", icon: Star, onClick: () => setActiveTab("platzhalter") },
     { key: "chatter_dash" as const, label: "Mitarbeiter-Dashboard", icon: Users, onClick: () => setActiveTab("chatter_dash") },
     { key: "gdrive" as const, label: "Google Drive", icon: ExternalLink, onClick: () => setActiveTab("gdrive") },
+    { key: "settings" as const, label: "Einstellungen", icon: Settings, onClick: () => { setActiveTab("settings"); loadSettingsData(); } },
   ];
 
   return (
@@ -4615,6 +4663,137 @@ export default function AdminDashboard() {
                     </p>
                   </div>
                 </div>
+              </div>
+            </section>
+          </div>
+        )}
+
+        {activeTab === "settings" && (
+          <div className="space-y-5">
+            {/* Firmendaten / Issuer Settings */}
+            <section className="glass-card rounded-xl overflow-hidden">
+              <div className="px-4 py-3 border-b border-border flex items-center gap-2">
+                <Building2 className="h-4 w-4 text-accent" />
+                <h2 className="text-sm font-semibold text-foreground">Firmendaten (Issuer)</h2>
+                {settingsIssuerSaving && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground ml-auto" />}
+                {!settingsIssuerSaving && settingsIssuerLoaded && <CheckCircle2 className="h-3 w-3 text-accent ml-auto" />}
+              </div>
+              <div className="p-4 space-y-3">
+                <p className="text-[11px] text-muted-foreground">
+                  Diese Daten werden als Aussteller in allen Provider Invoices (Model- & Mitarbeiter-Dashboard) verwendet. Änderungen gelten sofort systemweit.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-muted-foreground">Firmenname</label>
+                    <div className="input-gold-shimmer rounded-lg">
+                      <Input
+                        value={settingsIssuer.name}
+                        onChange={(e) => saveIssuerSettings({ name: e.target.value })}
+                        className="text-sm border-transparent"
+                        placeholder="Firmenname"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-muted-foreground">VAT ID</label>
+                    <div className="input-gold-shimmer rounded-lg">
+                      <Input
+                        value={settingsIssuer.vat_id}
+                        onChange={(e) => saveIssuerSettings({ vat_id: e.target.value })}
+                        className="text-sm border-transparent"
+                        placeholder="VAT ID"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1 sm:col-span-2">
+                    <label className="text-xs font-medium text-muted-foreground">Adresse</label>
+                    <div className="input-gold-shimmer rounded-lg">
+                      <Input
+                        value={settingsIssuer.address}
+                        onChange={(e) => saveIssuerSettings({ address: e.target.value })}
+                        className="text-sm border-transparent"
+                        placeholder="Adresse"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-muted-foreground">KVK / Registernummer</label>
+                    <div className="input-gold-shimmer rounded-lg">
+                      <Input
+                        value={settingsIssuer.kvk}
+                        onChange={(e) => saveIssuerSettings({ kvk: e.target.value })}
+                        className="text-sm border-transparent"
+                        placeholder="Registernummer"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Invoice-Nummer / Sequence */}
+            <section className="glass-card rounded-xl overflow-hidden">
+              <div className="px-4 py-3 border-b border-border flex items-center gap-2">
+                <Hash className="h-4 w-4 text-accent" />
+                <h2 className="text-sm font-semibold text-foreground">Provider Invoice Nummerierung</h2>
+              </div>
+              <div className="p-4 space-y-4">
+                <p className="text-[11px] text-muted-foreground">
+                  Die nächste Provider Invoice erhält automatisch die nächste fortlaufende Nummer. Du kannst den Zählerstand hier anpassen.
+                </p>
+                {settingsSeqValue !== null ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-secondary/20">
+                      <div className="flex-1">
+                        <p className="text-[10px] text-muted-foreground">Aktueller Zählerstand</p>
+                        <p className="text-lg font-bold text-foreground font-mono">{settingsSeqValue}</p>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-[10px] text-muted-foreground">Nächste Invoice-Nummer</p>
+                        <p className="text-lg font-bold text-accent font-mono">
+                          GS-{new Date().getFullYear()}-{String(settingsSeqValue + 1).padStart(4, "0")}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => updateSeqValue(settingsSeqValue - 1)}
+                        disabled={settingsSeqValue <= 0}
+                        className="h-8 gap-1"
+                      >
+                        <ArrowDown className="h-3 w-3" /> -1
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => updateSeqValue(settingsSeqValue + 1)}
+                        className="h-8 gap-1"
+                      >
+                        <ArrowUp className="h-3 w-3" /> +1
+                      </Button>
+                      <div className="flex items-center gap-1.5 ml-auto">
+                        <label className="text-xs text-muted-foreground">Setze auf:</label>
+                        <div className="input-gold-shimmer rounded-lg">
+                          <Input
+                            type="number"
+                            min={0}
+                            className="w-24 text-sm border-transparent text-center"
+                            value={settingsSeqValue}
+                            onChange={(e) => setSettingsSeqValue(Number(e.target.value))}
+                            onBlur={() => updateSeqValue(settingsSeqValue)}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="text-xs">Lade Nummerierung...</span>
+                  </div>
+                )}
               </div>
             </section>
           </div>

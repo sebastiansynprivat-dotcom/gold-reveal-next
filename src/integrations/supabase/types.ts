@@ -920,6 +920,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_credit_note_seq: { Args: never; Returns: number }
       get_model_revenue: {
         Args: { p_account_id: string; p_date_from: string; p_date_to: string }
         Returns: {
@@ -937,6 +938,7 @@ export type Database = {
       increment_route_counter: { Args: never; Returns: number }
       is_admin: { Args: never; Returns: boolean }
       next_credit_note_number: { Args: never; Returns: string }
+      set_credit_note_seq: { Args: { new_val: number }; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user" | "model"
