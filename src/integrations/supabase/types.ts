@@ -921,6 +921,15 @@ export type Database = {
     }
     Functions: {
       get_credit_note_seq: { Args: never; Returns: number }
+      get_free_account_counts: {
+        Args: never
+        Returns: {
+          free_count: number
+          platform_name: string
+          route_id: string
+          target_path: string
+        }[]
+      }
       get_model_revenue: {
         Args: { p_account_id: string; p_date_from: string; p_date_to: string }
         Returns: {

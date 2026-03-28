@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
-import { Slider } from "@/components/ui/slider";
+
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -570,9 +570,7 @@ export default function AdminDashboard() {
   const [deletingPool, setDeletingPool] = useState(false);
   const [deletePoolConfirm, setDeletePoolConfirm] = useState(false);
   const [offers, setOffers] = useState<{ name: string; target_path: string }[]>([]);
-  const [quizRoutes, setQuizRoutes] = useState<{ id: string; name: string; target_path: string; weight: number; is_active: boolean }[]>([]);
-  const [routeWeights, setRouteWeights] = useState<Record<string, number>>({});
-  const [savingWeights, setSavingWeights] = useState(false);
+  const [quizRoutes, setQuizRoutes] = useState<{ id: string; name: string; target_path: string; free_count: number; is_active: boolean }[]>([]);
   const [offerVerteilungOpen, setOfferVerteilungOpen] = useState(false);
   const [manualSectionOpen, setManualSectionOpen] = useState(false);
   const [manualPoolOpen, setManualPoolOpen] = useState(false);
@@ -1095,29 +1093,17 @@ export default function AdminDashboard() {
   };
 
   const loadOffers = async () => {
-    const { data } = await supabase
-      .from("quiz_routes")
-      .select("id, name, target_path, weight, is_active")
-      .eq("is_active", true);
-    setOffers((data || []).map(d => ({ name: d.name, target_path: d.target_path })));
-    setQuizRoutes(data || []);
-    const weights: Record<string, number> = {};
-    (data || []).forEach(r => { weights[r.id] = r.weight; });
-    setRouteWeights(weights);
-  };
-
-  const saveRouteWeights = async () => {
-    setSavingWeights(true);
-    try {
-      for (const [id, weight] of Object.entries(routeWeights)) {
-        await supabase.from("quiz_routes").update({ weight }).eq("id", id);
-      }
-      toast.success("Offer-Verteilung gespeichert!");
-      loadOffers();
-    } catch (err: any) {
-      toast.error("Fehler: " + err.message);
-    }
-    setSavingWeights(false);
+    // Load routes with free account counts from RPC
+    const { data: routeData } = await supabase.rpc("get_free_account_counts");
+    const routes = (routeData || []).map((r: any) => ({
+      id: r.route_id,
+      name: r.platform_name,
+      target_path: r.target_path,
+      free_count: Number(r.free_count),
+      is_active: true,
+    }));
+    setOffers(routes.map((d: any) => ({ name: d.name, target_path: d.target_path })));
+    setQuizRoutes(routes);
   };
 
   const loadLoginStats = async () => {
@@ -2340,98 +2326,103 @@ export default function AdminDashboard() {
               <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${offerVerteilungOpen ? "rotate-90" : ""}`} />
               <Percent className="h-4 w-4 text-accent" />
               <h2 className="text-sm font-semibold text-foreground">Offer-Verteilung</h2>
-              {!offerVerteilungOpen && quizRoutes.length > 0 && (
-                <div className="flex gap-1.5 ml-1">
-                  {quizRoutes.map((route, i) => {
-                    const colors = ["hsl(var(--accent))", "#3b82f6", "#22d3ee", "#a855f7"];
-                    return (
-                      <Badge key={route.id} variant="secondary" className="text-[10px]">
-                        <span className="inline-block h-2 w-2 rounded-full mr-0.5" style={{ backgroundColor: colors[i % colors.length] }} />
-                        {routeWeights[route.id] || 0}%
-                      </Badge>
-                    );
-                  })}
-                </div>
-              )}
+              {!offerVerteilungOpen && quizRoutes.length > 0 && (() => {
+                const totalFree = quizRoutes.reduce((s, r) => s + r.free_count, 0);
+                return (
+                  <div className="flex gap-1.5 ml-1">
+                    {quizRoutes.map((route, i) => {
+                      const colors = ["hsl(var(--accent))", "#3b82f6", "#22d3ee", "#a855f7"];
+                      const pct = totalFree > 0 ? Math.round((route.free_count / totalFree) * 100) : 0;
+                      return (
+                        <Badge key={route.id} variant="secondary" className="text-[10px]">
+                          <span className="inline-block h-2 w-2 rounded-full mr-0.5" style={{ backgroundColor: colors[i % colors.length] }} />
+                          {route.free_count} frei ({pct}%)
+                        </Badge>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
             </button>
           </div>
           {offerVerteilungOpen && (
             <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
               {quizRoutes.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-4">Keine Offers konfiguriert.</p>
-              ) : (
-                <>
-                  <div className="space-y-4">
-                    {quizRoutes.map((route) => (
-                      <div key={route.id} className="space-y-1.5">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-medium text-foreground">{route.name}</span>
-                          <span className="text-xs font-bold text-accent">{routeWeights[route.id] || 0}%</span>
-                        </div>
-                        <Slider
-                          value={[routeWeights[route.id] || 0]}
-                          onValueChange={([v]) => {
-                            setRouteWeights(prev => {
-                              const otherIds = quizRoutes.filter(r => r.id !== route.id).map(r => r.id);
-                              const remaining = 100 - v;
-                              const otherTotal = otherIds.reduce((s, id) => s + (prev[id] || 0), 0) || 1;
-                              const next: Record<string, number> = { ...prev, [route.id]: v };
-                              otherIds.forEach(id => {
-                                next[id] = Math.round(((prev[id] || 0) / otherTotal) * remaining);
-                              });
-                              // Fix rounding to exactly 100
-                              const sum = Object.values(next).reduce((s, w) => s + w, 0);
-                              if (sum !== 100 && otherIds.length > 0) {
-                                next[otherIds[0]] += 100 - sum;
-                              }
-                              return next;
-                            });
-                          }}
-                          min={0}
-                          max={100}
-                          step={1}
-                          className="w-full"
-                        />
-                        <p className="text-[10px] text-muted-foreground">{route.target_path}</p>
+              ) : (() => {
+                const totalFree = quizRoutes.reduce((s, r) => s + r.free_count, 0);
+                return (
+                  <>
+                    <p className="text-[10px] text-muted-foreground">
+                      Die Verteilung wird automatisch anhand der verfügbaren Accounts berechnet. {totalFree} Account{totalFree !== 1 ? "s" : ""} frei.
+                    </p>
+                    <div className="space-y-3">
+                      {quizRoutes.map((route, i) => {
+                        const colors = ["hsl(var(--accent))", "#3b82f6", "#22d3ee", "#a855f7"];
+                        const pct = totalFree > 0 ? Math.round((route.free_count / totalFree) * 100) : 0;
+                        return (
+                          <div key={route.id} className="flex items-center justify-between p-2.5 rounded-lg bg-secondary/30 border border-border/30">
+                            <div className="flex items-center gap-2">
+                              <div className="h-3 w-3 rounded-full" style={{ backgroundColor: colors[i % colors.length] }} />
+                              <div>
+                                <span className="text-xs font-medium text-foreground">{route.name}</span>
+                                <p className="text-[10px] text-muted-foreground">{route.target_path}</p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-sm font-bold text-accent">{route.free_count}</span>
+                              <span className="text-[10px] text-muted-foreground ml-1">frei</span>
+                              <span className="text-[10px] text-muted-foreground ml-2">({pct}%)</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {/* Live preview bar */}
+                    <div className="flex rounded-full overflow-hidden h-3 bg-secondary/50">
+                      {quizRoutes.map((route, i) => {
+                        const colors = ["hsl(var(--accent))", "#3b82f6", "#22d3ee", "#a855f7"];
+                        const pct = totalFree > 0 ? Math.round((route.free_count / totalFree) * 100) : 0;
+                        return (
+                          <div
+                            key={route.id}
+                            style={{ width: `${pct}%`, backgroundColor: colors[i % colors.length] }}
+                            className="transition-all duration-300"
+                            title={`${route.name}: ${pct}%`}
+                          />
+                        );
+                      })}
+                    </div>
+                    <div className="flex gap-2 flex-wrap">
+                      {quizRoutes.map((route, i) => {
+                        const colors = ["hsl(var(--accent))", "#3b82f6", "#22d3ee", "#a855f7"];
+                        const pct = totalFree > 0 ? Math.round((route.free_count / totalFree) * 100) : 0;
+                        return (
+                          <div key={route.id} className="flex items-center gap-1.5">
+                            <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: colors[i % colors.length] }} />
+                            <span className="text-[10px] text-muted-foreground">{route.name}: {pct}%</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    {totalFree === 0 && (
+                      <div className="flex items-center gap-2 p-2 rounded-lg bg-amber-500/10 border border-amber-500/20">
+                        <AlertTriangle className="h-3.5 w-3.5 text-amber-400" />
+                        <span className="text-[10px] text-amber-400">Keine freien Accounts – Verteilung wird gleichmäßig auf alle Plattformen aufgeteilt.</span>
                       </div>
-                    ))}
-                  </div>
-                  {/* Live preview bar */}
-                  <div className="flex rounded-full overflow-hidden h-3 bg-secondary/50">
-                    {quizRoutes.map((route, i) => {
-                      const colors = ["hsl(var(--accent))", "#3b82f6", "#22d3ee", "#a855f7"];
-                      return (
-                        <div
-                          key={route.id}
-                          style={{ width: `${routeWeights[route.id] || 0}%`, backgroundColor: colors[i % colors.length] }}
-                          className="transition-all duration-300"
-                          title={`${route.name}: ${routeWeights[route.id] || 0}%`}
-                        />
-                      );
-                    })}
-                  </div>
-                  <div className="flex gap-2 flex-wrap">
-                    {quizRoutes.map((route, i) => {
-                      const colors = ["hsl(var(--accent))", "#3b82f6", "#22d3ee", "#a855f7"];
-                      return (
-                        <div key={route.id} className="flex items-center gap-1.5">
-                          <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: colors[i % colors.length] }} />
-                          <span className="text-[10px] text-muted-foreground">{route.name}: {routeWeights[route.id] || 0}%</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <Button
-                    onClick={saveRouteWeights}
-                    disabled={savingWeights}
-                    size="sm"
-                    className="w-full"
-                  >
-                    <Save className="h-3.5 w-3.5 mr-1.5" />
-                    {savingWeights ? "Wird gespeichert..." : "Verteilung speichern"}
-                  </Button>
-                </>
-              )}
+                    )}
+                    <Button
+                      onClick={loadOffers}
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                    >
+                      <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
+                      Aktualisieren
+                    </Button>
+                  </>
+                );
+              })()}
             </div>
           )}
         </section>

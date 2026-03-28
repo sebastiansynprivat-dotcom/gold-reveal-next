@@ -163,13 +163,19 @@ const WeightedRouteButton = () => {
   const handleContinue = async () => {
     setLoading(true);
     try {
-      const { data: routes } = await supabase
-        .from("quiz_routes")
-        .select("target_path, weight")
-        .eq("is_active", true);
+      // Get free account counts per platform (replaces manual weight percentages)
+      const { data: routes } = await supabase.rpc("get_free_account_counts");
 
-      if (!routes || routes.length === 0) {
-        navigate("/offer-a");
+      // Filter to routes that have free accounts
+      const available = (routes || []).filter((r: any) => r.free_count > 0);
+
+      if (!available || available.length === 0) {
+        // Fallback: no free accounts anywhere, go to first route or default
+        if (routes && routes.length > 0) {
+          navigate((routes as any[])[0].target_path);
+        } else {
+          navigate("/offer-a");
+        }
         return;
       }
 
@@ -177,15 +183,16 @@ const WeightedRouteButton = () => {
       const { data: counterResult } = await supabase.rpc("increment_route_counter");
       const currentCounter = counterResult ?? 0;
 
-      // Cumulative Bresenham: guarantees exact distribution with no gaps or ties
-      const totalWeight = routes.reduce((sum, r) => sum + r.weight, 0);
+      // Cumulative Bresenham using free_count as weight
+      const totalWeight = available.reduce((sum: number, r: any) => sum + Number(r.free_count), 0);
       const pos = currentCounter % totalWeight;
-      let selectedPath = routes[routes.length - 1].target_path;
+      let selectedPath = available[available.length - 1].target_path;
       let cumWeight = 0;
 
-      for (const route of routes) {
-        cumWeight += route.weight;
-        const prevCum = cumWeight - route.weight;
+      for (const route of available) {
+        const w = Number(route.free_count);
+        cumWeight += w;
+        const prevCum = cumWeight - w;
         const cumCrossed = Math.floor((pos + 1) * cumWeight / totalWeight) > Math.floor(pos * cumWeight / totalWeight);
         const prevCumSame = Math.floor((pos + 1) * prevCum / totalWeight) === Math.floor(pos * prevCum / totalWeight);
         if (cumCrossed && prevCumSame) {
