@@ -610,7 +610,14 @@ export default function AdminDashboard() {
   const [goalAmount, setGoalAmount] = useState("");
   const [goalSaving, setGoalSaving] = useState(false);
   const [expandedChatter, setExpandedChatter] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"einnahmen" | "chatter" | "anfragen" | "botdms" | "notifications" | "kiprompt" | "chatter_overview" | "platzhalter" | "chatter_dash" | "gdrive">("einnahmen");
+  const [activeTab, setActiveTab] = useState<"einnahmen" | "chatter" | "anfragen" | "botdms" | "notifications" | "kiprompt" | "chatter_overview" | "platzhalter" | "chatter_dash" | "gdrive" | "settings">("einnahmen");
+  const [settingsIssuer, setSettingsIssuer] = useState({ name: "", address: "", vat_id: "", kvk: "" });
+  const [settingsIssuerId, setSettingsIssuerId] = useState<string | null>(null);
+  const [settingsIssuerLoaded, setSettingsIssuerLoaded] = useState(false);
+  const [settingsSeqValue, setSettingsSeqValue] = useState<number | null>(null);
+  const [settingsSeqLoaded, setSettingsSeqLoaded] = useState(false);
+  const [settingsIssuerSaving, setSettingsIssuerSaving] = useState(false);
+  const settingsIssuerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [assignments, setAssignments] = useState<any[]>([]);
   const [assignmentsLoaded, setAssignmentsLoaded] = useState(false);
   const [assignmentsLoading, setAssignmentsLoading] = useState(false);
