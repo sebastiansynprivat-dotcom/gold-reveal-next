@@ -139,45 +139,7 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
         return;
       }
 
-      if (data && data.length > 0) {
-        setChatters(data.map(rowToChatter));
-        setLoading(false);
-        return;
-      }
-
-      // One-time migration from localStorage
-      try {
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-          const local: any[] = JSON.parse(saved);
-          if (local.length > 0) {
-            const rows = local.map(c => ({
-              id: c.id,
-              name: c.name || "",
-              platform: c.platform || "–",
-              role: c.role || "chatter",
-              compensation_type: c.compensationType || "percentage",
-              revenue_percentage: c.revenuePercentage || 0,
-              hourly_rate: c.hourlyRate || 0,
-              hours_worked: c.hoursWorked || 0,
-              fourbased_revenue: c.fourbasedRevenue ?? c.monthlyRevenue ?? 0,
-              maloum_revenue: c.maloumRevenue || 0,
-              brezzels_revenue: c.brezzelsRevenue || 0,
-              currency: c.currency || "EUR",
-              crypto_address: c.cryptoAddress || "",
-            }));
-            const { data: inserted, error: insertErr } = await chattersTable()
-              .insert(rows)
-              .select();
-            if (!insertErr && inserted) {
-              setChatters(inserted.map(rowToChatter));
-              localStorage.removeItem(STORAGE_KEY);
-              toast.success("Bestehende Daten migriert ✅");
-            }
-          }
-        }
-      } catch { /* ignore */ }
-
+      setChatters((data ?? []).map(rowToChatter));
       setLoading(false);
     };
     load();
