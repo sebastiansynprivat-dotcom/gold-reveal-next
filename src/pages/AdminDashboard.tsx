@@ -611,7 +611,7 @@ export default function AdminDashboard() {
   const [goalAmount, setGoalAmount] = useState("");
   const [goalSaving, setGoalSaving] = useState(false);
   const [expandedChatter, setExpandedChatter] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"einnahmen" | "chatter" | "anfragen" | "botdms" | "notifications" | "kiprompt" | "chatter_overview" | "platzhalter" | "chatter_dash" | "gdrive" | "settings">("einnahmen");
+  const [activeTab, setActiveTab] = useState<"einnahmen" | "chatter" | "anfragen" | "botdms" | "notifications" | "kiprompt" | "chatter_overview" | "platzhalter" | "chatter_dash" | "gdrive" | "settings" | "admin_mgmt">("einnahmen");
   const [settingsIssuer, setSettingsIssuer] = useState({ name: "", address: "", vat_id: "", kvk: "" });
   const [settingsIssuerId, setSettingsIssuerId] = useState<string | null>(null);
   const [settingsIssuerLoaded, setSettingsIssuerLoaded] = useState(false);
