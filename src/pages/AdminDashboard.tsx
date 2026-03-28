@@ -688,7 +688,7 @@ export default function AdminDashboard() {
 
   // Admin management state
   const [adminSectionOpen, setAdminSectionOpen] = useState(false);
-  const [adminList, setAdminList] = useState<{ user_id: string; email: string; has_totp: boolean }[]>([]);
+  const [adminList, setAdminList] = useState<{ user_id: string; email: string; has_totp: boolean; role: string }[]>([]);
   const [adminListLoading, setAdminListLoading] = useState(false);
   const [newAdminEmail, setNewAdminEmail] = useState("");
   const [addingAdmin, setAddingAdmin] = useState(false);
