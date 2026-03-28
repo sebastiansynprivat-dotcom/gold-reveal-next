@@ -1,55 +1,32 @@
 
 
-# Mitarbeiter-Dashboard: Persistente Speicherung in der Datenbank
+# Globale Firmendaten für Provider Invoice
 
 ## Problem
-Das **Mitarbeiter-Dashboard (ChatterDashboardTab)** speichert alle Daten nur in `localStorage`. Das bedeutet:
-- Daten gehen verloren, wenn der Browser-Cache geleert wird
-- Daten sind geräteabhängig (nicht synchronisiert)
-- Kein anderer Admin sieht die gleichen Daten
-
-Das **Model-Dashboard** nutzt bereits Supabase korrekt mit Auto-Save -- dort besteht kein Problem.
+Die Issuer-Daten (Firmenname, Adresse, VAT ID) sind als Konstante hardcoded (`ISSUER_DEFAULTS`) und werden pro Account separat im localStorage gespeichert. Wenn du die Firmendaten änderst, gilt das nur für diesen einen Account -- nicht für alle anderen.
 
 ## Lösung
 
-### 1. Neue Datenbank-Tabelle `chatters` erstellen
-Speichert alle Mitarbeiter/Chatter-Stammdaten persistent:
+### 1. Neue DB-Tabelle `issuer_settings` (eine Zeile)
+Speichert die globalen Firmendaten zentral:
+- `name` (text) -- Firmenname
+- `address` (text) -- Adresse
+- `vat_id` (text) -- VAT ID
+- `kvk` (text) -- KVK/Registernummer
 
-```text
-chatters
-├── id (uuid, PK)
-├── name (text)
-├── platform (text)
-├── role (text: 'chatter' | 'mitarbeiter')
-├── compensation_type (text: 'percentage' | 'hourly')
-├── revenue_percentage (numeric)
-├── hourly_rate (numeric)
-├── hours_worked (numeric)
-├── fourbased_revenue (numeric)
-├── maloum_revenue (numeric)
-├── brezzels_revenue (numeric)
-├── currency (text, default 'EUR')
-├── crypto_address (text)
-├── created_at (timestamptz)
-├── updated_at (timestamptz)
-```
+RLS: Nur Admins können lesen und schreiben. Eine Zeile wird mit den aktuellen Defaults vorbelegt.
 
-RLS: Nur Admins haben vollen Zugriff (SELECT/INSERT/UPDATE/DELETE).
+### 2. CreditNoteForm anpassen
+- Beim Laden: Issuer-Daten aus `issuer_settings` laden statt aus `ISSUER_DEFAULTS`
+- Beim Ändern der Issuer-Felder: Per Debounce automatisch in `issuer_settings` zurückschreiben
+- localStorage-Persistierung der Issuer-Felder entfernen (nur noch DB)
+- Provider-Felder bleiben weiterhin pro Account im localStorage
 
-### 2. ChatterDashboardTab umbauen
-- `localStorage`-Logik komplett entfernen
-- Daten beim Laden aus Supabase lesen
-- Auto-Save mit Debounce (wie im ModelDashboardTab) bei jeder Änderung
-- Neuen Eintrag per `INSERT` anlegen
-- Löschen per `DELETE`
-- Alle Felder (Name, Plattform, Rolle, Umsätze, Verdienst-Parameter, Crypto-Adresse) werden direkt in der DB gespeichert
-
-### 3. Keine Änderungen am Model-Dashboard nötig
-Das Model-Dashboard speichert bereits korrekt in `model_dashboard` via Supabase.
+### Ergebnis
+Wenn du in irgendeiner Provider Invoice die Firmendaten änderst, gilt die Änderung sofort überall -- Model Dashboard und Mitarbeiter Dashboard.
 
 ## Technische Details
-- Migration: `CREATE TABLE public.chatters (...)` mit RLS-Policy für Admins
-- Code: ~50 Zeilen Supabase-Logik ersetzen die localStorage-Zeilen
-- Auto-Save-Debounce: 1200ms (gleich wie ModelDashboardTab)
-- Bestehende localStorage-Daten werden beim ersten Laden einmalig migriert (falls vorhanden)
+- Migration: `CREATE TABLE issuer_settings` + `INSERT` mit aktuellen Defaults
+- CreditNoteForm: `useEffect` zum Laden, Debounce-Save bei Issuer-Feldänderungen
+- Keine neuen Komponenten nötig
 
