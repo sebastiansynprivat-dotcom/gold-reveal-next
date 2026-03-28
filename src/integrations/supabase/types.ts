@@ -216,6 +216,60 @@ export type Database = {
         }
         Relationships: []
       }
+      chatters: {
+        Row: {
+          brezzels_revenue: number
+          compensation_type: string
+          created_at: string
+          crypto_address: string
+          currency: string
+          fourbased_revenue: number
+          hourly_rate: number
+          hours_worked: number
+          id: string
+          maloum_revenue: number
+          name: string
+          platform: string
+          revenue_percentage: number
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          brezzels_revenue?: number
+          compensation_type?: string
+          created_at?: string
+          crypto_address?: string
+          currency?: string
+          fourbased_revenue?: number
+          hourly_rate?: number
+          hours_worked?: number
+          id?: string
+          maloum_revenue?: number
+          name?: string
+          platform?: string
+          revenue_percentage?: number
+          role?: string
+          updated_at?: string
+        }
+        Update: {
+          brezzels_revenue?: number
+          compensation_type?: string
+          created_at?: string
+          crypto_address?: string
+          currency?: string
+          fourbased_revenue?: number
+          hourly_rate?: number
+          hours_worked?: number
+          id?: string
+          maloum_revenue?: number
+          name?: string
+          platform?: string
+          revenue_percentage?: number
+          role?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       credit_notes: {
         Row: {
           account_id: string | null
