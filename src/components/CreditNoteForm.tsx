@@ -274,13 +274,14 @@ export default function CreditNoteForm({
 
     // ── Title ──
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
+    doc.setFontSize(14);
     doc.setTextColor(...gold);
     doc.text("SELF-BILLED PROVIDER INVOICE", m, y);
+    const titleWidth = doc.getTextWidth("SELF-BILLED PROVIDER INVOICE");
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
+    doc.setFontSize(7.5);
     doc.setTextColor(...muted);
-    doc.text("SELF-BILLING STATEMENT", m + 62, y);
+    doc.text("SELF-BILLING STATEMENT", m + titleWidth + 3, y);
     y += 4;
 
     // Thin gold line
