@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,8 @@ const ISSUER_DEFAULTS = {
   kvk: "",
   vatId: "CY60329590T",
 };
+
+const issuerSettingsTable = () => (supabase.from as any)("issuer_settings");
 
 const CRYPTO_NETWORKS = ["TRC20", "ERC20", "BEP20", "SOL", "BTC", "LTC"];
 
@@ -57,10 +59,10 @@ export default function CreditNoteForm({
   hourlyRate = 0,
   hoursWorked = 0,
 }: CreditNoteFormProps) {
-  // localStorage key for persisting form fields
+  // localStorage key for persisting provider (recipient) form fields
   const storageKey = `credit-note-form-${accountId || chatterName || "default"}`;
 
-  // Load persisted values
+  // Load persisted provider values
   const loadSaved = () => {
     try {
       const saved = localStorage.getItem(storageKey);
@@ -70,11 +72,49 @@ export default function CreditNoteForm({
 
   const saved = loadSaved();
 
-  // Issuer (editable)
-  const [issuerName, setIssuerName] = useState(saved.issuerName || ISSUER_DEFAULTS.name);
-  const [issuerAddress, setIssuerAddress] = useState(saved.issuerAddress || ISSUER_DEFAULTS.address);
-  const [issuerKvk, setIssuerKvk] = useState(saved.issuerKvk || ISSUER_DEFAULTS.kvk);
-  const [issuerVatId, setIssuerVatId] = useState(saved.issuerVatId || ISSUER_DEFAULTS.vatId);
+  // Issuer (editable, loaded from DB)
+  const [issuerName, setIssuerName] = useState(ISSUER_DEFAULTS.name);
+  const [issuerAddress, setIssuerAddress] = useState(ISSUER_DEFAULTS.address);
+  const [issuerKvk, setIssuerKvk] = useState(ISSUER_DEFAULTS.kvk);
+  const [issuerVatId, setIssuerVatId] = useState(ISSUER_DEFAULTS.vatId);
+  const issuerDbIdRef = useRef<string | null>(null);
+  const issuerSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Load issuer settings from DB on mount
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const { data, error } = await issuerSettingsTable().select("*").limit(1).single();
+        if (!error && data) {
+          issuerDbIdRef.current = data.id;
+          setIssuerName(data.name);
+          setIssuerAddress(data.address);
+          setIssuerVatId(data.vat_id);
+          setIssuerKvk(data.kvk || "");
+        }
+      } catch { /* use defaults */ }
+    };
+    load();
+  }, []);
+
+  // Auto-save issuer settings to DB with debounce
+  const saveIssuerToDb = useCallback(async (name: string, address: string, vatId: string, kvk: string) => {
+    if (!issuerDbIdRef.current) return;
+    try {
+      await issuerSettingsTable().update({
+        name, address, vat_id: vatId, kvk,
+      }).eq("id", issuerDbIdRef.current);
+    } catch { /* silent */ }
+  }, []);
+
+  useEffect(() => {
+    if (!issuerDbIdRef.current) return;
+    if (issuerSaveTimerRef.current) clearTimeout(issuerSaveTimerRef.current);
+    issuerSaveTimerRef.current = setTimeout(() => {
+      saveIssuerToDb(issuerName, issuerAddress, issuerVatId, issuerKvk);
+    }, 1200);
+    return () => { if (issuerSaveTimerRef.current) clearTimeout(issuerSaveTimerRef.current); };
+  }, [issuerName, issuerAddress, issuerVatId, issuerKvk, saveIssuerToDb]);
 
   // Provider
   const [providerName, setProviderName] = useState(saved.providerName || initialProviderName);
@@ -117,7 +157,6 @@ export default function CreditNoteForm({
       .then(data => {
         if (!cancelled && data?.rates?.EUR) {
           setLiveExchangeRate(data.rates.EUR);
-          // Auto-fill exchange rate field if empty
           if (!exchangeRate) {
             setExchangeRate(`1 ${currency} = ${data.rates.EUR.toFixed(4)} EUR`);
           }
@@ -128,17 +167,16 @@ export default function CreditNoteForm({
     return () => { cancelled = true; };
   }, [currency]);
 
-  // Auto-save form fields to localStorage
+  // Auto-save provider form fields to localStorage (issuer fields excluded – saved to DB)
   useEffect(() => {
     const timer = setTimeout(() => {
       localStorage.setItem(storageKey, JSON.stringify({
-        issuerName, issuerAddress, issuerKvk, issuerVatId,
         providerName, providerAddress, isBusiness, providerVatId,
         description, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet,
       }));
     }, 500);
     return () => clearTimeout(timer);
-  }, [issuerName, issuerAddress, issuerKvk, issuerVatId, providerName, providerAddress, isBusiness, providerVatId, description, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet, storageKey]);
+  }, [providerName, providerAddress, isBusiness, providerVatId, description, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet, storageKey]);
 
   // Update provider name when prop changes
   useEffect(() => {

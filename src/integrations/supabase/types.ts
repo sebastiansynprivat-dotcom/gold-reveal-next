@@ -410,6 +410,33 @@ export type Database = {
         }
         Relationships: []
       }
+      issuer_settings: {
+        Row: {
+          address: string
+          id: string
+          kvk: string
+          name: string
+          updated_at: string
+          vat_id: string
+        }
+        Insert: {
+          address?: string
+          id?: string
+          kvk?: string
+          name?: string
+          updated_at?: string
+          vat_id?: string
+        }
+        Update: {
+          address?: string
+          id?: string
+          kvk?: string
+          name?: string
+          updated_at?: string
+          vat_id?: string
+        }
+        Relationships: []
+      }
       login_events: {
         Row: {
           id: string
