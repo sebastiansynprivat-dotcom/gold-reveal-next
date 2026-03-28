@@ -2012,8 +2012,20 @@ export default function AdminDashboard() {
     { key: "admin_mgmt" as const, label: "Admin-Verwaltung", icon: Shield, onClick: () => { setActiveTab("admin_mgmt"); void loadAdmins(); } },
   ];
 
+  // Dynamic sub-admin tabs for super-admin view
+  const subAdminTabs = isSuperAdmin
+    ? adminList
+        .filter(a => a.role === "sub_admin")
+        .map(a => ({
+          key: `sub_${a.user_id}`,
+          label: a.email.split("@")[0],
+          icon: Users,
+          onClick: () => setActiveTab(`sub_${a.user_id}`),
+        }))
+    : [];
+
   const tabItems = isSuperAdmin
-    ? allTabItems
+    ? [...allTabItems, ...subAdminTabs]
     : allTabItems.filter(t => !SUPER_ADMIN_TABS.has(t.key));
 
   return (
