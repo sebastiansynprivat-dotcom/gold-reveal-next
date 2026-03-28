@@ -122,7 +122,7 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
   const [newPlatform, setNewPlatform] = useState("");
   const [newRole, setNewRole] = useState<ChatterRole>("chatter");
 
-  // Load from DB
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
     const load = async () => {
       const { data, error } = await chattersTable()
