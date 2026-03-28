@@ -227,6 +227,43 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (action === "change_role") {
+      if (!target_user_id || !new_role) {
+        return new Response(JSON.stringify({ error: "User ID und Rolle erforderlich" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      if (!["super_admin", "sub_admin"].includes(new_role)) {
+        return new Response(JSON.stringify({ error: "Ungültige Rolle" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      if (target_user_id === user.id) {
+        return new Response(
+          JSON.stringify({ error: "Du kannst deine eigene Rolle nicht ändern." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      await serviceClient
+        .from("user_roles")
+        .delete()
+        .eq("user_id", target_user_id)
+        .in("role", ["admin", "super_admin", "sub_admin"]);
+
+      await serviceClient
+        .from("user_roles")
+        .insert({ user_id: target_user_id, role: new_role });
+
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     return new Response(JSON.stringify({ error: "Invalid action" }), {
       status: 400,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
