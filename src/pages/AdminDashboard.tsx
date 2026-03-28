@@ -1470,6 +1470,7 @@ export default function AdminDashboard() {
   const addAccount = async () => {
     if (!newAccEmail.trim() || !newAccDomain.trim() || !selectedPlatform) return;
     setAddingAccount(true);
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
     const { error } = await supabase.from("accounts").insert({
       platform: selectedPlatform,
       account_email: newAccEmail.trim(),
@@ -1479,6 +1480,7 @@ export default function AdminDashboard() {
       model_language: newAccLanguage,
       model_active: newAccModelActive,
       model_agency: newAccModelAgency,
+      created_by: currentUser?.id,
     } as any);
     if (error) {
       toast.error("Fehler beim Hinzufügen");
