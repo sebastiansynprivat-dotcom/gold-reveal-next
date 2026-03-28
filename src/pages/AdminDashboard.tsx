@@ -4828,7 +4828,7 @@ export default function AdminDashboard() {
               <SubAdminManager />
             </section>
           </div>
-        )
+        )}
 
           </motion.div>
         </AnimatePresence>
