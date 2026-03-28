@@ -1962,6 +1962,7 @@ export default function AdminDashboard() {
     { key: "platzhalter" as const, label: "Model-Dashboard", icon: Star, onClick: () => setActiveTab("platzhalter") },
     { key: "chatter_dash" as const, label: "Mitarbeiter-Dashboard", icon: Users, onClick: () => setActiveTab("chatter_dash") },
     { key: "gdrive" as const, label: "Google Drive", icon: ExternalLink, onClick: () => setActiveTab("gdrive") },
+    { key: "settings" as const, label: "Einstellungen", icon: Settings, onClick: () => { setActiveTab("settings"); loadSettingsData(); } },
   ];
 
   return (
