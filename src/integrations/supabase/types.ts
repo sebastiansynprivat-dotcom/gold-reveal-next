@@ -953,7 +953,13 @@ export type Database = {
       set_credit_note_seq: { Args: { new_val: number }; Returns: undefined }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user" | "model"
+      app_role:
+        | "admin"
+        | "moderator"
+        | "user"
+        | "model"
+        | "super_admin"
+        | "sub_admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1081,7 +1087,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator", "user", "model"],
+      app_role: [
+        "admin",
+        "moderator",
+        "user",
+        "model",
+        "super_admin",
+        "sub_admin",
+      ],
     },
   },
 } as const
