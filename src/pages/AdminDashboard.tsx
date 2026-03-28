@@ -24,6 +24,8 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import ModelDashboardTab from "@/components/ModelDashboardTab";
 import ChatterDashboardTab from "@/components/ChatterDashboardTab";
 import GoldParticles from "@/components/GoldParticles";
+import SubAdminManager from "@/components/SubAdminManager";
+import { useAdminRole } from "@/hooks/useAdminRole";
 
 // Extract folder ID from a full Google Drive URL or return as-is if already an ID
 const extractDriveFolderId = (input: string): string => {
@@ -532,6 +534,7 @@ function ChatterOverviewTab({ assignments, assignmentsLoading, chatters }: { ass
 export default function AdminDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { isSuperAdmin } = useAdminRole();
   const [chatters, setChatters] = useState<ChatterProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -1977,7 +1980,9 @@ export default function AdminDashboard() {
     return c?.group_name || c?.telegram_id || userId.slice(0, 8);
   };
 
-  const tabItems = [
+  const SUPER_ADMIN_TABS = new Set(["notifications", "kiprompt", "platzhalter", "chatter_dash", "gdrive", "settings"]);
+
+  const allTabItems = [
     { key: "einnahmen" as const, label: "Einnahmen", icon: TrendingUp, onClick: () => setActiveTab("einnahmen") },
     { key: "chatter" as const, label: "Chatter", icon: Users, onClick: () => setActiveTab("chatter") },
     { key: "anfragen" as const, label: "Anfragen", icon: Send, onClick: () => { setActiveTab("anfragen"); if (!modelRequestsLoaded) loadModelRequests(); } },
@@ -1991,6 +1996,10 @@ export default function AdminDashboard() {
     { key: "settings" as const, label: "Einstellungen", icon: Settings, onClick: () => { setActiveTab("settings"); loadSettingsData(); } },
   ];
 
+  const tabItems = isSuperAdmin
+    ? allTabItems
+    : allTabItems.filter(t => !SUPER_ADMIN_TABS.has(t.key));
+
   return (
     <div className="min-h-screen bg-background relative">
       <GoldParticles spawnRate={0.2} maxParticles={20} baseOpacity={0.15} />
@@ -2000,7 +2009,7 @@ export default function AdminDashboard() {
         <div className="container relative z-10 mx-auto flex max-w-4xl items-center gap-3 px-4 py-4">
           <button
             type="button"
-            onClick={openAdminSection}
+            onClick={isSuperAdmin ? openAdminSection : undefined}
             className="flex flex-1 items-center gap-3 rounded-xl text-left transition-transform hover:scale-[1.01] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             aria-label="Admin-Verwaltung öffnen"
           >
@@ -2013,10 +2022,12 @@ export default function AdminDashboard() {
               <p className="text-[10px] tracking-wide text-muted-foreground">Chatter verwalten & Benachrichtigungen</p>
             </div>
           </button>
-          <Button type="button" variant="secondary" size="sm" onClick={openAdminSection} className="shrink-0">
-            <Shield className="h-3.5 w-3.5" />
-            Admins
-          </Button>
+          {isSuperAdmin && (
+            <Button type="button" variant="secondary" size="sm" onClick={openAdminSection} className="shrink-0">
+              <Shield className="h-3.5 w-3.5" />
+              Admins
+            </Button>
+          )}
         </div>
       </header>
 
@@ -2316,6 +2327,7 @@ export default function AdminDashboard() {
           );
         })()}
 
+        {isSuperAdmin && (<>
         {/* Offer-Verteilung (collapsible) */}
         <section className="glass-card rounded-xl p-4 space-y-3">
           <div className="flex items-center justify-between">
@@ -2608,7 +2620,16 @@ export default function AdminDashboard() {
             </div>
           )}
         </section>
+        </>)}
 
+        {/* Sub-Admin Zuweisungen (only for super admins) */}
+        {isSuperAdmin && (
+          <section className="glass-card rounded-xl p-4">
+            <SubAdminManager />
+          </section>
+        )}
+
+        {isSuperAdmin && <>
         {/* Admin-Verwaltung Dialog (opens via logo click) */}
         <Dialog open={adminSectionOpen} onOpenChange={setAdminSectionOpen}>
           <DialogContent className="glass-card border-border sm:max-w-md">
@@ -2746,6 +2767,7 @@ export default function AdminDashboard() {
             </div>
           </DialogContent>
         </Dialog>
+        </>}
 
         {/* Search & Filters Group */}
         <div className="space-y-3">

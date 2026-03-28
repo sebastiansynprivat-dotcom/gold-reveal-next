@@ -39,8 +39,16 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   
-  if (loading) {
+  useEffect(() => {
+    if (!user) return;
+    import("@/integrations/supabase/client").then(({ supabase }) => {
+      supabase.rpc("is_admin").then(({ data }) => setIsAdmin(data === true));
+    });
+  }, [user]);
+  
+  if (loading || (user && isAdmin === null)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
@@ -48,7 +56,7 @@ const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
   
-  if (!user) return <Navigate to="/admin/login" replace />;
+  if (!user || isAdmin === false) return <Navigate to="/admin/login" replace />;
   
   const verified = sessionStorage.getItem("admin_2fa_verified");
   const isValid = verified && (Date.now() - parseInt(verified)) < 8 * 60 * 60 * 1000;
