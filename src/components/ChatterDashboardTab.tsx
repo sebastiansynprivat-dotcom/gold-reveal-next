@@ -233,6 +233,7 @@ export default function ChatterDashboardTab() {
 
   const addChatter = async () => {
     if (!newName.trim()) return;
+    const { data: { user } } = await supabase.auth.getUser();
     const row = {
       name: newName.trim(),
       platform: newPlatform.trim() || "–",
@@ -246,6 +247,7 @@ export default function ChatterDashboardTab() {
       brezzels_revenue: 0,
       currency: "EUR",
       crypto_address: "",
+      created_by: user?.id,
     };
 
     const { data, error } = await chattersTable().insert(row).select().single();
