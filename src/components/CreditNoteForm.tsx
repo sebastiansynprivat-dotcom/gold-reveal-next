@@ -276,7 +276,7 @@ export default function CreditNoteForm({
     doc.setFont("helvetica", "bold");
     doc.setFontSize(16);
     doc.setTextColor(...gold);
-    doc.text("PROVIDER INVOICE", m, y);
+    doc.text("SELF-BILLED PROVIDER INVOICE", m, y);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
     doc.setTextColor(...muted);
