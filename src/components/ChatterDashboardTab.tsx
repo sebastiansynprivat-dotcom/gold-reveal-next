@@ -164,8 +164,7 @@ export default function ChatterDashboardTab() {
               currency: c.currency || "EUR",
               crypto_address: c.cryptoAddress || "",
             }));
-            const { data: inserted, error: insertErr } = await supabase
-              .from("chatters")
+            const { data: inserted, error: insertErr } = await chattersTable()
               .insert(rows)
               .select();
             if (!insertErr && inserted) {
