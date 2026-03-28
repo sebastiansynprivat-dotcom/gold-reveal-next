@@ -236,7 +236,7 @@ export default function CreditNoteForm({
     doc.setFont("helvetica", "bold");
     doc.setFontSize(7.5);
     doc.setTextColor(...goldLight);
-    doc.text("INVOICE NO", rCol, ry, { align: "right" });
+    doc.text("PROVIDER INVOICE NO", rCol, ry, { align: "right" });
     ry += 4;
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
