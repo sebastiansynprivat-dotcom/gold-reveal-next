@@ -118,9 +118,9 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<"all" | ChatterRole>("all");
   const [addingNew, setAddingNew] = useState(false);
+  const [newName, setNewName] = useState("");
   const [newPlatform, setNewPlatform] = useState("");
   const [newRole, setNewRole] = useState<ChatterRole>("chatter");
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Load from DB
   useEffect(() => {
