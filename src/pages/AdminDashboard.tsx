@@ -2327,6 +2327,7 @@ export default function AdminDashboard() {
           );
         })()}
 
+        {isSuperAdmin && (<>
         {/* Offer-Verteilung (collapsible) */}
         <section className="glass-card rounded-xl p-4 space-y-3">
           <div className="flex items-center justify-between">
