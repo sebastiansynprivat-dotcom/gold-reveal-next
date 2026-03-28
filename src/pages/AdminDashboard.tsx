@@ -6027,7 +6027,8 @@ export default function AdminDashboard() {
                         onClick={async () => {
                           if (!manualAccEmail.trim() || !selectedManualPlatform) return;
                           setAddingManual(true);
-                          const { error } = await supabase.from("accounts").insert({ platform: selectedManualPlatform, account_email: manualAccEmail.trim(), account_password: manualAccPassword.trim(), account_domain: manualAccDomain.trim(), drive_folder_id: extractDriveFolderId(manualAccDriveFolder.trim()), is_manual: true, folder_name: manualAccFolder.trim() || null, model_language: manualAccLanguage, model_active: manualAccModelActive, model_agency: manualAccModelAgency } as any);
+                          const { data: { user: cUser } } = await supabase.auth.getUser();
+                          const { error } = await supabase.from("accounts").insert({ platform: selectedManualPlatform, account_email: manualAccEmail.trim(), account_password: manualAccPassword.trim(), account_domain: manualAccDomain.trim(), drive_folder_id: extractDriveFolderId(manualAccDriveFolder.trim()), is_manual: true, folder_name: manualAccFolder.trim() || null, model_language: manualAccLanguage, model_active: manualAccModelActive, model_agency: manualAccModelAgency, created_by: cUser?.id } as any);
                           if (error) { toast.error("Fehler"); } else { toast.success("Hinzugefügt!"); setManualAccEmail(""); setManualAccPassword(""); setManualAccDriveFolder(""); setManualAccLanguage("de"); setManualAccModelActive(true); setManualAccModelAgency("shex"); loadAccounts(); loadChatters(); }
                           setAddingManual(false);
                         }}
