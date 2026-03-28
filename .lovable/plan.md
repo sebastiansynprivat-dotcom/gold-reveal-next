@@ -1,48 +1,112 @@
 
 
-# Offer-Verteilung basierend auf freien Accounts
+# Multi-Dashboard RBAC System – Datenbankschema
 
-## Aktueller Stand
-Die Offer-Verteilung nutzt manuell gesetzte Prozent-Gewichtungen in `quiz_routes.weight`. Admins stellen diese per Slider ein. Die `WeightedRouteButton`-Komponente verwendet den Bresenham-Algorithmus mit diesen Gewichtungen.
+## Ist-Zustand
 
-## Neue Logik
+- `app_role` Enum: `admin`, `moderator`, `user`, `model`
+- `user_roles` Tabelle: einfache User→Role Zuordnung
+- Ein einziges Admin-Dashboard (`/admin`) – alle Admins sehen alles
+- Accounts werden Usern zugewiesen (`accounts.assigned_to`), aber es gibt keine Zuweisungslogik "welcher Admin darf welche Accounts sehen"
 
-### Grundidee
-Statt manueller Prozentwerte wird die Verteilung **automatisch** anhand der Anzahl freier (unzugewiesener) Accounts pro Plattform berechnet. Keine Slider mehr nötig.
+## Ziel-Architektur
 
-### 1. Neue DB-Funktion: `get_free_account_counts()`
-Eine SQL-Funktion, die für jede aktive `quiz_route` die Anzahl freier Accounts zählt:
+**Drei Rollen-Ebenen:**
+1. **Super-Admin** (du als Inhaber) – sieht und verwaltet ALLES
+2. **Sub-Admin** (Mitarbeiter) – sieht nur die Accounts, die ihm explizit zugewiesen wurden
+3. Bestehende Rollen (`user`, `model`) bleiben unverändert
 
+**Kernprinzip:** Single Source of Truth – alle Daten leben in denselben Tabellen. Sub-Admin-Dashboards sind gefilterte Views, keine eigenen Datenspeicher.
+
+## Datenbankänderungen
+
+### 1. Enum erweitern
 ```sql
-CREATE FUNCTION get_free_account_counts()
-RETURNS TABLE(route_id uuid, platform_name text, target_path text, free_count bigint)
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'super_admin';
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'sub_admin';
 ```
 
-Verbindet `quiz_routes.name` mit `accounts.platform` und zählt `WHERE assigned_to IS NULL`.
+Bestehende `admin`-Rolle wird zu `super_admin` migriert (für deine Accounts).
 
-### 2. QuizResult.tsx – WeightedRouteButton anpassen
-- Statt `quiz_routes.weight` zu lesen, ruft die Komponente `get_free_account_counts()` auf
-- `free_count` wird direkt als Gewichtung für den Bresenham-Algorithmus verwendet
-- **Edge-Case: keine freien Accounts** → Fallback auf gleichmäßige Verteilung oder Fehlermeldung
-- **Edge-Case: nur eine Plattform hat freie Accounts** → 100% dorthin
-- **Plattformen mit 0 freien Accounts** → werden aus der Verteilung ausgeschlossen (Gewicht = 0)
+### 2. Neue Tabelle: `admin_account_access` (Many-to-Many)
+```sql
+CREATE TABLE public.admin_account_access (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  admin_user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  account_id UUID NOT NULL REFERENCES public.accounts(id) ON DELETE CASCADE,
+  granted_by UUID REFERENCES auth.users(id),
+  granted_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(admin_user_id, account_id)
+);
+```
 
-### 3. Admin-Dashboard – Offer-Verteilung-Section anpassen
-- Slider entfernen (keine manuelle Prozentsteuerung mehr)
-- Stattdessen: Anzeige der aktuellen freien Account-Zahlen pro Plattform
-- Live-Vorschau-Balken bleibt, zeigt aber die automatisch berechneten Anteile
-- Kein "Speichern"-Button mehr nötig (Verteilung ist immer live)
-- `quiz_routes.weight`-Spalte wird nicht mehr aktiv genutzt, bleibt aber in der DB
+Diese Tabelle definiert: **"Welcher Sub-Admin darf welchen Account sehen/verwalten?"** Nur Super-Admins können Einträge hinzufügen/entfernen.
 
-### 4. Edge-Cases
-- **Keine freien Accounts auf allen Plattformen**: User wird trotzdem zur ersten Route weitergeleitet (Fallback)
-- **Ungleiche Verteilung**: Bresenham funktioniert mit beliebigen Ganzzahl-Gewichtungen, also z.B. 3 freie Maloum + 7 freie Brezzels = 30%/70% automatisch
+### 3. RLS-Policies aktualisieren
 
-### Ergebnis
-Die Verteilung ist vollständig dynamisch – sobald Accounts zugewiesen oder neue hinzugefügt werden, ändert sich die Verteilung automatisch. Kein Admin-Eingriff nötig.
+Die zentrale Berechtigungslogik auf der `accounts`-Tabelle wird erweitert:
 
-## Technische Details
-- 1 neue DB-Funktion (`get_free_account_counts`)
-- Änderung in `QuizResult.tsx`: ~15 Zeilen (RPC-Call statt quiz_routes-Query)
-- Änderung in `AdminDashboard.tsx`: Slider-Section durch Read-Only-Anzeige ersetzen (~40 Zeilen)
+```text
+Super-Admin  →  sieht ALLE Accounts (wie bisher)
+Sub-Admin    →  sieht nur Accounts, die in admin_account_access stehen
+```
+
+Neue Security-Definer-Funktion:
+```sql
+CREATE FUNCTION can_access_account(p_user_id UUID, p_account_id UUID)
+RETURNS BOOLEAN AS $$
+  SELECT 
+    has_role(p_user_id, 'super_admin') 
+    OR EXISTS (
+      SELECT 1 FROM admin_account_access 
+      WHERE admin_user_id = p_user_id AND account_id = p_account_id
+    )
+$$ LANGUAGE sql STABLE SECURITY DEFINER;
+```
+
+Alle relevanten Tabellen (`accounts`, `account_assignments`, `daily_revenue`, `chatters`, etc.) erhalten aktualisierte RLS-Policies, die `can_access_account()` nutzen.
+
+### 4. Bestehende Admins migrieren
+```sql
+-- Bestehende 'admin'-Rollen zu 'super_admin' upgraden
+UPDATE user_roles SET role = 'super_admin' WHERE role = 'admin';
+```
+
+Die `is_admin()`-Funktion wird angepasst, sodass sie sowohl `super_admin` als auch `sub_admin` erkennt (für generelle Admin-Berechtigung), aber separate Funktionen für die Unterscheidung bereitstehen.
+
+### 5. Übersicht der Berechtigungsabfrage
+
+```text
+┌─────────────┐     ┌──────────────────────┐     ┌──────────┐
+│  user_roles  │     │ admin_account_access │     │ accounts │
+│─────────────│     │──────────────────────│     │──────────│
+│ user_id     │────▶│ admin_user_id        │────▶│ id       │
+│ role        │     │ account_id           │     │ platform │
+│ (super_admin│     │ granted_by           │     │ ...      │
+│  sub_admin) │     └──────────────────────┘     └──────────┘
+└─────────────┘
+
+Query-Logik:
+- Super-Admin: SELECT * FROM accounts (kein Filter)
+- Sub-Admin:   SELECT * FROM accounts 
+               WHERE id IN (SELECT account_id FROM admin_account_access 
+                            WHERE admin_user_id = auth.uid())
+```
+
+## Was NICHT in Schritt 1 enthalten ist
+- Frontend-Code (Dashboards, UI)
+- Sub-Admin-Erstellungs-Interface
+- Account-Zuweisungs-UI im Master-Dashboard
+
+Diese kommen in den Folge-Schritten, nachdem das Schema steht und bestätigt ist.
+
+## Zusammenfassung der DB-Objekte
+
+| Objekt | Typ | Zweck |
+|--------|-----|-------|
+| `super_admin`, `sub_admin` | Enum-Werte | Neue Rollen |
+| `admin_account_access` | Tabelle | Many-to-Many: Admin ↔ Account |
+| `can_access_account()` | Funktion | Zentrale Berechtigungsprüfung |
+| `is_admin()` | Update | Erkennt beide Admin-Rollen |
+| RLS auf `accounts` etc. | Policies | Filtern nach Berechtigung |
 
