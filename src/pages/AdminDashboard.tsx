@@ -4749,6 +4749,87 @@ export default function AdminDashboard() {
           </div>
         )}
 
+        {activeTab === "admin_mgmt" && (
+          <div className="space-y-5">
+            {/* Admin hinzufügen */}
+            <section className="glass-card rounded-xl overflow-hidden">
+              <div className="px-4 py-3 border-b border-border flex items-center gap-2">
+                <Shield className="h-4 w-4 text-accent" />
+                <h3 className="text-sm font-bold text-foreground">Admins verwalten</h3>
+              </div>
+              <div className="p-4 space-y-4">
+                {/* Add new admin */}
+                <div className="flex gap-2">
+                  <div className="relative flex-1 input-gold-shimmer rounded-lg">
+                    <UserPlus className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                    <Input
+                      value={newAdminEmail}
+                      onChange={(e) => setNewAdminEmail(e.target.value)}
+                      placeholder="E-Mail des neuen Admins..."
+                      className="pl-9 text-sm border-transparent"
+                      onKeyDown={(e) => e.key === "Enter" && addAdmin()}
+                    />
+                  </div>
+                  <Button
+                    onClick={addAdmin}
+                    disabled={!newAdminEmail.trim() || addingAdmin}
+                    size="sm"
+                  >
+                    {addingAdmin ? <Loader2 className="h-4 w-4 animate-spin" /> : "Hinzufügen"}
+                  </Button>
+                </div>
+
+                {/* Admin list */}
+                {adminListLoading ? (
+                  <div className="flex justify-center py-4">
+                    <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                  </div>
+                ) : adminList.length === 0 ? (
+                  <p className="text-xs text-muted-foreground text-center py-4">Keine Admins gefunden.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {adminList.map((admin) => (
+                      <div
+                        key={admin.user_id}
+                        className="flex items-center justify-between glass-card-subtle rounded-lg px-3 py-2.5"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Shield className="h-3.5 w-3.5 text-accent shrink-0" />
+                          <span className="text-sm text-foreground truncate">{admin.email}</span>
+                          {admin.has_totp && (
+                            <Badge variant="secondary" className="text-[9px] shrink-0">2FA ✓</Badge>
+                          )}
+                          {!admin.has_totp && (
+                            <Badge variant="outline" className="text-[9px] text-destructive shrink-0">Kein 2FA</Badge>
+                          )}
+                          {admin.user_id === user?.id && (
+                            <Badge className="text-[9px] shrink-0">Du</Badge>
+                          )}
+                        </div>
+                        {admin.user_id !== user?.id && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-destructive hover:text-destructive"
+                            onClick={() => setRemoveAdminConfirm(admin.user_id)}
+                          >
+                            <UserMinus className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </section>
+
+            {/* Sub-Admin Zuweisungen */}
+            <section className="glass-card rounded-xl p-4">
+              <SubAdminManager />
+            </section>
+          </div>
+        )
+
           </motion.div>
         </AnimatePresence>
       </main>
