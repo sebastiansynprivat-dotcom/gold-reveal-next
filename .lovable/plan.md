@@ -1,19 +1,55 @@
 
 
-# Offer C (FansyMe) zur Quiz-Verteilung hinzufügen
+# Mitarbeiter-Dashboard: Persistente Speicherung in der Datenbank
 
-## Zusammenfassung
-Ein neuer Eintrag "FansyMe" mit `target_path: /offer-c` wird in die `quiz_routes`-Tabelle eingefügt. Danach erscheint er automatisch im Admin-Dashboard unter "Offer-Verteilung" und kann per Slider gewichtet werden.
+## Problem
+Das **Mitarbeiter-Dashboard (ChatterDashboardTab)** speichert alle Daten nur in `localStorage`. Das bedeutet:
+- Daten gehen verloren, wenn der Browser-Cache geleert wird
+- Daten sind geräteabhängig (nicht synchronisiert)
+- Kein anderer Admin sieht die gleichen Daten
 
-## Änderungen
+Das **Model-Dashboard** nutzt bereits Supabase korrekt mit Auto-Save -- dort besteht kein Problem.
 
-### 1. Datenbank-Migration
-- Neuen Eintrag in `quiz_routes` einfügen:
-  - `name`: "FansyMe"
-  - `target_path`: "/offer-c"
-  - `weight`: 0 (startet deaktiviert, du kannst den Slider dann auf den gewünschten Wert stellen)
-  - `is_active`: true
+## Lösung
 
-### 2. Keine Code-Änderungen nötig
-Das Admin-Dashboard lädt alle aktiven `quiz_routes` dynamisch. Der neue Eintrag erscheint sofort als dritter Slider in der Offer-Verteilung. Auch die QuizResult-Komponente berücksichtigt ihn automatisch bei der Weiterleitung.
+### 1. Neue Datenbank-Tabelle `chatters` erstellen
+Speichert alle Mitarbeiter/Chatter-Stammdaten persistent:
+
+```text
+chatters
+├── id (uuid, PK)
+├── name (text)
+├── platform (text)
+├── role (text: 'chatter' | 'mitarbeiter')
+├── compensation_type (text: 'percentage' | 'hourly')
+├── revenue_percentage (numeric)
+├── hourly_rate (numeric)
+├── hours_worked (numeric)
+├── fourbased_revenue (numeric)
+├── maloum_revenue (numeric)
+├── brezzels_revenue (numeric)
+├── currency (text, default 'EUR')
+├── crypto_address (text)
+├── created_at (timestamptz)
+├── updated_at (timestamptz)
+```
+
+RLS: Nur Admins haben vollen Zugriff (SELECT/INSERT/UPDATE/DELETE).
+
+### 2. ChatterDashboardTab umbauen
+- `localStorage`-Logik komplett entfernen
+- Daten beim Laden aus Supabase lesen
+- Auto-Save mit Debounce (wie im ModelDashboardTab) bei jeder Änderung
+- Neuen Eintrag per `INSERT` anlegen
+- Löschen per `DELETE`
+- Alle Felder (Name, Plattform, Rolle, Umsätze, Verdienst-Parameter, Crypto-Adresse) werden direkt in der DB gespeichert
+
+### 3. Keine Änderungen am Model-Dashboard nötig
+Das Model-Dashboard speichert bereits korrekt in `model_dashboard` via Supabase.
+
+## Technische Details
+- Migration: `CREATE TABLE public.chatters (...)` mit RLS-Policy für Admins
+- Code: ~50 Zeilen Supabase-Logik ersetzen die localStorage-Zeilen
+- Auto-Save-Debounce: 1200ms (gleich wie ModelDashboardTab)
+- Bestehende localStorage-Daten werden beim ersten Laden einmalig migriert (falls vorhanden)
 
