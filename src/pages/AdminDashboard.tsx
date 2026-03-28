@@ -4442,7 +4442,70 @@ export default function AdminDashboard() {
 
         {activeTab === "chatter_dash" && <ChatterDashboardTab isSuperAdmin={isSuperAdmin} adminEmails={Object.fromEntries(adminList.map(a => [a.user_id, a.email]))} />}
 
-        {activeTab === "gdrive" && (
+        {/* Dynamic Sub-Admin Tabs */}
+        {activeTab.startsWith("sub_") && isSuperAdmin && (() => {
+          const subAdminId = activeTab.replace("sub_", "");
+          const subAdmin = adminList.find(a => a.user_id === subAdminId);
+          const subAdminAccounts = accounts.filter(a => (a as any).created_by === subAdminId);
+          const subAdminChatters = chatters.filter(c =>
+            c.assigned_accounts?.some(acc => (acc as any).created_by === subAdminId)
+          );
+          return (
+            <div className="space-y-4">
+              <section className="glass-card rounded-xl overflow-hidden">
+                <div className="px-4 py-3 border-b border-border flex items-center gap-2">
+                  <Users className="h-4 w-4 text-accent" />
+                  <h2 className="text-sm font-semibold text-foreground">
+                    Sub-Admin: {subAdmin?.email || subAdminId}
+                  </h2>
+                  <span className="text-xs text-muted-foreground ml-auto">
+                    {subAdminAccounts.length} Accounts · {subAdminChatters.length} Chatter
+                  </span>
+                </div>
+                <div className="p-4 space-y-4">
+                  {/* Accounts */}
+                  <div>
+                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Accounts</h3>
+                    {subAdminAccounts.length === 0 ? (
+                      <p className="text-xs text-muted-foreground">Keine Accounts erstellt</p>
+                    ) : (
+                      <div className="space-y-1.5">
+                        {subAdminAccounts.map(acc => (
+                          <div key={acc.id} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary/30 border border-border/50">
+                            <span className="text-xs font-medium text-foreground truncate flex-1">{acc.account_email || acc.platform}</span>
+                            <span className="text-[9px] bg-accent/10 text-accent border border-accent/30 rounded px-1.5 py-0.5">{acc.platform}</span>
+                            <span className={`text-[9px] rounded px-1.5 py-0.5 ${acc.assigned_to ? "bg-green-500/10 text-green-400 border border-green-500/30" : "bg-secondary/50 text-muted-foreground border border-border/30"}`}>
+                              {acc.assigned_to ? "Vergeben" : "Frei"}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {/* Chatters */}
+                  <div>
+                    <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Chatter</h3>
+                    {subAdminChatters.length === 0 ? (
+                      <p className="text-xs text-muted-foreground">Keine Chatter zugewiesen</p>
+                    ) : (
+                      <div className="space-y-1.5">
+                        {subAdminChatters.map(c => (
+                          <div key={c.user_id} className="flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary/30 border border-border/50">
+                            <span className="text-xs font-medium text-foreground truncate flex-1">{c.group_name || c.account_email || c.user_id.slice(0, 8)}</span>
+                            {c.assigned_accounts?.map(acc => (
+                              <span key={acc.id} className="text-[9px] bg-accent/10 text-accent border border-accent/30 rounded px-1.5 py-0.5">{acc.platform}</span>
+                            ))}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </section>
+            </div>
+          );
+        })()}
+
           <div className="space-y-4">
             <section className="glass-card rounded-xl overflow-hidden">
               <div className="px-4 py-3 border-b border-border flex items-center gap-2">
