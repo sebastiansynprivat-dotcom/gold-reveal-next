@@ -2009,7 +2009,7 @@ export default function AdminDashboard() {
         <div className="container relative z-10 mx-auto flex max-w-4xl items-center gap-3 px-4 py-4">
           <button
             type="button"
-            onClick={openAdminSection}
+            onClick={isSuperAdmin ? openAdminSection : undefined}
             className="flex flex-1 items-center gap-3 rounded-xl text-left transition-transform hover:scale-[1.01] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             aria-label="Admin-Verwaltung öffnen"
           >
@@ -2022,10 +2022,12 @@ export default function AdminDashboard() {
               <p className="text-[10px] tracking-wide text-muted-foreground">Chatter verwalten & Benachrichtigungen</p>
             </div>
           </button>
-          <Button type="button" variant="secondary" size="sm" onClick={openAdminSection} className="shrink-0">
-            <Shield className="h-3.5 w-3.5" />
-            Admins
-          </Button>
+          {isSuperAdmin && (
+            <Button type="button" variant="secondary" size="sm" onClick={openAdminSection} className="shrink-0">
+              <Shield className="h-3.5 w-3.5" />
+              Admins
+            </Button>
+          )}
         </div>
       </header>
 
