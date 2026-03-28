@@ -2767,6 +2767,7 @@ export default function AdminDashboard() {
             </div>
           </DialogContent>
         </Dialog>
+        </>}
 
         {/* Search & Filters Group */}
         <div className="space-y-3">
