@@ -198,7 +198,7 @@ Deno.serve(async (req) => {
         .from("user_roles")
         .delete()
         .eq("user_id", target_user_id)
-        .eq("role", "admin");
+        .in("role", ["admin", "super_admin", "sub_admin"]);
 
       await serviceClient
         .from("admin_totp_secrets")
