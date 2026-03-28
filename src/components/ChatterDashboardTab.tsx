@@ -251,7 +251,7 @@ export default function ChatterDashboardTab() {
       crypto_address: "",
     };
 
-    const { data, error } = await supabase.from("chatters").insert(row).select().single();
+    const { data, error } = await chattersTable().insert(row).select().single();
     if (error || !data) {
       toast.error("Fehler beim Anlegen");
       return;
@@ -281,7 +281,7 @@ export default function ChatterDashboardTab() {
   };
 
   const deleteChatter = async (id: string) => {
-    const { error } = await supabase.from("chatters").delete().eq("id", id);
+    const { error } = await chattersTable().delete().eq("id", id);
     if (error) {
       toast.error("Fehler beim Löschen");
       return;
