@@ -4506,6 +4506,7 @@ export default function AdminDashboard() {
           );
         })()}
 
+        {activeTab === "gdrive" && (
           <div className="space-y-4">
             <section className="glass-card rounded-xl overflow-hidden">
               <div className="px-4 py-3 border-b border-border flex items-center gap-2">
