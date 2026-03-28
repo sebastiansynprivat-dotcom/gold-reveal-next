@@ -2354,7 +2354,7 @@ export default function AdminDashboard() {
                 return (
                   <>
                     <p className="text-[10px] text-muted-foreground">
-                      Die Verteilung wird automatisch anhand der verfügbaren Accounts berechnet. {totalFree} Account{totalFree !== 1 ? "s" : ""} frei.
+                      Trage die Anzahl freier Accounts pro Plattform manuell ein. Die Verteilung berechnet sich automatisch. {totalFree} Account{totalFree !== 1 ? "s" : ""} frei.
                     </p>
                     <div className="space-y-3">
                       {quizRoutes.map((route, i) => {
@@ -2369,10 +2369,20 @@ export default function AdminDashboard() {
                                 <p className="text-[10px] text-muted-foreground">{route.target_path}</p>
                               </div>
                             </div>
-                            <div className="text-right">
-                              <span className="text-sm font-bold text-accent">{route.free_count}</span>
-                              <span className="text-[10px] text-muted-foreground ml-1">frei</span>
-                              <span className="text-[10px] text-muted-foreground ml-2">({pct}%)</span>
+                            <div className="flex items-center gap-2">
+                              <div className="relative input-gold-shimmer rounded-lg">
+                                <Input
+                                  type="number"
+                                  min={0}
+                                  value={route.free_count}
+                                  onChange={(e) => {
+                                    const val = Math.max(0, parseInt(e.target.value) || 0);
+                                    setQuizRoutes(prev => prev.map(r => r.id === route.id ? { ...r, free_count: val } : r));
+                                  }}
+                                  className="h-8 w-20 text-center text-sm font-bold bg-secondary/30 border-transparent"
+                                />
+                              </div>
+                              <span className="text-[10px] text-muted-foreground w-10 text-right">({pct}%)</span>
                             </div>
                           </div>
                         );
@@ -2412,13 +2422,22 @@ export default function AdminDashboard() {
                       </div>
                     )}
                     <Button
-                      onClick={loadOffers}
-                      variant="outline"
+                      onClick={async () => {
+                        try {
+                          for (const route of quizRoutes) {
+                            await supabase.from("quiz_routes").update({ free_count: route.free_count } as any).eq("id", route.id);
+                          }
+                          toast.success("Freie Accounts gespeichert!");
+                          loadOffers();
+                        } catch (err: any) {
+                          toast.error("Fehler: " + err.message);
+                        }
+                      }}
                       size="sm"
                       className="w-full"
                     >
-                      <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-                      Aktualisieren
+                      <Save className="h-3.5 w-3.5 mr-1.5" />
+                      Speichern
                     </Button>
                   </>
                 );

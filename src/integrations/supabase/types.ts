@@ -780,6 +780,7 @@ export type Database = {
       quiz_routes: {
         Row: {
           created_at: string
+          free_count: number
           id: string
           is_active: boolean
           name: string
@@ -788,6 +789,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          free_count?: number
           id?: string
           is_active?: boolean
           name: string
@@ -796,6 +798,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          free_count?: number
           id?: string
           is_active?: boolean
           name?: string
