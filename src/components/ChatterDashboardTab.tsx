@@ -35,6 +35,7 @@ interface Chatter {
   compensationType: CompensationType;
   hourlyRate: number;
   hoursWorked: number;
+  createdBy?: string;
 }
 
 // Map DB row to local interface
