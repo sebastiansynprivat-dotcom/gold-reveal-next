@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { action, email, target_user_id } = await req.json();
+    const { action, email, target_user_id, new_role } = await req.json();
 
     if (action === "list") {
       const { data: roles } = await serviceClient
