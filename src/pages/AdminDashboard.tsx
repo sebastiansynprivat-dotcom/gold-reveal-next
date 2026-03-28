@@ -1093,29 +1093,17 @@ export default function AdminDashboard() {
   };
 
   const loadOffers = async () => {
-    const { data } = await supabase
-      .from("quiz_routes")
-      .select("id, name, target_path, weight, is_active")
-      .eq("is_active", true);
-    setOffers((data || []).map(d => ({ name: d.name, target_path: d.target_path })));
-    setQuizRoutes(data || []);
-    const weights: Record<string, number> = {};
-    (data || []).forEach(r => { weights[r.id] = r.weight; });
-    setRouteWeights(weights);
-  };
-
-  const saveRouteWeights = async () => {
-    setSavingWeights(true);
-    try {
-      for (const [id, weight] of Object.entries(routeWeights)) {
-        await supabase.from("quiz_routes").update({ weight }).eq("id", id);
-      }
-      toast.success("Offer-Verteilung gespeichert!");
-      loadOffers();
-    } catch (err: any) {
-      toast.error("Fehler: " + err.message);
-    }
-    setSavingWeights(false);
+    // Load routes with free account counts from RPC
+    const { data: routeData } = await supabase.rpc("get_free_account_counts");
+    const routes = (routeData || []).map((r: any) => ({
+      id: r.route_id,
+      name: r.platform_name,
+      target_path: r.target_path,
+      free_count: Number(r.free_count),
+      is_active: true,
+    }));
+    setOffers(routes.map((d: any) => ({ name: d.name, target_path: d.target_path })));
+    setQuizRoutes(routes);
   };
 
   const loadLoginStats = async () => {
