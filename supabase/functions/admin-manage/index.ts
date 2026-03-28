@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
       .from("user_roles")
       .select("role")
       .eq("user_id", user.id)
-      .eq("role", "admin")
+      .in("role", ["admin", "super_admin"])
       .maybeSingle();
 
     if (!callerRole) {
@@ -68,7 +68,7 @@ Deno.serve(async (req) => {
       const { data: roles } = await serviceClient
         .from("user_roles")
         .select("user_id, role")
-        .eq("role", "admin");
+        .in("role", ["admin", "super_admin", "sub_admin"]);
 
       if (!roles || roles.length === 0) {
         return new Response(JSON.stringify({ admins: [] }), {
@@ -148,7 +148,7 @@ Deno.serve(async (req) => {
         .from("user_roles")
         .select("id")
         .eq("user_id", targetUser.id)
-        .eq("role", "admin")
+        .in("role", ["admin", "super_admin", "sub_admin"])
         .maybeSingle();
 
       if (existing) {
@@ -163,7 +163,7 @@ Deno.serve(async (req) => {
 
       await serviceClient
         .from("user_roles")
-        .insert({ user_id: targetUser.id, role: "admin" });
+        .insert({ user_id: targetUser.id, role: "super_admin" });
 
       const response: Record<string, any> = { success: true, created };
       if (created) {
@@ -198,7 +198,7 @@ Deno.serve(async (req) => {
         .from("user_roles")
         .delete()
         .eq("user_id", target_user_id)
-        .eq("role", "admin");
+        .in("role", ["admin", "super_admin", "sub_admin"]);
 
       await serviceClient
         .from("admin_totp_secrets")

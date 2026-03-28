@@ -103,6 +103,38 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_account_access: {
+        Row: {
+          account_id: string
+          admin_user_id: string
+          granted_at: string | null
+          granted_by: string | null
+          id: string
+        }
+        Insert: {
+          account_id: string
+          admin_user_id: string
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+        }
+        Update: {
+          account_id?: string
+          admin_user_id?: string
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_account_access_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_totp_secrets: {
         Row: {
           created_at: string
@@ -923,6 +955,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_access_account: {
+        Args: { p_account_id: string; p_user_id: string }
+        Returns: boolean
+      }
       get_credit_note_seq: { Args: never; Returns: number }
       get_free_account_counts: {
         Args: never
@@ -949,11 +985,18 @@ export type Database = {
       }
       increment_route_counter: { Args: never; Returns: number }
       is_admin: { Args: never; Returns: boolean }
+      is_super_admin: { Args: never; Returns: boolean }
       next_credit_note_number: { Args: never; Returns: string }
       set_credit_note_seq: { Args: { new_val: number }; Returns: undefined }
     }
     Enums: {
-      app_role: "admin" | "moderator" | "user" | "model"
+      app_role:
+        | "admin"
+        | "moderator"
+        | "user"
+        | "model"
+        | "super_admin"
+        | "sub_admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1081,7 +1124,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "moderator", "user", "model"],
+      app_role: [
+        "admin",
+        "moderator",
+        "user",
+        "model",
+        "super_admin",
+        "sub_admin",
+      ],
     },
   },
 } as const
