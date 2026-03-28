@@ -54,6 +54,7 @@ function rowToChatter(row: any): Chatter {
     compensationType: (row.compensation_type as CompensationType) || "percentage",
     hourlyRate: Number(row.hourly_rate) || 0,
     hoursWorked: Number(row.hours_worked) || 0,
+    createdBy: row.created_by || undefined,
   };
 }
 
