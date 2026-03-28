@@ -4668,7 +4668,138 @@ export default function AdminDashboard() {
           </div>
         )}
 
-          </motion.div>
+        {activeTab === "settings" && (
+          <div className="space-y-5">
+            {/* Firmendaten / Issuer Settings */}
+            <section className="glass-card rounded-xl overflow-hidden">
+              <div className="px-4 py-3 border-b border-border flex items-center gap-2">
+                <Building2 className="h-4 w-4 text-accent" />
+                <h2 className="text-sm font-semibold text-foreground">Firmendaten (Issuer)</h2>
+                {settingsIssuerSaving && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground ml-auto" />}
+                {!settingsIssuerSaving && settingsIssuerLoaded && <CheckCircle2 className="h-3 w-3 text-accent ml-auto" />}
+              </div>
+              <div className="p-4 space-y-3">
+                <p className="text-[11px] text-muted-foreground">
+                  Diese Daten werden als Aussteller in allen Provider Invoices (Model- & Mitarbeiter-Dashboard) verwendet. Änderungen gelten sofort systemweit.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-muted-foreground">Firmenname</label>
+                    <div className="input-gold-shimmer rounded-lg">
+                      <Input
+                        value={settingsIssuer.name}
+                        onChange={(e) => saveIssuerSettings({ name: e.target.value })}
+                        className="text-sm border-transparent"
+                        placeholder="Firmenname"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-muted-foreground">VAT ID</label>
+                    <div className="input-gold-shimmer rounded-lg">
+                      <Input
+                        value={settingsIssuer.vat_id}
+                        onChange={(e) => saveIssuerSettings({ vat_id: e.target.value })}
+                        className="text-sm border-transparent"
+                        placeholder="VAT ID"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1 sm:col-span-2">
+                    <label className="text-xs font-medium text-muted-foreground">Adresse</label>
+                    <div className="input-gold-shimmer rounded-lg">
+                      <Input
+                        value={settingsIssuer.address}
+                        onChange={(e) => saveIssuerSettings({ address: e.target.value })}
+                        className="text-sm border-transparent"
+                        placeholder="Adresse"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-muted-foreground">KVK / Registernummer</label>
+                    <div className="input-gold-shimmer rounded-lg">
+                      <Input
+                        value={settingsIssuer.kvk}
+                        onChange={(e) => saveIssuerSettings({ kvk: e.target.value })}
+                        className="text-sm border-transparent"
+                        placeholder="Registernummer"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            {/* Invoice-Nummer / Sequence */}
+            <section className="glass-card rounded-xl overflow-hidden">
+              <div className="px-4 py-3 border-b border-border flex items-center gap-2">
+                <Hash className="h-4 w-4 text-accent" />
+                <h2 className="text-sm font-semibold text-foreground">Provider Invoice Nummerierung</h2>
+              </div>
+              <div className="p-4 space-y-4">
+                <p className="text-[11px] text-muted-foreground">
+                  Die nächste Provider Invoice erhält automatisch die nächste fortlaufende Nummer. Du kannst den Zählerstand hier anpassen.
+                </p>
+                {settingsSeqValue !== null ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 p-3 rounded-lg border border-border/50 bg-secondary/20">
+                      <div className="flex-1">
+                        <p className="text-[10px] text-muted-foreground">Aktueller Zählerstand</p>
+                        <p className="text-lg font-bold text-foreground font-mono">{settingsSeqValue}</p>
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-[10px] text-muted-foreground">Nächste Invoice-Nummer</p>
+                        <p className="text-lg font-bold text-accent font-mono">
+                          GS-{new Date().getFullYear()}-{String(settingsSeqValue + 1).padStart(4, "0")}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => updateSeqValue(settingsSeqValue - 1)}
+                        disabled={settingsSeqValue <= 0}
+                        className="h-8 gap-1"
+                      >
+                        <ArrowDown className="h-3 w-3" /> -1
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => updateSeqValue(settingsSeqValue + 1)}
+                        className="h-8 gap-1"
+                      >
+                        <ArrowUp className="h-3 w-3" /> +1
+                      </Button>
+                      <div className="flex items-center gap-1.5 ml-auto">
+                        <label className="text-xs text-muted-foreground">Setze auf:</label>
+                        <div className="input-gold-shimmer rounded-lg">
+                          <Input
+                            type="number"
+                            min={0}
+                            className="w-24 text-sm border-transparent text-center"
+                            value={settingsSeqValue}
+                            onChange={(e) => setSettingsSeqValue(Number(e.target.value))}
+                            onBlur={() => updateSeqValue(settingsSeqValue)}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="text-xs">Lade Nummerierung...</span>
+                  </div>
+                )}
+              </div>
+            </section>
+          </div>
+        )}
+
+
         </AnimatePresence>
       </main>
 
