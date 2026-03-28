@@ -13,6 +13,9 @@ import {
 import CreditNoteForm from "@/components/CreditNoteForm";
 import { supabase } from "@/integrations/supabase/client";
 
+// Helper to query chatters table (not yet in generated types)
+const chattersTable = () => supabase.from("chatters" as any);
+
 const CURRENCIES = ["EUR", "USD", "GBP", "CHF", "AED"] as const;
 
 type ChatterRole = "chatter" | "mitarbeiter";
