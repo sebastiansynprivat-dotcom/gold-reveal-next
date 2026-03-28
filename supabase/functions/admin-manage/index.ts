@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 function generatePassword(length = 14): string {
@@ -23,15 +23,28 @@ Deno.serve(async (req) => {
   try {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
+      console.error("admin-manage: no auth header");
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+
+    if (!supabaseUrl || !serviceKey || !anonKey) {
+      console.error("admin-manage: missing env vars", {
+        hasUrl: !!supabaseUrl,
+        hasServiceKey: !!serviceKey,
+        hasAnonKey: !!anonKey,
+      });
+      return new Response(JSON.stringify({ error: "Server configuration error" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const userClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: authHeader } },
@@ -39,6 +52,7 @@ Deno.serve(async (req) => {
 
     const { data: { user }, error: userError } = await userClient.auth.getUser();
     if (userError || !user) {
+      console.error("admin-manage: auth failed", userError?.message);
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -48,12 +62,14 @@ Deno.serve(async (req) => {
     const serviceClient = createClient(supabaseUrl, serviceKey);
 
     // Check caller is admin
-    const { data: callerRole } = await serviceClient
+    const { data: callerRole, error: roleError } = await serviceClient
       .from("user_roles")
       .select("role")
       .eq("user_id", user.id)
       .in("role", ["admin", "super_admin"])
       .maybeSingle();
+
+    console.log("admin-manage: caller role check", { userId: user.id, callerRole, roleError: roleError?.message });
 
     if (!callerRole) {
       return new Response(JSON.stringify({ error: "Not an admin" }), {
