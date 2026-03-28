@@ -163,7 +163,7 @@ Deno.serve(async (req) => {
 
       await serviceClient
         .from("user_roles")
-        .insert({ user_id: targetUser.id, role: "admin" });
+        .insert({ user_id: targetUser.id, role: "super_admin" });
 
       const response: Record<string, any> = { success: true, created };
       if (created) {
