@@ -93,12 +93,13 @@ Deno.serve(async (req) => {
       }
 
       const admins = [];
-      for (const role of roles) {
-        const { data: { user: adminUser } } = await serviceClient.auth.admin.getUserById(role.user_id);
+      for (const r of roles) {
+        const { data: { user: adminUser } } = await serviceClient.auth.admin.getUserById(r.user_id);
         if (adminUser) {
           admins.push({
-            user_id: role.user_id,
+            user_id: r.user_id,
             email: adminUser.email,
+            role: r.role,
             has_totp: false,
           });
         }
