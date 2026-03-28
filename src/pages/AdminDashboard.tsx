@@ -1944,7 +1944,47 @@ export default function AdminDashboard() {
   const freeCount = platformAccounts.filter((a) => !a.assigned_to).length;
   const assignedCount = platformAccounts.filter((a) => a.assigned_to).length;
 
-  // Find chatter name by user_id
+  // ─── Settings Tab: load issuer + sequence ───
+  const loadSettingsData = useCallback(async () => {
+    if (!settingsIssuerLoaded) {
+      const { data } = await (supabase.from("issuer_settings") as any).select("*").limit(1).single();
+      if (data) {
+        setSettingsIssuer({ name: data.name, address: data.address, vat_id: data.vat_id, kvk: data.kvk });
+        setSettingsIssuerId(data.id);
+      }
+      setSettingsIssuerLoaded(true);
+    }
+    if (!settingsSeqLoaded) {
+      const { data } = await supabase.rpc("get_credit_note_seq" as any);
+      if (data !== null) setSettingsSeqValue(Number(data));
+      setSettingsSeqLoaded(true);
+    }
+  }, [settingsIssuerLoaded, settingsSeqLoaded]);
+
+  const saveIssuerSettings = useCallback(async (patch: Partial<typeof settingsIssuer>) => {
+    const updated = { ...settingsIssuer, ...patch };
+    setSettingsIssuer(updated);
+    if (settingsIssuerTimerRef.current) clearTimeout(settingsIssuerTimerRef.current);
+    settingsIssuerTimerRef.current = setTimeout(async () => {
+      if (!settingsIssuerId) return;
+      setSettingsIssuerSaving(true);
+      await (supabase.from("issuer_settings") as any).update({
+        name: updated.name, address: updated.address, vat_id: updated.vat_id, kvk: updated.kvk,
+      }).eq("id", settingsIssuerId);
+      setSettingsIssuerSaving(false);
+      toast.success("Firmendaten gespeichert");
+    }, 1200);
+  }, [settingsIssuer, settingsIssuerId]);
+
+  const updateSeqValue = useCallback(async (newVal: number) => {
+    if (newVal < 0) return;
+    setSettingsSeqValue(newVal);
+    const { error } = await supabase.rpc("set_credit_note_seq" as any, { new_val: newVal });
+    if (error) { toast.error("Fehler: " + error.message); return; }
+    toast.success(`Invoice-Nummer auf GS-${new Date().getFullYear()}-${String(newVal + 1).padStart(4, "0")} gesetzt`);
+  }, []);
+
+
   const getChatterName = (userId: string | null) => {
     if (!userId) return null;
     const c = chatters.find((ch) => ch.user_id === userId);
