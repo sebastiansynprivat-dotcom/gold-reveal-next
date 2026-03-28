@@ -113,8 +113,8 @@ const ROLE_FILTERS: { label: string; value: "all" | ChatterRole }[] = [
 export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails = {} }: { isSuperAdmin?: boolean; adminEmails?: Record<string, string> }) {
   const [chatters, setChatters] = useState<Chatter[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedId, setSelectedId] = useState<string>("");
   const chatterDetailRef = useRef<HTMLDivElement>(null);
-  const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<"all" | ChatterRole>("all");
   const [addingNew, setAddingNew] = useState(false);
   const [newName, setNewName] = useState("");
