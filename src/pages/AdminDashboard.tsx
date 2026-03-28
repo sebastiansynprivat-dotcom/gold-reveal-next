@@ -810,6 +810,7 @@ export default function AdminDashboard() {
     loadLoginStats();
     loadPushUsers();
     loadRevenueUsers();
+    if (isSuperAdmin) loadAdmins();
 
     // Realtime subscription for live revenue updates
     const channel = supabase
