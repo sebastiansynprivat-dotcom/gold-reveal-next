@@ -57,6 +57,7 @@ export type Database = {
           assigned_at: string | null
           assigned_to: string | null
           created_at: string
+          created_by: string | null
           drive_folder_id: string | null
           folder_name: string | null
           id: string
@@ -74,6 +75,7 @@ export type Database = {
           assigned_at?: string | null
           assigned_to?: string | null
           created_at?: string
+          created_by?: string | null
           drive_folder_id?: string | null
           folder_name?: string | null
           id?: string
@@ -91,6 +93,7 @@ export type Database = {
           assigned_at?: string | null
           assigned_to?: string | null
           created_at?: string
+          created_by?: string | null
           drive_folder_id?: string | null
           folder_name?: string | null
           id?: string
