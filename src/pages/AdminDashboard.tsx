@@ -2629,6 +2629,7 @@ export default function AdminDashboard() {
           </section>
         )}
 
+        {isSuperAdmin && <>
         {/* Admin-Verwaltung Dialog (opens via logo click) */}
         <Dialog open={adminSectionOpen} onOpenChange={setAdminSectionOpen}>
           <DialogContent className="glass-card border-border sm:max-w-md">
