@@ -1980,7 +1980,7 @@ export default function AdminDashboard() {
     return c?.group_name || c?.telegram_id || userId.slice(0, 8);
   };
 
-  const SUPER_ADMIN_TABS = new Set(["notifications", "kiprompt", "platzhalter", "chatter_dash", "gdrive", "settings"]);
+  const SUPER_ADMIN_TABS = new Set(["notifications", "kiprompt", "platzhalter", "chatter_dash", "gdrive", "settings", "admin_mgmt"]);
 
   const allTabItems = [
     { key: "einnahmen" as const, label: "Einnahmen", icon: TrendingUp, onClick: () => setActiveTab("einnahmen") },
