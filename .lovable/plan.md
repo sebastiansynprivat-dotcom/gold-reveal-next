@@ -1,112 +1,86 @@
 
 
-# Multi-Dashboard RBAC System – Datenbankschema
+# Schritte 2–4: Backend-Logik + Master-Dashboard + Sub-Admin Dashboard
 
-## Ist-Zustand
+## Analyse
 
-- `app_role` Enum: `admin`, `moderator`, `user`, `model`
-- `user_roles` Tabelle: einfache User→Role Zuordnung
-- Ein einziges Admin-Dashboard (`/admin`) – alle Admins sehen alles
-- Accounts werden Usern zugewiesen (`accounts.assigned_to`), aber es gibt keine Zuweisungslogik "welcher Admin darf welche Accounts sehen"
+Das aktuelle `AdminDashboard.tsx` ist eine 6.500-Zeilen-Datei, die direkt `supabase.from("accounts").select("*")` aufruft – ohne Rollenprüfung. Es gibt nur eine Route `/admin`, die von `AdminProtectedRoute` geschützt wird (prüft nur 2FA, nicht ob super_admin vs. sub_admin). Die RLS-Policies auf DB-Ebene filtern bereits korrekt (super_admin sieht alles, sub_admin sieht nur zugewiesene Accounts via `can_access_account()`).
 
-## Ziel-Architektur
+## Kernentscheidung
 
-**Drei Rollen-Ebenen:**
-1. **Super-Admin** (du als Inhaber) – sieht und verwaltet ALLES
-2. **Sub-Admin** (Mitarbeiter) – sieht nur die Accounts, die ihm explizit zugewiesen wurden
-3. Bestehende Rollen (`user`, `model`) bleiben unverändert
+Da RLS bereits auf DB-Ebene greift, brauchen wir **keine separate Edge Function** als "Türsteher". Die Supabase-Queries im Frontend werden automatisch gefiltert. Was wir brauchen:
 
-**Kernprinzip:** Single Source of Truth – alle Daten leben in denselben Tabellen. Sub-Admin-Dashboards sind gefilterte Views, keine eigenen Datenspeicher.
+1. **Frontend-seitige Rollenerkennung** – damit wir UI-Elemente ausblenden können
+2. **Geteiltes Dashboard** – beide Rollen nutzen dasselbe `AdminDashboard`, aber Sub-Admins sehen keine Super-Admin-Features
 
-## Datenbankänderungen
+## Plan
 
-### 1. Enum erweitern
-```sql
-ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'super_admin';
-ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'sub_admin';
-```
+### Schritt 2: Backend-Logik (Berechtigungsprüfung)
 
-Bestehende `admin`-Rolle wird zu `super_admin` migriert (für deine Accounts).
+Die RLS-Policies existieren bereits und filtern korrekt. Ergänzend:
 
-### 2. Neue Tabelle: `admin_account_access` (Many-to-Many)
-```sql
-CREATE TABLE public.admin_account_access (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  admin_user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  account_id UUID NOT NULL REFERENCES public.accounts(id) ON DELETE CASCADE,
-  granted_by UUID REFERENCES auth.users(id),
-  granted_at TIMESTAMPTZ DEFAULT now(),
-  UNIQUE(admin_user_id, account_id)
-);
-```
+- **Neuer React-Hook `useAdminRole`**: Prüft beim Mount via `supabase.rpc("is_super_admin")` ob der User Super-Admin ist. Gibt `{ isSuperAdmin: boolean, isSubAdmin: boolean, loading: boolean }` zurück.
+- Dieser Hook wird im Dashboard verwendet, um UI-Elemente conditional zu rendern.
 
-Diese Tabelle definiert: **"Welcher Sub-Admin darf welchen Account sehen/verwalten?"** Nur Super-Admins können Einträge hinzufügen/entfernen.
+**Datei:** `src/hooks/useAdminRole.ts`
 
-### 3. RLS-Policies aktualisieren
+### Schritt 3: Master-Dashboard anpassen
 
-Die zentrale Berechtigungslogik auf der `accounts`-Tabelle wird erweitert:
+Das bestehende `AdminDashboard.tsx` wird erweitert:
 
-```text
-Super-Admin  →  sieht ALLE Accounts (wie bisher)
-Sub-Admin    →  sieht nur Accounts, die in admin_account_access stehen
-```
+- **Hook einbinden**: `useAdminRole()` am Anfang der Komponente aufrufen.
+- **Sub-Admin Account-Zuweisungs-UI** im bestehenden Admin-Management-Bereich: Ein neues Panel, in dem Super-Admins Sub-Admins erstellen und ihnen Accounts zuweisen/entziehen können. Komponenten:
+  - `SubAdminManager.tsx`: Liste aller Sub-Admins mit ihren zugewiesenen Accounts
+  - Multi-Select Dialog: Accounts einem Sub-Admin zuweisen (Insert in `admin_account_access`)
+  - Entziehen-Button: Löscht Einträge aus `admin_account_access`
+- **Conditional Rendering**: Bereiche wie "Admins verwalten", "Account Pools", "Freie Accounts", "Offer-Verteilung" werden nur für Super-Admins angezeigt.
 
-Neue Security-Definer-Funktion:
-```sql
-CREATE FUNCTION can_access_account(p_user_id UUID, p_account_id UUID)
-RETURNS BOOLEAN AS $$
-  SELECT 
-    has_role(p_user_id, 'super_admin') 
-    OR EXISTS (
-      SELECT 1 FROM admin_account_access 
-      WHERE admin_user_id = p_user_id AND account_id = p_account_id
-    )
-$$ LANGUAGE sql STABLE SECURITY DEFINER;
-```
+### Schritt 4: Sub-Admin View
 
-Alle relevanten Tabellen (`accounts`, `account_assignments`, `daily_revenue`, `chatters`, etc.) erhalten aktualisierte RLS-Policies, die `can_access_account()` nutzen.
+Da RLS die Filterung übernimmt, sieht ein Sub-Admin automatisch nur "seine" Accounts wenn er `supabase.from("accounts").select("*")` aufruft. Daher:
 
-### 4. Bestehende Admins migrieren
-```sql
--- Bestehende 'admin'-Rollen zu 'super_admin' upgraden
-UPDATE user_roles SET role = 'super_admin' WHERE role = 'admin';
-```
+- **Gleiche Route `/admin`**, gleiche Komponente
+- **`isSuperAdmin === false`** blendet aus:
+  - Admin-Verwaltung (Admins hinzufügen/entfernen)
+  - Account-Pool-Verwaltung (Accounts anlegen/löschen)
+  - Offer-Verteilung (quiz_routes)
+  - Sub-Admin-Zuweisungen
+  - Account-Löschung und Freigabe
+- **Sub-Admin sieht**:
+  - Seine zugewiesenen Accounts (automatisch durch RLS)
+  - Chatter-Übersicht (nur für seine Accounts)
+  - Revenue-Daten (nur für seine Accounts)
+  - Bot-Messages verwalten (nur für seine Accounts)
 
-Die `is_admin()`-Funktion wird angepasst, sodass sie sowohl `super_admin` als auch `sub_admin` erkennt (für generelle Admin-Berechtigung), aber separate Funktionen für die Unterscheidung bereitstehen.
+### Neue Dateien
 
-### 5. Übersicht der Berechtigungsabfrage
+| Datei | Zweck |
+|-------|-------|
+| `src/hooks/useAdminRole.ts` | Hook für Rollenprüfung |
+| `src/components/SubAdminManager.tsx` | UI zum Zuweisen von Accounts an Sub-Admins |
+
+### Änderungen an bestehenden Dateien
+
+| Datei | Änderung |
+|-------|----------|
+| `src/pages/AdminDashboard.tsx` | `useAdminRole` einbinden, conditional rendering für ~15 Bereiche |
+| `src/App.tsx` | `AdminProtectedRoute` prüft zusätzlich ob `is_admin()` (sub_admin oder super_admin) |
+| `supabase/functions/admin-manage/index.ts` | Sub-Admin-Erstellung mit `sub_admin`-Rolle statt `super_admin` |
+
+### Berechtigungsmatrix
 
 ```text
-┌─────────────┐     ┌──────────────────────┐     ┌──────────┐
-│  user_roles  │     │ admin_account_access │     │ accounts │
-│─────────────│     │──────────────────────│     │──────────│
-│ user_id     │────▶│ admin_user_id        │────▶│ id       │
-│ role        │     │ account_id           │     │ platform │
-│ (super_admin│     │ granted_by           │     │ ...      │
-│  sub_admin) │     └──────────────────────┘     └──────────┘
-└─────────────┘
-
-Query-Logik:
-- Super-Admin: SELECT * FROM accounts (kein Filter)
-- Sub-Admin:   SELECT * FROM accounts 
-               WHERE id IN (SELECT account_id FROM admin_account_access 
-                            WHERE admin_user_id = auth.uid())
+Feature                    | Super-Admin | Sub-Admin
+---------------------------|-------------|----------
+Alle Accounts sehen        |     ✓       |    ✗ (nur zugewiesene)
+Accounts anlegen/löschen   |     ✓       |    ✗
+Accounts zuweisen          |     ✓       |    ✗
+Chatter verwalten          |     ✓       |    ✓ (nur eigene)
+Revenue einsehen           |     ✓       |    ✓ (nur eigene)
+Bot-Messages               |     ✓       |    ✓ (nur eigene)
+Admins verwalten           |     ✓       |    ✗
+Sub-Admin Zuweisungen      |     ✓       |    ✗
+Offer-Verteilung           |     ✓       |    ✗
+Push-Benachrichtigungen    |     ✓       |    ✗
 ```
-
-## Was NICHT in Schritt 1 enthalten ist
-- Frontend-Code (Dashboards, UI)
-- Sub-Admin-Erstellungs-Interface
-- Account-Zuweisungs-UI im Master-Dashboard
-
-Diese kommen in den Folge-Schritten, nachdem das Schema steht und bestätigt ist.
-
-## Zusammenfassung der DB-Objekte
-
-| Objekt | Typ | Zweck |
-|--------|-----|-------|
-| `super_admin`, `sub_admin` | Enum-Werte | Neue Rollen |
-| `admin_account_access` | Tabelle | Many-to-Many: Admin ↔ Account |
-| `can_access_account()` | Funktion | Zentrale Berechtigungsprüfung |
-| `is_admin()` | Update | Erkennt beide Admin-Rollen |
-| RLS auf `accounts` etc. | Policies | Filtern nach Berechtigung |
 
