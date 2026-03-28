@@ -443,6 +443,11 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
                     >
                       <div className="px-3 py-2 min-w-0">
                         <p className={cn("text-xs font-medium truncate", isSelected ? "text-accent" : "text-foreground")}>{c.name}</p>
+                        {isSuperAdmin && c.createdBy && (
+                          <p className="text-[9px] text-muted-foreground truncate">
+                            {adminEmails[c.createdBy] ? `↳ ${adminEmails[c.createdBy]}` : "↳ Super-Admin"}
+                          </p>
+                        )}
                       </div>
                       <div className="px-2 py-2 flex justify-center">
                         <span className="text-[9px] bg-secondary/50 text-muted-foreground border border-border/30 rounded px-1.5 py-0.5 capitalize truncate max-w-[70px]">{c.platform}</span>
