@@ -126,8 +126,7 @@ export default function ChatterDashboardTab() {
   // Load from DB
   useEffect(() => {
     const load = async () => {
-      const { data, error } = await supabase
-        .from("chatters")
+      const { data, error } = await chattersTable()
         .select("*")
         .order("created_at", { ascending: true });
 
