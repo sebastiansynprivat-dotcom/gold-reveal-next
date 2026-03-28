@@ -1980,7 +1980,9 @@ export default function AdminDashboard() {
     return c?.group_name || c?.telegram_id || userId.slice(0, 8);
   };
 
-  const tabItems = [
+  const SUPER_ADMIN_TABS = new Set(["notifications", "kiprompt", "platzhalter", "chatter_dash", "gdrive", "settings"]);
+
+  const allTabItems = [
     { key: "einnahmen" as const, label: "Einnahmen", icon: TrendingUp, onClick: () => setActiveTab("einnahmen") },
     { key: "chatter" as const, label: "Chatter", icon: Users, onClick: () => setActiveTab("chatter") },
     { key: "anfragen" as const, label: "Anfragen", icon: Send, onClick: () => { setActiveTab("anfragen"); if (!modelRequestsLoaded) loadModelRequests(); } },
@@ -1993,6 +1995,10 @@ export default function AdminDashboard() {
     { key: "gdrive" as const, label: "Google Drive", icon: ExternalLink, onClick: () => setActiveTab("gdrive") },
     { key: "settings" as const, label: "Einstellungen", icon: Settings, onClick: () => { setActiveTab("settings"); loadSettingsData(); } },
   ];
+
+  const tabItems = isSuperAdmin
+    ? allTabItems
+    : allTabItems.filter(t => !SUPER_ADMIN_TABS.has(t.key));
 
   return (
     <div className="min-h-screen bg-background relative">
