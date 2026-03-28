@@ -35,6 +35,7 @@ interface Chatter {
   compensationType: CompensationType;
   hourlyRate: number;
   hoursWorked: number;
+  createdBy?: string;
 }
 
 // Map DB row to local interface
@@ -53,6 +54,7 @@ function rowToChatter(row: any): Chatter {
     compensationType: (row.compensation_type as CompensationType) || "percentage",
     hourlyRate: Number(row.hourly_rate) || 0,
     hoursWorked: Number(row.hours_worked) || 0,
+    createdBy: row.created_by || undefined,
   };
 }
 
@@ -110,7 +112,7 @@ const ROLE_FILTERS: { label: string; value: "all" | ChatterRole }[] = [
 
 const STORAGE_KEY = "admin-chatter-dashboard";
 
-export default function ChatterDashboardTab() {
+export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails = {} }: { isSuperAdmin?: boolean; adminEmails?: Record<string, string> }) {
   const [chatters, setChatters] = useState<Chatter[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string>("");
@@ -233,6 +235,7 @@ export default function ChatterDashboardTab() {
 
   const addChatter = async () => {
     if (!newName.trim()) return;
+    const { data: { user } } = await supabase.auth.getUser();
     const row = {
       name: newName.trim(),
       platform: newPlatform.trim() || "–",
@@ -246,6 +249,7 @@ export default function ChatterDashboardTab() {
       brezzels_revenue: 0,
       currency: "EUR",
       crypto_address: "",
+      created_by: user?.id,
     };
 
     const { data, error } = await chattersTable().insert(row).select().single();
@@ -439,6 +443,11 @@ export default function ChatterDashboardTab() {
                     >
                       <div className="px-3 py-2 min-w-0">
                         <p className={cn("text-xs font-medium truncate", isSelected ? "text-accent" : "text-foreground")}>{c.name}</p>
+                        {isSuperAdmin && c.createdBy && (
+                          <p className="text-[9px] text-muted-foreground truncate">
+                            {adminEmails[c.createdBy] ? `↳ ${adminEmails[c.createdBy]}` : "↳ Super-Admin"}
+                          </p>
+                        )}
                       </div>
                       <div className="px-2 py-2 flex justify-center">
                         <span className="text-[9px] bg-secondary/50 text-muted-foreground border border-border/30 rounded px-1.5 py-0.5 capitalize truncate max-w-[70px]">{c.platform}</span>

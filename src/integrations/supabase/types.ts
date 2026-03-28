@@ -253,6 +253,7 @@ export type Database = {
           brezzels_revenue: number
           compensation_type: string
           created_at: string
+          created_by: string | null
           crypto_address: string
           currency: string
           fourbased_revenue: number
@@ -270,6 +271,7 @@ export type Database = {
           brezzels_revenue?: number
           compensation_type?: string
           created_at?: string
+          created_by?: string | null
           crypto_address?: string
           currency?: string
           fourbased_revenue?: number
@@ -287,6 +289,7 @@ export type Database = {
           brezzels_revenue?: number
           compensation_type?: string
           created_at?: string
+          created_by?: string | null
           crypto_address?: string
           currency?: string
           fourbased_revenue?: number

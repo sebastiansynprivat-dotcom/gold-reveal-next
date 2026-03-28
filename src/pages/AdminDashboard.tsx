@@ -4426,7 +4426,7 @@ export default function AdminDashboard() {
 
         {activeTab === "platzhalter" && <ModelDashboardTab />}
 
-        {activeTab === "chatter_dash" && <ChatterDashboardTab />}
+        {activeTab === "chatter_dash" && <ChatterDashboardTab isSuperAdmin={isSuperAdmin} adminEmails={Object.fromEntries(adminList.map(a => [a.user_id, a.email]))} />}
 
         {activeTab === "gdrive" && (
           <div className="space-y-4">
