@@ -183,8 +183,7 @@ export default function ChatterDashboardTab() {
 
   // Auto-save to DB with debounce
   const saveToDb = useCallback(async (chatter: Chatter) => {
-    const { error } = await supabase
-      .from("chatters")
+    const { error } = await chattersTable()
       .update({
         name: chatter.name,
         platform: chatter.platform,
