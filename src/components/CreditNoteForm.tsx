@@ -532,7 +532,7 @@ export default function CreditNoteForm({
     doc.setTextColor(...muted);
 
     const legalTexts = [
-      "This provider invoice has been issued under the self-billing procedure with the consent of the service provider.",
+      "This invoice has been issued by Sharify Media Limited under a self-billing arrangement with the consent of the service provider.",
       "The service provider agrees not to issue separate invoices for the above services.",
       "This document was generated electronically and is valid without signature.",
     ];
