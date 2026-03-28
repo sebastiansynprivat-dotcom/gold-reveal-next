@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,8 @@ const ISSUER_DEFAULTS = {
   kvk: "",
   vatId: "CY60329590T",
 };
+
+const issuerSettingsTable = () => (supabase.from as any)("issuer_settings");
 
 const CRYPTO_NETWORKS = ["TRC20", "ERC20", "BEP20", "SOL", "BTC", "LTC"];
 
