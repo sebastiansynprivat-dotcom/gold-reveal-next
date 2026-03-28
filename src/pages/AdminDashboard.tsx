@@ -611,7 +611,7 @@ export default function AdminDashboard() {
   const [goalAmount, setGoalAmount] = useState("");
   const [goalSaving, setGoalSaving] = useState(false);
   const [expandedChatter, setExpandedChatter] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"einnahmen" | "chatter" | "anfragen" | "botdms" | "notifications" | "kiprompt" | "chatter_overview" | "platzhalter" | "chatter_dash" | "gdrive" | "settings">("einnahmen");
+  const [activeTab, setActiveTab] = useState<"einnahmen" | "chatter" | "anfragen" | "botdms" | "notifications" | "kiprompt" | "chatter_overview" | "platzhalter" | "chatter_dash" | "gdrive" | "settings" | "admin_mgmt">("einnahmen");
   const [settingsIssuer, setSettingsIssuer] = useState({ name: "", address: "", vat_id: "", kvk: "" });
   const [settingsIssuerId, setSettingsIssuerId] = useState<string | null>(null);
   const [settingsIssuerLoaded, setSettingsIssuerLoaded] = useState(false);
@@ -1980,7 +1980,7 @@ export default function AdminDashboard() {
     return c?.group_name || c?.telegram_id || userId.slice(0, 8);
   };
 
-  const SUPER_ADMIN_TABS = new Set(["notifications", "kiprompt", "platzhalter", "chatter_dash", "gdrive", "settings"]);
+  const SUPER_ADMIN_TABS = new Set(["notifications", "kiprompt", "platzhalter", "chatter_dash", "gdrive", "settings", "admin_mgmt"]);
 
   const allTabItems = [
     { key: "einnahmen" as const, label: "Einnahmen", icon: TrendingUp, onClick: () => setActiveTab("einnahmen") },
@@ -1994,6 +1994,7 @@ export default function AdminDashboard() {
     { key: "chatter_dash" as const, label: "Mitarbeiter-Dashboard", icon: Users, onClick: () => setActiveTab("chatter_dash") },
     { key: "gdrive" as const, label: "Google Drive", icon: ExternalLink, onClick: () => setActiveTab("gdrive") },
     { key: "settings" as const, label: "Einstellungen", icon: Settings, onClick: () => { setActiveTab("settings"); loadSettingsData(); } },
+    { key: "admin_mgmt" as const, label: "Admin-Verwaltung", icon: Shield, onClick: () => { setActiveTab("admin_mgmt"); void loadAdmins(); } },
   ];
 
   const tabItems = isSuperAdmin
@@ -2009,7 +2010,7 @@ export default function AdminDashboard() {
         <div className="container relative z-10 mx-auto flex max-w-4xl items-center gap-3 px-4 py-4">
           <button
             type="button"
-            onClick={isSuperAdmin ? openAdminSection : undefined}
+            onClick={undefined}
             className="flex flex-1 items-center gap-3 rounded-xl text-left transition-transform hover:scale-[1.01] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             aria-label="Admin-Verwaltung öffnen"
           >
@@ -2622,91 +2623,8 @@ export default function AdminDashboard() {
         </section>
         </>)}
 
-        {/* Sub-Admin Zuweisungen (only for super admins) */}
-        {isSuperAdmin && (
-          <section className="glass-card rounded-xl p-4">
-            <SubAdminManager />
-          </section>
-        )}
-
+        {/* Remove Admin Confirm Dialog (always rendered for super admins) */}
         {isSuperAdmin && <>
-        {/* Admin-Verwaltung Dialog (opens via logo click) */}
-        <Dialog open={adminSectionOpen} onOpenChange={setAdminSectionOpen}>
-          <DialogContent className="glass-card border-border sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle className="text-foreground flex items-center gap-2">
-                <Shield className="h-5 w-5 text-accent" />
-                Admin-Verwaltung
-              </DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              {/* Add new admin */}
-              <div className="flex gap-2">
-                <div className="relative flex-1 input-gold-shimmer rounded-lg">
-                  <UserPlus className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                  <Input
-                    value={newAdminEmail}
-                    onChange={(e) => setNewAdminEmail(e.target.value)}
-                    placeholder="E-Mail des neuen Admins..."
-                    className="pl-9 text-sm border-transparent"
-                    onKeyDown={(e) => e.key === "Enter" && addAdmin()}
-                  />
-                </div>
-                <Button
-                  onClick={addAdmin}
-                  disabled={!newAdminEmail.trim() || addingAdmin}
-                  size="sm"
-                >
-                  {addingAdmin ? "..." : "Hinzufügen"}
-                </Button>
-              </div>
-
-              {/* Admin list */}
-              {adminListLoading ? (
-                <div className="flex justify-center py-4">
-                  <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-                </div>
-              ) : adminList.length === 0 ? (
-                <p className="text-xs text-muted-foreground text-center py-4">Keine Admins gefunden.</p>
-              ) : (
-                <div className="space-y-2">
-                  {adminList.map((admin) => (
-                    <div
-                      key={admin.user_id}
-                      className="flex items-center justify-between glass-card-subtle rounded-lg px-3 py-2.5"
-                    >
-                      <div className="flex items-center gap-2 min-w-0">
-                        <Shield className="h-3.5 w-3.5 text-accent shrink-0" />
-                        <span className="text-sm text-foreground truncate">{admin.email}</span>
-                        {admin.has_totp && (
-                          <Badge variant="secondary" className="text-[9px] shrink-0">2FA ✓</Badge>
-                        )}
-                        {!admin.has_totp && (
-                          <Badge variant="outline" className="text-[9px] text-destructive shrink-0">Kein 2FA</Badge>
-                        )}
-                        {admin.user_id === user?.id && (
-                          <Badge className="text-[9px] shrink-0">Du</Badge>
-                        )}
-                      </div>
-                      {admin.user_id !== user?.id && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-destructive hover:text-destructive"
-                          onClick={() => setRemoveAdminConfirm(admin.user_id)}
-                        >
-                          <UserMinus className="h-3.5 w-3.5" />
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* Remove Admin Confirm Dialog */}
         <AlertDialog open={!!removeAdminConfirm} onOpenChange={() => setRemoveAdminConfirm(null)}>
           <AlertDialogContent className="glass-card border-border">
             <AlertDialogHeader>
@@ -4827,6 +4745,87 @@ export default function AdminDashboard() {
                   </div>
                 )}
               </div>
+            </section>
+          </div>
+        )}
+
+        {activeTab === "admin_mgmt" && (
+          <div className="space-y-5">
+            {/* Admin hinzufügen */}
+            <section className="glass-card rounded-xl overflow-hidden">
+              <div className="px-4 py-3 border-b border-border flex items-center gap-2">
+                <Shield className="h-4 w-4 text-accent" />
+                <h3 className="text-sm font-bold text-foreground">Admins verwalten</h3>
+              </div>
+              <div className="p-4 space-y-4">
+                {/* Add new admin */}
+                <div className="flex gap-2">
+                  <div className="relative flex-1 input-gold-shimmer rounded-lg">
+                    <UserPlus className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                    <Input
+                      value={newAdminEmail}
+                      onChange={(e) => setNewAdminEmail(e.target.value)}
+                      placeholder="E-Mail des neuen Admins..."
+                      className="pl-9 text-sm border-transparent"
+                      onKeyDown={(e) => e.key === "Enter" && addAdmin()}
+                    />
+                  </div>
+                  <Button
+                    onClick={addAdmin}
+                    disabled={!newAdminEmail.trim() || addingAdmin}
+                    size="sm"
+                  >
+                    {addingAdmin ? <Loader2 className="h-4 w-4 animate-spin" /> : "Hinzufügen"}
+                  </Button>
+                </div>
+
+                {/* Admin list */}
+                {adminListLoading ? (
+                  <div className="flex justify-center py-4">
+                    <div className="w-5 h-5 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                  </div>
+                ) : adminList.length === 0 ? (
+                  <p className="text-xs text-muted-foreground text-center py-4">Keine Admins gefunden.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {adminList.map((admin) => (
+                      <div
+                        key={admin.user_id}
+                        className="flex items-center justify-between glass-card-subtle rounded-lg px-3 py-2.5"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Shield className="h-3.5 w-3.5 text-accent shrink-0" />
+                          <span className="text-sm text-foreground truncate">{admin.email}</span>
+                          {admin.has_totp && (
+                            <Badge variant="secondary" className="text-[9px] shrink-0">2FA ✓</Badge>
+                          )}
+                          {!admin.has_totp && (
+                            <Badge variant="outline" className="text-[9px] text-destructive shrink-0">Kein 2FA</Badge>
+                          )}
+                          {admin.user_id === user?.id && (
+                            <Badge className="text-[9px] shrink-0">Du</Badge>
+                          )}
+                        </div>
+                        {admin.user_id !== user?.id && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-destructive hover:text-destructive"
+                            onClick={() => setRemoveAdminConfirm(admin.user_id)}
+                          >
+                            <UserMinus className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </section>
+
+            {/* Sub-Admin Zuweisungen */}
+            <section className="glass-card rounded-xl p-4">
+              <SubAdminManager />
             </section>
           </div>
         )}
