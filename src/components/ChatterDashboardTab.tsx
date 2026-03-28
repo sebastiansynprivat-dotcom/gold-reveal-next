@@ -112,7 +112,7 @@ const ROLE_FILTERS: { label: string; value: "all" | ChatterRole }[] = [
 
 const STORAGE_KEY = "admin-chatter-dashboard";
 
-export default function ChatterDashboardTab() {
+export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails = {} }: { isSuperAdmin?: boolean; adminEmails?: Record<string, string> }) {
   const [chatters, setChatters] = useState<Chatter[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string>("");
