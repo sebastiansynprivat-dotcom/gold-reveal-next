@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
@@ -8,9 +8,13 @@ import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Plus, Trash2, Search, Wallet, Percent, FileDown, Save, Users, Crown, Clock
+  Plus, Trash2, Search, Wallet, Percent, FileDown, Save, Users, Crown, Clock, Loader2
 } from "lucide-react";
 import CreditNoteForm from "@/components/CreditNoteForm";
+import { supabase } from "@/integrations/supabase/client";
+
+// Helper to query chatters table (not yet in generated types)
+const chattersTable = () => supabase.from("chatters" as any);
 
 const CURRENCIES = ["EUR", "USD", "GBP", "CHF", "AED"] as const;
 
@@ -21,7 +25,6 @@ interface Chatter {
   id: string;
   name: string;
   platform: string;
-  monthlyRevenue: number;
   fourbasedRevenue: number;
   maloumRevenue: number;
   brezzelsRevenue: number;
@@ -34,19 +37,23 @@ interface Chatter {
   hoursWorked: number;
 }
 
-const STORAGE_KEY = "admin-chatter-dashboard";
-
-function migrateChatters(chatters: Chatter[]): Chatter[] {
-  return chatters.map(c => ({
-    ...c,
-    fourbasedRevenue: c.fourbasedRevenue ?? c.monthlyRevenue ?? 0,
-    maloumRevenue: c.maloumRevenue ?? 0,
-    brezzelsRevenue: c.brezzelsRevenue ?? 0,
-    role: c.role ?? "chatter",
-    compensationType: c.compensationType ?? "percentage",
-    hourlyRate: c.hourlyRate ?? 0,
-    hoursWorked: c.hoursWorked ?? 0,
-  }));
+// Map DB row to local interface
+function rowToChatter(row: any): Chatter {
+  return {
+    id: row.id,
+    name: row.name || "",
+    platform: row.platform || "–",
+    fourbasedRevenue: Number(row.fourbased_revenue) || 0,
+    maloumRevenue: Number(row.maloum_revenue) || 0,
+    brezzelsRevenue: Number(row.brezzels_revenue) || 0,
+    revenuePercentage: Number(row.revenue_percentage) || 0,
+    currency: row.currency || "EUR",
+    cryptoAddress: row.crypto_address || "",
+    role: (row.role as ChatterRole) || "chatter",
+    compensationType: (row.compensation_type as CompensationType) || "percentage",
+    hourlyRate: Number(row.hourly_rate) || 0,
+    hoursWorked: Number(row.hours_worked) || 0,
+  };
 }
 
 function useAnimatedCounter(target: number, duration = 1200) {
@@ -101,14 +108,11 @@ const ROLE_FILTERS: { label: string; value: "all" | ChatterRole }[] = [
   { label: "Mitarbeiter", value: "mitarbeiter" },
 ];
 
-export default function ChatterDashboardTab() {
-  const [chatters, setChatters] = useState<Chatter[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      return saved ? migrateChatters(JSON.parse(saved)) : [];
-    } catch { return []; }
-  });
+const STORAGE_KEY = "admin-chatter-dashboard";
 
+export default function ChatterDashboardTab() {
+  const [chatters, setChatters] = useState<Chatter[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string>("");
   const chatterDetailRef = useRef<HTMLDivElement>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -117,11 +121,90 @@ export default function ChatterDashboardTab() {
   const [newName, setNewName] = useState("");
   const [newPlatform, setNewPlatform] = useState("");
   const [newRole, setNewRole] = useState<ChatterRole>("chatter");
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Persist
+  // Load from DB
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(chatters));
-  }, [chatters]);
+    const load = async () => {
+      const { data, error } = await chattersTable()
+        .select("*")
+        .order("created_at", { ascending: true });
+
+      if (error) {
+        console.error("Failed to load chatters:", error);
+        toast.error("Fehler beim Laden der Mitarbeiter");
+        setLoading(false);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        setChatters(data.map(rowToChatter));
+        setLoading(false);
+        return;
+      }
+
+      // One-time migration from localStorage
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const local: any[] = JSON.parse(saved);
+          if (local.length > 0) {
+            const rows = local.map(c => ({
+              id: c.id,
+              name: c.name || "",
+              platform: c.platform || "–",
+              role: c.role || "chatter",
+              compensation_type: c.compensationType || "percentage",
+              revenue_percentage: c.revenuePercentage || 0,
+              hourly_rate: c.hourlyRate || 0,
+              hours_worked: c.hoursWorked || 0,
+              fourbased_revenue: c.fourbasedRevenue ?? c.monthlyRevenue ?? 0,
+              maloum_revenue: c.maloumRevenue || 0,
+              brezzels_revenue: c.brezzelsRevenue || 0,
+              currency: c.currency || "EUR",
+              crypto_address: c.cryptoAddress || "",
+            }));
+            const { data: inserted, error: insertErr } = await chattersTable()
+              .insert(rows)
+              .select();
+            if (!insertErr && inserted) {
+              setChatters(inserted.map(rowToChatter));
+              localStorage.removeItem(STORAGE_KEY);
+              toast.success("Bestehende Daten migriert ✅");
+            }
+          }
+        }
+      } catch { /* ignore */ }
+
+      setLoading(false);
+    };
+    load();
+  }, []);
+
+  // Auto-save to DB with debounce
+  const saveToDb = useCallback(async (chatter: Chatter) => {
+    const { error } = await chattersTable()
+      .update({
+        name: chatter.name,
+        platform: chatter.platform,
+        role: chatter.role,
+        compensation_type: chatter.compensationType,
+        revenue_percentage: chatter.revenuePercentage,
+        hourly_rate: chatter.hourlyRate,
+        hours_worked: chatter.hoursWorked,
+        fourbased_revenue: chatter.fourbasedRevenue,
+        maloum_revenue: chatter.maloumRevenue,
+        brezzels_revenue: chatter.brezzelsRevenue,
+        currency: chatter.currency,
+        crypto_address: chatter.cryptoAddress,
+      })
+      .eq("id", chatter.id);
+
+    if (error) {
+      console.error("Auto-save failed:", error);
+      toast.error("Speichern fehlgeschlagen");
+    }
+  }, []);
 
   const selected = chatters.find(c => c.id === selectedId) || null;
 
@@ -148,24 +231,30 @@ export default function ChatterDashboardTab() {
     return Math.round(totalRevenue * selected.revenuePercentage / 100);
   }, [selected, totalRevenue]);
 
-  const addChatter = () => {
+  const addChatter = async () => {
     if (!newName.trim()) return;
-    const chatter: Chatter = {
-      id: crypto.randomUUID(),
+    const row = {
       name: newName.trim(),
       platform: newPlatform.trim() || "–",
-      monthlyRevenue: 0,
-      fourbasedRevenue: 0,
-      maloumRevenue: 0,
-      brezzelsRevenue: 0,
-      revenuePercentage: 0,
-      currency: "EUR",
-      cryptoAddress: "",
       role: newRole,
-      compensationType: newRole === "mitarbeiter" ? "hourly" : "percentage",
-      hourlyRate: 0,
-      hoursWorked: 0,
+      compensation_type: newRole === "mitarbeiter" ? "hourly" : "percentage",
+      revenue_percentage: 0,
+      hourly_rate: 0,
+      hours_worked: 0,
+      fourbased_revenue: 0,
+      maloum_revenue: 0,
+      brezzels_revenue: 0,
+      currency: "EUR",
+      crypto_address: "",
     };
+
+    const { data, error } = await chattersTable().insert(row).select().single();
+    if (error || !data) {
+      toast.error("Fehler beim Anlegen");
+      return;
+    }
+
+    const chatter = rowToChatter(data);
     setChatters(prev => [...prev, chatter]);
     setSelectedId(chatter.id);
     setNewName("");
@@ -177,10 +266,23 @@ export default function ChatterDashboardTab() {
 
   const updateSelected = (patch: Partial<Chatter>) => {
     if (!selectedId) return;
-    setChatters(prev => prev.map(c => c.id === selectedId ? { ...c, ...patch } : c));
+    setChatters(prev => {
+      const updated = prev.map(c => c.id === selectedId ? { ...c, ...patch } : c);
+      const chatter = updated.find(c => c.id === selectedId);
+      if (chatter) {
+        if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+        saveTimerRef.current = setTimeout(() => saveToDb(chatter), 1200);
+      }
+      return updated;
+    });
   };
 
-  const deleteChatter = (id: string) => {
+  const deleteChatter = async (id: string) => {
+    const { error } = await chattersTable().delete().eq("id", id);
+    if (error) {
+      toast.error("Fehler beim Löschen");
+      return;
+    }
     setChatters(prev => prev.filter(c => c.id !== id));
     if (selectedId === id) setSelectedId("");
     toast.success("Eintrag gelöscht");
@@ -192,6 +294,14 @@ export default function ChatterDashboardTab() {
     if (c.revenuePercentage <= 0) return 0;
     return Math.round(total * c.revenuePercentage / 100);
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-6 w-6 text-accent animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5">
