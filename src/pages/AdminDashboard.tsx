@@ -2620,6 +2620,14 @@ export default function AdminDashboard() {
             </div>
           )}
         </section>
+        </>)}
+
+        {/* Sub-Admin Zuweisungen (only for super admins) */}
+        {isSuperAdmin && (
+          <section className="glass-card rounded-xl p-4">
+            <SubAdminManager />
+          </section>
+        )}
 
         {/* Admin-Verwaltung Dialog (opens via logo click) */}
         <Dialog open={adminSectionOpen} onOpenChange={setAdminSectionOpen}>
