@@ -1399,6 +1399,19 @@ export default function AdminDashboard() {
     setSetupDashboardsLoaded(true);
   };
 
+  const changeAdminRole = async (targetUserId: string, newRole: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-manage", {
+        body: { action: "change_role", target_user_id: targetUserId, new_role: newRole },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      toast.success(`Rolle geändert zu ${newRole === "super_admin" ? "Super-Admin" : "Sub-Admin"}`);
+      await loadAdmins();
+    } catch (err: any) {
+      toast.error(err.message || "Rolle konnte nicht geändert werden");
+    }
+  };
 
   const deletePool = async () => {
     if (!selectedPlatform) return;
