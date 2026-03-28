@@ -1994,6 +1994,7 @@ export default function AdminDashboard() {
     { key: "chatter_dash" as const, label: "Mitarbeiter-Dashboard", icon: Users, onClick: () => setActiveTab("chatter_dash") },
     { key: "gdrive" as const, label: "Google Drive", icon: ExternalLink, onClick: () => setActiveTab("gdrive") },
     { key: "settings" as const, label: "Einstellungen", icon: Settings, onClick: () => { setActiveTab("settings"); loadSettingsData(); } },
+    { key: "admin_mgmt" as const, label: "Admin-Verwaltung", icon: Shield, onClick: () => { setActiveTab("admin_mgmt"); void loadAdmins(); } },
   ];
 
   const tabItems = isSuperAdmin
