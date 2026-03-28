@@ -688,7 +688,7 @@ export default function AdminDashboard() {
 
   // Admin management state
   const [adminSectionOpen, setAdminSectionOpen] = useState(false);
-  const [adminList, setAdminList] = useState<{ user_id: string; email: string; has_totp: boolean }[]>([]);
+  const [adminList, setAdminList] = useState<{ user_id: string; email: string; has_totp: boolean; role: string }[]>([]);
   const [adminListLoading, setAdminListLoading] = useState(false);
   const [newAdminEmail, setNewAdminEmail] = useState("");
   const [addingAdmin, setAddingAdmin] = useState(false);
@@ -1399,6 +1399,19 @@ export default function AdminDashboard() {
     setSetupDashboardsLoaded(true);
   };
 
+  const changeAdminRole = async (targetUserId: string, newRole: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke("admin-manage", {
+        body: { action: "change_role", target_user_id: targetUserId, new_role: newRole },
+      });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      toast.success(`Rolle geändert zu ${newRole === "super_admin" ? "Super-Admin" : "Sub-Admin"}`);
+      await loadAdmins();
+    } catch (err: any) {
+      toast.error(err.message || "Rolle konnte nicht geändert werden");
+    }
+  };
 
   const deletePool = async () => {
     if (!selectedPlatform) return;
@@ -4793,29 +4806,52 @@ export default function AdminDashboard() {
                         key={admin.user_id}
                         className="flex items-center justify-between glass-card-subtle rounded-lg px-3 py-2.5"
                       >
-                        <div className="flex items-center gap-2 min-w-0">
+                        <div className="flex items-center gap-2 min-w-0 flex-wrap">
                           <Shield className="h-3.5 w-3.5 text-accent shrink-0" />
                           <span className="text-sm text-foreground truncate">{admin.email}</span>
-                          {admin.has_totp && (
+                          {admin.has_totp ? (
                             <Badge variant="secondary" className="text-[9px] shrink-0">2FA ✓</Badge>
-                          )}
-                          {!admin.has_totp && (
+                          ) : (
                             <Badge variant="outline" className="text-[9px] text-destructive shrink-0">Kein 2FA</Badge>
                           )}
                           {admin.user_id === user?.id && (
                             <Badge className="text-[9px] shrink-0">Du</Badge>
                           )}
                         </div>
-                        {admin.user_id !== user?.id && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-7 w-7 text-destructive hover:text-destructive"
-                            onClick={() => setRemoveAdminConfirm(admin.user_id)}
-                          >
-                            <UserMinus className="h-3.5 w-3.5" />
-                          </Button>
-                        )}
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {/* Role toggle */}
+                          {admin.user_id !== user?.id ? (
+                            <button
+                              type="button"
+                              onClick={() => changeAdminRole(
+                                admin.user_id,
+                                admin.role === "super_admin" ? "sub_admin" : "super_admin"
+                              )}
+                              className={cn(
+                                "text-[9px] font-semibold px-2 py-1 rounded-md border transition-all",
+                                admin.role === "super_admin" || admin.role === "admin"
+                                  ? "bg-accent/15 text-accent border-accent/30"
+                                  : "bg-secondary/30 text-muted-foreground border-border/50 hover:border-accent/30"
+                              )}
+                            >
+                              {admin.role === "super_admin" || admin.role === "admin" ? "Super-Admin" : "Sub-Admin"}
+                            </button>
+                          ) : (
+                            <Badge variant="secondary" className="text-[9px]">
+                              {admin.role === "super_admin" || admin.role === "admin" ? "Super-Admin" : "Sub-Admin"}
+                            </Badge>
+                          )}
+                          {admin.user_id !== user?.id && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-destructive hover:text-destructive"
+                              onClick={() => setRemoveAdminConfirm(admin.user_id)}
+                            >
+                              <UserMinus className="h-3.5 w-3.5" />
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>

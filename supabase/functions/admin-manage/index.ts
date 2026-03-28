@@ -78,7 +78,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { action, email, target_user_id } = await req.json();
+    const { action, email, target_user_id, new_role } = await req.json();
 
     if (action === "list") {
       const { data: roles } = await serviceClient
@@ -93,12 +93,13 @@ Deno.serve(async (req) => {
       }
 
       const admins = [];
-      for (const role of roles) {
-        const { data: { user: adminUser } } = await serviceClient.auth.admin.getUserById(role.user_id);
+      for (const r of roles) {
+        const { data: { user: adminUser } } = await serviceClient.auth.admin.getUserById(r.user_id);
         if (adminUser) {
           admins.push({
-            user_id: role.user_id,
+            user_id: r.user_id,
             email: adminUser.email,
+            role: r.role,
             has_totp: false,
           });
         }
@@ -220,6 +221,43 @@ Deno.serve(async (req) => {
         .from("admin_totp_secrets")
         .delete()
         .eq("user_id", target_user_id);
+
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (action === "change_role") {
+      if (!target_user_id || !new_role) {
+        return new Response(JSON.stringify({ error: "User ID und Rolle erforderlich" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      if (!["super_admin", "sub_admin"].includes(new_role)) {
+        return new Response(JSON.stringify({ error: "Ungültige Rolle" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      if (target_user_id === user.id) {
+        return new Response(
+          JSON.stringify({ error: "Du kannst deine eigene Rolle nicht ändern." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      await serviceClient
+        .from("user_roles")
+        .delete()
+        .eq("user_id", target_user_id)
+        .in("role", ["admin", "super_admin", "sub_admin"]);
+
+      await serviceClient
+        .from("user_roles")
+        .insert({ user_id: target_user_id, role: new_role });
 
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
