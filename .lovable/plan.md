@@ -1,27 +1,22 @@
-
-
 ## Problem
 
-Wenn du die Invoice-Nummer in den Einstellungen z.B. von 18 auf 14 zurücksetzt, springt die nächste Nummer trotzdem wieder hoch (auf 19+). Zwei Ursachen:
+Im Mitarbeiter-Dashboard teilen sich alle Chatter dieselbe Provider-Daten (Name, Adresse, USt-ID etc.), weil:
 
-1. **`setval(seq, 14, true)`** bedeutet in PostgreSQL: "14 wurde bereits benutzt → nächster Wert ist 15". Die Funktion müsste stattdessen `setval(seq, new_val, false)` nutzen, damit `nextval` exakt `new_val` zurückgibt.
+1. **React recycelt die Komponente**: Wenn du von Julian zu Rose wechselst, wird `CreditNoteForm` nicht neu gemountet — React reused die Instanz. Der `useState`-Initialwert (`loadSaved()`) wird nur beim **ersten** Mount ausgeführt.
+2. Die localStorage-Keys sind zwar pro Chatter getrennt (`credit-note-form-Julian`, `credit-note-form-Rose`), aber die States werden beim Wechsel nicht neu geladen.
 
-2. **Die Duplikat-Schutz-Schleife** in `next_credit_note_number` überspringt jede Nummer, die schon in `credit_notes` existiert. Da 14, 15, 16, 17, 18 bereits existieren, springt sie immer zum nächsten freien Wert.
+## Lösung
 
-## Loesung
+### 2. Alternative (einfacher): `key`-Prop in `ChatterDashboardTab.tsx`
 
-### 1. Migration: Funktionen anpassen
+Statt den Effect manuell zu schreiben, kann man React zwingen, die Komponente komplett neu zu mounten, indem ein `key` gesetzt wird:
 
-**`set_credit_note_seq`** — `setval` mit `false` aufrufen, damit `nextval` exakt den gesetzten Wert zurückgibt:
-```sql
-PERFORM setval('public.credit_note_seq', new_val, false);
+```tsx
+<CreditNoteForm
+  key={selected.id}  // Force remount bei Chatter-Wechsel
+  suggestedAmount={verdienst}
+  ...
+/>
 ```
 
-**`next_credit_note_number`** — Duplikat-Schleife entfernen. Einfach `nextval` aufrufen und die Nummer zurückgeben, ohne zu prüfen ob sie schon existiert.
-
-**`credit_notes` Unique Constraint entfernen** — `credit_notes_credit_note_number_key` droppen, damit dieselbe Nummer bei Bedarf mehrfach vergeben werden kann. (Alternativ: Constraint behalten und bei INSERT `ON CONFLICT` nutzen — aber das verkompliziert den Code unnötig.)
-
-### 2. Keine Frontend-Änderungen nötig
-
-Die UI ruft bereits `set_credit_note_seq(newVal)` korrekt auf und zeigt die Vorschau. Nur die DB-Funktionen müssen gefixt werden.
-
+**Empfehlung**: Option 2 (key-Prop) — eine Zeile, sauber, kein Risiko vergessener States. Wird in beiden Stellen angewendet: `ChatterDashboardTab.tsx` und `ModelDashboardTab.tsx`.
