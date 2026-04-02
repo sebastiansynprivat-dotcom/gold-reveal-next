@@ -1,54 +1,27 @@
 
 
-## Plan: Sub-Admin Chatter-Isolation
+## Problem
 
-### Ziel
-Sub-Admins sehen nur ihre eigenen Chatter und können neue anlegen. Super-Admins sehen alle Chatter und erkennen, welchem Sub-Admin sie gehören.
+Wenn du die Invoice-Nummer in den Einstellungen z.B. von 18 auf 14 zurücksetzt, springt die nächste Nummer trotzdem wieder hoch (auf 19+). Zwei Ursachen:
 
-### Änderungen
+1. **`setval(seq, 14, true)`** bedeutet in PostgreSQL: "14 wurde bereits benutzt → nächster Wert ist 15". Die Funktion müsste stattdessen `setval(seq, new_val, false)` nutzen, damit `nextval` exakt `new_val` zurückgibt.
 
-**1. Datenbank-Migration**
-- Neue Spalte `created_by UUID` auf der `chatters`-Tabelle (nullable, damit bestehende Daten nicht brechen)
-- Bestehende Chatters ohne `created_by` bleiben dem Super-Admin zugeordnet
-- RLS-Policies anpassen:
-  - Super-Admins: voller Zugriff (ALL) — bleibt
-  - Sub-Admins: SELECT/INSERT/UPDATE/DELETE nur wo `created_by = auth.uid()`
+2. **Die Duplikat-Schutz-Schleife** in `next_credit_note_number` überspringt jede Nummer, die schon in `credit_notes` existiert. Da 14, 15, 16, 17, 18 bereits existieren, springt sie immer zum nächsten freien Wert.
 
-**2. Frontend: ChatterDashboardTab.tsx**
-- Beim Erstellen eines Chatters `created_by` auf die aktuelle User-ID setzen
-- Laden: Query bleibt gleich (RLS filtert automatisch)
+## Loesung
 
-**3. Frontend: AdminDashboard.tsx (Super-Admin Ansicht)**
-- Im Mitarbeiter-Tab: Anzeige eines kleinen Badges oder Labels, welcher Admin den Chatter erstellt hat
-- Dazu den `created_by`-Wert mit der Admin-Liste abgleichen, um den Namen/E-Mail anzuzeigen
+### 1. Migration: Funktionen anpassen
 
-### Technische Details
-
+**`set_credit_note_seq`** — `setval` mit `false` aufrufen, damit `nextval` exakt den gesetzten Wert zurückgibt:
 ```sql
--- Migration
-ALTER TABLE public.chatters ADD COLUMN created_by uuid;
-
--- Update existing RLS: replace current "Admin full access" with split policies
-DROP POLICY "Admin full access on chatters" ON public.chatters;
-
--- Super-admins keep full access
-CREATE POLICY "Super admins full access on chatters"
-ON public.chatters FOR ALL TO authenticated
-USING (has_role(auth.uid(), 'super_admin'))
-WITH CHECK (has_role(auth.uid(), 'super_admin'));
-
--- Sub-admins only own chatters
-CREATE POLICY "Sub admins manage own chatters"
-ON public.chatters FOR ALL TO authenticated
-USING (has_role(auth.uid(), 'sub_admin') AND created_by = auth.uid())
-WITH CHECK (has_role(auth.uid(), 'sub_admin') AND created_by = auth.uid());
+PERFORM setval('public.credit_note_seq', new_val, false);
 ```
 
-Frontend insert change:
-```typescript
-const row = {
-  ...existingFields,
-  created_by: (await supabase.auth.getUser()).data.user?.id,
-};
-```
+**`next_credit_note_number`** — Duplikat-Schleife entfernen. Einfach `nextval` aufrufen und die Nummer zurückgeben, ohne zu prüfen ob sie schon existiert.
+
+**`credit_notes` Unique Constraint entfernen** — `credit_notes_credit_note_number_key` droppen, damit dieselbe Nummer bei Bedarf mehrfach vergeben werden kann. (Alternativ: Constraint behalten und bei INSERT `ON CONFLICT` nutzen — aber das verkompliziert den Code unnötig.)
+
+### 2. Keine Frontend-Änderungen nötig
+
+Die UI ruft bereits `set_credit_note_seq(newVal)` korrekt auf und zeigt die Vorschau. Nur die DB-Funktionen müssen gefixt werden.
 
