@@ -634,6 +634,7 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
           {/* Credit Note */}
           <Section icon={FileDown} title="Provider Invoice erstellen" delay={0.22}>
             <CreditNoteForm
+              key={selected.id}
               suggestedAmount={verdienst}
               providerName={selected.name}
               chatterName={selected.name}
