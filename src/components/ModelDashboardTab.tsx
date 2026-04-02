@@ -1155,6 +1155,7 @@ export default function ModelDashboardTab() {
             {/* Credit Note */}
             <Section icon={FileDown} title="Provider Invoice erstellen" delay={0.4}>
               <CreditNoteForm
+                key={selectedAccountId}
                 suggestedAmount={gutschriftFromRevenue}
                 providerName={selectedAccount?.account_email || ""}
                 accountId={selectedAccountId}
