@@ -2060,10 +2060,41 @@ export default function AdminDashboard() {
         </div>
       </header>
 
-       <main className="container max-w-4xl mx-auto p-4 space-y-5">
-         {/* Premium Tab Navigation */}
+       <div className="flex min-h-[calc(100vh-65px)]">
+         {/* Desktop Sidebar */}
+         <aside className="hidden md:flex flex-col w-56 shrink-0 border-r border-border/30 bg-gradient-to-b from-secondary/20 to-background/50 backdrop-blur-sm overflow-y-auto sticky top-0 h-[calc(100vh-65px)]">
+           <nav className="flex flex-col gap-0.5 p-3">
+             {tabItems.map(({ key, label, icon: Icon, onClick }) => (
+               <button
+                 key={key}
+                 onClick={onClick}
+                 className={cn(
+                   "relative flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-medium transition-all duration-200 text-left w-full",
+                   activeTab === key
+                     ? "text-accent-foreground"
+                     : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
+                 )}
+               >
+                 {activeTab === key && (
+                   <motion.div
+                     layoutId="activeTabSidebar"
+                     className="absolute inset-0 bg-accent rounded-lg shadow-md shadow-accent/20"
+                     transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                   />
+                 )}
+                 <span className="relative z-10 flex items-center gap-2.5">
+                   <Icon className="h-3.5 w-3.5 shrink-0" />
+                   {label}
+                 </span>
+               </button>
+             ))}
+           </nav>
+         </aside>
+
+         <main className="flex-1 min-w-0 p-4 space-y-5 max-w-4xl mx-auto w-full">
+         {/* Mobile Tab Navigation */}
           <div
-            className="overflow-x-auto -mx-4 px-4 cursor-grab active:cursor-grabbing select-none"
+            className="overflow-x-auto -mx-4 px-4 cursor-grab active:cursor-grabbing select-none md:hidden"
             onWheel={(e) => { if (Math.abs(e.deltaX) < Math.abs(e.deltaY)) { e.currentTarget.scrollLeft += e.deltaY; e.preventDefault(); } }}
             onMouseDown={(e) => { const el = e.currentTarget; el.dataset.dragging = "true"; el.dataset.startX = String(e.pageX); el.dataset.scrollLeft = String(el.scrollLeft); }}
             onMouseMove={(e) => { const el = e.currentTarget; if (el.dataset.dragging !== "true") return; e.preventDefault(); el.scrollLeft = Number(el.dataset.scrollLeft) - (e.pageX - Number(el.dataset.startX)); }}
