@@ -552,14 +552,7 @@ export default function AdminDashboard() {
   const [accounts, setAccounts] = useState<AccountEntry[]>([]);
   const [accountPoolOpen, setAccountPoolOpen] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState("");
-  const [newAccEmail, setNewAccEmail] = useState("");
-  const [newAccPassword, setNewAccPassword] = useState("");
-  const [newAccDomain, setNewAccDomain] = useState("");
-  const [newAccDriveFolder, setNewAccDriveFolder] = useState("");
-  const [newAccLanguage, setNewAccLanguage] = useState<"de" | "en">("de");
-  const [newAccModelActive, setNewAccModelActive] = useState(true);
-  const [newAccModelAgency, setNewAccModelAgency] = useState<"shex" | "syn">("shex");
-  const [addingAccount, setAddingAccount] = useState(false);
+  
   const [assigning, setAssigning] = useState(false);
   const [assignConfirmOpen, setAssignConfirmOpen] = useState(false);
   const [assignResult, setAssignResult] = useState<{ assigned: number; message: string } | null>(null);
