@@ -161,6 +161,11 @@ export default function ModelDashboardTab() {
   // Revenue from model_dashboard (per-platform)
   const [dashboardRevenues, setDashboardRevenues] = useState<Record<string, number>>({});
 
+  // All accounts for revenue overview
+  const [allAccounts, setAllAccounts] = useState<{ id: string; model_id: string | null; platform: string }[]>([]);
+  const [allDashData, setAllDashData] = useState<Record<string, { fourbased: number; maloum: number; brezzels: number; monthly: number }>>({});
+  const [revenueOverviewLoaded, setRevenueOverviewLoaded] = useState(false);
+
   const detailRef = useRef<HTMLDivElement>(null);
 
   // ─── Load models ───
