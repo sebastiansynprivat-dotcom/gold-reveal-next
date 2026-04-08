@@ -565,6 +565,7 @@ export default function ModelDashboardTab() {
                   {modelAccounts.length} Plattform-Account{modelAccounts.length !== 1 ? "s" : ""}
                 </p>
               </div>
+              {modelAccounts.length < PLATFORMS.length && (
               <Button
                 size="sm"
                 variant="outline"
@@ -574,6 +575,7 @@ export default function ModelDashboardTab() {
                 <Plus className="h-3 w-3" />
                 Account
               </Button>
+              )}
             </div>
 
             {/* ── Ebene 1: Model-Stammdaten ── */}
@@ -831,7 +833,8 @@ export default function ModelDashboardTab() {
                   </Accordion>
                 )}
 
-                {/* Add more accounts button – always visible */}
+                {/* Add more accounts button – only if platforms available */}
+                {modelAccounts.length < PLATFORMS.length && (
                 <Button
                   size="sm"
                   variant="outline"
@@ -841,6 +844,7 @@ export default function ModelDashboardTab() {
                   <Plus className="h-3 w-3" />
                   Plattform-Account hinzufügen
                 </Button>
+                )}
               </div>
             </Section>
 
@@ -973,7 +977,7 @@ export default function ModelDashboardTab() {
           </DialogHeader>
           <p className="text-xs text-muted-foreground -mt-2">Wähle eine oder mehrere Plattformen aus und trage die Login-Daten ein.</p>
           <div className="space-y-3">
-            {PLATFORMS.map(platform => {
+            {PLATFORMS.filter(p => !modelAccounts.some(a => a.platform === p)).map(platform => {
               const entry = newAccounts[platform];
               const isSelected = entry?.selected;
               return (
