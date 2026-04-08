@@ -887,7 +887,7 @@ export default function ModelDashboardTab() {
           <div className="space-y-4">
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Plattform</Label>
-              <Select value={newAccount.platform} onValueChange={v => setNewAccount(prev => ({ ...prev, platform: v }))}>
+              <Select value={newAccount.platform} onValueChange={v => setNewAccount(prev => ({ ...prev, platform: v, account_domain: PLATFORM_DOMAINS[v] || prev.account_domain }))}>
                 <SelectTrigger className="bg-secondary/40 border-border/50 text-sm">
                   <SelectValue />
                 </SelectTrigger>
