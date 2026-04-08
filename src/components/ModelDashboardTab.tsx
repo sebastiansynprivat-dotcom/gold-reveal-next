@@ -226,33 +226,23 @@ export default function ModelDashboardTab() {
     );
   }, [models, searchQuery]);
 
-  // ─── Revenue overview per model ───
-  const modelRevenueOverview = useMemo(() => {
-    if (!revenueOverviewLoaded) return [];
-    return models.map(model => {
-      const accs = allAccounts.filter(a => a.model_id === model.id);
-      let fourbased = 0, maloum = 0, brezzels = 0, total = 0;
-      for (const acc of accs) {
-        const d = allDashData[acc.id];
-        if (d) {
-          fourbased += d.fourbased;
-          maloum += d.maloum;
-          brezzels += d.brezzels;
-          total += (d.fourbased + d.maloum + d.brezzels) || d.monthly;
-        }
+  // ─── Per-model platform revenue (for selected model) ───
+  const selectedModelPlatformRevenue = useMemo(() => {
+    if (!selectedModelId || modelAccounts.length === 0) return [];
+    const platformMap: Record<string, { fourbased: number; maloum: number; brezzels: number; total: number }> = {};
+    for (const acc of modelAccounts) {
+      const pr = platformRevenues[acc.id];
+      const rev = dashboardRevenues[acc.id] || 0;
+      if (!platformMap[acc.platform]) platformMap[acc.platform] = { fourbased: 0, maloum: 0, brezzels: 0, total: 0 };
+      if (pr) {
+        platformMap[acc.platform].fourbased += pr.fourbased;
+        platformMap[acc.platform].maloum += pr.maloum;
+        platformMap[acc.platform].brezzels += pr.brezzels;
       }
-      const anteil = model.revenue_percentage > 0 ? Math.round(total * model.revenue_percentage / 100) : 0;
-      return { id: model.id, name: model.name, username: model.username, fourbased, maloum, brezzels, total, percentage: model.revenue_percentage, anteil, currency: model.currency };
-    }).sort((a, b) => b.total - a.total);
-  }, [models, allAccounts, allDashData, revenueOverviewLoaded]);
-
-  const overviewGrandTotal = useMemo(() => modelRevenueOverview.reduce((s, m) => s + m.total, 0), [modelRevenueOverview]);
-  const overviewTotalAnteil = useMemo(() => modelRevenueOverview.reduce((s, m) => s + m.anteil, 0), [modelRevenueOverview]);
-  const overviewPlatformTotals = useMemo(() => ({
-    fourbased: modelRevenueOverview.reduce((s, m) => s + m.fourbased, 0),
-    maloum: modelRevenueOverview.reduce((s, m) => s + m.maloum, 0),
-    brezzels: modelRevenueOverview.reduce((s, m) => s + m.brezzels, 0),
-  }), [modelRevenueOverview]);
+      platformMap[acc.platform].total += rev;
+    }
+    return Object.entries(platformMap).map(([platform, data]) => ({ platform, ...data }));
+  }, [selectedModelId, modelAccounts, platformRevenues, dashboardRevenues]);
 
 
   const totalRevenue = useMemo(() => {
