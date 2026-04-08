@@ -552,14 +552,7 @@ export default function AdminDashboard() {
   const [accounts, setAccounts] = useState<AccountEntry[]>([]);
   const [accountPoolOpen, setAccountPoolOpen] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState("");
-  const [newAccEmail, setNewAccEmail] = useState("");
-  const [newAccPassword, setNewAccPassword] = useState("");
-  const [newAccDomain, setNewAccDomain] = useState("");
-  const [newAccDriveFolder, setNewAccDriveFolder] = useState("");
-  const [newAccLanguage, setNewAccLanguage] = useState<"de" | "en">("de");
-  const [newAccModelActive, setNewAccModelActive] = useState(true);
-  const [newAccModelAgency, setNewAccModelAgency] = useState<"shex" | "syn">("shex");
-  const [addingAccount, setAddingAccount] = useState(false);
+  
   const [assigning, setAssigning] = useState(false);
   const [assignConfirmOpen, setAssignConfirmOpen] = useState(false);
   const [assignResult, setAssignResult] = useState<{ assigned: number; message: string } | null>(null);
@@ -1468,36 +1461,7 @@ export default function AdminDashboard() {
   const platforms = [...new Set(accounts.filter(a => !a.is_manual).map((a) => a.platform).filter(Boolean))];
   const manualPlatforms = [...new Set(accounts.filter(a => a.is_manual).map(a => a.platform).filter(Boolean))];
 
-  const addAccount = async () => {
-    if (!newAccEmail.trim() || !newAccDomain.trim() || !selectedPlatform) return;
-    setAddingAccount(true);
-    const { data: { user: currentUser } } = await supabase.auth.getUser();
-    const { error } = await supabase.from("accounts").insert({
-      platform: selectedPlatform,
-      account_email: newAccEmail.trim(),
-      account_password: newAccPassword.trim(),
-      account_domain: newAccDomain.trim(),
-      drive_folder_id: extractDriveFolderId(newAccDriveFolder.trim()),
-      model_language: newAccLanguage,
-      model_active: newAccModelActive,
-      model_agency: newAccModelAgency,
-      created_by: currentUser?.id,
-    } as any);
-    if (error) {
-      toast.error("Fehler beim Hinzufügen");
-    } else {
-      toast.success("Account hinzugefügt!");
-      setNewAccEmail("");
-      setNewAccPassword("");
-      setNewAccDomain("");
-      setNewAccDriveFolder("");
-      setNewAccLanguage("de");
-      setNewAccModelActive(true);
-      setNewAccModelAgency("shex");
-      loadAccounts();
-    }
-    setAddingAccount(false);
-  };
+  
 
   const openAssignDialog = () => {
     setAssignResult(null);
@@ -2571,8 +2535,6 @@ export default function AdminDashboard() {
                           key={p}
                           onClick={() => {
                             setSelectedPlatform(p);
-                            const existingDomain = accounts.find((a) => a.platform === p)?.account_domain;
-                            setNewAccDomain(existingDomain || "");
                             setAccountPoolOpen(true);
                           }}
                           className="glass-card-subtle rounded-xl p-4 text-left hover:bg-secondary/30 transition-colors"
@@ -5030,79 +4992,8 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Split Layout: Form + List */}
-          <div className="flex-1 overflow-hidden flex flex-col sm:flex-row gap-4 pt-3 min-h-0">
-            
-            {/* Left: Add Account Form */}
-            <div className="sm:w-[280px] shrink-0 overflow-y-auto max-h-full">
-              <div className="rounded-xl border border-accent/20 bg-accent/[0.03] p-4 space-y-3">
-                <div className="flex items-center gap-2 pb-1">
-                  <div className="h-7 w-7 rounded-lg bg-accent/10 border border-accent/20 flex items-center justify-center">
-                    <Plus className="h-3.5 w-3.5 text-accent" />
-                  </div>
-                  <p className="text-xs font-semibold text-foreground">Neuer Account</p>
-                </div>
-                
-                <div className="space-y-2">
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Domain</label>
-                    <div className="input-gold-shimmer rounded-lg"><Input value={newAccDomain} onChange={(e) => setNewAccDomain(e.target.value)} placeholder="z.B. brezzels.com" className="text-xs h-8 border-transparent" /></div>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">E-Mail</label>
-                    <div className="input-gold-shimmer rounded-lg"><Input value={newAccEmail} onChange={(e) => setNewAccEmail(e.target.value)} placeholder="account@email.com" type="email" className="text-xs h-8 border-transparent" /></div>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Passwort</label>
-                    <div className="input-gold-shimmer rounded-lg"><Input value={newAccPassword} onChange={(e) => setNewAccPassword(e.target.value)} placeholder="••••••••" className="text-xs h-8 border-transparent" /></div>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Drive Folder ID</label>
-                    <div className="input-gold-shimmer rounded-lg"><Input value={newAccDriveFolder} onChange={(e) => setNewAccDriveFolder(e.target.value)} placeholder="Optional" className="text-xs h-8 border-transparent" /></div>
-                  </div>
-                </div>
-
-                <div className="space-y-2 pt-1">
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Model spricht</label>
-                    <div className="flex gap-1.5">
-                      <button onClick={() => setNewAccLanguage("de")}
-                        className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", newAccLanguage === "de" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50 hover:border-accent/30")}>
-                        🇩🇪 DE
-                      </button>
-                      <button onClick={() => setNewAccLanguage("en")}
-                        className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", newAccLanguage === "en" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50 hover:border-accent/30")}>
-                        🇬🇧 EN
-                      </button>
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Model ist bei</label>
-                    <div className="flex gap-1.5">
-                      <button onClick={() => setNewAccModelAgency("shex")}
-                        className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", newAccModelAgency === "shex" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50 hover:border-accent/30")}>
-                        SheX
-                      </button>
-                      <button onClick={() => setNewAccModelAgency("syn")}
-                        className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", newAccModelAgency === "syn" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50 hover:border-accent/30")}>
-                        SYN
-                      </button>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between py-1">
-                    <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Model aktiv</span>
-                    <Switch checked={newAccModelActive} onCheckedChange={setNewAccModelActive} />
-                  </div>
-                </div>
-
-                <Button onClick={addAccount} disabled={addingAccount || !newAccEmail.trim() || !newAccDomain.trim()} className="w-full" size="sm">
-                  <Plus className="h-3.5 w-3.5 mr-1.5" />
-                  {addingAccount ? "Wird hinzugefügt..." : "Hinzufügen"}
-                </Button>
-              </div>
-            </div>
-
-            {/* Right: Account List */}
+          {/* Account List */}
+          <div className="flex-1 overflow-hidden flex flex-col pt-3 min-h-0">
             <div className="flex-1 flex flex-col min-h-0 gap-3">
               {/* Filter + Search */}
               <div className="flex items-center gap-2">
