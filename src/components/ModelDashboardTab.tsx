@@ -833,7 +833,8 @@ export default function ModelDashboardTab() {
                   </Accordion>
                 )}
 
-                {/* Add more accounts button – always visible */}
+                {/* Add more accounts button – only if platforms available */}
+                {modelAccounts.length < PLATFORMS.length && (
                 <Button
                   size="sm"
                   variant="outline"
@@ -843,6 +844,7 @@ export default function ModelDashboardTab() {
                   <Plus className="h-3 w-3" />
                   Plattform-Account hinzufügen
                 </Button>
+                )}
               </div>
             </Section>
 
