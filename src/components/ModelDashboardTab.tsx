@@ -339,6 +339,31 @@ export default function ModelDashboardTab() {
       if (selectedModelId) await loadModelAccounts(selectedModelId);
     }
   };
+  // ─── Start editing account ───
+  const startEditAccount = (acc: AccountRow) => {
+    setEditingAccountId(acc.id);
+    setEditAccountData({
+      account_email: acc.account_email,
+      account_password: acc.account_password,
+      account_domain: acc.account_domain,
+    });
+  };
+
+  // ─── Save edited account ───
+  const saveEditAccount = async () => {
+    if (!editingAccountId) return;
+    const { error } = await supabase.from("accounts").update({
+      account_email: editAccountData.account_email,
+      account_password: editAccountData.account_password,
+      account_domain: editAccountData.account_domain,
+    }).eq("id", editingAccountId);
+    if (error) toast.error(error.message);
+    else {
+      toast.success("Account aktualisiert ✅");
+      setEditingAccountId(null);
+      if (selectedModelId) await loadModelAccounts(selectedModelId);
+    }
+  };
 
   // ─── Generate model login ───
   const generateModelLogin = async (accountId: string) => {
