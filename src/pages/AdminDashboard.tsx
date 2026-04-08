@@ -1909,7 +1909,7 @@ export default function AdminDashboard() {
   };
 
   const platformAccounts = selectedPlatform
-    ? accounts.filter((a) => a.platform === selectedPlatform)
+    ? accounts.filter((a) => a.platform.toLowerCase() === selectedPlatform.toLowerCase())
     : [];
   const freeCount = platformAccounts.filter((a) => !a.assigned_to).length;
   const assignedCount = platformAccounts.filter((a) => a.assigned_to).length;
