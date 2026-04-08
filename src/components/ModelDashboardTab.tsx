@@ -111,6 +111,7 @@ const platformColors: Record<string, string> = {
   "4Based": "bg-blue-500/15 text-blue-400 border-blue-500/30",
   "Maloum": "bg-purple-500/15 text-purple-400 border-purple-500/30",
   "Brezzels": "bg-orange-500/15 text-orange-400 border-orange-500/30",
+  "FansyMe": "bg-pink-500/15 text-pink-400 border-pink-500/30",
 };
 
 // ─── Main Component ───
