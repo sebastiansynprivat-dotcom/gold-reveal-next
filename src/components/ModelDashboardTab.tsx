@@ -1158,13 +1158,13 @@ export default function ModelDashboardTab() {
         )}
       </AnimatePresence>
 
-      {/* ── Create Model Dialog ── */}
-      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-        <DialogContent className="glass-card border-border sm:max-w-md">
+      <Dialog open={createDialogOpen} onOpenChange={v => { setCreateDialogOpen(v); if (!v) { setCreateAccounts(emptyAccountEntries()); } }}>
+        <DialogContent className="glass-card border-border sm:max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-foreground">Neues Model anlegen</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            {/* Model info */}
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Name *</Label>
               <Input
@@ -1174,31 +1174,169 @@ export default function ModelDashboardTab() {
                 className="bg-secondary/40 border-border/50 text-sm"
               />
             </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Benutzername</Label>
-              <Input
-                value={newModel.username}
-                onChange={e => setNewModel(prev => ({ ...prev, username: e.target.value }))}
-                placeholder="z.B. alina_official"
-                className="bg-secondary/40 border-border/50 text-sm"
-              />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Benutzername</Label>
+                <Input
+                  value={newModel.username}
+                  onChange={e => setNewModel(prev => ({ ...prev, username: e.target.value }))}
+                  placeholder="z.B. alina_official"
+                  className="bg-secondary/40 border-border/50 text-sm"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Anschrift</Label>
+                <Input
+                  value={newModel.address}
+                  onChange={e => setNewModel(prev => ({ ...prev, address: e.target.value }))}
+                  placeholder="Straße, PLZ, Ort"
+                  className="bg-secondary/40 border-border/50 text-sm"
+                />
+              </div>
             </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Anschrift</Label>
-              <Textarea
-                value={newModel.address}
-                onChange={e => setNewModel(prev => ({ ...prev, address: e.target.value }))}
-                placeholder="Straße, PLZ, Ort, Land"
-                className="bg-secondary/40 border-border/50 text-sm min-h-[60px]"
-              />
+
+            {/* Divider */}
+            <div className="border-t border-border/30 pt-3">
+              <p className="text-xs font-semibold text-foreground mb-1">Plattform-Accounts</p>
+              <p className="text-[10px] text-muted-foreground mb-3">Optional – wähle Plattformen aus und trage Login-Daten ein.</p>
             </div>
+
+            {/* Platform accounts */}
+            <div className="space-y-2">
+              {PLATFORMS.map(platform => {
+                const entry = createAccounts[platform];
+                const isSelected = entry?.selected;
+                return (
+                  <div key={platform} className={cn(
+                    "rounded-lg border transition-all duration-200",
+                    isSelected ? "border-accent/40 bg-accent/5" : "border-border/40 bg-secondary/10"
+                  )}>
+                    <button
+                      type="button"
+                      onClick={() => setCreateAccounts(prev => ({
+                        ...prev,
+                        [platform]: { ...prev[platform], selected: !prev[platform].selected }
+                      }))}
+                      className="w-full flex items-center gap-3 px-3 py-2.5"
+                    >
+                      <div className={cn(
+                        "h-5 w-5 rounded border-2 flex items-center justify-center transition-all",
+                        isSelected ? "border-accent bg-accent/20" : "border-muted-foreground/30"
+                      )}>
+                        {isSelected && <CheckCircle2 className="h-3 w-3 text-accent" />}
+                      </div>
+                      <span className={cn(
+                        "text-[10px] font-medium px-2.5 py-0.5 rounded-full border",
+                        platformColors[platform] || "bg-secondary/50 text-muted-foreground border-border/30"
+                      )}>
+                        {platform}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground ml-auto">{PLATFORM_DOMAINS[platform]}</span>
+                    </button>
+
+                    <AnimatePresence>
+                      {isSelected && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="px-3 pb-3 space-y-2 border-t border-border/30 pt-2">
+                            <div className="grid grid-cols-2 gap-2">
+                              <div className="space-y-1">
+                                <Label className="text-[10px] text-muted-foreground">E-Mail / Login</Label>
+                                <Input
+                                  value={entry.account_email}
+                                  onChange={e => setCreateAccounts(prev => ({ ...prev, [platform]: { ...prev[platform], account_email: e.target.value } }))}
+                                  placeholder="login@example.com"
+                                  className="bg-secondary/40 border-border/50 text-xs h-8"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-[10px] text-muted-foreground">Passwort</Label>
+                                <Input
+                                  value={entry.account_password}
+                                  onChange={e => setCreateAccounts(prev => ({ ...prev, [platform]: { ...prev[platform], account_password: e.target.value } }))}
+                                  placeholder="••••••••"
+                                  className="bg-secondary/40 border-border/50 text-xs h-8"
+                                />
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div className="space-y-1">
+                                <Label className="text-[10px] text-muted-foreground">Domain</Label>
+                                <Input
+                                  value={entry.account_domain}
+                                  onChange={e => setCreateAccounts(prev => ({ ...prev, [platform]: { ...prev[platform], account_domain: e.target.value } }))}
+                                  className="bg-secondary/40 border-border/50 text-xs h-8"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-[10px] text-muted-foreground">Drive Folder ID</Label>
+                                <Input
+                                  value={entry.drive_folder_id}
+                                  onChange={e => setCreateAccounts(prev => ({ ...prev, [platform]: { ...prev[platform], drive_folder_id: e.target.value } }))}
+                                  placeholder="Optional"
+                                  className="bg-secondary/40 border-border/50 text-xs h-8"
+                                />
+                              </div>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div className="space-y-1">
+                                <Label className="text-[10px] text-muted-foreground">Sprache</Label>
+                                <div className="flex gap-1">
+                                  <button onClick={() => setCreateAccounts(prev => ({ ...prev, [platform]: { ...prev[platform], model_language: "de" as const } }))}
+                                    className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", entry.model_language === "de" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50")}>
+                                    🇩🇪 DE
+                                  </button>
+                                  <button onClick={() => setCreateAccounts(prev => ({ ...prev, [platform]: { ...prev[platform], model_language: "en" as const } }))}
+                                    className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", entry.model_language === "en" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50")}>
+                                    🇬🇧 EN
+                                  </button>
+                                </div>
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-[10px] text-muted-foreground">Agentur</Label>
+                                <div className="flex gap-1">
+                                  <button onClick={() => setCreateAccounts(prev => ({ ...prev, [platform]: { ...prev[platform], model_agency: "shex" as const } }))}
+                                    className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", entry.model_agency === "shex" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50")}>
+                                    SheX
+                                  </button>
+                                  <button onClick={() => setCreateAccounts(prev => ({ ...prev, [platform]: { ...prev[platform], model_agency: "syn" as const } }))}
+                                    className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", entry.model_agency === "syn" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50")}>
+                                    SYN
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="flex items-center justify-between py-1">
+                              <span className="text-[10px] font-medium text-muted-foreground">Model aktiv</span>
+                              <Switch
+                                checked={entry.model_active}
+                                onCheckedChange={(checked) => setCreateAccounts(prev => ({ ...prev, [platform]: { ...prev[platform], model_active: checked } }))}
+                              />
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                );
+              })}
+            </div>
+
             <Button
               onClick={handleCreateModel}
               disabled={creating}
               className="w-full gap-2 bg-accent hover:bg-accent/90 text-accent-foreground"
             >
               {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-              Model erstellen
+              {(() => {
+                const count = Object.values(createAccounts).filter(v => v.selected).length;
+                return count > 0 ? `Model mit ${count} Account${count > 1 ? "s" : ""} erstellen` : "Model erstellen";
+              })()}
             </Button>
           </div>
         </DialogContent>
