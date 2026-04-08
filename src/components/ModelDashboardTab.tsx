@@ -223,12 +223,12 @@ export default function ModelDashboardTab() {
     if (!newModel.name.trim()) { toast.error("Name ist erforderlich"); return; }
     setCreating(true);
     const { data: userData } = await supabase.auth.getUser();
-    const { error } = await supabase.from("models").insert({
+    const { error } = await (supabase.from("models") as any).insert({
       name: newModel.name,
       username: newModel.username,
       address: newModel.address,
       created_by: userData.user?.id,
-    } as any);
+    });
     if (error) { toast.error(error.message); }
     else {
       toast.success("Model erstellt ✅");
