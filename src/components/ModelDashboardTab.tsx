@@ -327,7 +327,20 @@ export default function ModelDashboardTab() {
       currency: modelForm.currency,
       notes: modelForm.notes,
       contract_file_path: modelForm.contract_file_path,
+      drive_folder_id: extractDriveFolderId(modelForm.drive_folder_id || ""),
+      model_language: modelForm.model_language,
+      model_agency: modelForm.model_agency,
+      model_active: modelForm.model_active,
     }).eq("id", selectedModelId);
+    // Also update all accounts with model-level fields
+    if (!error && modelAccounts.length > 0) {
+      await (supabase.from("accounts") as any).update({
+        drive_folder_id: extractDriveFolderId(modelForm.drive_folder_id || ""),
+        model_language: modelForm.model_language,
+        model_agency: modelForm.model_agency,
+        model_active: modelForm.model_active,
+      }).eq("model_id", selectedModelId);
+    }
     if (error) toast.error(error.message);
     else { toast.success("Gespeichert ✅"); await loadModels(); }
     setSaving(false);
