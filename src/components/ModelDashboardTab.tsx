@@ -56,6 +56,12 @@ interface ChatterProfile {
 
 const CURRENCIES = ["EUR", "USD", "GBP", "CHF", "AED"] as const;
 const PLATFORMS = ["4Based", "Maloum", "Brezzels", "FansyMe"] as const;
+const PLATFORM_DOMAINS: Record<string, string> = {
+  "4Based": "4based.com",
+  "Maloum": "malum.com",
+  "Brezzels": "brezzels.com",
+  "FansyMe": "fansyme.com",
+};
 
 // ─── Animated counter ───
 function useAnimatedCounter(target: number, duration = 1200) {
@@ -137,7 +143,7 @@ export default function ModelDashboardTab() {
 
   // Add account dialog
   const [addAccountOpen, setAddAccountOpen] = useState(false);
-  const [newAccount, setNewAccount] = useState({ platform: "4Based", account_email: "", account_password: "", account_domain: "" });
+  const [newAccount, setNewAccount] = useState({ platform: "4Based", account_email: "", account_password: "", account_domain: PLATFORM_DOMAINS["4Based"] || "" });
   const [addingAccount, setAddingAccount] = useState(false);
 
   // Model login dialog
@@ -307,7 +313,7 @@ export default function ModelDashboardTab() {
     if (error) toast.error(error.message);
     else {
       toast.success("Account hinzugefügt ✅");
-      setNewAccount({ platform: "4Based", account_email: "", account_password: "", account_domain: "" });
+      setNewAccount({ platform: "4Based", account_email: "", account_password: "", account_domain: PLATFORM_DOMAINS["4Based"] || "" });
       setAddAccountOpen(false);
       await loadModelAccounts(selectedModelId);
     }
@@ -881,7 +887,7 @@ export default function ModelDashboardTab() {
           <div className="space-y-4">
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Plattform</Label>
-              <Select value={newAccount.platform} onValueChange={v => setNewAccount(prev => ({ ...prev, platform: v }))}>
+              <Select value={newAccount.platform} onValueChange={v => setNewAccount(prev => ({ ...prev, platform: v, account_domain: PLATFORM_DOMAINS[v] || prev.account_domain }))}>
                 <SelectTrigger className="bg-secondary/40 border-border/50 text-sm">
                   <SelectValue />
                 </SelectTrigger>
