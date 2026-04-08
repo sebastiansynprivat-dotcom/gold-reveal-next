@@ -56,6 +56,12 @@ interface ChatterProfile {
 
 const CURRENCIES = ["EUR", "USD", "GBP", "CHF", "AED"] as const;
 const PLATFORMS = ["4Based", "Maloum", "Brezzels", "FansyMe"] as const;
+const PLATFORM_DOMAINS: Record<string, string> = {
+  "4Based": "4based.com",
+  "Maloum": "malum.com",
+  "Brezzels": "brezzels.com",
+  "FansyMe": "fansyme.com",
+};
 
 // ─── Animated counter ───
 function useAnimatedCounter(target: number, duration = 1200) {
