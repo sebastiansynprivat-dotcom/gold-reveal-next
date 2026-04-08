@@ -19,6 +19,7 @@ import {
   Search, ChevronRight, TrendingUp, KeyRound, Copy, Eye, EyeOff,
   Users, Globe, User, FolderTree, Pencil
 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import CreditNoteForm from "@/components/CreditNoteForm";
 
 // ─── Types ───
