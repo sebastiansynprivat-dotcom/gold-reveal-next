@@ -160,11 +160,7 @@ export default function ModelDashboardTab() {
 
   // Revenue from model_dashboard (per-platform)
   const [dashboardRevenues, setDashboardRevenues] = useState<Record<string, number>>({});
-
-  // All accounts for revenue overview
-  const [allAccounts, setAllAccounts] = useState<{ id: string; model_id: string | null; platform: string }[]>([]);
-  const [allDashData, setAllDashData] = useState<Record<string, { fourbased: number; maloum: number; brezzels: number; monthly: number }>>({});
-  const [revenueOverviewLoaded, setRevenueOverviewLoaded] = useState(false);
+  const [platformRevenues, setPlatformRevenues] = useState<Record<string, { fourbased: number; maloum: number; brezzels: number }>>({});
 
   const detailRef = useRef<HTMLDivElement>(null);
 
@@ -179,29 +175,8 @@ export default function ModelDashboardTab() {
 
   useEffect(() => { loadModels(); }, [loadModels]);
 
-  // ─── Load all revenue data for overview ───
-  const loadRevenueOverview = useCallback(async () => {
-    const [accsRes, dashRes] = await Promise.all([
-      supabase.from("accounts").select("id, model_id, platform" as any),
-      supabase.from("model_dashboard").select("account_id, fourbased_revenue, maloum_revenue, brezzels_revenue, monthly_revenue"),
-    ]);
-    if (accsRes.data) setAllAccounts(accsRes.data as any);
-    if (dashRes.data) {
-      const map: Record<string, { fourbased: number; maloum: number; brezzels: number; monthly: number }> = {};
-      for (const d of dashRes.data) {
-        map[d.account_id] = {
-          fourbased: Number((d as any).fourbased_revenue) || 0,
-          maloum: Number((d as any).maloum_revenue) || 0,
-          brezzels: Number((d as any).brezzels_revenue) || 0,
-          monthly: Number((d as any).monthly_revenue) || 0,
-        };
-      }
-      setAllDashData(map);
-    }
-    setRevenueOverviewLoaded(true);
-  }, []);
 
-  useEffect(() => { loadRevenueOverview(); }, [loadRevenueOverview]);
+
 
   // ─── Load accounts for selected model ───
   const loadModelAccounts = useCallback(async (modelId: string) => {
@@ -218,13 +193,16 @@ export default function ModelDashboardTab() {
       .select("account_id, fourbased_revenue, maloum_revenue, brezzels_revenue, monthly_revenue");
     if (dashData) {
       const revMap: Record<string, number> = {};
+      const platRevMap: Record<string, { fourbased: number; maloum: number; brezzels: number }> = {};
       for (const d of dashData) {
         const fb = Number((d as any).fourbased_revenue) || 0;
         const ml = Number((d as any).maloum_revenue) || 0;
         const br = Number((d as any).brezzels_revenue) || 0;
         revMap[d.account_id] = fb + ml + br || Number((d as any).monthly_revenue) || 0;
+        platRevMap[d.account_id] = { fourbased: fb, maloum: ml, brezzels: br };
       }
       setDashboardRevenues(revMap);
+      setPlatformRevenues(platRevMap);
     }
   }, []);
 
@@ -248,33 +226,23 @@ export default function ModelDashboardTab() {
     );
   }, [models, searchQuery]);
 
-  // ─── Revenue overview per model ───
-  const modelRevenueOverview = useMemo(() => {
-    if (!revenueOverviewLoaded) return [];
-    return models.map(model => {
-      const accs = allAccounts.filter(a => a.model_id === model.id);
-      let fourbased = 0, maloum = 0, brezzels = 0, total = 0;
-      for (const acc of accs) {
-        const d = allDashData[acc.id];
-        if (d) {
-          fourbased += d.fourbased;
-          maloum += d.maloum;
-          brezzels += d.brezzels;
-          total += (d.fourbased + d.maloum + d.brezzels) || d.monthly;
-        }
+  // ─── Per-model platform revenue (for selected model) ───
+  const selectedModelPlatformRevenue = useMemo(() => {
+    if (!selectedModelId || modelAccounts.length === 0) return [];
+    const platformMap: Record<string, { fourbased: number; maloum: number; brezzels: number; total: number }> = {};
+    for (const acc of modelAccounts) {
+      const pr = platformRevenues[acc.id];
+      const rev = dashboardRevenues[acc.id] || 0;
+      if (!platformMap[acc.platform]) platformMap[acc.platform] = { fourbased: 0, maloum: 0, brezzels: 0, total: 0 };
+      if (pr) {
+        platformMap[acc.platform].fourbased += pr.fourbased;
+        platformMap[acc.platform].maloum += pr.maloum;
+        platformMap[acc.platform].brezzels += pr.brezzels;
       }
-      const anteil = model.revenue_percentage > 0 ? Math.round(total * model.revenue_percentage / 100) : 0;
-      return { id: model.id, name: model.name, username: model.username, fourbased, maloum, brezzels, total, percentage: model.revenue_percentage, anteil, currency: model.currency };
-    }).sort((a, b) => b.total - a.total);
-  }, [models, allAccounts, allDashData, revenueOverviewLoaded]);
-
-  const overviewGrandTotal = useMemo(() => modelRevenueOverview.reduce((s, m) => s + m.total, 0), [modelRevenueOverview]);
-  const overviewTotalAnteil = useMemo(() => modelRevenueOverview.reduce((s, m) => s + m.anteil, 0), [modelRevenueOverview]);
-  const overviewPlatformTotals = useMemo(() => ({
-    fourbased: modelRevenueOverview.reduce((s, m) => s + m.fourbased, 0),
-    maloum: modelRevenueOverview.reduce((s, m) => s + m.maloum, 0),
-    brezzels: modelRevenueOverview.reduce((s, m) => s + m.brezzels, 0),
-  }), [modelRevenueOverview]);
+      platformMap[acc.platform].total += rev;
+    }
+    return Object.entries(platformMap).map(([platform, data]) => ({ platform, ...data }));
+  }, [selectedModelId, modelAccounts, platformRevenues, dashboardRevenues]);
 
 
   const totalRevenue = useMemo(() => {
@@ -524,133 +492,6 @@ export default function ModelDashboardTab() {
         </div>
       </motion.div>
 
-      {/* ── Revenue Overview ── */}
-      {revenueOverviewLoaded && models.length > 0 && (
-        <motion.section
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.08 }}
-          className="space-y-3"
-        >
-          {/* Hero Gesamtumsatz */}
-          <div className="relative gold-gradient-border-animated pulse-glow rounded-xl p-5 text-center">
-            <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-accent/8 via-transparent to-accent/5 pointer-events-none" />
-            <div className="relative">
-              <p className="text-[10px] text-muted-foreground mb-1 tracking-widest uppercase">Gesamtumsatz aller Models</p>
-              <p className="text-3xl font-extrabold text-gold-gradient-shimmer tracking-tight">
-                <AnimatedGoldValue value={overviewGrandTotal} />
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">Auszahlungen gesamt: <span className="text-accent font-semibold">{overviewTotalAnteil.toLocaleString("de-DE")}€</span></p>
-            </div>
-          </div>
-
-          {/* Platform Cards */}
-          <div className="grid grid-cols-3 gap-3">
-            {([
-              { label: "4Based", value: overviewPlatformTotals.fourbased, color: "#22d3ee" },
-              { label: "Maloum", value: overviewPlatformTotals.maloum, color: "#d4af37" },
-              { label: "Brezzels", value: overviewPlatformTotals.brezzels, color: "#3b82f6" },
-            ]).map(({ label, value, color }) => (
-              <div key={label} className="glass-card-subtle rounded-xl p-3 text-center hover:scale-[1.02] transition-transform">
-                <div className="flex items-center justify-center gap-1.5 mb-1">
-                  <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
-                  <p className="text-[10px] text-muted-foreground font-medium">{label}</p>
-                </div>
-                <p className="text-base font-bold text-foreground tabular-nums">{value.toLocaleString("de-DE")}€</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Per-Model Revenue Table */}
-          <div className="glass-card rounded-xl overflow-hidden">
-            <div className="px-4 py-3 header-gradient-border flex items-center gap-2.5">
-              <div className="h-7 w-7 rounded-lg bg-accent/10 flex items-center justify-center">
-                <TrendingUp className="h-3.5 w-3.5 text-accent" />
-              </div>
-              <h2 className="text-sm font-semibold text-foreground tracking-wide">Umsatz pro Model</h2>
-            </div>
-            <div className="overflow-x-auto scrollbar-none">
-              {/* Table Header */}
-              <div className="grid grid-cols-[1fr_70px_70px_70px_80px_60px_80px] gap-0 bg-accent/10 border-b border-accent/20">
-                <div className="px-3 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold">Model</div>
-                <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-right">4Based</div>
-                <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-right">Maloum</div>
-                <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-right">Brezzels</div>
-                <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-right">Gesamt</div>
-                <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-right">%</div>
-                <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-right pr-3">Anteil</div>
-              </div>
-
-              <ScrollArea className="max-h-[400px]">
-                {modelRevenueOverview.map((m, i) => (
-                  <div
-                    key={m.id}
-                    onClick={() => {
-                      setSelectedModelId(m.id);
-                      setTimeout(() => detailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
-                    }}
-                    className={cn(
-                      "grid grid-cols-[1fr_70px_70px_70px_80px_60px_80px] gap-0 items-center border-b border-border/30 cursor-pointer transition-colors",
-                      m.id === selectedModelId
-                        ? "bg-accent/15 border-l-2 border-l-accent"
-                        : i % 2 === 0 ? "bg-card/40 hover:bg-accent/5" : "bg-card/20 hover:bg-accent/5"
-                    )}
-                  >
-                    <div className="px-3 py-2.5 min-w-0">
-                      <p className={cn("text-xs font-medium truncate", m.id === selectedModelId ? "text-accent" : "text-foreground")}>
-                        {m.name || "Unbenannt"}
-                      </p>
-                    </div>
-                    <div className="px-1 py-2 text-right">
-                      <span className="text-[11px] tabular-nums text-muted-foreground">{m.fourbased > 0 ? `${m.fourbased.toLocaleString("de-DE")}€` : "–"}</span>
-                    </div>
-                    <div className="px-1 py-2 text-right">
-                      <span className="text-[11px] tabular-nums text-muted-foreground">{m.maloum > 0 ? `${m.maloum.toLocaleString("de-DE")}€` : "–"}</span>
-                    </div>
-                    <div className="px-1 py-2 text-right">
-                      <span className="text-[11px] tabular-nums text-muted-foreground">{m.brezzels > 0 ? `${m.brezzels.toLocaleString("de-DE")}€` : "–"}</span>
-                    </div>
-                    <div className="px-1 py-2 text-right">
-                      <span className={cn("text-[11px] tabular-nums font-semibold", m.total > 0 ? "text-foreground" : "text-muted-foreground")}>
-                        {m.total > 0 ? `${m.total.toLocaleString("de-DE")}€` : "–"}
-                      </span>
-                    </div>
-                    <div className="px-1 py-2 text-right">
-                      <span className="text-[11px] tabular-nums text-muted-foreground">{m.percentage}%</span>
-                    </div>
-                    <div className="px-1 py-2 text-right pr-3">
-                      <span className={cn("text-[11px] tabular-nums font-semibold", m.anteil > 0 ? "text-accent" : "text-muted-foreground")}>
-                        {m.anteil > 0 ? `${m.anteil.toLocaleString("de-DE")}€` : "–"}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </ScrollArea>
-
-              {/* Footer totals */}
-              <div className="grid grid-cols-[1fr_70px_70px_70px_80px_60px_80px] gap-0 bg-accent/10 border-t border-accent/20">
-                <div className="px-3 py-2 text-[10px] uppercase tracking-wider text-accent font-bold">Gesamt</div>
-                <div className="px-1 py-2 text-right">
-                  <span className="text-[11px] tabular-nums font-bold text-foreground">{overviewPlatformTotals.fourbased.toLocaleString("de-DE")}€</span>
-                </div>
-                <div className="px-1 py-2 text-right">
-                  <span className="text-[11px] tabular-nums font-bold text-foreground">{overviewPlatformTotals.maloum.toLocaleString("de-DE")}€</span>
-                </div>
-                <div className="px-1 py-2 text-right">
-                  <span className="text-[11px] tabular-nums font-bold text-foreground">{overviewPlatformTotals.brezzels.toLocaleString("de-DE")}€</span>
-                </div>
-                <div className="px-1 py-2 text-right">
-                  <span className="text-[11px] tabular-nums font-bold text-accent">{overviewGrandTotal.toLocaleString("de-DE")}€</span>
-                </div>
-                <div className="px-1 py-2 text-right"><span className="text-[11px]">–</span></div>
-                <div className="px-1 py-2 text-right pr-3">
-                  <span className="text-[11px] tabular-nums font-bold text-accent">{overviewTotalAnteil.toLocaleString("de-DE")}€</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </motion.section>
-      )}
 
       {/* ── Model-Liste ── */}
       <motion.section
@@ -762,6 +603,52 @@ export default function ModelDashboardTab() {
               </Button>
               )}
             </div>
+
+            {/* ── Revenue per Platform ── */}
+            {modelAccounts.length > 0 && (
+              <Section icon={TrendingUp} title="Einnahmen" delay={0.05}>
+                <div className="space-y-3">
+                  {/* Hero total */}
+                  <div className="relative gold-gradient-border-animated pulse-glow rounded-xl p-5 text-center">
+                    <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-accent/8 via-transparent to-accent/5 pointer-events-none" />
+                    <div className="relative">
+                      <p className="text-[10px] text-muted-foreground mb-1 tracking-widest uppercase">Gesamtumsatz</p>
+                      <p className="text-3xl font-extrabold text-gold-gradient-shimmer tracking-tight tabular-nums">
+                        <AnimatedGoldValue value={totalRevenue} suffix={` ${modelForm.currency || "EUR"}`} />
+                      </p>
+                      {verdienst > 0 && (
+                        <p className="text-xs text-muted-foreground mt-1.5">
+                          Verdienst ({modelForm.revenue_percentage}%): <span className="text-accent font-semibold">{verdienst.toLocaleString("de-DE")} {modelForm.currency || "EUR"}</span>
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Platform cards */}
+                  <div className={cn("grid gap-3", selectedModelPlatformRevenue.length <= 2 ? "grid-cols-2" : "grid-cols-3")}>
+                    {selectedModelPlatformRevenue.map(({ platform, total }) => {
+                      const colorMap: Record<string, string> = {
+                        "4Based": "#22d3ee",
+                        "Maloum": "#d4af37",
+                        "Brezzels": "#3b82f6",
+                        "FansyMe": "#ec4899",
+                      };
+                      return (
+                        <div key={platform} className="glass-card-subtle rounded-xl p-3 text-center hover:scale-[1.02] transition-transform">
+                          <div className="flex items-center justify-center gap-1.5 mb-1">
+                            <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: colorMap[platform] || "#888" }} />
+                            <p className="text-[10px] text-muted-foreground font-medium">{platform}</p>
+                          </div>
+                          <p className="text-base font-bold text-foreground tabular-nums">
+                            {total > 0 ? `${total.toLocaleString("de-DE")}€` : "–"}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </Section>
+            )}
 
             {/* ── Ebene 1: Model-Stammdaten ── */}
             <Section icon={User} title="Model-Stammdaten" delay={0}>
