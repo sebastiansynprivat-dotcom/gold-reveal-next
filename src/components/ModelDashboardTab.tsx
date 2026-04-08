@@ -167,10 +167,10 @@ export default function ModelDashboardTab() {
   const loadModelAccounts = useCallback(async (modelId: string) => {
     const { data } = await supabase
       .from("accounts")
-      .select("id, account_email, account_domain, account_password, platform, model_id, assigned_to, model_active")
-      .eq("model_id" as any, modelId)
+      .select("id, account_email, account_domain, account_password, platform, model_id, assigned_to, model_active" as any)
+      .eq("model_id", modelId)
       .order("platform");
-    if (data) setModelAccounts(data as unknown as AccountRow[]);
+    if (data) setModelAccounts(data as any as AccountRow[]);
 
     // Load revenue data from model_dashboard for these accounts
     const { data: dashData } = await supabase
