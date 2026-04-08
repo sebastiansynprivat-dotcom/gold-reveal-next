@@ -4,7 +4,6 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -12,72 +11,53 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Upload, FileText, Trash2, Download, Save, Loader2, Star,
-  Percent, Wallet, StickyNote, CheckCircle2, FileDown, List, Filter, Search, ChevronRight, ChevronDown, TrendingUp, CalendarDays, DollarSign, KeyRound, Copy, Eye, EyeOff
+  Percent, Wallet, StickyNote, CheckCircle2, FileDown, Plus,
+  Search, ChevronRight, TrendingUp, KeyRound, Copy, Eye, EyeOff,
+  Users, Globe, User, FolderTree
 } from "lucide-react";
 import CreditNoteForm from "@/components/CreditNoteForm";
-import { format, startOfMonth, endOfMonth, subMonths } from "date-fns";
 
-interface Account {
+// ─── Types ───
+interface ModelRow {
+  id: string;
+  name: string;
+  username: string;
+  address: string;
+  revenue_percentage: number;
+  crypto_address: string;
+  currency: string;
+  contract_file_path: string;
+  notes: string;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface AccountRow {
   id: string;
   account_email: string;
   account_domain: string;
+  account_password: string;
   platform: string;
+  model_id: string | null;
+  assigned_to: string | null;
+  model_active: boolean;
 }
 
-interface ModelDashboardRow {
-  id: string;
-  account_id: string;
-  fourbased_submitted: boolean;
-  maloum_submitted: boolean;
-  brezzels_submitted: boolean;
-  botdm_done: boolean;
-  massdm_done: boolean;
-  fourbased_botdm_done: boolean;
-  fourbased_massdm_done: boolean;
-  maloum_botdm_done: boolean;
-  maloum_massdm_done: boolean;
-  brezzels_botdm_done: boolean;
-  brezzels_massdm_done: boolean;
-  notes: string | null;
-  revenue_percentage: number | null;
-  crypto_address: string | null;
-  contract_file_path: string | null;
+interface ChatterProfile {
+  user_id: string;
+  group_name: string;
+  account_email: string | null;
 }
-
-type PlatformFilter = "all" | "4Based" | "Maloum" | "Brezzels";
-type SubFilter = "none" | "botdm_fehlt" | "botdm_vorhanden" | "massdm_fehlt" | "massdm_vorhanden" | "setup_fehlt" | "setup_vorhanden";
 
 const CURRENCIES = ["EUR", "USD", "GBP", "CHF", "AED"] as const;
+const PLATFORMS = ["4Based", "Maloum", "Brezzels"] as const;
 
-interface BotMessageRow {
-  account_id: string | null;
-  message: string;
-  follow_up_message: string;
-}
-
-const SENDER = {
-  company: "Sharify Media FZCO",
-  line1: "IFZA Business Park DDP 21236-001",
-  line2: "Silicon Oasis",
-  line3: "00000, United Arab Emirates",
-  taxId: "1041507169",
-};
-
-const PLATFORM_LABELS: PlatformFilter[] = ["all", "4Based", "Maloum", "Brezzels"];
-
-const SUB_FILTERS: { label: string; value: SubFilter }[] = [
-  { label: "BotDM fehlt", value: "botdm_fehlt" },
-  { label: "BotDM vorhanden", value: "botdm_vorhanden" },
-  { label: "MassDM fehlt", value: "massdm_fehlt" },
-  { label: "MassDM vorhanden", value: "massdm_vorhanden" },
-  { label: "Account Setup fehlt", value: "setup_fehlt" },
-  { label: "Account Setup vorhanden", value: "setup_vorhanden" },
-];
-
-// ─── Animated counter (count-up) ───
+// ─── Animated counter ───
 function useAnimatedCounter(target: number, duration = 1200) {
   const [value, setValue] = useState(0);
   const prevTarget = useRef(0);
@@ -100,20 +80,6 @@ function useAnimatedCounter(target: number, duration = 1200) {
   return value;
 }
 
-function AnimatedNumber({ value }: { value: number }) {
-  return (
-    <motion.span
-      key={value}
-      initial={{ y: 8, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ type: "spring", stiffness: 300, damping: 24 }}
-      className="inline-block"
-    >
-      {value}
-    </motion.span>
-  );
-}
-
 function AnimatedGoldValue({ value, suffix = "€", className }: { value: number; suffix?: string; className?: string }) {
   const animated = useAnimatedCounter(value);
   return <span className={className}>{animated.toLocaleString("de-DE")}{suffix}</span>;
@@ -121,16 +87,8 @@ function AnimatedGoldValue({ value, suffix = "€", className }: { value: number
 
 // ─── Section wrapper ───
 function Section({
-  icon: Icon,
-  title,
-  children,
-  delay = 0,
-}: {
-  icon: React.ElementType;
-  title: string;
-  children: React.ReactNode;
-  delay?: number;
-}) {
+  icon: Icon, title, children, delay = 0,
+}: { icon: React.ElementType; title: string; children: React.ReactNode; delay?: number }) {
   return (
     <motion.section
       initial={{ opacity: 0, y: 16 }}
@@ -149,544 +107,225 @@ function Section({
   );
 }
 
-// ─── BotDM Table Component ───
-function BotDmTable({
-  rows,
-  allDashboards,
-  onToggle,
-}: {
-  rows: { acc: Account; dash: ModelDashboardRow | undefined; botMsg: BotMessageRow | undefined }[];
-  allDashboards: ModelDashboardRow[];
-  onToggle: (accountId: string, field: string, value: boolean) => Promise<void>;
-}) {
-  const [tableSearch, setTableSearch] = useState("");
-  const [tablePlatform, setTablePlatform] = useState<"all" | "4Based" | "Maloum" | "Brezzels">("all");
-  const [expandedFollowUp, setExpandedFollowUp] = useState<string | null>(null);
-  const [toggling, setToggling] = useState<string | null>(null);
+const platformColors: Record<string, string> = {
+  "4Based": "bg-blue-500/15 text-blue-400 border-blue-500/30",
+  "Maloum": "bg-purple-500/15 text-purple-400 border-purple-500/30",
+  "Brezzels": "bg-orange-500/15 text-orange-400 border-orange-500/30",
+};
 
-  const filtered = rows.filter(({ acc }) => {
-    if (tablePlatform !== "all" && acc.platform !== tablePlatform) return false;
-    if (tableSearch) {
-      const q = tableSearch.toLowerCase();
-      return acc.account_email.toLowerCase().includes(q) || acc.account_domain.toLowerCase().includes(q);
-    }
-    return true;
-  });
-
-  const getField = (acc: Account, type: "botdm" | "welcome" | "massdm") => {
-    const p = acc.platform;
-    if (type === "botdm") return p === "Maloum" ? "maloum_botdm_done" : p === "Brezzels" ? "brezzels_botdm_done" : "fourbased_botdm_done";
-    if (type === "welcome") return p === "Maloum" ? "maloum_submitted" : p === "Brezzels" ? "brezzels_submitted" : "fourbased_submitted";
-    return p === "Maloum" ? "maloum_massdm_done" : p === "Brezzels" ? "brezzels_massdm_done" : "fourbased_massdm_done";
-  };
-
-  const handleToggle = async (accountId: string, field: string, current: boolean) => {
-    const key = `${accountId}-${field}`;
-    setToggling(key);
-    await onToggle(accountId, field, !current);
-    setToggling(null);
-  };
-
-  const platformColors: Record<string, string> = {
-    "4Based": "bg-blue-500/15 text-blue-400 border-blue-500/30",
-    "Maloum": "bg-purple-500/15 text-purple-400 border-purple-500/30",
-    "Brezzels": "bg-orange-500/15 text-orange-400 border-orange-500/30",
-  };
-
-  return (
-    <div className="space-y-3">
-      {/* Search + Filter */}
-      <div className="flex flex-col gap-2">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-          <div className="input-gold-shimmer rounded-lg">
-            <Input
-              value={tableSearch}
-              onChange={e => setTableSearch(e.target.value)}
-              placeholder="Account suchen…"
-              className="pl-9 bg-secondary/50 border-transparent text-sm h-9"
-            />
-          </div>
-        </div>
-        <div className="flex gap-1 p-1 rounded-lg bg-secondary/30">
-          {(["all", "4Based", "Maloum", "Brezzels"] as const).map(p => (
-            <button
-              key={p}
-              onClick={() => setTablePlatform(p)}
-              className={cn(
-                "flex-1 text-[11px] font-medium py-1.5 rounded-md transition-all duration-200",
-                tablePlatform === p
-                  ? "bg-accent/20 text-accent border border-accent/30"
-                  : "text-muted-foreground hover:text-foreground border border-transparent"
-              )}
-            >
-              {p === "all" ? "Alle" : p}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Table */}
-      <div className="rounded-lg border border-border/50 overflow-hidden">
-        {/* Header */}
-        <div className="grid grid-cols-[1fr_80px_50px_50px_50px] gap-0 bg-accent/10 border-b border-accent/20">
-          <div className="px-3 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold">Account</div>
-          <div className="px-2 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">Plattform</div>
-          <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">Bot</div>
-          <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">Setup</div>
-          <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">Mass</div>
-        </div>
-
-        {/* Rows */}
-        <ScrollArea className="max-h-[400px]">
-          {filtered.length === 0 ? (
-            <p className="text-xs text-muted-foreground text-center py-8">Keine Accounts gefunden.</p>
-          ) : (
-            filtered.map(({ acc, dash }, i) => {
-              const botdmField = getField(acc, "botdm");
-              const welcomeField = getField(acc, "welcome");
-              const massdmField = getField(acc, "massdm");
-              const botdmVal = !!(dash as any)?.[botdmField];
-              const welcomeVal = !!(dash as any)?.[welcomeField];
-              const massdmVal = !!(dash as any)?.[massdmField];
-              const isMaloum = acc.platform === "Maloum";
-              const botMsg = rows.find(r => r.acc.id === acc.id)?.botMsg;
-              const isExpanded = expandedFollowUp === acc.id;
-
-              return (
-                <div key={acc.id}>
-                  <div className={cn(
-                    "grid grid-cols-[1fr_80px_50px_50px_50px] gap-0 items-center border-b border-border/30 transition-colors hover:bg-accent/5",
-                    i % 2 === 0 ? "bg-card/40" : "bg-card/20"
-                  )}>
-                    {/* Account */}
-                    <div className="px-3 py-2 min-w-0">
-                      <p className="text-xs font-medium text-foreground truncate">{acc.account_email}</p>
-                      {acc.account_domain && (
-                        <p className="text-[10px] text-muted-foreground truncate">{acc.account_domain}</p>
-                      )}
-                      {isMaloum && botMsg?.follow_up_message && (
-                        <button
-                          onClick={() => setExpandedFollowUp(isExpanded ? null : acc.id)}
-                          className="text-[10px] text-accent hover:underline mt-0.5 flex items-center gap-1"
-                        >
-                          <ChevronDown className={cn("h-2.5 w-2.5 transition-transform", isExpanded && "rotate-180")} />
-                          Follow-Up
-                        </button>
-                      )}
-                    </div>
-
-                    {/* Platform badge */}
-                    <div className="px-2 py-2 flex justify-center">
-                      <span className={cn(
-                        "text-[9px] font-medium px-2 py-0.5 rounded-full border",
-                        platformColors[acc.platform] || "bg-secondary/50 text-muted-foreground border-border/30"
-                      )}>
-                        {acc.platform}
-                      </span>
-                    </div>
-
-                    {/* BotDM checkbox */}
-                    <div className="flex justify-center py-2">
-                      <button
-                        onClick={() => handleToggle(acc.id, botdmField, botdmVal)}
-                        disabled={toggling === `${acc.id}-${botdmField}`}
-                        className={cn(
-                          "h-5 w-5 rounded border-2 flex items-center justify-center transition-all duration-200",
-                          botdmVal
-                            ? "border-accent bg-accent/20"
-                            : "border-muted-foreground/30 bg-transparent hover:border-accent/50"
-                        )}
-                      >
-                        {botdmVal && <CheckCircle2 className="h-3 w-3 text-accent" />}
-                      </button>
-                    </div>
-
-                    {/* Welcome/Setup checkbox */}
-                    <div className="flex justify-center py-2">
-                      <button
-                        onClick={() => handleToggle(acc.id, welcomeField, welcomeVal)}
-                        disabled={toggling === `${acc.id}-${welcomeField}`}
-                        className={cn(
-                          "h-5 w-5 rounded border-2 flex items-center justify-center transition-all duration-200",
-                          welcomeVal
-                            ? "border-accent bg-accent/20"
-                            : "border-muted-foreground/30 bg-transparent hover:border-accent/50"
-                        )}
-                      >
-                        {welcomeVal && <CheckCircle2 className="h-3 w-3 text-accent" />}
-                      </button>
-                    </div>
-
-                    {/* MassDM checkbox */}
-                    <div className="flex justify-center py-2">
-                      <button
-                        onClick={() => handleToggle(acc.id, massdmField, massdmVal)}
-                        disabled={toggling === `${acc.id}-${massdmField}`}
-                        className={cn(
-                          "h-5 w-5 rounded border-2 flex items-center justify-center transition-all duration-200",
-                          massdmVal
-                            ? "border-accent bg-accent/20"
-                            : "border-muted-foreground/30 bg-transparent hover:border-accent/50"
-                        )}
-                      >
-                        {massdmVal && <CheckCircle2 className="h-3 w-3 text-accent" />}
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Maloum Follow-Up expandable */}
-                  <AnimatePresence>
-                    {isMaloum && isExpanded && botMsg?.follow_up_message && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="overflow-hidden border-b border-border/30 bg-accent/5"
-                      >
-                        <div className="px-4 py-2.5">
-                          <p className="text-[10px] uppercase tracking-wider text-accent font-medium mb-1">Follow-Up Nachricht</p>
-                          <p className="text-xs text-foreground/80 whitespace-pre-wrap">{botMsg.follow_up_message}</p>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              );
-            })
-          )}
-        </ScrollArea>
-      </div>
-
-      {/* Summary */}
-      <div className="flex items-center justify-between px-1">
-        <span className="text-[10px] text-muted-foreground">{filtered.length} Accounts</span>
-      </div>
-    </div>
-  );
-}
+// ─── Main Component ───
 export default function ModelDashboardTab() {
-  const [accounts, setAccounts] = useState<Account[]>([]);
-  const [allDashboards, setAllDashboards] = useState<ModelDashboardRow[]>([]);
-  const [selectedAccountId, setSelectedAccountId] = useState<string>("");
-  const detailRef = useRef<HTMLDivElement>(null);
-  const [data, setData] = useState<ModelDashboardRow | null>(null);
-  const [loading, setLoading] = useState(false);
+  // Models
+  const [models, setModels] = useState<ModelRow[]>([]);
+  const [selectedModelId, setSelectedModelId] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  // Selected model form state
+  const [modelForm, setModelForm] = useState<Partial<ModelRow>>({});
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [platformFilter, setPlatformFilter] = useState<PlatformFilter>("all");
-  const [subFilter, setSubFilter] = useState<SubFilter>("none");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [modelListOpen, setModelListOpen] = useState(false);
-  const [allBotMessages, setAllBotMessages] = useState<BotMessageRow[]>([]);
+
+  // Accounts for selected model
+  const [modelAccounts, setModelAccounts] = useState<AccountRow[]>([]);
+
+  // Create model dialog
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [newModel, setNewModel] = useState({ name: "", username: "", address: "" });
+  const [creating, setCreating] = useState(false);
+
+  // Add account dialog
+  const [addAccountOpen, setAddAccountOpen] = useState(false);
+  const [newAccount, setNewAccount] = useState({ platform: "4Based", account_email: "", account_password: "", account_domain: "" });
+  const [addingAccount, setAddingAccount] = useState(false);
+
+  // Model login dialog
   const [modelLoginDialog, setModelLoginDialog] = useState(false);
   const [modelLoginLoading, setModelLoginLoading] = useState(false);
   const [modelLoginCreds, setModelLoginCreds] = useState<{ email: string; password: string } | null>(null);
   const [showLoginPassword, setShowLoginPassword] = useState(false);
+  const [loginAccountId, setLoginAccountId] = useState<string>("");
 
-  // Local form state – per-platform status
-  const [fourbasedSubmitted, setFourbasedSubmitted] = useState(false);
-  const [maloumSubmitted, setMaloumSubmitted] = useState(false);
-  const [brezzelsSubmitted, setBrezzelsSubmitted] = useState(false);
-  const [fourbasedBotdm, setFourbasedBotdm] = useState(false);
-  const [fourbasedMassdm, setFourbasedMassdm] = useState(false);
-  const [maloumBotdm, setMaloumBotdm] = useState(false);
-  const [maloumMassdm, setMaloumMassdm] = useState(false);
-  const [brezzelsBotdm, setBrezzelsBotdm] = useState(false);
-  const [brezzelsMassdm, setBrezzelsMassdm] = useState(false);
-  const [openPlatformStatus, setOpenPlatformStatus] = useState<string | null>(null);
-  const [notes, setNotes] = useState("");
-  const [revenuePercentage, setRevenuePercentage] = useState(0);
-  const [cryptoAddress, setCryptoAddress] = useState("");
-  const [contractPath, setContractPath] = useState("");
-  const [manualMonthly, setManualMonthly] = useState(0);
-  const [fourbasedRevenue, setFourbasedRevenue] = useState(0);
-  const [maloumRevenue, setMaloumRevenue] = useState(0);
-  const [brezzelsRevenue, setBrezzelsRevenue] = useState(0);
-  const [currency, setCurrency] = useState("EUR");
+  // Revenue from model_dashboard (per-platform)
+  const [dashboardRevenues, setDashboardRevenues] = useState<Record<string, number>>({});
 
-  // (Gutschrift state removed – now uses CreditNoteForm component)
+  const detailRef = useRef<HTMLDivElement>(null);
 
-  // Revenue per model
-  const [modelRevenue, setModelRevenue] = useState<{ date: string; amount: number; user_id: string }[]>([]);
-  const [revenueLoading, setRevenueLoading] = useState(false);
-  const [revenueMonth, setRevenueMonth] = useState(() => format(new Date(), "yyyy-MM"));
-
-  const loadAllDashboards = useCallback(async () => {
-    const { data } = await supabase.from("model_dashboard").select("*");
-    if (data) setAllDashboards(data as ModelDashboardRow[]);
-  }, []);
-
-  useEffect(() => {
-    supabase
-      .from("accounts")
-      .select("id, account_email, account_domain, platform")
-      .order("account_email")
-      .then(({ data }) => { if (data) setAccounts(data); });
-    loadAllDashboards();
-    supabase
-      .from("bot_messages")
-      .select("account_id, message, follow_up_message")
-      .then(({ data }) => { if (data) setAllBotMessages(data as BotMessageRow[]); });
-  }, [loadAllDashboards]);
-
-  const loadModelData = useCallback(async (accountId: string) => {
-    setLoading(true);
-    const { data } = await supabase
-      .from("model_dashboard")
+  // ─── Load models ───
+  const loadModels = useCallback(async () => {
+    const { data } = await (supabase.from("models") as any)
       .select("*")
-      .eq("account_id", accountId)
-      .maybeSingle();
-
-    if (data) {
-      const d = data as ModelDashboardRow;
-      setData(d);
-      setFourbasedSubmitted(d.fourbased_submitted);
-      setMaloumSubmitted(d.maloum_submitted);
-      setBrezzelsSubmitted(d.brezzels_submitted);
-      setFourbasedBotdm(d.fourbased_botdm_done);
-      setFourbasedMassdm(d.fourbased_massdm_done);
-      setMaloumBotdm(d.maloum_botdm_done);
-      setMaloumMassdm(d.maloum_massdm_done);
-      setBrezzelsBotdm(d.brezzels_botdm_done);
-      setBrezzelsMassdm(d.brezzels_massdm_done);
-      setNotes(d.notes || "");
-      setRevenuePercentage(d.revenue_percentage || 0);
-      setCryptoAddress(d.crypto_address || "");
-      setContractPath(d.contract_file_path || "");
-      setManualMonthly(Number((d as any).monthly_revenue) || 0);
-      setFourbasedRevenue(Number((d as any).fourbased_revenue) || 0);
-      setMaloumRevenue(Number((d as any).maloum_revenue) || 0);
-      setBrezzelsRevenue(Number((d as any).brezzels_revenue) || 0);
-      setCurrency((d as any).currency || "EUR");
-    } else {
-      setData(null);
-      setFourbasedSubmitted(false);
-      setMaloumSubmitted(false);
-      setBrezzelsSubmitted(false);
-      setFourbasedBotdm(false);
-      setFourbasedMassdm(false);
-      setMaloumBotdm(false);
-      setMaloumMassdm(false);
-      setBrezzelsBotdm(false);
-      setBrezzelsMassdm(false);
-      setNotes("");
-      setRevenuePercentage(0);
-      setCryptoAddress("");
-      setContractPath("");
-      setManualMonthly(0);
-      setFourbasedRevenue(0);
-      setMaloumRevenue(0);
-      setBrezzelsRevenue(0);
-      setCurrency("EUR");
-    }
+      .order("name");
+    if (data) setModels(data as ModelRow[]);
     setLoading(false);
   }, []);
 
-  const loadModelRevenue = useCallback(async (accountId: string, month: string) => {
-    setRevenueLoading(true);
-    // 1. Get all user_ids assigned to this account (current + historical)
-    const { data: assignments } = await supabase
-      .from("account_assignments")
-      .select("user_id")
-      .eq("account_id", accountId);
+  useEffect(() => { loadModels(); }, [loadModels]);
 
-    const userIds = [...new Set((assignments || []).map(a => a.user_id))];
-    if (userIds.length === 0) { setModelRevenue([]); setRevenueLoading(false); return; }
+  // ─── Load accounts for selected model ───
+  const loadModelAccounts = useCallback(async (modelId: string) => {
+    const { data } = await supabase
+      .from("accounts")
+      .select("id, account_email, account_domain, account_password, platform, model_id, assigned_to, model_active" as any)
+      .eq("model_id", modelId)
+      .order("platform");
+    if (data) setModelAccounts(data as any as AccountRow[]);
 
-    // 2. Get daily_revenue for those users in the selected month
-    const [year, mon] = month.split("-").map(Number);
-    const monthStart = format(new Date(year, mon - 1, 1), "yyyy-MM-dd");
-    const monthEnd = format(endOfMonth(new Date(year, mon - 1, 1)), "yyyy-MM-dd");
-
-    const { data: revenue } = await supabase
-      .from("daily_revenue")
-      .select("date, amount, user_id")
-      .in("user_id", userIds)
-      .gte("date", monthStart)
-      .lte("date", monthEnd)
-      .order("date", { ascending: true });
-
-    setModelRevenue((revenue || []) as { date: string; amount: number; user_id: string }[]);
-    setRevenueLoading(false);
+    // Load revenue data from model_dashboard for these accounts
+    const { data: dashData } = await supabase
+      .from("model_dashboard")
+      .select("account_id, fourbased_revenue, maloum_revenue, brezzels_revenue, monthly_revenue");
+    if (dashData) {
+      const revMap: Record<string, number> = {};
+      for (const d of dashData) {
+        const fb = Number((d as any).fourbased_revenue) || 0;
+        const ml = Number((d as any).maloum_revenue) || 0;
+        const br = Number((d as any).brezzels_revenue) || 0;
+        revMap[d.account_id] = fb + ml + br || Number((d as any).monthly_revenue) || 0;
+      }
+      setDashboardRevenues(revMap);
+    }
   }, []);
 
+  // ─── Load selected model data into form ───
   useEffect(() => {
-    if (selectedAccountId) {
-      loadModelData(selectedAccountId);
-      loadModelRevenue(selectedAccountId, revenueMonth);
+    if (!selectedModelId) return;
+    const model = models.find(m => m.id === selectedModelId);
+    if (model) {
+      setModelForm({ ...model });
+      loadModelAccounts(selectedModelId);
     }
-  }, [selectedAccountId, loadModelData, loadModelRevenue, revenueMonth]);
+  }, [selectedModelId, models, loadModelAccounts]);
 
-  // Auto-save with debounce
-  const autoSaveTimer = useRef<ReturnType<typeof setTimeout>>();
-  const initialLoadDone = useRef(false);
-  
-  useEffect(() => {
-    if (!selectedAccountId || loading) return;
-    // Skip auto-save on initial load
-    if (!initialLoadDone.current) {
-      initialLoadDone.current = true;
-      return;
+  // ─── Filter models ───
+  const filteredModels = useMemo(() => {
+    if (!searchQuery) return models;
+    const q = searchQuery.toLowerCase();
+    return models.filter(m =>
+      m.name.toLowerCase().includes(q) ||
+      (m.username || "").toLowerCase().includes(q)
+    );
+  }, [models, searchQuery]);
+
+  // ─── Revenue calculations ───
+  const totalRevenue = useMemo(() => {
+    return modelAccounts.reduce((sum, acc) => sum + (dashboardRevenues[acc.id] || 0), 0);
+  }, [modelAccounts, dashboardRevenues]);
+
+  const verdienst = useMemo(() => {
+    const pct = modelForm.revenue_percentage || 0;
+    if (pct <= 0 || totalRevenue <= 0) return 0;
+    return Math.round(totalRevenue * pct / 100);
+  }, [totalRevenue, modelForm.revenue_percentage]);
+
+  // ─── Create model ───
+  const handleCreateModel = async () => {
+    if (!newModel.name.trim()) { toast.error("Name ist erforderlich"); return; }
+    setCreating(true);
+    const { data: userData } = await supabase.auth.getUser();
+    const { error } = await (supabase.from("models") as any).insert({
+      name: newModel.name,
+      username: newModel.username,
+      address: newModel.address,
+      created_by: userData.user?.id,
+    });
+    if (error) { toast.error(error.message); }
+    else {
+      toast.success("Model erstellt ✅");
+      setNewModel({ name: "", username: "", address: "" });
+      setCreateDialogOpen(false);
+      await loadModels();
     }
-    clearTimeout(autoSaveTimer.current);
-    autoSaveTimer.current = setTimeout(() => {
-      saveData();
-    }, 1200);
-    return () => clearTimeout(autoSaveTimer.current);
-  }, [notes, cryptoAddress, manualMonthly, fourbasedRevenue, maloumRevenue, brezzelsRevenue, revenuePercentage, currency,
-      fourbasedSubmitted, maloumSubmitted, brezzelsSubmitted,
-      fourbasedBotdm, fourbasedMassdm, maloumBotdm, maloumMassdm, brezzelsBotdm, brezzelsMassdm]);
-
-  // Reset initialLoadDone when account changes
-  useEffect(() => {
-    initialLoadDone.current = false;
-  }, [selectedAccountId]);
-
-  // Revenue calculations
-  // Auto-calculate total from platform revenues
-  const totalPlatformRevenue = fourbasedRevenue + maloumRevenue + brezzelsRevenue;
-  // Use platform sum if any platform has a value, otherwise fall back to manual
-  const effectiveMonthly = totalPlatformRevenue > 0 ? totalPlatformRevenue : manualMonthly;
-  
-  // Sync manualMonthly with platform sum
-  useEffect(() => {
-    if (totalPlatformRevenue > 0) {
-      setManualMonthly(totalPlatformRevenue);
-    }
-  }, [totalPlatformRevenue]);
-
-  const totalMonthRevenue = effectiveMonthly;
-  const gutschriftFromRevenue = useMemo(() => {
-    if (revenuePercentage <= 0 || effectiveMonthly <= 0) return 0;
-    return (effectiveMonthly * revenuePercentage) / 100;
-  }, [effectiveMonthly, revenuePercentage]);
-
-  // Available months for selection (last 12 months)
-  const availableMonths = useMemo(() => {
-    const months = [];
-    const now = new Date();
-    for (let i = 0; i < 12; i++) {
-      const d = subMonths(now, i);
-      months.push({ value: format(d, "yyyy-MM"), label: format(d, "MMMM yyyy") });
-    }
-    return months;
-  }, []);
-
-  const getDashboard = (id: string) => allDashboards.find(d => d.account_id === id);
-
-  const getBotMessage = (accountId: string) => allBotMessages.find(b => b.account_id === accountId);
-
-  const getSetupField = (acc: Account): "fourbased_submitted" | "maloum_submitted" | "brezzels_submitted" => {
-    if (acc.platform === "Maloum") return "maloum_submitted";
-    if (acc.platform === "Brezzels") return "brezzels_submitted";
-    return "fourbased_submitted";
+    setCreating(false);
   };
 
-  const getBotdmField = (acc: Account): "fourbased_botdm_done" | "maloum_botdm_done" | "brezzels_botdm_done" => {
-    if (acc.platform === "Maloum") return "maloum_botdm_done";
-    if (acc.platform === "Brezzels") return "brezzels_botdm_done";
-    return "fourbased_botdm_done";
-  };
-
-  const getMassdmField = (acc: Account): "fourbased_massdm_done" | "maloum_massdm_done" | "brezzels_massdm_done" => {
-    if (acc.platform === "Maloum") return "maloum_massdm_done";
-    if (acc.platform === "Brezzels") return "brezzels_massdm_done";
-    return "fourbased_massdm_done";
-  };
-
-  const filteredAccounts = accounts.filter(acc => {
-    if (platformFilter !== "all" && acc.platform !== platformFilter) return false;
-
-    if (subFilter !== "none") {
-      const dash = getDashboard(acc.id);
-      const hasBotDm = !!dash?.[getBotdmField(acc)];
-      const hasMassDm = !!dash?.[getMassdmField(acc)];
-      const hasSetup = !!dash?.[getSetupField(acc)];
-
-      if (subFilter === "botdm_fehlt" && hasBotDm) return false;
-      if (subFilter === "botdm_vorhanden" && !hasBotDm) return false;
-      if (subFilter === "massdm_fehlt" && hasMassDm) return false;
-      if (subFilter === "massdm_vorhanden" && !hasMassDm) return false;
-      if (subFilter === "setup_fehlt" && hasSetup) return false;
-      if (subFilter === "setup_vorhanden" && !hasSetup) return false;
-    }
-
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      return acc.account_email.toLowerCase().includes(q) || acc.account_domain.toLowerCase().includes(q);
-    }
-    return true;
-  });
-
-  const saveData = async () => {
-    if (!selectedAccountId) return;
+  // ─── Save model ───
+  const saveModel = async () => {
+    if (!selectedModelId) return;
     setSaving(true);
-    const payload = {
-      account_id: selectedAccountId,
-      fourbased_submitted: fourbasedSubmitted,
-      maloum_submitted: maloumSubmitted,
-      brezzels_submitted: brezzelsSubmitted,
-      botdm_done: fourbasedBotdm || maloumBotdm || brezzelsBotdm,
-      massdm_done: fourbasedMassdm || maloumMassdm || brezzelsMassdm,
-      fourbased_botdm_done: fourbasedBotdm,
-      fourbased_massdm_done: fourbasedMassdm,
-      maloum_botdm_done: maloumBotdm,
-      maloum_massdm_done: maloumMassdm,
-      brezzels_botdm_done: brezzelsBotdm,
-      brezzels_massdm_done: brezzelsMassdm,
-      notes,
-      revenue_percentage: revenuePercentage,
-      crypto_address: cryptoAddress,
-      contract_file_path: contractPath,
-      monthly_revenue: manualMonthly,
-      fourbased_revenue: fourbasedRevenue,
-      maloum_revenue: maloumRevenue,
-      brezzels_revenue: brezzelsRevenue,
-      currency,
-    };
-    if (data?.id) {
-      await supabase.from("model_dashboard").update(payload).eq("id", data.id);
-    } else {
-      await supabase.from("model_dashboard").insert(payload);
-    }
-    toast.success("Gespeichert ✅");
-    await loadModelData(selectedAccountId);
-    await loadAllDashboards();
+    const { error } = await (supabase.from("models") as any).update({
+      name: modelForm.name,
+      username: modelForm.username,
+      address: modelForm.address,
+      revenue_percentage: modelForm.revenue_percentage,
+      crypto_address: modelForm.crypto_address,
+      currency: modelForm.currency,
+      notes: modelForm.notes,
+      contract_file_path: modelForm.contract_file_path,
+    }).eq("id", selectedModelId);
+    if (error) toast.error(error.message);
+    else { toast.success("Gespeichert ✅"); await loadModels(); }
     setSaving(false);
   };
 
+  // ─── Contract upload ───
   const handleContractUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file || !selectedAccountId) return;
+    if (!file || !selectedModelId) return;
     setUploading(true);
-    const path = `${selectedAccountId}/${file.name}`;
-    if (contractPath) await supabase.storage.from("model-contracts").remove([contractPath]);
+    const path = `${selectedModelId}/${file.name}`;
+    if (modelForm.contract_file_path) {
+      await supabase.storage.from("model-contracts").remove([modelForm.contract_file_path]);
+    }
     const { error } = await supabase.storage.from("model-contracts").upload(path, file, { upsert: true });
     if (error) toast.error("Upload fehlgeschlagen: " + error.message);
-    else { setContractPath(path); toast.success("Vertrag hochgeladen ✅"); }
+    else {
+      setModelForm(prev => ({ ...prev, contract_file_path: path }));
+      toast.success("Vertrag hochgeladen ✅");
+    }
     setUploading(false);
     e.target.value = "";
   };
 
   const deleteContract = async () => {
-    if (!contractPath) return;
-    await supabase.storage.from("model-contracts").remove([contractPath]);
-    setContractPath("");
+    if (!modelForm.contract_file_path) return;
+    await supabase.storage.from("model-contracts").remove([modelForm.contract_file_path]);
+    setModelForm(prev => ({ ...prev, contract_file_path: "" }));
     toast.success("Vertrag gelöscht");
   };
 
   const downloadContract = async () => {
-    if (!contractPath) return;
-    const { data } = await supabase.storage.from("model-contracts").createSignedUrl(contractPath, 60);
+    if (!modelForm.contract_file_path) return;
+    const { data } = await supabase.storage.from("model-contracts").createSignedUrl(modelForm.contract_file_path, 60);
     if (data?.signedUrl) window.open(data.signedUrl, "_blank");
   };
 
-  const selectedAccount = accounts.find(a => a.id === selectedAccountId);
+  // ─── Add platform account ───
+  const handleAddAccount = async () => {
+    if (!selectedModelId) return;
+    setAddingAccount(true);
+    const { data: userData } = await supabase.auth.getUser();
+    const { error } = await (supabase.from("accounts") as any).insert({
+      platform: newAccount.platform,
+      account_email: newAccount.account_email,
+      account_password: newAccount.account_password,
+      account_domain: newAccount.account_domain,
+      model_id: selectedModelId,
+      created_by: userData.user?.id,
+    });
+    if (error) toast.error(error.message);
+    else {
+      toast.success("Account hinzugefügt ✅");
+      setNewAccount({ platform: "4Based", account_email: "", account_password: "", account_domain: "" });
+      setAddAccountOpen(false);
+      await loadModelAccounts(selectedModelId);
+    }
+    setAddingAccount(false);
+  };
 
-  const generateModelLogin = async () => {
-    if (!selectedAccountId) return;
+  // ─── Delete platform account ───
+  const deleteAccount = async (accountId: string) => {
+    const { error } = await supabase.from("accounts").delete().eq("id", accountId);
+    if (error) toast.error(error.message);
+    else {
+      toast.success("Account gelöscht");
+      if (selectedModelId) await loadModelAccounts(selectedModelId);
+    }
+  };
+
+  // ─── Generate model login ───
+  const generateModelLogin = async (accountId: string) => {
+    setLoginAccountId(accountId);
     setModelLoginLoading(true);
     setModelLoginCreds(null);
     try {
@@ -699,23 +338,52 @@ export default function ModelDashboardTab() {
           Authorization: `Bearer ${session?.access_token}`,
           apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
         },
-        body: JSON.stringify({ account_id: selectedAccountId }),
+        body: JSON.stringify({ account_id: accountId }),
       });
       const data = await res.json();
-      if (!res.ok) {
-        toast.error(data.error || "Fehler beim Erstellen");
-      } else {
+      if (!res.ok) toast.error(data.error || "Fehler");
+      else {
         setModelLoginCreds({ email: data.email, password: data.password });
         setModelLoginDialog(true);
-        toast.success("Model-Login erstellt ✅");
+        toast.success("Login erstellt ✅");
       }
-    } catch (err: any) {
-      toast.error(err.message);
-    }
+    } catch (err: any) { toast.error(err.message); }
     setModelLoginLoading(false);
   };
 
-  // generateGutschrift removed – now uses CreditNoteForm component
+  // ─── Delete model ───
+  const deleteModel = async () => {
+    if (!selectedModelId) return;
+    // First unlink accounts
+    await (supabase.from("accounts") as any).update({ model_id: null }).eq("model_id", selectedModelId);
+    const { error } = await (supabase.from("models") as any).delete().eq("id", selectedModelId);
+    if (error) toast.error(error.message);
+    else {
+      toast.success("Model gelöscht");
+      setSelectedModelId("");
+      await loadModels();
+    }
+  };
+
+  const selectedModel = models.find(m => m.id === selectedModelId);
+
+  // Group accounts by platform
+  const accountsByPlatform = useMemo(() => {
+    const grouped: Record<string, AccountRow[]> = {};
+    for (const acc of modelAccounts) {
+      if (!grouped[acc.platform]) grouped[acc.platform] = [];
+      grouped[acc.platform].push(acc);
+    }
+    return grouped;
+  }, [modelAccounts]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-20">
+        <Loader2 className="h-6 w-6 animate-spin text-accent" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5">
@@ -726,49 +394,24 @@ export default function ModelDashboardTab() {
         className="flex items-center gap-3"
       >
         <div className="h-9 w-9 rounded-xl bg-accent/15 flex items-center justify-center gold-glow">
-          <Star className="h-4.5 w-4.5 text-accent" />
+          <FolderTree className="h-4.5 w-4.5 text-accent" />
         </div>
-        <div>
-          <h1 className="text-lg font-bold text-gold-gradient-shimmer tracking-wide">Model-Dashboard</h1>
-          <p className="text-xs text-muted-foreground">{accounts.length} Models registriert</p>
+        <div className="flex-1">
+          <h1 className="text-lg font-bold text-gold-gradient-shimmer tracking-wide">Model-Verwaltung</h1>
+          <p className="text-xs text-muted-foreground">{models.length} Models registriert</p>
         </div>
+        <Button
+          onClick={() => setCreateDialogOpen(true)}
+          size="sm"
+          className="gap-1.5 bg-accent hover:bg-accent/90 text-accent-foreground gold-glow"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          Model anlegen
+        </Button>
       </motion.div>
-
-      {/* ── Platform Filter ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.05 }}
-        className="flex items-center gap-1.5 p-1 rounded-xl bg-secondary/40"
-      >
-        {PLATFORM_LABELS.map(p => (
-          <button
-            key={p}
-            onClick={() => { setPlatformFilter(p); setSubFilter("none"); }}
-            className={`relative flex-1 text-xs font-medium py-2 rounded-lg transition-colors duration-200 ${
-              platformFilter === p ? "text-accent-foreground" : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {platformFilter === p && (
-              <motion.div
-                layoutId="platform-pill"
-                className="absolute inset-0 rounded-lg bg-accent/20 border border-accent/30"
-                transition={{ type: "spring", stiffness: 400, damping: 30 }}
-              />
-            )}
-            <span className="relative z-10">{p === "all" ? "Alle" : p}</span>
-          </button>
-        ))}
-      </motion.div>
-
-      {/* Sub-Filter entfernt – Plattform-Filter oben reicht */}
 
       {/* ── Search ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-      >
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
           <div className="input-gold-shimmer rounded-lg">
@@ -782,186 +425,187 @@ export default function ModelDashboardTab() {
         </div>
       </motion.div>
 
-      {/* ── Model-Tabelle (Google Sheets Style) ── */}
+      {/* ── Model-Liste ── */}
       <motion.section
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
+        transition={{ delay: 0.1 }}
         className="glass-card rounded-xl overflow-hidden"
       >
         <div className="px-4 py-3 header-gradient-border flex items-center gap-2.5">
           <div className="h-7 w-7 rounded-lg bg-accent/10 flex items-center justify-center">
-            <List className="h-3.5 w-3.5 text-accent" />
+            <Users className="h-3.5 w-3.5 text-accent" />
           </div>
           <h2 className="text-sm font-semibold text-foreground tracking-wide">Alle Models</h2>
           <Badge variant="outline" className="ml-auto text-[10px] border-accent/30 text-accent tabular-nums">
-            {filteredAccounts.length}
+            {filteredModels.length}
           </Badge>
         </div>
 
         <div className="overflow-x-auto scrollbar-none">
-          {/* Sticky Header */}
-          <div className="grid grid-cols-[1fr_80px_80px_50px] gap-0 bg-accent/10 border-b border-accent/20">
-            <div className="px-3 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold">Model</div>
-            <div className="px-2 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">Plattform</div>
-            <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-right">Gesamt</div>
-            <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-right">%</div>
+          {/* Header */}
+          <div className="grid grid-cols-[1fr_100px_80px] gap-0 bg-accent/10 border-b border-accent/20">
+            <div className="px-3 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold">Name</div>
+            <div className="px-2 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">Benutzername</div>
+            <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-right">Anteil</div>
           </div>
 
           {/* Rows */}
-          <div>
-            {filteredAccounts.length === 0 ? (
-              <p className="text-xs text-muted-foreground text-center py-8">Keine Models gefunden.</p>
+          <ScrollArea className="max-h-[350px]">
+            {filteredModels.length === 0 ? (
+              <p className="text-xs text-muted-foreground text-center py-8">
+                {models.length === 0 ? 'Noch keine Models angelegt.' : 'Keine Models gefunden.'}
+              </p>
             ) : (
-              filteredAccounts.map((acc, i) => {
-                const dash = getDashboard(acc.id);
-                const fb = Number((dash as any)?.fourbased_revenue) || 0;
-                const ml = Number((dash as any)?.maloum_revenue) || 0;
-                const br = Number((dash as any)?.brezzels_revenue) || 0;
-                const total = fb + ml + br;
-                const pct = (dash as any)?.revenue_percentage || 0;
-                const isSelected = acc.id === selectedAccountId;
+              filteredModels.map((model, i) => {
+                const isSelected = model.id === selectedModelId;
                 return (
                   <div
-                    key={acc.id}
+                    key={model.id}
                     onClick={() => {
-                      setSelectedAccountId(acc.id);
+                      setSelectedModelId(model.id);
                       setTimeout(() => detailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
                     }}
                     className={cn(
-                      "grid grid-cols-[1fr_80px_80px_50px] gap-0 items-center border-b border-border/30 cursor-pointer transition-colors",
+                      "grid grid-cols-[1fr_100px_80px] gap-0 items-center border-b border-border/30 cursor-pointer transition-colors",
                       isSelected
                         ? "bg-accent/15 border-l-2 border-l-accent"
                         : i % 2 === 0 ? "bg-card/40 hover:bg-accent/5" : "bg-card/20 hover:bg-accent/5"
                     )}
                   >
-                    <div className="px-3 py-2 min-w-0">
-                      <p className={cn("text-xs font-medium truncate", isSelected ? "text-accent" : "text-foreground")}>{acc.account_email}</p>
-                      {acc.account_domain && (
-                        <p className="text-[10px] text-muted-foreground truncate">{acc.account_domain}</p>
+                    <div className="px-3 py-2.5 min-w-0">
+                      <p className={cn("text-xs font-medium truncate", isSelected ? "text-accent" : "text-foreground")}>
+                        {model.name || "Unbenannt"}
+                      </p>
+                      {model.address && (
+                        <p className="text-[10px] text-muted-foreground truncate">{model.address}</p>
                       )}
                     </div>
-                    <div className="px-2 py-2 flex justify-center">
-                      <span className={cn(
-                        "text-[9px] font-medium px-2 py-0.5 rounded-full border",
-                        acc.platform === "4Based" ? "bg-blue-500/15 text-blue-400 border-blue-500/30" :
-                        acc.platform === "Maloum" ? "bg-purple-500/15 text-purple-400 border-purple-500/30" :
-                        acc.platform === "Brezzels" ? "bg-orange-500/15 text-orange-400 border-orange-500/30" :
-                        "bg-secondary/50 text-muted-foreground border-border/30"
-                      )}>
-                        {acc.platform}
-                      </span>
+                    <div className="px-2 py-2 text-center">
+                      <span className="text-[11px] text-muted-foreground">{model.username || "–"}</span>
                     </div>
-                    <div className="px-1 py-2 text-right">
-                      <span className="text-[11px] tabular-nums font-semibold text-foreground">{total.toLocaleString("de-DE")}</span>
-                    </div>
-                    <div className="px-1 py-2 text-right">
-                      <span className="text-[11px] tabular-nums text-muted-foreground">{pct}%</span>
+                    <div className="px-1 py-2 text-right pr-3">
+                      <span className="text-[11px] tabular-nums text-muted-foreground">{model.revenue_percentage}%</span>
                     </div>
                   </div>
                 );
               })
             )}
-          </div>
+          </ScrollArea>
 
-          {/* Footer */}
           <div className="px-3 py-1.5 bg-secondary/20 border-t border-border/30">
-            <span className="text-[10px] text-muted-foreground">{filteredAccounts.length} Models</span>
+            <span className="text-[10px] text-muted-foreground">{filteredModels.length} Models</span>
           </div>
         </div>
       </motion.section>
 
-      {/* ── Loading ── */}
-      {loading && (
-        <div className="flex justify-center py-10">
-          <Loader2 className="h-6 w-6 animate-spin text-accent" />
-        </div>
-      )}
-
-      {/* ── Detail View ── */}
+      {/* ── Detail View (Stammbaum) ── */}
       <AnimatePresence mode="wait">
-        {selectedAccountId && !loading && (
-          <motion.div ref={detailRef}
-            key={selectedAccountId}
+        {selectedModelId && selectedModel && (
+          <motion.div
+            ref={detailRef}
+            key={selectedModelId}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.3 }}
             className="space-y-4"
           >
-            {/* Selected model header */}
+            {/* Model header */}
             <div className="flex items-center gap-3 px-1">
               <div className="h-10 w-10 rounded-full bg-accent/15 flex items-center justify-center text-sm font-bold text-accent gold-glow">
-                {selectedAccount?.account_email.charAt(0).toUpperCase()}
+                {selectedModel.name.charAt(0).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-foreground truncate">{selectedAccount?.account_email}</p>
+                <p className="text-sm font-semibold text-foreground truncate">{selectedModel.name}</p>
                 <p className="text-xs text-muted-foreground truncate">
-                  {selectedAccount?.account_domain && `${selectedAccount.account_domain} · `}{selectedAccount?.platform}
+                  {selectedModel.username && `@${selectedModel.username} · `}
+                  {modelAccounts.length} Plattform-Account{modelAccounts.length !== 1 ? "s" : ""}
                 </p>
+              </div>
               <Button
                 size="sm"
                 variant="outline"
-                onClick={generateModelLogin}
-                disabled={modelLoginLoading}
+                onClick={() => setAddAccountOpen(true)}
                 className="shrink-0 text-xs gap-1.5 border-accent/30 text-accent hover:bg-accent/10"
               >
-                <KeyRound className="h-3 w-3" />
-                {modelLoginLoading ? "Wird erstellt…" : "Login generieren"}
+                <Plus className="h-3 w-3" />
+                Account
               </Button>
-              </div>
             </div>
 
-            {/* Model Login Credentials Dialog */}
-            <Dialog open={modelLoginDialog} onOpenChange={setModelLoginDialog}>
-              <DialogContent className="glass-card border-border sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle className="text-foreground">Model-Login erstellt</DialogTitle>
-                </DialogHeader>
-                {modelLoginCreds && (
-                  <div className="space-y-4">
-                    <p className="text-xs text-muted-foreground">Sende diese Zugangsdaten an das Model. Das Passwort wird nur einmal angezeigt!</p>
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2 p-3 rounded-lg bg-secondary/50 border border-border">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[10px] text-muted-foreground">E-Mail</p>
-                          <p className="text-sm font-mono text-foreground truncate">{modelLoginCreds.email}</p>
-                        </div>
-                        <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" onClick={() => { navigator.clipboard.writeText(modelLoginCreds.email); toast.success("Kopiert!"); }}>
-                          <Copy className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                      <div className="flex items-center gap-2 p-3 rounded-lg bg-secondary/50 border border-border">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[10px] text-muted-foreground">Passwort</p>
-                          <p className="text-sm font-mono text-foreground truncate">{showLoginPassword ? modelLoginCreds.password : "••••••••••••"}</p>
-                        </div>
-                        <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" onClick={() => setShowLoginPassword(!showLoginPassword)}>
-                          {showLoginPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                        </Button>
-                        <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" onClick={() => { navigator.clipboard.writeText(modelLoginCreds.password); toast.success("Kopiert!"); }}>
-                          <Copy className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
+            {/* ── Ebene 1: Model-Stammdaten ── */}
+            <Section icon={User} title="Model-Stammdaten" delay={0}>
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Name</Label>
+                    <div className="input-gold-shimmer rounded-lg">
+                      <Input
+                        value={modelForm.name || ""}
+                        onChange={e => setModelForm(prev => ({ ...prev, name: e.target.value }))}
+                        className="bg-secondary/40 border-transparent text-sm h-9"
+                        placeholder="z.B. Alina"
+                      />
                     </div>
-                    <p className="text-[10px] text-muted-foreground">Login-URL: <span className="text-foreground font-mono">{window.location.origin}/model/login</span></p>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Benutzername</Label>
+                    <div className="input-gold-shimmer rounded-lg">
+                      <Input
+                        value={modelForm.username || ""}
+                        onChange={e => setModelForm(prev => ({ ...prev, username: e.target.value }))}
+                        className="bg-secondary/40 border-transparent text-sm h-9"
+                        placeholder="z.B. alina_official"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Anschrift</Label>
+                  <div className="input-gold-shimmer rounded-lg">
+                    <Textarea
+                      value={modelForm.address || ""}
+                      onChange={e => setModelForm(prev => ({ ...prev, address: e.target.value }))}
+                      className="bg-secondary/40 border-transparent text-sm min-h-[60px]"
+                      placeholder="Straße, PLZ, Ort, Land"
+                    />
+                  </div>
+                </div>
+              </div>
+            </Section>
+
+            {/* ── Revenue & Payout ── */}
+            <Section icon={TrendingUp} title="Einnahmen & Anteil" delay={0.05}>
+              <div className="space-y-4">
+                {/* Total revenue from all platform accounts */}
+                {totalRevenue > 0 && (
+                  <div className="text-center py-3">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Gesamtumsatz</p>
+                    <p className="text-4xl font-black text-gold-gradient tabular-nums">
+                      <AnimatedGoldValue value={totalRevenue} suffix={` ${modelForm.currency || "EUR"}`} />
+                    </p>
                   </div>
                 )}
-              </DialogContent>
-            </Dialog>
-            <Section icon={TrendingUp} title="Einnahmen (manuell)" delay={0.05}>
-              <div className="space-y-4">
-                {/* Big golden number – total */}
-                <div className="text-center py-3">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Gesamtumsatz</p>
-                  <p className="text-4xl font-black text-gold-gradient tabular-nums">
-                    <AnimatedGoldValue value={effectiveMonthly} suffix={` ${currency}`} />
-                  </p>
+
+                {/* Percentage slider */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-foreground">Revenue-Anteil:</span>
+                    <div className="gold-gradient-border-animated rounded-lg px-3 py-1">
+                      <span className="text-sm font-bold text-gold-gradient tabular-nums">{modelForm.revenue_percentage || 0}%</span>
+                    </div>
+                  </div>
+                  <Slider
+                    value={[modelForm.revenue_percentage || 0]}
+                    onValueChange={([v]) => setModelForm(prev => ({ ...prev, revenue_percentage: v }))}
+                    min={0} max={100} step={1}
+                  />
                 </div>
 
-                {/* Currency selector */}
+                {/* Currency */}
                 <div className="flex justify-end">
-                  <Select value={currency} onValueChange={setCurrency}>
+                  <Select value={modelForm.currency || "EUR"} onValueChange={v => setModelForm(prev => ({ ...prev, currency: v }))}>
                     <SelectTrigger className="w-[100px] text-sm h-9">
                       <SelectValue />
                     </SelectTrigger>
@@ -971,77 +615,29 @@ export default function ModelDashboardTab() {
                   </Select>
                 </div>
 
-                {/* Per-platform revenue inputs */}
-                <div className="space-y-2">
-                  {([
-                    { label: "4Based", value: fourbasedRevenue, onChange: setFourbasedRevenue },
-                    { label: "Maloum", value: maloumRevenue, onChange: setMaloumRevenue },
-                    { label: "Brezzels", value: brezzelsRevenue, onChange: setBrezzelsRevenue },
-                  ] as const).map(p => (
-                    <div key={p.label} className="flex items-center gap-3 p-2.5 rounded-lg bg-secondary/30 border border-border/50">
-                      <span className="text-xs font-medium text-foreground w-16 shrink-0">{p.label}</span>
-                      <div className="flex-1 input-gold-shimmer rounded-lg">
-                        <Input
-                          type="number"
-                          value={p.value || ""}
-                          onChange={e => p.onChange(Number(e.target.value) || 0)}
-                          className="h-9 text-center text-sm font-semibold border-transparent"
-                          placeholder="0"
-                        />
-                      </div>
-                      <span className="text-xs text-muted-foreground w-10 shrink-0">{currency}</span>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Payout calculation */}
-                {revenuePercentage > 0 && effectiveMonthly > 0 && (
-                  <div className="space-y-2">
-                    <div className="rounded-xl border border-accent/20 bg-accent/5 p-3 text-center space-y-1">
-                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                        Verdienst Model ({revenuePercentage}%)
-                      </p>
-                      <p className="text-2xl font-bold text-accent tabular-nums">
-                        <AnimatedGoldValue value={Math.round(effectiveMonthly * revenuePercentage / 100)} suffix={` ${currency}`} />
-                      </p>
-                    </div>
-
-                    {/* Per-platform payout breakdown */}
-                    {totalPlatformRevenue > 0 && (
-                      <div className="rounded-lg bg-secondary/20 border border-border/40 p-2.5 space-y-1.5">
-                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Aufschlüsselung Payout</p>
-                        {fourbasedRevenue > 0 && (
-                          <div className="flex justify-between text-xs">
-                            <span className="text-muted-foreground">4Based</span>
-                            <span className="font-mono text-foreground">{Math.round(fourbasedRevenue * revenuePercentage / 100).toLocaleString("de-DE")} {currency}</span>
-                          </div>
-                        )}
-                        {maloumRevenue > 0 && (
-                          <div className="flex justify-between text-xs">
-                            <span className="text-muted-foreground">Maloum</span>
-                            <span className="font-mono text-foreground">{Math.round(maloumRevenue * revenuePercentage / 100).toLocaleString("de-DE")} {currency}</span>
-                          </div>
-                        )}
-                        {brezzelsRevenue > 0 && (
-                          <div className="flex justify-between text-xs">
-                            <span className="text-muted-foreground">Brezzels</span>
-                            <span className="font-mono text-foreground">{Math.round(brezzelsRevenue * revenuePercentage / 100).toLocaleString("de-DE")} {currency}</span>
-                          </div>
-                        )}
-                      </div>
-                    )}
+                {/* Verdienst */}
+                {verdienst > 0 && (
+                  <div className="rounded-xl border border-accent/20 bg-accent/5 p-3 text-center space-y-1">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                      Verdienst Model ({modelForm.revenue_percentage}%)
+                    </p>
+                    <p className="text-2xl font-bold text-accent tabular-nums">
+                      <AnimatedGoldValue value={verdienst} suffix={` ${modelForm.currency || "EUR"}`} />
+                    </p>
                   </div>
                 )}
               </div>
             </Section>
 
-            {/* Vertrag */}
-            <Section icon={FileText} title="Vertrag Upload" delay={0.05}>
+            {/* ── Vertrag ── */}
+            <Section icon={FileText} title="Vertrag Upload" delay={0.1}>
               <div className="space-y-3">
-                {contractPath ? (
+                {modelForm.contract_file_path ? (
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-accent/5 border border-accent/20">
                     <CheckCircle2 className="h-5 w-5 text-accent shrink-0" />
-                    <span className="text-xs text-foreground truncate flex-1 font-medium">{contractPath.split("/").pop()}</span>
+                    <span className="text-xs text-foreground truncate flex-1 font-medium">
+                      {modelForm.contract_file_path.split("/").pop()}
+                    </span>
                     <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-accent" onClick={downloadContract}>
                       <Download className="h-4 w-4" />
                     </Button>
@@ -1060,118 +656,315 @@ export default function ModelDashboardTab() {
               </div>
             </Section>
 
-            {/* BotDMs & Setup – Google Sheets style table */}
-            <Section icon={CheckCircle2} title="BotDMs & Setup" delay={0.1}>
-              {(() => {
-                // Build rows: all accounts with their dashboard data
-                const allAccountRows = accounts.map(acc => {
-                  const dash = getDashboard(acc.id);
-                  const botMsg = getBotMessage(acc.id);
-                  return { acc, dash, botMsg };
-                });
+            {/* ── Ebene 2: Plattform-Accounts (Stammbaum) ── */}
+            <Section icon={Globe} title="Plattform-Accounts" delay={0.15}>
+              {modelAccounts.length === 0 ? (
+                <div className="text-center py-6">
+                  <p className="text-xs text-muted-foreground mb-3">Noch keine Plattform-Accounts verknüpft.</p>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setAddAccountOpen(true)}
+                    className="gap-1.5 text-xs border-accent/30 text-accent hover:bg-accent/10"
+                  >
+                    <Plus className="h-3 w-3" />
+                    Ersten Account anlegen
+                  </Button>
+                </div>
+              ) : (
+                <Accordion type="multiple" className="space-y-2">
+                  {Object.entries(accountsByPlatform).map(([platform, accs]) => (
+                    <AccordionItem key={platform} value={platform} className="border border-border/40 rounded-lg overflow-hidden">
+                      <AccordionTrigger className="px-3 py-2.5 hover:no-underline hover:bg-accent/5">
+                        <div className="flex items-center gap-2.5">
+                          <span className={cn(
+                            "text-[10px] font-medium px-2.5 py-0.5 rounded-full border",
+                            platformColors[platform] || "bg-secondary/50 text-muted-foreground border-border/30"
+                          )}>
+                            {platform}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {accs.length} Account{accs.length !== 1 ? "s" : ""}
+                          </span>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="px-3 pb-3 space-y-2">
+                        {accs.map(acc => (
+                          <div key={acc.id} className="rounded-lg border border-border/30 bg-secondary/20 p-3 space-y-2">
+                            {/* Account details */}
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0 flex-1 space-y-1">
+                                <div className="flex items-center gap-2">
+                                  <p className="text-xs font-medium text-foreground truncate">{acc.account_email || "–"}</p>
+                                </div>
+                                {acc.account_domain && (
+                                  <p className="text-[10px] text-muted-foreground truncate">{acc.account_domain}</p>
+                                )}
+                                {acc.account_password && (
+                                  <p className="text-[10px] text-muted-foreground font-mono">PW: ••••••</p>
+                                )}
+                                <p className="text-[10px] text-muted-foreground/60 font-mono">ID: {acc.id.slice(0, 8)}…</p>
+                              </div>
+                              <div className="flex gap-1 shrink-0">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => generateModelLogin(acc.id)}
+                                  disabled={modelLoginLoading && loginAccountId === acc.id}
+                                  className="h-7 text-[10px] gap-1 text-accent hover:bg-accent/10"
+                                >
+                                  <KeyRound className="h-3 w-3" />
+                                  Login
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => deleteAccount(acc.id)}
+                                  className="h-7 text-[10px] text-destructive hover:bg-destructive/10"
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
 
-                return <BotDmTable
-                  rows={allAccountRows}
-                  allDashboards={allDashboards}
-                  onToggle={async (accountId: string, field: string, value: boolean) => {
-                    // Find or create dashboard row
-                    const dash = allDashboards.find(d => d.account_id === accountId);
-                    if (dash) {
-                      await supabase.from("model_dashboard").update({ [field]: value }).eq("id", dash.id);
-                    } else {
-                      await supabase.from("model_dashboard").insert({ account_id: accountId, [field]: value });
-                    }
-                    await loadAllDashboards();
-                    // If it's the selected account, reload its data too
-                    if (accountId === selectedAccountId) {
-                      await loadModelData(accountId);
-                    }
-                  }}
-                />;
-              })()}
+                            {/* Ebene 3: Chatter assigned */}
+                            <div className="border-t border-border/30 pt-2">
+                              <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Zugewiesener Chatter</p>
+                              {acc.assigned_to ? (
+                                <div className="flex items-center gap-2">
+                                  <div className="h-5 w-5 rounded-full bg-accent/15 flex items-center justify-center">
+                                    <User className="h-3 w-3 text-accent" />
+                                  </div>
+                                  <span className="text-xs text-foreground font-mono">{acc.assigned_to.slice(0, 8)}…</span>
+                                </div>
+                              ) : (
+                                <p className="text-[10px] text-muted-foreground/60 italic">Kein Chatter zugewiesen</p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              )}
             </Section>
 
-            {/* Notizen */}
-            <Section icon={StickyNote} title="Model Daten" delay={0.15}>
+            {/* ── Crypto ── */}
+            <Section icon={Wallet} title="Crypto / Auszahlung" delay={0.2}>
               <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Notizen / Freitext</Label>
+                <Label className="text-xs text-muted-foreground">Crypto-Infos (Adresse, Coin, Netzwerk…)</Label>
                 <div className="input-gold-shimmer rounded-lg">
                   <Textarea
-                    value={notes}
-                    onChange={e => setNotes(e.target.value)}
+                    value={modelForm.crypto_address || ""}
+                    onChange={e => setModelForm(prev => ({ ...prev, crypto_address: e.target.value }))}
+                    placeholder="z.B. USDT TRC20 – TXyz…&#10;Netzwerk: Tron"
+                    className="bg-secondary/40 border-transparent text-sm min-h-[80px]"
+                  />
+                </div>
+              </div>
+            </Section>
+
+            {/* ── Notizen ── */}
+            <Section icon={StickyNote} title="Notizen" delay={0.25}>
+              <div className="space-y-1.5">
+                <div className="input-gold-shimmer rounded-lg">
+                  <Textarea
+                    value={modelForm.notes || ""}
+                    onChange={e => setModelForm(prev => ({ ...prev, notes: e.target.value }))}
                     placeholder="Notizen zum Model…"
-                    className="bg-secondary/40 border-transparent min-h-[100px] text-sm"
+                    className="bg-secondary/40 border-transparent min-h-[80px] text-sm"
                   />
                 </div>
               </div>
             </Section>
 
-            {/* Prozente */}
-            <Section icon={Percent} title="Prozente einstellen" delay={0.2}>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-foreground">Anteil:</span>
-                  <div className="gold-gradient-border-animated rounded-lg px-3 py-1">
-                    <span className="text-sm font-bold text-gold-gradient tabular-nums">{revenuePercentage}%</span>
-                  </div>
-                </div>
-                <Slider value={[revenuePercentage]} onValueChange={([v]) => setRevenuePercentage(v)} min={0} max={100} step={1} />
-              </div>
-            </Section>
-
-            {/* Crypto */}
-            <Section icon={Wallet} title="Crypto / Auszahlung" delay={0.25}>
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Crypto-Infos (Adresse, Coin, Netzwerk, Notizen…)</Label>
-                <div className="input-gold-shimmer rounded-lg">
-                  <Textarea
-                    value={cryptoAddress}
-                    onChange={e => setCryptoAddress(e.target.value)}
-                    placeholder="z.B. USDT TRC20 – TXyz…&#10;Netzwerk: Tron&#10;Weitere Infos…"
-                    className="bg-secondary/40 border-transparent text-sm min-h-[100px]"
-                  />
-                </div>
-              </div>
-            </Section>
-
-            {/* Save */}
+            {/* ── Save & Delete ── */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
+              className="space-y-2"
             >
               <Button
-                onClick={saveData}
+                onClick={saveModel}
                 disabled={saving}
                 className="w-full gap-2 h-11 text-sm font-semibold bg-accent hover:bg-accent/90 text-accent-foreground transition-all hover:scale-[1.01] active:scale-[0.99] gold-glow"
               >
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                 Alles speichern
               </Button>
+              <Button
+                onClick={deleteModel}
+                variant="ghost"
+                className="w-full text-xs text-destructive/60 hover:text-destructive hover:bg-destructive/5"
+              >
+                <Trash2 className="h-3 w-3 mr-1.5" />
+                Model löschen
+              </Button>
             </motion.div>
 
-
-
-            {/* Credit Note */}
-            <Section icon={FileDown} title="Provider Invoice erstellen" delay={0.4}>
+            {/* ── Credit Note ── */}
+            <Section icon={FileDown} title="Provider Invoice erstellen" delay={0.35}>
               <CreditNoteForm
-                key={selectedAccountId}
-                suggestedAmount={gutschriftFromRevenue}
-                providerName={selectedAccount?.account_email || ""}
-                accountId={selectedAccountId}
-                cryptoAddress={cryptoAddress}
-                revenuePercentage={revenuePercentage}
-                currency={currency}
+                key={selectedModelId}
+                suggestedAmount={verdienst}
+                providerName={selectedModel.name}
+                accountId={modelAccounts[0]?.id || ""}
+                cryptoAddress={modelForm.crypto_address || ""}
+                revenuePercentage={modelForm.revenue_percentage || 0}
+                currency={modelForm.currency || "EUR"}
                 platformRevenue={{
-                  fourbased: fourbasedRevenue,
-                  maloum: maloumRevenue,
-                  brezzels: brezzelsRevenue,
+                  fourbased: 0,
+                  maloum: 0,
+                  brezzels: 0,
                 }}
               />
             </Section>
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* ── Create Model Dialog ── */}
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent className="glass-card border-border sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">Neues Model anlegen</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Name *</Label>
+              <Input
+                value={newModel.name}
+                onChange={e => setNewModel(prev => ({ ...prev, name: e.target.value }))}
+                placeholder="z.B. Alina"
+                className="bg-secondary/40 border-border/50 text-sm"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Benutzername</Label>
+              <Input
+                value={newModel.username}
+                onChange={e => setNewModel(prev => ({ ...prev, username: e.target.value }))}
+                placeholder="z.B. alina_official"
+                className="bg-secondary/40 border-border/50 text-sm"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Anschrift</Label>
+              <Textarea
+                value={newModel.address}
+                onChange={e => setNewModel(prev => ({ ...prev, address: e.target.value }))}
+                placeholder="Straße, PLZ, Ort, Land"
+                className="bg-secondary/40 border-border/50 text-sm min-h-[60px]"
+              />
+            </div>
+            <Button
+              onClick={handleCreateModel}
+              disabled={creating}
+              className="w-full gap-2 bg-accent hover:bg-accent/90 text-accent-foreground"
+            >
+              {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+              Model erstellen
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Add Account Dialog ── */}
+      <Dialog open={addAccountOpen} onOpenChange={setAddAccountOpen}>
+        <DialogContent className="glass-card border-border sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">Plattform-Account hinzufügen</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Plattform</Label>
+              <Select value={newAccount.platform} onValueChange={v => setNewAccount(prev => ({ ...prev, platform: v }))}>
+                <SelectTrigger className="bg-secondary/40 border-border/50 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {PLATFORMS.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">E-Mail / Login</Label>
+              <Input
+                value={newAccount.account_email}
+                onChange={e => setNewAccount(prev => ({ ...prev, account_email: e.target.value }))}
+                placeholder="login@example.com"
+                className="bg-secondary/40 border-border/50 text-sm"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Passwort</Label>
+              <Input
+                value={newAccount.account_password}
+                onChange={e => setNewAccount(prev => ({ ...prev, account_password: e.target.value }))}
+                placeholder="••••••••"
+                className="bg-secondary/40 border-border/50 text-sm"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Domain / URL</Label>
+              <Input
+                value={newAccount.account_domain}
+                onChange={e => setNewAccount(prev => ({ ...prev, account_domain: e.target.value }))}
+                placeholder="z.B. model.4based.com"
+                className="bg-secondary/40 border-border/50 text-sm"
+              />
+            </div>
+            <Button
+              onClick={handleAddAccount}
+              disabled={addingAccount}
+              className="w-full gap-2 bg-accent hover:bg-accent/90 text-accent-foreground"
+            >
+              {addingAccount ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+              Account hinzufügen
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Model Login Dialog ── */}
+      <Dialog open={modelLoginDialog} onOpenChange={setModelLoginDialog}>
+        <DialogContent className="glass-card border-border sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">Model-Login erstellt</DialogTitle>
+          </DialogHeader>
+          {modelLoginCreds && (
+            <div className="space-y-4">
+              <p className="text-xs text-muted-foreground">Sende diese Zugangsdaten an das Model. Das Passwort wird nur einmal angezeigt!</p>
+              <div className="space-y-3">
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-secondary/50 border border-border">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] text-muted-foreground">E-Mail</p>
+                    <p className="text-sm font-mono text-foreground truncate">{modelLoginCreds.email}</p>
+                  </div>
+                  <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" onClick={() => { navigator.clipboard.writeText(modelLoginCreds.email); toast.success("Kopiert!"); }}>
+                    <Copy className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-secondary/50 border border-border">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-[10px] text-muted-foreground">Passwort</p>
+                    <p className="text-sm font-mono text-foreground truncate">{showLoginPassword ? modelLoginCreds.password : "••••••••••••"}</p>
+                  </div>
+                  <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" onClick={() => setShowLoginPassword(!showLoginPassword)}>
+                    {showLoginPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                  </Button>
+                  <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" onClick={() => { navigator.clipboard.writeText(modelLoginCreds.password); toast.success("Kopiert!"); }}>
+                    <Copy className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+              <p className="text-[10px] text-muted-foreground">Login-URL: <span className="text-foreground font-mono">{window.location.origin}/model/login</span></p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
