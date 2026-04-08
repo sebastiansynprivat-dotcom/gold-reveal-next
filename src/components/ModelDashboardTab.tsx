@@ -269,18 +269,39 @@ export default function ModelDashboardTab() {
     if (!newModel.name.trim()) { toast.error("Name ist erforderlich"); return; }
     setCreating(true);
     const { data: userData } = await supabase.auth.getUser();
-    const { error } = await (supabase.from("models") as any).insert({
+    const userId = userData.user?.id;
+    const { data: modelData, error } = await (supabase.from("models") as any).insert({
       name: newModel.name,
       username: newModel.username,
       address: newModel.address,
-      created_by: userData.user?.id,
-    });
-    if (error) { toast.error(error.message); }
-    else {
-      toast.success("Model erstellt ✅");
-      setNewModel({ name: "", username: "", address: "" });
-      setCreateDialogOpen(false);
-      await loadModels();
+      created_by: userId,
+    }).select("id").single();
+    if (error) { toast.error(error.message); setCreating(false); return; }
+
+    // Create selected platform accounts
+    const selected = Object.entries(createAccounts).filter(([, v]) => v.selected);
+    for (const [platform, entry] of selected) {
+      await (supabase.from("accounts") as any).insert({
+        platform,
+        account_email: entry.account_email,
+        account_password: entry.account_password,
+        account_domain: entry.account_domain,
+        drive_folder_id: extractDriveFolderId(entry.drive_folder_id),
+        model_language: entry.model_language,
+        model_agency: entry.model_agency,
+        model_active: entry.model_active,
+        model_id: modelData.id,
+        created_by: userId,
+      });
+    }
+
+    toast.success(`Model erstellt${selected.length > 0 ? ` mit ${selected.length} Account${selected.length > 1 ? "s" : ""}` : ""} ✅`);
+    setNewModel({ name: "", username: "", address: "" });
+    setCreateAccounts(emptyAccountEntries());
+    setCreateDialogOpen(false);
+    await loadModels();
+    if (modelData?.id) {
+      setSelectedModelId(modelData.id);
     }
     setCreating(false);
   };
