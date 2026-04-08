@@ -248,7 +248,35 @@ export default function ModelDashboardTab() {
     );
   }, [models, searchQuery]);
 
-  // ─── Revenue calculations ───
+  // ─── Revenue overview per model ───
+  const modelRevenueOverview = useMemo(() => {
+    if (!revenueOverviewLoaded) return [];
+    return models.map(model => {
+      const accs = allAccounts.filter(a => a.model_id === model.id);
+      let fourbased = 0, maloum = 0, brezzels = 0, total = 0;
+      for (const acc of accs) {
+        const d = allDashData[acc.id];
+        if (d) {
+          fourbased += d.fourbased;
+          maloum += d.maloum;
+          brezzels += d.brezzels;
+          total += (d.fourbased + d.maloum + d.brezzels) || d.monthly;
+        }
+      }
+      const anteil = model.revenue_percentage > 0 ? Math.round(total * model.revenue_percentage / 100) : 0;
+      return { id: model.id, name: model.name, username: model.username, fourbased, maloum, brezzels, total, percentage: model.revenue_percentage, anteil, currency: model.currency };
+    }).sort((a, b) => b.total - a.total);
+  }, [models, allAccounts, allDashData, revenueOverviewLoaded]);
+
+  const overviewGrandTotal = useMemo(() => modelRevenueOverview.reduce((s, m) => s + m.total, 0), [modelRevenueOverview]);
+  const overviewTotalAnteil = useMemo(() => modelRevenueOverview.reduce((s, m) => s + m.anteil, 0), [modelRevenueOverview]);
+  const overviewPlatformTotals = useMemo(() => ({
+    fourbased: modelRevenueOverview.reduce((s, m) => s + m.fourbased, 0),
+    maloum: modelRevenueOverview.reduce((s, m) => s + m.maloum, 0),
+    brezzels: modelRevenueOverview.reduce((s, m) => s + m.brezzels, 0),
+  }), [modelRevenueOverview]);
+
+
   const totalRevenue = useMemo(() => {
     return modelAccounts.reduce((sum, acc) => sum + (dashboardRevenues[acc.id] || 0), 0);
   }, [modelAccounts, dashboardRevenues]);
