@@ -800,6 +800,57 @@ export default function ModelDashboardTab() {
                     />
                   </div>
                 </div>
+
+                {/* Model-level settings */}
+                <div className="border-t border-border/30 pt-3 space-y-3">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Einstellungen</p>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Drive Folder ID</Label>
+                    <div className="input-gold-shimmer rounded-lg">
+                      <Input
+                        value={modelForm.drive_folder_id || ""}
+                        onChange={e => setModelForm(prev => ({ ...prev, drive_folder_id: e.target.value }))}
+                        placeholder="Google Drive URL oder Folder ID"
+                        className="bg-secondary/40 border-transparent text-sm h-9"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Sprache</Label>
+                      <div className="flex gap-1.5">
+                        <button onClick={() => setModelForm(prev => ({ ...prev, model_language: "de" }))}
+                          className={cn("flex-1 text-xs px-2 py-2 rounded-lg border transition-all", (modelForm.model_language || "de") === "de" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50 hover:border-accent/30")}>
+                          🇩🇪 DE
+                        </button>
+                        <button onClick={() => setModelForm(prev => ({ ...prev, model_language: "en" }))}
+                          className={cn("flex-1 text-xs px-2 py-2 rounded-lg border transition-all", modelForm.model_language === "en" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50 hover:border-accent/30")}>
+                          🇬🇧 EN
+                        </button>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Agentur</Label>
+                      <div className="flex gap-1.5">
+                        <button onClick={() => setModelForm(prev => ({ ...prev, model_agency: "shex" }))}
+                          className={cn("flex-1 text-xs px-2 py-2 rounded-lg border transition-all", (modelForm.model_agency || "shex") === "shex" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50 hover:border-accent/30")}>
+                          SheX
+                        </button>
+                        <button onClick={() => setModelForm(prev => ({ ...prev, model_agency: "syn" }))}
+                          className={cn("flex-1 text-xs px-2 py-2 rounded-lg border transition-all", modelForm.model_agency === "syn" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50 hover:border-accent/30")}>
+                          SYN
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between py-1">
+                    <span className="text-xs text-muted-foreground">Model aktiv</span>
+                    <Switch
+                      checked={modelForm.model_active !== false}
+                      onCheckedChange={(checked) => setModelForm(prev => ({ ...prev, model_active: checked }))}
+                    />
+                  </div>
+                </div>
               </div>
             </Section>
 
