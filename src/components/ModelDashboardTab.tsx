@@ -175,29 +175,8 @@ export default function ModelDashboardTab() {
 
   useEffect(() => { loadModels(); }, [loadModels]);
 
-  // ─── Load all revenue data for overview ───
-  const loadRevenueOverview = useCallback(async () => {
-    const [accsRes, dashRes] = await Promise.all([
-      supabase.from("accounts").select("id, model_id, platform" as any),
-      supabase.from("model_dashboard").select("account_id, fourbased_revenue, maloum_revenue, brezzels_revenue, monthly_revenue"),
-    ]);
-    if (accsRes.data) setAllAccounts(accsRes.data as any);
-    if (dashRes.data) {
-      const map: Record<string, { fourbased: number; maloum: number; brezzels: number; monthly: number }> = {};
-      for (const d of dashRes.data) {
-        map[d.account_id] = {
-          fourbased: Number((d as any).fourbased_revenue) || 0,
-          maloum: Number((d as any).maloum_revenue) || 0,
-          brezzels: Number((d as any).brezzels_revenue) || 0,
-          monthly: Number((d as any).monthly_revenue) || 0,
-        };
-      }
-      setAllDashData(map);
-    }
-    setRevenueOverviewLoaded(true);
-  }, []);
 
-  useEffect(() => { loadRevenueOverview(); }, [loadRevenueOverview]);
+
 
   // ─── Load accounts for selected model ───
   const loadModelAccounts = useCallback(async (modelId: string) => {
