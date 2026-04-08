@@ -1215,10 +1215,59 @@ export default function ModelDashboardTab() {
               </div>
             </div>
 
+            {/* Model-level settings */}
+            <div className="border-t border-border/30 pt-3 space-y-3">
+              <p className="text-xs font-semibold text-foreground mb-1">Einstellungen</p>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] text-muted-foreground">Drive Folder ID</Label>
+                <Input
+                  value={newModel.drive_folder_id}
+                  onChange={e => setNewModel(prev => ({ ...prev, drive_folder_id: e.target.value }))}
+                  placeholder="Google Drive URL oder Folder ID (optional)"
+                  className="bg-secondary/40 border-border/50 text-xs h-8"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label className="text-[10px] text-muted-foreground">Sprache</Label>
+                  <div className="flex gap-1">
+                    <button onClick={() => setNewModel(prev => ({ ...prev, model_language: "de" as const }))}
+                      className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", newModel.model_language === "de" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50")}>
+                      🇩🇪 DE
+                    </button>
+                    <button onClick={() => setNewModel(prev => ({ ...prev, model_language: "en" as const }))}
+                      className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", newModel.model_language === "en" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50")}>
+                      🇬🇧 EN
+                    </button>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-[10px] text-muted-foreground">Agentur</Label>
+                  <div className="flex gap-1">
+                    <button onClick={() => setNewModel(prev => ({ ...prev, model_agency: "shex" as const }))}
+                      className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", newModel.model_agency === "shex" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50")}>
+                      SheX
+                    </button>
+                    <button onClick={() => setNewModel(prev => ({ ...prev, model_agency: "syn" as const }))}
+                      className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", newModel.model_agency === "syn" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50")}>
+                      SYN
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center justify-between py-1">
+                <span className="text-[10px] font-medium text-muted-foreground">Model aktiv</span>
+                <Switch
+                  checked={newModel.model_active}
+                  onCheckedChange={(checked) => setNewModel(prev => ({ ...prev, model_active: checked }))}
+                />
+              </div>
+            </div>
+
             {/* Divider */}
             <div className="border-t border-border/30 pt-3">
               <p className="text-xs font-semibold text-foreground mb-1">Plattform-Accounts</p>
-              <p className="text-[10px] text-muted-foreground mb-3">Optional – wähle Plattformen aus und trage Login-Daten ein.</p>
+              <p className="text-[10px] text-muted-foreground mb-3">Optional – wähle Plattformen aus und trage die Login-Daten ein.</p>
             </div>
 
             {/* Platform accounts */}
