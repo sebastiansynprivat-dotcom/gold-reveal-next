@@ -17,7 +17,7 @@ import {
   Upload, FileText, Trash2, Download, Save, Loader2, Star,
   Percent, Wallet, StickyNote, CheckCircle2, FileDown, Plus,
   Search, ChevronRight, TrendingUp, KeyRound, Copy, Eye, EyeOff,
-  Users, Globe, User, FolderTree
+  Users, Globe, User, FolderTree, Pencil
 } from "lucide-react";
 import CreditNoteForm from "@/components/CreditNoteForm";
 
