@@ -313,7 +313,7 @@ export default function ModelDashboardTab() {
     if (error) toast.error(error.message);
     else {
       toast.success("Account hinzugefügt ✅");
-      setNewAccount({ platform: "4Based", account_email: "", account_password: "", account_domain: "" });
+      setNewAccount({ platform: "4Based", account_email: "", account_password: "", account_domain: PLATFORM_DOMAINS["4Based"] || "" });
       setAddAccountOpen(false);
       await loadModelAccounts(selectedModelId);
     }
