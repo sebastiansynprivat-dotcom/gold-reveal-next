@@ -143,7 +143,7 @@ export default function ModelDashboardTab() {
 
   // Add account dialog
   const [addAccountOpen, setAddAccountOpen] = useState(false);
-  const [newAccount, setNewAccount] = useState({ platform: "4Based", account_email: "", account_password: "", account_domain: "" });
+  const [newAccount, setNewAccount] = useState({ platform: "4Based", account_email: "", account_password: "", account_domain: PLATFORM_DOMAINS["4Based"] || "" });
   const [addingAccount, setAddingAccount] = useState(false);
 
   // Model login dialog
