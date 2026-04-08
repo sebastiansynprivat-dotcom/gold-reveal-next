@@ -2543,6 +2543,65 @@ export default function AdminDashboard() {
           )}
         </section>
 
+        {/* Freie Accounts Section */}
+        <section className="glass-card rounded-xl p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => setManualSectionOpen(!manualSectionOpen)}
+              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+            >
+              <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${manualSectionOpen ? "rotate-90" : ""}`} />
+              <FolderOpen className="h-4 w-4 text-amber-400" />
+              <h2 className="text-sm font-semibold text-foreground">Freie Accounts</h2>
+              {!manualSectionOpen && (
+                <>
+                  <Badge variant="secondary" className="text-[10px] ml-1">
+                    {accounts.filter(a => a.is_manual).length} gesamt
+                  </Badge>
+                  <Badge variant="secondary" className="text-[10px] flex items-center gap-1">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-400" />
+                    </span>
+                    {accounts.filter(a => a.is_manual && !a.assigned_to).length} frei
+                  </Badge>
+                </>
+              )}
+            </button>
+          </div>
+
+          {manualSectionOpen && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {DEFAULT_PLATFORMS.map((p) => {
+                const pAccounts = accounts.filter((a) => a.is_manual && a.platform.toLowerCase() === p.toLowerCase());
+                const free = pAccounts.filter((a) => !a.assigned_to).length;
+                const assigned = pAccounts.filter((a) => a.assigned_to).length;
+                return (
+                  <button
+                    key={p}
+                    onClick={() => {
+                      setSelectedManualPlatform(p);
+                      setManualPoolOpen(true);
+                    }}
+                    className="glass-card-subtle rounded-xl p-4 text-left hover:bg-secondary/30 transition-colors"
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-semibold text-foreground">{p}</span>
+                      <Badge variant="secondary" className="text-[10px]">
+                        {pAccounts.length} Accounts
+                      </Badge>
+                    </div>
+                    <div className="flex gap-3 text-[10px] text-muted-foreground">
+                      <span className="text-amber-400">{free} frei</span>
+                      <span>{assigned} vergeben</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </section>
+
         </>)}
 
 
