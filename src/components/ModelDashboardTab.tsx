@@ -143,7 +143,7 @@ export default function ModelDashboardTab() {
 
   // Add account dialog – multi-platform
   const [addAccountOpen, setAddAccountOpen] = useState(false);
-  const emptyAccountEntries = () => PLATFORMS.reduce((acc, p) => ({ ...acc, [p]: { selected: false, account_email: "", account_password: "", account_domain: PLATFORM_DOMAINS[p] || "" } }), {} as Record<string, { selected: boolean; account_email: string; account_password: string; account_domain: string }>);
+  const emptyAccountEntries = () => PLATFORMS.reduce((acc, p) => ({ ...acc, [p]: { selected: false, account_email: "", account_password: "", account_domain: PLATFORM_DOMAINS[p] || "", drive_folder_id: "", model_language: "de" as "de" | "en", model_agency: "shex" as "shex" | "syn", model_active: true } }), {} as Record<string, { selected: boolean; account_email: string; account_password: string; account_domain: string; drive_folder_id: string; model_language: "de" | "en"; model_agency: "shex" | "syn"; model_active: boolean }>);
   const [newAccounts, setNewAccounts] = useState(emptyAccountEntries);
   const [addingAccount, setAddingAccount] = useState(false);
 
