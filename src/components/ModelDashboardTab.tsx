@@ -1220,58 +1220,12 @@ export default function ModelDashboardTab() {
                                 />
                               </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-2">
-                              <div className="space-y-1">
-                                <Label className="text-[10px] text-muted-foreground">Domain</Label>
-                                <Input
-                                  value={entry.account_domain}
-                                  onChange={e => setCreateAccounts(prev => ({ ...prev, [platform]: { ...prev[platform], account_domain: e.target.value } }))}
-                                  className="bg-secondary/40 border-border/50 text-xs h-8"
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <Label className="text-[10px] text-muted-foreground">Drive Folder ID</Label>
-                                <Input
-                                  value={entry.drive_folder_id}
-                                  onChange={e => setCreateAccounts(prev => ({ ...prev, [platform]: { ...prev[platform], drive_folder_id: e.target.value } }))}
-                                  placeholder="Optional"
-                                  className="bg-secondary/40 border-border/50 text-xs h-8"
-                                />
-                              </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-2">
-                              <div className="space-y-1">
-                                <Label className="text-[10px] text-muted-foreground">Sprache</Label>
-                                <div className="flex gap-1">
-                                  <button onClick={() => setCreateAccounts(prev => ({ ...prev, [platform]: { ...prev[platform], model_language: "de" as const } }))}
-                                    className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", entry.model_language === "de" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50")}>
-                                    🇩🇪 DE
-                                  </button>
-                                  <button onClick={() => setCreateAccounts(prev => ({ ...prev, [platform]: { ...prev[platform], model_language: "en" as const } }))}
-                                    className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", entry.model_language === "en" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50")}>
-                                    🇬🇧 EN
-                                  </button>
-                                </div>
-                              </div>
-                              <div className="space-y-1">
-                                <Label className="text-[10px] text-muted-foreground">Agentur</Label>
-                                <div className="flex gap-1">
-                                  <button onClick={() => setCreateAccounts(prev => ({ ...prev, [platform]: { ...prev[platform], model_agency: "shex" as const } }))}
-                                    className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", entry.model_agency === "shex" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50")}>
-                                    SheX
-                                  </button>
-                                  <button onClick={() => setCreateAccounts(prev => ({ ...prev, [platform]: { ...prev[platform], model_agency: "syn" as const } }))}
-                                    className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", entry.model_agency === "syn" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50")}>
-                                    SYN
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex items-center justify-between py-1">
-                              <span className="text-[10px] font-medium text-muted-foreground">Model aktiv</span>
-                              <Switch
-                                checked={entry.model_active}
-                                onCheckedChange={(checked) => setCreateAccounts(prev => ({ ...prev, [platform]: { ...prev[platform], model_active: checked } }))}
+                            <div className="space-y-1">
+                              <Label className="text-[10px] text-muted-foreground">Domain</Label>
+                              <Input
+                                value={entry.account_domain}
+                                onChange={e => setCreateAccounts(prev => ({ ...prev, [platform]: { ...prev[platform], account_domain: e.target.value } }))}
+                                className="bg-secondary/40 border-border/50 text-xs h-8"
                               />
                             </div>
                           </div>
