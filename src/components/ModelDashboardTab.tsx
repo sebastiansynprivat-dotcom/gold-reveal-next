@@ -346,6 +346,10 @@ export default function ModelDashboardTab() {
         account_email: entry.account_email,
         account_password: entry.account_password,
         account_domain: entry.account_domain,
+        drive_folder_id: extractDriveFolderId(entry.drive_folder_id),
+        model_language: entry.model_language,
+        model_agency: entry.model_agency,
+        model_active: entry.model_active,
         model_id: selectedModelId,
         created_by: userData.user?.id,
       });
