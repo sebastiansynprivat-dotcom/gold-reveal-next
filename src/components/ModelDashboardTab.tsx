@@ -423,10 +423,6 @@ export default function ModelDashboardTab() {
       account_email: editAccountData.account_email,
       account_password: editAccountData.account_password,
       account_domain: editAccountData.account_domain,
-      drive_folder_id: extractDriveFolderId(editAccountData.drive_folder_id),
-      model_language: editAccountData.model_language,
-      model_agency: editAccountData.model_agency,
-      model_active: editAccountData.model_active,
     } as any).eq("id", editingAccountId);
     if (error) toast.error(error.message);
     else {
