@@ -356,8 +356,8 @@ export default function ModelDashboardTab() {
   const deleteModel = async () => {
     if (!selectedModelId) return;
     // First unlink accounts
-    await supabase.from("accounts").update({ model_id: null } as any).eq("model_id" as any, selectedModelId);
-    const { error } = await supabase.from("models").delete().eq("id", selectedModelId);
+    await (supabase.from("accounts") as any).update({ model_id: null }).eq("model_id", selectedModelId);
+    const { error } = await (supabase.from("models") as any).delete().eq("id", selectedModelId);
     if (error) toast.error(error.message);
     else {
       toast.success("Model gelöscht");
