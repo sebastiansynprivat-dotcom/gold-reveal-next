@@ -565,6 +565,7 @@ export default function ModelDashboardTab() {
                   {modelAccounts.length} Plattform-Account{modelAccounts.length !== 1 ? "s" : ""}
                 </p>
               </div>
+              {modelAccounts.length < PLATFORMS.length && (
               <Button
                 size="sm"
                 variant="outline"
