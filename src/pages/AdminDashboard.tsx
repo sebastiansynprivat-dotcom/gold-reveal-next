@@ -1458,7 +1458,8 @@ export default function AdminDashboard() {
     loadAccounts();
   };
 
-  const platforms = [...new Set(accounts.filter(a => !a.is_manual).map((a) => a.platform).filter(Boolean))];
+  const DEFAULT_PLATFORMS = ["Maloum", "Brezzels", "4Based", "FansyMe"];
+  const platforms = DEFAULT_PLATFORMS;
   const manualPlatforms = [...new Set(accounts.filter(a => a.is_manual).map(a => a.platform).filter(Boolean))];
 
   
