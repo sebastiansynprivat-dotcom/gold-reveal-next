@@ -193,6 +193,7 @@ export default function ModelDashboardTab() {
       .select("account_id, fourbased_revenue, maloum_revenue, brezzels_revenue, monthly_revenue");
     if (dashData) {
       const revMap: Record<string, number> = {};
+      const platRevMap: Record<string, { fourbased: number; maloum: number; brezzels: number }> = {};
       for (const d of dashData) {
         const fb = Number((d as any).fourbased_revenue) || 0;
         const ml = Number((d as any).maloum_revenue) || 0;
