@@ -64,6 +64,7 @@ export type Database = {
           is_manual: boolean
           model_active: boolean
           model_agency: string
+          model_id: string | null
           model_language: string
           platform: string
           subfolder_name: string | null
@@ -82,6 +83,7 @@ export type Database = {
           is_manual?: boolean
           model_active?: boolean
           model_agency?: string
+          model_id?: string | null
           model_language?: string
           platform?: string
           subfolder_name?: string | null
@@ -100,11 +102,20 @@ export type Database = {
           is_manual?: boolean
           model_active?: boolean
           model_agency?: string
+          model_id?: string | null
           model_language?: string
           platform?: string
           subfolder_name?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "accounts_model_id_fkey"
+            columns: ["model_id"]
+            isOneToOne: false
+            referencedRelation: "models"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       admin_account_access: {
         Row: {
@@ -661,6 +672,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      models: {
+        Row: {
+          address: string | null
+          contract_file_path: string | null
+          created_at: string
+          created_by: string | null
+          crypto_address: string | null
+          currency: string
+          id: string
+          name: string
+          notes: string | null
+          revenue_percentage: number
+          updated_at: string
+          username: string | null
+        }
+        Insert: {
+          address?: string | null
+          contract_file_path?: string | null
+          created_at?: string
+          created_by?: string | null
+          crypto_address?: string | null
+          currency?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          revenue_percentage?: number
+          updated_at?: string
+          username?: string | null
+        }
+        Update: {
+          address?: string | null
+          contract_file_path?: string | null
+          created_at?: string
+          created_by?: string | null
+          crypto_address?: string | null
+          currency?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          revenue_percentage?: number
+          updated_at?: string
+          username?: string | null
+        }
+        Relationships: []
       }
       notification_templates: {
         Row: {
