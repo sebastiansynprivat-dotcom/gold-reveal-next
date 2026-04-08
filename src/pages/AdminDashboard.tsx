@@ -895,10 +895,12 @@ export default function AdminDashboard() {
     }
   };
 
-  // Load summaries when chatter tab is active
+  // Load summaries and refresh accounts when chatter tab is active
   useEffect(() => {
     if (activeTab === "chatter") {
       loadChatterSummaries();
+      loadAccounts();
+      loadChatters();
     }
   }, [activeTab]);
 
