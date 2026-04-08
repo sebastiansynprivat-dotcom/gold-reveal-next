@@ -407,16 +407,12 @@ export default function ModelDashboardTab() {
     }
   };
   // ─── Start editing account ───
-  const startEditAccount = (acc: AccountRow & { drive_folder_id?: string; model_language?: string; model_agency?: string }) => {
+  const startEditAccount = (acc: AccountRow) => {
     setEditingAccountId(acc.id);
     setEditAccountData({
       account_email: acc.account_email,
       account_password: acc.account_password,
       account_domain: acc.account_domain,
-      drive_folder_id: (acc as any).drive_folder_id || "",
-      model_language: ((acc as any).model_language || "de") as "de" | "en",
-      model_agency: ((acc as any).model_agency || "shex") as "shex" | "syn",
-      model_active: acc.model_active !== false,
     });
   };
 
