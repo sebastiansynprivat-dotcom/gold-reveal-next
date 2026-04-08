@@ -2507,16 +2507,7 @@ export default function AdminDashboard() {
                 </>
               )}
             </button>
-            {accountPoolSectionOpen && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => { setNewPlatformName(""); setNewPlatformOpen(true); }}
-              >
-                <Plus className="h-3.5 w-3.5 mr-1.5" />
-                Neuer Pool
-              </Button>
-            )}
+            
           </div>
 
            {accountPoolSectionOpen && (
