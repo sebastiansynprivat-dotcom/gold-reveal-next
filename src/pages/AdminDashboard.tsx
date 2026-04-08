@@ -1461,36 +1461,7 @@ export default function AdminDashboard() {
   const platforms = [...new Set(accounts.filter(a => !a.is_manual).map((a) => a.platform).filter(Boolean))];
   const manualPlatforms = [...new Set(accounts.filter(a => a.is_manual).map(a => a.platform).filter(Boolean))];
 
-  const addAccount = async () => {
-    if (!newAccEmail.trim() || !newAccDomain.trim() || !selectedPlatform) return;
-    setAddingAccount(true);
-    const { data: { user: currentUser } } = await supabase.auth.getUser();
-    const { error } = await supabase.from("accounts").insert({
-      platform: selectedPlatform,
-      account_email: newAccEmail.trim(),
-      account_password: newAccPassword.trim(),
-      account_domain: newAccDomain.trim(),
-      drive_folder_id: extractDriveFolderId(newAccDriveFolder.trim()),
-      model_language: newAccLanguage,
-      model_active: newAccModelActive,
-      model_agency: newAccModelAgency,
-      created_by: currentUser?.id,
-    } as any);
-    if (error) {
-      toast.error("Fehler beim Hinzufügen");
-    } else {
-      toast.success("Account hinzugefügt!");
-      setNewAccEmail("");
-      setNewAccPassword("");
-      setNewAccDomain("");
-      setNewAccDriveFolder("");
-      setNewAccLanguage("de");
-      setNewAccModelActive(true);
-      setNewAccModelAgency("shex");
-      loadAccounts();
-    }
-    setAddingAccount(false);
-  };
+  
 
   const openAssignDialog = () => {
     setAssignResult(null);
