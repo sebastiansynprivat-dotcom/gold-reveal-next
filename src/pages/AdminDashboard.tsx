@@ -2000,22 +2000,23 @@ export default function AdminDashboard() {
       {/* Premium Header */}
       <header className="relative border-b border-border/50 bg-gradient-to-b from-secondary/30 to-background">
         <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-accent/5 via-transparent to-accent/5" />
-        <div className="container relative z-10 mx-auto flex max-w-4xl items-center gap-3 px-4 py-4">
+        <div className="relative z-10 flex items-center gap-3 px-4 py-4">
           <button
             type="button"
             onClick={undefined}
-            className="flex flex-1 items-center gap-3 rounded-xl text-left transition-transform hover:scale-[1.01] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            className="flex items-center gap-3 rounded-xl text-left transition-transform hover:scale-[1.01] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             aria-label="Admin-Verwaltung öffnen"
           >
             <div className="relative shrink-0">
               <img src={logo} alt="Logo" className="h-10 w-10 rounded-full ring-2 ring-accent/20" />
               <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-accent border-2 border-background" />
             </div>
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0">
               <h1 className="text-base font-bold tracking-tight text-foreground">Admin Dashboard</h1>
               <p className="text-[10px] tracking-wide text-muted-foreground">Chatter verwalten & Benachrichtigungen</p>
             </div>
           </button>
+          <div className="flex-1" />
           {isSuperAdmin && (
             <Button type="button" variant="secondary" size="sm" onClick={openAdminSection} className="shrink-0">
               <Shield className="h-3.5 w-3.5" />
