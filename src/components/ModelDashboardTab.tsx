@@ -22,6 +22,11 @@ import {
 import CreditNoteForm from "@/components/CreditNoteForm";
 
 // ─── Types ───
+const extractDriveFolderId = (input: string): string => {
+  if (!input) return "";
+  const match = input.match(/\/folders\/([a-zA-Z0-9_-]+)/);
+  return match ? match[1] : input;
+};
 interface ModelRow {
   id: string;
   name: string;
