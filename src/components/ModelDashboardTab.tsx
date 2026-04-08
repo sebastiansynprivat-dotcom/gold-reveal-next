@@ -773,12 +773,32 @@ export default function ModelDashboardTab() {
                                   <>
                                     <div className="flex items-start justify-between gap-2">
                                       <div className="min-w-0 flex-1 space-y-1">
-                                        <p className="text-xs font-medium text-foreground truncate">{acc.account_email || "–"}</p>
+                                        <div className="flex items-center gap-1.5 group/email">
+                                          <p className="text-xs font-medium text-foreground truncate">{acc.account_email || "–"}</p>
+                                          {acc.account_email && (
+                                            <button
+                                              type="button"
+                                              onClick={() => { navigator.clipboard.writeText(acc.account_email); toast.success("E-Mail kopiert"); }}
+                                              className="opacity-0 group-hover/email:opacity-100 transition-opacity"
+                                            >
+                                              <Copy className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                                            </button>
+                                          )}
+                                        </div>
                                         {acc.account_domain && (
                                           <p className="text-[10px] text-muted-foreground truncate">{acc.account_domain}</p>
                                         )}
                                         {acc.account_password && (
-                                          <p className="text-[10px] text-muted-foreground font-mono">PW: ••••••</p>
+                                          <div className="flex items-center gap-1.5 group/pw">
+                                            <p className="text-[10px] text-muted-foreground font-mono">PW: {acc.account_password}</p>
+                                            <button
+                                              type="button"
+                                              onClick={() => { navigator.clipboard.writeText(acc.account_password); toast.success("Passwort kopiert"); }}
+                                              className="opacity-0 group-hover/pw:opacity-100 transition-opacity"
+                                            >
+                                              <Copy className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                                            </button>
+                                          </div>
                                         )}
                                         <p className="text-[10px] text-muted-foreground/60 font-mono">ID: {acc.id.slice(0, 8)}…</p>
                                       </div>
