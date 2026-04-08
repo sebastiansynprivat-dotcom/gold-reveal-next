@@ -604,6 +604,52 @@ export default function ModelDashboardTab() {
               )}
             </div>
 
+            {/* ── Revenue per Platform ── */}
+            {modelAccounts.length > 0 && (
+              <Section icon={TrendingUp} title="Einnahmen" delay={0.05}>
+                <div className="space-y-3">
+                  {/* Hero total */}
+                  <div className="relative gold-gradient-border-animated pulse-glow rounded-xl p-5 text-center">
+                    <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-accent/8 via-transparent to-accent/5 pointer-events-none" />
+                    <div className="relative">
+                      <p className="text-[10px] text-muted-foreground mb-1 tracking-widest uppercase">Gesamtumsatz</p>
+                      <p className="text-3xl font-extrabold text-gold-gradient-shimmer tracking-tight tabular-nums">
+                        <AnimatedGoldValue value={totalRevenue} suffix={` ${modelForm.currency || "EUR"}`} />
+                      </p>
+                      {verdienst > 0 && (
+                        <p className="text-xs text-muted-foreground mt-1.5">
+                          Verdienst ({modelForm.revenue_percentage}%): <span className="text-accent font-semibold">{verdienst.toLocaleString("de-DE")} {modelForm.currency || "EUR"}</span>
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Platform cards */}
+                  <div className={cn("grid gap-3", selectedModelPlatformRevenue.length <= 2 ? "grid-cols-2" : "grid-cols-3")}>
+                    {selectedModelPlatformRevenue.map(({ platform, total }) => {
+                      const colorMap: Record<string, string> = {
+                        "4Based": "#22d3ee",
+                        "Maloum": "#d4af37",
+                        "Brezzels": "#3b82f6",
+                        "FansyMe": "#ec4899",
+                      };
+                      return (
+                        <div key={platform} className="glass-card-subtle rounded-xl p-3 text-center hover:scale-[1.02] transition-transform">
+                          <div className="flex items-center justify-center gap-1.5 mb-1">
+                            <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: colorMap[platform] || "#888" }} />
+                            <p className="text-[10px] text-muted-foreground font-medium">{platform}</p>
+                          </div>
+                          <p className="text-base font-bold text-foreground tabular-nums">
+                            {total > 0 ? `${total.toLocaleString("de-DE")}€` : "–"}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </Section>
+            )}
+
             {/* ── Ebene 1: Model-Stammdaten ── */}
             <Section icon={User} title="Model-Stammdaten" delay={0}>
               <div className="space-y-3">
