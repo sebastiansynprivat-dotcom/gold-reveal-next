@@ -147,6 +147,10 @@ export default function ModelDashboardTab() {
   const [newAccounts, setNewAccounts] = useState(emptyAccountEntries);
   const [addingAccount, setAddingAccount] = useState(false);
 
+  // Inline edit account
+  const [editingAccountId, setEditingAccountId] = useState<string | null>(null);
+  const [editAccountData, setEditAccountData] = useState({ account_email: "", account_password: "", account_domain: "" });
+
   // Model login dialog
   const [modelLoginDialog, setModelLoginDialog] = useState(false);
   const [modelLoginLoading, setModelLoginLoading] = useState(false);
