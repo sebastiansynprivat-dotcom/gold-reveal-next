@@ -162,7 +162,7 @@ export default function ModelDashboardTab() {
 
   // Inline edit account
   const [editingAccountId, setEditingAccountId] = useState<string | null>(null);
-  const [editAccountData, setEditAccountData] = useState({ account_email: "", account_password: "", account_domain: "", drive_folder_id: "", model_language: "de" as "de" | "en", model_agency: "shex" as "shex" | "syn", model_active: true });
+  const [editAccountData, setEditAccountData] = useState({ account_email: "", account_password: "", account_domain: "" });
 
   // Model login dialog
   const [modelLoginDialog, setModelLoginDialog] = useState(false);
