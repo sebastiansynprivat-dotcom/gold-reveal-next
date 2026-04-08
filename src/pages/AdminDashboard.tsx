@@ -4916,6 +4916,7 @@ export default function AdminDashboard() {
           </motion.div>
         </AnimatePresence>
       </main>
+      </div>
 
       {/* Remove Admin Confirm Dialog */}
       {isSuperAdmin && (
