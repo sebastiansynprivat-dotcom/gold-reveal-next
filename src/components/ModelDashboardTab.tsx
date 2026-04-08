@@ -38,6 +38,10 @@ interface ModelRow {
   currency: string;
   contract_file_path: string;
   notes: string;
+  drive_folder_id: string;
+  model_language: string;
+  model_agency: string;
+  model_active: boolean;
   created_by: string | null;
   created_at: string;
   updated_at: string;
