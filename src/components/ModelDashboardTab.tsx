@@ -700,96 +700,148 @@ export default function ModelDashboardTab() {
 
             {/* ── Ebene 2: Plattform-Accounts (Stammbaum) ── */}
             <Section icon={Globe} title="Plattform-Accounts" delay={0.15}>
-              {modelAccounts.length === 0 ? (
-                <div className="text-center py-6">
-                  <p className="text-xs text-muted-foreground mb-3">Noch keine Plattform-Accounts verknüpft.</p>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => setAddAccountOpen(true)}
-                    className="gap-1.5 text-xs border-accent/30 text-accent hover:bg-accent/10"
-                  >
-                    <Plus className="h-3 w-3" />
-                    Ersten Account anlegen
-                  </Button>
-                </div>
-              ) : (
-                <Accordion type="multiple" className="space-y-2">
-                  {Object.entries(accountsByPlatform).map(([platform, accs]) => (
-                    <AccordionItem key={platform} value={platform} className="border border-border/40 rounded-lg overflow-hidden">
-                      <AccordionTrigger className="px-3 py-2.5 hover:no-underline hover:bg-accent/5">
-                        <div className="flex items-center gap-2.5">
-                          <span className={cn(
-                            "text-[10px] font-medium px-2.5 py-0.5 rounded-full border",
-                            platformColors[platform] || "bg-secondary/50 text-muted-foreground border-border/30"
-                          )}>
-                            {platform}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {accs.length} Account{accs.length !== 1 ? "s" : ""}
-                          </span>
-                        </div>
-                      </AccordionTrigger>
-                      <AccordionContent className="px-3 pb-3 space-y-2">
-                        {accs.map(acc => (
-                          <div key={acc.id} className="rounded-lg border border-border/30 bg-secondary/20 p-3 space-y-2">
-                            {/* Account details */}
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="min-w-0 flex-1 space-y-1">
-                                <div className="flex items-center gap-2">
-                                  <p className="text-xs font-medium text-foreground truncate">{acc.account_email || "–"}</p>
-                                </div>
-                                {acc.account_domain && (
-                                  <p className="text-[10px] text-muted-foreground truncate">{acc.account_domain}</p>
-                                )}
-                                {acc.account_password && (
-                                  <p className="text-[10px] text-muted-foreground font-mono">PW: ••••••</p>
-                                )}
-                                <p className="text-[10px] text-muted-foreground/60 font-mono">ID: {acc.id.slice(0, 8)}…</p>
-                              </div>
-                              <div className="flex gap-1 shrink-0">
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => generateModelLogin(acc.id)}
-                                  disabled={modelLoginLoading && loginAccountId === acc.id}
-                                  className="h-7 text-[10px] gap-1 text-accent hover:bg-accent/10"
-                                >
-                                  <KeyRound className="h-3 w-3" />
-                                  Login
-                                </Button>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => deleteAccount(acc.id)}
-                                  className="h-7 text-[10px] text-destructive hover:bg-destructive/10"
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            </div>
-
-                            {/* Ebene 3: Chatter assigned */}
-                            <div className="border-t border-border/30 pt-2">
-                              <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Zugewiesener Chatter</p>
-                              {acc.assigned_to ? (
-                                <div className="flex items-center gap-2">
-                                  <div className="h-5 w-5 rounded-full bg-accent/15 flex items-center justify-center">
-                                    <User className="h-3 w-3 text-accent" />
-                                  </div>
-                                  <span className="text-xs text-foreground font-mono">{acc.assigned_to.slice(0, 8)}…</span>
-                                </div>
-                              ) : (
-                                <p className="text-[10px] text-muted-foreground/60 italic">Kein Chatter zugewiesen</p>
-                              )}
-                            </div>
+              <div className="space-y-3">
+                {modelAccounts.length === 0 ? (
+                  <div className="text-center py-6">
+                    <p className="text-xs text-muted-foreground mb-3">Noch keine Plattform-Accounts verknüpft.</p>
+                  </div>
+                ) : (
+                  <Accordion type="multiple" className="space-y-2">
+                    {Object.entries(accountsByPlatform).map(([platform, accs]) => (
+                      <AccordionItem key={platform} value={platform} className="border border-border/40 rounded-lg overflow-hidden">
+                        <AccordionTrigger className="px-3 py-2.5 hover:no-underline hover:bg-accent/5">
+                          <div className="flex items-center gap-2.5">
+                            <span className={cn(
+                              "text-[10px] font-medium px-2.5 py-0.5 rounded-full border",
+                              platformColors[platform] || "bg-secondary/50 text-muted-foreground border-border/30"
+                            )}>
+                              {platform}
+                            </span>
+                            <span className="text-xs text-muted-foreground">
+                              {accs.length} Account{accs.length !== 1 ? "s" : ""}
+                            </span>
                           </div>
-                        ))}
-                      </AccordionContent>
-                    </AccordionItem>
-                  ))}
-                </Accordion>
-              )}
+                        </AccordionTrigger>
+                        <AccordionContent className="px-3 pb-3 space-y-2">
+                          {accs.map(acc => {
+                            const isEditing = editingAccountId === acc.id;
+                            return (
+                              <div key={acc.id} className="rounded-lg border border-border/30 bg-secondary/20 p-3 space-y-2">
+                                {isEditing ? (
+                                  /* ── Inline Edit Mode ── */
+                                  <div className="space-y-2">
+                                    <div className="grid grid-cols-2 gap-2">
+                                      <div className="space-y-1">
+                                        <Label className="text-[10px] text-muted-foreground">E-Mail / Login</Label>
+                                        <Input
+                                          value={editAccountData.account_email}
+                                          onChange={e => setEditAccountData(prev => ({ ...prev, account_email: e.target.value }))}
+                                          className="bg-secondary/40 border-border/50 text-xs h-8"
+                                        />
+                                      </div>
+                                      <div className="space-y-1">
+                                        <Label className="text-[10px] text-muted-foreground">Passwort</Label>
+                                        <Input
+                                          value={editAccountData.account_password}
+                                          onChange={e => setEditAccountData(prev => ({ ...prev, account_password: e.target.value }))}
+                                          className="bg-secondary/40 border-border/50 text-xs h-8"
+                                        />
+                                      </div>
+                                    </div>
+                                    <div className="space-y-1">
+                                      <Label className="text-[10px] text-muted-foreground">Domain</Label>
+                                      <Input
+                                        value={editAccountData.account_domain}
+                                        onChange={e => setEditAccountData(prev => ({ ...prev, account_domain: e.target.value }))}
+                                        className="bg-secondary/40 border-border/50 text-xs h-8"
+                                      />
+                                    </div>
+                                    <div className="flex gap-2">
+                                      <Button size="sm" onClick={saveEditAccount} className="h-7 text-[10px] gap-1 bg-accent hover:bg-accent/90 text-accent-foreground">
+                                        <Save className="h-3 w-3" />
+                                        Speichern
+                                      </Button>
+                                      <Button size="sm" variant="ghost" onClick={() => setEditingAccountId(null)} className="h-7 text-[10px]">
+                                        Abbrechen
+                                      </Button>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  /* ── View Mode ── */
+                                  <>
+                                    <div className="flex items-start justify-between gap-2">
+                                      <div className="min-w-0 flex-1 space-y-1">
+                                        <p className="text-xs font-medium text-foreground truncate">{acc.account_email || "–"}</p>
+                                        {acc.account_domain && (
+                                          <p className="text-[10px] text-muted-foreground truncate">{acc.account_domain}</p>
+                                        )}
+                                        {acc.account_password && (
+                                          <p className="text-[10px] text-muted-foreground font-mono">PW: ••••••</p>
+                                        )}
+                                        <p className="text-[10px] text-muted-foreground/60 font-mono">ID: {acc.id.slice(0, 8)}…</p>
+                                      </div>
+                                      <div className="flex gap-1 shrink-0">
+                                        <Button
+                                          size="sm" variant="ghost"
+                                          onClick={() => startEditAccount(acc)}
+                                          className="h-7 text-[10px] gap-1 text-foreground hover:bg-accent/10"
+                                        >
+                                          <Pencil className="h-3 w-3" />
+                                        </Button>
+                                        <Button
+                                          size="sm" variant="ghost"
+                                          onClick={() => generateModelLogin(acc.id)}
+                                          disabled={modelLoginLoading && loginAccountId === acc.id}
+                                          className="h-7 text-[10px] gap-1 text-accent hover:bg-accent/10"
+                                        >
+                                          <KeyRound className="h-3 w-3" />
+                                          Login
+                                        </Button>
+                                        <Button
+                                          size="sm" variant="ghost"
+                                          onClick={() => deleteAccount(acc.id)}
+                                          className="h-7 text-[10px] text-destructive hover:bg-destructive/10"
+                                        >
+                                          <Trash2 className="h-3 w-3" />
+                                        </Button>
+                                      </div>
+                                    </div>
+                                    {/* Ebene 3: Chatter assigned */}
+                                    <div className="border-t border-border/30 pt-2">
+                                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Zugewiesener Chatter</p>
+                                      {acc.assigned_to ? (
+                                        <div className="flex items-center gap-2">
+                                          <div className="h-5 w-5 rounded-full bg-accent/15 flex items-center justify-center">
+                                            <User className="h-3 w-3 text-accent" />
+                                          </div>
+                                          <span className="text-xs text-foreground font-mono">{acc.assigned_to.slice(0, 8)}…</span>
+                                        </div>
+                                      ) : (
+                                        <p className="text-[10px] text-muted-foreground/60 italic">Kein Chatter zugewiesen</p>
+                                      )}
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                )}
+
+                {/* Add more accounts button – always visible */}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setAddAccountOpen(true)}
+                  className="w-full gap-1.5 text-xs border-accent/30 text-accent hover:bg-accent/10"
+                >
+                  <Plus className="h-3 w-3" />
+                  Plattform-Account hinzufügen
+                </Button>
+              </div>
             </Section>
 
             {/* ── Crypto ── */}
