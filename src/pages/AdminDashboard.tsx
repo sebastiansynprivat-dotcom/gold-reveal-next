@@ -2535,8 +2535,6 @@ export default function AdminDashboard() {
                           key={p}
                           onClick={() => {
                             setSelectedPlatform(p);
-                            const existingDomain = accounts.find((a) => a.platform === p)?.account_domain;
-                            setNewAccDomain(existingDomain || "");
                             setAccountPoolOpen(true);
                           }}
                           className="glass-card-subtle rounded-xl p-4 text-left hover:bg-secondary/30 transition-colors"
