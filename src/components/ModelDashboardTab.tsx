@@ -141,9 +141,10 @@ export default function ModelDashboardTab() {
   const [newModel, setNewModel] = useState({ name: "", username: "", address: "" });
   const [creating, setCreating] = useState(false);
 
-  // Add account dialog
+  // Add account dialog – multi-platform
   const [addAccountOpen, setAddAccountOpen] = useState(false);
-  const [newAccount, setNewAccount] = useState({ platform: "4Based", account_email: "", account_password: "", account_domain: PLATFORM_DOMAINS["4Based"] || "" });
+  const emptyAccountEntries = () => PLATFORMS.reduce((acc, p) => ({ ...acc, [p]: { selected: false, account_email: "", account_password: "", account_domain: PLATFORM_DOMAINS[p] || "" } }), {} as Record<string, { selected: boolean; account_email: string; account_password: string; account_domain: string }>);
+  const [newAccounts, setNewAccounts] = useState(emptyAccountEntries);
   const [addingAccount, setAddingAccount] = useState(false);
 
   // Model login dialog
