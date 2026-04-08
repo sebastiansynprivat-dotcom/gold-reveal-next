@@ -624,24 +624,81 @@ export default function ModelDashboardTab() {
                     </div>
                   </div>
 
-                  {/* Platform cards */}
-                  <div className={cn("grid gap-3", selectedModelPlatformRevenue.length <= 2 ? "grid-cols-2" : "grid-cols-3")}>
-                    {selectedModelPlatformRevenue.map(({ platform, total }) => {
+                  {/* Platform cards with editable revenue */}
+                  <div className="space-y-2">
+                    {modelAccounts.map((acc) => {
+                      const pr = platformRevenues[acc.id] || { fourbased: 0, maloum: 0, brezzels: 0 };
+                      const rev = dashboardRevenues[acc.id] || 0;
                       const colorMap: Record<string, string> = {
                         "4Based": "#22d3ee",
                         "Maloum": "#d4af37",
                         "Brezzels": "#3b82f6",
                         "FansyMe": "#ec4899",
                       };
+                      // Map platform to the correct revenue field
+                      const platformFieldMap: Record<string, string> = {
+                        "4Based": "fourbased_revenue",
+                        "Maloum": "maloum_revenue",
+                        "Brezzels": "brezzels_revenue",
+                      };
+                      const revenueField = platformFieldMap[acc.platform] || "monthly_revenue";
+
                       return (
-                        <div key={platform} className="glass-card-subtle rounded-xl p-3 text-center hover:scale-[1.02] transition-transform">
-                          <div className="flex items-center justify-center gap-1.5 mb-1">
-                            <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: colorMap[platform] || "#888" }} />
-                            <p className="text-[10px] text-muted-foreground font-medium">{platform}</p>
+                        <div key={acc.id} className="glass-card-subtle rounded-xl p-3 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: colorMap[acc.platform] || "#888" }} />
+                              <p className="text-xs font-medium text-foreground">{acc.platform}</p>
+                              <Badge variant="outline" className={cn("text-[9px]", platformColors[acc.platform])}>
+                                {acc.account_email || acc.account_domain}
+                              </Badge>
+                            </div>
+                            <p className="text-sm font-bold text-foreground tabular-nums">
+                              {rev > 0 ? `${rev.toLocaleString("de-DE")}€` : "–"}
+                            </p>
                           </div>
-                          <p className="text-base font-bold text-foreground tabular-nums">
-                            {total > 0 ? `${total.toLocaleString("de-DE")}€` : "–"}
-                          </p>
+                          {/* Inline edit revenue */}
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 input-gold-shimmer rounded-lg">
+                              <Input
+                                type="number"
+                                min={0}
+                                step={1}
+                                placeholder="Umsatz eintragen…"
+                                defaultValue={rev > 0 ? rev : ""}
+                                className="bg-secondary/40 border-transparent text-sm h-8 tabular-nums"
+                                onBlur={async (e) => {
+                                  const newVal = Number(e.target.value) || 0;
+                                  if (newVal === rev) return;
+                                  // Upsert into model_dashboard
+                                  const updateData: Record<string, any> = {
+                                    [revenueField]: newVal,
+                                    monthly_revenue: newVal,
+                                  };
+                                  // Check if row exists
+                                  const { data: existing } = await supabase
+                                    .from("model_dashboard")
+                                    .select("id")
+                                    .eq("account_id", acc.id)
+                                    .maybeSingle();
+                                  if (existing) {
+                                    await supabase.from("model_dashboard").update(updateData).eq("account_id", acc.id);
+                                  } else {
+                                    await supabase.from("model_dashboard").insert({
+                                      account_id: acc.id,
+                                      ...updateData,
+                                    } as any);
+                                  }
+                                  toast.success(`${acc.platform} Umsatz aktualisiert ✅`);
+                                  if (selectedModelId) loadModelAccounts(selectedModelId);
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                                }}
+                              />
+                            </div>
+                            <span className="text-[10px] text-muted-foreground shrink-0">{modelForm.currency || "EUR"}</span>
+                          </div>
                         </div>
                       );
                     })}
