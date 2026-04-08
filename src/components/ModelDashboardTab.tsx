@@ -301,20 +301,25 @@ export default function ModelDashboardTab() {
   // ─── Add platform account ───
   const handleAddAccount = async () => {
     if (!selectedModelId) return;
+    const selected = Object.entries(newAccounts).filter(([, v]) => v.selected);
+    if (selected.length === 0) { toast.error("Wähle mindestens eine Plattform"); return; }
     setAddingAccount(true);
     const { data: userData } = await supabase.auth.getUser();
-    const { error } = await (supabase.from("accounts") as any).insert({
-      platform: newAccount.platform,
-      account_email: newAccount.account_email,
-      account_password: newAccount.account_password,
-      account_domain: newAccount.account_domain,
-      model_id: selectedModelId,
-      created_by: userData.user?.id,
-    });
-    if (error) toast.error(error.message);
-    else {
-      toast.success("Account hinzugefügt ✅");
-      setNewAccount({ platform: "4Based", account_email: "", account_password: "", account_domain: PLATFORM_DOMAINS["4Based"] || "" });
+    let errors = 0;
+    for (const [platform, entry] of selected) {
+      const { error } = await (supabase.from("accounts") as any).insert({
+        platform,
+        account_email: entry.account_email,
+        account_password: entry.account_password,
+        account_domain: entry.account_domain,
+        model_id: selectedModelId,
+        created_by: userData.user?.id,
+      });
+      if (error) { errors++; toast.error(`${platform}: ${error.message}`); }
+    }
+    if (errors === 0) {
+      toast.success(`${selected.length} Account${selected.length > 1 ? "s" : ""} hinzugefügt ✅`);
+      setNewAccounts(emptyAccountEntries());
       setAddAccountOpen(false);
       await loadModelAccounts(selectedModelId);
     }
