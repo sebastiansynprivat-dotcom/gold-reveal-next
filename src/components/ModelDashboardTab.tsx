@@ -243,7 +243,7 @@ export default function ModelDashboardTab() {
   const saveModel = async () => {
     if (!selectedModelId) return;
     setSaving(true);
-    const { error } = await supabase.from("models").update({
+    const { error } = await (supabase.from("models") as any).update({
       name: modelForm.name,
       username: modelForm.username,
       address: modelForm.address,
@@ -252,7 +252,7 @@ export default function ModelDashboardTab() {
       currency: modelForm.currency,
       notes: modelForm.notes,
       contract_file_path: modelForm.contract_file_path,
-    } as any).eq("id", selectedModelId);
+    }).eq("id", selectedModelId);
     if (error) toast.error(error.message);
     else { toast.success("Gespeichert ✅"); await loadModels(); }
     setSaving(false);
