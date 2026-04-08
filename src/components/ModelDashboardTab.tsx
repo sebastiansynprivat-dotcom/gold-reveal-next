@@ -146,6 +146,7 @@ export default function ModelDashboardTab() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [newModel, setNewModel] = useState({ name: "", username: "", address: "" });
   const [creating, setCreating] = useState(false);
+  const [createAccounts, setCreateAccounts] = useState(emptyAccountEntries);
 
   // Add account dialog – multi-platform
   const [addAccountOpen, setAddAccountOpen] = useState(false);
