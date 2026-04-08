@@ -973,7 +973,7 @@ export default function ModelDashboardTab() {
           </DialogHeader>
           <p className="text-xs text-muted-foreground -mt-2">Wähle eine oder mehrere Plattformen aus und trage die Login-Daten ein.</p>
           <div className="space-y-3">
-            {PLATFORMS.map(platform => {
+            {PLATFORMS.filter(p => !modelAccounts.some(a => a.platform === p)).map(platform => {
               const entry = newAccounts[platform];
               const isSelected = entry?.selected;
               return (
