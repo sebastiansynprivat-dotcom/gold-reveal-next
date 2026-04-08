@@ -524,6 +524,134 @@ export default function ModelDashboardTab() {
         </div>
       </motion.div>
 
+      {/* ── Revenue Overview ── */}
+      {revenueOverviewLoaded && models.length > 0 && (
+        <motion.section
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.08 }}
+          className="space-y-3"
+        >
+          {/* Hero Gesamtumsatz */}
+          <div className="relative gold-gradient-border-animated pulse-glow rounded-xl p-5 text-center">
+            <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-accent/8 via-transparent to-accent/5 pointer-events-none" />
+            <div className="relative">
+              <p className="text-[10px] text-muted-foreground mb-1 tracking-widest uppercase">Gesamtumsatz aller Models</p>
+              <p className="text-3xl font-extrabold text-gold-gradient-shimmer tracking-tight">
+                <AnimatedGoldValue value={overviewGrandTotal} />
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">Auszahlungen gesamt: <span className="text-accent font-semibold">{overviewTotalAnteil.toLocaleString("de-DE")}€</span></p>
+            </div>
+          </div>
+
+          {/* Platform Cards */}
+          <div className="grid grid-cols-3 gap-3">
+            {([
+              { label: "4Based", value: overviewPlatformTotals.fourbased, color: "#22d3ee" },
+              { label: "Maloum", value: overviewPlatformTotals.maloum, color: "#d4af37" },
+              { label: "Brezzels", value: overviewPlatformTotals.brezzels, color: "#3b82f6" },
+            ]).map(({ label, value, color }) => (
+              <div key={label} className="glass-card-subtle rounded-xl p-3 text-center hover:scale-[1.02] transition-transform">
+                <div className="flex items-center justify-center gap-1.5 mb-1">
+                  <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
+                  <p className="text-[10px] text-muted-foreground font-medium">{label}</p>
+                </div>
+                <p className="text-base font-bold text-foreground tabular-nums">{value.toLocaleString("de-DE")}€</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Per-Model Revenue Table */}
+          <div className="glass-card rounded-xl overflow-hidden">
+            <div className="px-4 py-3 header-gradient-border flex items-center gap-2.5">
+              <div className="h-7 w-7 rounded-lg bg-accent/10 flex items-center justify-center">
+                <TrendingUp className="h-3.5 w-3.5 text-accent" />
+              </div>
+              <h2 className="text-sm font-semibold text-foreground tracking-wide">Umsatz pro Model</h2>
+            </div>
+            <div className="overflow-x-auto scrollbar-none">
+              {/* Table Header */}
+              <div className="grid grid-cols-[1fr_70px_70px_70px_80px_60px_80px] gap-0 bg-accent/10 border-b border-accent/20">
+                <div className="px-3 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold">Model</div>
+                <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-right">4Based</div>
+                <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-right">Maloum</div>
+                <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-right">Brezzels</div>
+                <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-right">Gesamt</div>
+                <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-right">%</div>
+                <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-right pr-3">Anteil</div>
+              </div>
+
+              <ScrollArea className="max-h-[400px]">
+                {modelRevenueOverview.map((m, i) => (
+                  <div
+                    key={m.id}
+                    onClick={() => {
+                      setSelectedModelId(m.id);
+                      setTimeout(() => detailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
+                    }}
+                    className={cn(
+                      "grid grid-cols-[1fr_70px_70px_70px_80px_60px_80px] gap-0 items-center border-b border-border/30 cursor-pointer transition-colors",
+                      m.id === selectedModelId
+                        ? "bg-accent/15 border-l-2 border-l-accent"
+                        : i % 2 === 0 ? "bg-card/40 hover:bg-accent/5" : "bg-card/20 hover:bg-accent/5"
+                    )}
+                  >
+                    <div className="px-3 py-2.5 min-w-0">
+                      <p className={cn("text-xs font-medium truncate", m.id === selectedModelId ? "text-accent" : "text-foreground")}>
+                        {m.name || "Unbenannt"}
+                      </p>
+                    </div>
+                    <div className="px-1 py-2 text-right">
+                      <span className="text-[11px] tabular-nums text-muted-foreground">{m.fourbased > 0 ? `${m.fourbased.toLocaleString("de-DE")}€` : "–"}</span>
+                    </div>
+                    <div className="px-1 py-2 text-right">
+                      <span className="text-[11px] tabular-nums text-muted-foreground">{m.maloum > 0 ? `${m.maloum.toLocaleString("de-DE")}€` : "–"}</span>
+                    </div>
+                    <div className="px-1 py-2 text-right">
+                      <span className="text-[11px] tabular-nums text-muted-foreground">{m.brezzels > 0 ? `${m.brezzels.toLocaleString("de-DE")}€` : "–"}</span>
+                    </div>
+                    <div className="px-1 py-2 text-right">
+                      <span className={cn("text-[11px] tabular-nums font-semibold", m.total > 0 ? "text-foreground" : "text-muted-foreground")}>
+                        {m.total > 0 ? `${m.total.toLocaleString("de-DE")}€` : "–"}
+                      </span>
+                    </div>
+                    <div className="px-1 py-2 text-right">
+                      <span className="text-[11px] tabular-nums text-muted-foreground">{m.percentage}%</span>
+                    </div>
+                    <div className="px-1 py-2 text-right pr-3">
+                      <span className={cn("text-[11px] tabular-nums font-semibold", m.anteil > 0 ? "text-accent" : "text-muted-foreground")}>
+                        {m.anteil > 0 ? `${m.anteil.toLocaleString("de-DE")}€` : "–"}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </ScrollArea>
+
+              {/* Footer totals */}
+              <div className="grid grid-cols-[1fr_70px_70px_70px_80px_60px_80px] gap-0 bg-accent/10 border-t border-accent/20">
+                <div className="px-3 py-2 text-[10px] uppercase tracking-wider text-accent font-bold">Gesamt</div>
+                <div className="px-1 py-2 text-right">
+                  <span className="text-[11px] tabular-nums font-bold text-foreground">{overviewPlatformTotals.fourbased.toLocaleString("de-DE")}€</span>
+                </div>
+                <div className="px-1 py-2 text-right">
+                  <span className="text-[11px] tabular-nums font-bold text-foreground">{overviewPlatformTotals.maloum.toLocaleString("de-DE")}€</span>
+                </div>
+                <div className="px-1 py-2 text-right">
+                  <span className="text-[11px] tabular-nums font-bold text-foreground">{overviewPlatformTotals.brezzels.toLocaleString("de-DE")}€</span>
+                </div>
+                <div className="px-1 py-2 text-right">
+                  <span className="text-[11px] tabular-nums font-bold text-accent">{overviewGrandTotal.toLocaleString("de-DE")}€</span>
+                </div>
+                <div className="px-1 py-2 text-right"><span className="text-[11px]">–</span></div>
+                <div className="px-1 py-2 text-right pr-3">
+                  <span className="text-[11px] tabular-nums font-bold text-accent">{overviewTotalAnteil.toLocaleString("de-DE")}€</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.section>
+      )}
+
       {/* ── Model-Liste ── */}
       <motion.section
         initial={{ opacity: 0, y: 12 }}
