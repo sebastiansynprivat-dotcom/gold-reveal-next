@@ -38,6 +38,10 @@ interface ModelRow {
   currency: string;
   contract_file_path: string;
   notes: string;
+  drive_folder_id: string;
+  model_language: string;
+  model_agency: string;
+  model_active: boolean;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -142,12 +146,12 @@ export default function ModelDashboardTab() {
   // Accounts for selected model
   const [modelAccounts, setModelAccounts] = useState<AccountRow[]>([]);
 
-  // Shared account entry factory
-  const emptyAccountEntries = () => PLATFORMS.reduce((acc, p) => ({ ...acc, [p]: { selected: false, account_email: "", account_password: "", account_domain: PLATFORM_DOMAINS[p] || "", drive_folder_id: "", model_language: "de" as "de" | "en", model_agency: "shex" as "shex" | "syn", model_active: true } }), {} as Record<string, { selected: boolean; account_email: string; account_password: string; account_domain: string; drive_folder_id: string; model_language: "de" | "en"; model_agency: "shex" | "syn"; model_active: boolean }>);
+  // Shared account entry factory (simplified: only email/password/domain per platform)
+  const emptyAccountEntries = () => PLATFORMS.reduce((acc, p) => ({ ...acc, [p]: { selected: false, account_email: "", account_password: "", account_domain: PLATFORM_DOMAINS[p] || "" } }), {} as Record<string, { selected: boolean; account_email: string; account_password: string; account_domain: string }>);
 
   // Create model dialog
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [newModel, setNewModel] = useState({ name: "", username: "", address: "" });
+  const [newModel, setNewModel] = useState({ name: "", username: "", address: "", drive_folder_id: "", model_language: "de" as "de" | "en", model_agency: "shex" as "shex" | "syn", model_active: true });
   const [creating, setCreating] = useState(false);
   const [createAccounts, setCreateAccounts] = useState(emptyAccountEntries);
 
@@ -158,7 +162,7 @@ export default function ModelDashboardTab() {
 
   // Inline edit account
   const [editingAccountId, setEditingAccountId] = useState<string | null>(null);
-  const [editAccountData, setEditAccountData] = useState({ account_email: "", account_password: "", account_domain: "", drive_folder_id: "", model_language: "de" as "de" | "en", model_agency: "shex" as "shex" | "syn", model_active: true });
+  const [editAccountData, setEditAccountData] = useState({ account_email: "", account_password: "", account_domain: "" });
 
   // Model login dialog
   const [modelLoginDialog, setModelLoginDialog] = useState(false);
@@ -274,11 +278,15 @@ export default function ModelDashboardTab() {
       name: newModel.name,
       username: newModel.username,
       address: newModel.address,
+      drive_folder_id: extractDriveFolderId(newModel.drive_folder_id),
+      model_language: newModel.model_language,
+      model_agency: newModel.model_agency,
+      model_active: newModel.model_active,
       created_by: userId,
     }).select("id").single();
     if (error) { toast.error(error.message); setCreating(false); return; }
 
-    // Create selected platform accounts
+    // Create selected platform accounts – model-level fields applied to all
     const selected = Object.entries(createAccounts).filter(([, v]) => v.selected);
     for (const [platform, entry] of selected) {
       await (supabase.from("accounts") as any).insert({
@@ -286,17 +294,17 @@ export default function ModelDashboardTab() {
         account_email: entry.account_email,
         account_password: entry.account_password,
         account_domain: entry.account_domain,
-        drive_folder_id: extractDriveFolderId(entry.drive_folder_id),
-        model_language: entry.model_language,
-        model_agency: entry.model_agency,
-        model_active: entry.model_active,
+        drive_folder_id: extractDriveFolderId(newModel.drive_folder_id),
+        model_language: newModel.model_language,
+        model_agency: newModel.model_agency,
+        model_active: newModel.model_active,
         model_id: modelData.id,
         created_by: userId,
       });
     }
 
     toast.success(`Model erstellt${selected.length > 0 ? ` mit ${selected.length} Account${selected.length > 1 ? "s" : ""}` : ""} ✅`);
-    setNewModel({ name: "", username: "", address: "" });
+    setNewModel({ name: "", username: "", address: "", drive_folder_id: "", model_language: "de", model_agency: "shex", model_active: true });
     setCreateAccounts(emptyAccountEntries());
     setCreateDialogOpen(false);
     await loadModels();
@@ -319,7 +327,20 @@ export default function ModelDashboardTab() {
       currency: modelForm.currency,
       notes: modelForm.notes,
       contract_file_path: modelForm.contract_file_path,
+      drive_folder_id: extractDriveFolderId(modelForm.drive_folder_id || ""),
+      model_language: modelForm.model_language,
+      model_agency: modelForm.model_agency,
+      model_active: modelForm.model_active,
     }).eq("id", selectedModelId);
+    // Also update all accounts with model-level fields
+    if (!error && modelAccounts.length > 0) {
+      await (supabase.from("accounts") as any).update({
+        drive_folder_id: extractDriveFolderId(modelForm.drive_folder_id || ""),
+        model_language: modelForm.model_language,
+        model_agency: modelForm.model_agency,
+        model_active: modelForm.model_active,
+      }).eq("model_id", selectedModelId);
+    }
     if (error) toast.error(error.message);
     else { toast.success("Gespeichert ✅"); await loadModels(); }
     setSaving(false);
@@ -371,10 +392,10 @@ export default function ModelDashboardTab() {
         account_email: entry.account_email,
         account_password: entry.account_password,
         account_domain: entry.account_domain,
-        drive_folder_id: extractDriveFolderId(entry.drive_folder_id),
-        model_language: entry.model_language,
-        model_agency: entry.model_agency,
-        model_active: entry.model_active,
+        drive_folder_id: extractDriveFolderId(modelForm.drive_folder_id || ""),
+        model_language: modelForm.model_language || "de",
+        model_agency: modelForm.model_agency || "shex",
+        model_active: modelForm.model_active !== false,
         model_id: selectedModelId,
         created_by: userData.user?.id,
       });
@@ -399,16 +420,12 @@ export default function ModelDashboardTab() {
     }
   };
   // ─── Start editing account ───
-  const startEditAccount = (acc: AccountRow & { drive_folder_id?: string; model_language?: string; model_agency?: string }) => {
+  const startEditAccount = (acc: AccountRow) => {
     setEditingAccountId(acc.id);
     setEditAccountData({
       account_email: acc.account_email,
       account_password: acc.account_password,
       account_domain: acc.account_domain,
-      drive_folder_id: (acc as any).drive_folder_id || "",
-      model_language: ((acc as any).model_language || "de") as "de" | "en",
-      model_agency: ((acc as any).model_agency || "shex") as "shex" | "syn",
-      model_active: acc.model_active !== false,
     });
   };
 
@@ -419,10 +436,6 @@ export default function ModelDashboardTab() {
       account_email: editAccountData.account_email,
       account_password: editAccountData.account_password,
       account_domain: editAccountData.account_domain,
-      drive_folder_id: extractDriveFolderId(editAccountData.drive_folder_id),
-      model_language: editAccountData.model_language,
-      model_agency: editAccountData.model_agency,
-      model_active: editAccountData.model_active,
     } as any).eq("id", editingAccountId);
     if (error) toast.error(error.message);
     else {
@@ -787,6 +800,57 @@ export default function ModelDashboardTab() {
                     />
                   </div>
                 </div>
+
+                {/* Model-level settings */}
+                <div className="border-t border-border/30 pt-3 space-y-3">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Einstellungen</p>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Drive Folder ID</Label>
+                    <div className="input-gold-shimmer rounded-lg">
+                      <Input
+                        value={modelForm.drive_folder_id || ""}
+                        onChange={e => setModelForm(prev => ({ ...prev, drive_folder_id: e.target.value }))}
+                        placeholder="Google Drive URL oder Folder ID"
+                        className="bg-secondary/40 border-transparent text-sm h-9"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Sprache</Label>
+                      <div className="flex gap-1.5">
+                        <button onClick={() => setModelForm(prev => ({ ...prev, model_language: "de" }))}
+                          className={cn("flex-1 text-xs px-2 py-2 rounded-lg border transition-all", (modelForm.model_language || "de") === "de" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50 hover:border-accent/30")}>
+                          🇩🇪 DE
+                        </button>
+                        <button onClick={() => setModelForm(prev => ({ ...prev, model_language: "en" }))}
+                          className={cn("flex-1 text-xs px-2 py-2 rounded-lg border transition-all", modelForm.model_language === "en" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50 hover:border-accent/30")}>
+                          🇬🇧 EN
+                        </button>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Agentur</Label>
+                      <div className="flex gap-1.5">
+                        <button onClick={() => setModelForm(prev => ({ ...prev, model_agency: "shex" }))}
+                          className={cn("flex-1 text-xs px-2 py-2 rounded-lg border transition-all", (modelForm.model_agency || "shex") === "shex" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50 hover:border-accent/30")}>
+                          SheX
+                        </button>
+                        <button onClick={() => setModelForm(prev => ({ ...prev, model_agency: "syn" }))}
+                          className={cn("flex-1 text-xs px-2 py-2 rounded-lg border transition-all", modelForm.model_agency === "syn" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50 hover:border-accent/30")}>
+                          SYN
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between py-1">
+                    <span className="text-xs text-muted-foreground">Model aktiv</span>
+                    <Switch
+                      checked={modelForm.model_active !== false}
+                      onCheckedChange={(checked) => setModelForm(prev => ({ ...prev, model_active: checked }))}
+                    />
+                  </div>
+                </div>
               </div>
             </Section>
 
@@ -927,50 +991,6 @@ export default function ModelDashboardTab() {
                                         value={editAccountData.account_domain}
                                         onChange={e => setEditAccountData(prev => ({ ...prev, account_domain: e.target.value }))}
                                         className="bg-secondary/40 border-border/50 text-xs h-8"
-                                      />
-                                    </div>
-                                    <div className="space-y-1">
-                                      <Label className="text-[10px] text-muted-foreground">Drive Folder ID</Label>
-                                      <Input
-                                        value={editAccountData.drive_folder_id}
-                                        onChange={e => setEditAccountData(prev => ({ ...prev, drive_folder_id: e.target.value }))}
-                                        placeholder="URL oder ID"
-                                        className="bg-secondary/40 border-border/50 text-xs h-8"
-                                      />
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-2">
-                                      <div className="space-y-1">
-                                        <Label className="text-[10px] text-muted-foreground">Sprache</Label>
-                                        <div className="flex gap-1">
-                                          <button onClick={() => setEditAccountData(prev => ({ ...prev, model_language: "de" }))}
-                                            className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", editAccountData.model_language === "de" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50")}>
-                                            🇩🇪 DE
-                                          </button>
-                                          <button onClick={() => setEditAccountData(prev => ({ ...prev, model_language: "en" }))}
-                                            className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", editAccountData.model_language === "en" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50")}>
-                                            🇬🇧 EN
-                                          </button>
-                                        </div>
-                                      </div>
-                                      <div className="space-y-1">
-                                        <Label className="text-[10px] text-muted-foreground">Agentur</Label>
-                                        <div className="flex gap-1">
-                                          <button onClick={() => setEditAccountData(prev => ({ ...prev, model_agency: "shex" }))}
-                                            className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", editAccountData.model_agency === "shex" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50")}>
-                                            SheX
-                                          </button>
-                                          <button onClick={() => setEditAccountData(prev => ({ ...prev, model_agency: "syn" }))}
-                                            className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", editAccountData.model_agency === "syn" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50")}>
-                                            SYN
-                                          </button>
-                                        </div>
-                                      </div>
-                                    </div>
-                                    <div className="flex items-center justify-between py-1">
-                                      <span className="text-[10px] font-medium text-muted-foreground">Model aktiv</span>
-                                      <Switch
-                                        checked={editAccountData.model_active}
-                                        onCheckedChange={(checked) => setEditAccountData(prev => ({ ...prev, model_active: checked }))}
                                       />
                                     </div>
                                     <div className="flex gap-2">
@@ -1195,10 +1215,59 @@ export default function ModelDashboardTab() {
               </div>
             </div>
 
+            {/* Model-level settings */}
+            <div className="border-t border-border/30 pt-3 space-y-3">
+              <p className="text-xs font-semibold text-foreground mb-1">Einstellungen</p>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] text-muted-foreground">Drive Folder ID</Label>
+                <Input
+                  value={newModel.drive_folder_id}
+                  onChange={e => setNewModel(prev => ({ ...prev, drive_folder_id: e.target.value }))}
+                  placeholder="Google Drive URL oder Folder ID (optional)"
+                  className="bg-secondary/40 border-border/50 text-xs h-8"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label className="text-[10px] text-muted-foreground">Sprache</Label>
+                  <div className="flex gap-1">
+                    <button onClick={() => setNewModel(prev => ({ ...prev, model_language: "de" as const }))}
+                      className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", newModel.model_language === "de" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50")}>
+                      🇩🇪 DE
+                    </button>
+                    <button onClick={() => setNewModel(prev => ({ ...prev, model_language: "en" as const }))}
+                      className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", newModel.model_language === "en" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50")}>
+                      🇬🇧 EN
+                    </button>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-[10px] text-muted-foreground">Agentur</Label>
+                  <div className="flex gap-1">
+                    <button onClick={() => setNewModel(prev => ({ ...prev, model_agency: "shex" as const }))}
+                      className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", newModel.model_agency === "shex" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50")}>
+                      SheX
+                    </button>
+                    <button onClick={() => setNewModel(prev => ({ ...prev, model_agency: "syn" as const }))}
+                      className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", newModel.model_agency === "syn" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50")}>
+                      SYN
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center justify-between py-1">
+                <span className="text-[10px] font-medium text-muted-foreground">Model aktiv</span>
+                <Switch
+                  checked={newModel.model_active}
+                  onCheckedChange={(checked) => setNewModel(prev => ({ ...prev, model_active: checked }))}
+                />
+              </div>
+            </div>
+
             {/* Divider */}
             <div className="border-t border-border/30 pt-3">
               <p className="text-xs font-semibold text-foreground mb-1">Plattform-Accounts</p>
-              <p className="text-[10px] text-muted-foreground mb-3">Optional – wähle Plattformen aus und trage Login-Daten ein.</p>
+              <p className="text-[10px] text-muted-foreground mb-3">Optional – wähle Plattformen aus und trage die Login-Daten ein.</p>
             </div>
 
             {/* Platform accounts */}
@@ -1264,58 +1333,12 @@ export default function ModelDashboardTab() {
                                 />
                               </div>
                             </div>
-                            <div className="grid grid-cols-2 gap-2">
-                              <div className="space-y-1">
-                                <Label className="text-[10px] text-muted-foreground">Domain</Label>
-                                <Input
-                                  value={entry.account_domain}
-                                  onChange={e => setCreateAccounts(prev => ({ ...prev, [platform]: { ...prev[platform], account_domain: e.target.value } }))}
-                                  className="bg-secondary/40 border-border/50 text-xs h-8"
-                                />
-                              </div>
-                              <div className="space-y-1">
-                                <Label className="text-[10px] text-muted-foreground">Drive Folder ID</Label>
-                                <Input
-                                  value={entry.drive_folder_id}
-                                  onChange={e => setCreateAccounts(prev => ({ ...prev, [platform]: { ...prev[platform], drive_folder_id: e.target.value } }))}
-                                  placeholder="Optional"
-                                  className="bg-secondary/40 border-border/50 text-xs h-8"
-                                />
-                              </div>
-                            </div>
-                            <div className="grid grid-cols-2 gap-2">
-                              <div className="space-y-1">
-                                <Label className="text-[10px] text-muted-foreground">Sprache</Label>
-                                <div className="flex gap-1">
-                                  <button onClick={() => setCreateAccounts(prev => ({ ...prev, [platform]: { ...prev[platform], model_language: "de" as const } }))}
-                                    className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", entry.model_language === "de" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50")}>
-                                    🇩🇪 DE
-                                  </button>
-                                  <button onClick={() => setCreateAccounts(prev => ({ ...prev, [platform]: { ...prev[platform], model_language: "en" as const } }))}
-                                    className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", entry.model_language === "en" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50")}>
-                                    🇬🇧 EN
-                                  </button>
-                                </div>
-                              </div>
-                              <div className="space-y-1">
-                                <Label className="text-[10px] text-muted-foreground">Agentur</Label>
-                                <div className="flex gap-1">
-                                  <button onClick={() => setCreateAccounts(prev => ({ ...prev, [platform]: { ...prev[platform], model_agency: "shex" as const } }))}
-                                    className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", entry.model_agency === "shex" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50")}>
-                                    SheX
-                                  </button>
-                                  <button onClick={() => setCreateAccounts(prev => ({ ...prev, [platform]: { ...prev[platform], model_agency: "syn" as const } }))}
-                                    className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", entry.model_agency === "syn" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50")}>
-                                    SYN
-                                  </button>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex items-center justify-between py-1">
-                              <span className="text-[10px] font-medium text-muted-foreground">Model aktiv</span>
-                              <Switch
-                                checked={entry.model_active}
-                                onCheckedChange={(checked) => setCreateAccounts(prev => ({ ...prev, [platform]: { ...prev[platform], model_active: checked } }))}
+                            <div className="space-y-1">
+                              <Label className="text-[10px] text-muted-foreground">Domain</Label>
+                              <Input
+                                value={entry.account_domain}
+                                onChange={e => setCreateAccounts(prev => ({ ...prev, [platform]: { ...prev[platform], account_domain: e.target.value } }))}
+                                className="bg-secondary/40 border-border/50 text-xs h-8"
                               />
                             </div>
                           </div>
@@ -1428,53 +1451,6 @@ export default function ModelDashboardTab() {
                                 [platform]: { ...prev[platform], account_domain: e.target.value }
                               }))}
                               className="bg-secondary/40 border-border/50 text-xs h-8"
-                            />
-                          </div>
-                          <div className="space-y-1">
-                            <Label className="text-[10px] text-muted-foreground">Drive Folder ID</Label>
-                            <Input
-                              value={entry.drive_folder_id}
-                              onChange={e => setNewAccounts(prev => ({
-                                ...prev,
-                                [platform]: { ...prev[platform], drive_folder_id: e.target.value }
-                              }))}
-                              placeholder="Optional – URL oder ID"
-                              className="bg-secondary/40 border-border/50 text-xs h-8"
-                            />
-                          </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            <div className="space-y-1">
-                              <Label className="text-[10px] text-muted-foreground">Sprache</Label>
-                              <div className="flex gap-1">
-                                <button onClick={() => setNewAccounts(prev => ({ ...prev, [platform]: { ...prev[platform], model_language: "de" as const } }))}
-                                  className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", entry.model_language === "de" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50")}>
-                                  🇩🇪 DE
-                                </button>
-                                <button onClick={() => setNewAccounts(prev => ({ ...prev, [platform]: { ...prev[platform], model_language: "en" as const } }))}
-                                  className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", entry.model_language === "en" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50")}>
-                                  🇬🇧 EN
-                                </button>
-                              </div>
-                            </div>
-                            <div className="space-y-1">
-                              <Label className="text-[10px] text-muted-foreground">Agentur</Label>
-                              <div className="flex gap-1">
-                                <button onClick={() => setNewAccounts(prev => ({ ...prev, [platform]: { ...prev[platform], model_agency: "shex" as const } }))}
-                                  className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", entry.model_agency === "shex" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50")}>
-                                  SheX
-                                </button>
-                                <button onClick={() => setNewAccounts(prev => ({ ...prev, [platform]: { ...prev[platform], model_agency: "syn" as const } }))}
-                                  className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", entry.model_agency === "syn" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50")}>
-                                  SYN
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center justify-between py-1">
-                            <span className="text-[10px] font-medium text-muted-foreground">Model aktiv</span>
-                            <Switch
-                              checked={entry.model_active}
-                              onCheckedChange={(checked) => setNewAccounts(prev => ({ ...prev, [platform]: { ...prev[platform], model_active: checked } }))}
                             />
                           </div>
                         </div>

@@ -681,7 +681,11 @@ export type Database = {
           created_by: string | null
           crypto_address: string | null
           currency: string
+          drive_folder_id: string | null
           id: string
+          model_active: boolean
+          model_agency: string
+          model_language: string
           name: string
           notes: string | null
           revenue_percentage: number
@@ -695,7 +699,11 @@ export type Database = {
           created_by?: string | null
           crypto_address?: string | null
           currency?: string
+          drive_folder_id?: string | null
           id?: string
+          model_active?: boolean
+          model_agency?: string
+          model_language?: string
           name?: string
           notes?: string | null
           revenue_percentage?: number
@@ -709,7 +717,11 @@ export type Database = {
           created_by?: string | null
           crypto_address?: string | null
           currency?: string
+          drive_folder_id?: string | null
           id?: string
+          model_active?: boolean
+          model_agency?: string
+          model_language?: string
           name?: string
           notes?: string | null
           revenue_percentage?: number
