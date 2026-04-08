@@ -278,11 +278,15 @@ export default function ModelDashboardTab() {
       name: newModel.name,
       username: newModel.username,
       address: newModel.address,
+      drive_folder_id: extractDriveFolderId(newModel.drive_folder_id),
+      model_language: newModel.model_language,
+      model_agency: newModel.model_agency,
+      model_active: newModel.model_active,
       created_by: userId,
     }).select("id").single();
     if (error) { toast.error(error.message); setCreating(false); return; }
 
-    // Create selected platform accounts
+    // Create selected platform accounts – model-level fields applied to all
     const selected = Object.entries(createAccounts).filter(([, v]) => v.selected);
     for (const [platform, entry] of selected) {
       await (supabase.from("accounts") as any).insert({
@@ -290,17 +294,17 @@ export default function ModelDashboardTab() {
         account_email: entry.account_email,
         account_password: entry.account_password,
         account_domain: entry.account_domain,
-        drive_folder_id: extractDriveFolderId(entry.drive_folder_id),
-        model_language: entry.model_language,
-        model_agency: entry.model_agency,
-        model_active: entry.model_active,
+        drive_folder_id: extractDriveFolderId(newModel.drive_folder_id),
+        model_language: newModel.model_language,
+        model_agency: newModel.model_agency,
+        model_active: newModel.model_active,
         model_id: modelData.id,
         created_by: userId,
       });
     }
 
     toast.success(`Model erstellt${selected.length > 0 ? ` mit ${selected.length} Account${selected.length > 1 ? "s" : ""}` : ""} ✅`);
-    setNewModel({ name: "", username: "", address: "" });
+    setNewModel({ name: "", username: "", address: "", drive_folder_id: "", model_language: "de", model_agency: "shex", model_active: true });
     setCreateAccounts(emptyAccountEntries());
     setCreateDialogOpen(false);
     await loadModels();
