@@ -5636,47 +5636,6 @@ export default function AdminDashboard() {
         </DialogContent>
       </Dialog>
 
-      {/* New Platform Dialog */}
-      <Dialog open={newPlatformOpen} onOpenChange={setNewPlatformOpen}>
-        <DialogContent className="glass-card border-border sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="text-foreground flex items-center gap-2">
-              <Package className="h-5 w-5 text-accent" />
-              Neuen Pool erstellen
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Pool-Name</label>
-              <div className="input-gold-shimmer rounded-lg">
-              <Input
-                value={newPlatformName}
-                onChange={(e) => setNewPlatformName(e.target.value)}
-                placeholder="z.B. Brezzels, Maloum, 4Based..."
-                className="text-sm border-transparent"
-                autoFocus
-              />
-              </div>
-            </div>
-            <Button
-              onClick={() => {
-                if (newPlatformName.trim()) {
-                  setSelectedPlatform(newPlatformName.trim());
-                  setNewPlatformOpen(false);
-                  setAccountPoolOpen(true);
-                }
-              }}
-              disabled={!newPlatformName.trim()}
-              className="w-full"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Plattform anlegen
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Manual Platform Dialog */}
       <Dialog open={manualPoolOpen} onOpenChange={(o) => { setManualPoolOpen(o); if (!o) { setManualAccFolder(""); setCreatingFolder(false); setNewFolderName(""); setOpenFolder(null); setDragOverFolder(null); setManualFilter("alle"); setMoveToFolderAcc(null); setColorPickerFolder(null); setManualAccountSearch(""); setCreatingSubfolder(false); setNewSubfolderName(""); } }}>
         <DialogContent className="glass-card border-border sm:max-w-3xl max-h-[85vh] overflow-hidden flex flex-col" onOpenAutoFocus={(e) => e.preventDefault()}>
           <DialogHeader className="pb-0">
