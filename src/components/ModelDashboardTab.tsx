@@ -141,9 +141,10 @@ export default function ModelDashboardTab() {
   const [newModel, setNewModel] = useState({ name: "", username: "", address: "" });
   const [creating, setCreating] = useState(false);
 
-  // Add account dialog
+  // Add account dialog – multi-platform
   const [addAccountOpen, setAddAccountOpen] = useState(false);
-  const [newAccount, setNewAccount] = useState({ platform: "4Based", account_email: "", account_password: "", account_domain: PLATFORM_DOMAINS["4Based"] || "" });
+  const emptyAccountEntries = () => PLATFORMS.reduce((acc, p) => ({ ...acc, [p]: { selected: false, account_email: "", account_password: "", account_domain: PLATFORM_DOMAINS[p] || "" } }), {} as Record<string, { selected: boolean; account_email: string; account_password: string; account_domain: string }>);
+  const [newAccounts, setNewAccounts] = useState(emptyAccountEntries);
   const [addingAccount, setAddingAccount] = useState(false);
 
   // Model login dialog
@@ -300,20 +301,25 @@ export default function ModelDashboardTab() {
   // ─── Add platform account ───
   const handleAddAccount = async () => {
     if (!selectedModelId) return;
+    const selected = Object.entries(newAccounts).filter(([, v]) => v.selected);
+    if (selected.length === 0) { toast.error("Wähle mindestens eine Plattform"); return; }
     setAddingAccount(true);
     const { data: userData } = await supabase.auth.getUser();
-    const { error } = await (supabase.from("accounts") as any).insert({
-      platform: newAccount.platform,
-      account_email: newAccount.account_email,
-      account_password: newAccount.account_password,
-      account_domain: newAccount.account_domain,
-      model_id: selectedModelId,
-      created_by: userData.user?.id,
-    });
-    if (error) toast.error(error.message);
-    else {
-      toast.success("Account hinzugefügt ✅");
-      setNewAccount({ platform: "4Based", account_email: "", account_password: "", account_domain: PLATFORM_DOMAINS["4Based"] || "" });
+    let errors = 0;
+    for (const [platform, entry] of selected) {
+      const { error } = await (supabase.from("accounts") as any).insert({
+        platform,
+        account_email: entry.account_email,
+        account_password: entry.account_password,
+        account_domain: entry.account_domain,
+        model_id: selectedModelId,
+        created_by: userData.user?.id,
+      });
+      if (error) { errors++; toast.error(`${platform}: ${error.message}`); }
+    }
+    if (errors === 0) {
+      toast.success(`${selected.length} Account${selected.length > 1 ? "s" : ""} hinzugefügt ✅`);
+      setNewAccounts(emptyAccountEntries());
       setAddAccountOpen(false);
       await loadModelAccounts(selectedModelId);
     }
@@ -878,58 +884,112 @@ export default function ModelDashboardTab() {
         </DialogContent>
       </Dialog>
 
-      {/* ── Add Account Dialog ── */}
-      <Dialog open={addAccountOpen} onOpenChange={setAddAccountOpen}>
-        <DialogContent className="glass-card border-border sm:max-w-md">
+      {/* ── Add Account Dialog (Multi-Platform) ── */}
+      <Dialog open={addAccountOpen} onOpenChange={v => { setAddAccountOpen(v); if (!v) setNewAccounts(emptyAccountEntries()); }}>
+        <DialogContent className="glass-card border-border sm:max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-foreground">Plattform-Account hinzufügen</DialogTitle>
+            <DialogTitle className="text-foreground">Plattform-Accounts hinzufügen</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Plattform</Label>
-              <Select value={newAccount.platform} onValueChange={v => setNewAccount(prev => ({ ...prev, platform: v, account_domain: PLATFORM_DOMAINS[v] || prev.account_domain }))}>
-                <SelectTrigger className="bg-secondary/40 border-border/50 text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {PLATFORMS.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">E-Mail / Login</Label>
-              <Input
-                value={newAccount.account_email}
-                onChange={e => setNewAccount(prev => ({ ...prev, account_email: e.target.value }))}
-                placeholder="login@example.com"
-                className="bg-secondary/40 border-border/50 text-sm"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Passwort</Label>
-              <Input
-                value={newAccount.account_password}
-                onChange={e => setNewAccount(prev => ({ ...prev, account_password: e.target.value }))}
-                placeholder="••••••••"
-                className="bg-secondary/40 border-border/50 text-sm"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Domain / URL</Label>
-              <Input
-                value={newAccount.account_domain}
-                onChange={e => setNewAccount(prev => ({ ...prev, account_domain: e.target.value }))}
-                placeholder="z.B. model.4based.com"
-                className="bg-secondary/40 border-border/50 text-sm"
-              />
-            </div>
+          <p className="text-xs text-muted-foreground -mt-2">Wähle eine oder mehrere Plattformen aus und trage die Login-Daten ein.</p>
+          <div className="space-y-3">
+            {PLATFORMS.map(platform => {
+              const entry = newAccounts[platform];
+              const isSelected = entry?.selected;
+              return (
+                <div key={platform} className={cn(
+                  "rounded-lg border transition-all duration-200",
+                  isSelected ? "border-accent/40 bg-accent/5" : "border-border/40 bg-secondary/10"
+                )}>
+                  {/* Platform toggle header */}
+                  <button
+                    type="button"
+                    onClick={() => setNewAccounts(prev => ({
+                      ...prev,
+                      [platform]: { ...prev[platform], selected: !prev[platform].selected }
+                    }))}
+                    className="w-full flex items-center gap-3 px-3 py-2.5"
+                  >
+                    <div className={cn(
+                      "h-5 w-5 rounded border-2 flex items-center justify-center transition-all",
+                      isSelected ? "border-accent bg-accent/20" : "border-muted-foreground/30"
+                    )}>
+                      {isSelected && <CheckCircle2 className="h-3 w-3 text-accent" />}
+                    </div>
+                    <span className={cn(
+                      "text-[10px] font-medium px-2.5 py-0.5 rounded-full border",
+                      platformColors[platform] || "bg-secondary/50 text-muted-foreground border-border/30"
+                    )}>
+                      {platform}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground ml-auto">{PLATFORM_DOMAINS[platform]}</span>
+                  </button>
+
+                  {/* Expanded fields */}
+                  <AnimatePresence>
+                    {isSelected && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="px-3 pb-3 space-y-2 border-t border-border/30 pt-2">
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="space-y-1">
+                              <Label className="text-[10px] text-muted-foreground">E-Mail / Login</Label>
+                              <Input
+                                value={entry.account_email}
+                                onChange={e => setNewAccounts(prev => ({
+                                  ...prev,
+                                  [platform]: { ...prev[platform], account_email: e.target.value }
+                                }))}
+                                placeholder="login@example.com"
+                                className="bg-secondary/40 border-border/50 text-xs h-8"
+                              />
+                            </div>
+                            <div className="space-y-1">
+                              <Label className="text-[10px] text-muted-foreground">Passwort</Label>
+                              <Input
+                                value={entry.account_password}
+                                onChange={e => setNewAccounts(prev => ({
+                                  ...prev,
+                                  [platform]: { ...prev[platform], account_password: e.target.value }
+                                }))}
+                                placeholder="••••••••"
+                                className="bg-secondary/40 border-border/50 text-xs h-8"
+                              />
+                            </div>
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-[10px] text-muted-foreground">Domain</Label>
+                            <Input
+                              value={entry.account_domain}
+                              onChange={e => setNewAccounts(prev => ({
+                                ...prev,
+                                [platform]: { ...prev[platform], account_domain: e.target.value }
+                              }))}
+                              className="bg-secondary/40 border-border/50 text-xs h-8"
+                            />
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            })}
+
             <Button
               onClick={handleAddAccount}
-              disabled={addingAccount}
+              disabled={addingAccount || !Object.values(newAccounts).some(v => v.selected)}
               className="w-full gap-2 bg-accent hover:bg-accent/90 text-accent-foreground"
             >
               {addingAccount ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-              Account hinzufügen
+              {(() => {
+                const count = Object.values(newAccounts).filter(v => v.selected).length;
+                return count > 1 ? `${count} Accounts hinzufügen` : "Account hinzufügen";
+              })()}
             </Button>
           </div>
         </DialogContent>
