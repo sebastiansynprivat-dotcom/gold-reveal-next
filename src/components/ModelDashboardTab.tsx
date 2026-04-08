@@ -198,8 +198,10 @@ export default function ModelDashboardTab() {
         const ml = Number((d as any).maloum_revenue) || 0;
         const br = Number((d as any).brezzels_revenue) || 0;
         revMap[d.account_id] = fb + ml + br || Number((d as any).monthly_revenue) || 0;
+        platRevMap[d.account_id] = { fourbased: fb, maloum: ml, brezzels: br };
       }
       setDashboardRevenues(revMap);
+      setPlatformRevenues(platRevMap);
     }
   }, []);
 
