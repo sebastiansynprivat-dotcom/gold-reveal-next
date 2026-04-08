@@ -2580,8 +2580,8 @@ export default function AdminDashboard() {
                   <button
                     key={p}
                     onClick={() => {
-                      setSelectedManualPlatform(p);
-                      setManualPoolOpen(true);
+                      setSelectedPlatform(p);
+                      setAccountPoolOpen(true);
                     }}
                     className="glass-card-subtle rounded-xl p-4 text-left hover:bg-secondary/30 transition-colors"
                   >
