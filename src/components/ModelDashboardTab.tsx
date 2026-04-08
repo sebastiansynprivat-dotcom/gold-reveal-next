@@ -153,11 +153,10 @@ export default function ModelDashboardTab() {
 
   // ─── Load models ───
   const loadModels = useCallback(async () => {
-    const { data } = await supabase
-      .from("models")
+    const { data } = await (supabase.from("models") as any)
       .select("*")
       .order("name");
-    if (data) setModels(data as unknown as ModelRow[]);
+    if (data) setModels(data as ModelRow[]);
     setLoading(false);
   }, []);
 
