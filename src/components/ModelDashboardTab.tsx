@@ -146,12 +146,12 @@ export default function ModelDashboardTab() {
   // Accounts for selected model
   const [modelAccounts, setModelAccounts] = useState<AccountRow[]>([]);
 
-  // Shared account entry factory
-  const emptyAccountEntries = () => PLATFORMS.reduce((acc, p) => ({ ...acc, [p]: { selected: false, account_email: "", account_password: "", account_domain: PLATFORM_DOMAINS[p] || "", drive_folder_id: "", model_language: "de" as "de" | "en", model_agency: "shex" as "shex" | "syn", model_active: true } }), {} as Record<string, { selected: boolean; account_email: string; account_password: string; account_domain: string; drive_folder_id: string; model_language: "de" | "en"; model_agency: "shex" | "syn"; model_active: boolean }>);
+  // Shared account entry factory (simplified: only email/password/domain per platform)
+  const emptyAccountEntries = () => PLATFORMS.reduce((acc, p) => ({ ...acc, [p]: { selected: false, account_email: "", account_password: "", account_domain: PLATFORM_DOMAINS[p] || "" } }), {} as Record<string, { selected: boolean; account_email: string; account_password: string; account_domain: string }>);
 
   // Create model dialog
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [newModel, setNewModel] = useState({ name: "", username: "", address: "" });
+  const [newModel, setNewModel] = useState({ name: "", username: "", address: "", drive_folder_id: "", model_language: "de" as "de" | "en", model_agency: "shex" as "shex" | "syn", model_active: true });
   const [creating, setCreating] = useState(false);
   const [createAccounts, setCreateAccounts] = useState(emptyAccountEntries);
 
