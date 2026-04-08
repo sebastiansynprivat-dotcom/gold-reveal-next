@@ -295,14 +295,14 @@ export default function ModelDashboardTab() {
     if (!selectedModelId) return;
     setAddingAccount(true);
     const { data: userData } = await supabase.auth.getUser();
-    const { error } = await supabase.from("accounts").insert({
+    const { error } = await (supabase.from("accounts") as any).insert({
       platform: newAccount.platform,
       account_email: newAccount.account_email,
       account_password: newAccount.account_password,
       account_domain: newAccount.account_domain,
       model_id: selectedModelId,
       created_by: userData.user?.id,
-    } as any);
+    });
     if (error) toast.error(error.message);
     else {
       toast.success("Account hinzugefügt ✅");
