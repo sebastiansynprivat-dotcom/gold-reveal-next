@@ -575,6 +575,7 @@ export default function ModelDashboardTab() {
                 <Plus className="h-3 w-3" />
                 Account
               </Button>
+              )}
             </div>
 
             {/* ── Ebene 1: Model-Stammdaten ── */}
