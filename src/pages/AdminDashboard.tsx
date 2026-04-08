@@ -2511,43 +2511,34 @@ export default function AdminDashboard() {
           </div>
 
            {accountPoolSectionOpen && (
-            <>
-              {platforms.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">
-                    Noch keine Pools angelegt. Erstelle einen neuen Pool oben.
-                  </p>
-                ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {platforms.map((p) => {
-                      const pAccounts = accounts.filter((a) => a.platform === p);
-                      const free = pAccounts.filter((a) => !a.assigned_to).length;
-                      const assigned = pAccounts.filter((a) => a.assigned_to).length;
-                      return (
-                        <button
-                          key={p}
-                          onClick={() => {
-                            setSelectedPlatform(p);
-                            setAccountPoolOpen(true);
-                          }}
-                          className="glass-card-subtle rounded-xl p-4 text-left hover:bg-secondary/30 transition-colors"
-                        >
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-sm font-semibold text-foreground">{p}</span>
-                            <Badge variant="secondary" className="text-[10px]">
-                              {pAccounts.length} Accounts
-                            </Badge>
-                          </div>
-                          <div className="flex gap-3 text-[10px] text-muted-foreground">
-                            <span className="text-green-500">{free} frei</span>
-                            <span>{assigned} vergeben</span>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-
-            </>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {platforms.map((p) => {
+                const pAccounts = accounts.filter((a) => a.platform.toLowerCase() === p.toLowerCase());
+                const free = pAccounts.filter((a) => !a.assigned_to).length;
+                const assigned = pAccounts.filter((a) => a.assigned_to).length;
+                return (
+                  <button
+                    key={p}
+                    onClick={() => {
+                      setSelectedPlatform(p);
+                      setAccountPoolOpen(true);
+                    }}
+                    className="glass-card-subtle rounded-xl p-4 text-left hover:bg-secondary/30 transition-colors"
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-semibold text-foreground">{p}</span>
+                      <Badge variant="secondary" className="text-[10px]">
+                        {pAccounts.length} Accounts
+                      </Badge>
+                    </div>
+                    <div className="flex gap-3 text-[10px] text-muted-foreground">
+                      <span className="text-green-500">{free} frei</span>
+                      <span>{assigned} vergeben</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           )}
         </section>
 
