@@ -5422,27 +5422,6 @@ export default function AdminDashboard() {
 
               return (
                 <div className="space-y-4">
-                  {/* Account-Pools */}
-                  {poolPlatforms.length > 0 && (
-                    <div className="space-y-2.5">
-                      <button onClick={() => setReassignPoolSectionOpen(!reassignPoolSectionOpen)} className="flex items-center gap-2 px-1 w-full text-left group/sec hover:opacity-80 transition-opacity">
-                        <ChevronRight className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 ${reassignPoolSectionOpen ? "rotate-90" : ""}`} />
-                        <div className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_6px_hsl(152_69%_45%/0.4)]" />
-                        <p className="text-[11px] font-semibold text-foreground tracking-wide uppercase">Account-Pools</p>
-                        <Badge variant="secondary" className="text-[9px] ml-auto">{poolAccounts.length} frei</Badge>
-                      </button>
-                      {reassignPoolSectionOpen && poolPlatforms.map((p) => (
-                        <div key={p} className="space-y-1.5 pl-6">
-                          <div className="flex items-center gap-1.5 px-1">
-                            <Badge className="text-[9px] px-1.5 py-0 bg-accent/10 text-accent/80 border-accent/15">{p}</Badge>
-                            <span className="text-[9px] text-muted-foreground">{poolAccounts.filter(a => a.platform === p).length} verfügbar</span>
-                          </div>
-                          {renderAccountList(poolAccounts, p)}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
                   {/* Freie Accounts */}
                   {manualPlatforms.length > 0 && (
                     <div className="space-y-2.5">
