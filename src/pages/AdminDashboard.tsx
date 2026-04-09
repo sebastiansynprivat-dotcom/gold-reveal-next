@@ -556,8 +556,9 @@ export default function AdminDashboard() {
   const [broadcastBody, setBroadcastBody] = useState("");
   const [broadcastSending, setBroadcastSending] = useState(false);
 
-  // Account pool state
+   // Account pool state
   const [accounts, setAccounts] = useState<AccountEntry[]>([]);
+  const [modelNames, setModelNames] = useState<Record<string, string>>({});
   const [accountPoolOpen, setAccountPoolOpen] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState("");
   
