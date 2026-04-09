@@ -2538,9 +2538,13 @@ export default function AdminDashboard() {
           {manualSectionOpen && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {DEFAULT_PLATFORMS.map((p) => {
-                const pAccounts = accounts.filter((a) => a.is_manual && a.platform.toLowerCase() === p.toLowerCase());
+                const pKey = p.toLowerCase();
+                const style = PLATFORM_STYLES[pKey] || { bg: "bg-secondary/10", text: "text-muted-foreground", border: "border-border/50", dot: "bg-muted-foreground" };
+                const pAccounts = accounts.filter((a) => a.is_manual && a.platform.toLowerCase() === pKey);
                 const free = pAccounts.filter((a) => !a.assigned_to).length;
                 const assigned = pAccounts.filter((a) => a.assigned_to).length;
+                // Collect unique model names for this platform
+                const pModelNames = [...new Set(pAccounts.map(a => a.model_id ? modelNames[a.model_id] : null).filter(Boolean))];
                 return (
                   <button
                     key={p}
@@ -2548,17 +2552,23 @@ export default function AdminDashboard() {
                       setSelectedPlatform(p);
                       setAccountPoolOpen(true);
                     }}
-                    className="glass-card-subtle rounded-xl p-4 text-left hover:bg-secondary/30 transition-colors"
+                    className={`rounded-xl p-4 text-left transition-all hover:scale-[1.02] border ${style.border} ${style.bg}`}
                   >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-semibold text-foreground">{p}</span>
-                      <Badge variant="secondary" className="text-[10px]">
-                        {pAccounts.length} Accounts
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <div className={`h-2.5 w-2.5 rounded-full ${style.dot} shrink-0`} />
+                      <span className={`text-sm font-bold ${style.text}`}>{p}</span>
+                      <Badge variant="secondary" className="text-[10px] ml-auto">
+                        {pAccounts.length}
                       </Badge>
                     </div>
-                    <div className="flex gap-3 text-[10px] text-muted-foreground">
-                      <span className="text-amber-400">{free} frei</span>
-                      <span>{assigned} vergeben</span>
+                    {pModelNames.length > 0 && (
+                      <p className="text-[10px] text-muted-foreground truncate mb-1.5 pl-[18px]">
+                        {pModelNames.join(", ")}
+                      </p>
+                    )}
+                    <div className="flex gap-3 text-[10px] pl-[18px]">
+                      <span className="text-amber-400 font-medium">{free} frei</span>
+                      <span className="text-muted-foreground">{assigned} vergeben</span>
                     </div>
                   </button>
                 );
@@ -2596,9 +2606,12 @@ export default function AdminDashboard() {
            {accountPoolSectionOpen && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {platforms.map((p) => {
-                const pAccounts = accounts.filter((a) => a.platform.toLowerCase() === p.toLowerCase());
+                const pKey = p.toLowerCase();
+                const style = PLATFORM_STYLES[pKey] || { bg: "bg-secondary/10", text: "text-muted-foreground", border: "border-border/50", dot: "bg-muted-foreground" };
+                const pAccounts = accounts.filter((a) => !a.is_manual && a.platform.toLowerCase() === pKey);
                 const free = pAccounts.filter((a) => !a.assigned_to).length;
                 const assigned = pAccounts.filter((a) => a.assigned_to).length;
+                const pModelNames = [...new Set(pAccounts.map(a => a.model_id ? modelNames[a.model_id] : null).filter(Boolean))];
                 return (
                   <button
                     key={p}
@@ -2606,17 +2619,23 @@ export default function AdminDashboard() {
                       setSelectedPlatform(p);
                       setAccountPoolOpen(true);
                     }}
-                    className="glass-card-subtle rounded-xl p-4 text-left hover:bg-secondary/30 transition-colors"
+                    className={`rounded-xl p-4 text-left transition-all hover:scale-[1.02] border ${style.border} ${style.bg}`}
                   >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-semibold text-foreground">{p}</span>
-                      <Badge variant="secondary" className="text-[10px]">
-                        {pAccounts.length} Accounts
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <div className={`h-2.5 w-2.5 rounded-full ${style.dot} shrink-0`} />
+                      <span className={`text-sm font-bold ${style.text}`}>{p}</span>
+                      <Badge variant="secondary" className="text-[10px] ml-auto">
+                        {pAccounts.length}
                       </Badge>
                     </div>
-                    <div className="flex gap-3 text-[10px] text-muted-foreground">
-                      <span className="text-green-500">{free} frei</span>
-                      <span>{assigned} vergeben</span>
+                    {pModelNames.length > 0 && (
+                      <p className="text-[10px] text-muted-foreground truncate mb-1.5 pl-[18px]">
+                        {pModelNames.join(", ")}
+                      </p>
+                    )}
+                    <div className="flex gap-3 text-[10px] pl-[18px]">
+                      <span className="text-green-500 font-medium">{free} frei</span>
+                      <span className="text-muted-foreground">{assigned} vergeben</span>
                     </div>
                   </button>
                 );
