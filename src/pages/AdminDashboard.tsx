@@ -2486,65 +2486,6 @@ export default function AdminDashboard() {
           )}
         </section>
 
-        <section className="glass-card rounded-xl p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => setAccountPoolSectionOpen(!accountPoolSectionOpen)}
-              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-            >
-              <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${accountPoolSectionOpen ? "rotate-90" : ""}`} />
-              <Package className="h-4 w-4 text-accent" />
-              <h2 className="text-sm font-semibold text-foreground">Account-Pools</h2>
-              {!accountPoolSectionOpen && (
-                <>
-                  <Badge variant="secondary" className="text-[10px] ml-1">
-                    {accounts.filter(a => !a.is_manual).length} gesamt
-                  </Badge>
-                  <Badge variant="secondary" className="text-[10px] flex items-center gap-1">
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
-                    </span>
-                    {accounts.filter(a => !a.is_manual && !a.assigned_to).length} frei
-                  </Badge>
-                </>
-              )}
-            </button>
-            
-          </div>
-
-           {accountPoolSectionOpen && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {platforms.map((p) => {
-                const pAccounts = accounts.filter((a) => a.platform.toLowerCase() === p.toLowerCase());
-                const free = pAccounts.filter((a) => !a.assigned_to).length;
-                const assigned = pAccounts.filter((a) => a.assigned_to).length;
-                return (
-                  <button
-                    key={p}
-                    onClick={() => {
-                      setSelectedPlatform(p);
-                      setAccountPoolOpen(true);
-                    }}
-                    className="glass-card-subtle rounded-xl p-4 text-left hover:bg-secondary/30 transition-colors"
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-semibold text-foreground">{p}</span>
-                      <Badge variant="secondary" className="text-[10px]">
-                        {pAccounts.length} Accounts
-                      </Badge>
-                    </div>
-                    <div className="flex gap-3 text-[10px] text-muted-foreground">
-                      <span className="text-green-500">{free} frei</span>
-                      <span>{assigned} vergeben</span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </section>
-
         {/* Freie Accounts Section */}
         <section className="glass-card rounded-xl p-4 space-y-3">
           <div className="flex items-center justify-between">
@@ -2595,6 +2536,64 @@ export default function AdminDashboard() {
                     </div>
                     <div className="flex gap-3 text-[10px] text-muted-foreground">
                       <span className="text-amber-400">{free} frei</span>
+                      <span>{assigned} vergeben</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </section>
+
+        <section className="glass-card rounded-xl p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => setAccountPoolSectionOpen(!accountPoolSectionOpen)}
+              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+            >
+              <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${accountPoolSectionOpen ? "rotate-90" : ""}`} />
+              <Package className="h-4 w-4 text-accent" />
+              <h2 className="text-sm font-semibold text-foreground">Account-Pools</h2>
+              {!accountPoolSectionOpen && (
+                <>
+                  <Badge variant="secondary" className="text-[10px] ml-1">
+                    {accounts.filter(a => !a.is_manual).length} gesamt
+                  </Badge>
+                  <Badge variant="secondary" className="text-[10px] flex items-center gap-1">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+                    </span>
+                    {accounts.filter(a => !a.is_manual && !a.assigned_to).length} frei
+                  </Badge>
+                </>
+              )}
+            </button>
+          </div>
+
+           {accountPoolSectionOpen && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {platforms.map((p) => {
+                const pAccounts = accounts.filter((a) => a.platform.toLowerCase() === p.toLowerCase());
+                const free = pAccounts.filter((a) => !a.assigned_to).length;
+                const assigned = pAccounts.filter((a) => a.assigned_to).length;
+                return (
+                  <button
+                    key={p}
+                    onClick={() => {
+                      setSelectedPlatform(p);
+                      setAccountPoolOpen(true);
+                    }}
+                    className="glass-card-subtle rounded-xl p-4 text-left hover:bg-secondary/30 transition-colors"
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-semibold text-foreground">{p}</span>
+                      <Badge variant="secondary" className="text-[10px]">
+                        {pAccounts.length} Accounts
+                      </Badge>
+                    </div>
+                    <div className="flex gap-3 text-[10px] text-muted-foreground">
+                      <span className="text-green-500">{free} frei</span>
                       <span>{assigned} vergeben</span>
                     </div>
                   </button>
