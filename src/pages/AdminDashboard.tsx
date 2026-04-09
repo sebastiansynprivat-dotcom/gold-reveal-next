@@ -5084,6 +5084,11 @@ export default function AdminDashboard() {
                           </Button>
                         </div>
                       </div>
+                      {acc.model_id && modelNames[acc.model_id] && (
+                        <p className="text-[10px] text-muted-foreground truncate mb-1 pl-[14px]">
+                          {modelNames[acc.model_id]}
+                        </p>
+                      )}
                       <button onClick={() => copyToClipboard(acc.account_email, "E-Mail")} className="w-full flex items-center gap-2 p-1.5 -mx-1.5 rounded-md hover:bg-accent/5 transition-colors group/copy text-left">
                         <Copy className="h-3 w-3 text-muted-foreground group-hover/copy:text-accent shrink-0 transition-colors" />
                         <span className="text-xs font-medium text-foreground truncate">{acc.account_email}</span>
