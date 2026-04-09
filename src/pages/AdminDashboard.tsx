@@ -1105,10 +1105,13 @@ export default function AdminDashboard() {
     if (modelIds.length > 0) {
       const { data: models } = await supabase
         .from("models")
-        .select("id, name")
+        .select("id, name, username")
         .in("id", modelIds);
       const nameMap: Record<string, string> = {};
-      (models || []).forEach((m: any) => { nameMap[m.id] = m.name; });
+      (models || []).forEach((m: any) => { 
+        const display = m.username ? `${m.name} (@${m.username})` : m.name;
+        nameMap[m.id] = display; 
+      });
       setModelNames(nameMap);
     }
   };
