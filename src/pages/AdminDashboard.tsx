@@ -2486,65 +2486,6 @@ export default function AdminDashboard() {
           )}
         </section>
 
-        <section className="glass-card rounded-xl p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => setAccountPoolSectionOpen(!accountPoolSectionOpen)}
-              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-            >
-              <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${accountPoolSectionOpen ? "rotate-90" : ""}`} />
-              <Package className="h-4 w-4 text-accent" />
-              <h2 className="text-sm font-semibold text-foreground">Account-Pools</h2>
-              {!accountPoolSectionOpen && (
-                <>
-                  <Badge variant="secondary" className="text-[10px] ml-1">
-                    {accounts.filter(a => !a.is_manual).length} gesamt
-                  </Badge>
-                  <Badge variant="secondary" className="text-[10px] flex items-center gap-1">
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
-                    </span>
-                    {accounts.filter(a => !a.is_manual && !a.assigned_to).length} frei
-                  </Badge>
-                </>
-              )}
-            </button>
-            
-          </div>
-
-           {accountPoolSectionOpen && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {platforms.map((p) => {
-                const pAccounts = accounts.filter((a) => a.platform.toLowerCase() === p.toLowerCase());
-                const free = pAccounts.filter((a) => !a.assigned_to).length;
-                const assigned = pAccounts.filter((a) => a.assigned_to).length;
-                return (
-                  <button
-                    key={p}
-                    onClick={() => {
-                      setSelectedPlatform(p);
-                      setAccountPoolOpen(true);
-                    }}
-                    className="glass-card-subtle rounded-xl p-4 text-left hover:bg-secondary/30 transition-colors"
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-semibold text-foreground">{p}</span>
-                      <Badge variant="secondary" className="text-[10px]">
-                        {pAccounts.length} Accounts
-                      </Badge>
-                    </div>
-                    <div className="flex gap-3 text-[10px] text-muted-foreground">
-                      <span className="text-green-500">{free} frei</span>
-                      <span>{assigned} vergeben</span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </section>
-
         {/* Freie Accounts Section */}
         <section className="glass-card rounded-xl p-4 space-y-3">
           <div className="flex items-center justify-between">
@@ -2595,6 +2536,64 @@ export default function AdminDashboard() {
                     </div>
                     <div className="flex gap-3 text-[10px] text-muted-foreground">
                       <span className="text-amber-400">{free} frei</span>
+                      <span>{assigned} vergeben</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </section>
+
+        <section className="glass-card rounded-xl p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => setAccountPoolSectionOpen(!accountPoolSectionOpen)}
+              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+            >
+              <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${accountPoolSectionOpen ? "rotate-90" : ""}`} />
+              <Package className="h-4 w-4 text-accent" />
+              <h2 className="text-sm font-semibold text-foreground">Account-Pools</h2>
+              {!accountPoolSectionOpen && (
+                <>
+                  <Badge variant="secondary" className="text-[10px] ml-1">
+                    {accounts.filter(a => !a.is_manual).length} gesamt
+                  </Badge>
+                  <Badge variant="secondary" className="text-[10px] flex items-center gap-1">
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75" />
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+                    </span>
+                    {accounts.filter(a => !a.is_manual && !a.assigned_to).length} frei
+                  </Badge>
+                </>
+              )}
+            </button>
+          </div>
+
+           {accountPoolSectionOpen && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {platforms.map((p) => {
+                const pAccounts = accounts.filter((a) => a.platform.toLowerCase() === p.toLowerCase());
+                const free = pAccounts.filter((a) => !a.assigned_to).length;
+                const assigned = pAccounts.filter((a) => a.assigned_to).length;
+                return (
+                  <button
+                    key={p}
+                    onClick={() => {
+                      setSelectedPlatform(p);
+                      setAccountPoolOpen(true);
+                    }}
+                    className="glass-card-subtle rounded-xl p-4 text-left hover:bg-secondary/30 transition-colors"
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-semibold text-foreground">{p}</span>
+                      <Badge variant="secondary" className="text-[10px]">
+                        {pAccounts.length} Accounts
+                      </Badge>
+                    </div>
+                    <div className="flex gap-3 text-[10px] text-muted-foreground">
+                      <span className="text-green-500">{free} frei</span>
                       <span>{assigned} vergeben</span>
                     </div>
                   </button>
@@ -5422,27 +5421,6 @@ export default function AdminDashboard() {
 
               return (
                 <div className="space-y-4">
-                  {/* Account-Pools */}
-                  {poolPlatforms.length > 0 && (
-                    <div className="space-y-2.5">
-                      <button onClick={() => setReassignPoolSectionOpen(!reassignPoolSectionOpen)} className="flex items-center gap-2 px-1 w-full text-left group/sec hover:opacity-80 transition-opacity">
-                        <ChevronRight className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 ${reassignPoolSectionOpen ? "rotate-90" : ""}`} />
-                        <div className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_6px_hsl(152_69%_45%/0.4)]" />
-                        <p className="text-[11px] font-semibold text-foreground tracking-wide uppercase">Account-Pools</p>
-                        <Badge variant="secondary" className="text-[9px] ml-auto">{poolAccounts.length} frei</Badge>
-                      </button>
-                      {reassignPoolSectionOpen && poolPlatforms.map((p) => (
-                        <div key={p} className="space-y-1.5 pl-6">
-                          <div className="flex items-center gap-1.5 px-1">
-                            <Badge className="text-[9px] px-1.5 py-0 bg-accent/10 text-accent/80 border-accent/15">{p}</Badge>
-                            <span className="text-[9px] text-muted-foreground">{poolAccounts.filter(a => a.platform === p).length} verfügbar</span>
-                          </div>
-                          {renderAccountList(poolAccounts, p)}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
                   {/* Freie Accounts */}
                   {manualPlatforms.length > 0 && (
                     <div className="space-y-2.5">
