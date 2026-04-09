@@ -1097,7 +1097,20 @@ export default function AdminDashboard() {
       .from("accounts")
       .select("*")
       .order("created_at", { ascending: true });
-    setAccounts((data as any[] || []) as AccountEntry[]);
+    const accs = (data as any[] || []) as AccountEntry[];
+    setAccounts(accs);
+
+    // Load model names for accounts that have model_id
+    const modelIds = [...new Set(accs.map(a => a.model_id).filter(Boolean))] as string[];
+    if (modelIds.length > 0) {
+      const { data: models } = await supabase
+        .from("models")
+        .select("id, name")
+        .in("id", modelIds);
+      const nameMap: Record<string, string> = {};
+      (models || []).forEach((m: any) => { nameMap[m.id] = m.name; });
+      setModelNames(nameMap);
+    }
   };
 
   const loadOffers = async () => {
