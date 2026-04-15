@@ -621,7 +621,7 @@ export default function CreditNoteForm({
         vat_rate: vatRate,
         vat_amount: vatAmount,
         gross_amount: grossAmount,
-        payment_method: `${cryptoCoin} (${cryptoNetwork})`,
+        payment_method: modelPaymentMethod === "bank" ? "Bank Transfer" : `${cryptoCoin} (${cryptoNetwork})`,
         crypto_coin: cryptoCoin,
         tx_hash: txHash,
         exchange_rate: exchangeRate,
@@ -889,49 +889,96 @@ export default function CreditNoteForm({
           Payment Information
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">Coin</Label>
-            <div className="flex gap-2">
-              <Select value={cryptoCoin} onValueChange={setCryptoCoin}>
-                <SelectTrigger className="flex-1 text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {CRYPTO_COINS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              <Select value={cryptoNetwork} onValueChange={setCryptoNetwork}>
-                <SelectTrigger className="w-[110px] text-sm">
-                  <SelectValue placeholder="Netzwerk" />
-                </SelectTrigger>
-                <SelectContent>
-                  {CRYPTO_NETWORKS.map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
+        {modelPaymentMethod === "bank" ? (
+          /* Bank details (read-only, from model settings) */
+          <div className="rounded-lg bg-secondary/20 border border-border/40 p-3 space-y-2">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">🏦 Banküberweisung</p>
+            {modelBankAccountHolder && (
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Kontoinhaber</span>
+                <span className="font-medium text-foreground">{modelBankAccountHolder}</span>
+              </div>
+            )}
+            {modelBankIban && (
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">IBAN</span>
+                <span className="font-mono text-foreground text-[11px]">{modelBankIban}</span>
+              </div>
+            )}
+            {modelBankBic && (
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">BIC/SWIFT</span>
+                <span className="font-mono text-foreground text-[11px]">{modelBankBic}</span>
+              </div>
+            )}
+            {modelBankName && (
+              <div className="flex justify-between text-xs">
+                <span className="text-muted-foreground">Bank</span>
+                <span className="text-foreground">{modelBankName}</span>
+              </div>
+            )}
+            {!modelBankIban && !modelBankAccountHolder && (
+              <p className="text-xs text-muted-foreground italic">Keine Bankdaten hinterlegt – bitte oben unter "Auszahlung" eintragen.</p>
+            )}
           </div>
+        ) : (
+          /* Crypto fields */
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Coin</Label>
+                <div className="flex gap-2">
+                  <Select value={cryptoCoin} onValueChange={setCryptoCoin}>
+                    <SelectTrigger className="flex-1 text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CRYPTO_COINS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <Select value={cryptoNetwork} onValueChange={setCryptoNetwork}>
+                    <SelectTrigger className="w-[110px] text-sm">
+                      <SelectValue placeholder="Netzwerk" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CRYPTO_NETWORKS.map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Payment Date</Label>
+                <div className="input-gold-shimmer rounded-lg">
+                  <Input type="date" value={paymentDate} onChange={e => setPaymentDate(e.target.value)} className="text-sm border-transparent" />
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Receiver Wallet</Label>
+              <div className="input-gold-shimmer rounded-lg">
+                <Input value={receiverWallet} onChange={e => setReceiverWallet(e.target.value)} placeholder="Wallet-Adresse des Empfängers" className="text-sm border-transparent font-mono text-xs" />
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">TxHash</Label>
+              <div className="input-gold-shimmer rounded-lg">
+                <Input value={txHash} onChange={e => setTxHash(e.target.value)} placeholder="Transaction Hash" className="text-sm border-transparent font-mono text-xs" />
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Payment date for bank too */}
+        {modelPaymentMethod === "bank" && (
           <div className="space-y-1.5">
             <Label className="text-xs text-muted-foreground">Payment Date</Label>
             <div className="input-gold-shimmer rounded-lg">
               <Input type="date" value={paymentDate} onChange={e => setPaymentDate(e.target.value)} className="text-sm border-transparent" />
             </div>
           </div>
-        </div>
-
-        <div className="space-y-1.5">
-          <Label className="text-xs text-muted-foreground">Receiver Wallet</Label>
-          <div className="input-gold-shimmer rounded-lg">
-            <Input value={receiverWallet} onChange={e => setReceiverWallet(e.target.value)} placeholder="Wallet-Adresse des Empfängers" className="text-sm border-transparent font-mono text-xs" />
-          </div>
-        </div>
-
-        <div className="space-y-1.5">
-          <Label className="text-xs text-muted-foreground">TxHash</Label>
-          <div className="input-gold-shimmer rounded-lg">
-            <Input value={txHash} onChange={e => setTxHash(e.target.value)} placeholder="Transaction Hash" className="text-sm border-transparent font-mono text-xs" />
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Generate Button */}
