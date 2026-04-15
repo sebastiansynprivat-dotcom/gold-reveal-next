@@ -638,18 +638,80 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
             </Section>
           )}
 
-          {/* Crypto */}
-          <Section icon={Wallet} title="Crypto / Auszahlung" delay={0.18}>
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-muted-foreground">Crypto-Infos (Adresse, Coin, Netzwerk, Notizen…)</label>
-              <div className="input-gold-shimmer rounded-lg">
-                <Textarea
-                  value={selected.cryptoAddress || ""}
-                  onChange={e => updateSelected({ cryptoAddress: e.target.value })}
-                  placeholder={"z.B. USDT TRC20 – TXyz…\nNetzwerk: Tron\nWeitere Infos…"}
-                  className="bg-secondary/40 border-transparent text-sm min-h-[100px]"
-                />
+          {/* Auszahlung */}
+          <Section icon={Wallet} title="Auszahlung" delay={0.18}>
+            <div className="space-y-4">
+              {/* Payment method toggle */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Auszahlungsmethode</label>
+                <div className="flex gap-1.5">
+                  <button
+                    onClick={() => updateSelected({ paymentMethod: "crypto" })}
+                    className={cn(
+                      "flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border",
+                      selected.paymentMethod === "crypto"
+                        ? "bg-accent/15 text-accent border-accent/30"
+                        : "bg-secondary/30 text-muted-foreground border-border/30"
+                    )}
+                  >
+                    💰 Crypto
+                  </button>
+                  <button
+                    onClick={() => updateSelected({ paymentMethod: "bank" })}
+                    className={cn(
+                      "flex-1 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors border",
+                      selected.paymentMethod === "bank"
+                        ? "bg-accent/15 text-accent border-accent/30"
+                        : "bg-secondary/30 text-muted-foreground border-border/30"
+                    )}
+                  >
+                    🏦 Bank
+                  </button>
+                </div>
               </div>
+
+              {selected.paymentMethod === "bank" ? (
+                <div className="space-y-3">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">Kontoinhaber</label>
+                    <div className="input-gold-shimmer rounded-lg">
+                      <Input value={selected.bankAccountHolder} onChange={e => updateSelected({ bankAccountHolder: e.target.value })} placeholder="Vor- und Nachname" className="text-sm border-transparent" />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">IBAN</label>
+                    <div className="input-gold-shimmer rounded-lg">
+                      <Input value={selected.bankIban} onChange={e => updateSelected({ bankIban: e.target.value })} placeholder="DE89 ..." className="text-sm border-transparent font-mono" />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">BIC/SWIFT</label>
+                      <div className="input-gold-shimmer rounded-lg">
+                        <Input value={selected.bankBic} onChange={e => updateSelected({ bankBic: e.target.value })} placeholder="COBADEFFXXX" className="text-sm border-transparent font-mono" />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">Bankname</label>
+                      <div className="input-gold-shimmer rounded-lg">
+                        <Input value={selected.bankName} onChange={e => updateSelected({ bankName: e.target.value })} placeholder="Commerzbank" className="text-sm border-transparent" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Crypto-Infos (Adresse, Coin, Netzwerk, Notizen…)</label>
+                  <div className="input-gold-shimmer rounded-lg">
+                    <Textarea
+                      value={selected.cryptoAddress || ""}
+                      onChange={e => updateSelected({ cryptoAddress: e.target.value })}
+                      placeholder={"z.B. USDT TRC20 – TXyz…\nNetzwerk: Tron\nWeitere Infos…"}
+                      className="bg-secondary/40 border-transparent text-sm min-h-[100px]"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </Section>
 
@@ -666,6 +728,11 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
               compensationType={selected.compensationType}
               hourlyRate={selected.hourlyRate}
               hoursWorked={selected.hoursWorked}
+              paymentMethod={selected.paymentMethod}
+              bankName={selected.bankName}
+              bankIban={selected.bankIban}
+              bankBic={selected.bankBic}
+              bankAccountHolder={selected.bankAccountHolder}
               platformRevenue={selected.compensationType === "hourly" ? undefined : {
                 fourbased: selected.fourbasedRevenue || 0,
                 maloum: selected.maloumRevenue || 0,
