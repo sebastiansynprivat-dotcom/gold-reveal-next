@@ -225,6 +225,11 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
       brezzels_revenue: 0,
       currency: "EUR",
       crypto_address: "",
+      payment_method: "crypto",
+      bank_account_holder: "",
+      bank_iban: "",
+      bank_bic: "",
+      bank_name: "",
       created_by: user?.id,
     };
 
