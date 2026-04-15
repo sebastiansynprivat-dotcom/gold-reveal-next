@@ -63,6 +63,11 @@ export default function CreditNoteForm({
   compensationType = "percentage",
   hourlyRate = 0,
   hoursWorked = 0,
+  paymentMethod: modelPaymentMethod = "crypto",
+  bankName: modelBankName = "",
+  bankIban: modelBankIban = "",
+  bankBic: modelBankBic = "",
+  bankAccountHolder: modelBankAccountHolder = "",
 }: CreditNoteFormProps) {
   // localStorage key for persisting provider (recipient) form fields
   const storageKey = `credit-note-form-${accountId || chatterName || "default"}`;
