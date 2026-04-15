@@ -495,7 +495,8 @@ export default function CreditNoteForm({
     }
 
     // ── Payment Information ──
-    if (cryptoCoin || txHash || (currency !== "EUR" && liveExchangeRate)) {
+    const isBank = modelPaymentMethod === "bank";
+    if (isBank || cryptoCoin || txHash || (currency !== "EUR" && liveExchangeRate)) {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(7.5);
       doc.setTextColor(...goldLight);
@@ -505,17 +506,38 @@ export default function CreditNoteForm({
       doc.setFontSize(8.5);
       doc.setTextColor(...white);
 
-      if (cryptoCoin) {
-        doc.text(`Payment Method: ${cryptoCoin} (${cryptoNetwork})`, m, y);
+      if (isBank) {
+        doc.text("Payment Method: Bank Transfer", m, y);
         y += 4.5;
-      }
-      if (receiverWallet) {
-        doc.text(`Receiver Wallet: ${receiverWallet}`, m, y);
-        y += 4.5;
-      }
-      if (txHash) {
-        doc.text(`TxHash: ${txHash}`, m, y);
-        y += 4.5;
+        if (modelBankAccountHolder) {
+          doc.text(`Account Holder: ${modelBankAccountHolder}`, m, y);
+          y += 4.5;
+        }
+        if (modelBankIban) {
+          doc.text(`IBAN: ${modelBankIban}`, m, y);
+          y += 4.5;
+        }
+        if (modelBankBic) {
+          doc.text(`BIC/SWIFT: ${modelBankBic}`, m, y);
+          y += 4.5;
+        }
+        if (modelBankName) {
+          doc.text(`Bank: ${modelBankName}`, m, y);
+          y += 4.5;
+        }
+      } else {
+        if (cryptoCoin) {
+          doc.text(`Payment Method: ${cryptoCoin} (${cryptoNetwork})`, m, y);
+          y += 4.5;
+        }
+        if (receiverWallet) {
+          doc.text(`Receiver Wallet: ${receiverWallet}`, m, y);
+          y += 4.5;
+        }
+        if (txHash) {
+          doc.text(`TxHash: ${txHash}`, m, y);
+          y += 4.5;
+        }
       }
       if (currency !== "EUR" && liveExchangeRate) {
         doc.text(`Exchange Rate: 1 ${currency} = ${liveExchangeRate.toFixed(4)} EUR`, m, y);
