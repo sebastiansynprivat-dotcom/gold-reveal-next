@@ -264,6 +264,10 @@ export type Database = {
       }
       chatters: {
         Row: {
+          bank_account_holder: string | null
+          bank_bic: string | null
+          bank_iban: string | null
+          bank_name: string | null
           brezzels_revenue: number
           compensation_type: string
           created_at: string
@@ -276,12 +280,17 @@ export type Database = {
           id: string
           maloum_revenue: number
           name: string
+          payment_method: string
           platform: string
           revenue_percentage: number
           role: string
           updated_at: string
         }
         Insert: {
+          bank_account_holder?: string | null
+          bank_bic?: string | null
+          bank_iban?: string | null
+          bank_name?: string | null
           brezzels_revenue?: number
           compensation_type?: string
           created_at?: string
@@ -294,12 +303,17 @@ export type Database = {
           id?: string
           maloum_revenue?: number
           name?: string
+          payment_method?: string
           platform?: string
           revenue_percentage?: number
           role?: string
           updated_at?: string
         }
         Update: {
+          bank_account_holder?: string | null
+          bank_bic?: string | null
+          bank_iban?: string | null
+          bank_name?: string | null
           brezzels_revenue?: number
           compensation_type?: string
           created_at?: string
@@ -312,6 +326,7 @@ export type Database = {
           id?: string
           maloum_revenue?: number
           name?: string
+          payment_method?: string
           platform?: string
           revenue_percentage?: number
           role?: string
