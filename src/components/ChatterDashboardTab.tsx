@@ -170,6 +170,11 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
         brezzels_revenue: chatter.brezzelsRevenue,
         currency: chatter.currency,
         crypto_address: chatter.cryptoAddress,
+        payment_method: chatter.paymentMethod,
+        bank_account_holder: chatter.bankAccountHolder,
+        bank_iban: chatter.bankIban,
+        bank_bic: chatter.bankBic,
+        bank_name: chatter.bankName,
       })
       .eq("id", chatter.id);
 
