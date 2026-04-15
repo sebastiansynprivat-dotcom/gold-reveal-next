@@ -42,6 +42,11 @@ interface ModelRow {
   model_language: string;
   model_agency: string;
   model_active: boolean;
+  payment_method: string;
+  bank_name: string;
+  bank_iban: string;
+  bank_bic: string;
+  bank_account_holder: string;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -331,6 +336,11 @@ export default function ModelDashboardTab() {
       model_language: modelForm.model_language,
       model_agency: modelForm.model_agency,
       model_active: modelForm.model_active,
+      payment_method: modelForm.payment_method || "crypto",
+      bank_name: modelForm.bank_name || "",
+      bank_iban: modelForm.bank_iban || "",
+      bank_bic: modelForm.bank_bic || "",
+      bank_account_holder: modelForm.bank_account_holder || "",
     }).eq("id", selectedModelId);
     // Also update all accounts with model-level fields
     if (!error && modelAccounts.length > 0) {
@@ -1103,18 +1113,94 @@ export default function ModelDashboardTab() {
               </div>
             </Section>
 
-            {/* ── Crypto ── */}
-            <Section icon={Wallet} title="Crypto / Auszahlung" delay={0.2}>
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Crypto-Infos (Adresse, Coin, Netzwerk…)</Label>
-                <div className="input-gold-shimmer rounded-lg">
-                  <Textarea
-                    value={modelForm.crypto_address || ""}
-                    onChange={e => setModelForm(prev => ({ ...prev, crypto_address: e.target.value }))}
-                    placeholder="z.B. USDT TRC20 – TXyz…&#10;Netzwerk: Tron"
-                    className="bg-secondary/40 border-transparent text-sm min-h-[80px]"
-                  />
+            {/* ── Auszahlung ── */}
+            <Section icon={Wallet} title="Auszahlung" delay={0.2}>
+              <div className="space-y-4">
+                {/* Payment method toggle */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Auszahlungsmethode</Label>
+                  <div className="flex gap-1.5">
+                    <button
+                      onClick={() => setModelForm(prev => ({ ...prev, payment_method: "crypto" }))}
+                      className={cn("flex-1 text-xs px-3 py-2.5 rounded-lg border transition-all font-medium", (modelForm.payment_method || "crypto") === "crypto" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50 hover:border-accent/30")}
+                    >
+                      💰 Crypto
+                    </button>
+                    <button
+                      onClick={() => setModelForm(prev => ({ ...prev, payment_method: "bank" }))}
+                      className={cn("flex-1 text-xs px-3 py-2.5 rounded-lg border transition-all font-medium", modelForm.payment_method === "bank" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50 hover:border-accent/30")}
+                    >
+                      🏦 Bank
+                    </button>
+                  </div>
                 </div>
+
+                {/* Crypto fields */}
+                {(modelForm.payment_method || "crypto") === "crypto" && (
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Crypto-Infos (Adresse, Coin, Netzwerk…)</Label>
+                    <div className="input-gold-shimmer rounded-lg">
+                      <Textarea
+                        value={modelForm.crypto_address || ""}
+                        onChange={e => setModelForm(prev => ({ ...prev, crypto_address: e.target.value }))}
+                        placeholder="z.B. USDT TRC20 – TXyz…&#10;Netzwerk: Tron"
+                        className="bg-secondary/40 border-transparent text-sm min-h-[80px]"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Bank fields */}
+                {modelForm.payment_method === "bank" && (
+                  <div className="space-y-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Kontoinhaber</Label>
+                      <div className="input-gold-shimmer rounded-lg">
+                        <Input
+                          value={(modelForm as any).bank_account_holder || ""}
+                          onChange={e => setModelForm(prev => ({ ...prev, bank_account_holder: e.target.value }))}
+                          placeholder="Vor- und Nachname"
+                          className="bg-secondary/40 border-transparent text-sm h-9"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">IBAN</Label>
+                      <div className="input-gold-shimmer rounded-lg">
+                        <Input
+                          value={(modelForm as any).bank_iban || ""}
+                          onChange={e => setModelForm(prev => ({ ...prev, bank_iban: e.target.value }))}
+                          placeholder="DE89 3704 0044 0532 0130 00"
+                          className="bg-secondary/40 border-transparent text-sm h-9 font-mono"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <Label className="text-xs text-muted-foreground">BIC / SWIFT</Label>
+                        <div className="input-gold-shimmer rounded-lg">
+                          <Input
+                            value={(modelForm as any).bank_bic || ""}
+                            onChange={e => setModelForm(prev => ({ ...prev, bank_bic: e.target.value }))}
+                            placeholder="COBADEFFXXX"
+                            className="bg-secondary/40 border-transparent text-sm h-9 font-mono"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs text-muted-foreground">Bankname</Label>
+                        <div className="input-gold-shimmer rounded-lg">
+                          <Input
+                            value={(modelForm as any).bank_name || ""}
+                            onChange={e => setModelForm(prev => ({ ...prev, bank_name: e.target.value }))}
+                            placeholder="z.B. Commerzbank"
+                            className="bg-secondary/40 border-transparent text-sm h-9"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </Section>
 
