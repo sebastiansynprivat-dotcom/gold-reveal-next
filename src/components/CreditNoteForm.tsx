@@ -43,6 +43,11 @@ interface CreditNoteFormProps {
   compensationType?: "percentage" | "hourly";
   hourlyRate?: number;
   hoursWorked?: number;
+  paymentMethod?: "crypto" | "bank";
+  bankName?: string;
+  bankIban?: string;
+  bankBic?: string;
+  bankAccountHolder?: string;
 }
 
 export default function CreditNoteForm({

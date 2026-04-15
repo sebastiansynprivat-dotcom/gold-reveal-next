@@ -1253,6 +1253,11 @@ export default function ModelDashboardTab() {
                 cryptoAddress={modelForm.crypto_address || ""}
                 revenuePercentage={modelForm.revenue_percentage || 0}
                 currency={modelForm.currency || "EUR"}
+                paymentMethod={(modelForm as any).payment_method || "crypto"}
+                bankName={(modelForm as any).bank_name || ""}
+                bankIban={(modelForm as any).bank_iban || ""}
+                bankBic={(modelForm as any).bank_bic || ""}
+                bankAccountHolder={(modelForm as any).bank_account_holder || ""}
                 platformRevenue={{
                   fourbased: 0,
                   maloum: 0,
