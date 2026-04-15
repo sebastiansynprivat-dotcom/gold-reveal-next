@@ -676,6 +676,10 @@ export type Database = {
       models: {
         Row: {
           address: string | null
+          bank_account_holder: string | null
+          bank_bic: string | null
+          bank_iban: string | null
+          bank_name: string | null
           contract_file_path: string | null
           created_at: string
           created_by: string | null
@@ -688,12 +692,17 @@ export type Database = {
           model_language: string
           name: string
           notes: string | null
+          payment_method: string
           revenue_percentage: number
           updated_at: string
           username: string | null
         }
         Insert: {
           address?: string | null
+          bank_account_holder?: string | null
+          bank_bic?: string | null
+          bank_iban?: string | null
+          bank_name?: string | null
           contract_file_path?: string | null
           created_at?: string
           created_by?: string | null
@@ -706,12 +715,17 @@ export type Database = {
           model_language?: string
           name?: string
           notes?: string | null
+          payment_method?: string
           revenue_percentage?: number
           updated_at?: string
           username?: string | null
         }
         Update: {
           address?: string | null
+          bank_account_holder?: string | null
+          bank_bic?: string | null
+          bank_iban?: string | null
+          bank_name?: string | null
           contract_file_path?: string | null
           created_at?: string
           created_by?: string | null
@@ -724,6 +738,7 @@ export type Database = {
           model_language?: string
           name?: string
           notes?: string | null
+          payment_method?: string
           revenue_percentage?: number
           updated_at?: string
           username?: string | null
