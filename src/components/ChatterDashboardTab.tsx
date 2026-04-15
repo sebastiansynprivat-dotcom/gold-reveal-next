@@ -21,6 +21,8 @@ const CURRENCIES = ["EUR", "USD", "GBP", "CHF", "AED"] as const;
 type ChatterRole = "chatter" | "mitarbeiter";
 type CompensationType = "percentage" | "hourly";
 
+type PaymentMethod = "crypto" | "bank";
+
 interface Chatter {
   id: string;
   name: string;
@@ -36,6 +38,11 @@ interface Chatter {
   hourlyRate: number;
   hoursWorked: number;
   createdBy?: string;
+  paymentMethod: PaymentMethod;
+  bankAccountHolder: string;
+  bankIban: string;
+  bankBic: string;
+  bankName: string;
 }
 
 // Map DB row to local interface
