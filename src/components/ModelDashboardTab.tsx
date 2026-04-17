@@ -684,7 +684,7 @@ export default function ModelDashboardTab() {
                       </p>
                       {verdienst > 0 && (
                         <p className="text-xs text-muted-foreground mt-1.5">
-                          Verdienst ({modelForm.revenue_percentage}%): <span className="text-accent font-semibold">{verdienst.toLocaleString("de-DE")} {modelForm.currency || "EUR"}</span>
+                          Verdienst ({modelForm.revenue_percentage}%): <span className="text-accent font-semibold">{verdienst.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {modelForm.currency || "EUR"}</span>
                         </p>
                       )}
                     </div>
