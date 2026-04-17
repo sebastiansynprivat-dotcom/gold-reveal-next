@@ -92,7 +92,8 @@ function useAnimatedCounter(target: number, duration = 1200) {
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / duration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
-      setValue(Math.round(start + (target - start) * eased));
+      // Keep 2-decimal precision so cents are preserved
+      setValue(Math.round((start + (target - start) * eased) * 100) / 100);
       if (progress < 1) raf = requestAnimationFrame(anim);
     };
     raf = requestAnimationFrame(anim);
@@ -103,7 +104,7 @@ function useAnimatedCounter(target: number, duration = 1200) {
 
 function AnimatedGoldValue({ value, suffix = "€", className }: { value: number; suffix?: string; className?: string }) {
   const animated = useAnimatedCounter(value);
-  return <span className={className}>{animated.toLocaleString("de-DE")}{suffix}</span>;
+  return <span className={className}>{animated.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{suffix}</span>;
 }
 
 // ─── Section wrapper ───
@@ -270,7 +271,7 @@ export default function ModelDashboardTab() {
   const verdienst = useMemo(() => {
     const pct = modelForm.revenue_percentage || 0;
     if (pct <= 0 || totalRevenue <= 0) return 0;
-    return Math.round(totalRevenue * pct / 100);
+    return Math.round(totalRevenue * pct) / 100;
   }, [totalRevenue, modelForm.revenue_percentage]);
 
   // ─── Create model ───
@@ -683,7 +684,7 @@ export default function ModelDashboardTab() {
                       </p>
                       {verdienst > 0 && (
                         <p className="text-xs text-muted-foreground mt-1.5">
-                          Verdienst ({modelForm.revenue_percentage}%): <span className="text-accent font-semibold">{verdienst.toLocaleString("de-DE")} {modelForm.currency || "EUR"}</span>
+                          Verdienst ({modelForm.revenue_percentage}%): <span className="text-accent font-semibold">{verdienst.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {modelForm.currency || "EUR"}</span>
                         </p>
                       )}
                     </div>
@@ -719,7 +720,7 @@ export default function ModelDashboardTab() {
                               </Badge>
                             </div>
                             <p className="text-sm font-bold text-foreground tabular-nums">
-                              {rev > 0 ? `${rev.toLocaleString("de-DE")}€` : "–"}
+                              {rev > 0 ? `${rev.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€` : "–"}
                             </p>
                           </div>
                           {/* Inline edit revenue */}
@@ -728,12 +729,14 @@ export default function ModelDashboardTab() {
                               <Input
                                 type="number"
                                 min={0}
-                                step={1}
-                                placeholder="Umsatz eintragen…"
-                                defaultValue={rev > 0 ? rev : ""}
+                                step="0.01"
+                                inputMode="decimal"
+                                placeholder="Umsatz eintragen (z.B. 1234.56)…"
+                                defaultValue={rev > 0 ? rev.toFixed(2) : ""}
                                 className="bg-secondary/40 border-transparent text-sm h-8 tabular-nums"
                                 onBlur={async (e) => {
-                                  const newVal = Number(e.target.value) || 0;
+                                  const raw = e.target.value.replace(",", ".");
+                                  const newVal = Math.round((Number(raw) || 0) * 100) / 100;
                                   if (newVal === rev) return;
                                   // Upsert into model_dashboard
                                   const updateData: Record<string, any> = {
