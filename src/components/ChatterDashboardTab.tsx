@@ -487,9 +487,9 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
                 <AnimatedGoldValue value={totalRevenue} suffix={` ${selected.currency || "EUR"}`} />
               </p>
               <div className="flex justify-center gap-4 text-xs text-muted-foreground mt-2">
-                <span>4Based: {(selected.fourbasedRevenue || 0).toLocaleString("de-DE")}</span>
-                <span>Maloum: {(selected.maloumRevenue || 0).toLocaleString("de-DE")}</span>
-                <span>Brezzels: {(selected.brezzelsRevenue || 0).toLocaleString("de-DE")}</span>
+                <span>4Based: {(selected.fourbasedRevenue || 0).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                <span>Maloum: {(selected.maloumRevenue || 0).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                <span>Brezzels: {(selected.brezzelsRevenue || 0).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
             </motion.div>
           )}
