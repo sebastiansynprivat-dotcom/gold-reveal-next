@@ -83,7 +83,8 @@ function useAnimatedCounter(target: number, duration = 1200) {
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / duration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
-      setValue(Math.round(start + (target - start) * eased));
+      // Preserve cents precision
+      setValue(Math.round((start + (target - start) * eased) * 100) / 100);
       if (progress < 1) raf = requestAnimationFrame(anim);
     };
     raf = requestAnimationFrame(anim);
@@ -94,7 +95,7 @@ function useAnimatedCounter(target: number, duration = 1200) {
 
 function AnimatedGoldValue({ value, suffix = "€", className }: { value: number; suffix?: string; className?: string }) {
   const animated = useAnimatedCounter(value);
-  return <span className={className}>{animated.toLocaleString("de-DE")}{suffix}</span>;
+  return <span className={className}>{animated.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{suffix}</span>;
 }
 
 function Section({ icon: Icon, title, children, delay = 0 }: { icon: React.ElementType; title: string; children: React.ReactNode; delay?: number }) {
@@ -203,10 +204,10 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
   const verdienst = useMemo(() => {
     if (!selected) return 0;
     if (selected.compensationType === "hourly") {
-      return Math.round(selected.hourlyRate * selected.hoursWorked);
+      return Math.round(selected.hourlyRate * selected.hoursWorked * 100) / 100;
     }
     if (selected.revenuePercentage <= 0) return 0;
-    return Math.round(totalRevenue * selected.revenuePercentage / 100);
+    return Math.round(totalRevenue * selected.revenuePercentage) / 100;
   }, [selected, totalRevenue]);
 
   const addChatter = async () => {
@@ -275,9 +276,9 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
 
   const getVerdienst = (c: Chatter) => {
     const total = (c.fourbasedRevenue || 0) + (c.maloumRevenue || 0) + (c.brezzelsRevenue || 0);
-    if (c.compensationType === "hourly") return Math.round(c.hourlyRate * c.hoursWorked);
+    if (c.compensationType === "hourly") return Math.round(c.hourlyRate * c.hoursWorked * 100) / 100;
     if (c.revenuePercentage <= 0) return 0;
-    return Math.round(total * c.revenuePercentage / 100);
+    return Math.round(total * c.revenuePercentage) / 100;
   };
 
   if (loading) {
@@ -442,10 +443,10 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
                         )}>{c.role}</span>
                       </div>
                       <div className="px-1 py-2 text-right">
-                        <span className="text-[11px] tabular-nums font-semibold text-foreground">{isHourlyRow ? "–" : total.toLocaleString("de-DE")}</span>
+                        <span className="text-[11px] tabular-nums font-semibold text-foreground">{isHourlyRow ? "–" : total.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                       </div>
                       <div className="px-1 py-2 text-right">
-                        <span className="text-[11px] tabular-nums text-accent font-medium">{isHourlyRow ? "–" : earnings.toLocaleString("de-DE")}</span>
+                        <span className="text-[11px] tabular-nums text-accent font-medium">{isHourlyRow ? "–" : earnings.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                       </div>
                       <div className="flex justify-center py-2">
                         <button
@@ -486,9 +487,9 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
                 <AnimatedGoldValue value={totalRevenue} suffix={` ${selected.currency || "EUR"}`} />
               </p>
               <div className="flex justify-center gap-4 text-xs text-muted-foreground mt-2">
-                <span>4Based: {(selected.fourbasedRevenue || 0).toLocaleString("de-DE")}</span>
-                <span>Maloum: {(selected.maloumRevenue || 0).toLocaleString("de-DE")}</span>
-                <span>Brezzels: {(selected.brezzelsRevenue || 0).toLocaleString("de-DE")}</span>
+                <span>4Based: {(selected.fourbasedRevenue || 0).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                <span>Maloum: {(selected.maloumRevenue || 0).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                <span>Brezzels: {(selected.brezzelsRevenue || 0).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
               </div>
             </motion.div>
           )}
@@ -546,19 +547,19 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
                     <div className="space-y-1.5">
                       <label className="text-xs font-medium text-muted-foreground">4Based Revenue</label>
                       <div className="input-gold-shimmer rounded-lg">
-                        <Input type="number" value={selected.fourbasedRevenue || ""} onChange={e => updateSelected({ fourbasedRevenue: Number(e.target.value) || 0 })} className="text-sm border-transparent" placeholder="0" />
+                        <Input type="number" inputMode="decimal" step="0.01" min={0} value={selected.fourbasedRevenue || ""} onChange={e => updateSelected({ fourbasedRevenue: Math.round((Number(e.target.value.replace(",", ".")) || 0) * 100) / 100 })} className="text-sm border-transparent tabular-nums" placeholder="0,00" />
                       </div>
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-xs font-medium text-muted-foreground">Maloum Revenue</label>
                       <div className="input-gold-shimmer rounded-lg">
-                        <Input type="number" value={selected.maloumRevenue || ""} onChange={e => updateSelected({ maloumRevenue: Number(e.target.value) || 0 })} className="text-sm border-transparent" placeholder="0" />
+                        <Input type="number" inputMode="decimal" step="0.01" min={0} value={selected.maloumRevenue || ""} onChange={e => updateSelected({ maloumRevenue: Math.round((Number(e.target.value.replace(",", ".")) || 0) * 100) / 100 })} className="text-sm border-transparent tabular-nums" placeholder="0,00" />
                       </div>
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-xs font-medium text-muted-foreground">Brezzels Revenue</label>
                       <div className="input-gold-shimmer rounded-lg">
-                        <Input type="number" value={selected.brezzelsRevenue || ""} onChange={e => updateSelected({ brezzelsRevenue: Number(e.target.value) || 0 })} className="text-sm border-transparent" placeholder="0" />
+                        <Input type="number" inputMode="decimal" step="0.01" min={0} value={selected.brezzelsRevenue || ""} onChange={e => updateSelected({ brezzelsRevenue: Math.round((Number(e.target.value.replace(",", ".")) || 0) * 100) / 100 })} className="text-sm border-transparent tabular-nums" placeholder="0,00" />
                       </div>
                     </div>
                   </div>
@@ -566,7 +567,7 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="glass-card rounded-lg p-3 flex items-center justify-between">
                       <span className="text-xs font-medium text-muted-foreground">Gesamt</span>
-                      <span className="text-sm font-bold text-accent tabular-nums">{totalRevenue.toLocaleString("de-DE")} {selected.currency || "EUR"}</span>
+                      <span className="text-sm font-bold text-accent tabular-nums">{totalRevenue.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {selected.currency || "EUR"}</span>
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-xs font-medium text-muted-foreground">Währung</label>
