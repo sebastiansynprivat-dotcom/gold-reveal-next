@@ -83,7 +83,8 @@ function useAnimatedCounter(target: number, duration = 1200) {
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / duration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
-      setValue(Math.round(start + (target - start) * eased));
+      // Preserve cents precision
+      setValue(Math.round((start + (target - start) * eased) * 100) / 100);
       if (progress < 1) raf = requestAnimationFrame(anim);
     };
     raf = requestAnimationFrame(anim);
@@ -94,7 +95,7 @@ function useAnimatedCounter(target: number, duration = 1200) {
 
 function AnimatedGoldValue({ value, suffix = "€", className }: { value: number; suffix?: string; className?: string }) {
   const animated = useAnimatedCounter(value);
-  return <span className={className}>{animated.toLocaleString("de-DE")}{suffix}</span>;
+  return <span className={className}>{animated.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{suffix}</span>;
 }
 
 function Section({ icon: Icon, title, children, delay = 0 }: { icon: React.ElementType; title: string; children: React.ReactNode; delay?: number }) {
