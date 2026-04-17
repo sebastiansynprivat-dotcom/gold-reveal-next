@@ -567,7 +567,7 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="glass-card rounded-lg p-3 flex items-center justify-between">
                       <span className="text-xs font-medium text-muted-foreground">Gesamt</span>
-                      <span className="text-sm font-bold text-accent tabular-nums">{totalRevenue.toLocaleString("de-DE")} {selected.currency || "EUR"}</span>
+                      <span className="text-sm font-bold text-accent tabular-nums">{totalRevenue.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {selected.currency || "EUR"}</span>
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-xs font-medium text-muted-foreground">Währung</label>
