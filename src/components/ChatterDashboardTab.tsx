@@ -443,10 +443,10 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
                         )}>{c.role}</span>
                       </div>
                       <div className="px-1 py-2 text-right">
-                        <span className="text-[11px] tabular-nums font-semibold text-foreground">{isHourlyRow ? "–" : total.toLocaleString("de-DE")}</span>
+                        <span className="text-[11px] tabular-nums font-semibold text-foreground">{isHourlyRow ? "–" : total.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                       </div>
                       <div className="px-1 py-2 text-right">
-                        <span className="text-[11px] tabular-nums text-accent font-medium">{isHourlyRow ? "–" : earnings.toLocaleString("de-DE")}</span>
+                        <span className="text-[11px] tabular-nums text-accent font-medium">{isHourlyRow ? "–" : earnings.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                       </div>
                       <div className="flex justify-center py-2">
                         <button
