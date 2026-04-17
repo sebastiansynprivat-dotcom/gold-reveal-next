@@ -209,8 +209,6 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
     if (selected.revenuePercentage <= 0) return 0;
     return Math.round(totalRevenue * selected.revenuePercentage) / 100;
   }, [selected, totalRevenue]);
-    return Math.round(totalRevenue * selected.revenuePercentage / 100);
-  }, [selected, totalRevenue]);
 
   const addChatter = async () => {
     if (!newName.trim()) return;
