@@ -271,7 +271,7 @@ export default function ModelDashboardTab() {
   const verdienst = useMemo(() => {
     const pct = modelForm.revenue_percentage || 0;
     if (pct <= 0 || totalRevenue <= 0) return 0;
-    return Math.round(totalRevenue * pct / 100);
+    return Math.round(totalRevenue * pct) / 100;
   }, [totalRevenue, modelForm.revenue_percentage]);
 
   // ─── Create model ───
