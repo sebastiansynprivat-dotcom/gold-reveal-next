@@ -559,7 +559,7 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
                     <div className="space-y-1.5">
                       <label className="text-xs font-medium text-muted-foreground">Brezzels Revenue</label>
                       <div className="input-gold-shimmer rounded-lg">
-                        <Input type="number" value={selected.brezzelsRevenue || ""} onChange={e => updateSelected({ brezzelsRevenue: Number(e.target.value) || 0 })} className="text-sm border-transparent" placeholder="0" />
+                        <Input type="number" inputMode="decimal" step="0.01" min={0} value={selected.brezzelsRevenue || ""} onChange={e => updateSelected({ brezzelsRevenue: Math.round((Number(e.target.value.replace(",", ".")) || 0) * 100) / 100 })} className="text-sm border-transparent tabular-nums" placeholder="0,00" />
                       </div>
                     </div>
                   </div>
