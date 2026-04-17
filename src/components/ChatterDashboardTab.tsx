@@ -204,9 +204,11 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
   const verdienst = useMemo(() => {
     if (!selected) return 0;
     if (selected.compensationType === "hourly") {
-      return Math.round(selected.hourlyRate * selected.hoursWorked);
+      return Math.round(selected.hourlyRate * selected.hoursWorked * 100) / 100;
     }
     if (selected.revenuePercentage <= 0) return 0;
+    return Math.round(totalRevenue * selected.revenuePercentage) / 100;
+  }, [selected, totalRevenue]);
     return Math.round(totalRevenue * selected.revenuePercentage / 100);
   }, [selected, totalRevenue]);
 
