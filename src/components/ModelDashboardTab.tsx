@@ -1261,11 +1261,14 @@ export default function ModelDashboardTab() {
                 bankIban={(modelForm as any).bank_iban || ""}
                 bankBic={(modelForm as any).bank_bic || ""}
                 bankAccountHolder={(modelForm as any).bank_account_holder || ""}
-                platformRevenue={{
-                  fourbased: 0,
-                  maloum: 0,
-                  brezzels: 0,
-                }}
+                platformRevenue={selectedModelPlatformRevenue.reduce(
+                  (acc, p) => ({
+                    fourbased: acc.fourbased + (p.fourbased || 0),
+                    maloum: acc.maloum + (p.maloum || 0),
+                    brezzels: acc.brezzels + (p.brezzels || 0),
+                  }),
+                  { fourbased: 0, maloum: 0, brezzels: 0 }
+                )}
               />
             </Section>
           </motion.div>
