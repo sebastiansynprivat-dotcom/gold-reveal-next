@@ -276,9 +276,9 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
 
   const getVerdienst = (c: Chatter) => {
     const total = (c.fourbasedRevenue || 0) + (c.maloumRevenue || 0) + (c.brezzelsRevenue || 0);
-    if (c.compensationType === "hourly") return Math.round(c.hourlyRate * c.hoursWorked);
+    if (c.compensationType === "hourly") return Math.round(c.hourlyRate * c.hoursWorked * 100) / 100;
     if (c.revenuePercentage <= 0) return 0;
-    return Math.round(total * c.revenuePercentage / 100);
+    return Math.round(total * c.revenuePercentage) / 100;
   };
 
   if (loading) {
