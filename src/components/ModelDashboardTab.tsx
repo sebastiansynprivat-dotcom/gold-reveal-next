@@ -720,7 +720,7 @@ export default function ModelDashboardTab() {
                               </Badge>
                             </div>
                             <p className="text-sm font-bold text-foreground tabular-nums">
-                              {rev > 0 ? `${rev.toLocaleString("de-DE")}€` : "–"}
+                              {rev > 0 ? `${rev.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€` : "–"}
                             </p>
                           </div>
                           {/* Inline edit revenue */}
@@ -729,12 +729,14 @@ export default function ModelDashboardTab() {
                               <Input
                                 type="number"
                                 min={0}
-                                step={1}
-                                placeholder="Umsatz eintragen…"
-                                defaultValue={rev > 0 ? rev : ""}
+                                step="0.01"
+                                inputMode="decimal"
+                                placeholder="Umsatz eintragen (z.B. 1234.56)…"
+                                defaultValue={rev > 0 ? rev.toFixed(2) : ""}
                                 className="bg-secondary/40 border-transparent text-sm h-8 tabular-nums"
                                 onBlur={async (e) => {
-                                  const newVal = Number(e.target.value) || 0;
+                                  const raw = e.target.value.replace(",", ".");
+                                  const newVal = Math.round((Number(raw) || 0) * 100) / 100;
                                   if (newVal === rev) return;
                                   // Upsert into model_dashboard
                                   const updateData: Record<string, any> = {
