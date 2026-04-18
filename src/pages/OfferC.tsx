@@ -228,47 +228,20 @@ const OfferC = () => {
           ))}
         </div>
 
-        {/* Links Section */}
+        {/* How-To Section */}
         <motion.div
           className="max-w-3xl mx-auto mb-16"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7, duration: 0.8, ease }}
         >
-          <h2 className="gold-gradient-text text-xl md:text-2xl font-bold mb-6 text-center">
-            Wichtige Links
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {links.map((link) => (
-              <a
-                key={link.title}
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`glass-card-subtle rounded-xl p-5 flex items-start gap-4 hover:scale-[1.02] transition-all duration-300 group ${
-                  completedSteps.has(link.step) ? "opacity-60" : ""
-                }`}
-              >
-                <StepBadge step={link.step} completed={completedSteps.has(link.step)} />
-                <div className="flex-1">
-                  <h3 className="text-foreground font-semibold group-hover:text-primary transition-colors">
-                    {link.title}
-                  </h3>
-                  <p className="text-muted-foreground text-sm mt-1">{link.description}</p>
-                </div>
-              </a>
-            ))}
-          </div>
-
-          {/* How-To Hint */}
           <button
             onClick={() => setShowHowTo(!showHowTo)}
-            className="mt-6 w-full flex items-center justify-center gap-2 text-sm text-primary/80 hover:text-primary transition-colors py-2"
+            className="w-full flex items-center justify-center gap-2 text-sm text-primary/80 hover:text-primary transition-colors py-2"
           >
             <span className="font-medium">Wie schicke ich das in die Gruppe?</span>
             <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${showHowTo ? "rotate-180" : ""}`} />
           </button>
-
           <AnimatePresence>
             {showHowTo && (
               <motion.div
