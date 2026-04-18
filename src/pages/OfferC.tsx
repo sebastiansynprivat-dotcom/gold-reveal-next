@@ -53,7 +53,7 @@ const loadCompleted = (): Set<number> => {
 
 const OfferC = () => {
   const [showPopup, setShowPopup] = useState(true);
-  const [showHowTo, setShowHowTo] = useState(false);
+  
   const [timeLeft, setTimeLeft] = useState(getTimeLeft);
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(loadCompleted);
 
