@@ -273,35 +273,13 @@ const OfferC = () => {
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {/* Notifications Bot Example */}
-                      <div className="space-y-3">
-                        <div className="rounded-lg overflow-hidden border border-primary/10">
-                          <img src={exampleNotifications} alt="Beispiel Notifications Bot" className="w-full" />
-                        </div>
-                        <a
-                          href="https://t.me/notifications_fansyme_bot"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center justify-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors font-medium"
-                        >
-                          <ExternalLink className="w-3 h-3" />
-                          FansyMe Notifications öffnen
-                        </a>
+                      <div className="rounded-lg overflow-hidden border border-primary/10">
+                        <img src={exampleNotifications} alt="Beispiel Notifications Bot" className="w-full" />
                       </div>
 
                       {/* My ID Bot Example */}
-                      <div className="space-y-3">
-                        <div className="rounded-lg overflow-hidden border border-primary/10">
-                          <img src={exampleMyIdBot} alt="Beispiel My ID Bot" className="w-full" />
-                        </div>
-                        <a
-                          href="https://t.me/myidbot"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center justify-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors font-medium"
-                        >
-                          <ExternalLink className="w-3 h-3" />
-                          My ID Bot öffnen
-                        </a>
+                      <div className="rounded-lg overflow-hidden border border-primary/10">
+                        <img src={exampleMyIdBot} alt="Beispiel My ID Bot" className="w-full" />
                       </div>
                     </div>
                   </div>
