@@ -38,9 +38,6 @@ const pad = (n: number) => String(n).padStart(2, "0");
 
 const steps = [
   { id: 1, title: "Plattform Erklärungs Video anschauen" },
-  { id: 2, title: "Telegram Nachrichten Video anschauen" },
-  { id: 3, title: "FansyMe Notifications aktivieren" },
-  { id: 4, title: "My ID Bot einrichten" },
 ];
 
 const videos = [
@@ -48,11 +45,6 @@ const videos = [
     step: 1,
     title: "Plattform Erklärungs Video",
     embedUrl: "https://www.loom.com/embed/995a654cabf648bc86cb0ab32a7f32dd?sid=1&hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true",
-  },
-  {
-    step: 2,
-    title: "Telegram Nachrichten Video",
-    embedUrl: "https://www.loom.com/embed/c680443a4de949aea1d3ee37f9a31159?sid=1&hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true",
   },
 ];
 
