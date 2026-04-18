@@ -1,11 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Clock, Lock, ChevronDown, ExternalLink } from "lucide-react";
+import { Clock, Lock, ChevronDown } from "lucide-react";
 import logo from "@/assets/logo.png";
 import exampleNotifications from "@/assets/example-fansyme-notifications.jpeg";
 import exampleMyIdBot from "@/assets/example-myidbot.jpeg";
 import GoldenAudioPlayer from "@/components/GoldenAudioPlayer";
-import StepBadge from "@/components/StepBadge";
 import LoomVideoStep from "@/components/LoomVideoStep";
 
 const ease = [0.16, 1, 0.3, 1] as const;
@@ -36,40 +35,11 @@ const formatCountdown = (ms: number) => {
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
-const steps = [
-  { id: 1, title: "Plattform Erklärungs Video anschauen" },
-  { id: 2, title: "Telegram Nachrichten Video anschauen" },
-  { id: 3, title: "FansyMe Notifications aktivieren" },
-  { id: 4, title: "My ID Bot einrichten" },
-];
-
 const videos = [
   {
     step: 1,
     title: "Plattform Erklärungs Video",
     embedUrl: "https://www.loom.com/embed/995a654cabf648bc86cb0ab32a7f32dd?sid=1&hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true",
-  },
-  {
-    step: 2,
-    title: "Telegram Nachrichten Video",
-    embedUrl: "https://www.loom.com/embed/c680443a4de949aea1d3ee37f9a31159?sid=1&hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true",
-  },
-];
-
-const links = [
-  {
-    step: 3,
-    title: "FansyMe Notifications",
-    description: "Aktiviere Benachrichtigungen damit du keine Nachricht verpasst",
-    url: "https://t.me/notifications_fansyme_bot",
-    icon: "🔔",
-  },
-  {
-    step: 4,
-    title: "My ID Bot",
-    description: "Finde deine Telegram ID für die Einrichtung",
-    url: "https://t.me/myidbot",
-    icon: "🤖",
   },
 ];
 
@@ -210,8 +180,7 @@ const OfferC = () => {
         >
           <img src={logo} alt="SHE Logo" className="w-16 h-16 mb-6 opacity-80" />
           <h1 className="text-3xl md:text-5xl font-bold tracking-tight leading-tight mb-3">
-            <span className="text-foreground">Kurze Anleitung für deinen Start mit </span>
-            <span className="text-[hsl(270,80%,60%)]">FansyMe</span>
+            <span className="text-[hsl(0,84%,60%)]">Kurze Anleitung für deinen Start mit VisitX</span>
           </h1>
           <p className="text-muted-foreground text-base max-w-md">
             Schau dir alle Videos an und richte alles Schritt für Schritt ein.
@@ -248,47 +217,20 @@ const OfferC = () => {
           ))}
         </div>
 
-        {/* Links Section */}
+        {/* How-To Section */}
         <motion.div
           className="max-w-3xl mx-auto mb-16"
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7, duration: 0.8, ease }}
         >
-          <h2 className="gold-gradient-text text-xl md:text-2xl font-bold mb-6 text-center">
-            Wichtige Links
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {links.map((link) => (
-              <a
-                key={link.title}
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`glass-card-subtle rounded-xl p-5 flex items-start gap-4 hover:scale-[1.02] transition-all duration-300 group ${
-                  completedSteps.has(link.step) ? "opacity-60" : ""
-                }`}
-              >
-                <StepBadge step={link.step} completed={completedSteps.has(link.step)} />
-                <div className="flex-1">
-                  <h3 className="text-foreground font-semibold group-hover:text-primary transition-colors">
-                    {link.title}
-                  </h3>
-                  <p className="text-muted-foreground text-sm mt-1">{link.description}</p>
-                </div>
-              </a>
-            ))}
-          </div>
-
-          {/* How-To Hint */}
           <button
             onClick={() => setShowHowTo(!showHowTo)}
-            className="mt-6 w-full flex items-center justify-center gap-2 text-sm text-primary/80 hover:text-primary transition-colors py-2"
+            className="w-full flex items-center justify-center gap-2 text-sm text-primary/80 hover:text-primary transition-colors py-2"
           >
             <span className="font-medium">Wie schicke ich das in die Gruppe?</span>
             <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${showHowTo ? "rotate-180" : ""}`} />
           </button>
-
           <AnimatePresence>
             {showHowTo && (
               <motion.div
@@ -321,35 +263,13 @@ const OfferC = () => {
                     </p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       {/* Notifications Bot Example */}
-                      <div className="space-y-3">
-                        <div className="rounded-lg overflow-hidden border border-primary/10">
-                          <img src={exampleNotifications} alt="Beispiel Notifications Bot" className="w-full" />
-                        </div>
-                        <a
-                          href="https://t.me/notifications_fansyme_bot"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center justify-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors font-medium"
-                        >
-                          <ExternalLink className="w-3 h-3" />
-                          FansyMe Notifications öffnen
-                        </a>
+                      <div className="rounded-lg overflow-hidden border border-primary/10">
+                        <img src={exampleNotifications} alt="Beispiel Notifications Bot" className="w-full" />
                       </div>
 
                       {/* My ID Bot Example */}
-                      <div className="space-y-3">
-                        <div className="rounded-lg overflow-hidden border border-primary/10">
-                          <img src={exampleMyIdBot} alt="Beispiel My ID Bot" className="w-full" />
-                        </div>
-                        <a
-                          href="https://t.me/myidbot"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center justify-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors font-medium"
-                        >
-                          <ExternalLink className="w-3 h-3" />
-                          My ID Bot öffnen
-                        </a>
+                      <div className="rounded-lg overflow-hidden border border-primary/10">
+                        <img src={exampleMyIdBot} alt="Beispiel My ID Bot" className="w-full" />
                       </div>
                     </div>
                   </div>
