@@ -47,7 +47,7 @@ const videos = [
   {
     step: 1,
     title: "Plattform Erklärungs Video",
-    embedUrl: "https://www.loom.com/embed/e05514625bb54af192324d6d51be1f27?sid=1&hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true",
+    embedUrl: "https://www.loom.com/embed/995a654cabf648bc86cb0ab32a7f32dd?sid=1&hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true",
   },
   {
     step: 2,
