@@ -35,10 +35,6 @@ const formatCountdown = (ms: number) => {
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
-const steps = [
-  { id: 1, title: "Plattform Erklärungs Video anschauen" },
-];
-
 const videos = [
   {
     step: 1,
@@ -46,11 +42,6 @@ const videos = [
     embedUrl: "https://www.loom.com/embed/995a654cabf648bc86cb0ab32a7f32dd?sid=1&hide_owner=true&hide_share=true&hide_title=true&hideEmbedTopBar=true",
   },
 ];
-
-const linkSteps = {
-  notifications: { url: "https://t.me/notifications_fansyme_bot" },
-  myIdBot: { url: "https://t.me/myidbot" },
-};
 
 const STORAGE_KEY = "offerc-completed-steps";
 
