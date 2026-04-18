@@ -217,67 +217,6 @@ const OfferC = () => {
           ))}
         </div>
 
-        {/* How-To Section */}
-        <motion.div
-          className="max-w-3xl mx-auto mb-16"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.7, duration: 0.8, ease }}
-        >
-          <button
-            onClick={() => setShowHowTo(!showHowTo)}
-            className="w-full flex items-center justify-center gap-2 text-sm text-primary/80 hover:text-primary transition-colors py-2"
-          >
-            <span className="font-medium">Wie schicke ich das in die Gruppe?</span>
-            <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${showHowTo ? "rotate-180" : ""}`} />
-          </button>
-          <AnimatePresence>
-            {showHowTo && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.3, ease }}
-                className="overflow-hidden"
-              >
-                <div className="glass-card-subtle rounded-xl p-5 mt-3 space-y-5">
-                  <p className="text-sm text-foreground font-medium text-center">
-                    Bitte schicke folgendes in deine WhatsApp-Gruppe:
-                  </p>
-
-                  <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground">
-                      1️⃣ Einen <span className="text-foreground font-semibold">Screenshot</span>, wie du <span className="font-mono text-primary">/start</span> im Notifications-Bot geschickt hast
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      2️⃣ Deine <span className="text-foreground font-semibold">kopierte Nummer</span> vom My ID Bot
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      ⚠️ <span className="text-foreground font-semibold">Wichtig:</span> Es sind zwei Screenshots von zwei verschiedenen Bots. Bitte beachten!
-                    </p>
-                  </div>
-
-                  <div className="border-t border-primary/10 pt-4">
-                    <p className="text-xs text-muted-foreground text-center mb-4 font-medium uppercase tracking-wide">
-                      Hier ist ein Beispiel
-                    </p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      {/* Notifications Bot Example */}
-                      <div className="rounded-lg overflow-hidden border border-primary/10">
-                        <img src={exampleNotifications} alt="Beispiel Notifications Bot" className="w-full" />
-                      </div>
-
-                      {/* My ID Bot Example */}
-                      <div className="rounded-lg overflow-hidden border border-primary/10">
-                        <img src={exampleMyIdBot} alt="Beispiel My ID Bot" className="w-full" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
       </div>
     </div>
   );
