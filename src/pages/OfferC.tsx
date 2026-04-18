@@ -48,22 +48,10 @@ const videos = [
   },
 ];
 
-const links = [
-  {
-    step: 3,
-    title: "FansyMe Notifications",
-    description: "Aktiviere Benachrichtigungen damit du keine Nachricht verpasst",
-    url: "https://t.me/notifications_fansyme_bot",
-    icon: "🔔",
-  },
-  {
-    step: 4,
-    title: "My ID Bot",
-    description: "Finde deine Telegram ID für die Einrichtung",
-    url: "https://t.me/myidbot",
-    icon: "🤖",
-  },
-];
+const linkSteps = {
+  notifications: { url: "https://t.me/notifications_fansyme_bot" },
+  myIdBot: { url: "https://t.me/myidbot" },
+};
 
 const STORAGE_KEY = "offerc-completed-steps";
 
