@@ -2287,7 +2287,7 @@ export default function AdminDashboard() {
     const fromDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
     let { data, error } = await supabase
-      .from("revenue_report")
+      .from("revenue_report" as any)
       .select("date, platform, revenue_today")
       .lte("date", selectedDate)
       .gte("date", fromDate)
@@ -2346,7 +2346,7 @@ export default function AdminDashboard() {
     const fromDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
     let { data, error } = await supabase
-      .from("revenue_report")
+      .from("revenue_report" as any)
       .select("date, platform, revenue_today")
       .lte("date", todayDate)
       .gte("date", fromDate)
@@ -2393,7 +2393,7 @@ export default function AdminDashboard() {
   }
   async function getRevenueRangebyDates(dateRange) {
     let { data, error } = await supabase
-      .from("revenue_report")
+      .from("revenue_report" as any)
       .select("date, platform, revenue_today")
       .order("date", { ascending: true })
       .gte("date", dateRange.from)
