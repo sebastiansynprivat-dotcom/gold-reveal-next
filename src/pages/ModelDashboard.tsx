@@ -13,7 +13,10 @@ function useAnimatedCounter(target: number, duration = 1200) {
   useEffect(() => {
     const start = prevTarget.current;
     prevTarget.current = target;
-    if (start === target) { setValue(target); return; }
+    if (start === target) {
+      setValue(target);
+      return;
+    }
     const startTime = performance.now();
     let raf: number;
     const anim = (now: number) => {
@@ -31,7 +34,12 @@ function useAnimatedCounter(target: number, duration = 1200) {
 
 function AnimatedValue({ value, suffix = "€", className }: { value: number; suffix?: string; className?: string }) {
   const animated = useAnimatedCounter(value);
-  return <span className={className}>{animated.toLocaleString("de-DE")}{suffix}</span>;
+  return (
+    <span className={className}>
+      {animated.toLocaleString("de-DE")}
+      {suffix}
+    </span>
+  );
 }
 
 const staggerContainer = { hidden: {}, show: { transition: { staggerChildren: 0.1 } } };
@@ -52,13 +60,12 @@ export default function ModelDashboard() {
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const { data: mu } = await supabase
-        .from("model_users")
-        .select("account_id")
-        .eq("user_id", user.id)
-        .maybeSingle();
+      const { data: mu } = await supabase.from("model_users").select("account_id").eq("user_id", user.id).maybeSingle();
 
-      if (!mu) { setLoading(false); return; }
+      if (!mu) {
+        setLoading(false);
+        return;
+      }
 
       const { data: acc } = await supabase
         .from("accounts")
@@ -88,7 +95,7 @@ export default function ModelDashboard() {
 
   const verdienst = useMemo(() => {
     if (revenuePercentage <= 0) return 0;
-    return Math.round(monthlyRevenue * revenuePercentage / 100);
+    return Math.round((monthlyRevenue * revenuePercentage) / 100);
   }, [monthlyRevenue, revenuePercentage]);
 
   if (loading) {
@@ -109,7 +116,12 @@ export default function ModelDashboard() {
               <h1 className="text-base font-bold text-foreground leading-tight">Model Dashboard</h1>
               <p className="text-xs text-muted-foreground truncate">{accountName}</p>
             </div>
-            <Button variant="ghost" size="icon" onClick={signOut} className="text-muted-foreground hover:text-foreground">
+            <Button
+              variant="secondary"
+              size="icon"
+              onClick={signOut}
+              className="text-muted-foreground hover:text-foreground"
+            >
               <LogOut className="h-4 w-4" />
             </Button>
           </div>
@@ -143,7 +155,9 @@ export default function ModelDashboard() {
               <Wallet className="h-5 w-5 text-accent" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Dein Verdienst ({revenuePercentage}%)</p>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                Dein Verdienst ({revenuePercentage}%)
+              </p>
               <p className="text-2xl font-bold text-accent tabular-nums">
                 <AnimatedValue value={verdienst} suffix={` ${currency}`} />
               </p>
