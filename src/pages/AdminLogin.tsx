@@ -19,7 +19,10 @@ const AdminLogin = () => {
   const [totpCode, setTotpCode] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [setupData, setSetupData] = useState<{ secret: string; otpauth_url: string } | null>(null);
+  const [setupData, setSetupData] = useState<{
+    secret: string;
+    otpauth_url: string;
+  } | null>(null);
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [totpVerified, setTotpVerified] = useState(false);
   const [loginCompleted, setLoginCompleted] = useState(false);
@@ -27,7 +30,7 @@ const AdminLogin = () => {
   // Only check admin status AFTER explicit login on this page
   useEffect(() => {
     if (!user || !loginCompleted) return;
-    
+
     const checkAdmin = async () => {
       const { data } = await supabase.rpc("is_admin");
       if (!data) {
@@ -65,7 +68,9 @@ const AdminLogin = () => {
 
   const initTotpSetup = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) return;
 
       const res = await supabase.functions.invoke("admin-totp-setup", {
@@ -94,24 +99,23 @@ const AdminLogin = () => {
 
     const { error } = await signIn(email, password);
     if (error) {
-      setError(
-        error.message.includes("Invalid login")
-          ? "E-Mail oder Passwort ist falsch."
-          : error.message
-      );
+      setError(error.message.includes("Invalid login") ? "E-Mail oder Passwort ist falsch." : error.message);
     } else {
       setLoginCompleted(true);
     }
     setSubmitting(false);
   };
 
-  const handleTotpVerify = async () => {
+  const handleTotpVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (totpCode.length !== 6) return;
     setError("");
     setSubmitting(true);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) throw new Error("Keine Session");
 
       const res = await supabase.functions.invoke("admin-totp-verify", {
@@ -148,9 +152,7 @@ const AdminLogin = () => {
       <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-background">
         <Shield className="h-16 w-16 text-destructive mb-4" />
         <h1 className="text-xl font-bold text-foreground mb-2">Zugriff verweigert</h1>
-        <p className="text-muted-foreground text-sm text-center mb-6">
-          Du hast keine Admin-Berechtigung.
-        </p>
+        <p className="text-muted-foreground text-sm text-center mb-6">Du hast keine Admin-Berechtigung.</p>
         <Button variant="outline" onClick={() => navigate("/dashboard")}>
           Zum Dashboard
         </Button>
@@ -169,12 +171,8 @@ const AdminLogin = () => {
               <Shield className="h-4 w-4 text-accent-foreground" />
             </div>
           </div>
-          <h1 className="gold-gradient-text text-2xl font-bold tracking-tight">
-            Admin-Zugang
-          </h1>
-          <p className="text-muted-foreground text-xs mt-1">
-            Geschützter Bereich – Zwei-Faktor-Authentifizierung
-          </p>
+          <h1 className="gold-gradient-text text-2xl font-bold tracking-tight">Admin-Zugang</h1>
+          <p className="text-muted-foreground text-xs mt-1">Geschützter Bereich – Zwei-Faktor-Authentifizierung</p>
         </div>
 
         {/* Step 1: Login */}
@@ -210,9 +208,7 @@ const AdminLogin = () => {
               </button>
             </div>
 
-            {error && (
-              <p className="text-destructive text-sm text-center animate-fade-in">{error}</p>
-            )}
+            {error && <p className="text-destructive text-sm text-center animate-fade-in">{error}</p>}
 
             <Button type="submit" disabled={submitting} className="w-full">
               {submitting ? "Anmelden..." : "Admin-Login"}
@@ -224,13 +220,11 @@ const AdminLogin = () => {
         {step === "setup" && setupData && (
           <div className="space-y-6 text-center">
             <div className="bg-card border border-border rounded-xl p-6">
-              <h2 className="text-sm font-semibold text-foreground mb-3">
-                2FA einrichten
-              </h2>
+              <h2 className="text-sm font-semibold text-foreground mb-3">2FA einrichten</h2>
               <p className="text-xs text-muted-foreground mb-4">
                 Scanne den QR-Code mit deiner Authenticator-App (Google Authenticator, Authy, etc.)
               </p>
-              
+
               {/* QR Code via external API */}
               <div className="flex justify-center mb-4">
                 <img
@@ -244,22 +238,14 @@ const AdminLogin = () => {
 
               <div className="bg-muted rounded-lg p-3 mb-4">
                 <p className="text-[10px] text-muted-foreground mb-1">Manueller Schlüssel:</p>
-                <p className="text-xs font-mono text-foreground break-all select-all">
-                  {setupData.secret}
-                </p>
+                <p className="text-xs font-mono text-foreground break-all select-all">{setupData.secret}</p>
               </div>
             </div>
 
             <div>
-              <p className="text-xs text-muted-foreground mb-3">
-                Gib den 6-stelligen Code aus deiner App ein:
-              </p>
+              <p className="text-xs text-muted-foreground mb-3">Gib den 6-stelligen Code aus deiner App ein:</p>
               <div className="flex justify-center mb-4">
-                <InputOTP
-                  maxLength={6}
-                  value={totpCode}
-                  onChange={setTotpCode}
-                >
+                <InputOTP maxLength={6} value={totpCode} onChange={setTotpCode}>
                   <InputOTPGroup>
                     <InputOTPSlot index={0} />
                     <InputOTPSlot index={1} />
@@ -271,15 +257,9 @@ const AdminLogin = () => {
                 </InputOTP>
               </div>
 
-              {error && (
-                <p className="text-destructive text-sm text-center mb-3 animate-fade-in">{error}</p>
-              )}
+              {error && <p className="text-destructive text-sm text-center mb-3 animate-fade-in">{error}</p>}
 
-              <Button
-                onClick={handleTotpVerify}
-                disabled={totpCode.length !== 6 || submitting}
-                className="w-full"
-              >
+              <Button onClick={handleTotpVerify} disabled={totpCode.length !== 6 || submitting} className="w-full">
                 {submitting ? "Prüfe..." : "2FA aktivieren & bestätigen"}
               </Button>
             </div>
@@ -291,42 +271,35 @@ const AdminLogin = () => {
           <div className="space-y-6 text-center">
             <div className="bg-card border border-border rounded-xl p-6">
               <Shield className="h-10 w-10 text-accent mx-auto mb-3" />
-              <h2 className="text-sm font-semibold text-foreground mb-1">
-                Zwei-Faktor-Authentifizierung
-              </h2>
-              <p className="text-xs text-muted-foreground">
-                Gib den Code aus deiner Authenticator-App ein.
-              </p>
+              <h2 className="text-sm font-semibold text-foreground mb-1">Zwei-Faktor-Authentifizierung</h2>
+              <p className="text-xs text-muted-foreground">Gib den Code aus deiner Authenticator-App ein.</p>
             </div>
 
-            <div className="flex justify-center">
-              <InputOTP
-                maxLength={6}
-                value={totpCode}
-                onChange={setTotpCode}
+            <form onSubmit={handleTotpVerify} className="flex-col gap-2 justify-between">
+              <div className="flex justify-center">
+                <InputOTP maxLength={6} value={totpCode} onChange={setTotpCode}>
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} autoFocus />
+                    <InputOTPSlot index={1} />
+                    <InputOTPSlot index={2} />
+                    <InputOTPSlot index={3} />
+                    <InputOTPSlot index={4} />
+                    <InputOTPSlot index={5} />
+                  </InputOTPGroup>
+                </InputOTP>
+              </div>
+
+              {error && <p className="text-destructive text-sm text-center animate-fade-in">{error}</p>}
+
+              <Button
+                type="submit"
+                // onClick={handleTotpVerify}
+                disabled={totpCode.length !== 6 || submitting}
+                className="w-full mt-3"
               >
-                <InputOTPGroup>
-                  <InputOTPSlot index={0} />
-                  <InputOTPSlot index={1} />
-                  <InputOTPSlot index={2} />
-                  <InputOTPSlot index={3} />
-                  <InputOTPSlot index={4} />
-                  <InputOTPSlot index={5} />
-                </InputOTPGroup>
-              </InputOTP>
-            </div>
-
-            {error && (
-              <p className="text-destructive text-sm text-center animate-fade-in">{error}</p>
-            )}
-
-            <Button
-              onClick={handleTotpVerify}
-              disabled={totpCode.length !== 6 || submitting}
-              className="w-full"
-            >
-              {submitting ? "Prüfe..." : "Bestätigen"}
-            </Button>
+                {submitting ? "Prüfe..." : "Bestätigen"}
+              </Button>
+            </form>
           </div>
         )}
 
