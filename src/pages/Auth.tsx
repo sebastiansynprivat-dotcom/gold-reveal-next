@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import logo from "@/assets/logo.png";
@@ -33,17 +33,7 @@ const Auth = () => {
   const pendingSubmitRef = useRef<React.FormEvent | null>(null);
 
   // Mouse-following particles
-  const particlesRef = useRef<
-    {
-      x: number;
-      y: number;
-      size: number;
-      opacity: number;
-      vx: number;
-      vy: number;
-      life: number;
-    }[]
-  >([]);
+  const particlesRef = useRef<{ x: number; y: number; size: number; opacity: number; vx: number; vy: number; life: number }[]>([]);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animFrameRef = useRef<number>(0);
 
@@ -136,18 +126,18 @@ const Auth = () => {
             for (const acc of withDrive) {
               try {
                 const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-                await fetch(`https://${projectId}.supabase.co/functions/v1/share-drive`, {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                    apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-                    Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-                  },
-                  body: JSON.stringify({
-                    folder_id: acc.drive_folder_id,
-                    email: user.email,
-                  }),
-                });
+                await fetch(
+                  `https://${projectId}.supabase.co/functions/v1/share-drive`,
+                  {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+                      Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+                    },
+                    body: JSON.stringify({ folder_id: acc.drive_folder_id, email: user.email }),
+                  }
+                );
               } catch (err) {
                 console.error("Auto drive share failed:", err);
               }
@@ -155,14 +145,17 @@ const Auth = () => {
 
             try {
               const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-              await fetch(`https://${projectId}.supabase.co/functions/v1/notify-account-assigned`, {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-                },
-                body: JSON.stringify({ user_id: user.id }),
-              });
+              await fetch(
+                `https://${projectId}.supabase.co/functions/v1/notify-account-assigned`,
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+                  },
+                  body: JSON.stringify({ user_id: user.id }),
+                }
+              );
             } catch (err) {
               console.error("Account assignment notification failed:", err);
             }
@@ -207,11 +200,7 @@ const Auth = () => {
   const handleConfirmSignUp = async () => {
     setShowGroupConfirm(false);
     setSubmitting(true);
-
-    const { error } = await signUp(email, password, {
-      group_name: groupName.trim(),
-      user_role: "chatter",
-    });
+    const { error } = await signUp(email, password, { group_name: groupName.trim() });
     if (error) {
       setError(translateError(error.message));
     } else {
@@ -221,10 +210,7 @@ const Auth = () => {
   };
 
   return (
-    <div
-      className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden"
-      onMouseMove={handleMouseMove}
-    >
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 relative overflow-hidden" onMouseMove={handleMouseMove}>
       <canvas ref={canvasRef} className="absolute inset-0 pointer-events-none z-0" />
 
       {/* Group name confirmation popup */}
@@ -246,8 +232,7 @@ const Auth = () => {
               <span className="text-foreground font-semibold text-base">{groupName.trim()}</span>
             </div>
             <p className="text-muted-foreground text-xs text-center leading-relaxed">
-              Bitte checke nochmal in deiner <span className="text-foreground font-medium">WhatsApp-Gruppe</span>, ob
-              der Name exakt übereinstimmt. Der korrekte Gruppenname ist wichtig für deine Abrechnung.
+              Bitte checke nochmal in deiner <span className="text-foreground font-medium">WhatsApp-Gruppe</span>, ob der Name exakt übereinstimmt. Der korrekte Gruppenname ist wichtig für deine Abrechnung.
             </p>
             <div className="flex gap-3">
               <button
@@ -289,12 +274,16 @@ const Auth = () => {
           <div className="w-14 h-14 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-3">
             <span className="text-2xl">✉️</span>
           </div>
-          <h2 className="gold-gradient-text text-xl font-bold">Bestätige deine E-Mail</h2>
+          <h2 className="gold-gradient-text text-xl font-bold">
+            Bestätige deine E-Mail
+          </h2>
           <p className="text-muted-foreground text-sm leading-relaxed">
-            Wir haben dir eine E-Mail an <span className="text-foreground font-medium">{email}</span> gesendet. Klicke
-            auf den Link in der E-Mail, um dein Konto zu aktivieren.
+            Wir haben dir eine E-Mail an <span className="text-foreground font-medium">{email}</span> gesendet.
+            Klicke auf den Link in der E-Mail, um dein Konto zu aktivieren.
           </p>
-          <p className="text-muted-foreground/60 text-xs">Keine E-Mail erhalten? Schau im Spam-Ordner nach.</p>
+          <p className="text-muted-foreground/60 text-xs">
+            Keine E-Mail erhalten? Schau im Spam-Ordner nach.
+          </p>
           <button
             onClick={() => {
               setSignUpSuccess(false);
@@ -319,9 +308,7 @@ const Auth = () => {
             {isSignUp ? "Erstelle ein kostenloses Konto bei SheX" : "Willkommen zurück"}
           </h1>
           <p className="text-muted-foreground text-sm text-center mb-7">
-            {isSignUp
-              ? "Erstelle dein kostenloses Konto, um deinen Account zu bekommen und damit Geld zu verdienen."
-              : "Melde dich an, um weiterzumachen"}
+            {isSignUp ? "Erstelle dein kostenloses Konto, um deinen Account zu bekommen und damit Geld zu verdienen." : "Melde dich an, um weiterzumachen"}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -352,13 +339,10 @@ const Auth = () => {
                     className="mt-2 p-3 rounded-xl bg-card border border-border text-xs text-muted-foreground leading-relaxed space-y-2"
                   >
                     <p>
-                      Wir haben mit dir eine <span className="text-foreground font-medium">WhatsApp-Gruppe</span>{" "}
-                      eröffnet. Den Gruppennamen findest du direkt oben in der Gruppe – kopiere ihn einfach 1:1 und füge
-                      ihn hier ein.
+                      Wir haben mit dir eine <span className="text-foreground font-medium">WhatsApp-Gruppe</span> eröffnet. Den Gruppennamen findest du direkt oben in der Gruppe – kopiere ihn einfach 1:1 und füge ihn hier ein.
                     </p>
                     <p className="text-primary font-semibold">
-                      ⚠️ Es ist extrem wichtig, dass du den richtigen Gruppennamen angibst, damit du korrekt abgerechnet
-                      werden kannst!
+                      ⚠️ Es ist extrem wichtig, dass du den richtigen Gruppennamen angibst, damit du korrekt abgerechnet werden kannst!
                     </p>
                   </motion.div>
                 )}
@@ -386,7 +370,9 @@ const Auth = () => {
               />
             </div>
 
-            {error && <p className="text-destructive text-sm text-center animate-fade-in">{error}</p>}
+            {error && (
+              <p className="text-destructive text-sm text-center animate-fade-in">{error}</p>
+            )}
 
             <button
               type="submit"
