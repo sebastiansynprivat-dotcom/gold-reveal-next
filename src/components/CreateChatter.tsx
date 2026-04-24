@@ -32,7 +32,7 @@ interface Account {
 interface ChatterUser {
   id: string;
   name: string;
-  telegram_id: string;
+  telegram_id?: string | null;
 }
 
 const DOMAINS = {
@@ -53,7 +53,7 @@ const ChatterManager = () => {
     const { data, error } = await supabase.from("chatters").select("*").order("created_at", { ascending: false });
 
     if (error) toast.error("Failed to load models");
-    else setUsers(data || []);
+    else setUsers((data || []) as any);
   };
 
   useEffect(() => {
@@ -337,7 +337,7 @@ const AddAccountDialog = ({ user, onAccountAdded }: { user: ChatterUser; onAccou
 
     setSubmitting(true);
     const { error } = await supabase.from("accounts").insert({
-      parent_model: user.id,
+      model_id: user.id,
       platform: form.platform,
       account_email: form.email.trim(),
       account_password: form.pass.trim(),
@@ -352,7 +352,7 @@ const AddAccountDialog = ({ user, onAccountAdded }: { user: ChatterUser; onAccou
       toast.error(error.message);
     } else {
       toast.success("Account added successfully");
-      const { data } = await supabase.from("accounts").select("*").eq("parent_model", user.id);
+      const { data } = await supabase.from("accounts").select("*").eq("model_id", user.id);
       if (data) onAccountAdded(data);
       setOpen(false);
       // Reset form

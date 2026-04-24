@@ -47,7 +47,7 @@ interface Account {
 interface ModelUser {
   id: string;
   name: string;
-  email: string;
+  email?: string | null;
   accounts?: Account[];
 }
 
@@ -69,7 +69,7 @@ const ModelManager = () => {
     const { data, error } = await supabase.from("models").select("*").order("created_at", { ascending: false });
 
     if (error) toast.error("Failed to load models");
-    else setUsers(data || []);
+    else setUsers((data || []) as any);
   };
 
   useEffect(() => {
@@ -200,7 +200,7 @@ const ModelRow = ({ user }: { user: ModelUser }) => {
 
     if (nextState && accounts.length === 0) {
       setLoading(true);
-      const { data } = await supabase.from("accounts").select("*").eq("parent_model", user.id);
+      const { data } = await supabase.from("accounts").select("*").eq("model_id", user.id);
       if (data) {
         setAccounts(data as any);
       }
@@ -214,7 +214,7 @@ const ModelRow = ({ user }: { user: ModelUser }) => {
       toast.error("delete failed");
       return;
     }
-    const { data } = await supabase.from("accounts").select("*").eq("parent_model", user.id);
+    const { data } = await supabase.from("accounts").select("*").eq("model_id", user.id);
     if (data) {
       setAccounts(data as any);
     }
@@ -532,7 +532,7 @@ const AddAccountDialog = ({
     const { data: edited, error } = await supabase
       .from("accounts")
       .update({
-        parent_model: user.id,
+        model_id: user.id,
         platform: form.platform,
         account_email: form.email.trim(),
         account_password: form.pass.trim(),
@@ -552,7 +552,7 @@ const AddAccountDialog = ({
       toast.error(error.message);
     } else {
       toast.success("Account Edited successfully");
-      const { data } = await supabase.from("accounts").select("*").eq("parent_model", user.id);
+      const { data } = await supabase.from("accounts").select("*").eq("model_id", user.id);
       if (data) onAccountEdited(data);
       setOpen(false);
       // Reset form
@@ -573,7 +573,7 @@ const AddAccountDialog = ({
   const handleAdd = async () => {
     setSubmitting(true);
     const { error } = await supabase.from("accounts").insert({
-      parent_model: user.id,
+      model_id: user.id,
       platform: form.platform,
       account_email: form.email.trim(),
       account_password: form.pass.trim(),
@@ -588,7 +588,7 @@ const AddAccountDialog = ({
       toast.error(error.message);
     } else {
       toast.success("Account added successfully");
-      const { data } = await supabase.from("accounts").select("*").eq("parent_model", user.id);
+      const { data } = await supabase.from("accounts").select("*").eq("model_id", user.id);
       if (data) onAccountAdded(data);
       setOpen(false);
       // Reset form

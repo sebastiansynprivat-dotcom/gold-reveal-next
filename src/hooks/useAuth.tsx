@@ -71,7 +71,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     let userId = session?.user?.id;
-    supabase.from("logout_events").insert({ user_id: userId }).then();
+    // logout_events table not in schema
+    // supabase.from("logout_events").insert({ user_id: userId }).then();
 
     await supabase.auth.signOut();
   };
