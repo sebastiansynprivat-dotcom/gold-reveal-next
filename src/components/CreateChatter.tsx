@@ -32,7 +32,7 @@ interface Account {
 interface ChatterUser {
   id: string;
   name: string;
-  telegram_id: string;
+  telegram_id?: string | null;
 }
 
 const DOMAINS = {
@@ -53,7 +53,7 @@ const ChatterManager = () => {
     const { data, error } = await supabase.from("chatters").select("*").order("created_at", { ascending: false });
 
     if (error) toast.error("Failed to load models");
-    else setUsers(data || []);
+    else setUsers((data || []) as any);
   };
 
   useEffect(() => {

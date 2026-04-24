@@ -47,7 +47,7 @@ interface Account {
 interface ModelUser {
   id: string;
   name: string;
-  email: string;
+  email?: string | null;
   accounts?: Account[];
 }
 
@@ -69,7 +69,7 @@ const ModelManager = () => {
     const { data, error } = await supabase.from("models").select("*").order("created_at", { ascending: false });
 
     if (error) toast.error("Failed to load models");
-    else setUsers(data || []);
+    else setUsers((data || []) as any);
   };
 
   useEffect(() => {
