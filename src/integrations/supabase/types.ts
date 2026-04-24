@@ -943,6 +943,33 @@ export type Database = {
         }
         Relationships: []
       }
+      revenue_report: {
+        Row: {
+          created_at: string
+          data: Json | null
+          date: string
+          id: string
+          platform: Database["public"]["Enums"]["platform"]
+          revenue_today: number | null
+        }
+        Insert: {
+          created_at?: string
+          data?: Json | null
+          date: string
+          id?: string
+          platform: Database["public"]["Enums"]["platform"]
+          revenue_today?: number | null
+        }
+        Update: {
+          created_at?: string
+          data?: Json | null
+          date?: string
+          id?: string
+          platform?: Database["public"]["Enums"]["platform"]
+          revenue_today?: number | null
+        }
+        Relationships: []
+      }
       route_counter: {
         Row: {
           counter: number
@@ -1101,6 +1128,7 @@ export type Database = {
         | "model"
         | "super_admin"
         | "sub_admin"
+      platform: "new" | "maloum" | "4based" | "brezzels"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1236,6 +1264,7 @@ export const Constants = {
         "super_admin",
         "sub_admin",
       ],
+      platform: ["new", "maloum", "4based", "brezzels"],
     },
   },
 } as const
