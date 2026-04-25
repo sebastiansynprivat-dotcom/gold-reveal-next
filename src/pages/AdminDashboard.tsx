@@ -2664,14 +2664,14 @@ export default function AdminDashboard() {
                   {/* Platform Cards */}
                   <div className="grid grid-cols-3 gap-3">
                     {[
-                      { key: "maloum", label: "Maloum", color: PLATFORM_COLORS.maloum, value: totalValue.maloum },
+                      { key: "maloum", label: "Maloum", color: PLATFORM_COLORS.maloum, value: totalValue?.maloum ?? 0 },
                       {
                         key: "brezzels",
                         label: "Brezzels",
                         color: PLATFORM_COLORS.brezzels,
-                        value: totalValue.brezzels,
+                        value: totalValue?.brezzels ?? 0,
                       },
-                      { key: "4based", label: "4Based", color: PLATFORM_COLORS["4based"], value: totalValue["4based"] },
+                      { key: "4based", label: "4Based", color: PLATFORM_COLORS["4based"], value: totalValue?.based ?? 0 },
                     ].map(({ key, label, color, value }) => (
                       <div
                         key={key}
