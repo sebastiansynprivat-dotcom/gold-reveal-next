@@ -1140,58 +1140,58 @@ export default function AdminDashboard() {
     loadRevenueUsers();
     if (isSuperAdmin) loadAdmins();
 
-    const isToday = (date) => {
-      const d = new Date(date);
-      const t = new Date();
-      return d.getFullYear() === t.getFullYear() && d.getMonth() === t.getMonth() && d.getDate() === t.getDate();
-    };
+    // const isToday = (date) => {
+    //   const d = new Date(date);
+    //   const t = new Date();
+    //   return d.getFullYear() === t.getFullYear() && d.getMonth() === t.getMonth() && d.getDate() === t.getDate();
+    // };
 
-    let prevTotalRef = { current: totalEarnings };
+    // let prevTotalRef = { current: totalEarnings };
 
-    // ⚡ Realtime updates (incremental)
-    const channel = supabase
-      .channel("realtime-revenue")
-      .on("postgres_changes", { event: "*", schema: "public", table: "daily_revenue" }, (payload) => {
-        const newRow: any = payload.new;
-        const oldRow: any = payload.old;
-        const platform: any = payload.old;
+    // // ⚡ Realtime updates (incremental)
+    // const channel = supabase
+    //   .channel("realtime-revenue")
+    //   .on("postgres_changes", { event: "*", schema: "public", table: "daily_revenue" }, (payload) => {
+    //     const newRow: any = payload.new;
+    //     const oldRow: any = payload.old;
+    //     const platform: any = payload.old;
 
-        let diff = 0;
+    //     let diff = 0;
 
-        // 🟢 INSERT
-        if (payload.eventType === "INSERT" && newRow && isToday(newRow.date)) {
-          diff = newRow.amount || 0;
-        }
+    //     // 🟢 INSERT
+    //     if (payload.eventType === "INSERT" && newRow && isToday(newRow.date)) {
+    //       diff = newRow.amount || 0;
+    //     }
 
-        // 🔵 UPDATE (date doesn't change, so just diff amount)
-        if (payload.eventType === "UPDATE" && newRow && oldRow && isToday(newRow.date)) {
-          diff = (newRow.amount || 0) - (oldRow.amount || 0);
-        }
+    //     // 🔵 UPDATE (date doesn't change, so just diff amount)
+    //     if (payload.eventType === "UPDATE" && newRow && oldRow && isToday(newRow.date)) {
+    //       diff = (newRow.amount || 0) - (oldRow.amount || 0);
+    //     }
 
-        // 🔴 DELETE
-        if (payload.eventType === "DELETE" && oldRow && isToday(oldRow.date)) {
-          diff = -(oldRow.amount || 0);
-        }
+    //     // 🔴 DELETE
+    //     if (payload.eventType === "DELETE" && oldRow && isToday(oldRow.date)) {
+    //       diff = -(oldRow.amount || 0);
+    //     }
 
-        if (diff !== 0) {
-          setTotalEarnings((prev) => {
-            const next = prev + diff;
-            prevTotalRef.current = next;
-            return next;
-          });
+    //     if (diff !== 0) {
+    //       setTotalEarnings((prev) => {
+    //         const next = prev + diff;
+    //         prevTotalRef.current = next;
+    //         return next;
+    //       });
 
-          if (activeTabRef.current === "einnahmen" && timeFilter === "heute") {
-            const sign = diff > 0 ? "+" : "";
-            toast.success(`${sign}${diff}€ Umsatz Änderung`);
-          }
-        }
-      })
-      .subscribe();
+    //       if (activeTabRef.current === "einnahmen" && timeFilter === "heute") {
+    //         const sign = diff > 0 ? "+" : "";
+    //         toast.success(`${sign}${diff}€ Umsatz Änderung`);
+    //       }
+    //     }
+    //   })
+    //   .subscribe();
 
-    // 🧹 Cleanup
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    // // 🧹 Cleanup
+    // return () => {
+    //   supabase.removeChannel(channel);
+    // };
   }, []);
 
   // Load cached AI summaries
