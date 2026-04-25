@@ -902,7 +902,7 @@ export default function AdminDashboard() {
 
   //revenue state
   const [range, setRange] = useState<RootData>();
-  const [totalValue, setTotalValue] = useState<CurrentTotal>();
+  const [totalValue, setTotalValue] = useState<CurrentTotal>({ maloum: 0, brezzels: 0, based: 0 });
   const [totalEarnings, setTotalEarnings] = useState(0);
   const [customFrom, setCustomFrom] = useState<Date | undefined>(undefined);
   const [customTo, setCustomTo] = useState<Date | undefined>(undefined);
@@ -943,7 +943,7 @@ export default function AdminDashboard() {
           date: x.date,
           total: x.revenue_today || 0,
         }))
-        .slice(-7);
+        .slice(flag === "today" ? -7 : -3);
     };
 
     const total = {
@@ -2664,14 +2664,14 @@ export default function AdminDashboard() {
                   {/* Platform Cards */}
                   <div className="grid grid-cols-3 gap-3">
                     {[
-                      { key: "maloum", label: "Maloum", color: PLATFORM_COLORS.maloum, value: totalValue?.maloum ?? 0 },
+                      { key: "maloum", label: "Maloum", color: PLATFORM_COLORS.maloum, value: totalValue.maloum },
                       {
                         key: "brezzels",
                         label: "Brezzels",
                         color: PLATFORM_COLORS.brezzels,
-                        value: totalValue?.brezzels ?? 0,
+                        value: totalValue.brezzels,
                       },
-                      { key: "4based", label: "4Based", color: PLATFORM_COLORS["4based"], value: totalValue?.based ?? 0 },
+                      { key: "4based", label: "4Based", color: PLATFORM_COLORS["4based"], value: totalValue.based },
                     ].map(({ key, label, color, value }) => (
                       <div
                         key={key}
@@ -2772,7 +2772,7 @@ export default function AdminDashboard() {
                             />
                             <Line
                               type="monotone"
-                              dataKey="4based"
+                              dataKey="based"
                               stroke={PLATFORM_COLORS["4based"]}
                               strokeWidth={2.5}
                               dot={false}
