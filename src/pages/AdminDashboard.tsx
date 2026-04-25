@@ -964,6 +964,8 @@ export default function AdminDashboard() {
     const sumTotal = total.maloum + total.based + total.brezzels;
     setTotalEarnings(sumTotal);
     flag == "today" ? setTimeFilter("heute") : setTimeFilter("gestern");
+
+    return sumTotal;
   }
   async function getRevenueRange(flag) {
     let days = parseInt(flag);
@@ -1138,35 +1140,57 @@ export default function AdminDashboard() {
     loadRevenueUsers();
     if (isSuperAdmin) loadAdmins();
 
-    // Realtime subscription for live revenue updates
+    const isToday = (date) => {
+      const d = new Date(date);
+      const t = new Date();
+      return d.getFullYear() === t.getFullYear() && d.getMonth() === t.getMonth() && d.getDate() === t.getDate();
+    };
+
+    let prevTotalRef = { current: totalEarnings };
+
+    // ⚡ Realtime updates (incremental)
     const channel = supabase
-      .channel("admin-revenue-realtime")
+      .channel("realtime-revenue")
       .on("postgres_changes", { event: "*", schema: "public", table: "daily_revenue" }, (payload) => {
-        const amount = (payload.new as any)?.amount || 0;
-        const oldAmount = (payload.old as any)?.amount || 0;
-        const diff = amount - oldAmount;
-        if (diff > 0) {
-          setRevenueBoost((prev) => prev + diff);
-          if (activeTabRef.current === "einnahmen") {
-            toast.success(`+${diff}€ Umsatz eingegangen!`, { duration: 3000 });
+        const newRow: any = payload.new;
+        const oldRow: any = payload.old;
+        const platform: any = payload.old;
+
+        let diff = 0;
+
+        // 🟢 INSERT
+        if (payload.eventType === "INSERT" && newRow && isToday(newRow.date)) {
+          diff = newRow.amount || 0;
+        }
+
+        // 🔵 UPDATE (date doesn't change, so just diff amount)
+        if (payload.eventType === "UPDATE" && newRow && oldRow && isToday(newRow.date)) {
+          diff = (newRow.amount || 0) - (oldRow.amount || 0);
+        }
+
+        // 🔴 DELETE
+        if (payload.eventType === "DELETE" && oldRow && isToday(oldRow.date)) {
+          diff = -(oldRow.amount || 0);
+        }
+
+        if (diff !== 0) {
+          setTotalEarnings((prev) => {
+            const next = prev + diff;
+            prevTotalRef.current = next;
+            return next;
+          });
+
+          if (activeTabRef.current === "einnahmen" && timeFilter === "heute") {
+            const sign = diff > 0 ? "+" : "";
+            toast.success(`${sign}${diff}€ Umsatz Änderung`);
           }
         }
-        loadRevenueUsers();
       })
       .subscribe();
 
-    // Demo: every 5s add random 5-100€
-    const demoInterval = setInterval(() => {
-      const randomAmount = Math.floor(Math.random() * 96) + 5;
-      setRevenueBoost((prev) => prev + randomAmount);
-      if (activeTabRef.current === "einnahmen") {
-        toast.success(`+${randomAmount}€ Umsatz eingegangen!`, { duration: 2000 });
-      }
-    }, 5000);
-
+    // 🧹 Cleanup
     return () => {
       supabase.removeChannel(channel);
-      clearInterval(demoInterval);
     };
   }, []);
 
