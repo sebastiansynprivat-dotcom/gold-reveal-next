@@ -1,8 +1,41 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Save, CheckCircle2, Award, Zap, HelpCircle, FileText, Clock, Users, Pencil, ChevronDown, ChevronLeft, ChevronRight, Copy, Smartphone, Mic, MessageSquare, ExternalLink, Gift, Crown, Diamond, Medal, Eye, EyeOff, Check, Trophy } from "lucide-react";
+import {
+  Save,
+  CheckCircle2,
+  Award,
+  Zap,
+  HelpCircle,
+  FileText,
+  Clock,
+  Users,
+  Pencil,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Copy,
+  Smartphone,
+  Mic,
+  MessageSquare,
+  ExternalLink,
+  Gift,
+  Crown,
+  Diamond,
+  Medal,
+  Eye,
+  EyeOff,
+  Check,
+  Trophy,
+} from "lucide-react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
@@ -58,7 +91,9 @@ function getStreakDays(): number {
       else break;
     }
     return count;
-  } catch { return 0; }
+  } catch {
+    return 0;
+  }
 }
 
 const BONUS_TIERS = [
@@ -72,11 +107,11 @@ const BONUS_TIERS = [
 ] as const;
 
 function getCurrentTier(monthlyRevenue: number) {
-  return BONUS_TIERS.find(t => monthlyRevenue >= t.min && monthlyRevenue <= t.max) || BONUS_TIERS[0];
+  return BONUS_TIERS.find((t) => monthlyRevenue >= t.min && monthlyRevenue <= t.max) || BONUS_TIERS[0];
 }
 
 function getNextTier(monthlyRevenue: number) {
-  const currentIdx = BONUS_TIERS.findIndex(t => monthlyRevenue >= t.min && monthlyRevenue <= t.max);
+  const currentIdx = BONUS_TIERS.findIndex((t) => monthlyRevenue >= t.min && monthlyRevenue <= t.max);
   if (currentIdx < BONUS_TIERS.length - 1) return BONUS_TIERS[currentIdx + 1];
   return null;
 }
@@ -88,7 +123,10 @@ function useAnimatedCounter(target: number, duration = 1200) {
   useEffect(() => {
     const start = prevTarget.current;
     prevTarget.current = target;
-    if (start === target) { setValue(target); return; }
+    if (start === target) {
+      setValue(target);
+      return;
+    }
     const startTime = performance.now();
     let raf: number;
     const animate = (now: number) => {
@@ -121,13 +159,31 @@ const sectionVariants = {
 
 function AnimatedValue({ value, suffix = "€", className }: { value: number; suffix?: string; className?: string }) {
   const animated = useAnimatedCounter(value);
-  return <span className={className}>{animated.toLocaleString("de-DE")}{suffix}</span>;
+  return (
+    <span className={className}>
+      {animated.toLocaleString("de-DE")}
+      {suffix}
+    </span>
+  );
 }
 
-function AnimatedDecimalValue({ value, suffix = "€", className }: { value: number; suffix?: string; className?: string }) {
+function AnimatedDecimalValue({
+  value,
+  suffix = "€",
+  className,
+}: {
+  value: number;
+  suffix?: string;
+  className?: string;
+}) {
   const animated = useAnimatedCounter(Math.round(value * 100));
   const display = (animated / 100).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  return <span className={className}>{display}{suffix}</span>;
+  return (
+    <span className={className}>
+      {display}
+      {suffix}
+    </span>
+  );
 }
 
 export default function Dashboard() {
@@ -146,7 +202,19 @@ export default function Dashboard() {
   const [editingGroupName, setEditingGroupName] = useState(false);
 
   const [offer, setOffer] = useState("");
-  const [assignedAccounts, setAssignedAccounts] = useState<{id: string;account_email: string;account_password: string;account_domain: string;platform: string;assigned_at: string | null;drive_folder_id?: string;model_language?: string;model_active?: boolean;}[]>([]);
+  const [assignedAccounts, setAssignedAccounts] = useState<
+    {
+      id: string;
+      account_email: string;
+      account_password: string;
+      account_domain: string;
+      platform: string;
+      assigned_at: string | null;
+      drive_folder_id?: string;
+      model_language?: string;
+      model_active?: boolean;
+    }[]
+  >([]);
   const [modelInactiveInfoOpen, setModelInactiveInfoOpen] = useState(false);
   const [demoModelInactive, setDemoModelInactive] = useState(false);
   const [accountsOpen, setAccountsOpen] = useState(true);
@@ -157,7 +225,9 @@ export default function Dashboard() {
     try {
       const saved = localStorage.getItem("seen_request_updates");
       return saved ? new Set(JSON.parse(saved)) : new Set();
-    } catch { return new Set(); }
+    } catch {
+      return new Set();
+    }
   });
 
   const loadMyRequests = useCallback(async () => {
@@ -180,9 +250,14 @@ export default function Dashboard() {
     try {
       const stored = JSON.parse(localStorage.getItem("drive_states") || "{}");
       return stored[accountId] || { done: false, hidden: false, memoSeen: false, assignedAt: null };
-    } catch {return { done: false, hidden: false, memoSeen: false, assignedAt: null };}
+    } catch {
+      return { done: false, hidden: false, memoSeen: false, assignedAt: null };
+    }
   };
-  const setDriveState = (accountId: string, update: {done?: boolean;hidden?: boolean;memoSeen?: boolean;assignedAt?: string | null;}) => {
+  const setDriveState = (
+    accountId: string,
+    update: { done?: boolean; hidden?: boolean; memoSeen?: boolean; assignedAt?: string | null },
+  ) => {
     try {
       const stored = JSON.parse(localStorage.getItem("drive_states") || "{}");
       stored[accountId] = { ...getDriveState(accountId), ...update };
@@ -199,13 +274,13 @@ export default function Dashboard() {
   const [showFrageMemo, setShowFrageMemo] = useState(false);
   const [homescreenDismissed, setHomescreenDismissed] = useState(() => {
     // If PWA is already installed or tutorial was seen, no need to wait
-    const isStandalone = window.matchMedia("(display-mode: standalone)").matches || (window.navigator as any).standalone === true;
+    const isStandalone =
+      window.matchMedia("(display-mode: standalone)").matches || (window.navigator as any).standalone === true;
     const seen = localStorage.getItem("homescreen_tutorial_seen");
     return isStandalone || !!seen;
   });
   const [isPwaInstalled, setIsPwaInstalled] = useState(() => {
-    return window.matchMedia("(display-mode: standalone)").matches ||
-    (window.navigator as any).standalone === true;
+    return window.matchMedia("(display-mode: standalone)").matches || (window.navigator as any).standalone === true;
   });
 
   // Listen for PWA install changes (e.g. user adds to homescreen while page is open)
@@ -219,73 +294,72 @@ export default function Dashboard() {
   // Load profile data
   useEffect(() => {
     if (!user) return;
-    supabase.
-    from("profiles").
-    select("telegram_id, group_name, offer").
-    eq("user_id", user.id).
-    maybeSingle().
-    then(({ data }) => {
-      if (data?.telegram_id) {
-        setTelegramId(data.telegram_id);
-        setTelegramSaved(true);
-      }
-      if (data?.group_name) {
-        setGroupName(data.group_name);
-        setGroupNameSaved(true);
-      }
-      if (data?.offer) setOffer(data.offer);
-      setTelegramLoading(false);
-    });
+    supabase
+      .from("profiles")
+      .select("telegram_id, group_name, offer")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.telegram_id) {
+          setTelegramId(data.telegram_id);
+          setTelegramSaved(true);
+        }
+        if (data?.group_name) {
+          setGroupName(data.group_name);
+          setGroupNameSaved(true);
+        }
+        if (data?.offer) setOffer(data.offer);
+        setTelegramLoading(false);
+      });
 
     // Load all assigned accounts
-    supabase.
-    from("accounts").
-    select("id, account_email, account_password, account_domain, platform, assigned_at, drive_folder_id, model_language, model_active").
-    eq("assigned_to", user.id).
-    order("created_at", { ascending: true }).
-    then(({ data }) => {
-      if (data && data.length > 0) {
-        // Reset drive state for re-assigned accounts (assigned_at changed)
-        data.forEach((acc) => {
-          const ds = getDriveState(acc.id);
-          if (ds.assignedAt && ds.assignedAt !== acc.assigned_at) {
-            // Account was re-assigned – reset to unchecked
-            setDriveState(acc.id, { done: false, hidden: false, assignedAt: acc.assigned_at });
-          } else if (!ds.assignedAt) {
-            // First time seeing this account – store assigned_at
-            setDriveState(acc.id, { assignedAt: acc.assigned_at });
-          }
-        });
-        setAssignedAccounts(data);
-      }
-    });
+    supabase
+      .from("accounts")
+      .select(
+        "id, account_email, account_password, account_domain, platform, assigned_at, drive_folder_id, model_language, model_active",
+      )
+      .eq("assigned_to", user.id)
+      .order("created_at", { ascending: true })
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          // Reset drive state for re-assigned accounts (assigned_at changed)
+          data.forEach((acc) => {
+            const ds = getDriveState(acc.id);
+            if (ds.assignedAt && ds.assignedAt !== acc.assigned_at) {
+              // Account was re-assigned – reset to unchecked
+              setDriveState(acc.id, { done: false, hidden: false, assignedAt: acc.assigned_at });
+            } else if (!ds.assignedAt) {
+              // First time seeing this account – store assigned_at
+              setDriveState(acc.id, { assignedAt: acc.assigned_at });
+            }
+          });
+          setAssignedAccounts(data);
+        }
+      });
 
     // Check if first login
-    supabase.
-    from("login_events").
-    select("id", { count: "exact", head: true }).
-    eq("user_id", user.id).
-    then(({ count }) => {
-      if (count !== null && count <= 1) {
-        setIsFirstLogin(true);
-      }
-    });
+    supabase
+      .from("login_events")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .then(({ count }) => {
+        if (count !== null && count <= 1) {
+          setIsFirstLogin(true);
+        }
+      });
 
     // Track PWA install status
     if (isPwaInstalled) {
-      supabase.
-      from("profiles").
-      update({ pwa_installed: true } as any).
-      eq("user_id", user.id).
-      then();
+      supabase
+        .from("profiles")
+        .update({ pwa_installed: true } as any)
+        .eq("user_id", user.id)
+        .then();
     }
   }, [user, isPwaInstalled]);
   const saveTelegram = async () => {
     if (!user) return;
-    const { error } = await supabase.
-    from("profiles").
-    update({ telegram_id: telegramId.trim() }).
-    eq("user_id", user.id);
+    const { error } = await supabase.from("profiles").update({ telegram_id: telegramId.trim() }).eq("user_id", user.id);
     if (error) {
       toast.error("Fehler beim Speichern");
       return;
@@ -296,10 +370,7 @@ export default function Dashboard() {
 
   const saveGroupName = async () => {
     if (!user) return;
-    const { error } = await supabase.
-    from("profiles").
-    update({ group_name: groupName.trim() }).
-    eq("user_id", user.id);
+    const { error } = await supabase.from("profiles").update({ group_name: groupName.trim() }).eq("user_id", user.id);
     if (error) {
       toast.error("Fehler beim Speichern");
       return;
@@ -329,11 +400,11 @@ export default function Dashboard() {
       const monthStart = today.slice(0, 8) + "01";
 
       // Load all revenue entries
-      const { data } = await supabase.
-      from("daily_revenue").
-      select("date, amount").
-      eq("user_id", user.id).
-      order("date", { ascending: false });
+      const { data } = await supabase
+        .from("daily_revenue")
+        .select("date, amount")
+        .eq("user_id", user.id)
+        .order("date", { ascending: false });
 
       if (data) {
         const todayEntry = data.find((d) => d.date === today);
@@ -342,9 +413,7 @@ export default function Dashboard() {
         const yesterdayEntry = data.find((d) => d.date === yesterday);
         setYesterdayRevenue(yesterdayEntry ? Number(yesterdayEntry.amount) : 0);
 
-        const monthly = data.
-        filter((d) => d.date >= monthStart).
-        reduce((sum, d) => sum + Number(d.amount), 0);
+        const monthly = data.filter((d) => d.date >= monthStart).reduce((sum, d) => sum + Number(d.amount), 0);
         setMonthlyRevenue(monthly);
 
         const total = data.reduce((sum, d) => sum + Number(d.amount), 0);
@@ -354,38 +423,39 @@ export default function Dashboard() {
     loadRevenue();
   }, [user]);
 
-  // Save revenue on change (debounced)
-  const saveRevenue = useCallback(async (amount: number) => {
-    if (!user) return;
-    setSavingRevenue(true);
-    const today = new Date().toISOString().slice(0, 10);
-    const { error } = await supabase.
-    from("daily_revenue").
-    upsert(
-      { user_id: user.id, date: today, amount },
-      { onConflict: "user_id,date" }
-    );
-    if (error) {
-      toast.error("Fehler beim Speichern des Umsatzes");
-    }
-    playCoinSound();
-    setSavingRevenue(false);
-  }, [user, playCoinSound]);
+  // // Save revenue on change (debounced)
+  // const saveRevenue = useCallback(async (amount: number) => {
+  //   if (!user) return;
+  //   setSavingRevenue(true);
+  //   const today = new Date().toISOString().slice(0, 10);
+  //   console.log(today, amount)
+  //   // const { error } = await supabase.
+  //   // from("daily_revenue").
+  //   // upsert(
+  //   //   { user_id: user.id, date: today, amount },
+  //   //   { onConflict: "user_id,date" }
+  //   // );
+  //   // if (error) {
+  //   //   toast.error("Fehler beim Speichern des Umsatzes");
+  //   // }
+  //   playCoinSound();
+  //   setSavingRevenue(false);
+  // }, [user, playCoinSound]);
 
-  const handleUmsatzChange = useCallback((val: number) => {
-    setUmsatz(val);
-    // Recalculate monthly and total with new today value
-    // We update optimistically
-  }, []);
+  // const handleUmsatzChange = useCallback((val: number) => {
+  //   setUmsatz(val);
+  //   // Recalculate monthly and total with new today value
+  //   // We update optimistically
+  // }, []);
 
-  // Debounce save
-  useEffect(() => {
-    if (!user) return;
-    const timer = setTimeout(() => {
-      saveRevenue(umsatz);
-    }, 800);
-    return () => clearTimeout(timer);
-  }, [umsatz, saveRevenue, user]);
+  // // Debounce save
+  // useEffect(() => {
+  //   if (!user) return;
+  //   const timer = setTimeout(() => {
+  //     saveRevenue(umsatz);
+  //   }, 800);
+  //   return () => clearTimeout(timer);
+  // }, [umsatz, saveRevenue, user]);
 
   // Derived: total includes today's change
   const effectiveMonthlyRevenue = useMemo(() => {
@@ -410,7 +480,7 @@ export default function Dashboard() {
       particleCount: 150,
       spread: 80,
       origin: { y: 0.6 },
-      colors: ["#c4973b", "#e8c96b", "#a07c2a", "#f5d98a"]
+      colors: ["#c4973b", "#e8c96b", "#a07c2a", "#f5d98a"],
     });
   }, []);
 
@@ -432,13 +502,37 @@ export default function Dashboard() {
 
   // Streak for hot-streak effect
   const streakDays = useMemo(() => getStreakDays(), []);
-  const hotStreakClass = streakDays >= 7 ? "hot-streak-7" : streakDays >= 6 ? "hot-streak-6" : streakDays >= 5 ? "hot-streak-5" : streakDays >= 4 ? "hot-streak-4" : streakDays >= 3 ? "hot-streak-3" : "";
+  const hotStreakClass =
+    streakDays >= 7
+      ? "hot-streak-7"
+      : streakDays >= 6
+        ? "hot-streak-6"
+        : streakDays >= 5
+          ? "hot-streak-5"
+          : streakDays >= 4
+            ? "hot-streak-4"
+            : streakDays >= 3
+              ? "hot-streak-3"
+              : "";
 
   return (
     <div className="min-h-screen bg-background pb-24">
       <GoldParticles spawnRate={0.25} maxParticles={20} baseOpacity={0.2} />
-      <HomescreenTutorial isFirstLogin={isFirstLogin} manualOpen={showTutorial} onManualClose={() => { setShowTutorial(false); setHomescreenDismissed(true); }} onDismiss={() => setHomescreenDismissed(true)} />
-      <DashboardOnboarding isFirstLogin={isFirstLogin} manualOpen={showOnboarding} onManualClose={() => setShowOnboarding(false)} waitForDismiss={!homescreenDismissed} />
+      <HomescreenTutorial
+        isFirstLogin={isFirstLogin}
+        manualOpen={showTutorial}
+        onManualClose={() => {
+          setShowTutorial(false);
+          setHomescreenDismissed(true);
+        }}
+        onDismiss={() => setHomescreenDismissed(true)}
+      />
+      <DashboardOnboarding
+        isFirstLogin={isFirstLogin}
+        manualOpen={showOnboarding}
+        onManualClose={() => setShowOnboarding(false)}
+        waitForDismiss={!homescreenDismissed}
+      />
       <PushNotificationDialog />
       <AccountMemoDialog open={showMemo} onOpenChange={setShowMemo} />
       <FrageMemoDialog open={showFrageMemo} onOpenChange={setShowFrageMemo} />
@@ -453,64 +547,126 @@ export default function Dashboard() {
             </div>
             <div className="h-8 w-px bg-border shrink-0" />
             <div className="flex items-center gap-2">
-              {telegramSaved ?
-              <>
+              {telegramSaved ? (
+                <>
                   <CheckCircle2 className="h-4 w-4 text-accent shrink-0" />
                   <span className="text-sm text-foreground font-medium">{telegramId}</span>
-                  <Button onClick={() => setTelegramSaved(false)} variant="ghost" size="sm" className="text-[10px] text-accent h-6 px-2">
+                  <Button
+                    onClick={() => setTelegramSaved(false)}
+                    variant="ghost"
+                    size="sm"
+                    className="text-[10px] text-accent h-6 px-2"
+                  >
                     Ändern
                   </Button>
-                </> :
-
-              <div className="space-y-0.5">
+                </>
+              ) : (
+                <div className="space-y-0.5">
                   <div className="flex items-center gap-1.5">
-                    <div className="input-gold-shimmer rounded-lg"><Input value={telegramId} onChange={(e) => setTelegramId(e.target.value)} placeholder="Deine Telegram ID" className="h-7 text-xs w-44 border-transparent" /></div>
-                    <Button onClick={saveTelegram} size="sm" disabled={!telegramId.trim()} className="h-7 text-xs px-2.5"><Save className="h-3 w-3" /></Button>
+                    <div className="input-gold-shimmer rounded-lg">
+                      <Input
+                        value={telegramId}
+                        onChange={(e) => setTelegramId(e.target.value)}
+                        placeholder="Deine Telegram ID"
+                        className="h-7 text-xs w-44 border-transparent"
+                      />
+                    </div>
+                    <Button
+                      onClick={saveTelegram}
+                      size="sm"
+                      disabled={!telegramId.trim()}
+                      className="h-7 text-xs px-2.5"
+                    >
+                      <Save className="h-3 w-3" />
+                    </Button>
                   </div>
-                  <Dialog onOpenChange={(open) => {setVideoOpen(open);if (!open) setVideoLoaded(false);}}>
+                  <Dialog
+                    onOpenChange={(open) => {
+                      setVideoOpen(open);
+                      if (!open) setVideoLoaded(false);
+                    }}
+                  >
                     <DialogTrigger asChild>
                       <button className="flex items-center gap-1 text-[10px] text-accent hover:text-accent/80 transition-colors">
-                        <HelpCircle className="h-3 w-3" />Wo finde ich meine Telegram ID?
+                        <HelpCircle className="h-3 w-3" />
+                        Wo finde ich meine Telegram ID?
                       </button>
                     </DialogTrigger>
                     <DialogContent className="glass-card border-border sm:max-w-lg">
                       <DialogHeader>
                         <DialogTitle className="text-foreground">Wo finde ich meine Telegram-ID?</DialogTitle>
-                        <DialogDescription className="text-muted-foreground text-xs">Schau dir das kurze Video an, um deine Telegram-ID zu finden.</DialogDescription>
+                        <DialogDescription className="text-muted-foreground text-xs">
+                          Schau dir das kurze Video an, um deine Telegram-ID zu finden.
+                        </DialogDescription>
                       </DialogHeader>
                       <div className="aspect-video w-full rounded-lg overflow-hidden bg-secondary relative">
-                        {!videoLoaded && <div className="absolute inset-0 flex items-center justify-center"><div className="h-8 w-8 border-2 border-accent border-t-transparent rounded-full animate-spin" /></div>}
-                        {videoOpen && <iframe src="https://www.loom.com/embed/0582b0ea68b942728a535a98f990660b?autoplay=1" frameBorder="0" allowFullScreen allow="autoplay" className={`w-full h-full transition-opacity duration-300 ${videoLoaded ? "opacity-100" : "opacity-0"}`} title="Telegram ID finden" onLoad={() => setVideoLoaded(true)} />}
+                        {!videoLoaded && (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="h-8 w-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                          </div>
+                        )}
+                        {videoOpen && (
+                          <iframe
+                            src="https://www.loom.com/embed/0582b0ea68b942728a535a98f990660b?autoplay=1"
+                            frameBorder="0"
+                            allowFullScreen
+                            allow="autoplay"
+                            className={`w-full h-full transition-opacity duration-300 ${videoLoaded ? "opacity-100" : "opacity-0"}`}
+                            title="Telegram ID finden"
+                            onLoad={() => setVideoLoaded(true)}
+                          />
+                        )}
                       </div>
                     </DialogContent>
                   </Dialog>
                 </div>
-              }
+              )}
             </div>
             <div className="h-8 w-px bg-border shrink-0" />
             <div className="flex items-center gap-2">
               <Users className="h-3.5 w-3.5 text-accent shrink-0" />
-              {groupNameSaved && !editingGroupName ?
-              <>
+              {groupNameSaved && !editingGroupName ? (
+                <>
                   <span className="text-sm text-foreground font-medium">{groupName}</span>
-                  <Button onClick={() => setEditingGroupName(true)} variant="ghost" size="sm" className="text-[10px] text-accent h-6 px-2">
+                  <Button
+                    onClick={() => setEditingGroupName(true)}
+                    variant="ghost"
+                    size="sm"
+                    className="text-[10px] text-accent h-6 px-2"
+                  >
                     <Pencil className="h-3 w-3" />
                   </Button>
-                </> :
-
-              <div className="flex items-center gap-1.5">
-                  <div className="input-gold-shimmer rounded-lg"><Input value={groupName} onChange={(e) => setGroupName(e.target.value)} placeholder="Gruppenname" className="h-7 text-xs w-36 border-transparent" /></div>
-                  <Button onClick={saveGroupName} size="sm" disabled={!groupName.trim()} className="h-7 text-xs px-2.5"><Save className="h-3 w-3" /></Button>
+                </>
+              ) : (
+                <div className="flex items-center gap-1.5">
+                  <div className="input-gold-shimmer rounded-lg">
+                    <Input
+                      value={groupName}
+                      onChange={(e) => setGroupName(e.target.value)}
+                      placeholder="Gruppenname"
+                      className="h-7 text-xs w-36 border-transparent"
+                    />
+                  </div>
+                  <Button onClick={saveGroupName} size="sm" disabled={!groupName.trim()} className="h-7 text-xs px-2.5">
+                    <Save className="h-3 w-3" />
+                  </Button>
                 </div>
-              }
+              )}
             </div>
             <div className="ml-auto flex items-center gap-3">
               <div className="flex items-center gap-1.5">
                 <Zap className="h-3.5 w-3.5 text-accent shrink-0" />
-                <div className="input-gold-shimmer rounded-lg"><Input type="number" min={0} step={50} value={umsatz || ""} onChange={(e) => handleUmsatzChange(Number(e.target.value) || 0)} placeholder="Umsatz €" className="h-7 text-xs w-24 font-semibold border-transparent" /></div>
+                <div className="input-gold-shimmer rounded-lg">
+                  <span className="h-7 text-sm w-24 font-semibold border-transparent">Umsatz: €{umsatz || "0"}</span>
+                </div>
               </div>
-              <Badge className={isTopTier ? "bg-accent text-accent-foreground gold-glow" : "bg-secondary text-secondary-foreground"}>
-                <Award className="h-3 w-3 mr-1" />{currentTier.emoji} {currentTier.name}
+              <Badge
+                className={
+                  isTopTier ? "bg-accent text-accent-foreground gold-glow" : "bg-secondary text-secondary-foreground"
+                }
+              >
+                <Award className="h-3 w-3 mr-1" />
+                {currentTier.emoji} {currentTier.name}
               </Badge>
             </div>
           </div>
@@ -523,67 +679,122 @@ export default function Dashboard() {
               <div className="flex-1 min-w-0">
                 <h1 className="text-sm font-bold text-foreground leading-tight">Chatter Dashboard</h1>
               </div>
-              <Badge className={`shrink-0 text-[10px] ${isTopTier ? "bg-accent text-accent-foreground gold-glow" : "bg-secondary text-secondary-foreground"}`}>
-                <Award className="h-3 w-3 mr-1" />{currentTier.emoji} {currentTier.name}
+              <Badge
+                className={`shrink-0 text-[10px] ${isTopTier ? "bg-accent text-accent-foreground gold-glow" : "bg-secondary text-secondary-foreground"}`}
+              >
+                <Award className="h-3 w-3 mr-1" />
+                {currentTier.emoji} {currentTier.name}
               </Badge>
             </div>
 
             {/* Row 2: Gruppenname */}
             <div className="flex items-center gap-2">
               <Users className="h-3.5 w-3.5 text-accent shrink-0" />
-              {groupNameSaved && !editingGroupName ?
-              <div className="flex items-center gap-1.5 flex-1 min-w-0">
+              {groupNameSaved && !editingGroupName ? (
+                <div className="flex items-center gap-1.5 flex-1 min-w-0">
                   <span className="text-xs text-foreground font-medium truncate">{groupName}</span>
-                  <Button onClick={() => setEditingGroupName(true)} variant="ghost" size="sm" className="text-[10px] text-accent h-5 px-1.5">
+                  <Button
+                    onClick={() => setEditingGroupName(true)}
+                    variant="ghost"
+                    size="sm"
+                    className="text-[10px] text-accent h-5 px-1.5"
+                  >
                     <Pencil className="h-3 w-3" />
                   </Button>
-                </div> :
-
-              <div className="flex items-center gap-1 flex-1 min-w-0">
-                  <div className="input-gold-shimmer rounded-lg flex-1 min-w-0"><Input value={groupName} onChange={(e) => setGroupName(e.target.value)} placeholder="Gruppenname eingeben" className="h-7 text-xs w-full border-transparent" /></div>
-                  <Button onClick={saveGroupName} size="sm" disabled={!groupName.trim()} className="h-7 text-xs px-2"><Save className="h-3 w-3" /></Button>
                 </div>
-              }
+              ) : (
+                <div className="flex items-center gap-1 flex-1 min-w-0">
+                  <div className="input-gold-shimmer rounded-lg flex-1 min-w-0">
+                    <Input
+                      value={groupName}
+                      onChange={(e) => setGroupName(e.target.value)}
+                      placeholder="Gruppenname eingeben"
+                      className="h-7 text-xs w-full border-transparent"
+                    />
+                  </div>
+                  <Button onClick={saveGroupName} size="sm" disabled={!groupName.trim()} className="h-7 text-xs px-2">
+                    <Save className="h-3 w-3" />
+                  </Button>
+                </div>
+              )}
             </div>
 
             {/* Row 3: Telegram + Umsatz side by side */}
             <div className="flex items-center gap-2">
-              {telegramSaved ?
-              <div className="flex items-center gap-1.5 flex-1 min-w-0">
+              {telegramSaved ? (
+                <div className="flex items-center gap-1.5 flex-1 min-w-0">
                   <CheckCircle2 className="h-3.5 w-3.5 text-accent shrink-0" />
                   <span className="text-xs text-foreground font-medium truncate">{telegramId}</span>
-                  <Button onClick={() => setTelegramSaved(false)} variant="ghost" size="sm" className="text-[10px] text-accent h-5 px-1.5">
+                  <Button
+                    onClick={() => setTelegramSaved(false)}
+                    variant="ghost"
+                    size="sm"
+                    className="text-[10px] text-accent h-5 px-1.5"
+                  >
                     Ändern
                   </Button>
-                </div> :
-
-              <div className="flex-1 min-w-0 space-y-0.5">
+                </div>
+              ) : (
+                <div className="flex-1 min-w-0 space-y-0.5">
                   <div className="flex items-center gap-1">
-                    <div className="input-gold-shimmer rounded-lg flex-1 min-w-0"><Input value={telegramId} onChange={(e) => setTelegramId(e.target.value)} placeholder="Telegram ID" className="h-7 text-xs w-full border-transparent" /></div>
-                    <Button onClick={saveTelegram} size="sm" disabled={!telegramId.trim()} className="h-7 text-xs px-2"><Save className="h-3 w-3" /></Button>
+                    <div className="input-gold-shimmer rounded-lg flex-1 min-w-0">
+                      <Input
+                        value={telegramId}
+                        onChange={(e) => setTelegramId(e.target.value)}
+                        placeholder="Telegram ID"
+                        className="h-7 text-xs w-full border-transparent"
+                      />
+                    </div>
+                    <Button onClick={saveTelegram} size="sm" disabled={!telegramId.trim()} className="h-7 text-xs px-2">
+                      <Save className="h-3 w-3" />
+                    </Button>
                   </div>
-                  <Dialog onOpenChange={(open) => {setVideoOpen(open);if (!open) setVideoLoaded(false);}}>
+                  <Dialog
+                    onOpenChange={(open) => {
+                      setVideoOpen(open);
+                      if (!open) setVideoLoaded(false);
+                    }}
+                  >
                     <DialogTrigger asChild>
                       <button className="flex items-center gap-1 text-[10px] text-accent hover:text-accent/80 transition-colors">
-                        <HelpCircle className="h-3 w-3" />Wo finde ich meine ID?
+                        <HelpCircle className="h-3 w-3" />
+                        Wo finde ich meine ID?
                       </button>
                     </DialogTrigger>
                     <DialogContent className="glass-card border-border max-w-[calc(100vw-2rem)]">
                       <DialogHeader>
                         <DialogTitle className="text-foreground text-sm">Wo finde ich meine Telegram-ID?</DialogTitle>
-                        <DialogDescription className="text-muted-foreground text-xs">Schau dir das kurze Video an.</DialogDescription>
+                        <DialogDescription className="text-muted-foreground text-xs">
+                          Schau dir das kurze Video an.
+                        </DialogDescription>
                       </DialogHeader>
                       <div className="aspect-video w-full rounded-lg overflow-hidden bg-secondary relative">
-                        {!videoLoaded && <div className="absolute inset-0 flex items-center justify-center"><div className="h-8 w-8 border-2 border-accent border-t-transparent rounded-full animate-spin" /></div>}
-                        {videoOpen && <iframe src="https://www.loom.com/embed/0582b0ea68b942728a535a98f990660b?autoplay=1" frameBorder="0" allowFullScreen allow="autoplay" className={`w-full h-full transition-opacity duration-300 ${videoLoaded ? "opacity-100" : "opacity-0"}`} title="Telegram ID finden" onLoad={() => setVideoLoaded(true)} />}
+                        {!videoLoaded && (
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="h-8 w-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                          </div>
+                        )}
+                        {videoOpen && (
+                          <iframe
+                            src="https://www.loom.com/embed/0582b0ea68b942728a535a98f990660b?autoplay=1"
+                            frameBorder="0"
+                            allowFullScreen
+                            allow="autoplay"
+                            className={`w-full h-full transition-opacity duration-300 ${videoLoaded ? "opacity-100" : "opacity-0"}`}
+                            title="Telegram ID finden"
+                            onLoad={() => setVideoLoaded(true)}
+                          />
+                        )}
                       </div>
                     </DialogContent>
                   </Dialog>
                 </div>
-              }
+              )}
               <div className="shrink-0 flex items-center gap-1" data-tour="revenue-input">
                 <Zap className="h-3 w-3 text-accent" />
-                <div className="input-gold-shimmer rounded-lg"><Input type="number" min={0} step={50} value={umsatz || ""} onChange={(e) => handleUmsatzChange(Number(e.target.value) || 0)} placeholder="€" className="h-7 text-xs w-20 font-semibold border-transparent" /></div>
+                <div className="input-gold-shimmer rounded-lg">
+                  <span className="h-7 text-sm w-24 font-semibold border-transparent">Umsatz: €{umsatz || "0"}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -599,80 +810,145 @@ export default function Dashboard() {
 
         {/* Stats Cards */}
         <div data-tour="stats-cards">
-        {/* Mobile: 2-col grid with full-width status */}
-        <motion.div
-          variants={staggerContainer}
-          initial="hidden"
-          animate="show"
-          className="grid grid-cols-2 gap-3 lg:hidden"
-        >
-          <motion.div variants={staggerItem} className="glass-card-subtle rounded-xl p-3 text-center card-hover-glow card-inner-glow group">
-            <p className="text-[10px] text-muted-foreground mb-0.5">Umsatz gestern</p>
-            <p className="text-xl font-bold text-gold-gradient transition-transform duration-200 group-hover:scale-105"><AnimatedValue value={yesterdayRevenue} /></p>
+          {/* Mobile: 2-col grid with full-width status */}
+          <motion.div
+            variants={staggerContainer}
+            initial="hidden"
+            animate="show"
+            className="grid grid-cols-2 gap-3 lg:hidden"
+          >
+            <motion.div
+              variants={staggerItem}
+              className="glass-card-subtle rounded-xl p-3 text-center card-hover-glow card-inner-glow group"
+            >
+              <p className="text-[10px] text-muted-foreground mb-0.5">Umsatz gestern</p>
+              <p className="text-xl font-bold text-gold-gradient transition-transform duration-200 group-hover:scale-105">
+                <AnimatedValue value={yesterdayRevenue} />
+              </p>
+            </motion.div>
+            <motion.div
+              variants={staggerItem}
+              className="glass-card-subtle rounded-xl p-3 text-center card-hover-glow card-inner-glow group"
+            >
+              <p className="text-[10px] text-muted-foreground mb-0.5">Monatsumsatz</p>
+              <p className="text-xl font-bold text-gold-gradient transition-transform duration-200 group-hover:scale-105">
+                <AnimatedValue value={monthlyRevenue} />
+              </p>
+            </motion.div>
+            <motion.div
+              variants={staggerItem}
+              className="glass-card-subtle rounded-xl p-3 text-center card-hover-glow card-inner-glow group"
+            >
+              <p className="text-[10px] text-muted-foreground mb-0.5">Gesamtumsatz</p>
+              <p className="text-xl font-bold text-gold-gradient transition-transform duration-200 group-hover:scale-105">
+                <AnimatedValue value={totalRevenue} />
+              </p>
+            </motion.div>
+            <motion.div
+              variants={staggerItem}
+              className="glass-card-subtle rounded-xl p-3 text-center card-hover-glow card-inner-glow group"
+            >
+              <p className="text-[10px] text-muted-foreground mb-0.5">Verdienst diesen Monat</p>
+              <p className="text-xl font-bold text-gold-gradient transition-transform duration-200 group-hover:scale-105">
+                <AnimatedDecimalValue value={verdienst} />
+              </p>
+            </motion.div>
+            <motion.div
+              variants={staggerItem}
+              className="glass-card-subtle rounded-xl p-3 text-center card-hover-glow card-inner-glow group"
+            >
+              <p className="text-[10px] text-muted-foreground mb-0.5">Deine Rate</p>
+              <p className="text-xl font-bold text-gold-gradient transition-transform duration-200 group-hover:scale-105">
+                {Math.round(rate * 100)}%
+              </p>
+            </motion.div>
+            <DailyGoal />
+            <motion.div
+              variants={staggerItem}
+              className="gold-gradient-border-animated rounded-xl p-3 text-center col-span-2 pulse-glow"
+            >
+              <p className="text-[10px] text-muted-foreground mb-0.5">Status</p>
+              <p className={`text-xl font-bold ${isTopTier ? "text-gold-gradient" : "text-foreground"}`}>
+                {currentTier.emoji} {currentTier.name}
+              </p>
+            </motion.div>
           </motion.div>
-          <motion.div variants={staggerItem} className="glass-card-subtle rounded-xl p-3 text-center card-hover-glow card-inner-glow group">
-            <p className="text-[10px] text-muted-foreground mb-0.5">Monatsumsatz</p>
-            <p className="text-xl font-bold text-gold-gradient transition-transform duration-200 group-hover:scale-105"><AnimatedValue value={monthlyRevenue} /></p>
+          {/* Desktop: Bento grid */}
+          <motion.div
+            variants={staggerContainer}
+            initial="hidden"
+            animate="show"
+            className="hidden lg:grid grid-cols-4 gap-4"
+          >
+            <motion.div
+              variants={staggerItem}
+              className="glass-card-subtle rounded-xl p-5 text-center card-hover-glow card-inner-glow group"
+            >
+              <p className="text-xs text-muted-foreground mb-0.5">Umsatz gestern</p>
+              <p className="text-2xl font-bold text-gold-gradient transition-transform duration-200 group-hover:scale-105">
+                <AnimatedValue value={yesterdayRevenue} />
+              </p>
+            </motion.div>
+            <motion.div
+              variants={staggerItem}
+              className="col-span-2 glass-card-subtle rounded-xl p-5 text-center card-hover-glow card-inner-glow card-top-line group"
+            >
+              <p className="text-xs text-muted-foreground mb-0.5">Monatsumsatz</p>
+              <p className="text-3xl font-bold text-gold-gradient transition-transform duration-200 group-hover:scale-105">
+                <AnimatedValue value={monthlyRevenue} />
+              </p>
+            </motion.div>
+            <motion.div
+              variants={staggerItem}
+              className="glass-card-subtle rounded-xl p-5 text-center card-hover-glow card-inner-glow group"
+            >
+              <p className="text-xs text-muted-foreground mb-0.5">Gesamtumsatz</p>
+              <p className="text-2xl font-bold text-gold-gradient transition-transform duration-200 group-hover:scale-105">
+                <AnimatedValue value={totalRevenue} />
+              </p>
+            </motion.div>
+            <motion.div
+              variants={staggerItem}
+              className="col-span-2 glass-card-subtle rounded-xl p-5 text-center card-hover-glow card-inner-glow card-top-line group"
+            >
+              <p className="text-xs text-muted-foreground mb-0.5">Verdienst diesen Monat</p>
+              <p className="text-3xl font-bold text-gold-gradient transition-transform duration-200 group-hover:scale-105">
+                <AnimatedDecimalValue value={verdienst} />
+              </p>
+            </motion.div>
+            <motion.div
+              variants={staggerItem}
+              className="glass-card-subtle rounded-xl p-5 text-center card-hover-glow card-inner-glow group"
+            >
+              <p className="text-xs text-muted-foreground mb-0.5">Deine Rate</p>
+              <p className="text-2xl font-bold text-gold-gradient transition-transform duration-200 group-hover:scale-105">
+                {Math.round(rate * 100)}%
+              </p>
+            </motion.div>
+            <DailyGoal />
+            <motion.div
+              variants={staggerItem}
+              className="gold-gradient-border-animated rounded-xl p-5 text-center col-span-4 pulse-glow"
+            >
+              <p className="text-xs text-muted-foreground mb-0.5">Status</p>
+              <p className={`text-2xl font-bold ${isTopTier ? "text-gold-gradient" : "text-foreground"}`}>
+                {currentTier.emoji} {currentTier.name}
+              </p>
+            </motion.div>
           </motion.div>
-          <motion.div variants={staggerItem} className="glass-card-subtle rounded-xl p-3 text-center card-hover-glow card-inner-glow group">
-            <p className="text-[10px] text-muted-foreground mb-0.5">Gesamtumsatz</p>
-            <p className="text-xl font-bold text-gold-gradient transition-transform duration-200 group-hover:scale-105"><AnimatedValue value={totalRevenue} /></p>
-          </motion.div>
-          <motion.div variants={staggerItem} className="glass-card-subtle rounded-xl p-3 text-center card-hover-glow card-inner-glow group">
-            <p className="text-[10px] text-muted-foreground mb-0.5">Verdienst diesen Monat</p>
-            <p className="text-xl font-bold text-gold-gradient transition-transform duration-200 group-hover:scale-105"><AnimatedDecimalValue value={verdienst} /></p>
-          </motion.div>
-          <motion.div variants={staggerItem} className="glass-card-subtle rounded-xl p-3 text-center card-hover-glow card-inner-glow group">
-            <p className="text-[10px] text-muted-foreground mb-0.5">Deine Rate</p>
-            <p className="text-xl font-bold text-gold-gradient transition-transform duration-200 group-hover:scale-105">{Math.round(rate * 100)}%</p>
-          </motion.div>
-          <DailyGoal />
-          <motion.div variants={staggerItem} className="gold-gradient-border-animated rounded-xl p-3 text-center col-span-2 pulse-glow">
-            <p className="text-[10px] text-muted-foreground mb-0.5">Status</p>
-            <p className={`text-xl font-bold ${isTopTier ? "text-gold-gradient" : "text-foreground"}`}>{currentTier.emoji} {currentTier.name}</p>
-          </motion.div>
-        </motion.div>
-        {/* Desktop: Bento grid */}
-        <motion.div
-          variants={staggerContainer}
-          initial="hidden"
-          animate="show"
-          className="hidden lg:grid grid-cols-4 gap-4"
-        >
-          <motion.div variants={staggerItem} className="glass-card-subtle rounded-xl p-5 text-center card-hover-glow card-inner-glow group">
-            <p className="text-xs text-muted-foreground mb-0.5">Umsatz gestern</p>
-            <p className="text-2xl font-bold text-gold-gradient transition-transform duration-200 group-hover:scale-105"><AnimatedValue value={yesterdayRevenue} /></p>
-          </motion.div>
-          <motion.div variants={staggerItem} className="col-span-2 glass-card-subtle rounded-xl p-5 text-center card-hover-glow card-inner-glow card-top-line group">
-            <p className="text-xs text-muted-foreground mb-0.5">Monatsumsatz</p>
-            <p className="text-3xl font-bold text-gold-gradient transition-transform duration-200 group-hover:scale-105"><AnimatedValue value={monthlyRevenue} /></p>
-          </motion.div>
-          <motion.div variants={staggerItem} className="glass-card-subtle rounded-xl p-5 text-center card-hover-glow card-inner-glow group">
-            <p className="text-xs text-muted-foreground mb-0.5">Gesamtumsatz</p>
-            <p className="text-2xl font-bold text-gold-gradient transition-transform duration-200 group-hover:scale-105"><AnimatedValue value={totalRevenue} /></p>
-          </motion.div>
-          <motion.div variants={staggerItem} className="col-span-2 glass-card-subtle rounded-xl p-5 text-center card-hover-glow card-inner-glow card-top-line group">
-            <p className="text-xs text-muted-foreground mb-0.5">Verdienst diesen Monat</p>
-            <p className="text-3xl font-bold text-gold-gradient transition-transform duration-200 group-hover:scale-105"><AnimatedDecimalValue value={verdienst} /></p>
-          </motion.div>
-          <motion.div variants={staggerItem} className="glass-card-subtle rounded-xl p-5 text-center card-hover-glow card-inner-glow group">
-            <p className="text-xs text-muted-foreground mb-0.5">Deine Rate</p>
-            <p className="text-2xl font-bold text-gold-gradient transition-transform duration-200 group-hover:scale-105">{Math.round(rate * 100)}%</p>
-          </motion.div>
-          <DailyGoal />
-          <motion.div variants={staggerItem} className="gold-gradient-border-animated rounded-xl p-5 text-center col-span-4 pulse-glow">
-            <p className="text-xs text-muted-foreground mb-0.5">Status</p>
-            <p className={`text-2xl font-bold ${isTopTier ? "text-gold-gradient" : "text-foreground"}`}>{currentTier.emoji} {currentTier.name}</p>
-          </motion.div>
-        </motion.div>
         </div>
 
         {/* Quick Action Bar */}
         <QuickActionBar
           onAskQuestion={() => setShowFrageMemo(true)}
           onFocusRevenue={() => {
-            const input = document.querySelector('input[placeholder="Umsatz €"], input[placeholder="€"]') as HTMLInputElement;
-            if (input) { input.focus(); input.scrollIntoView({ behavior: "smooth", block: "center" }); }
+            const input = document.querySelector(
+              'input[placeholder="Umsatz €"], input[placeholder="€"]',
+            ) as HTMLInputElement;
+            if (input) {
+              input.focus();
+              input.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
           }}
           onScrollToAccount={() => {
             const el = document.querySelector('[data-section="accounts"]');
@@ -685,20 +961,20 @@ export default function Dashboard() {
         />
 
         {/* PWA Install To-Do */}
-        {!isPwaInstalled &&
-        <button
-          onClick={() => setShowTutorial(true)}
-          className="w-full flex items-center gap-3 glass-card-subtle rounded-xl p-3 lg:p-4 border border-accent/30 bg-accent/5 text-left cursor-pointer hover:bg-accent/10 hover:border-accent/50 transition-all">
-          
+        {!isPwaInstalled && (
+          <button
+            onClick={() => setShowTutorial(true)}
+            className="w-full flex items-center gap-3 glass-card-subtle rounded-xl p-3 lg:p-4 border border-accent/30 bg-accent/5 text-left cursor-pointer hover:bg-accent/10 hover:border-accent/50 transition-all"
+          >
             <Smartphone className="h-5 w-5 text-accent shrink-0 animate-pulse" />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-foreground">Aufgabe bevor du startest: Füge die App auf deinem Handy zum Homescreen hinzu.</p>
-              <p className="text-xs text-accent mt-0.5 hover:underline">
-                Wie geht das?
+              <p className="text-sm font-semibold text-foreground">
+                Aufgabe bevor du startest: Füge die App auf deinem Handy zum Homescreen hinzu.
               </p>
+              <p className="text-xs text-accent mt-0.5 hover:underline">Wie geht das?</p>
             </div>
           </button>
-        }
+        )}
 
         {/* 7-Day Revenue Chart */}
         <div data-tour="revenue-chart">{user && <RevenueChart userId={user.id} />}</div>
@@ -749,166 +1025,274 @@ export default function Dashboard() {
         >
           <button
             onClick={() => setAccountsOpen(!accountsOpen)}
-            className="w-full flex items-center justify-between p-4 lg:p-6 text-left">
-            
+            className="w-full flex items-center justify-between p-4 lg:p-6 text-left"
+          >
             <h2 className="text-sm lg:text-base font-semibold text-foreground">
               {assignedAccounts.length > 1 ? "Deine Accounts" : "Dein Account"}
-              {assignedAccounts.length > 0 &&
-              <span className="ml-2 text-[10px] font-normal text-muted-foreground">({assignedAccounts.length})</span>
-              }
+              {assignedAccounts.length > 0 && (
+                <span className="ml-2 text-[10px] font-normal text-muted-foreground">({assignedAccounts.length})</span>
+              )}
             </h2>
-            <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${accountsOpen ? "rotate-180" : ""}`} />
+            <ChevronDown
+              className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${accountsOpen ? "rotate-180" : ""}`}
+            />
           </button>
-          {accountsOpen &&
-          <div className="px-4 pb-4 lg:px-6 lg:pb-6 space-y-4">
+          {accountsOpen && (
+            <div className="px-4 pb-4 lg:px-6 lg:pb-6 space-y-4">
               {assignedAccounts.length === 0 ? (
-            <div className="space-y-3">
-              <p className="text-xs text-muted-foreground">Noch keine Accounts zugewiesen.</p>
-              <button
-                onClick={() => setAssignedAccounts([{
-                  id: "demo-account",
-                  account_email: "demo@example.com",
-                  account_password: "demo-password-123",
-                  account_domain: "demo-platform.com",
-                  platform: "Demo",
-                  assigned_at: new Date().toISOString(),
-                  drive_folder_id: "1ABC_demoFolderId123",
-                }])}
-                className="flex items-center gap-2 w-full rounded-lg border border-dashed border-accent/40 bg-accent/5 px-3 py-2.5 text-xs font-medium text-accent hover:bg-accent/10 hover:border-accent/60 transition-all"
-              >
-                🧪 Demo: Account-Zuweisung simulieren
-              </button>
-            </div>
-            ) :
-
-            <div className="space-y-3">
+                <div className="space-y-3">
+                  <p className="text-xs text-muted-foreground">Noch keine Accounts zugewiesen.</p>
+                  <button
+                    onClick={() =>
+                      setAssignedAccounts([
+                        {
+                          id: "demo-account",
+                          account_email: "demo@example.com",
+                          account_password: "demo-password-123",
+                          account_domain: "demo-platform.com",
+                          platform: "Demo",
+                          assigned_at: new Date().toISOString(),
+                          drive_folder_id: "1ABC_demoFolderId123",
+                        },
+                      ])
+                    }
+                    className="flex items-center gap-2 w-full rounded-lg border border-dashed border-accent/40 bg-accent/5 px-3 py-2.5 text-xs font-medium text-accent hover:bg-accent/10 hover:border-accent/60 transition-all"
+                  >
+                    🧪 Demo: Account-Zuweisung simulieren
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-3">
                   {assignedAccounts.map((acc) => {
-                const ds = getDriveState(acc.id);
-                return (
-                  <div key={acc.id} className={assignedAccounts.length > 1 ? "p-3 rounded-lg border border-border/50 bg-secondary/20" : ""}>
-                      {assignedAccounts.length > 1 &&
-                    <p className="text-[10px] text-muted-foreground font-medium mb-2">{acc.platform}</p>
-                    }
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div>
-                          <p className="text-[10px] text-muted-foreground mb-1">E-Mail</p>
-                          <button onClick={() => {if (acc.account_email) {navigator.clipboard.writeText(acc.account_email);toast.success("E-Mail kopiert!");}}} className="flex items-center gap-2 w-full rounded-lg border border-border/50 bg-secondary/40 px-3 py-2 hover:border-accent/50 hover:bg-secondary/60 hover:shadow-[0_0_12px_hsl(43_56%_52%_/_0.15)] active:scale-[0.97] transition-all cursor-pointer group" title="Klicken zum Kopieren">
-                            <p className="text-xs lg:text-sm font-medium text-foreground truncate flex-1 text-left">{acc.account_email || "–"}</p>
-                            {acc.account_email && <Copy className="h-3.5 w-3.5 text-accent shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />}
-                          </button>
-                        </div>
-                        <div>
-                          <p className="text-[10px] text-muted-foreground mb-1">Passwort</p>
-                          <button onClick={() => {if (acc.account_password) {navigator.clipboard.writeText(acc.account_password);toast.success("Passwort kopiert!");}}} className="flex items-center gap-2 w-full rounded-lg border border-border/50 bg-secondary/40 px-3 py-2 hover:border-accent/50 hover:bg-secondary/60 hover:shadow-[0_0_12px_hsl(43_56%_52%_/_0.15)] active:scale-[0.97] transition-all cursor-pointer group" title="Klicken zum Kopieren">
-                            <p className="text-xs lg:text-sm font-medium text-foreground truncate flex-1 text-left">{acc.account_password || "–"}</p>
-                            {acc.account_password && <Copy className="h-3.5 w-3.5 text-accent shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />}
-                          </button>
-                        </div>
-                        <div>
-                          <p className="text-[10px] text-muted-foreground mb-1">Domain</p>
-                          {acc.account_domain ?
-                        <a href={`https://${acc.account_domain.replace(/^https?:\/\//, '')}`} target="_blank" rel="noopener noreferrer" className="flex items-center rounded-lg border border-border/50 bg-secondary/40 px-3 py-2 text-xs lg:text-sm font-medium text-primary underline underline-offset-2 hover:border-accent/50 hover:bg-secondary/60 hover:shadow-[0_0_12px_hsl(43_56%_52%_/_0.15)] transition-all truncate">{acc.account_domain}</a> :
-
-                        <div className="flex items-center rounded-lg border border-border/50 bg-secondary/40 px-3 py-2"><p className="text-xs lg:text-sm font-medium text-foreground truncate">–</p></div>
+                    const ds = getDriveState(acc.id);
+                    return (
+                      <div
+                        key={acc.id}
+                        className={
+                          assignedAccounts.length > 1 ? "p-3 rounded-lg border border-border/50 bg-secondary/20" : ""
                         }
-                        </div>
-                      </div>
-                      {/* Memo button – only if never seen globally */}
-                      {!localStorage.getItem("account_memo_seen") &&
-                    <button
-                      onClick={() => {setShowMemo(true);localStorage.setItem("account_memo_seen", "true");setDriveVersion((p) => p + 1);}}
-                      className="mt-3 flex items-center gap-2.5 w-full rounded-xl border border-accent/20 bg-accent/5 px-3.5 py-2.5 hover:bg-accent/10 active:scale-[0.98] transition-all cursor-pointer group">
-                      
-                          <div className="w-8 h-8 rounded-full bg-accent/15 border border-accent/25 flex items-center justify-center shrink-0">
-                            <Mic className="h-3.5 w-3.5 text-accent" />
+                      >
+                        {assignedAccounts.length > 1 && (
+                          <p className="text-[10px] text-muted-foreground font-medium mb-2">{acc.platform}</p>
+                        )}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          <div>
+                            <p className="text-[10px] text-muted-foreground mb-1">E-Mail</p>
+                            <button
+                              onClick={() => {
+                                if (acc.account_email) {
+                                  navigator.clipboard.writeText(acc.account_email);
+                                  toast.success("E-Mail kopiert!");
+                                }
+                              }}
+                              className="flex items-center gap-2 w-full rounded-lg border border-border/50 bg-secondary/40 px-3 py-2 hover:border-accent/50 hover:bg-secondary/60 hover:shadow-[0_0_12px_hsl(43_56%_52%_/_0.15)] active:scale-[0.97] transition-all cursor-pointer group"
+                              title="Klicken zum Kopieren"
+                            >
+                              <p className="text-xs lg:text-sm font-medium text-foreground truncate flex-1 text-left">
+                                {acc.account_email || "–"}
+                              </p>
+                              {acc.account_email && (
+                                <Copy className="h-3.5 w-3.5 text-accent shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
+                              )}
+                            </button>
                           </div>
-                          <span className="text-xs font-medium text-foreground">Kann ich direkt starten?</span>
-                          <span className="ml-auto text-[10px] text-accent opacity-70 group-hover:opacity-100 transition-opacity">Anhören</span>
-                        </button>
-                    }
-                      {!ds.hidden &&
-                    <div className="mt-3 border-t border-border/30 pt-3">
-                          {acc.drive_folder_id ? (
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <button
-                                  className="flex items-center gap-2 w-full rounded-lg border border-accent/30 bg-accent/5 px-3 py-2.5 text-xs font-medium text-accent hover:bg-accent/10 hover:border-accent/50 hover:shadow-[0_0_12px_hsl(43_56%_52%_/_0.15)] transition-all cursor-pointer"
-                                >
-                                  <span className="flex flex-col items-start gap-0.5">
-                                    <span>📂 Google Drive öffnen</span>
-                                    <span className="text-[10px] font-normal text-muted-foreground">Wozu brauche ich den Google Drive?</span>
-                                  </span>
-                                  <ExternalLink className="h-3 w-3 ml-auto opacity-70 shrink-0" />
-                                </button>
-                              </DialogTrigger>
-                              <DialogContent className="glass-card border-border sm:max-w-md max-h-[85vh] overflow-y-auto">
-                                <DialogHeader>
-                                  <DialogTitle className="text-foreground flex items-center gap-2 text-base">
-                                    📂 Wozu der Google Drive?
-                                  </DialogTitle>
-                                  <DialogDescription className="sr-only">Informationen zum Google Drive Ordner</DialogDescription>
-                                </DialogHeader>
-                                <div className="space-y-4">
-                                  <div className="space-y-2 text-sm text-muted-foreground leading-relaxed">
-                                    <p>
-                                      Im Google Drive findest du <span className="text-foreground font-medium">zusätzlichen Content</span>, der zum Teil noch nicht in der Cloud verfügbar ist.
-                                    </p>
-                                    <p>
-                                      Dort wird regelmäßig <span className="text-foreground font-medium">neuer Content hochgeladen</span> – außerdem findest du dort Content aus <span className="text-foreground font-medium">Model-Anfragen</span>, den du selbstständig hochladen kannst.
-                                    </p>
-                                  </div>
-                                  <div className="space-y-3 border-t border-border/30 pt-4">
-                                    <h3 className="text-sm font-semibold text-foreground">📤 So lädst du Content hoch</h3>
-                                    <div className="rounded-xl border border-border/50 bg-secondary/30 overflow-hidden aspect-video flex items-center justify-center">
-                                      <div className="text-center space-y-2 p-4">
-                                        <div className="w-12 h-12 mx-auto rounded-full bg-accent/10 flex items-center justify-center">
-                                          <span className="text-2xl">🎬</span>
+                          <div>
+                            <p className="text-[10px] text-muted-foreground mb-1">Passwort</p>
+                            <button
+                              onClick={() => {
+                                if (acc.account_password) {
+                                  navigator.clipboard.writeText(acc.account_password);
+                                  toast.success("Passwort kopiert!");
+                                }
+                              }}
+                              className="flex items-center gap-2 w-full rounded-lg border border-border/50 bg-secondary/40 px-3 py-2 hover:border-accent/50 hover:bg-secondary/60 hover:shadow-[0_0_12px_hsl(43_56%_52%_/_0.15)] active:scale-[0.97] transition-all cursor-pointer group"
+                              title="Klicken zum Kopieren"
+                            >
+                              <p className="text-xs lg:text-sm font-medium text-foreground truncate flex-1 text-left">
+                                {acc.account_password || "–"}
+                              </p>
+                              {acc.account_password && (
+                                <Copy className="h-3.5 w-3.5 text-accent shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
+                              )}
+                            </button>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-muted-foreground mb-1">Domain</p>
+                            {acc.account_domain ? (
+                              <a
+                                href={`https://${acc.account_domain.replace(/^https?:\/\//, "")}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center rounded-lg border border-border/50 bg-secondary/40 px-3 py-2 text-xs lg:text-sm font-medium text-primary underline underline-offset-2 hover:border-accent/50 hover:bg-secondary/60 hover:shadow-[0_0_12px_hsl(43_56%_52%_/_0.15)] transition-all truncate"
+                              >
+                                {acc.account_domain}
+                              </a>
+                            ) : (
+                              <div className="flex items-center rounded-lg border border-border/50 bg-secondary/40 px-3 py-2">
+                                <p className="text-xs lg:text-sm font-medium text-foreground truncate">–</p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        {/* Memo button – only if never seen globally */}
+                        {!localStorage.getItem("account_memo_seen") && (
+                          <button
+                            onClick={() => {
+                              setShowMemo(true);
+                              localStorage.setItem("account_memo_seen", "true");
+                              setDriveVersion((p) => p + 1);
+                            }}
+                            className="mt-3 flex items-center gap-2.5 w-full rounded-xl border border-accent/20 bg-accent/5 px-3.5 py-2.5 hover:bg-accent/10 active:scale-[0.98] transition-all cursor-pointer group"
+                          >
+                            <div className="w-8 h-8 rounded-full bg-accent/15 border border-accent/25 flex items-center justify-center shrink-0">
+                              <Mic className="h-3.5 w-3.5 text-accent" />
+                            </div>
+                            <span className="text-xs font-medium text-foreground">Kann ich direkt starten?</span>
+                            <span className="ml-auto text-[10px] text-accent opacity-70 group-hover:opacity-100 transition-opacity">
+                              Anhören
+                            </span>
+                          </button>
+                        )}
+                        {!ds.hidden && (
+                          <div className="mt-3 border-t border-border/30 pt-3">
+                            {acc.drive_folder_id ? (
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <button className="flex items-center gap-2 w-full rounded-lg border border-accent/30 bg-accent/5 px-3 py-2.5 text-xs font-medium text-accent hover:bg-accent/10 hover:border-accent/50 hover:shadow-[0_0_12px_hsl(43_56%_52%_/_0.15)] transition-all cursor-pointer">
+                                    <span className="flex flex-col items-start gap-0.5">
+                                      <span>📂 Google Drive öffnen</span>
+                                      <span className="text-[10px] font-normal text-muted-foreground">
+                                        Wozu brauche ich den Google Drive?
+                                      </span>
+                                    </span>
+                                    <ExternalLink className="h-3 w-3 ml-auto opacity-70 shrink-0" />
+                                  </button>
+                                </DialogTrigger>
+                                <DialogContent className="glass-card border-border sm:max-w-md max-h-[85vh] overflow-y-auto">
+                                  <DialogHeader>
+                                    <DialogTitle className="text-foreground flex items-center gap-2 text-base">
+                                      📂 Wozu der Google Drive?
+                                    </DialogTitle>
+                                    <DialogDescription className="sr-only">
+                                      Informationen zum Google Drive Ordner
+                                    </DialogDescription>
+                                  </DialogHeader>
+                                  <div className="space-y-4">
+                                    <div className="space-y-2 text-sm text-muted-foreground leading-relaxed">
+                                      <p>
+                                        Im Google Drive findest du{" "}
+                                        <span className="text-foreground font-medium">zusätzlichen Content</span>, der
+                                        zum Teil noch nicht in der Cloud verfügbar ist.
+                                      </p>
+                                      <p>
+                                        Dort wird regelmäßig{" "}
+                                        <span className="text-foreground font-medium">neuer Content hochgeladen</span> –
+                                        außerdem findest du dort Content aus{" "}
+                                        <span className="text-foreground font-medium">Model-Anfragen</span>, den du
+                                        selbstständig hochladen kannst.
+                                      </p>
+                                    </div>
+                                    <div className="space-y-3 border-t border-border/30 pt-4">
+                                      <h3 className="text-sm font-semibold text-foreground">
+                                        📤 So lädst du Content hoch
+                                      </h3>
+                                      <div className="rounded-xl border border-border/50 bg-secondary/30 overflow-hidden aspect-video flex items-center justify-center">
+                                        <div className="text-center space-y-2 p-4">
+                                          <div className="w-12 h-12 mx-auto rounded-full bg-accent/10 flex items-center justify-center">
+                                            <span className="text-2xl">🎬</span>
+                                          </div>
+                                          <p className="text-xs text-muted-foreground">Tutorial-Video kommt bald</p>
                                         </div>
-                                        <p className="text-xs text-muted-foreground">Tutorial-Video kommt bald</p>
                                       </div>
                                     </div>
+                                    <a
+                                      href={`https://drive.google.com/drive/folders/${acc.drive_folder_id}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="flex items-center justify-center gap-2 w-full rounded-xl border border-accent/30 bg-accent/10 px-4 py-3 text-sm font-semibold text-accent hover:bg-accent/20 hover:border-accent/50 hover:shadow-[0_0_16px_hsl(43_56%_52%_/_0.2)] transition-all"
+                                    >
+                                      📂 Google Drive öffnen
+                                      <ExternalLink className="h-4 w-4 opacity-70" />
+                                    </a>
                                   </div>
-                                  <a
-                                    href={`https://drive.google.com/drive/folders/${acc.drive_folder_id}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center justify-center gap-2 w-full rounded-xl border border-accent/30 bg-accent/10 px-4 py-3 text-sm font-semibold text-accent hover:bg-accent/20 hover:border-accent/50 hover:shadow-[0_0_16px_hsl(43_56%_52%_/_0.2)] transition-all"
-                                  >
-                                    📂 Google Drive öffnen
-                                    <ExternalLink className="h-4 w-4 opacity-70" />
-                                  </a>
+                                </DialogContent>
+                              </Dialog>
+                            ) : (
+                              <div className="flex items-start gap-3">
+                                <Checkbox
+                                  checked={ds.done}
+                                  onCheckedChange={(v) => {
+                                    setDriveState(acc.id, { done: !!v });
+                                    setDriveVersion((p) => p + 1);
+                                  }}
+                                  className="mt-0.5 shrink-0 border-accent data-[state=checked]:bg-accent data-[state=checked]:text-accent-foreground"
+                                />
+                                <div className="flex-1 min-w-0 space-y-2">
+                                  <div className="flex items-center justify-between gap-2">
+                                    <p
+                                      className={cn(
+                                        "text-xs font-semibold text-foreground",
+                                        ds.done && "line-through text-muted-foreground",
+                                      )}
+                                    >
+                                      📂 Google Drive Zugang anfordern
+                                    </p>
+                                    {ds.done && (
+                                      <button
+                                        onClick={() => {
+                                          setDriveState(acc.id, { hidden: true });
+                                          setDriveVersion((p) => p + 1);
+                                        }}
+                                        className="text-[10px] text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
+                                      >
+                                        Ausblenden
+                                      </button>
+                                    )}
+                                  </div>
+                                  {!ds.done && (
+                                    <>
+                                      <p className="text-[10px] text-muted-foreground">
+                                        Schick diese Nachricht in die WhatsApp-Gruppe:
+                                      </p>
+                                      <button
+                                        onClick={() => {
+                                          const msg = `Hey, könnt ihr mich bitte zum Google Drive hinzufügen? Meine E-Mail: ${user?.email || "[DEINE E-MAIL]"} | Model-Account: ${acc.account_email || "[ACCOUNT E-MAIL]"} – Danke! 🙏`;
+                                          navigator.clipboard.writeText(msg);
+                                          toast.success("Nachricht kopiert – WhatsApp öffnet sich…");
+                                          setTimeout(() => {
+                                            window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
+                                          }, 400);
+                                        }}
+                                        className="flex items-center gap-2 w-full rounded-lg border border-border/50 bg-secondary/40 px-3 py-2 hover:border-accent/50 hover:bg-secondary/60 active:scale-[0.98] transition-all cursor-pointer group text-left"
+                                        title="Kopieren & WhatsApp öffnen"
+                                      >
+                                        <p className="text-[11px] text-foreground leading-relaxed flex-1 min-w-0">
+                                          Hey, könnt ihr mich bitte zum Google Drive hinzufügen? Meine E-Mail:{" "}
+                                          <span className="font-semibold text-accent">
+                                            {user?.email || "[DEINE E-MAIL]"}
+                                          </span>{" "}
+                                          | Model-Account:{" "}
+                                          <span className="font-semibold text-accent">
+                                            {acc.account_email || "[ACCOUNT E-MAIL]"}
+                                          </span>{" "}
+                                          – Danke! 🙏
+                                        </p>
+                                        <Copy className="h-3.5 w-3.5 text-accent shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
+                                      </button>
+                                    </>
+                                  )}
                                 </div>
-                              </DialogContent>
-                            </Dialog>
-                          ) : (
-                          <div className="flex items-start gap-3">
-                            <Checkbox checked={ds.done} onCheckedChange={(v) => {setDriveState(acc.id, { done: !!v });setDriveVersion((p) => p + 1);}} className="mt-0.5 shrink-0 border-accent data-[state=checked]:bg-accent data-[state=checked]:text-accent-foreground" />
-                            <div className="flex-1 min-w-0 space-y-2">
-                              <div className="flex items-center justify-between gap-2">
-                                <p className={cn("text-xs font-semibold text-foreground", ds.done && "line-through text-muted-foreground")}>📂 Google Drive Zugang anfordern</p>
-                                {ds.done && <button onClick={() => {setDriveState(acc.id, { hidden: true });setDriveVersion((p) => p + 1);}} className="text-[10px] text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap">Ausblenden</button>}
                               </div>
-                              {!ds.done &&
-                          <>
-                                  <p className="text-[10px] text-muted-foreground">Schick diese Nachricht in die WhatsApp-Gruppe:</p>
-                                  <button onClick={() => {const msg = `Hey, könnt ihr mich bitte zum Google Drive hinzufügen? Meine E-Mail: ${user?.email || "[DEINE E-MAIL]"} | Model-Account: ${acc.account_email || "[ACCOUNT E-MAIL]"} – Danke! 🙏`;navigator.clipboard.writeText(msg);toast.success("Nachricht kopiert – WhatsApp öffnet sich…");setTimeout(() => {window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");}, 400);}} className="flex items-center gap-2 w-full rounded-lg border border-border/50 bg-secondary/40 px-3 py-2 hover:border-accent/50 hover:bg-secondary/60 active:scale-[0.98] transition-all cursor-pointer group text-left" title="Kopieren & WhatsApp öffnen">
-                                    <p className="text-[11px] text-foreground leading-relaxed flex-1 min-w-0">Hey, könnt ihr mich bitte zum Google Drive hinzufügen? Meine E-Mail: <span className="font-semibold text-accent">{user?.email || "[DEINE E-MAIL]"}</span> | Model-Account: <span className="font-semibold text-accent">{acc.account_email || "[ACCOUNT E-MAIL]"}</span> – Danke! 🙏</p>
-                                    <Copy className="h-3.5 w-3.5 text-accent shrink-0 opacity-70 group-hover:opacity-100 transition-opacity" />
-                                  </button>
-                                </>
-                          }
-                            </div>
+                            )}
                           </div>
-                          )}
-                        </div>
-                    }
-                    </div>);
-
-              })}
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-            }
+              )}
             </div>
-          }
+          )}
 
           {/* Demo Toggle für Model aktiv/inaktiv */}
           <div className="border-t border-border/30 px-4 py-2 lg:px-6 flex items-center gap-2">
@@ -925,14 +1309,16 @@ export default function Dashboard() {
 
           {/* Anfrage an das Model – oder Inaktiv-Hinweis */}
           <div className="border-t border-border/30">
-            {(demoModelInactive || assignedAccounts.some(acc => acc.model_active === false)) ? (
+            {demoModelInactive || assignedAccounts.some((acc) => acc.model_active === false) ? (
               <>
                 <div className="flex items-center gap-3 px-4 py-4 lg:px-6 lg:py-5">
                   <div className="h-10 w-10 rounded-full bg-destructive/15 flex items-center justify-center shrink-0">
                     <MessageSquare className="h-5 w-5 text-destructive/70" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-muted-foreground">Dein Model kann momentan keine Anfragen entgegennehmen</p>
+                    <p className="text-sm font-semibold text-muted-foreground">
+                      Dein Model kann momentan keine Anfragen entgegennehmen
+                    </p>
                     <button
                       onClick={() => setModelInactiveInfoOpen(true)}
                       className="text-[11px] text-accent/70 hover:text-accent underline underline-offset-2 mt-0.5 transition-colors"
@@ -946,12 +1332,15 @@ export default function Dashboard() {
                     <DialogHeader>
                       <DialogTitle className="text-foreground">Model momentan inaktiv</DialogTitle>
                       <DialogDescription className="text-muted-foreground">
-                        Dein Model hat uns mitgeteilt, dass sie aktuell keine neuen Anfragen entgegennehmen kann. Das ist der letzte Stand, den wir haben.
+                        Dein Model hat uns mitgeteilt, dass sie aktuell keine neuen Anfragen entgegennehmen kann. Das
+                        ist der letzte Stand, den wir haben.
                       </DialogDescription>
                     </DialogHeader>
                     <div className="rounded-lg border border-accent/20 bg-accent/5 p-4">
                       <p className="text-sm text-foreground">
-                        💰 <strong>Trotzdem kann gutes Geld verdient werden!</strong> Es ist bereits genug Content auf dem Account vorhanden, mit dem du weiterarbeiten kannst. Nutze den vorhandenen Content, um Umsatz zu machen.
+                        💰 <strong>Trotzdem kann gutes Geld verdient werden!</strong> Es ist bereits genug Content auf
+                        dem Account vorhanden, mit dem du weiterarbeiten kannst. Nutze den vorhandenen Content, um
+                        Umsatz zu machen.
                       </p>
                     </div>
                   </DialogContent>
@@ -968,156 +1357,206 @@ export default function Dashboard() {
           </div>
 
           {/* Bisherige Anfragen – einklappbar */}
-          {myRequests.length > 0 && (() => {
-            // Unseen = requests with status !== pending OR with admin_comment, that user hasn't seen yet
-            const unseenCount = myRequests.filter(r =>
-              (r.status !== "pending" || r.admin_comment) && !seenRequestIds.has(r.id + "_" + r.status + "_" + (r.admin_comment || ""))
-            ).length;
+          {myRequests.length > 0 &&
+            (() => {
+              // Unseen = requests with status !== pending OR with admin_comment, that user hasn't seen yet
+              const unseenCount = myRequests.filter(
+                (r) =>
+                  (r.status !== "pending" || r.admin_comment) &&
+                  !seenRequestIds.has(r.id + "_" + r.status + "_" + (r.admin_comment || "")),
+              ).length;
 
-            const markAllSeen = () => {
-              const newSeen = new Set(seenRequestIds);
-              myRequests.forEach(r => {
-                newSeen.add(r.id + "_" + r.status + "_" + (r.admin_comment || ""));
-              });
-              setSeenRequestIds(newSeen);
-              localStorage.setItem("seen_request_updates", JSON.stringify([...newSeen]));
-            };
+              const markAllSeen = () => {
+                const newSeen = new Set(seenRequestIds);
+                myRequests.forEach((r) => {
+                  newSeen.add(r.id + "_" + r.status + "_" + (r.admin_comment || ""));
+                });
+                setSeenRequestIds(newSeen);
+                localStorage.setItem("seen_request_updates", JSON.stringify([...newSeen]));
+              };
 
-            return (
-              <div className="border-t border-border/30">
-                <button
-                  onClick={() => {
-                    const newOpen = !requestsOpen;
-                    setRequestsOpen(newOpen);
-                    if (newOpen) markAllSeen();
-                  }}
-                  className="w-full flex items-center justify-between px-4 py-3 lg:px-6 hover:bg-secondary/20 transition-colors"
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-semibold text-foreground">Deine Anfragen ({myRequests.length})</span>
-                    {unseenCount > 0 && (
-                      <span className="h-5 min-w-5 px-1.5 rounded-full bg-accent text-accent-foreground text-[10px] font-bold flex items-center justify-center animate-in zoom-in duration-200">
-                        {unseenCount}
+              return (
+                <div className="border-t border-border/30">
+                  <button
+                    onClick={() => {
+                      const newOpen = !requestsOpen;
+                      setRequestsOpen(newOpen);
+                      if (newOpen) markAllSeen();
+                    }}
+                    className="w-full flex items-center justify-between px-4 py-3 lg:px-6 hover:bg-secondary/20 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-foreground">
+                        Deine Anfragen ({myRequests.length})
                       </span>
-                    )}
-                  </div>
-                  <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 ${requestsOpen ? "rotate-180" : ""}`} />
-                </button>
-                {requestsOpen && (
-                  <div className="px-4 pb-4 lg:px-6 lg:pb-6 space-y-2">
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <button className="flex items-center gap-2 text-[11px] text-accent hover:underline mb-1 cursor-pointer">
-                          <HelpCircle className="h-3.5 w-3.5" />
-                          Wie lange dauert es, bis eine Anfrage bearbeitet wird?
-                        </button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-sm bg-background border-border">
-                        <DialogHeader>
-                          <DialogTitle className="text-foreground text-sm">⏳ Bearbeitungsdauer</DialogTitle>
-                          <DialogDescription className="text-muted-foreground text-xs leading-relaxed pt-2">
-                            In der Regel werden Anfragen innerhalb von <strong className="text-foreground">24 bis 48 Stunden</strong> bearbeitet.
-                            <br /><br />
-                            In Sonderfällen – zum Beispiel wenn das Model gesundheitlich angeschlagen ist – kann es auch länger dauern.
-                          </DialogDescription>
-                        </DialogHeader>
-                      </DialogContent>
-                    </Dialog>
-                    {[...myRequests].sort((a, b) => a.status === "rejected" && b.status !== "rejected" ? 1 : b.status === "rejected" && a.status !== "rejected" ? -1 : 0).map((req) => (
-                      <div key={req.id} className="rounded-lg border border-border/50 bg-secondary/20 p-3 space-y-1.5">
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="flex flex-col">
-                            <span className="text-xs font-medium text-foreground">{req.model_name}</span>
-                            {(req as any).customer_name && (
-                              <span className="text-[10px] text-muted-foreground">Kunde: {(req as any).customer_name}</span>
+                      {unseenCount > 0 && (
+                        <span className="h-5 min-w-5 px-1.5 rounded-full bg-accent text-accent-foreground text-[10px] font-bold flex items-center justify-center animate-in zoom-in duration-200">
+                          {unseenCount}
+                        </span>
+                      )}
+                    </div>
+                    <ChevronDown
+                      className={`h-3.5 w-3.5 text-muted-foreground transition-transform duration-200 ${requestsOpen ? "rotate-180" : ""}`}
+                    />
+                  </button>
+                  {requestsOpen && (
+                    <div className="px-4 pb-4 lg:px-6 lg:pb-6 space-y-2">
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <button className="flex items-center gap-2 text-[11px] text-accent hover:underline mb-1 cursor-pointer">
+                            <HelpCircle className="h-3.5 w-3.5" />
+                            Wie lange dauert es, bis eine Anfrage bearbeitet wird?
+                          </button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-sm bg-background border-border">
+                          <DialogHeader>
+                            <DialogTitle className="text-foreground text-sm">⏳ Bearbeitungsdauer</DialogTitle>
+                            <DialogDescription className="text-muted-foreground text-xs leading-relaxed pt-2">
+                              In der Regel werden Anfragen innerhalb von{" "}
+                              <strong className="text-foreground">24 bis 48 Stunden</strong> bearbeitet.
+                              <br />
+                              <br />
+                              In Sonderfällen – zum Beispiel wenn das Model gesundheitlich angeschlagen ist – kann es
+                              auch länger dauern.
+                            </DialogDescription>
+                          </DialogHeader>
+                        </DialogContent>
+                      </Dialog>
+                      {[...myRequests]
+                        .sort((a, b) =>
+                          a.status === "rejected" && b.status !== "rejected"
+                            ? 1
+                            : b.status === "rejected" && a.status !== "rejected"
+                              ? -1
+                              : 0,
+                        )
+                        .map((req) => (
+                          <div
+                            key={req.id}
+                            className="rounded-lg border border-border/50 bg-secondary/20 p-3 space-y-1.5"
+                          >
+                            <div className="flex items-center justify-between gap-2">
+                              <div className="flex flex-col">
+                                <span className="text-xs font-medium text-foreground">{req.model_name}</span>
+                                {(req as any).customer_name && (
+                                  <span className="text-[10px] text-muted-foreground">
+                                    Kunde: {(req as any).customer_name}
+                                  </span>
+                                )}
+                              </div>
+                              <Badge
+                                variant={
+                                  req.status === "accepted"
+                                    ? "default"
+                                    : req.status === "rejected"
+                                      ? "destructive"
+                                      : req.status === "in_progress"
+                                        ? "secondary"
+                                        : "secondary"
+                                }
+                                className="text-[10px]"
+                              >
+                                {req.status === "pending"
+                                  ? "⏳ Ausstehend"
+                                  : req.status === "accepted"
+                                    ? "✅ Angenommen"
+                                    : req.status === "in_progress"
+                                      ? "⏳ Wird bearbeitet"
+                                      : "❌ Abgelehnt"}
+                              </Badge>
+                            </div>
+                            <p className="text-[10px] text-muted-foreground line-clamp-2">{req.description}</p>
+                            {req.admin_comment && (
+                              <div className="flex items-start gap-1.5 rounded-md bg-accent/10 border border-accent/20 px-2.5 py-2 mt-1">
+                                <MessageSquare className="h-3 w-3 text-accent shrink-0 mt-0.5" />
+                                <p className="text-[11px] text-foreground leading-relaxed">{req.admin_comment}</p>
+                              </div>
+                            )}
+                            {/* Content Link with Tutorial Dialog */}
+                            {(req as any).content_link &&
+                              (req.status === "accepted" || req.status === "in_progress") && (
+                                <Dialog>
+                                  <DialogTrigger asChild>
+                                    <button className="flex items-center gap-1.5 rounded-md bg-accent/10 border border-accent/20 px-2.5 py-2 mt-1 hover:bg-accent/15 transition-colors w-full text-left">
+                                      <ExternalLink className="h-3 w-3 text-accent shrink-0" />
+                                      <span className="text-[11px] text-accent font-medium">
+                                        Link zum angefragten Content
+                                      </span>
+                                    </button>
+                                  </DialogTrigger>
+                                  <DialogContent className="max-w-sm">
+                                    <DialogHeader>
+                                      <DialogTitle className="text-sm">Content herunterladen & hochladen</DialogTitle>
+                                      <DialogDescription className="text-xs text-muted-foreground">
+                                        Schau dir kurz das Tutorial an, wie du den Content runterlädst und dann selbst
+                                        hochlädst.
+                                      </DialogDescription>
+                                    </DialogHeader>
+                                    <div className="space-y-4">
+                                      {/* Tutorial Video */}
+                                      <div className="rounded-lg overflow-hidden border border-border/50 aspect-video bg-secondary/30">
+                                        <iframe
+                                          src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+                                          title="Content Tutorial"
+                                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                          allowFullScreen
+                                          className="w-full h-full"
+                                        />
+                                      </div>
+
+                                      {/* Content Link */}
+                                      <a
+                                        href={(req as any).content_link}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        onClickCapture={(e) => e.stopPropagation()}
+                                        onPointerDownCapture={(e) => e.stopPropagation()}
+                                        className="flex items-center justify-center gap-2 w-full rounded-lg bg-accent text-accent-foreground px-4 py-2.5 text-sm font-medium hover:bg-accent/90 transition-colors"
+                                      >
+                                        <ExternalLink className="h-4 w-4" />
+                                        Content öffnen
+                                      </a>
+                                    </div>
+                                  </DialogContent>
+                                </Dialog>
+                              )}
+                            {/* Bearbeiten Button – nur bei Admin-Kommentar */}
+                            {req.admin_comment && req.status !== "rejected" && (
+                              <button
+                                onClick={() =>
+                                  setEditRequest({
+                                    id: req.id,
+                                    model_name: req.model_name,
+                                    request_type: req.request_type as "individual" | "general",
+                                    price: req.price,
+                                    description: req.description,
+                                    customer_name: (req as any).customer_name,
+                                  })
+                                }
+                                className="flex items-center gap-1.5 text-[10px] text-accent hover:text-accent/80 transition-colors mt-1 cursor-pointer"
+                              >
+                                <Pencil className="h-3 w-3" />
+                                Anfrage bearbeiten
+                              </button>
                             )}
                           </div>
-                          <Badge variant={req.status === "accepted" ? "default" : req.status === "rejected" ? "destructive" : req.status === "in_progress" ? "secondary" : "secondary"} className="text-[10px]">
-                            {req.status === "pending" ? "⏳ Ausstehend" : req.status === "accepted" ? "✅ Angenommen" : req.status === "in_progress" ? "⏳ Wird bearbeitet" : "❌ Abgelehnt"}
-                          </Badge>
-                        </div>
-                        <p className="text-[10px] text-muted-foreground line-clamp-2">{req.description}</p>
-                        {req.admin_comment && (
-                          <div className="flex items-start gap-1.5 rounded-md bg-accent/10 border border-accent/20 px-2.5 py-2 mt-1">
-                            <MessageSquare className="h-3 w-3 text-accent shrink-0 mt-0.5" />
-                            <p className="text-[11px] text-foreground leading-relaxed">{req.admin_comment}</p>
-                          </div>
-                        )}
-                        {/* Content Link with Tutorial Dialog */}
-                        {(req as any).content_link && (req.status === "accepted" || req.status === "in_progress") && (
-                          <Dialog>
-                            <DialogTrigger asChild>
-                              <button className="flex items-center gap-1.5 rounded-md bg-accent/10 border border-accent/20 px-2.5 py-2 mt-1 hover:bg-accent/15 transition-colors w-full text-left">
-                                <ExternalLink className="h-3 w-3 text-accent shrink-0" />
-                                <span className="text-[11px] text-accent font-medium">Link zum angefragten Content</span>
-                              </button>
-                            </DialogTrigger>
-                            <DialogContent className="max-w-sm">
-                              <DialogHeader>
-                                <DialogTitle className="text-sm">Content herunterladen & hochladen</DialogTitle>
-                                <DialogDescription className="text-xs text-muted-foreground">
-                                  Schau dir kurz das Tutorial an, wie du den Content runterlädst und dann selbst hochlädst.
-                                </DialogDescription>
-                              </DialogHeader>
-                              <div className="space-y-4">
-                                {/* Tutorial Video */}
-                                <div className="rounded-lg overflow-hidden border border-border/50 aspect-video bg-secondary/30">
-                                  <iframe
-                                    src="https://www.youtube.com/embed/dQw4w9WgXcQ"
-                                    title="Content Tutorial"
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                    allowFullScreen
-                                    className="w-full h-full"
-                                  />
-                                </div>
-
-                                {/* Content Link */}
-                                <a
-                                  href={(req as any).content_link}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  onClickCapture={(e) => e.stopPropagation()}
-                                  onPointerDownCapture={(e) => e.stopPropagation()}
-                                  className="flex items-center justify-center gap-2 w-full rounded-lg bg-accent text-accent-foreground px-4 py-2.5 text-sm font-medium hover:bg-accent/90 transition-colors"
-                                >
-                                  <ExternalLink className="h-4 w-4" />
-                                  Content öffnen
-                                </a>
-                              </div>
-                            </DialogContent>
-                          </Dialog>
-                        )}
-                        {/* Bearbeiten Button – nur bei Admin-Kommentar */}
-                        {req.admin_comment && req.status !== "rejected" && (
-                          <button
-                            onClick={() => setEditRequest({
-                              id: req.id,
-                              model_name: req.model_name,
-                              request_type: req.request_type as "individual" | "general",
-                              price: req.price,
-                              description: req.description,
-                              customer_name: (req as any).customer_name,
-                            })}
-                            className="flex items-center gap-1.5 text-[10px] text-accent hover:text-accent/80 transition-colors mt-1 cursor-pointer"
-                          >
-                            <Pencil className="h-3 w-3" />
-                            Anfrage bearbeiten
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })()}
+                        ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
         </motion.section>
 
         {/* MassDM Generator */}
-        <div data-tour="massdm"><MassDmGenerator /></div>
+        <div data-tour="massdm">
+          <MassDmGenerator />
+        </div>
 
         {/* Tägliche Aufgaben */}
-        <div data-tour="checklist"><DailyChecklist /></div>
+        <div data-tour="checklist">
+          <DailyChecklist />
+        </div>
 
         {/* Bonus Model - alles in einer Karte */}
         <BonusModelSection
@@ -1134,7 +1573,9 @@ export default function Dashboard() {
       </main>
 
       <DashboardChat externalOpen={chatOpen} onExternalOpenChange={setChatOpen} />
-    </div>);}
+    </div>
+  );
+}
 
 function BonusModelSection({
   monthlyRevenue,
@@ -1183,9 +1624,9 @@ function BonusModelSection({
         <div
           className="absolute inset-0 opacity-[0.04]"
           style={{
-            background: 'linear-gradient(105deg, transparent 40%, hsl(43 56% 52%) 50%, transparent 60%)',
-            backgroundSize: '200% 100%',
-            animation: 'bonus-sweep 14s ease-in-out infinite',
+            background: "linear-gradient(105deg, transparent 40%, hsl(43 56% 52%) 50%, transparent 60%)",
+            backgroundSize: "200% 100%",
+            animation: "bonus-sweep 14s ease-in-out infinite",
           }}
         />
       </div>
@@ -1204,19 +1645,22 @@ function BonusModelSection({
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => window.location.href = "/leaderboard"}
+              onClick={() => (window.location.href = "/leaderboard")}
               className="flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-medium bg-secondary/50 text-muted-foreground border border-border/30 hover:border-accent/20 hover:text-foreground transition-all"
             >
               <Trophy className="h-3 w-3" />
               Zur Bestenliste
             </button>
             <button
-              onClick={() => { setDemoMode(!demoMode); setDemoTierIndex(0); }}
+              onClick={() => {
+                setDemoMode(!demoMode);
+                setDemoTierIndex(0);
+              }}
               className={cn(
                 "flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-medium transition-all",
                 demoMode
                   ? "bg-accent/20 text-accent border border-accent/30"
-                  : "bg-secondary/50 text-muted-foreground border border-border/30 hover:border-accent/20 hover:text-foreground"
+                  : "bg-secondary/50 text-muted-foreground border border-border/30 hover:border-accent/20 hover:text-foreground",
               )}
             >
               {demoMode ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
@@ -1275,19 +1719,19 @@ function BonusModelSection({
               const isPassed = activeRevenue > tier.max;
               const isTitan = tier.name === "Titan";
               return (
-                  <motion.div
+                <motion.div
                   key={tier.name}
                   animate={isActive ? { scale: 1 } : { scale: 1 }}
                   className={cn(
                     "relative rounded-xl overflow-hidden transition-all duration-300",
                     isTitan && "col-span-3 lg:col-span-1",
                     isActive
-                      ? (tier.name === "Diamond" || tier.name === "Titan")
+                      ? tier.name === "Diamond" || tier.name === "Titan"
                         ? "gold-gradient-border-animated bg-[hsl(0_0%_8%/0.8)]"
                         : "border border-accent/50 bg-[hsl(0_0%_8%/0.8)] shadow-[0_0_24px_hsl(43_56%_52%/0.15)]"
                       : isPassed
                         ? "border border-accent/15 bg-[hsl(0_0%_7%/0.5)]"
-                        : "border border-border/20 bg-[hsl(0_0%_6%/0.4)]"
+                        : "border border-border/20 bg-[hsl(0_0%_6%/0.4)]",
                   )}
                 >
                   {/* Active top shine */}
@@ -1301,28 +1745,44 @@ function BonusModelSection({
                     </div>
                   )}
                   <div className="relative flex flex-col items-center text-center p-3 lg:p-4 gap-1">
-                    <span className={cn(
-                      "transition-all duration-300",
-                      isActive ? "text-2xl lg:text-3xl" : "text-xl lg:text-2xl"
-                    )}>
+                    <span
+                      className={cn(
+                        "transition-all duration-300",
+                        isActive ? "text-2xl lg:text-3xl" : "text-xl lg:text-2xl",
+                      )}
+                    >
                       {tier.emoji}
                     </span>
-                    <p className={cn(
-                      "font-bold text-[10px] lg:text-xs leading-tight tracking-wide uppercase",
-                      isActive ? "text-gold-gradient" : isPassed ? "text-accent/40" : "text-muted-foreground/60"
-                    )}>
+                    <p
+                      className={cn(
+                        "font-bold text-[10px] lg:text-xs leading-tight tracking-wide uppercase",
+                        isActive ? "text-gold-gradient" : isPassed ? "text-accent/40" : "text-muted-foreground/60",
+                      )}
+                    >
                       {tier.name}
                     </p>
-                    <p className={cn(
-                      "font-bold leading-none",
-                      isActive ? "text-lg lg:text-xl text-foreground" : isPassed ? "text-base lg:text-lg text-accent/30" : "text-base lg:text-lg text-muted-foreground/50"
-                    )}>
+                    <p
+                      className={cn(
+                        "font-bold leading-none",
+                        isActive
+                          ? "text-lg lg:text-xl text-foreground"
+                          : isPassed
+                            ? "text-base lg:text-lg text-accent/30"
+                            : "text-base lg:text-lg text-muted-foreground/50",
+                      )}
+                    >
                       {tier.rate}%
                     </p>
-                    <p className={cn(
-                      "text-[10px] lg:text-xs leading-tight font-medium",
-                      isActive ? "text-accent/70" : isPassed ? "text-muted-foreground/40" : "text-muted-foreground/60"
-                    )}>
+                    <p
+                      className={cn(
+                        "text-[10px] lg:text-xs leading-tight font-medium",
+                        isActive
+                          ? "text-accent/70"
+                          : isPassed
+                            ? "text-muted-foreground/40"
+                            : "text-muted-foreground/60",
+                      )}
+                    >
                       ab {tier.min.toLocaleString("de-DE")}€
                     </p>
                   </div>
@@ -1332,45 +1792,52 @@ function BonusModelSection({
           </div>
 
           {/* Progress bar */}
-          {activeNextTier && (() => {
-            const isAlmostThere = activeProgress >= 85;
-            const remaining = activeNextTier.min - activeRevenue;
-            return (
-              <div className="mt-3 space-y-1.5">
-                <div className="relative">
-                  <Progress
-                    value={activeProgress}
-                    className={`h-2.5 [&>div]:bg-accent shimmer-bar transition-all duration-500 ${isAlmostThere ? "gold-glow [&>div]:animate-pulse" : ""}`}
-                  />
-                  {isAlmostThere && (
-                    <motion.div
-                      className="absolute -top-6 right-0 bg-accent text-accent-foreground text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg"
-                      initial={{ scale: 0, opacity: 0 }}
-                      animate={{ scale: [1, 1.1, 1], opacity: 1 }}
-                      transition={{ duration: 0.6, repeat: Infinity, repeatDelay: 2 }}
-                    >
-                      🔥 Fast da! Nur noch {remaining.toLocaleString("de-DE")}€!
-                    </motion.div>
-                  )}
+          {activeNextTier &&
+            (() => {
+              const isAlmostThere = activeProgress >= 85;
+              const remaining = activeNextTier.min - activeRevenue;
+              return (
+                <div className="mt-3 space-y-1.5">
+                  <div className="relative">
+                    <Progress
+                      value={activeProgress}
+                      className={`h-2.5 [&>div]:bg-accent shimmer-bar transition-all duration-500 ${isAlmostThere ? "gold-glow [&>div]:animate-pulse" : ""}`}
+                    />
+                    {isAlmostThere && (
+                      <motion.div
+                        className="absolute -top-6 right-0 bg-accent text-accent-foreground text-[10px] font-bold px-2 py-0.5 rounded-full shadow-lg"
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: [1, 1.1, 1], opacity: 1 }}
+                        transition={{ duration: 0.6, repeat: Infinity, repeatDelay: 2 }}
+                      >
+                        🔥 Fast da! Nur noch {remaining.toLocaleString("de-DE")}€!
+                      </motion.div>
+                    )}
+                  </div>
+                  <div className="flex justify-between text-[9px] lg:text-[10px] text-muted-foreground">
+                    <span>
+                      {activeTier.emoji} {activeRevenue.toLocaleString("de-DE")}€
+                    </span>
+                    <span>
+                      Noch <span className="text-accent font-semibold">{remaining.toLocaleString("de-DE")}€</span> bis{" "}
+                      {activeNextTier.emoji} {activeNextTier.name}
+                    </span>
+                  </div>
+                  {(() => {
+                    const now = new Date();
+                    const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+                    const daysLeft = Math.max(1, daysInMonth - now.getDate());
+                    const dailyAvg = Math.ceil(remaining / daysLeft);
+                    return (
+                      <p className="text-[9px] lg:text-[10px] text-muted-foreground text-center mt-1">
+                        ⌀ <span className="text-accent font-semibold">{dailyAvg.toLocaleString("de-DE")}€</span> pro Tag
+                        nötig für {activeNextTier.emoji} {activeNextTier.name}
+                      </p>
+                    );
+                  })()}
                 </div>
-                <div className="flex justify-between text-[9px] lg:text-[10px] text-muted-foreground">
-                  <span>{activeTier.emoji} {activeRevenue.toLocaleString("de-DE")}€</span>
-                  <span>Noch <span className="text-accent font-semibold">{remaining.toLocaleString("de-DE")}€</span> bis {activeNextTier.emoji} {activeNextTier.name}</span>
-                </div>
-                {(() => {
-                  const now = new Date();
-                  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-                  const daysLeft = Math.max(1, daysInMonth - now.getDate());
-                  const dailyAvg = Math.ceil(remaining / daysLeft);
-                  return (
-                    <p className="text-[9px] lg:text-[10px] text-muted-foreground text-center mt-1">
-                      ⌀ <span className="text-accent font-semibold">{dailyAvg.toLocaleString("de-DE")}€</span> pro Tag nötig für {activeNextTier.emoji} {activeNextTier.name}
-                    </p>
-                  );
-                })()}
-              </div>
-            );
-          })()}
+              );
+            })()}
           {activeIsTop && (
             <p className="text-[10px] text-accent font-semibold mt-3 text-center">🏆 Höchste Stufe erreicht!</p>
           )}
@@ -1414,31 +1881,31 @@ function BonusModelSection({
                 <p className="text-[10px] lg:text-xs text-muted-foreground">30 Tage in Folge mind. 100€ Umsatz</p>
               </div>
             </div>
-            
           </div>
           <MonthlyStreakTracker dailyRevenue={umsatz} />
         </motion.div>
       </motion.div>
 
       <p className="text-[10px] lg:text-xs text-muted-foreground">
-        Deine Rate gilt für den <strong className="text-foreground">gesamten Monatsumsatz</strong> und wird automatisch angepasst.
+        Deine Rate gilt für den <strong className="text-foreground">gesamten Monatsumsatz</strong> und wird automatisch
+        angepasst.
       </p>
       <p className="text-[10px] lg:text-xs text-muted-foreground">
-        7 Tage × 30€ = <strong className="text-foreground">Account Upgrade</strong> · 30 Tage × 100€ = <strong className="text-foreground">Diamond Stufe 💎</strong>
+        7 Tage × 30€ = <strong className="text-foreground">Account Upgrade</strong> · 30 Tage × 100€ ={" "}
+        <strong className="text-foreground">Diamond Stufe 💎</strong>
       </p>
     </motion.section>
   );
 }
 const REFERRAL_LINKEDIN_URL = "LINKEDIN_URL";
 
-
-function DashboardBillingInfo({ onNavigate, groupName }: {onNavigate: () => void; groupName: string;}) {
+function DashboardBillingInfo({ onNavigate, groupName }: { onNavigate: () => void; groupName: string }) {
   const now = new Date();
   const deadline = endOfMonth(addMonths(now, 1));
   const daysLeft = differenceInDays(deadline, now);
   const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
   const totalDays = differenceInDays(deadline, startDate);
-  const progressPct = Math.round((totalDays - daysLeft) / totalDays * 100);
+  const progressPct = Math.round(((totalDays - daysLeft) / totalDays) * 100);
 
   const referralText = `Hey! Ich arbeite als Chatter und verdiene damit richtig gutes Geld. Wenn du Lust hast, bewirb dich hier!\n\nWichtig: Gib bei der Bewerbung meinen Gruppennamen „${groupName}" an – das ist nötig, damit es zugeordnet werden kann!\n\nLink zum Bewerben: ${REFERRAL_LINKEDIN_URL}`;
 
@@ -1468,12 +1935,16 @@ function DashboardBillingInfo({ onNavigate, groupName }: {onNavigate: () => void
           </div>
           <div className="space-y-0.5">
             <p className="text-[10px] text-muted-foreground">Nächste Abrechnung</p>
-            <p className="text-xs font-semibold text-gold-gradient">{format(deadline, "dd. MMM yyyy", { locale: de })}</p>
+            <p className="text-xs font-semibold text-gold-gradient">
+              {format(deadline, "dd. MMM yyyy", { locale: de })}
+            </p>
           </div>
         </div>
         <div className="space-y-1">
           <div className="flex justify-between text-[10px] text-muted-foreground">
-            <span>Noch <span className="text-accent font-semibold">{daysLeft}</span> Tage</span>
+            <span>
+              Noch <span className="text-accent font-semibold">{daysLeft}</span> Tage
+            </span>
             <span>{format(deadline, "dd.MM.yyyy")}</span>
           </div>
           <div className="w-full h-1.5 rounded-full bg-secondary overflow-hidden shimmer-bar">
@@ -1484,7 +1955,8 @@ function DashboardBillingInfo({ onNavigate, groupName }: {onNavigate: () => void
 
       <Button
         onClick={onNavigate}
-        className="w-full h-11 bg-gradient-to-r from-accent to-accent/80 text-accent-foreground hover:brightness-110 transition-all">
+        className="w-full h-11 bg-gradient-to-r from-accent to-accent/80 text-accent-foreground hover:brightness-110 transition-all"
+      >
         <FileText className="mr-2 h-4 w-4" />
         Rechnung erstellen
       </Button>
@@ -1504,7 +1976,9 @@ function DashboardBillingInfo({ onNavigate, groupName }: {onNavigate: () => void
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-semibold text-foreground">Empfehle deine Freunde</p>
-                <p className="text-[10px] text-muted-foreground">Verdiene 1% von dem, was sie verdienen – <span className="text-accent font-semibold">Lifetime</span></p>
+                <p className="text-[10px] text-muted-foreground">
+                  Verdiene 1% von dem, was sie verdienen – <span className="text-accent font-semibold">Lifetime</span>
+                </p>
               </div>
               <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
             </div>
@@ -1525,8 +1999,9 @@ function DashboardBillingInfo({ onNavigate, groupName }: {onNavigate: () => void
             <div className="glass-card-subtle rounded-lg p-3 space-y-2">
               <p className="text-xs text-foreground font-medium">So funktioniert's:</p>
               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                Für jeden Freund, den du zu uns bringst, erhältst du <span className="text-accent font-semibold">1% von dessen Verdienst – lebenslang</span>. 
-                Je mehr Freunde du empfiehlst, desto mehr verdienst du passiv dazu.
+                Für jeden Freund, den du zu uns bringst, erhältst du{" "}
+                <span className="text-accent font-semibold">1% von dessen Verdienst – lebenslang</span>. Je mehr Freunde
+                du empfiehlst, desto mehr verdienst du passiv dazu.
               </p>
             </div>
 
@@ -1537,7 +2012,9 @@ function DashboardBillingInfo({ onNavigate, groupName }: {onNavigate: () => void
                 Wichtig
               </p>
               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                Dein Freund muss im Bewerbungsprozess deinen <span className="text-foreground font-semibold">Gruppennamen</span> angeben, damit wir die Empfehlung zuordnen können.
+                Dein Freund muss im Bewerbungsprozess deinen{" "}
+                <span className="text-foreground font-semibold">Gruppennamen</span> angeben, damit wir die Empfehlung
+                zuordnen können.
               </p>
               {groupName && (
                 <div className="flex items-center gap-2 mt-1">
@@ -1556,7 +2033,9 @@ function DashboardBillingInfo({ onNavigate, groupName }: {onNavigate: () => void
                 try {
                   await navigator.clipboard.writeText(REFERRAL_LINKEDIN_URL);
                   toast.success("Bewerbungslink kopiert!");
-                } catch { toast.error("Kopieren fehlgeschlagen"); }
+                } catch {
+                  toast.error("Kopieren fehlgeschlagen");
+                }
               }}
               className="w-full h-10 text-xs border-accent/30 hover:bg-accent/10 hover:text-accent"
             >
@@ -1569,10 +2048,13 @@ function DashboardBillingInfo({ onNavigate, groupName }: {onNavigate: () => void
               <p className="text-xs text-foreground font-medium">Nachricht zum Teilen:</p>
               <div className="glass-card-subtle rounded-lg p-3 space-y-2">
                 <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  Hey! Ich arbeite als Chatter und verdiene damit richtig gutes Geld. Wenn du Lust hast, bewirb dich hier!
+                  Hey! Ich arbeite als Chatter und verdiene damit richtig gutes Geld. Wenn du Lust hast, bewirb dich
+                  hier!
                 </p>
                 <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  Wichtig: Gib bei der Bewerbung meinen Gruppennamen „<span className="text-accent font-semibold">{groupName || "—"}</span>" an – das ist nötig, damit es zugeordnet werden kann!
+                  Wichtig: Gib bei der Bewerbung meinen Gruppennamen „
+                  <span className="text-accent font-semibold">{groupName || "—"}</span>" an – das ist nötig, damit es
+                  zugeordnet werden kann!
                 </p>
                 <p className="text-[11px] text-muted-foreground leading-relaxed">
                   Link zum Bewerben:{" "}
@@ -1591,5 +2073,6 @@ function DashboardBillingInfo({ onNavigate, groupName }: {onNavigate: () => void
           </div>
         </DialogContent>
       </Dialog>
-    </div>);
+    </div>
+  );
 }
