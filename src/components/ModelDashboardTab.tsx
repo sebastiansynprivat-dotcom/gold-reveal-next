@@ -14,10 +14,31 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Upload, FileText, Trash2, Download, Save, Loader2, Star,
-  Percent, Wallet, StickyNote, CheckCircle2, FileDown, Plus,
-  Search, ChevronRight, TrendingUp, KeyRound, Copy, Eye, EyeOff,
-  Users, Globe, User, FolderTree, Pencil
+  Upload,
+  FileText,
+  Trash2,
+  Download,
+  Save,
+  Loader2,
+  Star,
+  Percent,
+  Wallet,
+  StickyNote,
+  CheckCircle2,
+  FileDown,
+  Plus,
+  Search,
+  ChevronRight,
+  TrendingUp,
+  KeyRound,
+  Copy,
+  Eye,
+  EyeOff,
+  Users,
+  Globe,
+  User,
+  FolderTree,
+  Pencil,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import CreditNoteForm from "@/components/CreditNoteForm";
@@ -73,9 +94,9 @@ const CURRENCIES = ["EUR", "USD", "GBP", "CHF", "AED"] as const;
 const PLATFORMS = ["4Based", "Maloum", "Brezzels", "FansyMe"] as const;
 const PLATFORM_DOMAINS: Record<string, string> = {
   "4Based": "4based.com",
-  "Maloum": "malum.com",
-  "Brezzels": "brezzels.com",
-  "FansyMe": "fansyme.com",
+  Maloum: "malum.com",
+  Brezzels: "brezzels.com",
+  FansyMe: "fansyme.com",
 };
 
 // ─── Animated counter ───
@@ -85,7 +106,10 @@ function useAnimatedCounter(target: number, duration = 1200) {
   useEffect(() => {
     const start = prevTarget.current;
     prevTarget.current = target;
-    if (start === target) { setValue(target); return; }
+    if (start === target) {
+      setValue(target);
+      return;
+    }
     const startTime = performance.now();
     let raf: number;
     const anim = (now: number) => {
@@ -104,13 +128,26 @@ function useAnimatedCounter(target: number, duration = 1200) {
 
 function AnimatedGoldValue({ value, suffix = "€", className }: { value: number; suffix?: string; className?: string }) {
   const animated = useAnimatedCounter(value);
-  return <span className={className}>{animated.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{suffix}</span>;
+  return (
+    <span className={className}>
+      {animated.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+      {suffix}
+    </span>
+  );
 }
 
 // ─── Section wrapper ───
 function Section({
-  icon: Icon, title, children, delay = 0,
-}: { icon: React.ElementType; title: string; children: React.ReactNode; delay?: number }) {
+  icon: Icon,
+  title,
+  children,
+  delay = 0,
+}: {
+  icon: React.ElementType;
+  title: string;
+  children: React.ReactNode;
+  delay?: number;
+}) {
   return (
     <motion.section
       initial={{ opacity: 0, y: 16 }}
@@ -131,9 +168,9 @@ function Section({
 
 const platformColors: Record<string, string> = {
   "4Based": "bg-blue-500/15 text-blue-400 border-blue-500/30",
-  "Maloum": "bg-purple-500/15 text-purple-400 border-purple-500/30",
-  "Brezzels": "bg-orange-500/15 text-orange-400 border-orange-500/30",
-  "FansyMe": "bg-pink-500/15 text-pink-400 border-pink-500/30",
+  Maloum: "bg-purple-500/15 text-purple-400 border-purple-500/30",
+  Brezzels: "bg-orange-500/15 text-orange-400 border-orange-500/30",
+  FansyMe: "bg-pink-500/15 text-pink-400 border-pink-500/30",
 };
 
 // ─── Main Component ───
@@ -153,11 +190,29 @@ export default function ModelDashboardTab() {
   const [modelAccounts, setModelAccounts] = useState<AccountRow[]>([]);
 
   // Shared account entry factory (simplified: only email/password/domain per platform)
-  const emptyAccountEntries = () => PLATFORMS.reduce((acc, p) => ({ ...acc, [p]: { selected: false, account_email: "", account_password: "", account_domain: PLATFORM_DOMAINS[p] || "" } }), {} as Record<string, { selected: boolean; account_email: string; account_password: string; account_domain: string }>);
+  const emptyAccountEntries = () =>
+    PLATFORMS.reduce(
+      (acc, p) => ({
+        ...acc,
+        [p]: { selected: false, account_email: "", account_password: "", account_domain: PLATFORM_DOMAINS[p] || "" },
+      }),
+      {} as Record<
+        string,
+        { selected: boolean; account_email: string; account_password: string; account_domain: string }
+      >,
+    );
 
   // Create model dialog
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [newModel, setNewModel] = useState({ name: "", username: "", address: "", drive_folder_id: "", model_language: "de" as "de" | "en", model_agency: "shex" as "shex" | "syn", model_active: true });
+  const [newModel, setNewModel] = useState({
+    name: "",
+    username: "",
+    address: "",
+    drive_folder_id: "",
+    model_language: "de" as "de" | "en",
+    model_agency: "shex" as "shex" | "syn",
+    model_active: true,
+  });
   const [creating, setCreating] = useState(false);
   const [createAccounts, setCreateAccounts] = useState(emptyAccountEntries);
 
@@ -168,7 +223,11 @@ export default function ModelDashboardTab() {
 
   // Inline edit account
   const [editingAccountId, setEditingAccountId] = useState<string | null>(null);
-  const [editAccountData, setEditAccountData] = useState({ account_email: "", account_password: "", account_domain: "" });
+  const [editAccountData, setEditAccountData] = useState({
+    account_email: "",
+    account_password: "",
+    account_domain: "",
+  });
 
   // Model login dialog
   const [modelLoginDialog, setModelLoginDialog] = useState(false);
@@ -179,29 +238,30 @@ export default function ModelDashboardTab() {
 
   // Revenue from model_dashboard (per-platform)
   const [dashboardRevenues, setDashboardRevenues] = useState<Record<string, number>>({});
-  const [platformRevenues, setPlatformRevenues] = useState<Record<string, { fourbased: number; maloum: number; brezzels: number }>>({});
+  const [platformRevenues, setPlatformRevenues] = useState<
+    Record<string, { fourbased: number; maloum: number; brezzels: number }>
+  >({});
 
   const detailRef = useRef<HTMLDivElement>(null);
 
   // ─── Load models ───
   const loadModels = useCallback(async () => {
-    const { data } = await (supabase.from("models") as any)
-      .select("*")
-      .order("name");
+    const { data } = await (supabase.from("models") as any).select("*").order("name");
     if (data) setModels(data as ModelRow[]);
     setLoading(false);
   }, []);
 
-  useEffect(() => { loadModels(); }, [loadModels]);
-
-
-
+  useEffect(() => {
+    loadModels();
+  }, [loadModels]);
 
   // ─── Load accounts for selected model ───
   const loadModelAccounts = useCallback(async (modelId: string) => {
     const { data } = await supabase
       .from("accounts")
-      .select("id, account_email, account_domain, account_password, platform, model_id, assigned_to, model_active" as any)
+      .select(
+        "id, account_email, account_domain, account_password, platform, model_id, assigned_to, model_active" as any,
+      )
       .eq("model_id", modelId)
       .order("platform");
     if (data) setModelAccounts(data as any as AccountRow[]);
@@ -228,7 +288,7 @@ export default function ModelDashboardTab() {
   // ─── Load selected model data into form ───
   useEffect(() => {
     if (!selectedModelId) return;
-    const model = models.find(m => m.id === selectedModelId);
+    const model = models.find((m) => m.id === selectedModelId);
     if (model) {
       setModelForm({ ...model });
       loadModelAccounts(selectedModelId);
@@ -239,10 +299,7 @@ export default function ModelDashboardTab() {
   const filteredModels = useMemo(() => {
     if (!searchQuery) return models;
     const q = searchQuery.toLowerCase();
-    return models.filter(m =>
-      m.name.toLowerCase().includes(q) ||
-      (m.username || "").toLowerCase().includes(q)
-    );
+    return models.filter((m) => m.name.toLowerCase().includes(q) || (m.username || "").toLowerCase().includes(q));
   }, [models, searchQuery]);
 
   // ─── Per-model platform revenue (for selected model) ───
@@ -263,7 +320,6 @@ export default function ModelDashboardTab() {
     return Object.entries(platformMap).map(([platform, data]) => ({ platform, ...data }));
   }, [selectedModelId, modelAccounts, platformRevenues, dashboardRevenues]);
 
-
   const totalRevenue = useMemo(() => {
     return modelAccounts.reduce((sum, acc) => sum + (dashboardRevenues[acc.id] || 0), 0);
   }, [modelAccounts, dashboardRevenues]);
@@ -276,21 +332,31 @@ export default function ModelDashboardTab() {
 
   // ─── Create model ───
   const handleCreateModel = async () => {
-    if (!newModel.name.trim()) { toast.error("Name ist erforderlich"); return; }
+    if (!newModel.name.trim()) {
+      toast.error("Name ist erforderlich");
+      return;
+    }
     setCreating(true);
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user?.id;
-    const { data: modelData, error } = await (supabase.from("models") as any).insert({
-      name: newModel.name,
-      username: newModel.username,
-      address: newModel.address,
-      drive_folder_id: extractDriveFolderId(newModel.drive_folder_id),
-      model_language: newModel.model_language,
-      model_agency: newModel.model_agency,
-      model_active: newModel.model_active,
-      created_by: userId,
-    }).select("id").single();
-    if (error) { toast.error(error.message); setCreating(false); return; }
+    const { data: modelData, error } = await (supabase.from("models") as any)
+      .insert({
+        name: newModel.name,
+        username: newModel.username,
+        address: newModel.address,
+        drive_folder_id: extractDriveFolderId(newModel.drive_folder_id),
+        model_language: newModel.model_language,
+        model_agency: newModel.model_agency,
+        model_active: newModel.model_active,
+        created_by: userId,
+      })
+      .select("id")
+      .single();
+    if (error) {
+      toast.error(error.message);
+      setCreating(false);
+      return;
+    }
 
     // Create selected platform accounts – model-level fields applied to all
     const selected = Object.entries(createAccounts).filter(([, v]) => v.selected);
@@ -309,8 +375,18 @@ export default function ModelDashboardTab() {
       });
     }
 
-    toast.success(`Model erstellt${selected.length > 0 ? ` mit ${selected.length} Account${selected.length > 1 ? "s" : ""}` : ""} ✅`);
-    setNewModel({ name: "", username: "", address: "", drive_folder_id: "", model_language: "de", model_agency: "shex", model_active: true });
+    toast.success(
+      `Model erstellt${selected.length > 0 ? ` mit ${selected.length} Account${selected.length > 1 ? "s" : ""}` : ""} ✅`,
+    );
+    setNewModel({
+      name: "",
+      username: "",
+      address: "",
+      drive_folder_id: "",
+      model_language: "de",
+      model_agency: "shex",
+      model_active: true,
+    });
     setCreateAccounts(emptyAccountEntries());
     setCreateDialogOpen(false);
     await loadModels();
@@ -324,36 +400,43 @@ export default function ModelDashboardTab() {
   const saveModel = async () => {
     if (!selectedModelId) return;
     setSaving(true);
-    const { error } = await (supabase.from("models") as any).update({
-      name: modelForm.name,
-      username: modelForm.username,
-      address: modelForm.address,
-      revenue_percentage: modelForm.revenue_percentage,
-      crypto_address: modelForm.crypto_address,
-      currency: modelForm.currency,
-      notes: modelForm.notes,
-      contract_file_path: modelForm.contract_file_path,
-      drive_folder_id: extractDriveFolderId(modelForm.drive_folder_id || ""),
-      model_language: modelForm.model_language,
-      model_agency: modelForm.model_agency,
-      model_active: modelForm.model_active,
-      payment_method: modelForm.payment_method || "crypto",
-      bank_name: modelForm.bank_name || "",
-      bank_iban: modelForm.bank_iban || "",
-      bank_bic: modelForm.bank_bic || "",
-      bank_account_holder: modelForm.bank_account_holder || "",
-    }).eq("id", selectedModelId);
-    // Also update all accounts with model-level fields
-    if (!error && modelAccounts.length > 0) {
-      await (supabase.from("accounts") as any).update({
+    const { error } = await (supabase.from("models") as any)
+      .update({
+        name: modelForm.name,
+        username: modelForm.username,
+        address: modelForm.address,
+        revenue_percentage: modelForm.revenue_percentage,
+        crypto_address: modelForm.crypto_address,
+        currency: modelForm.currency,
+        notes: modelForm.notes,
+        contract_file_path: modelForm.contract_file_path,
         drive_folder_id: extractDriveFolderId(modelForm.drive_folder_id || ""),
         model_language: modelForm.model_language,
         model_agency: modelForm.model_agency,
         model_active: modelForm.model_active,
-      }).eq("model_id", selectedModelId);
+        payment_method: modelForm.payment_method || "crypto",
+        bank_name: modelForm.bank_name || "",
+        bank_iban: modelForm.bank_iban || "",
+        bank_bic: modelForm.bank_bic || "",
+        bank_account_holder: modelForm.bank_account_holder || "",
+      })
+      .eq("id", selectedModelId);
+    // Also update all accounts with model-level fields
+    if (!error && modelAccounts.length > 0) {
+      await (supabase.from("accounts") as any)
+        .update({
+          drive_folder_id: extractDriveFolderId(modelForm.drive_folder_id || ""),
+          model_language: modelForm.model_language,
+          model_agency: modelForm.model_agency,
+          model_active: modelForm.model_active,
+        })
+        .eq("model_id", selectedModelId);
     }
     if (error) toast.error(error.message);
-    else { toast.success("Gespeichert ✅"); await loadModels(); }
+    else {
+      toast.success("Gespeichert ✅");
+      await loadModels();
+    }
     setSaving(false);
   };
 
@@ -369,7 +452,7 @@ export default function ModelDashboardTab() {
     const { error } = await supabase.storage.from("model-contracts").upload(path, file, { upsert: true });
     if (error) toast.error("Upload fehlgeschlagen: " + error.message);
     else {
-      setModelForm(prev => ({ ...prev, contract_file_path: path }));
+      setModelForm((prev) => ({ ...prev, contract_file_path: path }));
       toast.success("Vertrag hochgeladen ✅");
     }
     setUploading(false);
@@ -379,7 +462,7 @@ export default function ModelDashboardTab() {
   const deleteContract = async () => {
     if (!modelForm.contract_file_path) return;
     await supabase.storage.from("model-contracts").remove([modelForm.contract_file_path]);
-    setModelForm(prev => ({ ...prev, contract_file_path: "" }));
+    setModelForm((prev) => ({ ...prev, contract_file_path: "" }));
     toast.success("Vertrag gelöscht");
   };
 
@@ -393,7 +476,10 @@ export default function ModelDashboardTab() {
   const handleAddAccount = async () => {
     if (!selectedModelId) return;
     const selected = Object.entries(newAccounts).filter(([, v]) => v.selected);
-    if (selected.length === 0) { toast.error("Wähle mindestens eine Plattform"); return; }
+    if (selected.length === 0) {
+      toast.error("Wähle mindestens eine Plattform");
+      return;
+    }
     setAddingAccount(true);
     const { data: userData } = await supabase.auth.getUser();
     let errors = 0;
@@ -410,7 +496,10 @@ export default function ModelDashboardTab() {
         model_id: selectedModelId,
         created_by: userData.user?.id,
       });
-      if (error) { errors++; toast.error(`${platform}: ${error.message}`); }
+      if (error) {
+        errors++;
+        toast.error(`${platform}: ${error.message}`);
+      }
     }
     if (errors === 0) {
       toast.success(`${selected.length} Account${selected.length > 1 ? "s" : ""} hinzugefügt ✅`);
@@ -443,11 +532,14 @@ export default function ModelDashboardTab() {
   // ─── Save edited account ───
   const saveEditAccount = async () => {
     if (!editingAccountId) return;
-    const { error } = await supabase.from("accounts").update({
-      account_email: editAccountData.account_email,
-      account_password: editAccountData.account_password,
-      account_domain: editAccountData.account_domain,
-    } as any).eq("id", editingAccountId);
+    const { error } = await supabase
+      .from("accounts")
+      .update({
+        account_email: editAccountData.account_email,
+        account_password: editAccountData.account_password,
+        account_domain: editAccountData.account_domain,
+      } as any)
+      .eq("id", editingAccountId);
     if (error) toast.error(error.message);
     else {
       toast.success("Account aktualisiert ✅");
@@ -480,7 +572,9 @@ export default function ModelDashboardTab() {
         setModelLoginDialog(true);
         toast.success("Login erstellt ✅");
       }
-    } catch (err: any) { toast.error(err.message); }
+    } catch (err: any) {
+      toast.error(err.message);
+    }
     setModelLoginLoading(false);
   };
 
@@ -492,13 +586,13 @@ export default function ModelDashboardTab() {
     const { error } = await (supabase.from("models") as any).delete().eq("id", selectedModelId);
     if (error) toast.error(error.message);
     else {
-      toast.success("Model gelöscht");
+      // toast.success("Model gelöscht");
       setSelectedModelId("");
       await loadModels();
     }
   };
 
-  const selectedModel = models.find(m => m.id === selectedModelId);
+  const selectedModel = models.find((m) => m.id === selectedModelId);
 
   // Group accounts by platform
   const accountsByPlatform = useMemo(() => {
@@ -521,11 +615,7 @@ export default function ModelDashboardTab() {
   return (
     <div className="space-y-5">
       {/* ── Header ── */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-center gap-3"
-      >
+      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3">
         <div className="h-9 w-9 rounded-xl bg-accent/15 flex items-center justify-center gold-glow">
           <FolderTree className="h-4.5 w-4.5 text-accent" />
         </div>
@@ -550,14 +640,13 @@ export default function ModelDashboardTab() {
           <div className="input-gold-shimmer rounded-lg">
             <Input
               value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Model suchen…"
               className="pl-9 bg-secondary/50 border-transparent text-sm h-9"
             />
           </div>
         </div>
       </motion.div>
-
 
       {/* ── Model-Liste ── */}
       <motion.section
@@ -580,15 +669,19 @@ export default function ModelDashboardTab() {
           {/* Header */}
           <div className="grid grid-cols-[1fr_100px_80px] gap-0 bg-accent/10 border-b border-accent/20">
             <div className="px-3 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold">Name</div>
-            <div className="px-2 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">Benutzername</div>
-            <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-right">Anteil</div>
+            <div className="px-2 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">
+              Benutzername
+            </div>
+            <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-right">
+              Anteil
+            </div>
           </div>
 
           {/* Rows */}
           <ScrollArea className="max-h-[350px]">
             {filteredModels.length === 0 ? (
               <p className="text-xs text-muted-foreground text-center py-8">
-                {models.length === 0 ? 'Noch keine Models angelegt.' : 'Keine Models gefunden.'}
+                {models.length === 0 ? "Noch keine Models angelegt." : "Keine Models gefunden."}
               </p>
             ) : (
               filteredModels.map((model, i) => {
@@ -604,22 +697,24 @@ export default function ModelDashboardTab() {
                       "grid grid-cols-[1fr_100px_80px] gap-0 items-center border-b border-border/30 cursor-pointer transition-colors",
                       isSelected
                         ? "bg-accent/15 border-l-2 border-l-accent"
-                        : i % 2 === 0 ? "bg-card/40 hover:bg-accent/5" : "bg-card/20 hover:bg-accent/5"
+                        : i % 2 === 0
+                          ? "bg-card/40 hover:bg-accent/5"
+                          : "bg-card/20 hover:bg-accent/5",
                     )}
                   >
                     <div className="px-3 py-2.5 min-w-0">
                       <p className={cn("text-xs font-medium truncate", isSelected ? "text-accent" : "text-foreground")}>
                         {model.name || "Unbenannt"}
                       </p>
-                      {model.address && (
-                        <p className="text-[10px] text-muted-foreground truncate">{model.address}</p>
-                      )}
+                      {model.address && <p className="text-[10px] text-muted-foreground truncate">{model.address}</p>}
                     </div>
                     <div className="px-2 py-2 text-center">
                       <span className="text-[11px] text-muted-foreground">{model.username || "–"}</span>
                     </div>
                     <div className="px-1 py-2 text-right pr-3">
-                      <span className="text-[11px] tabular-nums text-muted-foreground">{model.revenue_percentage}%</span>
+                      <span className="text-[11px] tabular-nums text-muted-foreground">
+                        {model.revenue_percentage}%
+                      </span>
                     </div>
                   </div>
                 );
@@ -658,15 +753,15 @@ export default function ModelDashboardTab() {
                 </p>
               </div>
               {modelAccounts.length < PLATFORMS.length && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setAddAccountOpen(true)}
-                className="shrink-0 text-xs gap-1.5 border-accent/30 text-accent hover:bg-accent/10"
-              >
-                <Plus className="h-3 w-3" />
-                Account
-              </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setAddAccountOpen(true)}
+                  className="shrink-0 text-xs gap-1.5 border-accent/30 text-accent hover:bg-accent/10"
+                >
+                  <Plus className="h-3 w-3" />
+                  Account
+                </Button>
               )}
             </div>
 
@@ -684,7 +779,11 @@ export default function ModelDashboardTab() {
                       </p>
                       {verdienst > 0 && (
                         <p className="text-xs text-muted-foreground mt-1.5">
-                          Verdienst ({modelForm.revenue_percentage}%): <span className="text-accent font-semibold">{verdienst.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {modelForm.currency || "EUR"}</span>
+                          Verdienst ({modelForm.revenue_percentage}%):{" "}
+                          <span className="text-accent font-semibold">
+                            {verdienst.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{" "}
+                            {modelForm.currency || "EUR"}
+                          </span>
                         </p>
                       )}
                     </div>
@@ -697,15 +796,15 @@ export default function ModelDashboardTab() {
                       const rev = dashboardRevenues[acc.id] || 0;
                       const colorMap: Record<string, string> = {
                         "4Based": "#22d3ee",
-                        "Maloum": "#d4af37",
-                        "Brezzels": "#3b82f6",
-                        "FansyMe": "#ec4899",
+                        Maloum: "#d4af37",
+                        Brezzels: "#3b82f6",
+                        FansyMe: "#ec4899",
                       };
                       // Map platform to the correct revenue field
                       const platformFieldMap: Record<string, string> = {
                         "4Based": "fourbased_revenue",
-                        "Maloum": "maloum_revenue",
-                        "Brezzels": "brezzels_revenue",
+                        Maloum: "maloum_revenue",
+                        Brezzels: "brezzels_revenue",
                       };
                       const revenueField = platformFieldMap[acc.platform] || "monthly_revenue";
 
@@ -713,14 +812,19 @@ export default function ModelDashboardTab() {
                         <div key={acc.id} className="glass-card-subtle rounded-xl p-3 space-y-2">
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                              <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: colorMap[acc.platform] || "#888" }} />
+                              <div
+                                className="h-2.5 w-2.5 rounded-full"
+                                style={{ backgroundColor: colorMap[acc.platform] || "#888" }}
+                              />
                               <p className="text-xs font-medium text-foreground">{acc.platform}</p>
                               <Badge variant="outline" className={cn("text-[9px]", platformColors[acc.platform])}>
                                 {acc.account_email || acc.account_domain}
                               </Badge>
                             </div>
                             <p className="text-sm font-bold text-foreground tabular-nums">
-                              {rev > 0 ? `${rev.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€` : "–"}
+                              {rev > 0
+                                ? `${rev.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€`
+                                : "–"}
                             </p>
                           </div>
                           {/* Inline edit revenue */}
@@ -765,7 +869,9 @@ export default function ModelDashboardTab() {
                                 }}
                               />
                             </div>
-                            <span className="text-[10px] text-muted-foreground shrink-0">{modelForm.currency || "EUR"}</span>
+                            <span className="text-[10px] text-muted-foreground shrink-0">
+                              {modelForm.currency || "EUR"}
+                            </span>
                           </div>
                         </div>
                       );
@@ -784,7 +890,7 @@ export default function ModelDashboardTab() {
                     <div className="input-gold-shimmer rounded-lg">
                       <Input
                         value={modelForm.name || ""}
-                        onChange={e => setModelForm(prev => ({ ...prev, name: e.target.value }))}
+                        onChange={(e) => setModelForm((prev) => ({ ...prev, name: e.target.value }))}
                         className="bg-secondary/40 border-transparent text-sm h-9"
                         placeholder="z.B. Alina"
                       />
@@ -795,7 +901,7 @@ export default function ModelDashboardTab() {
                     <div className="input-gold-shimmer rounded-lg">
                       <Input
                         value={modelForm.username || ""}
-                        onChange={e => setModelForm(prev => ({ ...prev, username: e.target.value }))}
+                        onChange={(e) => setModelForm((prev) => ({ ...prev, username: e.target.value }))}
                         className="bg-secondary/40 border-transparent text-sm h-9"
                         placeholder="z.B. alina_official"
                       />
@@ -807,7 +913,7 @@ export default function ModelDashboardTab() {
                   <div className="input-gold-shimmer rounded-lg">
                     <Textarea
                       value={modelForm.address || ""}
-                      onChange={e => setModelForm(prev => ({ ...prev, address: e.target.value }))}
+                      onChange={(e) => setModelForm((prev) => ({ ...prev, address: e.target.value }))}
                       className="bg-secondary/40 border-transparent text-sm min-h-[60px]"
                       placeholder="Straße, PLZ, Ort, Land"
                     />
@@ -816,13 +922,15 @@ export default function ModelDashboardTab() {
 
                 {/* Model-level settings */}
                 <div className="border-t border-border/30 pt-3 space-y-3">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Einstellungen</p>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                    Einstellungen
+                  </p>
                   <div className="space-y-1.5">
                     <Label className="text-xs text-muted-foreground">Drive Folder ID</Label>
                     <div className="input-gold-shimmer rounded-lg">
                       <Input
                         value={modelForm.drive_folder_id || ""}
-                        onChange={e => setModelForm(prev => ({ ...prev, drive_folder_id: e.target.value }))}
+                        onChange={(e) => setModelForm((prev) => ({ ...prev, drive_folder_id: e.target.value }))}
                         placeholder="Google Drive URL oder Folder ID"
                         className="bg-secondary/40 border-transparent text-sm h-9"
                       />
@@ -832,12 +940,26 @@ export default function ModelDashboardTab() {
                     <div className="space-y-1.5">
                       <Label className="text-xs text-muted-foreground">Sprache</Label>
                       <div className="flex gap-1.5">
-                        <button onClick={() => setModelForm(prev => ({ ...prev, model_language: "de" }))}
-                          className={cn("flex-1 text-xs px-2 py-2 rounded-lg border transition-all", (modelForm.model_language || "de") === "de" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50 hover:border-accent/30")}>
+                        <button
+                          onClick={() => setModelForm((prev) => ({ ...prev, model_language: "de" }))}
+                          className={cn(
+                            "flex-1 text-xs px-2 py-2 rounded-lg border transition-all",
+                            (modelForm.model_language || "de") === "de"
+                              ? "bg-accent/15 text-accent border-accent/30 font-semibold"
+                              : "bg-secondary/30 text-muted-foreground border-border/50 hover:border-accent/30",
+                          )}
+                        >
                           🇩🇪 DE
                         </button>
-                        <button onClick={() => setModelForm(prev => ({ ...prev, model_language: "en" }))}
-                          className={cn("flex-1 text-xs px-2 py-2 rounded-lg border transition-all", modelForm.model_language === "en" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50 hover:border-accent/30")}>
+                        <button
+                          onClick={() => setModelForm((prev) => ({ ...prev, model_language: "en" }))}
+                          className={cn(
+                            "flex-1 text-xs px-2 py-2 rounded-lg border transition-all",
+                            modelForm.model_language === "en"
+                              ? "bg-accent/15 text-accent border-accent/30 font-semibold"
+                              : "bg-secondary/30 text-muted-foreground border-border/50 hover:border-accent/30",
+                          )}
+                        >
                           🇬🇧 EN
                         </button>
                       </div>
@@ -845,12 +967,26 @@ export default function ModelDashboardTab() {
                     <div className="space-y-1.5">
                       <Label className="text-xs text-muted-foreground">Agentur</Label>
                       <div className="flex gap-1.5">
-                        <button onClick={() => setModelForm(prev => ({ ...prev, model_agency: "shex" }))}
-                          className={cn("flex-1 text-xs px-2 py-2 rounded-lg border transition-all", (modelForm.model_agency || "shex") === "shex" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50 hover:border-accent/30")}>
+                        <button
+                          onClick={() => setModelForm((prev) => ({ ...prev, model_agency: "shex" }))}
+                          className={cn(
+                            "flex-1 text-xs px-2 py-2 rounded-lg border transition-all",
+                            (modelForm.model_agency || "shex") === "shex"
+                              ? "bg-accent/15 text-accent border-accent/30 font-semibold"
+                              : "bg-secondary/30 text-muted-foreground border-border/50 hover:border-accent/30",
+                          )}
+                        >
                           SheX
                         </button>
-                        <button onClick={() => setModelForm(prev => ({ ...prev, model_agency: "syn" }))}
-                          className={cn("flex-1 text-xs px-2 py-2 rounded-lg border transition-all", modelForm.model_agency === "syn" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50 hover:border-accent/30")}>
+                        <button
+                          onClick={() => setModelForm((prev) => ({ ...prev, model_agency: "syn" }))}
+                          className={cn(
+                            "flex-1 text-xs px-2 py-2 rounded-lg border transition-all",
+                            modelForm.model_agency === "syn"
+                              ? "bg-accent/15 text-accent border-accent/30 font-semibold"
+                              : "bg-secondary/30 text-muted-foreground border-border/50 hover:border-accent/30",
+                          )}
+                        >
                           SYN
                         </button>
                       </div>
@@ -860,7 +996,7 @@ export default function ModelDashboardTab() {
                     <span className="text-xs text-muted-foreground">Model aktiv</span>
                     <Switch
                       checked={modelForm.model_active !== false}
-                      onCheckedChange={(checked) => setModelForm(prev => ({ ...prev, model_active: checked }))}
+                      onCheckedChange={(checked) => setModelForm((prev) => ({ ...prev, model_active: checked }))}
                     />
                   </div>
                 </div>
@@ -885,24 +1021,35 @@ export default function ModelDashboardTab() {
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-foreground">Revenue-Anteil:</span>
                     <div className="gold-gradient-border-animated rounded-lg px-3 py-1">
-                      <span className="text-sm font-bold text-gold-gradient tabular-nums">{modelForm.revenue_percentage || 0}%</span>
+                      <span className="text-sm font-bold text-gold-gradient tabular-nums">
+                        {modelForm.revenue_percentage || 0}%
+                      </span>
                     </div>
                   </div>
                   <Slider
                     value={[modelForm.revenue_percentage || 0]}
-                    onValueChange={([v]) => setModelForm(prev => ({ ...prev, revenue_percentage: v }))}
-                    min={0} max={100} step={1}
+                    onValueChange={([v]) => setModelForm((prev) => ({ ...prev, revenue_percentage: v }))}
+                    min={0}
+                    max={100}
+                    step={1}
                   />
                 </div>
 
                 {/* Currency */}
                 <div className="flex justify-end">
-                  <Select value={modelForm.currency || "EUR"} onValueChange={v => setModelForm(prev => ({ ...prev, currency: v }))}>
+                  <Select
+                    value={modelForm.currency || "EUR"}
+                    onValueChange={(v) => setModelForm((prev) => ({ ...prev, currency: v }))}
+                  >
                     <SelectTrigger className="w-[100px] text-sm h-9">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {CURRENCIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                      {CURRENCIES.map((c) => (
+                        <SelectItem key={c} value={c}>
+                          {c}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -930,10 +1077,20 @@ export default function ModelDashboardTab() {
                     <span className="text-xs text-foreground truncate flex-1 font-medium">
                       {modelForm.contract_file_path.split("/").pop()}
                     </span>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-accent" onClick={downloadContract}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 hover:text-accent"
+                      onClick={downloadContract}
+                    >
                       <Download className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-destructive" onClick={deleteContract}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 hover:text-destructive"
+                      onClick={deleteContract}
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -941,9 +1098,21 @@ export default function ModelDashboardTab() {
                   <p className="text-xs text-muted-foreground">Noch kein Vertrag hochgeladen.</p>
                 )}
                 <label className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-accent/10 border border-accent/20 hover:bg-accent/15 transition-all cursor-pointer hover:scale-[1.02] active:scale-[0.98]">
-                  {uploading ? <Loader2 className="h-4 w-4 animate-spin text-accent" /> : <Upload className="h-4 w-4 text-accent" />}
-                  <span className="text-xs font-medium text-accent">{uploading ? "Wird hochgeladen…" : "PDF hochladen"}</span>
-                  <input type="file" accept=".pdf" className="hidden" onChange={handleContractUpload} disabled={uploading} />
+                  {uploading ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-accent" />
+                  ) : (
+                    <Upload className="h-4 w-4 text-accent" />
+                  )}
+                  <span className="text-xs font-medium text-accent">
+                    {uploading ? "Wird hochgeladen…" : "PDF hochladen"}
+                  </span>
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    className="hidden"
+                    onChange={handleContractUpload}
+                    disabled={uploading}
+                  />
                 </label>
               </div>
             </Section>
@@ -958,13 +1127,19 @@ export default function ModelDashboardTab() {
                 ) : (
                   <Accordion type="multiple" className="space-y-2">
                     {Object.entries(accountsByPlatform).map(([platform, accs]) => (
-                      <AccordionItem key={platform} value={platform} className="border border-border/40 rounded-lg overflow-hidden">
+                      <AccordionItem
+                        key={platform}
+                        value={platform}
+                        className="border border-border/40 rounded-lg overflow-hidden"
+                      >
                         <AccordionTrigger className="px-3 py-2.5 hover:no-underline hover:bg-accent/5">
                           <div className="flex items-center gap-2.5">
-                            <span className={cn(
-                              "text-[10px] font-medium px-2.5 py-0.5 rounded-full border",
-                              platformColors[platform] || "bg-secondary/50 text-muted-foreground border-border/30"
-                            )}>
+                            <span
+                              className={cn(
+                                "text-[10px] font-medium px-2.5 py-0.5 rounded-full border",
+                                platformColors[platform] || "bg-secondary/50 text-muted-foreground border-border/30",
+                              )}
+                            >
                               {platform}
                             </span>
                             <span className="text-xs text-muted-foreground">
@@ -973,10 +1148,13 @@ export default function ModelDashboardTab() {
                           </div>
                         </AccordionTrigger>
                         <AccordionContent className="px-3 pb-3 space-y-2">
-                          {accs.map(acc => {
+                          {accs.map((acc) => {
                             const isEditing = editingAccountId === acc.id;
                             return (
-                              <div key={acc.id} className="rounded-lg border border-border/30 bg-secondary/20 p-3 space-y-2">
+                              <div
+                                key={acc.id}
+                                className="rounded-lg border border-border/30 bg-secondary/20 p-3 space-y-2"
+                              >
                                 {isEditing ? (
                                   /* ── Inline Edit Mode ── */
                                   <div className="space-y-2">
@@ -985,7 +1163,9 @@ export default function ModelDashboardTab() {
                                         <Label className="text-[10px] text-muted-foreground">E-Mail / Login</Label>
                                         <Input
                                           value={editAccountData.account_email}
-                                          onChange={e => setEditAccountData(prev => ({ ...prev, account_email: e.target.value }))}
+                                          onChange={(e) =>
+                                            setEditAccountData((prev) => ({ ...prev, account_email: e.target.value }))
+                                          }
                                           className="bg-secondary/40 border-border/50 text-xs h-8"
                                         />
                                       </div>
@@ -993,7 +1173,12 @@ export default function ModelDashboardTab() {
                                         <Label className="text-[10px] text-muted-foreground">Passwort</Label>
                                         <Input
                                           value={editAccountData.account_password}
-                                          onChange={e => setEditAccountData(prev => ({ ...prev, account_password: e.target.value }))}
+                                          onChange={(e) =>
+                                            setEditAccountData((prev) => ({
+                                              ...prev,
+                                              account_password: e.target.value,
+                                            }))
+                                          }
                                           className="bg-secondary/40 border-border/50 text-xs h-8"
                                         />
                                       </div>
@@ -1002,16 +1187,27 @@ export default function ModelDashboardTab() {
                                       <Label className="text-[10px] text-muted-foreground">Domain</Label>
                                       <Input
                                         value={editAccountData.account_domain}
-                                        onChange={e => setEditAccountData(prev => ({ ...prev, account_domain: e.target.value }))}
+                                        onChange={(e) =>
+                                          setEditAccountData((prev) => ({ ...prev, account_domain: e.target.value }))
+                                        }
                                         className="bg-secondary/40 border-border/50 text-xs h-8"
                                       />
                                     </div>
                                     <div className="flex gap-2">
-                                      <Button size="sm" onClick={saveEditAccount} className="h-7 text-[10px] gap-1 bg-accent hover:bg-accent/90 text-accent-foreground">
+                                      <Button
+                                        size="sm"
+                                        onClick={saveEditAccount}
+                                        className="h-7 text-[10px] gap-1 bg-accent hover:bg-accent/90 text-accent-foreground"
+                                      >
                                         <Save className="h-3 w-3" />
                                         Speichern
                                       </Button>
-                                      <Button size="sm" variant="ghost" onClick={() => setEditingAccountId(null)} className="h-7 text-[10px]">
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => setEditingAccountId(null)}
+                                        className="h-7 text-[10px]"
+                                      >
                                         Abbrechen
                                       </Button>
                                     </div>
@@ -1022,11 +1218,16 @@ export default function ModelDashboardTab() {
                                     <div className="flex items-start justify-between gap-2">
                                       <div className="min-w-0 flex-1 space-y-1">
                                         <div className="flex items-center gap-1.5 group/email">
-                                          <p className="text-xs font-medium text-foreground truncate">{acc.account_email || "–"}</p>
+                                          <p className="text-xs font-medium text-foreground truncate">
+                                            {acc.account_email || "–"}
+                                          </p>
                                           {acc.account_email && (
                                             <button
                                               type="button"
-                                              onClick={() => { navigator.clipboard.writeText(acc.account_email); toast.success("E-Mail kopiert"); }}
+                                              onClick={() => {
+                                                navigator.clipboard.writeText(acc.account_email);
+                                                toast.success("E-Mail kopiert");
+                                              }}
                                               className="opacity-0 group-hover/email:opacity-100 transition-opacity"
                                             >
                                               <Copy className="h-3 w-3 text-muted-foreground hover:text-foreground" />
@@ -1034,32 +1235,43 @@ export default function ModelDashboardTab() {
                                           )}
                                         </div>
                                         {acc.account_domain && (
-                                          <p className="text-[10px] text-muted-foreground truncate">{acc.account_domain}</p>
+                                          <p className="text-[10px] text-muted-foreground truncate">
+                                            {acc.account_domain}
+                                          </p>
                                         )}
                                         {acc.account_password && (
                                           <div className="flex items-center gap-1.5 group/pw">
-                                            <p className="text-[10px] text-muted-foreground font-mono">PW: {acc.account_password}</p>
+                                            <p className="text-[10px] text-muted-foreground font-mono">
+                                              PW: {acc.account_password}
+                                            </p>
                                             <button
                                               type="button"
-                                              onClick={() => { navigator.clipboard.writeText(acc.account_password); toast.success("Passwort kopiert"); }}
+                                              onClick={() => {
+                                                navigator.clipboard.writeText(acc.account_password);
+                                                toast.success("Passwort kopiert");
+                                              }}
                                               className="opacity-0 group-hover/pw:opacity-100 transition-opacity"
                                             >
                                               <Copy className="h-3 w-3 text-muted-foreground hover:text-foreground" />
                                             </button>
                                           </div>
                                         )}
-                                        <p className="text-[10px] text-muted-foreground/60 font-mono">ID: {acc.id.slice(0, 8)}…</p>
+                                        <p className="text-[10px] text-muted-foreground/60 font-mono">
+                                          ID: {acc.id.slice(0, 8)}…
+                                        </p>
                                       </div>
                                       <div className="flex gap-1 shrink-0">
                                         <Button
-                                          size="sm" variant="ghost"
+                                          size="sm"
+                                          variant="ghost"
                                           onClick={() => startEditAccount(acc)}
                                           className="h-7 text-[10px] gap-1 text-foreground hover:bg-accent/10"
                                         >
                                           <Pencil className="h-3 w-3" />
                                         </Button>
                                         <Button
-                                          size="sm" variant="ghost"
+                                          size="sm"
+                                          variant="ghost"
                                           onClick={() => generateModelLogin(acc.id)}
                                           disabled={modelLoginLoading && loginAccountId === acc.id}
                                           className="h-7 text-[10px] gap-1 text-accent hover:bg-accent/10"
@@ -1068,7 +1280,8 @@ export default function ModelDashboardTab() {
                                           Login
                                         </Button>
                                         <Button
-                                          size="sm" variant="ghost"
+                                          size="sm"
+                                          variant="ghost"
                                           onClick={() => deleteAccount(acc.id)}
                                           className="h-7 text-[10px] text-destructive hover:bg-destructive/10"
                                         >
@@ -1078,16 +1291,22 @@ export default function ModelDashboardTab() {
                                     </div>
                                     {/* Ebene 3: Chatter assigned */}
                                     <div className="border-t border-border/30 pt-2">
-                                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Zugewiesener Chatter</p>
+                                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
+                                        Zugewiesener Chatter
+                                      </p>
                                       {acc.assigned_to ? (
                                         <div className="flex items-center gap-2">
                                           <div className="h-5 w-5 rounded-full bg-accent/15 flex items-center justify-center">
                                             <User className="h-3 w-3 text-accent" />
                                           </div>
-                                          <span className="text-xs text-foreground font-mono">{acc.assigned_to.slice(0, 8)}…</span>
+                                          <span className="text-xs text-foreground font-mono">
+                                            {acc.assigned_to.slice(0, 8)}…
+                                          </span>
                                         </div>
                                       ) : (
-                                        <p className="text-[10px] text-muted-foreground/60 italic">Kein Chatter zugewiesen</p>
+                                        <p className="text-[10px] text-muted-foreground/60 italic">
+                                          Kein Chatter zugewiesen
+                                        </p>
                                       )}
                                     </div>
                                   </>
@@ -1103,15 +1322,15 @@ export default function ModelDashboardTab() {
 
                 {/* Add more accounts button – only if platforms available */}
                 {modelAccounts.length < PLATFORMS.length && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setAddAccountOpen(true)}
-                  className="w-full gap-1.5 text-xs border-accent/30 text-accent hover:bg-accent/10"
-                >
-                  <Plus className="h-3 w-3" />
-                  Plattform-Account hinzufügen
-                </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setAddAccountOpen(true)}
+                    className="w-full gap-1.5 text-xs border-accent/30 text-accent hover:bg-accent/10"
+                  >
+                    <Plus className="h-3 w-3" />
+                    Plattform-Account hinzufügen
+                  </Button>
                 )}
               </div>
             </Section>
@@ -1124,14 +1343,24 @@ export default function ModelDashboardTab() {
                   <Label className="text-xs text-muted-foreground">Auszahlungsmethode</Label>
                   <div className="flex gap-1.5">
                     <button
-                      onClick={() => setModelForm(prev => ({ ...prev, payment_method: "crypto" }))}
-                      className={cn("flex-1 text-xs px-3 py-2.5 rounded-lg border transition-all font-medium", (modelForm.payment_method || "crypto") === "crypto" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50 hover:border-accent/30")}
+                      onClick={() => setModelForm((prev) => ({ ...prev, payment_method: "crypto" }))}
+                      className={cn(
+                        "flex-1 text-xs px-3 py-2.5 rounded-lg border transition-all font-medium",
+                        (modelForm.payment_method || "crypto") === "crypto"
+                          ? "bg-accent/15 text-accent border-accent/30 font-semibold"
+                          : "bg-secondary/30 text-muted-foreground border-border/50 hover:border-accent/30",
+                      )}
                     >
                       💰 Crypto
                     </button>
                     <button
-                      onClick={() => setModelForm(prev => ({ ...prev, payment_method: "bank" }))}
-                      className={cn("flex-1 text-xs px-3 py-2.5 rounded-lg border transition-all font-medium", modelForm.payment_method === "bank" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50 hover:border-accent/30")}
+                      onClick={() => setModelForm((prev) => ({ ...prev, payment_method: "bank" }))}
+                      className={cn(
+                        "flex-1 text-xs px-3 py-2.5 rounded-lg border transition-all font-medium",
+                        modelForm.payment_method === "bank"
+                          ? "bg-accent/15 text-accent border-accent/30 font-semibold"
+                          : "bg-secondary/30 text-muted-foreground border-border/50 hover:border-accent/30",
+                      )}
                     >
                       🏦 Bank
                     </button>
@@ -1145,7 +1374,7 @@ export default function ModelDashboardTab() {
                     <div className="input-gold-shimmer rounded-lg">
                       <Textarea
                         value={modelForm.crypto_address || ""}
-                        onChange={e => setModelForm(prev => ({ ...prev, crypto_address: e.target.value }))}
+                        onChange={(e) => setModelForm((prev) => ({ ...prev, crypto_address: e.target.value }))}
                         placeholder="z.B. USDT TRC20 – TXyz…&#10;Netzwerk: Tron"
                         className="bg-secondary/40 border-transparent text-sm min-h-[80px]"
                       />
@@ -1161,7 +1390,7 @@ export default function ModelDashboardTab() {
                       <div className="input-gold-shimmer rounded-lg">
                         <Input
                           value={(modelForm as any).bank_account_holder || ""}
-                          onChange={e => setModelForm(prev => ({ ...prev, bank_account_holder: e.target.value }))}
+                          onChange={(e) => setModelForm((prev) => ({ ...prev, bank_account_holder: e.target.value }))}
                           placeholder="Vor- und Nachname"
                           className="bg-secondary/40 border-transparent text-sm h-9"
                         />
@@ -1172,7 +1401,7 @@ export default function ModelDashboardTab() {
                       <div className="input-gold-shimmer rounded-lg">
                         <Input
                           value={(modelForm as any).bank_iban || ""}
-                          onChange={e => setModelForm(prev => ({ ...prev, bank_iban: e.target.value }))}
+                          onChange={(e) => setModelForm((prev) => ({ ...prev, bank_iban: e.target.value }))}
                           placeholder="DE89 3704 0044 0532 0130 00"
                           className="bg-secondary/40 border-transparent text-sm h-9 font-mono"
                         />
@@ -1184,7 +1413,7 @@ export default function ModelDashboardTab() {
                         <div className="input-gold-shimmer rounded-lg">
                           <Input
                             value={(modelForm as any).bank_bic || ""}
-                            onChange={e => setModelForm(prev => ({ ...prev, bank_bic: e.target.value }))}
+                            onChange={(e) => setModelForm((prev) => ({ ...prev, bank_bic: e.target.value }))}
                             placeholder="COBADEFFXXX"
                             className="bg-secondary/40 border-transparent text-sm h-9 font-mono"
                           />
@@ -1195,7 +1424,7 @@ export default function ModelDashboardTab() {
                         <div className="input-gold-shimmer rounded-lg">
                           <Input
                             value={(modelForm as any).bank_name || ""}
-                            onChange={e => setModelForm(prev => ({ ...prev, bank_name: e.target.value }))}
+                            onChange={(e) => setModelForm((prev) => ({ ...prev, bank_name: e.target.value }))}
                             placeholder="z.B. Commerzbank"
                             className="bg-secondary/40 border-transparent text-sm h-9"
                           />
@@ -1213,7 +1442,7 @@ export default function ModelDashboardTab() {
                 <div className="input-gold-shimmer rounded-lg">
                   <Textarea
                     value={modelForm.notes || ""}
-                    onChange={e => setModelForm(prev => ({ ...prev, notes: e.target.value }))}
+                    onChange={(e) => setModelForm((prev) => ({ ...prev, notes: e.target.value }))}
                     placeholder="Notizen zum Model…"
                     className="bg-secondary/40 border-transparent min-h-[80px] text-sm"
                   />
@@ -1267,7 +1496,7 @@ export default function ModelDashboardTab() {
                     maloum: acc.maloum + (p.maloum || 0),
                     brezzels: acc.brezzels + (p.brezzels || 0),
                   }),
-                  { fourbased: 0, maloum: 0, brezzels: 0 }
+                  { fourbased: 0, maloum: 0, brezzels: 0 },
                 )}
               />
             </Section>
@@ -1275,7 +1504,15 @@ export default function ModelDashboardTab() {
         )}
       </AnimatePresence>
 
-      <Dialog open={createDialogOpen} onOpenChange={v => { setCreateDialogOpen(v); if (!v) { setCreateAccounts(emptyAccountEntries()); } }}>
+      <Dialog
+        open={createDialogOpen}
+        onOpenChange={(v) => {
+          setCreateDialogOpen(v);
+          if (!v) {
+            setCreateAccounts(emptyAccountEntries());
+          }
+        }}
+      >
         <DialogContent className="glass-card border-border sm:max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-foreground">Neues Model anlegen</DialogTitle>
@@ -1286,7 +1523,7 @@ export default function ModelDashboardTab() {
               <Label className="text-xs text-muted-foreground">Name *</Label>
               <Input
                 value={newModel.name}
-                onChange={e => setNewModel(prev => ({ ...prev, name: e.target.value }))}
+                onChange={(e) => setNewModel((prev) => ({ ...prev, name: e.target.value }))}
                 placeholder="z.B. Alina"
                 className="bg-secondary/40 border-border/50 text-sm"
               />
@@ -1296,7 +1533,7 @@ export default function ModelDashboardTab() {
                 <Label className="text-xs text-muted-foreground">Benutzername</Label>
                 <Input
                   value={newModel.username}
-                  onChange={e => setNewModel(prev => ({ ...prev, username: e.target.value }))}
+                  onChange={(e) => setNewModel((prev) => ({ ...prev, username: e.target.value }))}
                   placeholder="z.B. alina_official"
                   className="bg-secondary/40 border-border/50 text-sm"
                 />
@@ -1305,7 +1542,7 @@ export default function ModelDashboardTab() {
                 <Label className="text-xs text-muted-foreground">Anschrift</Label>
                 <Input
                   value={newModel.address}
-                  onChange={e => setNewModel(prev => ({ ...prev, address: e.target.value }))}
+                  onChange={(e) => setNewModel((prev) => ({ ...prev, address: e.target.value }))}
                   placeholder="Straße, PLZ, Ort"
                   className="bg-secondary/40 border-border/50 text-sm"
                 />
@@ -1319,7 +1556,7 @@ export default function ModelDashboardTab() {
                 <Label className="text-[10px] text-muted-foreground">Drive Folder ID</Label>
                 <Input
                   value={newModel.drive_folder_id}
-                  onChange={e => setNewModel(prev => ({ ...prev, drive_folder_id: e.target.value }))}
+                  onChange={(e) => setNewModel((prev) => ({ ...prev, drive_folder_id: e.target.value }))}
                   placeholder="Google Drive URL oder Folder ID (optional)"
                   className="bg-secondary/40 border-border/50 text-xs h-8"
                 />
@@ -1328,12 +1565,26 @@ export default function ModelDashboardTab() {
                 <div className="space-y-1">
                   <Label className="text-[10px] text-muted-foreground">Sprache</Label>
                   <div className="flex gap-1">
-                    <button onClick={() => setNewModel(prev => ({ ...prev, model_language: "de" as const }))}
-                      className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", newModel.model_language === "de" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50")}>
+                    <button
+                      onClick={() => setNewModel((prev) => ({ ...prev, model_language: "de" as const }))}
+                      className={cn(
+                        "flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all",
+                        newModel.model_language === "de"
+                          ? "bg-accent/15 text-accent border-accent/30 font-semibold"
+                          : "bg-secondary/30 text-muted-foreground border-border/50",
+                      )}
+                    >
                       🇩🇪 DE
                     </button>
-                    <button onClick={() => setNewModel(prev => ({ ...prev, model_language: "en" as const }))}
-                      className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", newModel.model_language === "en" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50")}>
+                    <button
+                      onClick={() => setNewModel((prev) => ({ ...prev, model_language: "en" as const }))}
+                      className={cn(
+                        "flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all",
+                        newModel.model_language === "en"
+                          ? "bg-accent/15 text-accent border-accent/30 font-semibold"
+                          : "bg-secondary/30 text-muted-foreground border-border/50",
+                      )}
+                    >
                       🇬🇧 EN
                     </button>
                   </div>
@@ -1341,12 +1592,26 @@ export default function ModelDashboardTab() {
                 <div className="space-y-1">
                   <Label className="text-[10px] text-muted-foreground">Agentur</Label>
                   <div className="flex gap-1">
-                    <button onClick={() => setNewModel(prev => ({ ...prev, model_agency: "shex" as const }))}
-                      className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", newModel.model_agency === "shex" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50")}>
+                    <button
+                      onClick={() => setNewModel((prev) => ({ ...prev, model_agency: "shex" as const }))}
+                      className={cn(
+                        "flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all",
+                        newModel.model_agency === "shex"
+                          ? "bg-accent/15 text-accent border-accent/30 font-semibold"
+                          : "bg-secondary/30 text-muted-foreground border-border/50",
+                      )}
+                    >
                       SheX
                     </button>
-                    <button onClick={() => setNewModel(prev => ({ ...prev, model_agency: "syn" as const }))}
-                      className={cn("flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all", newModel.model_agency === "syn" ? "bg-accent/15 text-accent border-accent/30 font-semibold" : "bg-secondary/30 text-muted-foreground border-border/50")}>
+                    <button
+                      onClick={() => setNewModel((prev) => ({ ...prev, model_agency: "syn" as const }))}
+                      className={cn(
+                        "flex-1 text-[10px] px-2 py-1.5 rounded-md border transition-all",
+                        newModel.model_agency === "syn"
+                          ? "bg-accent/15 text-accent border-accent/30 font-semibold"
+                          : "bg-secondary/30 text-muted-foreground border-border/50",
+                      )}
+                    >
                       SYN
                     </button>
                   </div>
@@ -1356,7 +1621,7 @@ export default function ModelDashboardTab() {
                 <span className="text-[10px] font-medium text-muted-foreground">Model aktiv</span>
                 <Switch
                   checked={newModel.model_active}
-                  onCheckedChange={(checked) => setNewModel(prev => ({ ...prev, model_active: checked }))}
+                  onCheckedChange={(checked) => setNewModel((prev) => ({ ...prev, model_active: checked }))}
                 />
               </div>
             </div>
@@ -1364,37 +1629,48 @@ export default function ModelDashboardTab() {
             {/* Divider */}
             <div className="border-t border-border/30 pt-3">
               <p className="text-xs font-semibold text-foreground mb-1">Plattform-Accounts</p>
-              <p className="text-[10px] text-muted-foreground mb-3">Optional – wähle Plattformen aus und trage die Login-Daten ein.</p>
+              <p className="text-[10px] text-muted-foreground mb-3">
+                Optional – wähle Plattformen aus und trage die Login-Daten ein.
+              </p>
             </div>
 
             {/* Platform accounts */}
             <div className="space-y-2">
-              {PLATFORMS.map(platform => {
+              {PLATFORMS.map((platform) => {
                 const entry = createAccounts[platform];
                 const isSelected = entry?.selected;
                 return (
-                  <div key={platform} className={cn(
-                    "rounded-lg border transition-all duration-200",
-                    isSelected ? "border-accent/40 bg-accent/5" : "border-border/40 bg-secondary/10"
-                  )}>
+                  <div
+                    key={platform}
+                    className={cn(
+                      "rounded-lg border transition-all duration-200",
+                      isSelected ? "border-accent/40 bg-accent/5" : "border-border/40 bg-secondary/10",
+                    )}
+                  >
                     <button
                       type="button"
-                      onClick={() => setCreateAccounts(prev => ({
-                        ...prev,
-                        [platform]: { ...prev[platform], selected: !prev[platform].selected }
-                      }))}
+                      onClick={() =>
+                        setCreateAccounts((prev) => ({
+                          ...prev,
+                          [platform]: { ...prev[platform], selected: !prev[platform].selected },
+                        }))
+                      }
                       className="w-full flex items-center gap-3 px-3 py-2.5"
                     >
-                      <div className={cn(
-                        "h-5 w-5 rounded border-2 flex items-center justify-center transition-all",
-                        isSelected ? "border-accent bg-accent/20" : "border-muted-foreground/30"
-                      )}>
+                      <div
+                        className={cn(
+                          "h-5 w-5 rounded border-2 flex items-center justify-center transition-all",
+                          isSelected ? "border-accent bg-accent/20" : "border-muted-foreground/30",
+                        )}
+                      >
                         {isSelected && <CheckCircle2 className="h-3 w-3 text-accent" />}
                       </div>
-                      <span className={cn(
-                        "text-[10px] font-medium px-2.5 py-0.5 rounded-full border",
-                        platformColors[platform] || "bg-secondary/50 text-muted-foreground border-border/30"
-                      )}>
+                      <span
+                        className={cn(
+                          "text-[10px] font-medium px-2.5 py-0.5 rounded-full border",
+                          platformColors[platform] || "bg-secondary/50 text-muted-foreground border-border/30",
+                        )}
+                      >
                         {platform}
                       </span>
                       <span className="text-[10px] text-muted-foreground ml-auto">{PLATFORM_DOMAINS[platform]}</span>
@@ -1415,7 +1691,12 @@ export default function ModelDashboardTab() {
                                 <Label className="text-[10px] text-muted-foreground">E-Mail / Login</Label>
                                 <Input
                                   value={entry.account_email}
-                                  onChange={e => setCreateAccounts(prev => ({ ...prev, [platform]: { ...prev[platform], account_email: e.target.value } }))}
+                                  onChange={(e) =>
+                                    setCreateAccounts((prev) => ({
+                                      ...prev,
+                                      [platform]: { ...prev[platform], account_email: e.target.value },
+                                    }))
+                                  }
                                   placeholder="login@example.com"
                                   className="bg-secondary/40 border-border/50 text-xs h-8"
                                 />
@@ -1424,7 +1705,12 @@ export default function ModelDashboardTab() {
                                 <Label className="text-[10px] text-muted-foreground">Passwort</Label>
                                 <Input
                                   value={entry.account_password}
-                                  onChange={e => setCreateAccounts(prev => ({ ...prev, [platform]: { ...prev[platform], account_password: e.target.value } }))}
+                                  onChange={(e) =>
+                                    setCreateAccounts((prev) => ({
+                                      ...prev,
+                                      [platform]: { ...prev[platform], account_password: e.target.value },
+                                    }))
+                                  }
                                   placeholder="••••••••"
                                   className="bg-secondary/40 border-border/50 text-xs h-8"
                                 />
@@ -1434,7 +1720,12 @@ export default function ModelDashboardTab() {
                               <Label className="text-[10px] text-muted-foreground">Domain</Label>
                               <Input
                                 value={entry.account_domain}
-                                onChange={e => setCreateAccounts(prev => ({ ...prev, [platform]: { ...prev[platform], account_domain: e.target.value } }))}
+                                onChange={(e) =>
+                                  setCreateAccounts((prev) => ({
+                                    ...prev,
+                                    [platform]: { ...prev[platform], account_domain: e.target.value },
+                                  }))
+                                }
                                 className="bg-secondary/40 border-border/50 text-xs h-8"
                               />
                             </div>
@@ -1454,7 +1745,7 @@ export default function ModelDashboardTab() {
             >
               {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
               {(() => {
-                const count = Object.values(createAccounts).filter(v => v.selected).length;
+                const count = Object.values(createAccounts).filter((v) => v.selected).length;
                 return count > 0 ? `Model mit ${count} Account${count > 1 ? "s" : ""} erstellen` : "Model erstellen";
               })()}
             </Button>
@@ -1463,40 +1754,57 @@ export default function ModelDashboardTab() {
       </Dialog>
 
       {/* ── Add Account Dialog (Multi-Platform) ── */}
-      <Dialog open={addAccountOpen} onOpenChange={v => { setAddAccountOpen(v); if (!v) setNewAccounts(emptyAccountEntries()); }}>
+      <Dialog
+        open={addAccountOpen}
+        onOpenChange={(v) => {
+          setAddAccountOpen(v);
+          if (!v) setNewAccounts(emptyAccountEntries());
+        }}
+      >
         <DialogContent className="glass-card border-border sm:max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-foreground">Plattform-Accounts hinzufügen</DialogTitle>
           </DialogHeader>
-          <p className="text-xs text-muted-foreground -mt-2">Wähle eine oder mehrere Plattformen aus und trage die Login-Daten ein.</p>
+          <p className="text-xs text-muted-foreground -mt-2">
+            Wähle eine oder mehrere Plattformen aus und trage die Login-Daten ein.
+          </p>
           <div className="space-y-3">
-            {PLATFORMS.filter(p => !modelAccounts.some(a => a.platform === p)).map(platform => {
+            {PLATFORMS.filter((p) => !modelAccounts.some((a) => a.platform === p)).map((platform) => {
               const entry = newAccounts[platform];
               const isSelected = entry?.selected;
               return (
-                <div key={platform} className={cn(
-                  "rounded-lg border transition-all duration-200",
-                  isSelected ? "border-accent/40 bg-accent/5" : "border-border/40 bg-secondary/10"
-                )}>
+                <div
+                  key={platform}
+                  className={cn(
+                    "rounded-lg border transition-all duration-200",
+                    isSelected ? "border-accent/40 bg-accent/5" : "border-border/40 bg-secondary/10",
+                  )}
+                >
                   {/* Platform toggle header */}
                   <button
                     type="button"
-                    onClick={() => setNewAccounts(prev => ({
-                      ...prev,
-                      [platform]: { ...prev[platform], selected: !prev[platform].selected }
-                    }))}
+                    onClick={() =>
+                      setNewAccounts((prev) => ({
+                        ...prev,
+                        [platform]: { ...prev[platform], selected: !prev[platform].selected },
+                      }))
+                    }
                     className="w-full flex items-center gap-3 px-3 py-2.5"
                   >
-                    <div className={cn(
-                      "h-5 w-5 rounded border-2 flex items-center justify-center transition-all",
-                      isSelected ? "border-accent bg-accent/20" : "border-muted-foreground/30"
-                    )}>
+                    <div
+                      className={cn(
+                        "h-5 w-5 rounded border-2 flex items-center justify-center transition-all",
+                        isSelected ? "border-accent bg-accent/20" : "border-muted-foreground/30",
+                      )}
+                    >
                       {isSelected && <CheckCircle2 className="h-3 w-3 text-accent" />}
                     </div>
-                    <span className={cn(
-                      "text-[10px] font-medium px-2.5 py-0.5 rounded-full border",
-                      platformColors[platform] || "bg-secondary/50 text-muted-foreground border-border/30"
-                    )}>
+                    <span
+                      className={cn(
+                        "text-[10px] font-medium px-2.5 py-0.5 rounded-full border",
+                        platformColors[platform] || "bg-secondary/50 text-muted-foreground border-border/30",
+                      )}
+                    >
                       {platform}
                     </span>
                     <span className="text-[10px] text-muted-foreground ml-auto">{PLATFORM_DOMAINS[platform]}</span>
@@ -1518,10 +1826,12 @@ export default function ModelDashboardTab() {
                               <Label className="text-[10px] text-muted-foreground">E-Mail / Login</Label>
                               <Input
                                 value={entry.account_email}
-                                onChange={e => setNewAccounts(prev => ({
-                                  ...prev,
-                                  [platform]: { ...prev[platform], account_email: e.target.value }
-                                }))}
+                                onChange={(e) =>
+                                  setNewAccounts((prev) => ({
+                                    ...prev,
+                                    [platform]: { ...prev[platform], account_email: e.target.value },
+                                  }))
+                                }
                                 placeholder="login@example.com"
                                 className="bg-secondary/40 border-border/50 text-xs h-8"
                               />
@@ -1530,10 +1840,12 @@ export default function ModelDashboardTab() {
                               <Label className="text-[10px] text-muted-foreground">Passwort</Label>
                               <Input
                                 value={entry.account_password}
-                                onChange={e => setNewAccounts(prev => ({
-                                  ...prev,
-                                  [platform]: { ...prev[platform], account_password: e.target.value }
-                                }))}
+                                onChange={(e) =>
+                                  setNewAccounts((prev) => ({
+                                    ...prev,
+                                    [platform]: { ...prev[platform], account_password: e.target.value },
+                                  }))
+                                }
                                 placeholder="••••••••"
                                 className="bg-secondary/40 border-border/50 text-xs h-8"
                               />
@@ -1543,10 +1855,12 @@ export default function ModelDashboardTab() {
                             <Label className="text-[10px] text-muted-foreground">Domain</Label>
                             <Input
                               value={entry.account_domain}
-                              onChange={e => setNewAccounts(prev => ({
-                                ...prev,
-                                [platform]: { ...prev[platform], account_domain: e.target.value }
-                              }))}
+                              onChange={(e) =>
+                                setNewAccounts((prev) => ({
+                                  ...prev,
+                                  [platform]: { ...prev[platform], account_domain: e.target.value },
+                                }))
+                              }
                               className="bg-secondary/40 border-border/50 text-xs h-8"
                             />
                           </div>
@@ -1560,12 +1874,12 @@ export default function ModelDashboardTab() {
 
             <Button
               onClick={handleAddAccount}
-              disabled={addingAccount || !Object.values(newAccounts).some(v => v.selected)}
+              disabled={addingAccount || !Object.values(newAccounts).some((v) => v.selected)}
               className="w-full gap-2 bg-accent hover:bg-accent/90 text-accent-foreground"
             >
               {addingAccount ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
               {(() => {
-                const count = Object.values(newAccounts).filter(v => v.selected).length;
+                const count = Object.values(newAccounts).filter((v) => v.selected).length;
                 return count > 1 ? `${count} Accounts hinzufügen` : "Account hinzufügen";
               })()}
             </Button>
@@ -1581,31 +1895,58 @@ export default function ModelDashboardTab() {
           </DialogHeader>
           {modelLoginCreds && (
             <div className="space-y-4">
-              <p className="text-xs text-muted-foreground">Sende diese Zugangsdaten an das Model. Das Passwort wird nur einmal angezeigt!</p>
+              <p className="text-xs text-muted-foreground">
+                Sende diese Zugangsdaten an das Model. Das Passwort wird nur einmal angezeigt!
+              </p>
               <div className="space-y-3">
                 <div className="flex items-center gap-2 p-3 rounded-lg bg-secondary/50 border border-border">
                   <div className="flex-1 min-w-0">
                     <p className="text-[10px] text-muted-foreground">E-Mail</p>
                     <p className="text-sm font-mono text-foreground truncate">{modelLoginCreds.email}</p>
                   </div>
-                  <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" onClick={() => { navigator.clipboard.writeText(modelLoginCreds.email); toast.success("Kopiert!"); }}>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8 shrink-0"
+                    onClick={() => {
+                      navigator.clipboard.writeText(modelLoginCreds.email);
+                      toast.success("Kopiert!");
+                    }}
+                  >
                     <Copy className="h-3.5 w-3.5" />
                   </Button>
                 </div>
                 <div className="flex items-center gap-2 p-3 rounded-lg bg-secondary/50 border border-border">
                   <div className="flex-1 min-w-0">
                     <p className="text-[10px] text-muted-foreground">Passwort</p>
-                    <p className="text-sm font-mono text-foreground truncate">{showLoginPassword ? modelLoginCreds.password : "••••••••••••"}</p>
+                    <p className="text-sm font-mono text-foreground truncate">
+                      {showLoginPassword ? modelLoginCreds.password : "••••••••••••"}
+                    </p>
                   </div>
-                  <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" onClick={() => setShowLoginPassword(!showLoginPassword)}>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8 shrink-0"
+                    onClick={() => setShowLoginPassword(!showLoginPassword)}
+                  >
                     {showLoginPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                   </Button>
-                  <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" onClick={() => { navigator.clipboard.writeText(modelLoginCreds.password); toast.success("Kopiert!"); }}>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-8 w-8 shrink-0"
+                    onClick={() => {
+                      navigator.clipboard.writeText(modelLoginCreds.password);
+                      toast.success("Kopiert!");
+                    }}
+                  >
                     <Copy className="h-3.5 w-3.5" />
                   </Button>
                 </div>
               </div>
-              <p className="text-[10px] text-muted-foreground">Login-URL: <span className="text-foreground font-mono">{window.location.origin}/model/login</span></p>
+              <p className="text-[10px] text-muted-foreground">
+                Login-URL: <span className="text-foreground font-mono">{window.location.origin}/model/login</span>
+              </p>
             </div>
           )}
         </DialogContent>
