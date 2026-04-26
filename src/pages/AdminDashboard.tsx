@@ -884,7 +884,7 @@ export default function AdminDashboard() {
   interface CurrentTotal {
     maloum: number;
     brezzels: number;
-    based: number;
+    "4based": number;
     // fansyme: number;
   }
 
@@ -895,14 +895,14 @@ export default function AdminDashboard() {
 
   interface RootData {
     maloum: DailyTotal[];
-    based: DailyTotal[];
+    "4based": DailyTotal[];
     brezzels: DailyTotal[];
     // fansyme: DailyTotal[];
   }
 
   //revenue state
   const [range, setRange] = useState<RootData>();
-  const [totalValue, setTotalValue] = useState<CurrentTotal>({ maloum: 0, brezzels: 0, based: 0 });
+  const [totalValue, setTotalValue] = useState<CurrentTotal>({ maloum: 0, brezzels: 0, "4based": 0 });
   const [totalEarnings, setTotalEarnings] = useState(0);
   const [customFrom, setCustomFrom] = useState<Date | undefined>(undefined);
   const [customTo, setCustomTo] = useState<Date | undefined>(undefined);
@@ -949,19 +949,19 @@ export default function AdminDashboard() {
     const total = {
       maloum: revenueTotal("maloum", data),
       brezzels: revenueTotal("brezzels", data),
-      based: revenueTotal("4based", data),
+      "4based": revenueTotal("4based", data),
     };
 
     const range = {
       maloum: revenueRange("maloum", data),
       brezzels: revenueRange("brezzels", data),
-      based: revenueRange("4based", data),
+      "4based": revenueRange("4based", data),
     };
 
     setTotalValue(total);
     setRange(range);
 
-    const sumTotal = total.maloum + total.based + total.brezzels;
+    const sumTotal = total.maloum + total["4based"] + total.brezzels;
     setTotalEarnings(sumTotal);
     flag == "today" ? setTimeFilter("heute") : setTimeFilter("gestern");
 
@@ -1003,19 +1003,19 @@ export default function AdminDashboard() {
     const total = {
       maloum: revenueTotal("maloum", data),
       brezzels: revenueTotal("brezzels", data),
-      based: revenueTotal("4based", data),
+      "4based": revenueTotal("4based", data),
     };
 
     const range = {
       maloum: revenueRange("maloum", data),
       brezzels: revenueRange("brezzels", data),
-      based: revenueRange("4based", data),
+      "4based": revenueRange("4based", data),
     };
 
     setTotalValue(total);
     setRange(range);
 
-    const sumTotal = total.maloum + total.based + total.brezzels;
+    const sumTotal = total.maloum + total["4based"] + total.brezzels;
     setTotalEarnings(sumTotal);
   }
   async function getRevenueRangebyDates(dateRange) {
@@ -1049,20 +1049,20 @@ export default function AdminDashboard() {
     const total = {
       maloum: revenueTotal("maloum", data),
       brezzels: revenueTotal("brezzels", data),
-      based: revenueTotal("4based", data),
+      "4based": revenueTotal("4based", data),
     };
 
     const range = {
       maloum: revenueRange("maloum", data),
       brezzels: revenueRange("brezzels", data),
-      based: revenueRange("4based", data),
+      "4based": revenueRange("4based", data),
     };
     console.log(range);
 
     setTotalValue(total);
     setRange(range);
 
-    const sumTotal = total.maloum + total.based + total.brezzels;
+    const sumTotal = total.maloum + total["4based"] + total.brezzels;
     setTotalEarnings(sumTotal);
   }
 
@@ -1140,58 +1140,63 @@ export default function AdminDashboard() {
     loadRevenueUsers();
     if (isSuperAdmin) loadAdmins();
 
-    // const isToday = (date) => {
-    //   const d = new Date(date);
-    //   const t = new Date();
-    //   return d.getFullYear() === t.getFullYear() && d.getMonth() === t.getMonth() && d.getDate() === t.getDate();
-    // };
+    const channel = supabase
+      .channel("realtime-revenue")
+      .on("postgres_changes", { event: "*", schema: "public", table: "revenue_report" }, (payload) => {
+        const isToday = (date) => {
+          const d = new Date(date);
+          const t = new Date();
+          return d.getFullYear() === t.getFullYear() && d.getMonth() === t.getMonth() && d.getDate() === t.getDate();
+        };
 
-    // let prevTotalRef = { current: totalEarnings };
+        const newRow: any = payload.new;
+        const oldRow: any = payload.old;
 
-    // // ⚡ Realtime updates (incremental)
-    // const channel = supabase
-    //   .channel("realtime-revenue")
-    //   .on("postgres_changes", { event: "*", schema: "public", table: "daily_revenue" }, (payload) => {
-    //     const newRow: any = payload.new;
-    //     const oldRow: any = payload.old;
-    //     const platform: any = payload.old;
+        let diff = 0;
+        let platform: string | null = null;
 
-    //     let diff = 0;
+        // 🟢 INSERT
+        if (payload.eventType === "INSERT" && newRow && isToday(newRow.date)) {
+          diff = newRow.revenue_today || 0;
+          platform = newRow.platform;
+        }
 
-    //     // 🟢 INSERT
-    //     if (payload.eventType === "INSERT" && newRow && isToday(newRow.date)) {
-    //       diff = newRow.amount || 0;
-    //     }
+        // 🔵 UPDATE
+        if (payload.eventType === "UPDATE" && newRow && oldRow && isToday(newRow.date)) {
+          diff = (newRow.revenue_today || 0) - (oldRow.revenue_today || 0);
+          platform = newRow.platform;
+        }
 
-    //     // 🔵 UPDATE (date doesn't change, so just diff amount)
-    //     if (payload.eventType === "UPDATE" && newRow && oldRow && isToday(newRow.date)) {
-    //       diff = (newRow.amount || 0) - (oldRow.amount || 0);
-    //     }
+        // 🔴 DELETE
+        if (payload.eventType === "DELETE" && oldRow && isToday(oldRow.date)) {
+          diff = -(oldRow.revenue_today || 0);
+          platform = oldRow.platform;
+        }
 
-    //     // 🔴 DELETE
-    //     if (payload.eventType === "DELETE" && oldRow && isToday(oldRow.date)) {
-    //       diff = -(oldRow.amount || 0);
-    //     }
+        if (diff !== 0) {
+          // ✅ update total earnings
+          setTotalEarnings((prev) => prev + diff);
 
-    //     if (diff !== 0) {
-    //       setTotalEarnings((prev) => {
-    //         const next = prev + diff;
-    //         prevTotalRef.current = next;
-    //         return next;
-    //       });
+          // ✅ update per-platform totals safely
+          if (platform) {
+            setTotalValue((prev) => ({
+              ...prev,
+              [platform]: (prev[platform] || 0) + diff,
+            }));
+          }
 
-    //       if (activeTabRef.current === "einnahmen" && timeFilter === "heute") {
-    //         const sign = diff > 0 ? "+" : "";
-    //         toast.success(`${sign}${diff}€ Umsatz Änderung`);
-    //       }
-    //     }
-    //   })
-    //   .subscribe();
+          if (activeTabRef.current === "einnahmen" && timeFilter === "heute") {
+            const sign = diff > 0 ? "+" : "";
+            toast.success(`${sign}${diff.toFixed(2)}€ Umsatz Änderung`);
+          }
+        }
+      })
+      .subscribe();
 
-    // // 🧹 Cleanup
-    // return () => {
-    //   supabase.removeChannel(channel);
-    // };
+    // 🧹 Cleanup
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   // Load cached AI summaries
@@ -2695,7 +2700,7 @@ export default function AdminDashboard() {
                         color: PLATFORM_COLORS.brezzels,
                         value: totalValue.brezzels,
                       },
-                      { key: "4based", label: "4Based", color: PLATFORM_COLORS["4based"], value: totalValue.based },
+                      { key: "4based", label: "4Based", color: PLATFORM_COLORS["4based"], value: totalValue["4based"] },
                     ].map(({ key, label, color, value }) => (
                       <div
                         key={key}
@@ -2796,7 +2801,7 @@ export default function AdminDashboard() {
                             />
                             <Line
                               type="monotone"
-                              dataKey="based"
+                              dataKey="4based"
                               stroke={PLATFORM_COLORS["4based"]}
                               strokeWidth={2.5}
                               dot={false}
