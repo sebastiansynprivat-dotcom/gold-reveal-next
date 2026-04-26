@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
-import Index from "./pages/Index";
+
 import Onboarding from "./pages/Onboarding";
 import Quiz from "./pages/Quiz";
 import OfferA from "./pages/OfferA";
@@ -100,7 +100,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Index />} />
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/quiz" element={<Quiz />} />
             <Route path="/offer-a" element={<OfferA />} />
