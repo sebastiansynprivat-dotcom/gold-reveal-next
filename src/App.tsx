@@ -100,7 +100,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/" element={<ProtectedRoute><Navigate to="/dashboard" replace /></ProtectedRoute>} />
             <Route path="/onboarding" element={<Onboarding />} />
             <Route path="/quiz" element={<Quiz />} />
             <Route path="/offer-a" element={<OfferA />} />
