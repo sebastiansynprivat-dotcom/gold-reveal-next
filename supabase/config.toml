@@ -38,3 +38,6 @@ verify_jwt = false
 
 [functions.create-model-login]
 verify_jwt = false
+
+[functions.update-account]
+verify_jwt = false
