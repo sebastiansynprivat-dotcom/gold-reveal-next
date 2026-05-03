@@ -230,36 +230,20 @@ const PLATFORM_STYLES: Record<string, { bg: string; text: string; border: string
 };
 
 const AnimatedNumber = React.memo(function AnimatedNumber({ value, className, suffix = "€" }: { value: number; className?: string; suffix?: string }) {
-  const spanRef = useRef<HTMLSpanElement>(null);
-  const currentValue = useRef(0);
+  const target = Number.isFinite(value) ? value : 0;
+  const [display, setDisplay] = React.useState(target);
+  const currentValue = useRef(target);
   const rafRef = useRef<number | null>(null);
-  const maxWidthCh = useRef(0);
-  const formatValue = useCallback((nextValue: number) => `${Math.round(nextValue).toLocaleString("de-DE")}${suffix}`, [suffix]);
 
-  useLayoutEffect(() => {
-    const el = spanRef.current;
-    if (!el) return;
+  React.useEffect(() => {
     const start = currentValue.current;
-    const end = Number.isFinite(value) ? value : 0;
+    const end = target;
+    if (start === end) return;
 
-    if (rafRef.current !== null) {
-      cancelAnimationFrame(rafRef.current);
-      rafRef.current = null;
-    }
-
-    const startLabel = formatValue(start);
-    const endLabel = formatValue(end);
-    maxWidthCh.current = Math.max(maxWidthCh.current, startLabel.length, endLabel.length);
-    el.style.minWidth = `${maxWidthCh.current + 0.35}ch`;
-    el.textContent = startLabel;
-
-    if (start === end) {
-      el.textContent = endLabel;
-      return;
-    }
+    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
 
     const delta = Math.abs(end - start);
-    const duration = Math.min(1800, Math.max(950, 850 + Math.log10(delta + 1) * 170));
+    const duration = Math.min(1600, Math.max(800, 700 + Math.log10(delta + 1) * 150));
     const startTime = performance.now();
 
     const tick = (now: number) => {
@@ -268,12 +252,12 @@ const AnimatedNumber = React.memo(function AnimatedNumber({ value, className, su
       const eased = 1 - Math.pow(1 - progress, 4);
       const current = start + (end - start) * eased;
       currentValue.current = current;
-      el.textContent = formatValue(current);
+      setDisplay(current);
       if (progress < 1) {
         rafRef.current = requestAnimationFrame(tick);
       } else {
         currentValue.current = end;
-        el.textContent = endLabel;
+        setDisplay(end);
         rafRef.current = null;
       }
     };
@@ -285,25 +269,18 @@ const AnimatedNumber = React.memo(function AnimatedNumber({ value, className, su
         rafRef.current = null;
       }
     };
-  }, [formatValue, value]);
+  }, [target]);
 
   return (
     <span
-      ref={spanRef}
       className={className}
       style={{
-        contain: "layout style",
         display: "inline-block",
-        fontKerning: "none",
         fontVariantNumeric: "tabular-nums",
-        letterSpacing: 0,
-        textAlign: "right",
-        transform: "translateZ(0)",
         whiteSpace: "nowrap",
-        willChange: "contents",
       }}
     >
-      {formatValue(value)}
+      {Math.round(display).toLocaleString("de-DE")}{suffix}
     </span>
   );
 });
