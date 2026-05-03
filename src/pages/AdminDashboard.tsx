@@ -2712,7 +2712,6 @@ export default function AdminDashboard() {
                       <p className="text-[10px] text-muted-foreground mb-2 tracking-[0.25em] uppercase">Gesamtumsatz</p>
                       <p className="text-5xl sm:text-6xl font-black text-gold-gradient-shimmer tracking-tight tabular-nums leading-none">
                         <AnimatedNumber value={totalEarnings} />
-                        <span className="text-3xl sm:text-4xl ml-1 align-top">€</span>
                       </p>
 
                       <div className="mt-4 flex items-center justify-center gap-2 flex-wrap">
