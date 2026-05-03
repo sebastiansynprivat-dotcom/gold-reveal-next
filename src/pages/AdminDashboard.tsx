@@ -295,7 +295,7 @@ const AnimatedNumber = React.memo(function AnimatedNumber({ value, className, su
         whiteSpace: "nowrap",
         minWidth: `${reservedCharacters}ch`,
         maxWidth: "100%",
-        textAlign: "center",
+        textAlign: align,
         transform: "translateZ(0)",
       }}
     >
