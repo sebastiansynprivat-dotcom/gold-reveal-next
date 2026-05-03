@@ -2828,30 +2828,6 @@ export default function AdminDashboard() {
                     })}
                   </motion.div>
 
-                  {/* KPI STRIP */}
-                  {dailyTotals.length > 1 && (
-                    <motion.div
-                      variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { duration: 0.5 } } }}
-                      className="grid grid-cols-2 lg:grid-cols-4 gap-3"
-                    >
-                      {[
-                        { label: "Ø pro Tag", value: `${avgPerDay.toLocaleString("de-DE")}€`, icon: TrendingUp },
-                        { label: "Bester Tag", value: `${bestDay.total.toLocaleString("de-DE")}€`, sub: fmtDate(bestDay.date), icon: Sparkles },
-                        { label: "Aktive Tage", value: `${activeDays}`, sub: `von ${dailyTotals.length}`, icon: CalendarIcon },
-                        { label: "Projektion 30T", value: `${monthEndProjection.toLocaleString("de-DE")}€`, icon: DollarSign },
-                      ].map((kpi, i) => (
-                        <div key={i} className="glass-card-subtle rounded-xl p-3 relative overflow-hidden">
-                          <div className="absolute top-2 right-2 opacity-30">
-                            <kpi.icon className="h-3.5 w-3.5 text-accent" />
-                          </div>
-                          <p className="text-[9px] text-muted-foreground tracking-wider uppercase mb-1">{kpi.label}</p>
-                          <p className="text-base font-bold text-foreground tabular-nums leading-tight">{kpi.value}</p>
-                          {kpi.sub && <p className="text-[9px] text-muted-foreground mt-0.5">{kpi.sub}</p>}
-                        </div>
-                      ))}
-                    </motion.div>
-                  )}
-
                   {/* UMSATZVERLAUF — Premium Stacked Area */}
                   <motion.div
                     variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { duration: 0.5 } } }}
