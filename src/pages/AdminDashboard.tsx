@@ -2774,85 +2774,120 @@ export default function AdminDashboard() {
                     })}
                   </motion.div>
 
-                  {/* UMSATZVERLAUF — Premium Stacked Area */}
+                  {/* UMSATZVERLAUF — Luxury Cockpit */}
                   <motion.div
                     variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { duration: 0.5 } } }}
-                    className="glass-card rounded-2xl overflow-hidden relative"
+                    className="relative gold-gradient-border-animated rounded-2xl overflow-hidden"
                   >
-                    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/60 to-transparent" />
-                    <div className="px-5 py-4 border-b border-border/40 flex items-center justify-between flex-wrap gap-3">
+                    {/* Atmospheric layers */}
+                    <div className="absolute inset-0 pointer-events-none">
+                      <div className="absolute inset-0 bg-gradient-to-b from-accent/[0.04] via-transparent to-accent/[0.06]" />
+                      <div className="absolute -top-32 left-1/2 -translate-x-1/2 h-72 w-[120%] rounded-full bg-accent/10 blur-3xl opacity-40" />
+                      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-accent/5 to-transparent" />
+                    </div>
+
+                    <div className="relative px-5 py-4 header-gradient-border flex items-center justify-between flex-wrap gap-3">
                       <div className="flex items-center gap-3">
-                        <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/20 flex items-center justify-center">
+                        <motion.div
+                          initial={{ scale: 0.6, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          transition={{ delay: 0.1, type: "spring", stiffness: 220, damping: 18 }}
+                          className="h-10 w-10 rounded-xl bg-gradient-to-br from-accent/30 to-accent/5 border border-accent/30 flex items-center justify-center shadow-[0_0_18px_-4px_hsl(var(--accent)/0.5)]"
+                        >
                           <TrendingUp className="h-4 w-4 text-accent" />
-                        </div>
+                        </motion.div>
                         <div>
-                          <h2 className="text-sm font-bold text-foreground">Umsatzverlauf</h2>
-                          <p className="text-[10px] text-muted-foreground">{filterLabels[timeFilter]} · Ø {avgPerDay.toLocaleString("de-DE")}/Tag</p>
+                          <h2 className="text-sm font-bold text-gold-gradient-shimmer tracking-wide">Umsatzverlauf</h2>
+                          <p className="text-[10px] text-muted-foreground tracking-wide">
+                            {filterLabels[timeFilter]} · Ø <span className="text-foreground/80 font-semibold tabular-nums">{avgPerDay.toLocaleString("de-DE")}</span>/Tag
+                          </p>
                         </div>
                       </div>
-                      <div className="flex gap-3">
+                      <div className="flex gap-3 items-center">
                         {Object.entries(PLATFORM_COLORS).map(([key, color]) => (
-                          <div key={key} className="flex items-center gap-1.5">
-                            <div className="h-2 w-2 rounded-full shadow-[0_0_6px_currentColor]" style={{ backgroundColor: color, color }} />
-                            <span className="text-[10px] text-muted-foreground capitalize font-medium">{key}</span>
+                          <div key={key} className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-secondary/30 border border-border/30">
+                            <div className="h-1.5 w-1.5 rounded-full shadow-[0_0_8px_currentColor]" style={{ backgroundColor: color, color }} />
+                            <span className="text-[10px] text-muted-foreground capitalize font-semibold tracking-wide">{key === "4based" ? "4Based" : key}</span>
                           </div>
                         ))}
                       </div>
                     </div>
-                    <div className="p-4">
-                      <div className="h-72">
+
+                    <div className="relative p-4 pt-2">
+                      <div className="h-80">
                         <ResponsiveContainer width="100%" height="100%">
-                          <AreaChart data={rangeData} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+                          <AreaChart data={rangeData} margin={{ top: 16, right: 12, bottom: 0, left: 0 }}>
                             <defs>
                               {Object.entries(PLATFORM_COLORS).map(([key, color]) => (
                                 <linearGradient key={key} id={`area-${key}`} x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="0%" stopColor={color} stopOpacity={0.55} />
-                                  <stop offset="100%" stopColor={color} stopOpacity={0.02} />
+                                  <stop offset="0%" stopColor={color} stopOpacity={0.65} />
+                                  <stop offset="55%" stopColor={color} stopOpacity={0.18} />
+                                  <stop offset="100%" stopColor={color} stopOpacity={0} />
                                 </linearGradient>
                               ))}
+                              <filter id="goldGlow" x="-20%" y="-20%" width="140%" height="140%">
+                                <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+                                <feMerge>
+                                  <feMergeNode in="coloredBlur" />
+                                  <feMergeNode in="SourceGraphic" />
+                                </feMerge>
+                              </filter>
                             </defs>
-                            <CartesianGrid strokeDasharray="2 4" stroke="hsl(var(--border))" strokeOpacity={0.4} vertical={false} />
+                            <CartesianGrid strokeDasharray="2 6" stroke="hsl(var(--accent))" strokeOpacity={0.08} vertical={false} />
                             <XAxis
                               dataKey="date"
-                              tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                              tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))", fontWeight: 500 }}
                               tickLine={false}
                               axisLine={false}
+                              dy={6}
                               interval={Math.max(0, Math.floor(rangeData.length / 7))}
                               tickFormatter={(v) => { try { return format(new Date(v), "dd.MM."); } catch { return v; } }}
                             />
                             <YAxis
-                              tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                              tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))", fontWeight: 500 }}
                               tickLine={false}
                               axisLine={false}
                               tickFormatter={(v) => `${fmtK(v)}`}
-                              width={48}
+                              width={44}
                             />
                             <Tooltip
+                              cursor={{ stroke: "hsl(var(--accent))", strokeWidth: 1, strokeDasharray: "3 3", strokeOpacity: 0.5 }}
                               contentStyle={{
-                                background: "hsl(var(--card))",
-                                border: "1px solid hsl(var(--accent) / 0.4)",
-                                borderRadius: "12px",
+                                background: "hsl(0 0% 5% / 0.95)",
+                                backdropFilter: "blur(16px)",
+                                border: "1px solid hsl(var(--accent) / 0.5)",
+                                borderRadius: "14px",
                                 fontSize: "12px",
-                                boxShadow: "0 12px 40px rgba(0,0,0,0.55), 0 0 0 1px hsl(var(--accent)/0.15)",
-                                padding: "10px 14px",
+                                boxShadow: "0 20px 60px rgba(0,0,0,0.7), 0 0 0 1px hsl(var(--accent)/0.2), inset 0 1px 0 hsl(var(--accent)/0.15)",
+                                padding: "12px 16px",
                               }}
-                              formatter={(value: number, name: string) => [`${Number(value).toLocaleString("de-DE")}`, name]}
+                              itemStyle={{ color: "hsl(var(--foreground))", fontWeight: 600, padding: "2px 0" }}
+                              formatter={(value: number, name: string) => [`${Number(value).toLocaleString("de-DE")}`, name === "4based" ? "4Based" : name.charAt(0).toUpperCase() + name.slice(1)]}
                               labelFormatter={(v) => { try { return format(new Date(v), "EEE, dd.MM.yyyy"); } catch { return v; } }}
-                              labelStyle={{ color: "hsl(var(--accent))", fontSize: "11px", marginBottom: "6px", fontWeight: 600 }}
+                              labelStyle={{ color: "hsl(var(--accent))", fontSize: "10px", marginBottom: "8px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em" }}
                             />
                             {avgPerDay > 0 && (
-                              <ReferenceLine y={avgPerDay} stroke="hsl(var(--accent))" strokeDasharray="4 4" strokeOpacity={0.35} />
+                              <ReferenceLine
+                                y={avgPerDay}
+                                stroke="hsl(var(--accent))"
+                                strokeDasharray="3 6"
+                                strokeOpacity={0.5}
+                                label={{ value: `Ø ${fmtK(avgPerDay)}`, position: "right", fill: "hsl(var(--accent))", fontSize: 9, fontWeight: 700 }}
+                              />
                             )}
-                            {platformKeys.map((key) => (
+                            {platformKeys.map((key, i) => (
                               <Area
                                 key={key}
                                 type="monotone"
                                 dataKey={key}
                                 stackId="1"
                                 stroke={(PLATFORM_COLORS as any)[key]}
-                                strokeWidth={2}
+                                strokeWidth={2.25}
                                 fill={`url(#area-${key})`}
-                                activeDot={{ r: 4, strokeWidth: 2, stroke: "hsl(var(--background))" }}
+                                activeDot={{ r: 5, strokeWidth: 2, stroke: "hsl(var(--background))", filter: "url(#goldGlow)" }}
+                                animationDuration={1100}
+                                animationEasing="ease-out"
+                                animationBegin={i * 120}
                               />
                             ))}
                           </AreaChart>
@@ -2860,6 +2895,7 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                   </motion.div>
+
                 </motion.div>
                 );
               })()}
