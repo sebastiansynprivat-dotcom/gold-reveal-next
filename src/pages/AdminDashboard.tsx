@@ -941,6 +941,10 @@ export default function AdminDashboard() {
   const [customFrom, setCustomFrom] = useState<Date | undefined>(undefined);
   const [customTo, setCustomTo] = useState<Date | undefined>(undefined);
 
+  // Prefetch cache: holds precomputed totals/ranges per filter so switching is instant
+  type RevenueSnapshot = { total: CurrentTotal; range: RootData; totalEarnings: number };
+  const revenueCacheRef = useRef<Partial<Record<TimeFilter, RevenueSnapshot>>>({});
+
   // Compare mode states
   const [compareFromA, setCompareFromA] = useState<Date | undefined>(undefined);
   const [compareToA, setCompareToA] = useState<Date | undefined>(undefined);
@@ -1109,8 +1113,98 @@ export default function AdminDashboard() {
     setTotalEarnings(sumTotal);
   }
 
+  // Compute snapshot for "heute" / "gestern" without mutating UI state
+  async function computeTodaySnapshot(flag: "today" | "gestern"): Promise<RevenueSnapshot | null> {
+    const selectedDate = new Date().toISOString().slice(0, 10);
+    const fromDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const { data, error } = await supabase
+      .from("revenue_report")
+      .select("date, platform, revenue_today")
+      .lte("date", selectedDate)
+      .gte("date", fromDate)
+      .order("date", { ascending: true });
+    if (error || !data) return null;
+    const revenueTotal = (platform: string) => {
+      const filtered = data.filter((x: any) => x.platform === platform);
+      if (filtered.length === 0) return 0;
+      const index = flag === "today" ? -1 : -2;
+      const item: any = filtered.at(index);
+      return item ? item.revenue_today || 0 : 0;
+    };
+    const revenueRange = (platform: string) => {
+      const filtered = data.filter((x: any) => x.platform === platform);
+      return filtered.map((x: any) => ({ date: x.date, total: x.revenue_today || 0 })).slice(flag === "today" ? -7 : -3);
+    };
+    const total = { maloum: revenueTotal("maloum"), brezzels: revenueTotal("brezzels"), "4based": revenueTotal("4based") } as CurrentTotal;
+    const rng = { maloum: revenueRange("maloum"), brezzels: revenueRange("brezzels"), "4based": revenueRange("4based") } as RootData;
+    return { total, range: rng, totalEarnings: total.maloum + total.brezzels + total["4based"] };
+  }
+
+  async function computeRangeSnapshot(flag: "7" | "30" | "90"): Promise<RevenueSnapshot | null> {
+    const days = parseInt(flag);
+    const todayDate = new Date().toISOString().slice(0, 10);
+    const fromDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const { data, error } = await supabase
+      .from("revenue_report")
+      .select("date, platform, revenue_today")
+      .lte("date", todayDate)
+      .gte("date", fromDate)
+      .order("date", { ascending: true });
+    if (error || !data) return null;
+    const revenueTotal = (platform: string) =>
+      data.filter((x: any) => x.platform === platform).reduce((s: number, x: any) => s + (x.revenue_today || 0), 0);
+    const revenueRange = (platform: string) =>
+      data.filter((x: any) => x.platform === platform).map((x: any) => ({ date: x.date, total: x.revenue_today || 0 }));
+    const total = { maloum: revenueTotal("maloum"), brezzels: revenueTotal("brezzels"), "4based": revenueTotal("4based") } as CurrentTotal;
+    const rng = { maloum: revenueRange("maloum"), brezzels: revenueRange("brezzels"), "4based": revenueRange("4based") } as RootData;
+    return { total, range: rng, totalEarnings: total.maloum + total.brezzels + total["4based"] };
+  }
+
+  const applySnapshot = (snap: RevenueSnapshot) => {
+    setTotalValue(snap.total);
+    setRange(snap.range);
+    setTotalEarnings(snap.totalEarnings);
+  };
+
+  // Switch filter using cache-first strategy: instant set + animation, no flicker
+  const switchTimeFilter = async (f: TimeFilter) => {
+    setTimeFilter(f);
+    if (f === "custom" || f === "vergleich") return;
+    const cached = revenueCacheRef.current[f];
+    if (cached) {
+      applySnapshot(cached);
+      return;
+    }
+    let snap: RevenueSnapshot | null = null;
+    if (f === "heute") snap = await computeTodaySnapshot("today");
+    else if (f === "gestern") snap = await computeTodaySnapshot("gestern");
+    else if (f === "7" || f === "30" || f === "90") snap = await computeRangeSnapshot(f);
+    if (snap) {
+      revenueCacheRef.current[f] = snap;
+      applySnapshot(snap);
+    }
+  };
+
+  // Initial load + background prefetch of all standard ranges
   useEffect(() => {
-    getRevenueToday("today");
+    let cancelled = false;
+    (async () => {
+      const heute = await computeTodaySnapshot("today");
+      if (cancelled) return;
+      if (heute) {
+        revenueCacheRef.current["heute"] = heute;
+        applySnapshot(heute);
+      }
+      // Prefetch others in background — no UI mutation
+      const filters: Array<"gestern" | "7" | "30" | "90"> = ["gestern", "7", "30", "90"];
+      await Promise.all(
+        filters.map(async (f) => {
+          const snap = f === "gestern" ? await computeTodaySnapshot("gestern") : await computeRangeSnapshot(f);
+          if (!cancelled && snap) revenueCacheRef.current[f] = snap;
+        })
+      );
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   const rangeData = useMemo(() => {
@@ -2725,10 +2819,7 @@ export default function AdminDashboard() {
                         <button
                           key={f}
                           onClick={() => {
-                            setTimeFilter(f);
-                            if (["7", "30", "90"].includes(f)) getRevenueRange(f);
-                            if (["heute"].includes(f)) getRevenueToday("today");
-                            if (["gestern"].includes(f)) getRevenueToday("gestern");
+                            switchTimeFilter(f);
                           }}
                           className={cn(
                             "relative px-3 py-1.5 rounded-lg text-xs font-medium transition-colors duration-200 whitespace-nowrap z-10",
