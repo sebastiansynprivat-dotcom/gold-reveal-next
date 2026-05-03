@@ -233,6 +233,7 @@ const AnimatedNumber = React.memo(function AnimatedNumber({ value, className, su
   const spanRef = useRef<HTMLSpanElement>(null);
   const currentValue = useRef(0);
   const rafRef = useRef<number | null>(null);
+  const maxWidthCh = useRef(0);
   const formatValue = useCallback((nextValue: number) => `${Math.round(nextValue).toLocaleString("de-DE")}${suffix}`, [suffix]);
 
   useLayoutEffect(() => {
@@ -248,7 +249,8 @@ const AnimatedNumber = React.memo(function AnimatedNumber({ value, className, su
 
     const startLabel = formatValue(start);
     const endLabel = formatValue(end);
-    el.style.minWidth = `${Math.max(startLabel.length, endLabel.length)}ch`;
+    maxWidthCh.current = Math.max(maxWidthCh.current, startLabel.length, endLabel.length);
+    el.style.minWidth = `${maxWidthCh.current + 0.35}ch`;
     el.textContent = startLabel;
 
     if (start === end) {
