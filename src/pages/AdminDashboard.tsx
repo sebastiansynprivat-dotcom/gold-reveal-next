@@ -243,7 +243,7 @@ const AnimatedNumber = React.memo(function AnimatedNumber({ value, className, su
     if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
 
     const delta = Math.abs(end - start);
-    const duration = Math.min(1600, Math.max(800, 700 + Math.log10(delta + 1) * 150));
+    const duration = Math.min(800, Math.max(400, 350 + Math.log10(delta + 1) * 80));
     const startTime = performance.now();
 
     const tick = (now: number) => {
