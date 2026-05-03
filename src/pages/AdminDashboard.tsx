@@ -2731,22 +2731,6 @@ export default function AdminDashboard() {
                       </div>
                     </div>
 
-                    {/* Embedded sparkline */}
-                    {dailyTotals.length > 1 && (
-                      <div className="relative h-16 w-full opacity-90">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <AreaChart data={dailyTotals} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
-                            <defs>
-                              <linearGradient id="heroSpark" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="hsl(var(--accent))" stopOpacity={0.5} />
-                                <stop offset="100%" stopColor="hsl(var(--accent))" stopOpacity={0} />
-                              </linearGradient>
-                            </defs>
-                            <Area type="monotone" dataKey="total" stroke="hsl(var(--accent))" strokeWidth={1.75} fill="url(#heroSpark)" isAnimationActive={false} />
-                          </AreaChart>
-                        </ResponsiveContainer>
-                      </div>
-                    )}
                   </motion.div>
 
                   {/* PREMIUM PLATFORM TILES */}
