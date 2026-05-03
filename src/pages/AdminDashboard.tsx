@@ -2627,7 +2627,7 @@ export default function AdminDashboard() {
                 >
                   {/* Premium Time Filter */}
                   <motion.div variants={{ hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0 } }} className="overflow-x-auto scrollbar-none -mx-4 px-4">
-                    <div className="filter-pill-luxe inline-flex items-center gap-1 p-1.5 rounded-2xl relative">
+                    <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-secondary/40 backdrop-blur-sm border border-border/30 relative">
                       {[...(["heute", "gestern", "7", "30", "90"] as TimeFilter[]), "custom" as TimeFilter].map((f) => (
                         <button
                           key={f}
@@ -2638,23 +2638,19 @@ export default function AdminDashboard() {
                             if (["gestern"].includes(f)) getRevenueToday("gestern");
                           }}
                           className={cn(
-                            "relative px-4 py-2 rounded-xl text-xs font-semibold tracking-wide transition-colors duration-200 whitespace-nowrap z-10",
+                            "relative px-3 py-1.5 rounded-lg text-xs font-medium transition-colors duration-200 whitespace-nowrap z-10",
                             f === "custom" && "flex items-center gap-1",
-                            timeFilter === f ? "text-background" : "text-muted-foreground hover:text-foreground",
+                            timeFilter === f ? "text-accent-foreground" : "text-muted-foreground hover:text-foreground",
                           )}
                         >
                           {timeFilter === f && (
                             <motion.div
                               layoutId="activeTimeFilter"
-                              className="absolute inset-0 rounded-xl"
-                              style={{
-                                background: "linear-gradient(135deg, hsl(43 86% 60%), hsl(43 76% 46%))",
-                                boxShadow: "0 6px 20px -4px hsl(43 76% 46% / 0.55), inset 0 1px 0 hsl(43 96% 80% / 0.4)",
-                              }}
+                              className="absolute inset-0 bg-accent rounded-lg shadow-md shadow-accent/30"
                               transition={{ type: "spring", stiffness: 400, damping: 30 }}
                             />
                           )}
-                          <span className="relative z-10 flex items-center gap-1.5">
+                          <span className="relative z-10 flex items-center gap-1">
                             {f === "custom" && <CalendarIcon className="h-3 w-3" />}
                             {f === "custom" ? "Zeitraum" : filterLabels[f]}
                           </span>
@@ -2693,60 +2689,53 @@ export default function AdminDashboard() {
 
                   {/* HERO VAULT — Gesamtumsatz */}
                   <motion.div
-                    variants={{ hidden: { opacity: 0, y: 16, filter: "blur(8px)" }, show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.7 } } }}
-                    className="revenue-hero revenue-hero-glow rounded-[28px] overflow-hidden"
+                    variants={{ hidden: { opacity: 0, y: 16, filter: "blur(6px)" }, show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.6 } } }}
+                    className="relative gold-gradient-border-animated pulse-glow rounded-2xl overflow-hidden"
                   >
-                    <div className="relative px-6 sm:px-10 py-12 sm:py-16 text-center z-10">
-                      {/* Crown badge */}
+                    {/* Layered atmosphere */}
+                    <div className="absolute inset-0 pointer-events-none">
+                      <div className="absolute inset-0 bg-gradient-to-br from-accent/10 via-transparent to-accent/5" />
+                      <div className="absolute -top-24 left-1/2 -translate-x-1/2 h-64 w-64 rounded-full bg-accent/20 blur-3xl opacity-60" />
+                      <div className="absolute inset-0 opacity-[0.03] mix-blend-overlay" style={{ backgroundImage: "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")" }} />
+                    </div>
+
+                    <div className="relative px-6 pt-8 pb-4 text-center">
                       <motion.div
-                        initial={{ scale: 0.5, opacity: 0, rotate: -15 }}
-                        animate={{ scale: 1, opacity: 1, rotate: 0 }}
-                        transition={{ delay: 0.2, type: "spring", stiffness: 220, damping: 16 }}
-                        className="relative inline-flex items-center justify-center mb-5"
+                        initial={{ scale: 0.6, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ delay: 0.15, type: "spring", stiffness: 220, damping: 18 }}
+                        className="inline-flex items-center justify-center h-12 w-12 rounded-2xl bg-gradient-to-br from-accent/30 to-accent/5 border border-accent/30 mb-3 shadow-[0_0_24px_-4px_hsl(var(--accent)/0.5)]"
                       >
-                        <div className="absolute inset-0 rounded-2xl bg-accent/30 blur-xl scale-150" />
-                        <div className="relative h-14 w-14 rounded-2xl flex items-center justify-center border border-accent/40"
-                          style={{
-                            background: "linear-gradient(135deg, hsl(43 76% 46% / 0.35), hsl(43 56% 30% / 0.1))",
-                            boxShadow: "0 8px 30px -6px hsl(43 76% 46% / 0.5), inset 0 1px 0 hsl(43 96% 80% / 0.25)",
-                          }}
-                        >
-                          <Crown className="h-7 w-7 text-accent" strokeWidth={1.5} />
-                        </div>
+                        <Crown className="h-6 w-6 text-accent" />
                       </motion.div>
 
-                      <p className="text-[10px] sm:text-[11px] text-accent/70 mb-3 tracking-[0.4em] uppercase font-semibold">— Gesamtumsatz —</p>
-
-                      <p className="font-black text-gold-gradient-shimmer digit-glow tracking-tighter tabular-nums leading-none"
-                        style={{ fontSize: "clamp(3.5rem, 10vw, 7rem)" }}
-                      >
+                      <p className="text-[10px] text-muted-foreground mb-2 tracking-[0.25em] uppercase">Gesamtumsatz</p>
+                      <p className="text-5xl sm:text-6xl font-black text-gold-gradient-shimmer tracking-tight tabular-nums leading-none">
                         <AnimatedNumber value={totalEarnings} />
                       </p>
 
-                      <div className="mt-6 flex items-center justify-center gap-2.5 flex-wrap">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-medium tracking-wider uppercase border border-border/40 bg-secondary/30 text-muted-foreground">
-                          <CalendarIcon className="h-3 w-3" />
-                          {filterLabels[timeFilter]}
-                        </span>
+                      <div className="mt-4 flex items-center justify-center gap-2 flex-wrap">
+                        <span className="text-[10px] text-muted-foreground font-medium tracking-wide">{filterLabels[timeFilter]}</span>
                         {dailyTotals.length > 1 && (
                           <span className={cn(
-                            "inline-flex items-center gap-1 px-3 py-1 rounded-full text-[10px] font-bold border tracking-wide",
+                            "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border",
                             deltaUp
-                              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30 shadow-[0_0_12px_-2px_hsl(142_76%_46%/0.4)]"
-                              : "bg-red-500/10 text-red-400 border-red-500/30 shadow-[0_0_12px_-2px_hsl(0_76%_46%/0.4)]"
+                              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                              : "bg-red-500/10 text-red-400 border-red-500/30"
                           )}>
-                            {deltaUp ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
+                            {deltaUp ? <ArrowUp className="h-2.5 w-2.5" /> : <ArrowDown className="h-2.5 w-2.5" />}
                             {deltaUp ? "+" : ""}{deltaPct.toString().replace(".", ",")}% vs. Vorperiode
                           </span>
                         )}
                       </div>
                     </div>
+
                   </motion.div>
 
                   {/* PREMIUM PLATFORM TILES */}
                   <motion.div
                     variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { duration: 0.5 } } }}
-                    className="grid grid-cols-1 sm:grid-cols-3 gap-4"
+                    className="grid grid-cols-1 sm:grid-cols-3 gap-3"
                   >
                     {platformKeys.map((key) => {
                       const label = key === "4based" ? "4Based" : key.charAt(0).toUpperCase() + key.slice(1);
@@ -2755,61 +2744,52 @@ export default function AdminDashboard() {
                       const share = totalEarnings > 0 ? Math.round((value / totalEarnings) * 100) : 0;
                       const pdelta = platformDeltas[key];
                       const pdeltaUp = pdelta >= 0;
+                      const sparkData = rangeData.map((d: any) => ({ v: Number(d[key]) || 0 }));
 
                       return (
-                        <div key={key} className="platform-tile rounded-2xl p-5">
-                          {/* Watermark letter */}
-                          <div
-                            className="absolute -right-2 -bottom-6 text-[7rem] font-black leading-none pointer-events-none select-none opacity-[0.06]"
-                            style={{ color }}
-                          >
-                            {label.charAt(0)}
-                          </div>
-                          {/* Top accent line */}
-                          <div className="absolute inset-x-0 top-0 h-[2px] opacity-80" style={{ background: `linear-gradient(90deg, transparent, ${color}, transparent)` }} />
+                        <motion.div
+                          key={key}
+                          whileHover={{ y: -3 }}
+                          className="group relative glass-card-subtle rounded-2xl p-4 overflow-hidden transition-shadow hover:shadow-[0_8px_32px_-8px_hsl(var(--accent)/0.35)]"
+                        >
+                          <div className="absolute inset-x-0 top-0 h-px opacity-60" style={{ background: `linear-gradient(90deg, transparent, ${color}, transparent)` }} />
+                          <div className="absolute -bottom-12 -right-12 h-32 w-32 rounded-full opacity-10 blur-2xl" style={{ backgroundColor: color }} />
 
                           <div className="relative">
-                            <div className="flex items-center justify-between mb-3">
-                              <div className="flex items-center gap-2">
-                                <div
-                                  className="h-2.5 w-2.5 rounded-full"
-                                  style={{ backgroundColor: color, boxShadow: `0 0 12px ${color}, 0 0 4px ${color}` }}
-                                />
-                                <p className="text-[11px] text-foreground/80 font-bold tracking-[0.15em] uppercase">{label}</p>
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-1.5">
+                                <div className="h-2.5 w-2.5 rounded-full shadow-[0_0_8px_currentColor]" style={{ backgroundColor: color, color }} />
+                                <p className="text-[10px] text-muted-foreground font-semibold tracking-wider uppercase">{label}</p>
                               </div>
                               {dailyTotals.length > 1 && value > 0 && (
                                 <span className={cn(
-                                  "inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-bold border",
-                                  pdeltaUp ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30" : "bg-red-500/10 text-red-400 border-red-500/30"
+                                  "inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-semibold",
+                                  pdeltaUp ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"
                                 )}>
-                                  {pdeltaUp ? <ArrowUp className="h-2.5 w-2.5" /> : <ArrowDown className="h-2.5 w-2.5" />}
+                                  {pdeltaUp ? <ArrowUp className="h-2 w-2" /> : <ArrowDown className="h-2 w-2" />}
                                   {Math.abs(pdelta).toString().replace(".", ",")}%
                                 </span>
                               )}
                             </div>
 
-                            <p className="text-3xl sm:text-4xl font-black text-gold-gradient tabular-nums leading-tight">
+                            <p className="text-2xl font-black text-gold-gradient tabular-nums leading-tight">
                               <AnimatedNumber value={value} />
                             </p>
 
                             {/* Share bar */}
-                            <div className="mt-4 flex items-center gap-2">
-                              <div className="flex-1 h-1.5 rounded-full bg-secondary/40 overflow-hidden">
-                                <motion.div
-                                  initial={{ width: 0 }}
-                                  animate={{ width: `${share}%` }}
-                                  transition={{ duration: 1.1, ease: "easeOut" }}
-                                  className="h-full rounded-full"
-                                  style={{
-                                    background: `linear-gradient(90deg, ${color}88, ${color})`,
-                                    boxShadow: `0 0 8px ${color}66`,
-                                  }}
-                                />
-                              </div>
-                              <span className="text-[10px] text-muted-foreground font-semibold tabular-nums w-9 text-right">{share}%</span>
+                            <div className="mt-3 h-1 w-full rounded-full bg-secondary/40 overflow-hidden">
+                              <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${share}%` }}
+                                transition={{ duration: 0.9, ease: "easeOut" }}
+                                className="h-full rounded-full"
+                                style={{ background: `linear-gradient(90deg, ${color}aa, ${color})` }}
+                              />
                             </div>
+                            <p className="mt-1 text-[9px] text-muted-foreground tracking-wide">{share}% vom Gesamt</p>
+
                           </div>
-                        </div>
+                        </motion.div>
                       );
                     })}
                   </motion.div>
