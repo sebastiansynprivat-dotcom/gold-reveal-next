@@ -235,6 +235,7 @@ const AnimatedNumber = React.memo(function AnimatedNumber({ value, className, su
   const currentValue = useRef(target);
   const rafRef = useRef<number | null>(null);
   const formatterRef = useRef(new Intl.NumberFormat("de-DE", { maximumFractionDigits: 0 }));
+  const initialTextRef = useRef(`${formatterRef.current.format(Math.round(target))}${suffix}`);
 
   const paintValue = useCallback((next: number) => {
     const el = spanRef.current;
@@ -292,7 +293,7 @@ const AnimatedNumber = React.memo(function AnimatedNumber({ value, className, su
         contain: "content",
       }}
     >
-      {formatterRef.current.format(Math.round(target))}{suffix}
+      {initialTextRef.current}
     </span>
   );
 });
