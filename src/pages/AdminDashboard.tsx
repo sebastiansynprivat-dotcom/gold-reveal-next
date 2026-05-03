@@ -1127,6 +1127,56 @@ export default function AdminDashboard() {
     getRevenueRangebyDates(dateRange);
   }, [customFrom, customTo]);
 
+  // Compare mode: independent fetcher that doesn't touch main state
+  const fetchComparePeriod = async (from: Date, to: Date): Promise<ComparePeriodResult> => {
+    const fromStr = from.toISOString().slice(0, 10);
+    const toStr = to.toISOString().slice(0, 10);
+    const { data } = await supabase
+      .from("revenue_report")
+      .select("date, platform, revenue_today")
+      .order("date", { ascending: true })
+      .gte("date", fromStr)
+      .lte("date", toStr);
+    const rows = data || [];
+    const dateMap: Record<string, { date: string; total: number; maloum: number; brezzels: number; "4based": number }> = {};
+    for (const row of rows) {
+      const d = row.date as string;
+      if (!dateMap[d]) dateMap[d] = { date: d, total: 0, maloum: 0, brezzels: 0, "4based": 0 };
+      const amount = Number(row.revenue_today) || 0;
+      const plat = row.platform as "maloum" | "brezzels" | "4based";
+      if (plat === "maloum" || plat === "brezzels" || plat === "4based") {
+        dateMap[d][plat] += amount;
+        dateMap[d].total += amount;
+      }
+    }
+    const daily = Object.values(dateMap).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const byPlatform = {
+      maloum: daily.reduce((s, d) => s + d.maloum, 0),
+      brezzels: daily.reduce((s, d) => s + d.brezzels, 0),
+      "4based": daily.reduce((s, d) => s + d["4based"], 0),
+    };
+    const total = byPlatform.maloum + byPlatform.brezzels + byPlatform["4based"];
+    const activeDays = daily.filter((d) => d.total > 0).length;
+    const bestDay = daily.reduce((b, d) => (d.total > b.total ? { date: d.date, total: d.total } : b), { date: "", total: 0 });
+    const avgPerDay = activeDays > 0 ? Math.round(total / activeDays) : 0;
+    return { total, byPlatform, daily, activeDays, bestDay, avgPerDay };
+  };
+
+  useEffect(() => {
+    if (timeFilter !== "vergleich") return;
+    if (!compareFromA || !compareToA) { setCompareA(null); return; }
+    setCompareLoading(true);
+    fetchComparePeriod(compareFromA, compareToA).then(setCompareA).finally(() => setCompareLoading(false));
+  }, [compareFromA, compareToA, timeFilter]);
+
+  useEffect(() => {
+    if (timeFilter !== "vergleich") return;
+    if (!compareFromB || !compareToB) { setCompareB(null); return; }
+    setCompareLoading(true);
+    fetchComparePeriod(compareFromB, compareToB).then(setCompareB).finally(() => setCompareLoading(false));
+  }, [compareFromB, compareToB, timeFilter]);
+
+
   const filterLabels: Record<TimeFilter, string> = {
     heute: "Heute",
     gestern: "Gestern",
