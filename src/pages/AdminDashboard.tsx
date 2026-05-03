@@ -2716,17 +2716,6 @@ export default function AdminDashboard() {
 
                       <div className="mt-4 flex items-center justify-center gap-2 flex-wrap">
                         <span className="text-[10px] text-muted-foreground font-medium tracking-wide">{filterLabels[timeFilter]}</span>
-                        {dailyTotals.length > 1 && (
-                          <span className={cn(
-                            "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border",
-                            deltaUp
-                              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
-                              : "bg-red-500/10 text-red-400 border-red-500/30"
-                          )}>
-                            {deltaUp ? <ArrowUp className="h-2.5 w-2.5" /> : <ArrowDown className="h-2.5 w-2.5" />}
-                            {deltaUp ? "+" : ""}{deltaPct.toString().replace(".", ",")}% vs. Vorperiode
-                          </span>
-                        )}
                       </div>
                     </div>
 
