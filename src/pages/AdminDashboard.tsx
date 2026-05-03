@@ -941,6 +941,10 @@ export default function AdminDashboard() {
   const [customFrom, setCustomFrom] = useState<Date | undefined>(undefined);
   const [customTo, setCustomTo] = useState<Date | undefined>(undefined);
 
+  // Prefetch cache: holds precomputed totals/ranges per filter so switching is instant
+  type RevenueSnapshot = { total: CurrentTotal; range: RootData; totalEarnings: number };
+  const revenueCacheRef = useRef<Partial<Record<TimeFilter, RevenueSnapshot>>>({});
+
   // Compare mode states
   const [compareFromA, setCompareFromA] = useState<Date | undefined>(undefined);
   const [compareToA, setCompareToA] = useState<Date | undefined>(undefined);
