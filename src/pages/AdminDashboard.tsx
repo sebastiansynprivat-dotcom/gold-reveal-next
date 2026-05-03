@@ -3151,7 +3151,7 @@ export default function AdminDashboard() {
                       </motion.div>
 
                       <p className="text-[10px] text-muted-foreground mb-2 tracking-[0.25em] uppercase">Gesamtumsatz</p>
-                      <p className="text-5xl sm:text-6xl font-black text-accent tracking-tight tabular-nums leading-none inline-flex justify-center drop-shadow-[0_0_18px_hsl(var(--accent)/0.35)]">
+                      <p className="w-full text-center text-5xl sm:text-6xl font-black text-accent tracking-tight tabular-nums leading-none inline-flex justify-center drop-shadow-[0_0_18px_hsl(var(--accent)/0.35)]">
                         <AnimatedNumber value={totalEarnings} />
                       </p>
 
@@ -3193,7 +3193,7 @@ export default function AdminDashboard() {
                               </div>
                             </div>
 
-                            <p className="text-2xl font-black text-accent tabular-nums leading-tight inline-flex drop-shadow-[0_0_10px_hsl(var(--accent)/0.25)]">
+                            <p className="w-full text-center text-2xl font-black text-accent tabular-nums leading-tight inline-flex justify-center drop-shadow-[0_0_10px_hsl(var(--accent)/0.25)]">
                               <AnimatedNumber value={value} />
                             </p>
 
