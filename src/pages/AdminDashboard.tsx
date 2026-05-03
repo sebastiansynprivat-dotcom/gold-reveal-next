@@ -150,7 +150,16 @@ const generateFakeRevenueData = () => {
   return data;
 };
 
-type TimeFilter = "heute" | "gestern" | "7" | "30" | "90" | "custom";
+type TimeFilter = "heute" | "gestern" | "7" | "30" | "90" | "custom" | "vergleich";
+
+interface ComparePeriodResult {
+  total: number;
+  byPlatform: { maloum: number; brezzels: number; "4based": number };
+  daily: Array<{ date: string; total: number; maloum: number; brezzels: number; "4based": number }>;
+  activeDays: number;
+  bestDay: { date: string; total: number };
+  avgPerDay: number;
+}
 type ChatterFilter =
   | "alle"
   | "open_2d"
