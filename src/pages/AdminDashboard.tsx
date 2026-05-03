@@ -3193,8 +3193,8 @@ export default function AdminDashboard() {
                               </div>
                             </div>
 
-                            <p className="w-full text-center text-2xl font-black text-accent tabular-nums leading-tight inline-flex justify-center drop-shadow-[0_0_10px_hsl(var(--accent)/0.25)]">
-                              <AnimatedNumber value={value} />
+                            <p className="w-full text-left text-2xl font-black text-accent tabular-nums leading-tight inline-flex justify-start drop-shadow-[0_0_10px_hsl(var(--accent)/0.25)]">
+                              <AnimatedNumber value={value} align="left" />
                             </p>
 
                             {/* Share bar */}
