@@ -294,7 +294,8 @@ const AnimatedNumber = React.memo(function AnimatedNumber({ value, className, su
         fontVariantNumeric: "tabular-nums",
         whiteSpace: "nowrap",
         minWidth: `${reservedCharacters}ch`,
-        textAlign: "right",
+        maxWidth: "100%",
+        textAlign: "center",
         transform: "translateZ(0)",
       }}
     >
