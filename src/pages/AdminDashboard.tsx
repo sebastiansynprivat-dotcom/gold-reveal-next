@@ -2807,7 +2807,7 @@ export default function AdminDashboard() {
                         </div>
                         <div>
                           <h2 className="text-sm font-bold text-foreground">Umsatzverlauf</h2>
-                          <p className="text-[10px] text-muted-foreground">{filterLabels[timeFilter]} · Ø {avgPerDay.toLocaleString("de-DE")}€/Tag</p>
+                          <p className="text-[10px] text-muted-foreground">{filterLabels[timeFilter]} · Ø {avgPerDay.toLocaleString("de-DE")}/Tag</p>
                         </div>
                       </div>
                       <div className="flex gap-3">
