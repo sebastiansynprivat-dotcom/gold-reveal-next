@@ -2774,7 +2774,6 @@ export default function AdminDashboard() {
 
                             <p className="text-2xl font-black text-gold-gradient tabular-nums leading-tight">
                               <AnimatedNumber value={value} />
-                              <span className="text-sm ml-0.5">€</span>
                             </p>
 
                             {/* Share bar */}
