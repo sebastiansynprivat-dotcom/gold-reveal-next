@@ -233,52 +233,75 @@ const AnimatedNumber = React.memo(function AnimatedNumber({ value, className, su
   const spanRef = useRef<HTMLSpanElement>(null);
   const currentValue = useRef(0);
   const rafRef = useRef<number | null>(null);
+  const formatValue = useCallback((nextValue: number) => `${Math.round(nextValue).toLocaleString("de-DE")}${suffix}`, [suffix]);
 
   useLayoutEffect(() => {
     const el = spanRef.current;
     if (!el) return;
     const start = currentValue.current;
-    const end = value;
+    const end = Number.isFinite(value) ? value : 0;
+
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+
+    const startLabel = formatValue(start);
+    const endLabel = formatValue(end);
+    el.style.minWidth = `${Math.max(startLabel.length, endLabel.length)}ch`;
+    el.textContent = startLabel;
+
     if (start === end) {
-      el.textContent = end.toLocaleString("de-DE") + suffix;
+      el.textContent = endLabel;
       return;
     }
-    // Duration scales gently with magnitude of change for a premium feel
-    const delta = Math.abs(end - start);
-    const duration = Math.min(1400, Math.max(700, 600 + Math.log10(delta + 1) * 120));
-    const startTime = performance.now();
 
-    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    const delta = Math.abs(end - start);
+    const duration = Math.min(1800, Math.max(950, 850 + Math.log10(delta + 1) * 170));
+    const startTime = performance.now();
 
     const tick = (now: number) => {
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      // easeOutExpo — silky deceleration
-      const eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+      const eased = 1 - Math.pow(1 - progress, 4);
       const current = start + (end - start) * eased;
       currentValue.current = current;
-      el.textContent = Math.round(current).toLocaleString("de-DE") + suffix;
+      el.textContent = formatValue(current);
       if (progress < 1) {
         rafRef.current = requestAnimationFrame(tick);
       } else {
         currentValue.current = end;
+        el.textContent = endLabel;
         rafRef.current = null;
       }
     };
     rafRef.current = requestAnimationFrame(tick);
 
     return () => {
-      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
     };
-  }, [value, suffix]);
+  }, [formatValue, value]);
 
   return (
     <span
       ref={spanRef}
       className={className}
-      style={{ fontVariantNumeric: "tabular-nums", display: "inline-block", whiteSpace: "nowrap" }}
+      style={{
+        contain: "layout style",
+        display: "inline-block",
+        fontKerning: "none",
+        fontVariantNumeric: "tabular-nums",
+        letterSpacing: 0,
+        textAlign: "right",
+        transform: "translateZ(0)",
+        whiteSpace: "nowrap",
+        willChange: "contents",
+      }}
     >
-      0{suffix}
+      {formatValue(value)}
     </span>
   );
 });
