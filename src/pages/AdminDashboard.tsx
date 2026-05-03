@@ -2588,17 +2588,50 @@ export default function AdminDashboard() {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.2, ease: "easeInOut" }}
             >
-              {activeTab === "einnahmen" && (
-                <div className="space-y-5">
+              {activeTab === "einnahmen" && (() => {
+                // Derived metrics — purely client-side, no data import changes
+                const platformKeys = ["maloum", "brezzels", "4based"] as const;
+                const dailyTotals = rangeData.map((d: any) => ({
+                  date: d.date,
+                  total: platformKeys.reduce((s, k) => s + (Number(d[k]) || 0), 0),
+                }));
+                const activeDays = dailyTotals.filter((d) => d.total > 0).length;
+                const avgPerDay = activeDays > 0 ? Math.round(dailyTotals.reduce((s, d) => s + d.total, 0) / activeDays) : 0;
+                const bestDay = dailyTotals.reduce((best, d) => (d.total > best.total ? d : best), { date: "", total: 0 });
+                const half = Math.floor(dailyTotals.length / 2);
+                const prevSum = dailyTotals.slice(0, half).reduce((s, d) => s + d.total, 0);
+                const currSum = dailyTotals.slice(half).reduce((s, d) => s + d.total, 0);
+                const deltaPct = prevSum > 0 ? Math.round(((currSum - prevSum) / prevSum) * 1000) / 10 : 0;
+                const deltaUp = deltaPct >= 0;
+                const monthEndProjection = avgPerDay * 30;
+                const fmtK = (v: number) => v >= 1000 ? `${(v / 1000).toFixed(v >= 10000 ? 0 : 1).replace(".", ",")}k` : `${v}`;
+                const fmtDate = (d: string) => {
+                  if (!d) return "—";
+                  try { return format(new Date(d), "dd.MM."); } catch { return d; }
+                };
+
+                const platformDeltas = platformKeys.reduce((acc, k) => {
+                  const a = rangeData.slice(0, half).reduce((s: number, d: any) => s + (Number(d[k]) || 0), 0);
+                  const b = rangeData.slice(half).reduce((s: number, d: any) => s + (Number(d[k]) || 0), 0);
+                  acc[k] = a > 0 ? Math.round(((b - a) / a) * 1000) / 10 : 0;
+                  return acc;
+                }, {} as Record<string, number>);
+
+                return (
+                <motion.div
+                  initial="hidden"
+                  animate="show"
+                  variants={{ hidden: {}, show: { transition: { staggerChildren: 0.08 } } }}
+                  className="space-y-5"
+                >
                   {/* Premium Time Filter */}
-                  <div className="overflow-x-auto scrollbar-none -mx-4 px-4">
+                  <motion.div variants={{ hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0 } }} className="overflow-x-auto scrollbar-none -mx-4 px-4">
                     <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-secondary/40 backdrop-blur-sm border border-border/30 relative">
                       {[...(["heute", "gestern", "7", "30", "90"] as TimeFilter[]), "custom" as TimeFilter].map((f) => (
                         <button
                           key={f}
                           onClick={() => {
                             setTimeFilter(f);
-
                             if (["7", "30", "90"].includes(f)) getRevenueRange(f);
                             if (["heute"].includes(f)) getRevenueToday("today");
                             if (["gestern"].includes(f)) getRevenueToday("gestern");
@@ -2612,7 +2645,7 @@ export default function AdminDashboard() {
                           {timeFilter === f && (
                             <motion.div
                               layoutId="activeTimeFilter"
-                              className="absolute inset-0 bg-accent rounded-lg shadow-md shadow-accent/20"
+                              className="absolute inset-0 bg-accent rounded-lg shadow-md shadow-accent/30"
                               transition={{ type: "spring", stiffness: 400, damping: 30 }}
                             />
                           )}
@@ -2623,197 +2656,290 @@ export default function AdminDashboard() {
                         </button>
                       ))}
                     </div>
-                  </div>
+                  </motion.div>
 
                   {timeFilter === "custom" && (
                     <div className="flex gap-2 items-center glass-card-subtle rounded-xl p-3">
                       <Popover>
                         <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className={cn("h-8 text-xs flex-1 justify-start", !customFrom && "text-muted-foreground")}
-                          >
+                          <Button variant="outline" size="sm" className={cn("h-8 text-xs flex-1 justify-start", !customFrom && "text-muted-foreground")}>
                             <CalendarIcon className="h-3 w-3 mr-1.5" />
                             {customFrom ? format(customFrom, "dd.MM.yyyy") : "Von"}
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={customFrom}
-                            onSelect={setCustomFrom}
-                            initialFocus
-                            className="p-3 pointer-events-auto"
-                          />
+                          <Calendar mode="single" selected={customFrom} onSelect={setCustomFrom} initialFocus className="p-3 pointer-events-auto" />
                         </PopoverContent>
                       </Popover>
                       <span className="text-xs text-muted-foreground">bis</span>
                       <Popover>
                         <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className={cn("h-8 text-xs flex-1 justify-start", !customTo && "text-muted-foreground")}
-                          >
+                          <Button variant="outline" size="sm" className={cn("h-8 text-xs flex-1 justify-start", !customTo && "text-muted-foreground")}>
                             <CalendarIcon className="h-3 w-3 mr-1.5" />
                             {customTo ? format(customTo, "dd.MM.yyyy") : "Bis"}
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0" align="end">
-                          <Calendar
-                            mode="single"
-                            selected={customTo}
-                            onSelect={setCustomTo}
-                            initialFocus
-                            className="p-3 pointer-events-auto"
-                          />
+                          <Calendar mode="single" selected={customTo} onSelect={setCustomTo} initialFocus className="p-3 pointer-events-auto" />
                         </PopoverContent>
                       </Popover>
                     </div>
                   )}
 
-                  {/* Hero Gesamtumsatz */}
-                  <div className="relative gold-gradient-border-animated pulse-glow rounded-xl p-6 text-center">
-                    <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-accent/8 via-transparent to-accent/5 pointer-events-none" />
-                    <div className="relative">
-                      <div className="flex items-center justify-center gap-2 mb-2">
-                        <div className="h-8 w-8 rounded-lg bg-accent/10 flex items-center justify-center">
-                          <DollarSign className="h-4 w-4 text-accent" />
-                        </div>
-                      </div>
-                      <p className="text-[10px] text-muted-foreground mb-1.5 tracking-widest uppercase">Gesamtumsatz</p>
-                      <p className="text-3xl font-extrabold text-gold-gradient-shimmer tracking-tight">
-                        <AnimatedNumber value={totalEarnings} />
-                      </p>
-                      <p className="text-[10px] text-muted-foreground mt-1.5 font-medium">{filterLabels[timeFilter]}</p>
+                  {/* HERO VAULT — Gesamtumsatz */}
+                  <motion.div
+                    variants={{ hidden: { opacity: 0, y: 16, filter: "blur(6px)" }, show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.6 } } }}
+                    className="relative gold-gradient-border-animated pulse-glow rounded-2xl overflow-hidden"
+                  >
+                    {/* Layered atmosphere */}
+                    <div className="absolute inset-0 pointer-events-none">
+                      <div className="absolute inset-0 bg-gradient-to-br from-accent/10 via-transparent to-accent/5" />
+                      <div className="absolute -top-24 left-1/2 -translate-x-1/2 h-64 w-64 rounded-full bg-accent/20 blur-3xl opacity-60" />
+                      <div className="absolute inset-0 opacity-[0.03] mix-blend-overlay" style={{ backgroundImage: "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")" }} />
                     </div>
-                  </div>
 
-                  {/* Platform Cards */}
-                  <div className="grid grid-cols-3 gap-3">
-                    {[
-                      { key: "maloum", label: "Maloum", color: PLATFORM_COLORS.maloum, value: totalValue.maloum },
-                      {
-                        key: "brezzels",
-                        label: "Brezzels",
-                        color: PLATFORM_COLORS.brezzels,
-                        value: totalValue.brezzels,
-                      },
-                      { key: "4based", label: "4Based", color: PLATFORM_COLORS["4based"], value: totalValue["4based"] },
-                    ].map(({ key, label, color, value }) => (
-                      <div
-                        key={key}
-                        className="glass-card-subtle rounded-xl p-4 text-center relative overflow-hidden hover:scale-[1.02] transition-transform"
+                    <div className="relative px-6 pt-8 pb-4 text-center">
+                      <motion.div
+                        initial={{ scale: 0.6, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ delay: 0.15, type: "spring", stiffness: 220, damping: 18 }}
+                        className="inline-flex items-center justify-center h-12 w-12 rounded-2xl bg-gradient-to-br from-accent/30 to-accent/5 border border-accent/30 mb-3 shadow-[0_0_24px_-4px_hsl(var(--accent)/0.5)]"
                       >
-                        <div className="relative">
-                          <div className="flex items-center justify-center gap-1.5 mb-2">
-                            <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
-                            <p className="text-[10px] text-muted-foreground font-medium tracking-wide">{label}</p>
-                          </div>
-                          <p className="text-lg font-bold text-foreground">
-                            <AnimatedNumber value={value} />
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                        <Crown className="h-6 w-6 text-accent" />
+                      </motion.div>
 
-                  {/* Revenue Chart */}
-                  <div className="glass-card rounded-2xl overflow-hidden">
-                    <div className="px-5 py-4 border-b border-border/50 flex items-center justify-between">
+                      <p className="text-[10px] text-muted-foreground mb-2 tracking-[0.25em] uppercase">Gesamtumsatz</p>
+                      <p className="text-5xl sm:text-6xl font-black text-gold-gradient-shimmer tracking-tight tabular-nums leading-none">
+                        <AnimatedNumber value={totalEarnings} />
+                        <span className="text-3xl sm:text-4xl ml-1 align-top">€</span>
+                      </p>
+
+                      <div className="mt-4 flex items-center justify-center gap-2 flex-wrap">
+                        <span className="text-[10px] text-muted-foreground font-medium tracking-wide">{filterLabels[timeFilter]}</span>
+                        {dailyTotals.length > 1 && (
+                          <span className={cn(
+                            "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border",
+                            deltaUp
+                              ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+                              : "bg-red-500/10 text-red-400 border-red-500/30"
+                          )}>
+                            {deltaUp ? <ArrowUp className="h-2.5 w-2.5" /> : <ArrowDown className="h-2.5 w-2.5" />}
+                            {deltaUp ? "+" : ""}{deltaPct.toString().replace(".", ",")}% vs. Vorperiode
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Embedded sparkline */}
+                    {dailyTotals.length > 1 && (
+                      <div className="relative h-16 w-full opacity-90">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={dailyTotals} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
+                            <defs>
+                              <linearGradient id="heroSpark" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor="hsl(var(--accent))" stopOpacity={0.5} />
+                                <stop offset="100%" stopColor="hsl(var(--accent))" stopOpacity={0} />
+                              </linearGradient>
+                            </defs>
+                            <Area type="monotone" dataKey="total" stroke="hsl(var(--accent))" strokeWidth={1.75} fill="url(#heroSpark)" isAnimationActive={false} />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </div>
+                    )}
+                  </motion.div>
+
+                  {/* PREMIUM PLATFORM TILES */}
+                  <motion.div
+                    variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { duration: 0.5 } } }}
+                    className="grid grid-cols-1 sm:grid-cols-3 gap-3"
+                  >
+                    {platformKeys.map((key) => {
+                      const label = key === "4based" ? "4Based" : key.charAt(0).toUpperCase() + key.slice(1);
+                      const color = (PLATFORM_COLORS as any)[key];
+                      const value = (totalValue as any)[key] || 0;
+                      const share = totalEarnings > 0 ? Math.round((value / totalEarnings) * 100) : 0;
+                      const pdelta = platformDeltas[key];
+                      const pdeltaUp = pdelta >= 0;
+                      const sparkData = rangeData.map((d: any) => ({ v: Number(d[key]) || 0 }));
+
+                      return (
+                        <motion.div
+                          key={key}
+                          whileHover={{ y: -3 }}
+                          className="group relative glass-card-subtle rounded-2xl p-4 overflow-hidden transition-shadow hover:shadow-[0_8px_32px_-8px_hsl(var(--accent)/0.35)]"
+                        >
+                          <div className="absolute inset-x-0 top-0 h-px opacity-60" style={{ background: `linear-gradient(90deg, transparent, ${color}, transparent)` }} />
+                          <div className="absolute -bottom-12 -right-12 h-32 w-32 rounded-full opacity-10 blur-2xl" style={{ backgroundColor: color }} />
+
+                          <div className="relative">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-1.5">
+                                <div className="h-2.5 w-2.5 rounded-full shadow-[0_0_8px_currentColor]" style={{ backgroundColor: color, color }} />
+                                <p className="text-[10px] text-muted-foreground font-semibold tracking-wider uppercase">{label}</p>
+                              </div>
+                              {dailyTotals.length > 1 && value > 0 && (
+                                <span className={cn(
+                                  "inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-semibold",
+                                  pdeltaUp ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"
+                                )}>
+                                  {pdeltaUp ? <ArrowUp className="h-2 w-2" /> : <ArrowDown className="h-2 w-2" />}
+                                  {Math.abs(pdelta).toString().replace(".", ",")}%
+                                </span>
+                              )}
+                            </div>
+
+                            <p className="text-2xl font-black text-gold-gradient tabular-nums leading-tight">
+                              <AnimatedNumber value={value} />
+                              <span className="text-sm ml-0.5">€</span>
+                            </p>
+
+                            {/* Share bar */}
+                            <div className="mt-3 h-1 w-full rounded-full bg-secondary/40 overflow-hidden">
+                              <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${share}%` }}
+                                transition={{ duration: 0.9, ease: "easeOut" }}
+                                className="h-full rounded-full"
+                                style={{ background: `linear-gradient(90deg, ${color}aa, ${color})` }}
+                              />
+                            </div>
+                            <p className="mt-1 text-[9px] text-muted-foreground tracking-wide">{share}% vom Gesamt</p>
+
+                            {/* Mini sparkline */}
+                            {sparkData.length > 1 && (
+                              <div className="h-8 mt-2 -mx-1">
+                                <ResponsiveContainer width="100%" height="100%">
+                                  <AreaChart data={sparkData} margin={{ top: 2, right: 0, bottom: 0, left: 0 }}>
+                                    <defs>
+                                      <linearGradient id={`sp-${key}`} x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor={color} stopOpacity={0.5} />
+                                        <stop offset="100%" stopColor={color} stopOpacity={0} />
+                                      </linearGradient>
+                                    </defs>
+                                    <Area type="monotone" dataKey="v" stroke={color} strokeWidth={1.5} fill={`url(#sp-${key})`} isAnimationActive={false} />
+                                  </AreaChart>
+                                </ResponsiveContainer>
+                              </div>
+                            )}
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </motion.div>
+
+                  {/* KPI STRIP */}
+                  {dailyTotals.length > 1 && (
+                    <motion.div
+                      variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { duration: 0.5 } } }}
+                      className="grid grid-cols-2 lg:grid-cols-4 gap-3"
+                    >
+                      {[
+                        { label: "Ø pro Tag", value: `${avgPerDay.toLocaleString("de-DE")}€`, icon: TrendingUp },
+                        { label: "Bester Tag", value: `${bestDay.total.toLocaleString("de-DE")}€`, sub: fmtDate(bestDay.date), icon: Sparkles },
+                        { label: "Aktive Tage", value: `${activeDays}`, sub: `von ${dailyTotals.length}`, icon: CalendarIcon },
+                        { label: "Projektion 30T", value: `${monthEndProjection.toLocaleString("de-DE")}€`, icon: DollarSign },
+                      ].map((kpi, i) => (
+                        <div key={i} className="glass-card-subtle rounded-xl p-3 relative overflow-hidden">
+                          <div className="absolute top-2 right-2 opacity-30">
+                            <kpi.icon className="h-3.5 w-3.5 text-accent" />
+                          </div>
+                          <p className="text-[9px] text-muted-foreground tracking-wider uppercase mb-1">{kpi.label}</p>
+                          <p className="text-base font-bold text-foreground tabular-nums leading-tight">{kpi.value}</p>
+                          {kpi.sub && <p className="text-[9px] text-muted-foreground mt-0.5">{kpi.sub}</p>}
+                        </div>
+                      ))}
+                    </motion.div>
+                  )}
+
+                  {/* UMSATZVERLAUF — Premium Stacked Area */}
+                  <motion.div
+                    variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { duration: 0.5 } } }}
+                    className="glass-card rounded-2xl overflow-hidden relative"
+                  >
+                    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/60 to-transparent" />
+                    <div className="px-5 py-4 border-b border-border/40 flex items-center justify-between flex-wrap gap-3">
                       <div className="flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-lg bg-accent/10 flex items-center justify-center">
+                        <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-accent/20 to-accent/5 border border-accent/20 flex items-center justify-center">
                           <TrendingUp className="h-4 w-4 text-accent" />
                         </div>
                         <div>
                           <h2 className="text-sm font-bold text-foreground">Umsatzverlauf</h2>
-                          <p className="text-[10px] text-muted-foreground">{filterLabels[timeFilter]}</p>
+                          <p className="text-[10px] text-muted-foreground">{filterLabels[timeFilter]} · Ø {avgPerDay.toLocaleString("de-DE")}€/Tag</p>
                         </div>
                       </div>
                       <div className="flex gap-3">
                         {Object.entries(PLATFORM_COLORS).map(([key, color]) => (
                           <div key={key} className="flex items-center gap-1.5">
-                            <div className="h-2 w-2 rounded-full" style={{ backgroundColor: color }} />
+                            <div className="h-2 w-2 rounded-full shadow-[0_0_6px_currentColor]" style={{ backgroundColor: color, color }} />
                             <span className="text-[10px] text-muted-foreground capitalize font-medium">{key}</span>
                           </div>
                         ))}
                       </div>
                     </div>
                     <div className="p-4">
-                      <div className="h-64">
+                      <div className="h-72">
                         <ResponsiveContainer width="100%" height="100%">
-                          <LineChart data={rangeData}>
+                          <AreaChart data={rangeData} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
                             <defs>
                               {Object.entries(PLATFORM_COLORS).map(([key, color]) => (
-                                <linearGradient key={key} id={`gradient-${key}`} x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="0%" stopColor={color} stopOpacity={0.3} />
-                                  <stop offset="100%" stopColor={color} stopOpacity={0} />
+                                <linearGradient key={key} id={`area-${key}`} x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="0%" stopColor={color} stopOpacity={0.55} />
+                                  <stop offset="100%" stopColor={color} stopOpacity={0.02} />
                                 </linearGradient>
                               ))}
                             </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.5} />
+                            <CartesianGrid strokeDasharray="2 4" stroke="hsl(var(--border))" strokeOpacity={0.4} vertical={false} />
                             <XAxis
                               dataKey="date"
                               tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
                               tickLine={false}
                               axisLine={false}
                               interval={Math.max(0, Math.floor(rangeData.length / 7))}
+                              tickFormatter={(v) => { try { return format(new Date(v), "dd.MM."); } catch { return v; } }}
                             />
                             <YAxis
                               tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
                               tickLine={false}
                               axisLine={false}
-                              tickFormatter={(v) => `${v}€`}
-                              width={50}
+                              tickFormatter={(v) => `${fmtK(v)}€`}
+                              width={48}
                             />
                             <Tooltip
                               contentStyle={{
                                 background: "hsl(var(--card))",
-                                border: "1px solid hsl(var(--border))",
+                                border: "1px solid hsl(var(--accent) / 0.4)",
                                 borderRadius: "12px",
                                 fontSize: "12px",
-                                boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+                                boxShadow: "0 12px 40px rgba(0,0,0,0.55), 0 0 0 1px hsl(var(--accent)/0.15)",
                                 padding: "10px 14px",
                               }}
-                              formatter={(value: number, name: string) => [`${value.toLocaleString("de-DE")}€`, name]}
-                              labelStyle={{
-                                color: "hsl(var(--muted-foreground))",
-                                fontSize: "10px",
-                                marginBottom: "4px",
-                              }}
+                              formatter={(value: number, name: string) => [`${Number(value).toLocaleString("de-DE")}€`, name]}
+                              labelFormatter={(v) => { try { return format(new Date(v), "EEE, dd.MM.yyyy"); } catch { return v; } }}
+                              labelStyle={{ color: "hsl(var(--accent))", fontSize: "11px", marginBottom: "6px", fontWeight: 600 }}
                             />
-                            <Line
-                              type="monotone"
-                              dataKey="maloum"
-                              stroke={PLATFORM_COLORS.maloum}
-                              strokeWidth={2.5}
-                              dot={false}
-                              activeDot={{ r: 5, strokeWidth: 2, stroke: "hsl(var(--background))" }}
-                            />
-                            <Line
-                              type="monotone"
-                              dataKey="brezzels"
-                              stroke={PLATFORM_COLORS.brezzels}
-                              strokeWidth={2.5}
-                              dot={false}
-                              activeDot={{ r: 5, strokeWidth: 2, stroke: "hsl(var(--background))" }}
-                            />
-                            <Line
-                              type="monotone"
-                              dataKey="4based"
-                              stroke={PLATFORM_COLORS["4based"]}
-                              strokeWidth={2.5}
-                              dot={false}
-                              activeDot={{ r: 5, strokeWidth: 2, stroke: "hsl(var(--background))" }}
-                            />
-                          </LineChart>
+                            {avgPerDay > 0 && (
+                              <ReferenceLine y={avgPerDay} stroke="hsl(var(--accent))" strokeDasharray="4 4" strokeOpacity={0.35} />
+                            )}
+                            {platformKeys.map((key) => (
+                              <Area
+                                key={key}
+                                type="monotone"
+                                dataKey={key}
+                                stackId="1"
+                                stroke={(PLATFORM_COLORS as any)[key]}
+                                strokeWidth={2}
+                                fill={`url(#area-${key})`}
+                                activeDot={{ r: 4, strokeWidth: 2, stroke: "hsl(var(--background))" }}
+                              />
+                            ))}
+                          </AreaChart>
                         </ResponsiveContainer>
                       </div>
                     </div>
-                  </div>
-                </div>
-              )}
+                  </motion.div>
+                </motion.div>
+                );
+              })()}
 
               {activeTab === "chatter" && (
                 <div className="space-y-6">
