@@ -229,7 +229,7 @@ const PLATFORM_STYLES: Record<string, { bg: string; text: string; border: string
   fansyme: { bg: "bg-purple-500/10", text: "text-purple-400", border: "border-purple-500/30", dot: "bg-purple-500" },
 };
 
-const AnimatedNumber = React.memo(function AnimatedNumber({ value, className, suffix = "€" }: { value: number; className?: string; suffix?: string }) {
+const AnimatedNumber = React.memo(function AnimatedNumber({ value, className, suffix = "€", align = "center" }: { value: number; className?: string; suffix?: string; align?: "left" | "center" | "right" }) {
   const target = Number.isFinite(value) ? value : 0;
   const spanRef = useRef<HTMLSpanElement | null>(null);
   const currentValue = useRef(target);
@@ -295,7 +295,7 @@ const AnimatedNumber = React.memo(function AnimatedNumber({ value, className, su
         whiteSpace: "nowrap",
         minWidth: `${reservedCharacters}ch`,
         maxWidth: "100%",
-        textAlign: "center",
+        textAlign: align,
         transform: "translateZ(0)",
       }}
     >
@@ -3193,8 +3193,8 @@ export default function AdminDashboard() {
                               </div>
                             </div>
 
-                            <p className="w-full text-center text-2xl font-black text-accent tabular-nums leading-tight inline-flex justify-center drop-shadow-[0_0_10px_hsl(var(--accent)/0.25)]">
-                              <AnimatedNumber value={value} />
+                            <p className="w-full text-left text-2xl font-black text-accent tabular-nums leading-tight inline-flex justify-start drop-shadow-[0_0_10px_hsl(var(--accent)/0.25)]">
+                              <AnimatedNumber value={value} align="left" />
                             </p>
 
                             {/* Share bar */}
