@@ -1,53 +1,56 @@
+## Premium Redesign: Einnahmen Tab (Admin Dashboard)
 
+Ziel: Der Einnahmen-Tab fühlt sich wie ein luxuriöses Cockpit an — Black & Gold, Glassmorphism, mehr Tiefe, Bewegung und Wow-Faktor. **Datenimport bleibt 100% unverändert.**
 
-# Account-Erstellung aus Chatter-Tab entfernen & im Model-Dashboard erweitern
+### Aktueller Zustand
 
-## Zusammenfassung
+Time-Filter Pills, Hero Gold-Card (Gesamtumsatz), 3 kleine Plattform-Cards, Multi-Line Chart. Funktioniert, wirkt aber flach — kleines Hero, gleichgewichtige Cards, schlichter Line-Chart, keine Vergleiche, keine Hierarchie.
 
-Die Account-Erstellung wird komplett aus dem Chatter-Tab (AdminDashboard.tsx) entfernt und nur noch im Model-Dashboard (ModelDashboardTab.tsx) möglich gemacht. Beim Anlegen von Accounts im Model-Dashboard werden zusätzliche Felder abgefragt (Drive Folder ID, Sprache, Agentur, Model aktiv). Die Account-Zuweisung an Chatter bleibt im Chatter-Tab wie bisher bestehen.
+### Redesign
 
----
+**1. Hero "Vault" Card (Gesamtumsatz)**
 
-## Änderungen
+- Showpiece: deutlich größer (py-10), zentriertes Crown/Diamond Icon, animierte shimmernde Gold-Zahl (text-5xl/6xl), tabular-nums.
+- Layered Effects: animierter Conic-Gradient Gold-Border, sanfter Inner-Glow, dezenter radialer Gold-Spotlight, feiner Grain-Noise Overlay.
+- Delta-Row drunter: "▲ +12,4 % ggü. Vorperiode" (aktueller Filter-Range vs. vorheriger gleich langer Range), grün/rot Pill.
+- Mini-Sparkline am unteren Rand des Heros mit dem Trend für die aktive Range.
 
-### 1. AdminDashboard.tsx — Account-Erstellung entfernen
+**2. Plattform-Cards → "Premium Tiles"**
 
-**Entfernt wird:**
-- Das komplette "Neuer Account"-Formular (Domain, E-Mail, Passwort, Drive Folder ID, Sprache, Agentur, Model aktiv, Hinzufügen-Button) aus dem Account-Pool-Dialog
-- Die zugehörigen State-Variablen: `newAccEmail`, `newAccPassword`, `newAccDomain`, `newAccDriveFolder`, `newAccLanguage`, `newAccModelActive`, `newAccModelAgency`, `addingAccount`
-- Die `addAccount`-Funktion
+- Statt flacher 3-Spalten-Grid jetzt höhere Glass-Tiles mit:
+  - Plattform-Dot + Name
+  - Große Revenue-Zahl (Gold-Gradient)
+  - % Anteil am Gesamt (Progress-Bar in Plattform-Farbe)
+  - Mini 7-Punkt-Sparkline pro Plattform
+  - Period-Delta Chip (▲/▼ vs. Vorperiode)
+- Hover: Lift + soft Gold-Glow, animated Border-Sweep.
+  &nbsp;
 
-**Bleibt erhalten:**
-- Account-Pool-Ansicht (Liste der bestehenden Accounts pro Plattform)
-- Filter (Alle/Frei/Vergeben) und Suche
-- Account-Zuweisung an Chatter (assign-accounts)
-- Account freigeben, löschen
-- Plattform-Übersicht (Kacheln mit Anzahl frei/vergeben)
+**4. Umsatzverlauf Chart Upgrades**
 
-Das Layout des Pool-Dialogs wird angepasst: Ohne das linke Formular nimmt die Account-Liste die volle Breite ein.
+- Wechsel von `LineChart` auf Stacked/Overlay `AreaChart` mit reichen Gradients pro Plattform (Markenfarben bleiben).
+- Soft Gold "Total" Linie obendrauf.
+- Custom Tooltip Card: Gold-Border, Plattform-Breakdown, Tagestotal in Bold, formatierter Wochentag.
+- Chart-Mode Toggle: "Stacked / Linien / Gesamt" Segmented Control (gleicher Pill-Style wie Time-Filter).
+- Y-Achse: `1.2k`, `12k` Format zur Entlastung.
+- Dezente horizontale Benchmark-Linie für Tagesdurchschnitt der Range.
 
-### 2. ModelDashboardTab.tsx — Account-Erstellung erweitern
+**5. Polish & Motion**
 
-Beim Hinzufügen von Plattform-Accounts werden pro Plattform zusätzliche Felder abgefragt:
-- **Drive Folder ID** (optional, mit URL-Extraktion)
-- **Sprache** (DE/EN Toggle)
-- **Agentur** (SheX/SYN Toggle)
-- **Model aktiv** (Switch, default: true)
+- Stagger Fade-In/Blur: Hero → Tiles → KPI-Strip → Chart bei Tab-Mount und Filter-Wechsel.
+- Lokaler Gold-Spotlight hinter dem Hero.
+- Zahlen via existierender `AnimatedNumber`.
+- Time-Filter Pills behalten, aktiver bekommt subtilen Gold-Underline-Glow.
 
-Diese Werte werden beim Insert in die `accounts`-Tabelle mitgesendet (`drive_folder_id`, `model_language`, `model_agency`, `model_active`).
+### Technische Notes
 
-Die bestehende Account-Bearbeitung wird ebenfalls um diese Felder ergänzt.
+- Alle Edits innerhalb des `activeTab === "einnahmen"` Blocks in `src/pages/AdminDashboard.tsx` (Zeilen 2591–2816).
+- Reuse: `glass-card`, `glass-card-subtle`, `gold-gradient-border-animated`, `pulse-glow`, `text-gold-gradient-shimmer`, `AnimatedNumber`, `framer-motion`.
+- Deltas/Projections/Sparklines werden **rein clientseitig** aus dem bereits geladenen `rangeData` und `totalValue` berechnet.
+- **Keine Änderungen** an `getRevenueToday`, `getRevenueRange`, `getRevenueRangebyDates`, keine neuen Queries, keine DB-Änderungen, keine Edge Functions.
+- Neuer Chart nutzt `AreaChart` aus bereits importiertem `recharts`.
+- Keine neuen Dependencies.
 
-### 3. Keine DB-Änderungen nötig
+### Out of Scope
 
-Die Spalten `drive_folder_id`, `model_language`, `model_agency`, `model_active` existieren bereits auf der `accounts`-Tabelle. Die Verknüpfung mit dem Chatter-Tab funktioniert über `model_id` → `accounts` → `assigned_to` wie bisher.
-
----
-
-## Technische Details
-
-| Datei | Aktion |
-|-------|--------|
-| `src/pages/AdminDashboard.tsx` | Entferne ~60 Zeilen Formular-UI, ~30 Zeilen State/Funktionen, passe Pool-Dialog-Layout an (volle Breite) |
-| `src/components/ModelDashboardTab.tsx` | Erweitere Add-Account-Dialog und Edit-Account um 4 Felder, update Insert/Update-Logik |
-
+- Datenquellen, Backend, andere Tabs.
