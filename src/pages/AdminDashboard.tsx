@@ -2712,7 +2712,6 @@ export default function AdminDashboard() {
                       <p className="text-[10px] text-muted-foreground mb-2 tracking-[0.25em] uppercase">Gesamtumsatz</p>
                       <p className="text-5xl sm:text-6xl font-black text-gold-gradient-shimmer tracking-tight tabular-nums leading-none">
                         <AnimatedNumber value={totalEarnings} />
-                        <span className="text-3xl sm:text-4xl ml-1 align-top">€</span>
                       </p>
 
                       <div className="mt-4 flex items-center justify-center gap-2 flex-wrap">
@@ -2775,7 +2774,6 @@ export default function AdminDashboard() {
 
                             <p className="text-2xl font-black text-gold-gradient tabular-nums leading-tight">
                               <AnimatedNumber value={value} />
-                              <span className="text-sm ml-0.5">€</span>
                             </p>
 
                             {/* Share bar */}
@@ -2809,7 +2807,7 @@ export default function AdminDashboard() {
                         </div>
                         <div>
                           <h2 className="text-sm font-bold text-foreground">Umsatzverlauf</h2>
-                          <p className="text-[10px] text-muted-foreground">{filterLabels[timeFilter]} · Ø {avgPerDay.toLocaleString("de-DE")}€/Tag</p>
+                          <p className="text-[10px] text-muted-foreground">{filterLabels[timeFilter]} · Ø {avgPerDay.toLocaleString("de-DE")}/Tag</p>
                         </div>
                       </div>
                       <div className="flex gap-3">
@@ -2846,7 +2844,7 @@ export default function AdminDashboard() {
                               tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
                               tickLine={false}
                               axisLine={false}
-                              tickFormatter={(v) => `${fmtK(v)}€`}
+                              tickFormatter={(v) => `${fmtK(v)}`}
                               width={48}
                             />
                             <Tooltip
@@ -2858,7 +2856,7 @@ export default function AdminDashboard() {
                                 boxShadow: "0 12px 40px rgba(0,0,0,0.55), 0 0 0 1px hsl(var(--accent)/0.15)",
                                 padding: "10px 14px",
                               }}
-                              formatter={(value: number, name: string) => [`${Number(value).toLocaleString("de-DE")}€`, name]}
+                              formatter={(value: number, name: string) => [`${Number(value).toLocaleString("de-DE")}`, name]}
                               labelFormatter={(v) => { try { return format(new Date(v), "EEE, dd.MM.yyyy"); } catch { return v; } }}
                               labelStyle={{ color: "hsl(var(--accent))", fontSize: "11px", marginBottom: "6px", fontWeight: 600 }}
                             />
