@@ -1236,7 +1236,6 @@ export default function AdminDashboard() {
         })
       );
     })();
-    return () => { cancelled = true; };
     return () => {
       cancelled = true;
       if (rangeUpdateTimeoutRef.current !== null) window.clearTimeout(rangeUpdateTimeoutRef.current);
