@@ -234,7 +234,7 @@ const AnimatedNumber = React.memo(function AnimatedNumber({ value, className, su
   const currentValue = useRef(0);
   const rafRef = useRef<number | null>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = spanRef.current;
     if (!el) return;
     const start = currentValue.current;
