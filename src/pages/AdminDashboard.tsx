@@ -2750,15 +2750,6 @@ export default function AdminDashboard() {
                                 <div className="h-2.5 w-2.5 rounded-full shadow-[0_0_8px_currentColor]" style={{ backgroundColor: color, color }} />
                                 <p className="text-[10px] text-muted-foreground font-semibold tracking-wider uppercase">{label}</p>
                               </div>
-                              {dailyTotals.length > 1 && value > 0 && (
-                                <span className={cn(
-                                  "inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-semibold",
-                                  pdeltaUp ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"
-                                )}>
-                                  {pdeltaUp ? <ArrowUp className="h-2 w-2" /> : <ArrowDown className="h-2 w-2" />}
-                                  {Math.abs(pdelta).toString().replace(".", ",")}%
-                                </span>
-                              )}
                             </div>
 
                             <p className="text-2xl font-black text-gold-gradient tabular-nums leading-tight">
