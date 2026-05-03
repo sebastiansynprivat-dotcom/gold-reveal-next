@@ -231,33 +231,43 @@ const PLATFORM_STYLES: Record<string, { bg: string; text: string; border: string
 
 const AnimatedNumber = React.memo(function AnimatedNumber({ value, className, suffix = "€" }: { value: number; className?: string; suffix?: string }) {
   const target = Number.isFinite(value) ? value : 0;
-  const [display, setDisplay] = React.useState(target);
+  const spanRef = useRef<HTMLSpanElement | null>(null);
   const currentValue = useRef(target);
   const rafRef = useRef<number | null>(null);
+  const formatterRef = useRef(new Intl.NumberFormat("de-DE", { maximumFractionDigits: 0 }));
+
+  const paintValue = useCallback((next: number) => {
+    const el = spanRef.current;
+    if (!el) return;
+    el.textContent = `${formatterRef.current.format(Math.round(next))}${suffix}`;
+  }, [suffix]);
 
   React.useEffect(() => {
     const start = currentValue.current;
     const end = target;
-    if (start === end) return;
+    if (start === end) {
+      paintValue(end);
+      return;
+    }
 
     if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
 
     const delta = Math.abs(end - start);
-    const duration = Math.min(500, Math.max(220, 200 + Math.log10(delta + 1) * 45));
+    const duration = Math.min(360, Math.max(160, 140 + Math.log10(delta + 1) * 32));
     const startTime = performance.now();
 
     const tick = (now: number) => {
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 4);
+      const eased = 1 - Math.pow(1 - progress, 3);
       const current = start + (end - start) * eased;
       currentValue.current = current;
-      setDisplay(current);
+      paintValue(current);
       if (progress < 1) {
         rafRef.current = requestAnimationFrame(tick);
       } else {
         currentValue.current = end;
-        setDisplay(end);
+        paintValue(end);
         rafRef.current = null;
       }
     };
@@ -269,18 +279,20 @@ const AnimatedNumber = React.memo(function AnimatedNumber({ value, className, su
         rafRef.current = null;
       }
     };
-  }, [target]);
+  }, [target, paintValue]);
 
   return (
     <span
+      ref={spanRef}
       className={className}
       style={{
         display: "inline-block",
         fontVariantNumeric: "tabular-nums",
         whiteSpace: "nowrap",
+        contain: "content",
       }}
     >
-      {Math.round(display).toLocaleString("de-DE")}{suffix}
+      {formatterRef.current.format(Math.round(target))}{suffix}
     </span>
   );
 });
