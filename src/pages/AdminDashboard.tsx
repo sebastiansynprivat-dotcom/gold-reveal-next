@@ -2697,7 +2697,7 @@ export default function AdminDashboard() {
                   {/* Premium Time Filter */}
                   <motion.div variants={{ hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0 } }} className="overflow-x-auto scrollbar-none -mx-4 px-4">
                     <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-secondary/40 backdrop-blur-sm border border-border/30 relative">
-                      {[...(["heute", "gestern", "7", "30", "90"] as TimeFilter[]), "custom" as TimeFilter].map((f) => (
+                      {[...(["heute", "gestern", "7", "30", "90"] as TimeFilter[]), "custom" as TimeFilter, "vergleich" as TimeFilter].map((f) => (
                         <button
                           key={f}
                           onClick={() => {
@@ -2708,7 +2708,7 @@ export default function AdminDashboard() {
                           }}
                           className={cn(
                             "relative px-3 py-1.5 rounded-lg text-xs font-medium transition-colors duration-200 whitespace-nowrap z-10",
-                            f === "custom" && "flex items-center gap-1",
+                            (f === "custom" || f === "vergleich") && "flex items-center gap-1",
                             timeFilter === f ? "text-accent-foreground" : "text-muted-foreground hover:text-foreground",
                           )}
                         >
@@ -2721,7 +2721,8 @@ export default function AdminDashboard() {
                           )}
                           <span className="relative z-10 flex items-center gap-1">
                             {f === "custom" && <CalendarIcon className="h-3 w-3" />}
-                            {f === "custom" ? "Zeitraum" : filterLabels[f]}
+                            {f === "vergleich" && <TrendingUp className="h-3 w-3" />}
+                            {filterLabels[f]}
                           </span>
                         </button>
                       ))}
