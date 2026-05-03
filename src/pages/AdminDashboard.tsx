@@ -78,7 +78,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import ChatterStatsCard from "@/components/ChatterStatsCard";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import ModelDashboardTab from "@/components/ModelDashboardTab";
 import ChatterDashboardTab from "@/components/ChatterDashboardTab";
 import GoldParticles from "@/components/GoldParticles";
