@@ -958,6 +958,7 @@ export default function AdminDashboard() {
   const [totalEarnings, setTotalEarnings] = useState(0);
   const [customFrom, setCustomFrom] = useState<Date | undefined>(undefined);
   const [customTo, setCustomTo] = useState<Date | undefined>(undefined);
+  const rangeUpdateTimeoutRef = useRef<number | null>(null);
 
   // Prefetch cache: holds precomputed totals/ranges per filter so switching is instant
   type RevenueSnapshot = { total: CurrentTotal; range: RootData; totalEarnings: number };
@@ -1178,10 +1179,23 @@ export default function AdminDashboard() {
     return { total, range: rng, totalEarnings: total.maloum + total.brezzels + total["4based"] };
   }
 
-  const applySnapshot = (snap: RevenueSnapshot) => {
+  const applySnapshot = (snap: RevenueSnapshot, instantRange = false) => {
+    if (rangeUpdateTimeoutRef.current !== null) {
+      window.clearTimeout(rangeUpdateTimeoutRef.current);
+      rangeUpdateTimeoutRef.current = null;
+    }
+
     setTotalValue(snap.total);
-    setRange(snap.range);
     setTotalEarnings(snap.totalEarnings);
+    if (instantRange || !range) {
+      setRange(snap.range);
+      return;
+    }
+
+    rangeUpdateTimeoutRef.current = window.setTimeout(() => {
+      setRange(snap.range);
+      rangeUpdateTimeoutRef.current = null;
+    }, 420);
   };
 
   // Switch filter using cache-first strategy: instant set + animation, no flicker
@@ -1211,7 +1225,7 @@ export default function AdminDashboard() {
       if (cancelled) return;
       if (heute) {
         revenueCacheRef.current["heute"] = heute;
-        applySnapshot(heute);
+        applySnapshot(heute, true);
       }
       // Prefetch others in background — no UI mutation
       const filters: Array<"gestern" | "7" | "30" | "90"> = ["gestern", "7", "30", "90"];
@@ -1223,6 +1237,10 @@ export default function AdminDashboard() {
       );
     })();
     return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      if (rangeUpdateTimeoutRef.current !== null) window.clearTimeout(rangeUpdateTimeoutRef.current);
+    };
   }, []);
 
   const rangeData = useMemo(() => {
@@ -1252,7 +1270,7 @@ export default function AdminDashboard() {
 
     // 2. Convert to array and sort
     return Object.values(dateMap).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }, [range, totalValue, timeFilter]);
+  }, [range]);
 
   useEffect(() => {
     if (!customTo || !customFrom) return;
