@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import React, { useState, useEffect, useLayoutEffect, useMemo, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Users,
@@ -229,37 +229,59 @@ const PLATFORM_STYLES: Record<string, { bg: string; text: string; border: string
   fansyme: { bg: "bg-purple-500/10", text: "text-purple-400", border: "border-purple-500/30", dot: "bg-purple-500" },
 };
 
-function AnimatedNumber({ value, className, suffix = "€" }: { value: number; className?: string; suffix?: string }) {
+const AnimatedNumber = React.memo(function AnimatedNumber({ value, className, suffix = "€" }: { value: number; className?: string; suffix?: string }) {
   const spanRef = useRef<HTMLSpanElement>(null);
-  const prevValue = useRef(0);
+  const currentValue = useRef(0);
+  const rafRef = useRef<number | null>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const el = spanRef.current;
     if (!el) return;
-    const start = prevValue.current;
+    const start = currentValue.current;
     const end = value;
-    const duration = 600;
+    if (start === end) {
+      el.textContent = end.toLocaleString("de-DE") + suffix;
+      return;
+    }
+    // Duration scales gently with magnitude of change for a premium feel
+    const delta = Math.abs(end - start);
+    const duration = Math.min(1400, Math.max(700, 600 + Math.log10(delta + 1) * 120));
     const startTime = performance.now();
+
+    if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
 
     const tick = (now: number) => {
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      const current = Math.round(start + (end - start) * eased);
-      el.textContent = current.toLocaleString("de-DE") + suffix;
-      if (progress < 1) requestAnimationFrame(tick);
+      // easeOutExpo — silky deceleration
+      const eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+      const current = start + (end - start) * eased;
+      currentValue.current = current;
+      el.textContent = Math.round(current).toLocaleString("de-DE") + suffix;
+      if (progress < 1) {
+        rafRef.current = requestAnimationFrame(tick);
+      } else {
+        currentValue.current = end;
+        rafRef.current = null;
+      }
     };
-    requestAnimationFrame(tick);
-    prevValue.current = end;
+    rafRef.current = requestAnimationFrame(tick);
+
+    return () => {
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+    };
   }, [value, suffix]);
 
   return (
-    <span ref={spanRef} className={className}>
-      {value.toLocaleString("de-DE")}
-      {suffix}
+    <span
+      ref={spanRef}
+      className={className}
+      style={{ fontVariantNumeric: "tabular-nums", display: "inline-block", whiteSpace: "nowrap" }}
+    >
+      0{suffix}
     </span>
   );
-}
+});
 
 function getBillingPeriod() {
   const now = new Date();
