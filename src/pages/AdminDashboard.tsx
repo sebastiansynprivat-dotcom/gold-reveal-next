@@ -2948,7 +2948,7 @@ export default function AdminDashboard() {
                       <div className="grid grid-cols-2 gap-3 py-2.5 border-b border-border/20 last:border-0">
                         <div>
                           <p className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">{label}</p>
-                          <p className={cn("text-lg font-black tabular-nums leading-tight", accent ? "text-gold-gradient-shimmer" : "text-foreground/85")}>
+                          <p className={cn("text-lg font-black tabular-nums leading-tight", accent ? "text-accent" : "text-foreground/85")}>
                             <AnimatedNumber value={valueA} />
                           </p>
                         </div>
@@ -2957,7 +2957,7 @@ export default function AdminDashboard() {
                             <span>{label}</span>
                             <DeltaPill a={valueA} b={valueB} suffix="%" />
                           </p>
-                          <p className={cn("text-lg font-black tabular-nums leading-tight", accent ? "text-gold-gradient-shimmer" : "text-foreground")}>
+                          <p className={cn("text-lg font-black tabular-nums leading-tight", accent ? "text-accent" : "text-foreground")}>
                             <AnimatedNumber value={valueB} />
                           </p>
                         </div>
@@ -3019,7 +3019,7 @@ export default function AdminDashboard() {
                                   <div className="flex items-end justify-between gap-2">
                                     <div>
                                       <p className="text-[10px] text-muted-foreground tracking-wider uppercase mb-1">Gesamtumsatz</p>
-                                      <p className="text-4xl font-black text-gold-gradient-shimmer tabular-nums leading-none">
+                                      <p className="text-4xl font-black text-accent tabular-nums leading-none">
                                         <AnimatedNumber value={compareB.total} />
                                       </p>
                                     </div>
