@@ -1125,6 +1125,7 @@ export default function AdminDashboard() {
     "30": "30 Tage",
     "90": "90 Tage",
     custom: "Zeitraum",
+    vergleich: "Vergleich",
   };
 
   const loadPushUsers = async () => {
