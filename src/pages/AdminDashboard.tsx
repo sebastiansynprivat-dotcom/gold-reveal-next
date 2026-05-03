@@ -2844,7 +2844,7 @@ export default function AdminDashboard() {
                               tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
                               tickLine={false}
                               axisLine={false}
-                              tickFormatter={(v) => `${fmtK(v)}€`}
+                              tickFormatter={(v) => `${fmtK(v)}`}
                               width={48}
                             />
                             <Tooltip
@@ -2856,7 +2856,7 @@ export default function AdminDashboard() {
                                 boxShadow: "0 12px 40px rgba(0,0,0,0.55), 0 0 0 1px hsl(var(--accent)/0.15)",
                                 padding: "10px 14px",
                               }}
-                              formatter={(value: number, name: string) => [`${Number(value).toLocaleString("de-DE")}€`, name]}
+                              formatter={(value: number, name: string) => [`${Number(value).toLocaleString("de-DE")}`, name]}
                               labelFormatter={(v) => { try { return format(new Date(v), "EEE, dd.MM.yyyy"); } catch { return v; } }}
                               labelStyle={{ color: "hsl(var(--accent))", fontSize: "11px", marginBottom: "6px", fontWeight: 600 }}
                             />
