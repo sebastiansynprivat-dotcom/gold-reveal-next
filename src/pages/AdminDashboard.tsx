@@ -150,7 +150,16 @@ const generateFakeRevenueData = () => {
   return data;
 };
 
-type TimeFilter = "heute" | "gestern" | "7" | "30" | "90" | "custom";
+type TimeFilter = "heute" | "gestern" | "7" | "30" | "90" | "custom" | "vergleich";
+
+interface ComparePeriodResult {
+  total: number;
+  byPlatform: { maloum: number; brezzels: number; "4based": number };
+  daily: Array<{ date: string; total: number; maloum: number; brezzels: number; "4based": number }>;
+  activeDays: number;
+  bestDay: { date: string; total: number };
+  avgPerDay: number;
+}
 type ChatterFilter =
   | "alle"
   | "open_2d"
@@ -908,6 +917,15 @@ export default function AdminDashboard() {
   const [customFrom, setCustomFrom] = useState<Date | undefined>(undefined);
   const [customTo, setCustomTo] = useState<Date | undefined>(undefined);
 
+  // Compare mode states
+  const [compareFromA, setCompareFromA] = useState<Date | undefined>(undefined);
+  const [compareToA, setCompareToA] = useState<Date | undefined>(undefined);
+  const [compareFromB, setCompareFromB] = useState<Date | undefined>(undefined);
+  const [compareToB, setCompareToB] = useState<Date | undefined>(undefined);
+  const [compareA, setCompareA] = useState<ComparePeriodResult | null>(null);
+  const [compareB, setCompareB] = useState<ComparePeriodResult | null>(null);
+  const [compareLoading, setCompareLoading] = useState(false);
+
   async function getRevenueToday(flag) {
     const selectedDate = new Date().toISOString().slice(0, 10);
     const fromDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
@@ -1109,6 +1127,56 @@ export default function AdminDashboard() {
     getRevenueRangebyDates(dateRange);
   }, [customFrom, customTo]);
 
+  // Compare mode: independent fetcher that doesn't touch main state
+  const fetchComparePeriod = async (from: Date, to: Date): Promise<ComparePeriodResult> => {
+    const fromStr = from.toISOString().slice(0, 10);
+    const toStr = to.toISOString().slice(0, 10);
+    const { data } = await supabase
+      .from("revenue_report")
+      .select("date, platform, revenue_today")
+      .order("date", { ascending: true })
+      .gte("date", fromStr)
+      .lte("date", toStr);
+    const rows = data || [];
+    const dateMap: Record<string, { date: string; total: number; maloum: number; brezzels: number; "4based": number }> = {};
+    for (const row of rows) {
+      const d = row.date as string;
+      if (!dateMap[d]) dateMap[d] = { date: d, total: 0, maloum: 0, brezzels: 0, "4based": 0 };
+      const amount = Number(row.revenue_today) || 0;
+      const plat = row.platform as "maloum" | "brezzels" | "4based";
+      if (plat === "maloum" || plat === "brezzels" || plat === "4based") {
+        dateMap[d][plat] += amount;
+        dateMap[d].total += amount;
+      }
+    }
+    const daily = Object.values(dateMap).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const byPlatform = {
+      maloum: daily.reduce((s, d) => s + d.maloum, 0),
+      brezzels: daily.reduce((s, d) => s + d.brezzels, 0),
+      "4based": daily.reduce((s, d) => s + d["4based"], 0),
+    };
+    const total = byPlatform.maloum + byPlatform.brezzels + byPlatform["4based"];
+    const activeDays = daily.filter((d) => d.total > 0).length;
+    const bestDay = daily.reduce((b, d) => (d.total > b.total ? { date: d.date, total: d.total } : b), { date: "", total: 0 });
+    const avgPerDay = activeDays > 0 ? Math.round(total / activeDays) : 0;
+    return { total, byPlatform, daily, activeDays, bestDay, avgPerDay };
+  };
+
+  useEffect(() => {
+    if (timeFilter !== "vergleich") return;
+    if (!compareFromA || !compareToA) { setCompareA(null); return; }
+    setCompareLoading(true);
+    fetchComparePeriod(compareFromA, compareToA).then(setCompareA).finally(() => setCompareLoading(false));
+  }, [compareFromA, compareToA, timeFilter]);
+
+  useEffect(() => {
+    if (timeFilter !== "vergleich") return;
+    if (!compareFromB || !compareToB) { setCompareB(null); return; }
+    setCompareLoading(true);
+    fetchComparePeriod(compareFromB, compareToB).then(setCompareB).finally(() => setCompareLoading(false));
+  }, [compareFromB, compareToB, timeFilter]);
+
+
   const filterLabels: Record<TimeFilter, string> = {
     heute: "Heute",
     gestern: "Gestern",
@@ -1116,6 +1184,7 @@ export default function AdminDashboard() {
     "30": "30 Tage",
     "90": "90 Tage",
     custom: "Zeitraum",
+    vergleich: "Vergleich",
   };
 
   const loadPushUsers = async () => {
@@ -2628,7 +2697,7 @@ export default function AdminDashboard() {
                   {/* Premium Time Filter */}
                   <motion.div variants={{ hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0 } }} className="overflow-x-auto scrollbar-none -mx-4 px-4">
                     <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-secondary/40 backdrop-blur-sm border border-border/30 relative">
-                      {[...(["heute", "gestern", "7", "30", "90"] as TimeFilter[]), "custom" as TimeFilter].map((f) => (
+                      {[...(["heute", "gestern", "7", "30", "90"] as TimeFilter[]), "custom" as TimeFilter, "vergleich" as TimeFilter].map((f) => (
                         <button
                           key={f}
                           onClick={() => {
@@ -2639,7 +2708,7 @@ export default function AdminDashboard() {
                           }}
                           className={cn(
                             "relative px-3 py-1.5 rounded-lg text-xs font-medium transition-colors duration-200 whitespace-nowrap z-10",
-                            f === "custom" && "flex items-center gap-1",
+                            (f === "custom" || f === "vergleich") && "flex items-center gap-1",
                             timeFilter === f ? "text-accent-foreground" : "text-muted-foreground hover:text-foreground",
                           )}
                         >
@@ -2652,7 +2721,8 @@ export default function AdminDashboard() {
                           )}
                           <span className="relative z-10 flex items-center gap-1">
                             {f === "custom" && <CalendarIcon className="h-3 w-3" />}
-                            {f === "custom" ? "Zeitraum" : filterLabels[f]}
+                            {f === "vergleich" && <TrendingUp className="h-3 w-3" />}
+                            {filterLabels[f]}
                           </span>
                         </button>
                       ))}
@@ -2687,6 +2757,226 @@ export default function AdminDashboard() {
                     </div>
                   )}
 
+                  {timeFilter === "vergleich" && (() => {
+                    const platformLabels: Record<string, string> = { maloum: "Maloum", brezzels: "Brezzels", "4based": "4Based" };
+                    const fmtDateLabel = (d?: Date) => (d ? format(d, "dd.MM.yyyy") : "—");
+                    const fmtBest = (d: string) => { try { return format(new Date(d), "dd.MM."); } catch { return d || "—"; } };
+
+                    const DateRangePicker = ({
+                      from, to, onFrom, onTo, label,
+                    }: { from?: Date; to?: Date; onFrom: (d?: Date) => void; onTo: (d?: Date) => void; label: string }) => (
+                      <div className="flex flex-col gap-2">
+                        <p className="text-[9px] tracking-[0.2em] uppercase text-muted-foreground font-bold">{label}</p>
+                        <div className="flex gap-2 items-center">
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button variant="outline" size="sm" className={cn("h-8 text-xs flex-1 justify-start bg-secondary/30", !from && "text-muted-foreground")}>
+                                <CalendarIcon className="h-3 w-3 mr-1.5" />
+                                {from ? format(from, "dd.MM.yyyy") : "Von"}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar mode="single" selected={from} onSelect={onFrom} initialFocus className="p-3 pointer-events-auto" />
+                            </PopoverContent>
+                          </Popover>
+                          <span className="text-[10px] text-muted-foreground">bis</span>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button variant="outline" size="sm" className={cn("h-8 text-xs flex-1 justify-start bg-secondary/30", !to && "text-muted-foreground")}>
+                                <CalendarIcon className="h-3 w-3 mr-1.5" />
+                                {to ? format(to, "dd.MM.yyyy") : "Bis"}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="end">
+                              <Calendar mode="single" selected={to} onSelect={onTo} initialFocus className="p-3 pointer-events-auto" />
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+                      </div>
+                    );
+
+                    const DeltaPill = ({ a, b, suffix = "" }: { a: number; b: number; suffix?: string }) => {
+                      if (!a || !b) return null;
+                      const pct = Math.round(((b - a) / a) * 1000) / 10;
+                      const up = pct >= 0;
+                      return (
+                        <span className={cn(
+                          "inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold",
+                          up ? "bg-emerald-500/15 text-emerald-400" : "bg-red-500/15 text-red-400"
+                        )}>
+                          {up ? <ArrowUp className="h-2 w-2" /> : <ArrowDown className="h-2 w-2" />}
+                          {up ? "+" : ""}{pct.toString().replace(".", ",")}{suffix}
+                        </span>
+                      );
+                    };
+
+                    const KpiRow = ({ label, valueA, valueB, accent = false }: { label: string; valueA: number; valueB: number; accent?: boolean }) => (
+                      <div className="grid grid-cols-2 gap-3 py-2.5 border-b border-border/20 last:border-0">
+                        <div>
+                          <p className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold">{label}</p>
+                          <p className={cn("text-lg font-black tabular-nums leading-tight", accent ? "text-gold-gradient-shimmer" : "text-foreground/85")}>
+                            <AnimatedNumber value={valueA} />
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-[9px] uppercase tracking-wider text-muted-foreground font-semibold flex items-center justify-between">
+                            <span>{label}</span>
+                            <DeltaPill a={valueA} b={valueB} suffix="%" />
+                          </p>
+                          <p className={cn("text-lg font-black tabular-nums leading-tight", accent ? "text-gold-gradient-shimmer" : "text-foreground")}>
+                            <AnimatedNumber value={valueB} />
+                          </p>
+                        </div>
+                      </div>
+                    );
+
+                    // Build dual-line chart data (normalize on day index)
+                    const chartLen = Math.max(compareA?.daily.length || 0, compareB?.daily.length || 0);
+                    const chartData = Array.from({ length: chartLen }, (_, i) => ({
+                      idx: i + 1,
+                      a: compareA?.daily[i]?.total ?? null,
+                      b: compareB?.daily[i]?.total ?? null,
+                    }));
+                    const fmtK = (v: number) => v >= 1000 ? `${(v / 1000).toFixed(v >= 10000 ? 0 : 1).replace(".", ",")}k` : `${v}`;
+
+                    return (
+                      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="space-y-4">
+                        {/* Pickers row */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div className="glass-card-subtle rounded-xl p-4">
+                            <DateRangePicker from={compareFromA} to={compareToA} onFrom={setCompareFromA} onTo={setCompareToA} label="Zeitraum A" />
+                          </div>
+                          <div className="relative gold-gradient-border-animated rounded-xl p-4">
+                            <DateRangePicker from={compareFromB} to={compareToB} onFrom={setCompareFromB} onTo={setCompareToB} label="Zeitraum B" />
+                          </div>
+                        </div>
+
+                        {(!compareA || !compareB) ? (
+                          <div className="glass-card rounded-2xl p-8 text-center">
+                            <TrendingUp className="h-8 w-8 text-accent/60 mx-auto mb-3" />
+                            <p className="text-sm font-bold text-foreground mb-1">Wähle zwei Zeiträume</p>
+                            <p className="text-xs text-muted-foreground">
+                              {compareLoading ? "Lade Daten…" : "Beide Zeiträume (A & B) müssen ausgewählt sein, um den Vergleich zu starten."}
+                            </p>
+                          </div>
+                        ) : (
+                          <>
+                            {/* Headline totals card */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                              <motion.div
+                                initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.1 }}
+                                className="relative glass-card rounded-2xl p-5 overflow-hidden"
+                              >
+                                <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
+                                <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground font-bold mb-2">A · {fmtDateLabel(compareFromA)} – {fmtDateLabel(compareToA)}</p>
+                                <p className="text-[10px] text-muted-foreground tracking-wider uppercase mb-1">Gesamtumsatz</p>
+                                <p className="text-4xl font-black text-foreground/85 tabular-nums leading-none">
+                                  <AnimatedNumber value={compareA.total} />
+                                </p>
+                              </motion.div>
+
+                              <motion.div
+                                initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}
+                                className="relative gold-gradient-border-animated pulse-glow rounded-2xl p-5 overflow-hidden"
+                              >
+                                <div className="absolute -top-16 right-0 h-40 w-40 rounded-full bg-accent/15 blur-3xl" />
+                                <div className="relative">
+                                  <p className="text-[9px] uppercase tracking-[0.2em] text-accent font-bold mb-2">B · {fmtDateLabel(compareFromB)} – {fmtDateLabel(compareToB)}</p>
+                                  <div className="flex items-end justify-between gap-2">
+                                    <div>
+                                      <p className="text-[10px] text-muted-foreground tracking-wider uppercase mb-1">Gesamtumsatz</p>
+                                      <p className="text-4xl font-black text-gold-gradient-shimmer tabular-nums leading-none">
+                                        <AnimatedNumber value={compareB.total} />
+                                      </p>
+                                    </div>
+                                    <DeltaPill a={compareA.total} b={compareB.total} suffix="%" />
+                                  </div>
+                                </div>
+                              </motion.div>
+                            </div>
+
+                            {/* KPI breakdown table */}
+                            <motion.div
+                              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+                              className="glass-card rounded-2xl p-5"
+                            >
+                              <div className="grid grid-cols-2 gap-3 pb-2 mb-1 border-b border-accent/20">
+                                <p className="text-[9px] uppercase tracking-[0.2em] text-muted-foreground font-bold">KPI · Zeitraum A</p>
+                                <p className="text-[9px] uppercase tracking-[0.2em] text-accent font-bold">KPI · Zeitraum B</p>
+                              </div>
+                              <KpiRow label="Ø pro Tag" valueA={compareA.avgPerDay} valueB={compareB.avgPerDay} />
+                              <KpiRow label="Bester Tag" valueA={compareA.bestDay.total} valueB={compareB.bestDay.total} />
+                              <div className="grid grid-cols-2 gap-3 py-1 -mt-2 mb-1 text-[9px] text-muted-foreground/70">
+                                <span>{compareA.bestDay.date ? fmtBest(compareA.bestDay.date) : "—"}</span>
+                                <span>{compareB.bestDay.date ? fmtBest(compareB.bestDay.date) : "—"}</span>
+                              </div>
+                              <KpiRow label="Aktive Tage" valueA={compareA.activeDays} valueB={compareB.activeDays} />
+                              {(["maloum", "brezzels", "4based"] as const).map((p) => (
+                                <KpiRow key={p} label={platformLabels[p]} valueA={compareA.byPlatform[p]} valueB={compareB.byPlatform[p]} accent />
+                              ))}
+                            </motion.div>
+
+                            {/* Dual-line chart */}
+                            <motion.div
+                              initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
+                              className="relative gold-gradient-border-animated rounded-2xl p-5 overflow-hidden"
+                            >
+                              <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
+                                <h3 className="text-sm font-bold text-gold-gradient-shimmer">Verlauf · Tag-für-Tag</h3>
+                                <div className="flex gap-3 text-[10px]">
+                                  <span className="flex items-center gap-1.5">
+                                    <span className="h-0.5 w-4 bg-muted-foreground/60 rounded" />
+                                    <span className="text-muted-foreground font-semibold">A</span>
+                                  </span>
+                                  <span className="flex items-center gap-1.5">
+                                    <span className="h-0.5 w-4 bg-accent rounded shadow-[0_0_8px_hsl(var(--accent))]" />
+                                    <span className="text-accent font-semibold">B</span>
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="h-64">
+                                <ResponsiveContainer width="100%" height="100%">
+                                  <AreaChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
+                                    <defs>
+                                      <linearGradient id="cmpA" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.35} />
+                                        <stop offset="100%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0} />
+                                      </linearGradient>
+                                      <linearGradient id="cmpB" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="hsl(var(--accent))" stopOpacity={0.55} />
+                                        <stop offset="100%" stopColor="hsl(var(--accent))" stopOpacity={0} />
+                                      </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="2 6" stroke="hsl(var(--accent))" strokeOpacity={0.08} vertical={false} />
+                                    <XAxis dataKey="idx" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} tickFormatter={(v) => `T${v}`} />
+                                    <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} tickLine={false} axisLine={false} tickFormatter={(v) => fmtK(v)} width={44} />
+                                    <Tooltip
+                                      contentStyle={{
+                                        background: "hsl(0 0% 5% / 0.95)",
+                                        backdropFilter: "blur(16px)",
+                                        border: "1px solid hsl(var(--accent) / 0.5)",
+                                        borderRadius: "14px",
+                                        fontSize: "12px",
+                                        boxShadow: "0 20px 60px rgba(0,0,0,0.7)",
+                                        padding: "10px 14px",
+                                      }}
+                                      labelFormatter={(v) => `Tag ${v}`}
+                                      formatter={(value: number, name: string) => [Number(value).toLocaleString("de-DE"), name === "a" ? "Zeitraum A" : "Zeitraum B"]}
+                                    />
+                                    <Area type="monotone" dataKey="a" stroke="hsl(var(--muted-foreground))" strokeWidth={2} fill="url(#cmpA)" connectNulls />
+                                    <Area type="monotone" dataKey="b" stroke="hsl(var(--accent))" strokeWidth={2.5} fill="url(#cmpB)" connectNulls />
+                                  </AreaChart>
+                                </ResponsiveContainer>
+                              </div>
+                            </motion.div>
+                          </>
+                        )}
+                      </motion.div>
+                    );
+                  })()}
+
+                  {timeFilter !== "vergleich" && (
+                  <>
                   {/* HERO VAULT — Gesamtumsatz */}
                   <motion.div
                     variants={{ hidden: { opacity: 0, y: 16, filter: "blur(6px)" }, show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.6 } } }}
@@ -2895,6 +3185,8 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                   </motion.div>
+                  </>
+                  )}
 
                 </motion.div>
                 );

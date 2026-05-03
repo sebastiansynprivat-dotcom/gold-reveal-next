@@ -1,56 +1,46 @@
-## Premium Redesign: Einnahmen Tab (Admin Dashboard)
+## Vergleichs-Modus für den Einnahmen-Tab
 
-Ziel: Der Einnahmen-Tab fühlt sich wie ein luxuriöses Cockpit an — Black & Gold, Glassmorphism, mehr Tiefe, Bewegung und Wow-Faktor. **Datenimport bleibt 100% unverändert.**
+Neuer Filter "Vergleich" rechts neben "Zeitraum". Zwei eigene Date-Range-Picker (A vs. B) erlauben es, beliebige Zeiträume direkt nebeneinander zu vergleichen.
 
-### Aktueller Zustand
+### Filter-Bar
 
-Time-Filter Pills, Hero Gold-Card (Gesamtumsatz), 3 kleine Plattform-Cards, Multi-Line Chart. Funktioniert, wirkt aber flach — kleines Hero, gleichgewichtige Cards, schlichter Line-Chart, keine Vergleiche, keine Hierarchie.
+- Pill-Reihe wird erweitert: `Heute · Gestern · 7T · 30T · 90T · Zeitraum · Vergleich`.
+- Aktivieren des "Vergleich"-Pills blendet Hero/Plattform-Tiles/Chart aus und zeigt stattdessen das neue Vergleichs-Panel.
 
-### Redesign
+### Vergleichs-Panel
 
-**1. Hero "Vault" Card (Gesamtumsatz)**
+```text
+┌─────────────────────────┬─────────────────────────┐
+│ Zeitraum A              │ Zeitraum B              │
+│ [Von ▾]  [Bis ▾]        │ [Von ▾]  [Bis ▾]        │
+│ z.B. 01.04.–03.04.      │ z.B. 01.05.–03.05.      │
+├─────────────────────────┼─────────────────────────┤
+│ GESAMTUMSATZ            │ GESAMTUMSATZ            │
+│ 12.480 €                │ 17.940 €     ▲ +43,7 %  │
+├─────────────────────────┼─────────────────────────┤
+│ Ø/Tag    4.160          │ Ø/Tag    5.980  ▲ +43,7 │
+│ Bester   5.300 (02.04.) │ Bester   7.120 (02.05.) │
+│ Maloum   6.200          │ Maloum   8.700  ▲ +40 % │
+│ Brezzels 3.880          │ Brezzels 5.840  ▲ +50 % │
+│ 4Based   2.400          │ 4Based   3.400  ▲ +42 % │
+└─────────────────────────┴─────────────────────────┘
+```
 
-- Showpiece: deutlich größer (py-10), zentriertes Crown/Diamond Icon, animierte shimmernde Gold-Zahl (text-5xl/6xl), tabular-nums.
-- Layered Effects: animierter Conic-Gradient Gold-Border, sanfter Inner-Glow, dezenter radialer Gold-Spotlight, feiner Grain-Noise Overlay.
-- Delta-Row drunter: "▲ +12,4 % ggü. Vorperiode" (aktueller Filter-Range vs. vorheriger gleich langer Range), grün/rot Pill.
-- Mini-Sparkline am unteren Rand des Heros mit dem Trend für die aktive Range.
+- **Layout:** Zwei Glass-Cards nebeneinander (mobil gestackt). Rechts neben jedem KPI in Zeitraum B ein grünes/rotes Delta-Pill vs. A.
+- **KPIs pro Seite:** Gesamtumsatz, Ø pro Tag, Bester Tag (mit Datum), Anzahl aktiver Tage, plus Breakdown pro Plattform.
+- **Premium-Polish:** Gold-Animated-Border auf der "B"-Card, smoothe `AnimatedNumber`-Animationen, Stagger Fade-In, dezenter Spotlight hinter B.
+- **Dual Chart unten:** Ein einzelner AreaChart mit zwei Linien — Zeitraum A (gold-muted) vs. Zeitraum B (gold-bright), normalisiert auf "Tag 1, Tag 2, …" damit unterschiedlich lange Ranges vergleichbar bleiben.
 
-**2. Plattform-Cards → "Premium Tiles"**
+### Technische Umsetzung
 
-- Statt flacher 3-Spalten-Grid jetzt höhere Glass-Tiles mit:
-  - Plattform-Dot + Name
-  - Große Revenue-Zahl (Gold-Gradient)
-  - % Anteil am Gesamt (Progress-Bar in Plattform-Farbe)
-  - Mini 7-Punkt-Sparkline pro Plattform
-  - Period-Delta Chip (▲/▼ vs. Vorperiode)
-- Hover: Lift + soft Gold-Glow, animated Border-Sweep.
-  &nbsp;
-
-**4. Umsatzverlauf Chart Upgrades**
-
-- Wechsel von `LineChart` auf Stacked/Overlay `AreaChart` mit reichen Gradients pro Plattform (Markenfarben bleiben).
-- Soft Gold "Total" Linie obendrauf.
-- Custom Tooltip Card: Gold-Border, Plattform-Breakdown, Tagestotal in Bold, formatierter Wochentag.
-- Chart-Mode Toggle: "Stacked / Linien / Gesamt" Segmented Control (gleicher Pill-Style wie Time-Filter).
-- Y-Achse: `1.2k`, `12k` Format zur Entlastung.
-- Dezente horizontale Benchmark-Linie für Tagesdurchschnitt der Range.
-
-**5. Polish & Motion**
-
-- Stagger Fade-In/Blur: Hero → Tiles → KPI-Strip → Chart bei Tab-Mount und Filter-Wechsel.
-- Lokaler Gold-Spotlight hinter dem Hero.
-- Zahlen via existierender `AnimatedNumber`.
-- Time-Filter Pills behalten, aktiver bekommt subtilen Gold-Underline-Glow.
-
-### Technische Notes
-
-- Alle Edits innerhalb des `activeTab === "einnahmen"` Blocks in `src/pages/AdminDashboard.tsx` (Zeilen 2591–2816).
-- Reuse: `glass-card`, `glass-card-subtle`, `gold-gradient-border-animated`, `pulse-glow`, `text-gold-gradient-shimmer`, `AnimatedNumber`, `framer-motion`.
-- Deltas/Projections/Sparklines werden **rein clientseitig** aus dem bereits geladenen `rangeData` und `totalValue` berechnet.
-- **Keine Änderungen** an `getRevenueToday`, `getRevenueRange`, `getRevenueRangebyDates`, keine neuen Queries, keine DB-Änderungen, keine Edge Functions.
-- Neuer Chart nutzt `AreaChart` aus bereits importiertem `recharts`.
-- Keine neuen Dependencies.
+- `TimeFilter`-Union um `"vergleich"` erweitern.
+- Neue States: `compareFromA`, `compareToA`, `compareFromB`, `compareToB`, plus `compareDataA`, `compareDataB`, `compareTotalA`, `compareTotalB`.
+- Bestehende `getRevenueRangebyDates`-Funktion wiederverwendet — lokale Variante `fetchCompareRange(from, to)` die `{ data, total }` zurückgibt, so dass A und B parallel geladen werden ohne den Haupt-State zu zerschießen.
+- `useEffect` triggert beide Fetches sobald jeweils beide Daten gesetzt sind.
+- Delta-Berechnung clientseitig: `((B - A) / A) * 100`.
+- Alle Edits in `src/pages/AdminDashboard.tsx` innerhalb des `activeTab === "einnahmen"` Blocks. Keine DB-Änderungen, keine neuen Queries, keine neuen Dependencies.
 
 ### Out of Scope
 
-- Datenquellen, Backend, andere Tabs.
+- Speichern von Vergleichs-Presets.
+- Vergleich über andere Tabs (Chatter etc.).
