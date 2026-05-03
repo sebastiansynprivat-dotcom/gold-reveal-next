@@ -3134,7 +3134,7 @@ export default function AdminDashboard() {
                       </motion.div>
 
                       <p className="text-[10px] text-muted-foreground mb-2 tracking-[0.25em] uppercase">Gesamtumsatz</p>
-                      <p className="text-5xl sm:text-6xl font-black text-gold-gradient-shimmer tracking-tight tabular-nums leading-none">
+                      <p className="text-5xl sm:text-6xl font-black text-gold-gradient tracking-tight tabular-nums leading-none inline-flex justify-center">
                         <AnimatedNumber value={totalEarnings} />
                       </p>
 
@@ -3176,7 +3176,7 @@ export default function AdminDashboard() {
                               </div>
                             </div>
 
-                            <p className="text-2xl font-black text-gold-gradient tabular-nums leading-tight">
+                            <p className="text-2xl font-black text-gold-gradient tabular-nums leading-tight inline-flex">
                               <AnimatedNumber value={value} />
                             </p>
 
