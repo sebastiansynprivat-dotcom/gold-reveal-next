@@ -229,7 +229,7 @@ const PLATFORM_STYLES: Record<string, { bg: string; text: string; border: string
   fansyme: { bg: "bg-purple-500/10", text: "text-purple-400", border: "border-purple-500/30", dot: "bg-purple-500" },
 };
 
-const AnimatedNumber = React.memo(function AnimatedNumber({ value, className, suffix = "€" }: { value: number; className?: string; suffix?: string }) {
+const AnimatedNumber = React.memo(function AnimatedNumber({ value, className, suffix = "€", align = "center" }: { value: number; className?: string; suffix?: string; align?: "left" | "center" | "right" }) {
   const target = Number.isFinite(value) ? value : 0;
   const spanRef = useRef<HTMLSpanElement | null>(null);
   const currentValue = useRef(target);
