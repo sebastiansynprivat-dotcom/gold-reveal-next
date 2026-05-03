@@ -2819,10 +2819,7 @@ export default function AdminDashboard() {
                         <button
                           key={f}
                           onClick={() => {
-                            setTimeFilter(f);
-                            if (["7", "30", "90"].includes(f)) getRevenueRange(f);
-                            if (["heute"].includes(f)) getRevenueToday("today");
-                            if (["gestern"].includes(f)) getRevenueToday("gestern");
+                            switchTimeFilter(f);
                           }}
                           className={cn(
                             "relative px-3 py-1.5 rounded-lg text-xs font-medium transition-colors duration-200 whitespace-nowrap z-10",
