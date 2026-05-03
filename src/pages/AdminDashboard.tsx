@@ -917,6 +917,15 @@ export default function AdminDashboard() {
   const [customFrom, setCustomFrom] = useState<Date | undefined>(undefined);
   const [customTo, setCustomTo] = useState<Date | undefined>(undefined);
 
+  // Compare mode states
+  const [compareFromA, setCompareFromA] = useState<Date | undefined>(undefined);
+  const [compareToA, setCompareToA] = useState<Date | undefined>(undefined);
+  const [compareFromB, setCompareFromB] = useState<Date | undefined>(undefined);
+  const [compareToB, setCompareToB] = useState<Date | undefined>(undefined);
+  const [compareA, setCompareA] = useState<ComparePeriodResult | null>(null);
+  const [compareB, setCompareB] = useState<ComparePeriodResult | null>(null);
+  const [compareLoading, setCompareLoading] = useState(false);
+
   async function getRevenueToday(flag) {
     const selectedDate = new Date().toISOString().slice(0, 10);
     const fromDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
