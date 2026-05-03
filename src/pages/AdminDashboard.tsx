@@ -293,7 +293,6 @@ const AnimatedNumber = React.memo(function AnimatedNumber({ value, className, su
         display: "inline-block",
         fontVariantNumeric: "tabular-nums",
         whiteSpace: "nowrap",
-        contain: "content",
         minWidth: `${reservedCharacters}ch`,
         textAlign: "right",
         transform: "translateZ(0)",
