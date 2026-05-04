@@ -2716,6 +2716,9 @@ export default function AdminDashboard() {
         </div>
       </header>
 
+      {/* Spacer for fixed header */}
+      <div className="h-[65px]" aria-hidden="true" />
+
       <div className="flex min-h-[calc(100vh-65px)]">
         {/* Desktop Sidebar – fixed so it stays visible while scrolling */}
         <aside
