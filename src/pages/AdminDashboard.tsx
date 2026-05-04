@@ -238,6 +238,7 @@ const AnimatedNumber = React.memo(function AnimatedNumber({ value, className, su
   const rafRef = useRef<number | null>(null);
   const formatterRef = useRef(new Intl.NumberFormat("de-DE", { maximumFractionDigits: 0 }));
   const initialTextRef = useRef(`${formatterRef.current.format(Math.round(target))}${suffix}`);
+  const lastPaintedTextRef = useRef(initialTextRef.current);
   const startText = `${formatterRef.current.format(Math.round(currentValue.current))}${suffix}`;
   const targetText = `${formatterRef.current.format(Math.round(target))}${suffix}`;
   const reservedCharacters = Math.max(startText.length, targetText.length, initialTextRef.current.length);
@@ -245,7 +246,10 @@ const AnimatedNumber = React.memo(function AnimatedNumber({ value, className, su
   const paintValue = useCallback((next: number) => {
     const el = spanRef.current;
     if (!el) return;
-    el.textContent = `${formatterRef.current.format(Math.round(next))}${suffix}`;
+    const nextText = `${formatterRef.current.format(Math.round(next))}${suffix}`;
+    if (lastPaintedTextRef.current === nextText) return;
+    lastPaintedTextRef.current = nextText;
+    el.textContent = nextText;
   }, [suffix]);
 
   React.useEffect(() => {
