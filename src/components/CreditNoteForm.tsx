@@ -139,11 +139,44 @@ export default function CreditNoteForm({
     return () => { if (issuerSaveTimerRef.current) clearTimeout(issuerSaveTimerRef.current); };
   }, [issuerName, issuerAddress, issuerVatId, issuerKvk, saveIssuerToDb]);
 
-  // Provider
-  const [providerName, setProviderName] = useState(saved.providerName || initialProviderName);
-  const [providerAddress, setProviderAddress] = useState(saved.providerAddress || "");
-  const [isBusiness, setIsBusiness] = useState(saved.isBusiness || false);
-  const [providerVatId, setProviderVatId] = useState(saved.providerVatId || "");
+  // Provider (recipient) — persisted in DB per chatter/model
+  const [providerName, setProviderName] = useState(initialProviderNameOverride || initialProviderName);
+  const [providerAddress, setProviderAddress] = useState(initialProviderAddress);
+  const [isBusiness, setIsBusiness] = useState(initialProviderIsBusiness);
+  const [providerVatId, setProviderVatId] = useState(initialProviderVatId);
+  const providerSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const providerHydratedRef = useRef(false);
+
+  // Re-hydrate when switching between chatters/models
+  useEffect(() => {
+    providerHydratedRef.current = false;
+    setProviderName(initialProviderNameOverride || initialProviderName);
+    setProviderAddress(initialProviderAddress);
+    setIsBusiness(initialProviderIsBusiness);
+    setProviderVatId(initialProviderVatId);
+    // Mark hydrated next tick so the auto-save effect below doesn't fire on initial sync
+    const t = setTimeout(() => { providerHydratedRef.current = true; }, 50);
+    return () => clearTimeout(t);
+  }, [providerEntityId, providerEntityType, initialProviderName, initialProviderNameOverride, initialProviderAddress, initialProviderIsBusiness, initialProviderVatId]);
+
+  // Auto-save provider fields to DB (debounced)
+  useEffect(() => {
+    if (!providerEntityType || !providerEntityId) return;
+    if (!providerHydratedRef.current) return;
+    if (providerSaveTimerRef.current) clearTimeout(providerSaveTimerRef.current);
+    providerSaveTimerRef.current = setTimeout(async () => {
+      const table = providerEntityType === "chatter" ? "chatters" : "models";
+      try {
+        await (supabase.from as any)(table).update({
+          provider_address: providerAddress,
+          provider_is_business: isBusiness,
+          provider_vat_id: providerVatId,
+          provider_name_override: providerName !== initialProviderName ? providerName : "",
+        }).eq("id", providerEntityId);
+      } catch { /* silent */ }
+    }, 800);
+    return () => { if (providerSaveTimerRef.current) clearTimeout(providerSaveTimerRef.current); };
+  }, [providerName, providerAddress, isBusiness, providerVatId, providerEntityType, providerEntityId, initialProviderName]);
 
   // Metadata – default service period = previous month
   const lastMonth = subMonths(new Date(), 1);
