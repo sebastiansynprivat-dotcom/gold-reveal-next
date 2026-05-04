@@ -209,6 +209,13 @@
     pointer-events: none;
   }
 
+  /* Static, cheap variant — looks like animated but no constant repaints */
+  .gold-gradient-border-static {
+    position: relative;
+    background: hsl(0 0% 6% / 0.8);
+    border: 1px solid hsl(43 56% 52% / 0.25);
+  }
+
   @property --border-angle {
     syntax: "<angle>";
     initial-value: 0deg;
@@ -217,6 +224,13 @@
 
   @keyframes border-spin {
     to { --border-angle: 360deg; }
+  }
+
+  /* Disable expensive animated borders on mobile / reduced motion */
+  @media (max-width: 768px), (prefers-reduced-motion: reduce) {
+    .gold-gradient-border-animated::before {
+      animation: none;
+    }
   }
 
   .pulse-glow {
