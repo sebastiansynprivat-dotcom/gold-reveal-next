@@ -2927,7 +2927,7 @@ export default function AdminDashboard() {
                 <motion.div
                   initial="hidden"
                   animate="show"
-                  variants={{ hidden: {}, show: { transition: { staggerChildren: isMobileRevenueView ? 0.015 : 0.04 } } }}
+                  variants={{ hidden: {}, show: { transition: { staggerChildren: isMobileRevenueView ? 0 : 0.04 } } }}
                   className="space-y-5"
                 >
                   {/* Premium Time Filter */}
@@ -2945,13 +2945,15 @@ export default function AdminDashboard() {
                             timeFilter === f ? "text-accent-foreground" : "text-muted-foreground hover:text-foreground",
                           )}
                         >
-                          {timeFilter === f && (
+                          {timeFilter === f && (isMobileRevenueView ? (
+                            <div className="absolute inset-0 bg-accent rounded-lg shadow-md shadow-accent/20" />
+                          ) : (
                             <motion.div
                               layoutId="activeTimeFilter"
                               className="absolute inset-0 bg-accent rounded-lg shadow-md shadow-accent/30"
                               transition={{ type: "spring", stiffness: 400, damping: 30 }}
                             />
-                          )}
+                          ))}
                           <span className="relative z-10 flex items-center gap-1">
                             {f === "custom" && <CalendarIcon className="h-3 w-3" />}
                             {f === "vergleich" && <TrendingUp className="h-3 w-3" />}
