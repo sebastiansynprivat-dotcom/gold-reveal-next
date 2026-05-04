@@ -1017,6 +1017,24 @@ export default function AdminDashboard() {
   const [compareB, setCompareB] = useState<ComparePeriodResult | null>(null);
   const [compareLoading, setCompareLoading] = useState(false);
 
+  // Keep activeTabRef in sync + refresh Einnahmen only when returning to the tab
+  useEffect(() => {
+    const previousTab = previousActiveTabRef.current;
+    activeTabRef.current = activeTab;
+    previousActiveTabRef.current = activeTab;
+    if (activeTab === "einnahmen" && previousTab !== "einnahmen") {
+      setTimeFilter("heute");
+      const cachedToday = revenueCacheRef.current.heute;
+      if (cachedToday) applySnapshot(cachedToday, true);
+      computeTodaySnapshot("today").then((snap) => {
+        if (!snap || activeTabRef.current !== "einnahmen") return;
+        revenueCacheRef.current.heute = snap;
+        persistRevenueCache();
+        applySnapshot(snap, true);
+      });
+    }
+  }, [activeTab, persistRevenueCache]);
+
   async function getRevenueToday(flag) {
     const selectedDate = new Date().toISOString().slice(0, 10);
     const fromDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
