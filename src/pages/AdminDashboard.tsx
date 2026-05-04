@@ -2679,7 +2679,7 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-background relative">
       <GoldParticles spawnRate={0.2} maxParticles={20} baseOpacity={0.15} />
       {/* Premium Header */}
-      <header className="relative border-b border-border/50 bg-gradient-to-b from-secondary/30 to-background">
+      <header className="sticky top-0 z-40 border-b border-border/50 bg-gradient-to-b from-secondary/30 to-background backdrop-blur-md">
         <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-accent/5 via-transparent to-accent/5" />
         <div className="relative z-10 flex items-center gap-3 px-4 py-4">
           <button
@@ -2709,7 +2709,7 @@ export default function AdminDashboard() {
 
       <div className="flex min-h-[calc(100vh-65px)]">
         {/* Desktop Sidebar */}
-        <aside className="hidden md:flex flex-col w-56 shrink-0 border-r border-border/30 bg-gradient-to-b from-secondary/20 to-background/50 backdrop-blur-sm overflow-y-auto sticky top-0 h-[calc(100vh-65px)]">
+        <aside className="hidden md:flex flex-col w-56 shrink-0 border-r border-border/30 bg-gradient-to-b from-secondary/20 to-background/50 backdrop-blur-sm overflow-y-auto sticky top-[65px] h-[calc(100vh-65px)] self-start">
           <nav className="flex flex-col gap-0.5 p-3">
             {tabItems.map(({ key, label, icon: Icon, onClick }) => (
               <button
