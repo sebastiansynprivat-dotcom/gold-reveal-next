@@ -1010,6 +1010,8 @@ export default function AdminDashboard() {
   const [customFrom, setCustomFrom] = useState<Date | undefined>(undefined);
   const [customTo, setCustomTo] = useState<Date | undefined>(undefined);
   const rangeUpdateTimeoutRef = useRef<number | null>(null);
+  // Unified rendering: mobile uses identical desktop view & logic
+  const isMobileRevenueView = false;
 
   // Prefetch cache: holds precomputed totals/ranges per filter so switching is instant
   const revenueCacheRef = useRef<Partial<Record<TimeFilter, RevenueSnapshot>>>(initialRevenueCache);
