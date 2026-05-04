@@ -3364,9 +3364,7 @@ export default function AdminDashboard() {
                                 strokeWidth={2.25}
                                 fill={`url(#area-${key})`}
                                 activeDot={{ r: 5, strokeWidth: 2, stroke: "hsl(var(--background))", filter: "url(#goldGlow)" }}
-                                animationDuration={1100}
-                                animationEasing="ease-out"
-                                animationBegin={i * 120}
+                                isAnimationActive={false}
                               />
                             ))}
                           </AreaChart>
