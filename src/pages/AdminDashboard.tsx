@@ -3217,7 +3217,7 @@ export default function AdminDashboard() {
                       return (
                         <motion.div
                           key={key}
-                          whileHover={{ y: -3 }}
+                          whileHover={{ scale: 1.015 }}
                           className="group relative glass-card-subtle rounded-2xl p-4 overflow-hidden transition-shadow hover:shadow-[0_8px_32px_-8px_hsl(var(--accent)/0.35)]"
                         >
                           <div className="absolute inset-x-0 top-0 h-px opacity-60" style={{ background: `linear-gradient(90deg, transparent, ${color}, transparent)` }} />
