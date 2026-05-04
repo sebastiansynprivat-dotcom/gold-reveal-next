@@ -2887,7 +2887,15 @@ export default function AdminDashboard() {
       {/* Premium Header */}
       <header className="fixed top-0 left-0 right-0 z-40 border-b border-border/50 bg-gradient-to-b from-secondary/30 to-background backdrop-blur-md">
         <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-accent/5 via-transparent to-accent/5" />
-        <div className="relative z-10 flex items-center gap-3 px-4 py-4">
+        <div className="relative z-10 flex items-center gap-2 px-4 py-4">
+          <button
+            type="button"
+            onClick={() => setMobileNavOpen(true)}
+            aria-label="Navigation öffnen"
+            className="md:hidden shrink-0 h-10 w-10 -ml-1 flex items-center justify-center rounded-lg text-foreground hover:bg-secondary/50 transition-colors"
+          >
+            <Menu className="h-5 w-5" />
+          </button>
           <button
             type="button"
             onClick={undefined}
