@@ -3168,15 +3168,10 @@ export default function AdminDashboard() {
                   <>
                   {/* HERO VAULT — Gesamtumsatz */}
                   <motion.div
-                    variants={{ hidden: { opacity: 0, y: 16, filter: "blur(6px)" }, show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.6 } } }}
-                    className="relative gold-gradient-border-animated pulse-glow rounded-2xl overflow-hidden"
+                    variants={{ hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.5 } } }}
+                    className="relative glass-card-subtle rounded-2xl overflow-hidden"
                   >
-                    {/* Layered atmosphere */}
-                    <div className="absolute inset-0 pointer-events-none">
-                      <div className="absolute inset-0 bg-gradient-to-br from-accent/10 via-transparent to-accent/5" />
-                      <div className="absolute -top-24 left-1/2 -translate-x-1/2 h-64 w-64 rounded-full pointer-events-none" style={{ background: "radial-gradient(circle, hsl(var(--accent) / 0.22), transparent 70%)" }} />
-                      <div className="absolute inset-0 opacity-[0.03] mix-blend-overlay" style={{ backgroundImage: "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")" }} />
-                    </div>
+                    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/60 to-transparent pointer-events-none" />
 
                     <div className="relative px-6 pt-8 pb-4 text-center">
                       <motion.div
@@ -3256,14 +3251,9 @@ export default function AdminDashboard() {
                   {/* UMSATZVERLAUF — Luxury Cockpit */}
                   <motion.div
                     variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { duration: 0.5 } } }}
-                    className="relative gold-gradient-border-animated rounded-2xl overflow-hidden"
+                    className="relative glass-card-subtle rounded-2xl overflow-hidden"
                   >
-                    {/* Atmospheric layers */}
-                    <div className="absolute inset-0 pointer-events-none">
-                      <div className="absolute inset-0 bg-gradient-to-b from-accent/[0.04] via-transparent to-accent/[0.06]" />
-                      <div className="absolute -top-32 left-1/2 -translate-x-1/2 h-72 w-[120%] rounded-full pointer-events-none" style={{ background: "radial-gradient(ellipse at center, hsl(var(--accent) / 0.12), transparent 65%)" }} />
-                      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-accent/5 to-transparent" />
-                    </div>
+                    <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/60 to-transparent pointer-events-none" />
 
                     <div className="relative px-5 py-4 header-gradient-border flex items-center justify-between flex-wrap gap-3">
                       <div className="flex items-center gap-3">
