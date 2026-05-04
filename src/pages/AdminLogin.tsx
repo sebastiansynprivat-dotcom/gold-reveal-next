@@ -58,7 +58,7 @@ const AdminLogin = () => {
   // If admin verified TOTP, redirect
   useEffect(() => {
     if (totpVerified) {
-      sessionStorage.setItem("admin_2fa_verified", Date.now().toString());
+      localStorage.setItem("admin_2fa_verified", Date.now().toString());
       navigate("/admin", { replace: true });
     }
   }, [totpVerified, navigate]);
