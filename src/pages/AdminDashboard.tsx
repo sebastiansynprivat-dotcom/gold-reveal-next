@@ -867,7 +867,7 @@ export default function AdminDashboard() {
   const [setupStatusFilter, setSetupStatusFilter] = useState<
     "alle" | "botdm_missing" | "setup_missing" | "massdm_missing" | "bot_active" | "bot_inactive"
   >("alle");
-  const [timeFilter, setTimeFilter] = useState<TimeFilter>("30");
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>("heute");
   const [newPlatformOpen, setNewPlatformOpen] = useState(false);
   const [newPlatformName, setNewPlatformName] = useState("");
   const [poolFilter, setPoolFilter] = useState<"alle" | "frei" | "vergeben">("alle");
@@ -2590,7 +2590,7 @@ export default function AdminDashboard() {
   const SUPER_ADMIN_TABS = new Set(["notifications", "kiprompt", "platzhalter", "gdrive", "settings", "admin_mgmt"]);
 
   const allTabItems = [
-    { key: "einnahmen" as const, label: "Einnahmen", icon: TrendingUp, onClick: () => setActiveTab("einnahmen") },
+    { key: "einnahmen" as const, label: "Einnahmen", icon: TrendingUp, onClick: () => { setActiveTab("einnahmen"); setTimeFilter("heute"); } },
     { key: "chatter" as const, label: "Chatter", icon: Users, onClick: () => setActiveTab("chatter") },
     {
       key: "anfragen" as const,
@@ -3172,6 +3172,13 @@ export default function AdminDashboard() {
                     className="relative glass-card-subtle rounded-2xl overflow-hidden"
                   >
                     <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/60 to-transparent pointer-events-none" />
+                    <div
+                      className="absolute inset-0 pointer-events-none opacity-70"
+                      style={{
+                        background:
+                          "radial-gradient(ellipse 80% 60% at 50% 0%, hsl(var(--accent) / 0.10), transparent 70%)",
+                      }}
+                    />
 
                     <div className="relative px-6 pt-8 pb-4 text-center">
                       <motion.div
