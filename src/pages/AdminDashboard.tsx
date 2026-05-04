@@ -885,6 +885,7 @@ export default function AdminDashboard() {
   >("alle");
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("heute");
   const timeFilterRef = useRef<TimeFilter>("heute");
+  const revenueFilterBusyRef = useRef(false);
   const [newPlatformOpen, setNewPlatformOpen] = useState(false);
   const [newPlatformName, setNewPlatformName] = useState("");
   const [poolFilter, setPoolFilter] = useState<"alle" | "frei" | "vergeben">("alle");
@@ -979,6 +980,7 @@ export default function AdminDashboard() {
   }
 
   type RevenueSnapshot = { total: CurrentTotal; range: RootData; totalEarnings: number };
+  type RevenueRow = { date: string; platform: string; revenue_today: number | null };
 
   const emptyRevenueRange = (): RootData => ({ maloum: [], brezzels: [], "4based": [] });
 
@@ -988,6 +990,16 @@ export default function AdminDashboard() {
       return JSON.parse(sessionStorage.getItem("admin_revenue_cache_v1") || "{}") || {};
     } catch {
       return {};
+    }
+  }, []);
+
+  const initialRevenueRows = useMemo<RevenueRow[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const rows = JSON.parse(sessionStorage.getItem("admin_revenue_rows_v2") || "[]");
+      return Array.isArray(rows) ? rows : [];
+    } catch {
+      return [];
     }
   }, []);
 
@@ -1002,11 +1014,49 @@ export default function AdminDashboard() {
 
   // Prefetch cache: holds precomputed totals/ranges per filter so switching is instant
   const revenueCacheRef = useRef<Partial<Record<TimeFilter, RevenueSnapshot>>>(initialRevenueCache);
+  const revenueRowsRef = useRef<RevenueRow[]>(initialRevenueRows);
 
   const persistRevenueCache = useCallback(() => {
     if (typeof window === "undefined") return;
     sessionStorage.setItem("admin_revenue_cache_v1", JSON.stringify(revenueCacheRef.current));
   }, []);
+
+  const buildRevenueSnapshot = useCallback((rows: RevenueRow[], f: TimeFilter): RevenueSnapshot => {
+    const sorted = [...rows].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const today = new Date().toISOString().slice(0, 10);
+    const start = (days: number) => new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const rowsForRange = f === "90" ? sorted.filter((r) => r.date >= start(90) && r.date <= today)
+      : f === "30" ? sorted.filter((r) => r.date >= start(30) && r.date <= today)
+      : f === "7" ? sorted.filter((r) => r.date >= start(7) && r.date <= today)
+      : sorted.filter((r) => r.date >= start(7) && r.date <= today);
+    const platforms = ["maloum", "brezzels", "4based"] as const;
+    const total = platforms.reduce((acc, platform) => {
+      const platformRows = rowsForRange.filter((r) => r.platform === platform);
+      const value = f === "heute" || f === "gestern"
+        ? Number(platformRows.at(f === "heute" ? -1 : -2)?.revenue_today || 0)
+        : platformRows.reduce((sum, r) => sum + Number(r.revenue_today || 0), 0);
+      return { ...acc, [platform]: value };
+    }, {} as CurrentTotal);
+    const range = platforms.reduce((acc, platform) => ({
+      ...acc,
+      [platform]: rowsForRange
+        .filter((r) => r.platform === platform)
+        .map((r) => ({ date: r.date, total: Number(r.revenue_today || 0) }))
+        .slice(f === "gestern" ? -3 : f === "heute" ? -7 : undefined),
+    }), {} as RootData);
+    return { total, range, totalEarnings: total.maloum + total.brezzels + total["4based"] };
+  }, []);
+
+  const rebuildStandardRevenueCache = useCallback((rows: RevenueRow[]) => {
+    revenueRowsRef.current = rows;
+    (["heute", "gestern", "7", "30", "90"] as TimeFilter[]).forEach((f) => {
+      revenueCacheRef.current[f] = buildRevenueSnapshot(rows, f);
+    });
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("admin_revenue_rows_v2", JSON.stringify(rows));
+    }
+    persistRevenueCache();
+  }, [buildRevenueSnapshot, persistRevenueCache]);
 
   // Compare mode states
   const [compareFromA, setCompareFromA] = useState<Date | undefined>(undefined);
@@ -1017,25 +1067,8 @@ export default function AdminDashboard() {
   const [compareB, setCompareB] = useState<ComparePeriodResult | null>(null);
   const [compareLoading, setCompareLoading] = useState(false);
 
-  // Keep activeTabRef in sync + refresh Einnahmen only when returning to the tab
-  useEffect(() => {
-    const previousTab = previousActiveTabRef.current;
-    activeTabRef.current = activeTab;
-    previousActiveTabRef.current = activeTab;
-    if (activeTab === "einnahmen" && previousTab !== "einnahmen") {
-      setTimeFilter("heute");
-      const cachedToday = revenueCacheRef.current.heute;
-      if (cachedToday) applySnapshot(cachedToday, true);
-      computeTodaySnapshot("today").then((snap) => {
-        if (!snap || activeTabRef.current !== "einnahmen") return;
-        revenueCacheRef.current.heute = snap;
-        persistRevenueCache();
-        applySnapshot(snap, true);
-      });
-    }
-  }, [activeTab, persistRevenueCache]);
-
   async function getRevenueToday(flag) {
+    if (revenueRowsRef.current.length > 0) return buildRevenueSnapshot(revenueRowsRef.current, flag === "today" ? "heute" : "gestern");
     const selectedDate = new Date().toISOString().slice(0, 10);
     const fromDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
@@ -1222,6 +1255,7 @@ export default function AdminDashboard() {
   }
 
   async function computeRangeSnapshot(flag: "7" | "30" | "90"): Promise<RevenueSnapshot | null> {
+    if (revenueRowsRef.current.length > 0) return buildRevenueSnapshot(revenueRowsRef.current, flag);
     const days = parseInt(flag);
     const todayDate = new Date().toISOString().slice(0, 10);
     const fromDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
@@ -1259,6 +1293,36 @@ export default function AdminDashboard() {
       rangeUpdateTimeoutRef.current = null;
     }, 420);
   };
+
+  const loadRevenueRows = useCallback(async () => {
+    const todayDate = new Date().toISOString().slice(0, 10);
+    const fromDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const { data } = await supabase
+      .from("revenue_report")
+      .select("date, platform, revenue_today")
+      .lte("date", todayDate)
+      .gte("date", fromDate)
+      .order("date", { ascending: true });
+    if (!data) return;
+    rebuildStandardRevenueCache(data as RevenueRow[]);
+    const current = timeFilterRef.current;
+    if (activeTabRef.current === "einnahmen" && current !== "custom" && current !== "vergleich") {
+      applySnapshot(revenueCacheRef.current[current]!, true);
+    }
+  }, [rebuildStandardRevenueCache]);
+
+  // Keep activeTabRef in sync + refresh Einnahmen only when returning to the tab
+  useEffect(() => {
+    const previousTab = previousActiveTabRef.current;
+    activeTabRef.current = activeTab;
+    previousActiveTabRef.current = activeTab;
+    if (activeTab === "einnahmen" && previousTab !== "einnahmen") {
+      setTimeFilter("heute");
+      const cachedToday = revenueCacheRef.current.heute;
+      if (cachedToday) applySnapshot(cachedToday, true);
+      void loadRevenueRows();
+    }
+  }, [activeTab, loadRevenueRows]);
 
   // Batch realtime updates to avoid render storms (especially on mobile)
   const realtimePendingRef = useRef<Map<string, { platform: string; date: string; nextValue: number }>>(new Map());
@@ -1327,21 +1391,22 @@ export default function AdminDashboard() {
 
   // Switch filter using cache-first strategy: instant set + animation, no flicker
   const switchTimeFilter = async (f: TimeFilter) => {
+    if (revenueFilterBusyRef.current) return;
+    revenueFilterBusyRef.current = true;
     setTimeFilter(f);
-    if (f === "custom" || f === "vergleich") return;
-    const cached = revenueCacheRef.current[f];
-    if (cached) {
-      applySnapshot(cached);
-      return;
-    }
-    let snap: RevenueSnapshot | null = null;
-    if (f === "heute") snap = await computeTodaySnapshot("today");
-    else if (f === "gestern") snap = await computeTodaySnapshot("gestern");
-    else if (f === "7" || f === "30" || f === "90") snap = await computeRangeSnapshot(f);
-    if (snap) {
-      revenueCacheRef.current[f] = snap;
-      persistRevenueCache();
-      applySnapshot(snap);
+    try {
+      if (f === "custom" || f === "vergleich") return;
+      const cached = revenueCacheRef.current[f] || (revenueRowsRef.current.length > 0 ? buildRevenueSnapshot(revenueRowsRef.current, f) : null);
+      if (cached) {
+        revenueCacheRef.current[f] = cached;
+        applySnapshot(cached, true);
+        return;
+      }
+      await loadRevenueRows();
+      const snap = revenueCacheRef.current[f];
+      if (snap) applySnapshot(snap, true);
+    } finally {
+      window.setTimeout(() => { revenueFilterBusyRef.current = false; }, 80);
     }
   };
 
@@ -1349,27 +1414,16 @@ export default function AdminDashboard() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const heute = await computeTodaySnapshot("today");
+      const cachedToday = revenueCacheRef.current.heute;
+      if (cachedToday) applySnapshot(cachedToday, true);
+      await loadRevenueRows();
       if (cancelled) return;
-      if (heute) {
-        revenueCacheRef.current["heute"] = heute;
-        applySnapshot(heute, true);
-      }
-      if (isMobileRevenueView) return;
-      // Prefetch others in background — desktop only, no UI mutation
-      const filters: Array<"gestern" | "7" | "30" | "90"> = ["gestern", "7", "30", "90"];
-      await Promise.all(
-        filters.map(async (f) => {
-          const snap = f === "gestern" ? await computeTodaySnapshot("gestern") : await computeRangeSnapshot(f);
-          if (!cancelled && snap) revenueCacheRef.current[f] = snap;
-        })
-      );
     })();
     return () => {
       cancelled = true;
       if (rangeUpdateTimeoutRef.current !== null) window.clearTimeout(rangeUpdateTimeoutRef.current);
     };
-  }, []);
+  }, [loadRevenueRows]);
 
   const rangeData = useMemo(() => {
     if (!range) return [];
@@ -2995,6 +3049,7 @@ export default function AdminDashboard() {
                   return acc;
                 }, {} as Record<string, number>);
                 const revenueChartData = isMobileRevenueView ? rangeData.slice(-7) : rangeData;
+                const mobileMaxRevenue = Math.max(1, ...revenueChartData.flatMap((d: any) => platformKeys.map((k) => Number(d[k]) || 0)));
 
                 return (
                 <motion.div
@@ -3409,6 +3464,32 @@ export default function AdminDashboard() {
                     </div>
 
                     <div className="relative p-4 pt-2">
+                      {isMobileRevenueView ? (
+                        <div className="h-56 flex items-end gap-2 px-1 pb-6 pt-3">
+                          {revenueChartData.map((day: any) => {
+                            const total = platformKeys.reduce((sum, key) => sum + (Number(day[key]) || 0), 0);
+                            return (
+                              <div key={day.date} className="flex-1 h-full flex flex-col justify-end gap-1 min-w-0">
+                                <div className="flex-1 flex items-end gap-0.5">
+                                  {platformKeys.map((key) => (
+                                    <div
+                                      key={key}
+                                      className="flex-1 rounded-t-sm min-h-[2px]"
+                                      style={{
+                                        height: `${Math.max(2, ((Number(day[key]) || 0) / mobileMaxRevenue) * 100)}%`,
+                                        backgroundColor: (PLATFORM_COLORS as any)[key],
+                                      }}
+                                    />
+                                  ))}
+                                </div>
+                                <span className="text-[9px] text-muted-foreground text-center tabular-nums">
+                                  {fmtDate(day.date)}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
                       <div className="h-80">
                         <ResponsiveContainer width="100%" height="100%">
                           <AreaChart data={revenueChartData} margin={{ top: 16, right: 12, bottom: 0, left: 0 }}>
@@ -3486,6 +3567,7 @@ export default function AdminDashboard() {
                           </AreaChart>
                         </ResponsiveContainer>
                       </div>
+                      )}
                     </div>
                   </motion.div>
                   </>
