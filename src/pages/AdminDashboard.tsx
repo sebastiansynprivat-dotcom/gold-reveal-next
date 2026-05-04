@@ -821,6 +821,8 @@ export default function AdminDashboard() {
   const [assignmentsLoaded, setAssignmentsLoaded] = useState(false);
   const [assignmentsLoading, setAssignmentsLoading] = useState(false);
   const activeTabRef = useRef(activeTab);
+  const previousActiveTabRef = useRef(activeTab);
+  const adminDataBootstrapRef = useRef(false);
   const [modelRequests, setModelRequests] = useState<any[]>([]);
   const [modelRequestsLoaded, setModelRequestsLoaded] = useState(false);
   const [requestFilter, setRequestFilter] = useState<"all" | "pending" | "accepted" | "in_progress" | "rejected">(
@@ -954,10 +956,12 @@ export default function AdminDashboard() {
     toast.success("Alle Häkchen zurückgesetzt!");
   }, []);
 
-  // Keep activeTabRef in sync + reset Einnahmen filter to "heute" on every entry
+  // Keep activeTabRef in sync + refresh Einnahmen only when returning to the tab
   useEffect(() => {
+    const previousTab = previousActiveTabRef.current;
     activeTabRef.current = activeTab;
-    if (activeTab === "einnahmen") {
+    previousActiveTabRef.current = activeTab;
+    if (activeTab === "einnahmen" && previousTab !== "einnahmen") {
       setTimeFilter("heute");
       const cachedToday = revenueCacheRef.current.heute;
       if (cachedToday) applySnapshot(cachedToday, true);
