@@ -2982,70 +2982,39 @@ export default function AdminDashboard() {
         />
 
         <main className="flex-1 min-w-0 p-4 space-y-5 max-w-4xl mx-auto w-full">
-          {/* Mobile Tab Navigation */}
-          <div
-            className="overflow-x-auto -mx-4 px-4 cursor-grab active:cursor-grabbing select-none md:hidden"
-            onWheel={(e) => {
-              if (Math.abs(e.deltaX) < Math.abs(e.deltaY)) {
-                e.currentTarget.scrollLeft += e.deltaY;
-                e.preventDefault();
-              }
-            }}
-            onMouseDown={(e) => {
-              const el = e.currentTarget;
-              el.dataset.dragging = "true";
-              el.dataset.startX = String(e.pageX);
-              el.dataset.scrollLeft = String(el.scrollLeft);
-            }}
-            onMouseMove={(e) => {
-              const el = e.currentTarget;
-              if (el.dataset.dragging !== "true") return;
-              e.preventDefault();
-              el.scrollLeft = Number(el.dataset.scrollLeft) - (e.pageX - Number(el.dataset.startX));
-            }}
-            onMouseUp={(e) => {
-              e.currentTarget.dataset.dragging = "false";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.dataset.dragging = "false";
-            }}
-            style={{
-              scrollbarWidth: "none",
-              msOverflowStyle: "none",
-              WebkitOverflowScrolling: "touch",
-              touchAction: "pan-x",
-            }}
-          >
-            <style>{`
-             div:has(> .inline-flex)::-webkit-scrollbar {
-               display: none;
-             }
-           `}</style>
-            <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-secondary/40 backdrop-blur-sm border border-border/30 relative">
-              {tabItems.map(({ key, label, icon: Icon, onClick }) => (
-                <button
-                  key={key}
-                  onClick={onClick}
-                  className={cn(
-                    "relative flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors duration-200 whitespace-nowrap z-10",
-                    activeTab === key ? "text-accent-foreground" : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  {activeTab === key && (
-                    <motion.div
-                      layoutId="activeTab"
-                      className="absolute inset-0 bg-accent rounded-lg shadow-md shadow-accent/20"
-                      transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                    />
-                  )}
-                  <span className="relative z-10 flex items-center gap-1.5">
-                    <Icon className="h-3.5 w-3.5" />
-                    {label}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
+          {/* Mobile Sidebar Drawer */}
+          <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+            <SheetContent
+              side="left"
+              className="w-72 p-0 bg-gradient-to-b from-secondary/30 to-background backdrop-blur-xl border-r border-border/40"
+            >
+              <SheetHeader className="px-4 py-4 border-b border-border/30">
+                <SheetTitle className="text-sm font-bold tracking-tight text-left">
+                  Navigation
+                </SheetTitle>
+              </SheetHeader>
+              <nav className="flex flex-col gap-0.5 p-3 overflow-y-auto h-[calc(100vh-65px)]">
+                {tabItems.map(({ key, label, icon: Icon, onClick }) => (
+                  <button
+                    key={key}
+                    onClick={() => {
+                      onClick();
+                      setMobileNavOpen(false);
+                    }}
+                    className={cn(
+                      "relative flex items-center gap-2.5 px-3 py-3 rounded-lg text-sm font-medium transition-all text-left w-full",
+                      activeTab === key
+                        ? "bg-accent text-accent-foreground shadow-md shadow-accent/20"
+                        : "text-muted-foreground hover:text-foreground hover:bg-secondary/40",
+                    )}
+                  >
+                    <Icon className="h-4 w-4 shrink-0" />
+                    <span>{label}</span>
+                  </button>
+                ))}
+              </nav>
+            </SheetContent>
+          </Sheet>
 
           <AnimatePresence mode="wait">
             <motion.div
