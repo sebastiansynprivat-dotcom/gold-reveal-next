@@ -177,39 +177,19 @@
     100% { left: 200%; }
   }
 
+  /* Cheap gold border — the old conic-gradient + mask-composite version was
+     extremely expensive to repaint. This keeps the warm gold edge + soft glow
+     using a single border + box-shadow (GPU-cheap, no per-frame raster). */
   .gold-gradient-border-animated {
     position: relative;
     background: hsl(0 0% 6% / 0.8);
-    border: 1px solid transparent !important;
-  }
-  .gold-gradient-border-animated::before {
-    content: "";
-    position: absolute;
-    inset: -1px;
-    border-radius: inherit;
-    background: conic-gradient(
-      from var(--border-angle, 0deg),
-      hsl(43 56% 52% / 0.03) 0%,
-      hsl(43 56% 52% / 0.25) 12%,
-      hsl(43 76% 46% / 0.4) 20%,
-      hsl(43 56% 52% / 0.25) 28%,
-      hsl(43 56% 52% / 0.03) 40%,
-      hsl(43 30% 20% / 0.15) 50%,
-      hsl(43 56% 52% / 0.03) 60%,
-      hsl(43 56% 52% / 0.25) 72%,
-      hsl(43 76% 46% / 0.4) 80%,
-      hsl(43 56% 52% / 0.25) 88%,
-      hsl(43 56% 52% / 0.03) 100%
-    );
-    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-    -webkit-mask-composite: xor;
-    mask-composite: exclude;
-    padding: 1px;
-    animation: border-spin 6s linear infinite;
-    pointer-events: none;
+    border: 1px solid hsl(43 76% 46% / 0.45);
+    box-shadow:
+      0 0 0 1px hsl(43 56% 52% / 0.08),
+      0 0 24px -8px hsl(43 76% 46% / 0.35),
+      inset 0 1px 0 hsl(43 76% 46% / 0.12);
   }
 
-  /* Static, cheap variant — looks like animated but no constant repaints */
   .gold-gradient-border-static {
     position: relative;
     background: hsl(0 0% 6% / 0.8);
