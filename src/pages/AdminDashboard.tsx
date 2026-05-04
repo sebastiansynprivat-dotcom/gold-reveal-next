@@ -811,6 +811,7 @@ export default function AdminDashboard() {
     if (typeof window === "undefined") return false;
     return localStorage.getItem("admin_sidebar_collapsed") === "1";
   });
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   useEffect(() => {
     localStorage.setItem("admin_sidebar_collapsed", sidebarCollapsed ? "1" : "0");
   }, [sidebarCollapsed]);
