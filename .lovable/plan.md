@@ -1,36 +1,48 @@
-## Problem
+## GPU-Optimierung Admin Dashboard — Premium Look behalten
 
-Im `CreditNoteForm` (Provider Invoice) werden die Empfängerdaten (Name, Adresse, Geschäftlich/Privat, VAT-ID) nur im **localStorage** des Browsers gespeichert (Key: `credit-note-form-<accountId|chatterName>`). Daher gehen sie beim Browserwechsel, Inkognito-Modus oder Cache-Löschen verloren – effektiv „muss man immer neu eintragen".
+Ziel: Die Seite fühlt sich noch nicht ganz "smooth/hochwertig" an. Ursache sind GPU-teure Effekte, die bei Scrolling und Real-Time-Updates ständig neu komponiert werden — selbst auf Desktop mit dGPU spürbar.
 
-## Lösung
+### Hauptprobleme (in Reihenfolge der Kosten)
 
-Provider-Empfängerdaten zentral pro Chatter bzw. Model in der Datenbank speichern, damit sie geräteübergreifend persistent sind und sofort beim Auswählen vorbefüllt werden.
+1. **`backdrop-filter: blur(20px)`** auf jedem `glass-card` (~30+ Karten gleichzeitig im DOM). Backdrop-Blur ist mit Abstand der teuerste GPU-Effekt im Browser — jede Karte erzwingt ein Re-Composite des Hintergrunds.
+2. **`blur-3xl` Decor-Layer** (h-64 w-64, h-72 w-[120%]) hinter Hero/Vergleich-Karten. Große Gaussian-Blurs auf Render-Layern.
+3. **`drop-shadow-[0_0_18px_...]`** auf großem Hero-Text (5xl/6xl Total). Wird bei jeder Real-Time-Aktualisierung der `AnimatedNumber` neu berechnet.
+4. **`shadow-[0_0_8px_currentColor]`** auf jedem Plattform-Dot.
+5. **Framer-Motion `whileHover={{ y: -3 }}`** auf 3 Plattform-Tiles — triggert Layout statt Transform-only.
+6. **`text-gold-gradient-shimmer`** mit 8s Animation auf statischen Headlines.
 
-### 1. Datenbank-Migration
+### Änderungen
 
-Neue Spalten in `chatters` und `models`:
-- `provider_address text not null default ''`
-- `provider_is_business boolean not null default false`
-- `provider_vat_id text not null default ''`
+**A) `src/index.css` — Glass-Karten leichter**
+- `glass-card`: blur 20px → 12px + `saturate(140%)` (kompensiert visuell), Hintergrund-Opacity rauf (0.6 → 0.72) damit weniger Durchsicht nötig
+- `glass-card-subtle`: blur 12px → 8px, Opacity 0.8 → 0.85
+- `transform: translateZ(0)` als Promotion-Hint (eigene Compositor-Layer, kein Repaint nötig)
+- Mobile (`<768px`): `backdrop-filter: none`, dafür Opacity 0.92/0.95 — sieht identisch aus, GPU-Last halbiert
+- `prefers-reduced-motion`: ebenfalls Blur deaktivieren
 
-(Der Provider-Name bleibt = `chatters.name` / `models.name`, kann im Form weiterhin überschrieben werden, wird aber zusätzlich als Override gespeichert via neuer Spalte `provider_name_override text default ''`.)
+**B) `src/pages/AdminDashboard.tsx` — Decor-Blurs reduzieren**
+- 3× `blur-3xl` Glow-Layer ersetzen durch leichteren `bg-accent/10` mit `radial-gradient` (CSS) statt Filter — gleicher Look, kein Filter-Pass
+- `drop-shadow-[0_0_18px_hsl(var(--accent)/0.35)]` auf Hero-Total entfernen (Text bleibt durch `text-accent` golden), stattdessen `text-shadow` (billiger als `drop-shadow`)
+- `shadow-[0_0_8px_currentColor]` auf Plattform-Dots → einfacher `box-shadow` mit fixer Farbe (currentColor erzwingt per-element Berechnung)
+- `whileHover={{ y: -3 }}` → `whileHover={{ scale: 1.015 }}` (transform-only, kein Layout)
 
-### 2. CreditNoteForm
+**C) `src/index.css` — Kosmetische Animationen drosseln**
+- `text-gold-gradient-shimmer`: Animation nur auf Hover/explizit getriggert, statisches Gold-Gradient als Default — Headlines pulsieren nicht mehr permanent
+- `pulse-glow` von 4s → reine `box-shadow` ohne Animation, fester sanfter Glow
 
-- Neue Props: `providerAddress`, `providerIsBusiness`, `providerVatId`, `providerEntityType` (`"chatter" | "model"`), `providerEntityId` (uuid).
-- Init-Werte aus Props statt aus localStorage laden.
-- Debounced Auto-Save (~800ms) in die zugehörige Zeile (`chatters` oder `models`).
-- localStorage-Logik für diese Felder entfernen (sonst überstimmt der alte Cache die DB-Werte). Andere reine UI-Felder (cryptoNetwork, txHash, exchangeRate, receiverWallet) dürfen weiter in localStorage bleiben.
+### Was bleibt premium
+- Goldener Border-Glow auf Hero-Vault & Vergleichs-Karte
+- Glasmorph-Effekt auf Desktop (nur weniger aggressiv)
+- Alle Framer-Motion Enter-Animationen
+- Recharts Area-Verläufe mit Gold-Gradient
+- Crown-Icon Spring-Animation
+- Tooltips mit Backdrop-Blur
 
-### 3. Aufrufseiten anpassen
+### Erwartete Verbesserung
+- Composite-Zeit pro Frame um ~60–70% gesenkt (Backdrop-Blur ist der dominante Posten)
+- Real-Time Revenue-Updates triggern keine teuren Filter-Repaints mehr
+- Scrolling im Einnahmen-Tab spürbar smoother, besonders bei vielen sichtbaren Karten
 
-- `ChatterDashboardTab.tsx`: Werte aus `selected` weiterreichen, `providerEntityType="chatter"`, `providerEntityId={selected.id}`.
-- `ModelDashboardTab.tsx`: Werte aus `modelForm` weiterreichen, `providerEntityType="model"`, `providerEntityId={selectedModelId}`.
-
-### 4. RLS
-
-Bestehende Policies auf `chatters` / `models` decken Update bereits ab (Super-Admin: alles; Sub-Admin: nur eigene). Keine zusätzlichen Policies nötig.
-
-## Resultat
-
-Empfängeradressen werden pro Chatter/Model dauerhaft in der Datenbank gespeichert und stehen auf jedem Gerät sofort beim Öffnen des Provider-Invoice-Formulars zur Verfügung.
+### Geänderte Dateien
+- `src/index.css`
+- `src/pages/AdminDashboard.tsx`
