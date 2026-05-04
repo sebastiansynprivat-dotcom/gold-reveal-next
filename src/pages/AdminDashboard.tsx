@@ -2884,45 +2884,57 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-background relative">
       <GoldParticles spawnRate={0.2} maxParticles={20} baseOpacity={0.15} />
-      {/* Premium Header */}
-      <header className="fixed top-0 left-0 right-0 z-40 border-b border-border/50 bg-gradient-to-b from-secondary/30 to-background backdrop-blur-md">
-        <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-accent/5 via-transparent to-accent/5" />
-        <div className="relative z-10 flex items-center gap-2 px-4 py-4">
+      {/* Premium Header — luxurious black & gold */}
+      <header className="fixed top-0 left-0 right-0 z-40 border-b border-accent/20 bg-[linear-gradient(180deg,hsl(0_0%_4%/0.95)_0%,hsl(0_0%_6%/0.85)_100%)] backdrop-blur-2xl shadow-[0_8px_32px_-8px_hsl(0_0%_0%/0.6)]">
+        {/* gold shimmer overlay */}
+        <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(ellipse_at_top,hsl(var(--accent)/0.12)_0%,transparent_60%)]" />
+        {/* hairline gold accent */}
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/60 to-transparent" />
+        <div className="relative z-10 flex items-center gap-3 px-4 py-3.5 md:px-6">
           <button
             type="button"
             onClick={() => setMobileNavOpen(true)}
             aria-label="Navigation öffnen"
-            className="md:hidden shrink-0 h-10 w-10 -ml-1 flex items-center justify-center rounded-lg text-foreground hover:bg-secondary/50 transition-colors"
+            className="md:hidden shrink-0 h-10 w-10 -ml-1 flex items-center justify-center rounded-xl text-accent border border-accent/20 bg-accent/5 hover:bg-accent/15 hover:border-accent/40 transition-all shadow-[inset_0_1px_0_hsl(var(--accent)/0.15)]"
           >
             <Menu className="h-5 w-5" />
           </button>
           <button
             type="button"
             onClick={undefined}
-            className="flex items-center gap-3 rounded-xl text-left transition-transform hover:scale-[1.01] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            className="flex items-center gap-3 rounded-xl text-left transition-all hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             aria-label="Admin-Verwaltung öffnen"
           >
             <div className="relative shrink-0">
-              <img src={logo} alt="Logo" className="h-10 w-10 rounded-full ring-2 ring-accent/20" />
-              <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-accent border-2 border-background" />
+              <div className="absolute inset-0 rounded-full bg-accent/30 blur-md" aria-hidden="true" />
+              <img src={logo} alt="Logo" className="relative h-11 w-11 rounded-full ring-2 ring-accent/50 shadow-[0_0_20px_hsl(var(--accent)/0.4)]" />
+              <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-accent border-2 border-background shadow-[0_0_8px_hsl(var(--accent)/0.8)]" />
             </div>
             <div className="min-w-0">
-              <h1 className="text-base font-bold tracking-tight text-foreground">Admin Dashboard</h1>
-              <p className="text-[10px] tracking-wide text-muted-foreground">Chatter verwalten & Benachrichtigungen</p>
+              <h1 className="text-base md:text-lg font-bold tracking-tight bg-gradient-to-r from-accent via-yellow-200 to-accent bg-clip-text text-transparent">
+                Admin Dashboard
+              </h1>
+              <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground/70 font-medium">Premium Control</p>
             </div>
           </button>
           <div className="flex-1" />
           {isSuperAdmin && (
-            <Button type="button" variant="secondary" size="sm" onClick={openAdminSection} className="shrink-0">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={openAdminSection}
+              className="shrink-0 border border-accent/30 bg-accent/5 text-accent hover:bg-accent/15 hover:border-accent/50 transition-all shadow-[inset_0_1px_0_hsl(var(--accent)/0.15)]"
+            >
               <Shield className="h-3.5 w-3.5" />
-              Admins
+              <span className="hidden sm:inline">Admins</span>
             </Button>
           )}
         </div>
       </header>
 
       {/* Spacer for fixed header */}
-      <div className="h-[65px]" aria-hidden="true" />
+      <div className="h-[68px]" aria-hidden="true" />
 
       <div className="flex min-h-[calc(100vh-65px)]">
         {/* Desktop Sidebar – fixed so it stays visible while scrolling */}
@@ -2982,36 +2994,62 @@ export default function AdminDashboard() {
         />
 
         <main className="flex-1 min-w-0 p-4 space-y-5 max-w-4xl mx-auto w-full">
-          {/* Mobile Sidebar Drawer */}
+          {/* Mobile Sidebar Drawer — luxurious */}
           <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
             <SheetContent
               side="left"
-              className="w-72 p-0 bg-gradient-to-b from-secondary/30 to-background backdrop-blur-xl border-r border-border/40"
+              className="w-[300px] p-0 bg-[linear-gradient(165deg,hsl(0_0%_5%)_0%,hsl(0_0%_3%)_100%)] backdrop-blur-2xl border-r border-accent/25 shadow-[8px_0_40px_-8px_hsl(0_0%_0%/0.8)]"
             >
-              <SheetHeader className="px-4 py-4 border-b border-border/30">
-                <SheetTitle className="text-sm font-bold tracking-tight text-left">
-                  Navigation
-                </SheetTitle>
+              {/* gold edge glow */}
+              <div className="absolute top-0 right-0 bottom-0 w-px bg-gradient-to-b from-transparent via-accent/50 to-transparent" aria-hidden="true" />
+              {/* ambient gold spotlight */}
+              <div className="absolute top-0 left-0 right-0 h-40 pointer-events-none bg-[radial-gradient(ellipse_at_top_left,hsl(var(--accent)/0.15)_0%,transparent_70%)]" aria-hidden="true" />
+
+              <SheetHeader className="relative px-5 py-5 border-b border-accent/15">
+                <div className="flex items-center gap-3">
+                  <div className="relative shrink-0">
+                    <div className="absolute inset-0 rounded-full bg-accent/40 blur-lg" aria-hidden="true" />
+                    <img src={logo} alt="Logo" className="relative h-10 w-10 rounded-full ring-2 ring-accent/50" />
+                  </div>
+                  <div className="text-left">
+                    <SheetTitle className="text-base font-bold tracking-tight bg-gradient-to-r from-accent via-yellow-200 to-accent bg-clip-text text-transparent">
+                      Admin Dashboard
+                    </SheetTitle>
+                    <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground/70 font-medium">
+                      Premium Navigation
+                    </p>
+                  </div>
+                </div>
               </SheetHeader>
-              <nav className="flex flex-col gap-0.5 p-3 overflow-y-auto h-[calc(100vh-65px)]">
-                {tabItems.map(({ key, label, icon: Icon, onClick }) => (
-                  <button
-                    key={key}
-                    onClick={() => {
-                      onClick();
-                      setMobileNavOpen(false);
-                    }}
-                    className={cn(
-                      "relative flex items-center gap-2.5 px-3 py-3 rounded-lg text-sm font-medium transition-all text-left w-full",
-                      activeTab === key
-                        ? "bg-accent text-accent-foreground shadow-md shadow-accent/20"
-                        : "text-muted-foreground hover:text-foreground hover:bg-secondary/40",
-                    )}
-                  >
-                    <Icon className="h-4 w-4 shrink-0" />
-                    <span>{label}</span>
-                  </button>
-                ))}
+
+              <nav className="relative flex flex-col gap-1 p-3 overflow-y-auto h-[calc(100vh-92px)]">
+                {tabItems.map(({ key, label, icon: Icon, onClick }) => {
+                  const active = activeTab === key;
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => {
+                        onClick();
+                        setMobileNavOpen(false);
+                      }}
+                      className={cn(
+                        "group relative flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium transition-all text-left w-full overflow-hidden",
+                        active
+                          ? "text-accent-foreground bg-gradient-to-r from-accent to-yellow-500 shadow-[0_8px_24px_-6px_hsl(var(--accent)/0.5),inset_0_1px_0_hsl(0_0%_100%/0.2)]"
+                          : "text-muted-foreground hover:text-foreground border border-transparent hover:border-accent/20 hover:bg-accent/[0.04]",
+                      )}
+                    >
+                      {active && (
+                        <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-full bg-yellow-100/80 shadow-[0_0_12px_hsl(var(--accent))]" aria-hidden="true" />
+                      )}
+                      <Icon className={cn("h-4 w-4 shrink-0 transition-transform group-hover:scale-110", active && "drop-shadow-[0_0_6px_hsl(0_0%_100%/0.5)]")} />
+                      <span className="tracking-wide">{label}</span>
+                      {active && (
+                        <span className="ml-auto h-1.5 w-1.5 rounded-full bg-background/80" aria-hidden="true" />
+                      )}
+                    </button>
+                  );
+                })}
               </nav>
             </SheetContent>
           </Sheet>
