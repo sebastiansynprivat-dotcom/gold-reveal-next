@@ -59,7 +59,7 @@ const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   if (!user || isAdmin === false) return <Navigate to="/admin/login" replace />;
   
   const verified = sessionStorage.getItem("admin_2fa_verified");
-  const isValid = verified && (Date.now() - parseInt(verified)) < 8 * 60 * 60 * 1000;
+  const isValid = verified && (Date.now() - parseInt(verified)) < 30 * 24 * 60 * 60 * 1000;
   
   if (!isValid) return <Navigate to="/admin/login" replace />;
   
