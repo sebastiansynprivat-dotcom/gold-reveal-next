@@ -43,6 +43,10 @@ interface Chatter {
   bankIban: string;
   bankBic: string;
   bankName: string;
+  providerAddress: string;
+  providerIsBusiness: boolean;
+  providerVatId: string;
+  providerNameOverride: string;
 }
 
 // Map DB row to local interface
