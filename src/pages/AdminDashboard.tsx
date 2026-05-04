@@ -3212,7 +3212,7 @@ export default function AdminDashboard() {
                       const share = totalEarnings > 0 ? Math.round((value / totalEarnings) * 100) : 0;
                       const pdelta = platformDeltas[key];
                       const pdeltaUp = pdelta >= 0;
-                      const sparkData = rangeData.map((d: any) => ({ v: Number(d[key]) || 0 }));
+
 
                       return (
                         <motion.div
