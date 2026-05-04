@@ -50,6 +50,8 @@ import {
   ArrowUp,
   ArrowDown,
   Crown,
+  ChevronLeft,
+  PanelLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -787,6 +789,13 @@ export default function AdminDashboard() {
   const [goalSaving, setGoalSaving] = useState(false);
   const [expandedChatter, setExpandedChatter] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>("einnahmen");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("admin_sidebar_collapsed") === "1";
+  });
+  useEffect(() => {
+    localStorage.setItem("admin_sidebar_collapsed", sidebarCollapsed ? "1" : "0");
+  }, [sidebarCollapsed]);
   const [settingsIssuer, setSettingsIssuer] = useState({ name: "", address: "", vat_id: "", kvk: "" });
   const [settingsIssuerId, setSettingsIssuerId] = useState<string | null>(null);
   const [settingsIssuerLoaded, setSettingsIssuerLoaded] = useState(false);
@@ -2709,14 +2718,32 @@ export default function AdminDashboard() {
 
       <div className="flex min-h-[calc(100vh-65px)]">
         {/* Desktop Sidebar – fixed so it stays visible while scrolling */}
-        <aside className="hidden md:flex flex-col w-56 shrink-0 border-r border-border/30 bg-gradient-to-b from-secondary/20 to-background/50 backdrop-blur-sm overflow-y-auto fixed left-0 top-[65px] h-[calc(100vh-65px)] z-30">
-          <nav className="flex flex-col gap-0.5 p-3">
+        <aside
+          className={cn(
+            "hidden md:flex flex-col shrink-0 border-r border-border/30 bg-gradient-to-b from-secondary/20 to-background/50 backdrop-blur-sm overflow-y-auto fixed left-0 top-[65px] h-[calc(100vh-65px)] z-30 transition-[width] duration-200 ease-out",
+            sidebarCollapsed ? "w-14" : "w-56",
+          )}
+        >
+          <div className="flex justify-end p-2">
+            <button
+              type="button"
+              onClick={() => setSidebarCollapsed((v) => !v)}
+              className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary/40 transition-colors"
+              aria-label={sidebarCollapsed ? "Sidebar ausklappen" : "Sidebar einklappen"}
+              title={sidebarCollapsed ? "Sidebar ausklappen" : "Sidebar einklappen"}
+            >
+              {sidebarCollapsed ? <PanelLeft className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+            </button>
+          </div>
+          <nav className="flex flex-col gap-0.5 p-3 pt-0">
             {tabItems.map(({ key, label, icon: Icon, onClick }) => (
               <button
                 key={key}
                 onClick={onClick}
+                title={sidebarCollapsed ? label : undefined}
                 className={cn(
                   "relative flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-medium transition-all duration-200 text-left w-full",
+                  sidebarCollapsed && "justify-center px-2",
                   activeTab === key
                     ? "text-accent-foreground"
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary/40",
@@ -2729,16 +2756,19 @@ export default function AdminDashboard() {
                     transition={{ type: "spring", stiffness: 400, damping: 30 }}
                   />
                 )}
-                <span className="relative z-10 flex items-center gap-2.5">
+                <span className={cn("relative z-10 flex items-center gap-2.5", sidebarCollapsed && "gap-0")}>
                   <Icon className="h-3.5 w-3.5 shrink-0" />
-                  {label}
+                  {!sidebarCollapsed && label}
                 </span>
               </button>
             ))}
           </nav>
         </aside>
         {/* Spacer to reserve space for fixed sidebar on desktop */}
-        <div className="hidden md:block w-56 shrink-0" aria-hidden="true" />
+        <div
+          className={cn("hidden md:block shrink-0 transition-[width] duration-200 ease-out", sidebarCollapsed ? "w-14" : "w-56")}
+          aria-hidden="true"
+        />
 
         <main className="flex-1 min-w-0 p-4 space-y-5 max-w-4xl mx-auto w-full">
           {/* Mobile Tab Navigation */}
