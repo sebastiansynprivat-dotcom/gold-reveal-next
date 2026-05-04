@@ -3049,6 +3049,7 @@ export default function AdminDashboard() {
                   return acc;
                 }, {} as Record<string, number>);
                 const revenueChartData = isMobileRevenueView ? rangeData.slice(-7) : rangeData;
+                const mobileMaxRevenue = Math.max(1, ...revenueChartData.flatMap((d: any) => platformKeys.map((k) => Number(d[k]) || 0)));
 
                 return (
                 <motion.div
