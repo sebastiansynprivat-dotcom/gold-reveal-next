@@ -2883,7 +2883,7 @@ export default function AdminDashboard() {
                 <motion.div
                   initial="hidden"
                   animate="show"
-                  variants={{ hidden: {}, show: { transition: { staggerChildren: 0.08 } } }}
+                  variants={{ hidden: {}, show: { transition: { staggerChildren: 0.03 } } }}
                   className="space-y-5"
                 >
                   {/* Premium Time Filter */}
