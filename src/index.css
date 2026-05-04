@@ -226,11 +226,20 @@
     to { --border-angle: 360deg; }
   }
 
-  /* Disable expensive animated borders on mobile / reduced motion */
+  /* Disable expensive animated borders globally — conic-gradient + @property
+     repaints every frame and tanks performance even on desktop. Gradient
+     stays visible, just no rotation. */
+  .gold-gradient-border-animated::before {
+    animation: none;
+  }
+  .input-gold-shimmer::before {
+    animation: none;
+  }
+  .tour-gold-border::before {
+    animation: none;
+  }
+
   @media (max-width: 768px), (prefers-reduced-motion: reduce) {
-    .gold-gradient-border-animated::before {
-      animation: none;
-    }
     .pulse-glow {
       animation: none;
     }
