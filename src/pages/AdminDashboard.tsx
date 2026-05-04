@@ -3068,7 +3068,7 @@ export default function AdminDashboard() {
                                 initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}
                                 className="relative gold-gradient-border-animated pulse-glow rounded-2xl p-5 overflow-hidden"
                               >
-                                <div className="absolute -top-16 right-0 h-40 w-40 rounded-full bg-accent/15 blur-3xl" />
+                                <div className="absolute -top-16 right-0 h-40 w-40 rounded-full pointer-events-none" style={{ background: "radial-gradient(circle, hsl(var(--accent) / 0.18), transparent 70%)" }} />
                                 <div className="relative">
                                   <p className="text-[9px] uppercase tracking-[0.2em] text-accent font-bold mb-2">B · {fmtDateLabel(compareFromB)} – {fmtDateLabel(compareToB)}</p>
                                   <div className="flex items-end justify-between gap-2">
@@ -3174,7 +3174,7 @@ export default function AdminDashboard() {
                     {/* Layered atmosphere */}
                     <div className="absolute inset-0 pointer-events-none">
                       <div className="absolute inset-0 bg-gradient-to-br from-accent/10 via-transparent to-accent/5" />
-                      <div className="absolute -top-24 left-1/2 -translate-x-1/2 h-64 w-64 rounded-full bg-accent/20 blur-3xl opacity-60" />
+                      <div className="absolute -top-24 left-1/2 -translate-x-1/2 h-64 w-64 rounded-full pointer-events-none" style={{ background: "radial-gradient(circle, hsl(var(--accent) / 0.22), transparent 70%)" }} />
                       <div className="absolute inset-0 opacity-[0.03] mix-blend-overlay" style={{ backgroundImage: "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><filter id='n'><feTurbulence baseFrequency='0.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>\")" }} />
                     </div>
 
@@ -3189,7 +3189,7 @@ export default function AdminDashboard() {
                       </motion.div>
 
                       <p className="text-[10px] text-muted-foreground mb-2 tracking-[0.25em] uppercase">Gesamtumsatz</p>
-                      <p className="w-full text-center text-5xl sm:text-6xl font-black text-accent tracking-tight tabular-nums leading-none inline-flex justify-center drop-shadow-[0_0_18px_hsl(var(--accent)/0.35)]">
+                      <p className="w-full text-center text-5xl sm:text-6xl font-black text-accent tracking-tight tabular-nums leading-none inline-flex justify-center" style={{ textShadow: "0 0 18px hsl(var(--accent) / 0.35)" }}>
                         <AnimatedNumber value={totalEarnings} />
                       </p>
 
@@ -3217,7 +3217,7 @@ export default function AdminDashboard() {
                       return (
                         <motion.div
                           key={key}
-                          whileHover={{ y: -3 }}
+                          whileHover={{ scale: 1.015 }}
                           className="group relative glass-card-subtle rounded-2xl p-4 overflow-hidden transition-shadow hover:shadow-[0_8px_32px_-8px_hsl(var(--accent)/0.35)]"
                         >
                           <div className="absolute inset-x-0 top-0 h-px opacity-60" style={{ background: `linear-gradient(90deg, transparent, ${color}, transparent)` }} />
@@ -3226,12 +3226,12 @@ export default function AdminDashboard() {
                           <div className="relative">
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center gap-1.5">
-                                <div className="h-2.5 w-2.5 rounded-full shadow-[0_0_8px_currentColor]" style={{ backgroundColor: color, color }} />
+                                <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color, boxShadow: `0 0 8px ${color}` }} />
                                 <p className="text-[10px] text-muted-foreground font-semibold tracking-wider uppercase">{label}</p>
                               </div>
                             </div>
 
-                            <p className="w-full text-left text-2xl font-black text-accent tabular-nums leading-tight inline-flex justify-start drop-shadow-[0_0_10px_hsl(var(--accent)/0.25)]">
+                            <p className="w-full text-left text-2xl font-black text-accent tabular-nums leading-tight inline-flex justify-start" style={{ textShadow: "0 0 10px hsl(var(--accent) / 0.25)" }}>
                               <AnimatedNumber value={value} align="left" />
                             </p>
 
@@ -3261,7 +3261,7 @@ export default function AdminDashboard() {
                     {/* Atmospheric layers */}
                     <div className="absolute inset-0 pointer-events-none">
                       <div className="absolute inset-0 bg-gradient-to-b from-accent/[0.04] via-transparent to-accent/[0.06]" />
-                      <div className="absolute -top-32 left-1/2 -translate-x-1/2 h-72 w-[120%] rounded-full bg-accent/10 blur-3xl opacity-40" />
+                      <div className="absolute -top-32 left-1/2 -translate-x-1/2 h-72 w-[120%] rounded-full pointer-events-none" style={{ background: "radial-gradient(ellipse at center, hsl(var(--accent) / 0.12), transparent 65%)" }} />
                       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-accent/5 to-transparent" />
                     </div>
 
@@ -3285,7 +3285,7 @@ export default function AdminDashboard() {
                       <div className="flex gap-3 items-center">
                         {Object.entries(PLATFORM_COLORS).map(([key, color]) => (
                           <div key={key} className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-secondary/30 border border-border/30">
-                            <div className="h-1.5 w-1.5 rounded-full shadow-[0_0_8px_currentColor]" style={{ backgroundColor: color, color }} />
+                            <div className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: color, boxShadow: `0 0 8px ${color}` }} />
                             <span className="text-[10px] text-muted-foreground capitalize font-semibold tracking-wide">{key === "4based" ? "4Based" : key}</span>
                           </div>
                         ))}
