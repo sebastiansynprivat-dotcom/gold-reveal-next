@@ -8006,6 +8006,7 @@ export default function AdminDashboard() {
           </div>
         </DialogContent>
       </Dialog>
+      <RevenuePerfMonitor tabActive={activeTab === "einnahmen"} />
     </div>
   );
 }
