@@ -223,21 +223,15 @@ export default function CreditNoteForm({
     return () => { cancelled = true; };
   }, [currency]);
 
-  // Auto-save provider form fields to localStorage (issuer fields excluded – saved to DB)
+  // Auto-save remaining UI-only fields to localStorage (provider fields are persisted in DB)
   useEffect(() => {
     const timer = setTimeout(() => {
       localStorage.setItem(storageKey, JSON.stringify({
-        providerName, providerAddress, isBusiness, providerVatId,
         description, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet,
       }));
     }, 500);
     return () => clearTimeout(timer);
-  }, [providerName, providerAddress, isBusiness, providerVatId, description, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet, storageKey]);
-
-  // Update provider name when prop changes
-  useEffect(() => {
-    if (initialProviderName && !providerName) setProviderName(initialProviderName);
-  }, [initialProviderName]);
+  }, [description, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet, storageKey]);
 
   // Calculations
   const net = parseFloat(netAmount.replace(",", ".")) || 0;
