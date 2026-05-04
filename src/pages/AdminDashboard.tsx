@@ -3152,8 +3152,8 @@ export default function AdminDashboard() {
                                       labelFormatter={(v) => `Tag ${v}`}
                                       formatter={(value: number, name: string) => [Number(value).toLocaleString("de-DE"), name === "a" ? "Zeitraum A" : "Zeitraum B"]}
                                     />
-                                    <Area type="monotone" dataKey="a" stroke="hsl(var(--muted-foreground))" strokeWidth={2} fill="url(#cmpA)" connectNulls />
-                                    <Area type="monotone" dataKey="b" stroke="hsl(var(--accent))" strokeWidth={2.5} fill="url(#cmpB)" connectNulls />
+                                    <Area type="monotone" dataKey="a" stroke="hsl(var(--muted-foreground))" strokeWidth={2} fill="url(#cmpA)" connectNulls isAnimationActive={false} />
+                                    <Area type="monotone" dataKey="b" stroke="hsl(var(--accent))" strokeWidth={2.5} fill="url(#cmpB)" connectNulls isAnimationActive={false} />
                                   </AreaChart>
                                 </ResponsiveContainer>
                               </div>
