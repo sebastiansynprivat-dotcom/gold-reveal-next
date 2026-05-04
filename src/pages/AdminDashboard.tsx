@@ -238,6 +238,7 @@ const AnimatedNumber = React.memo(function AnimatedNumber({ value, className, su
   const rafRef = useRef<number | null>(null);
   const formatterRef = useRef(new Intl.NumberFormat("de-DE", { maximumFractionDigits: 0 }));
   const initialTextRef = useRef(`${formatterRef.current.format(Math.round(target))}${suffix}`);
+  const lastPaintedTextRef = useRef(initialTextRef.current);
   const startText = `${formatterRef.current.format(Math.round(currentValue.current))}${suffix}`;
   const targetText = `${formatterRef.current.format(Math.round(target))}${suffix}`;
   const reservedCharacters = Math.max(startText.length, targetText.length, initialTextRef.current.length);
@@ -245,7 +246,10 @@ const AnimatedNumber = React.memo(function AnimatedNumber({ value, className, su
   const paintValue = useCallback((next: number) => {
     const el = spanRef.current;
     if (!el) return;
-    el.textContent = `${formatterRef.current.format(Math.round(next))}${suffix}`;
+    const nextText = `${formatterRef.current.format(Math.round(next))}${suffix}`;
+    if (lastPaintedTextRef.current === nextText) return;
+    lastPaintedTextRef.current = nextText;
+    el.textContent = nextText;
   }, [suffix]);
 
   React.useEffect(() => {
@@ -974,6 +978,7 @@ export default function AdminDashboard() {
   const [customFrom, setCustomFrom] = useState<Date | undefined>(undefined);
   const [customTo, setCustomTo] = useState<Date | undefined>(undefined);
   const rangeUpdateTimeoutRef = useRef<number | null>(null);
+  const isMobileRevenueView = typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches;
 
   // Prefetch cache: holds precomputed totals/ranges per filter so switching is instant
   type RevenueSnapshot = { total: CurrentTotal; range: RootData; totalEarnings: number };
@@ -1202,7 +1207,7 @@ export default function AdminDashboard() {
 
     setTotalValue(snap.total);
     setTotalEarnings(snap.totalEarnings);
-    if (instantRange || !range) {
+    if (instantRange || !range || isMobileRevenueView) {
       setRange(snap.range);
       return;
     }
@@ -2888,7 +2893,7 @@ export default function AdminDashboard() {
                 <motion.div
                   initial="hidden"
                   animate="show"
-                  variants={{ hidden: {}, show: { transition: { staggerChildren: 0.04 } } }}
+                  variants={{ hidden: {}, show: { transition: { staggerChildren: isMobileRevenueView ? 0.015 : 0.04 } } }}
                   className="space-y-5"
                 >
                   {/* Premium Time Filter */}
@@ -3297,7 +3302,7 @@ export default function AdminDashboard() {
                     <div className="relative p-4 pt-2">
                       <div className="h-80">
                         <ResponsiveContainer width="100%" height="100%">
-                          <AreaChart data={rangeData} margin={{ top: 16, right: 12, bottom: 0, left: 0 }}>
+                          <AreaChart data={isMobileRevenueView ? rangeData.slice(-14) : rangeData} margin={{ top: 16, right: 12, bottom: 0, left: 0 }}>
                             <defs>
                               {Object.entries(PLATFORM_COLORS).map(([key, color]) => (
                                 <linearGradient key={key} id={`area-${key}`} x1="0" y1="0" x2="0" y2="1">
@@ -3321,7 +3326,7 @@ export default function AdminDashboard() {
                               tickLine={false}
                               axisLine={false}
                               dy={6}
-                              interval={Math.max(0, Math.floor(rangeData.length / 7))}
+                              interval={Math.max(0, Math.floor((isMobileRevenueView ? rangeData.slice(-14) : rangeData).length / 7))}
                               tickFormatter={(v) => { try { return format(new Date(v), "dd.MM."); } catch { return v; } }}
                             />
                             <YAxis
@@ -3365,7 +3370,7 @@ export default function AdminDashboard() {
                                 stroke={(PLATFORM_COLORS as any)[key]}
                                 strokeWidth={2.25}
                                 fill={`url(#area-${key})`}
-                                activeDot={{ r: 5, strokeWidth: 2, stroke: "hsl(var(--background))", filter: "url(#goldGlow)" }}
+                                activeDot={{ r: 5, strokeWidth: 2, stroke: "hsl(var(--background))", filter: isMobileRevenueView ? undefined : "url(#goldGlow)" }}
                                 isAnimationActive={false}
                               />
                             ))}
