@@ -3261,7 +3261,7 @@ export default function AdminDashboard() {
                     {/* Atmospheric layers */}
                     <div className="absolute inset-0 pointer-events-none">
                       <div className="absolute inset-0 bg-gradient-to-b from-accent/[0.04] via-transparent to-accent/[0.06]" />
-                      <div className="absolute -top-32 left-1/2 -translate-x-1/2 h-72 w-[120%] rounded-full bg-accent/10 blur-3xl opacity-40" />
+                      <div className="absolute -top-32 left-1/2 -translate-x-1/2 h-72 w-[120%] rounded-full pointer-events-none" style={{ background: "radial-gradient(ellipse at center, hsl(var(--accent) / 0.12), transparent 65%)" }} />
                       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-accent/5 to-transparent" />
                     </div>
 
