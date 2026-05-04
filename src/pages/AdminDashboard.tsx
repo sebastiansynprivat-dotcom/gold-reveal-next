@@ -1020,6 +1020,43 @@ export default function AdminDashboard() {
     sessionStorage.setItem("admin_revenue_cache_v1", JSON.stringify(revenueCacheRef.current));
   }, []);
 
+  const buildRevenueSnapshot = useCallback((rows: RevenueRow[], f: TimeFilter): RevenueSnapshot => {
+    const sorted = [...rows].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const today = new Date().toISOString().slice(0, 10);
+    const start = (days: number) => new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const rowsForRange = f === "90" ? sorted.filter((r) => r.date >= start(90) && r.date <= today)
+      : f === "30" ? sorted.filter((r) => r.date >= start(30) && r.date <= today)
+      : f === "7" ? sorted.filter((r) => r.date >= start(7) && r.date <= today)
+      : sorted.filter((r) => r.date >= start(7) && r.date <= today);
+    const platforms = ["maloum", "brezzels", "4based"] as const;
+    const total = platforms.reduce((acc, platform) => {
+      const platformRows = rowsForRange.filter((r) => r.platform === platform);
+      const value = f === "heute" || f === "gestern"
+        ? Number(platformRows.at(f === "heute" ? -1 : -2)?.revenue_today || 0)
+        : platformRows.reduce((sum, r) => sum + Number(r.revenue_today || 0), 0);
+      return { ...acc, [platform]: value };
+    }, {} as CurrentTotal);
+    const range = platforms.reduce((acc, platform) => ({
+      ...acc,
+      [platform]: rowsForRange
+        .filter((r) => r.platform === platform)
+        .map((r) => ({ date: r.date, total: Number(r.revenue_today || 0) }))
+        .slice(f === "gestern" ? -3 : f === "heute" ? -7 : undefined),
+    }), {} as RootData);
+    return { total, range, totalEarnings: total.maloum + total.brezzels + total["4based"] };
+  }, []);
+
+  const rebuildStandardRevenueCache = useCallback((rows: RevenueRow[]) => {
+    revenueRowsRef.current = rows;
+    (["heute", "gestern", "7", "30", "90"] as TimeFilter[]).forEach((f) => {
+      revenueCacheRef.current[f] = buildRevenueSnapshot(rows, f);
+    });
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("admin_revenue_rows_v2", JSON.stringify(rows));
+    }
+    persistRevenueCache();
+  }, [buildRevenueSnapshot, persistRevenueCache]);
+
   // Compare mode states
   const [compareFromA, setCompareFromA] = useState<Date | undefined>(undefined);
   const [compareToA, setCompareToA] = useState<Date | undefined>(undefined);
