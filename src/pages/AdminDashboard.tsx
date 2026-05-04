@@ -1431,12 +1431,15 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
-    loadChatters();
-    loadAccounts();
-    loadOffers();
-    loadLoginStats();
-    loadPushUsers();
-    loadRevenueUsers();
+    if (!adminDataBootstrapRef.current && activeTab !== "einnahmen") {
+      adminDataBootstrapRef.current = true;
+      loadChatters();
+      loadAccounts();
+      loadOffers();
+      loadLoginStats();
+      loadPushUsers();
+      loadRevenueUsers();
+    }
     if (isSuperAdmin) loadAdmins();
 
     const channel = supabase
@@ -1488,7 +1491,7 @@ export default function AdminDashboard() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [applyRevenueRealtimeRow, isSuperAdmin]);
+  }, [activeTab, applyRevenueRealtimeRow, isSuperAdmin]);
 
   // Load cached AI summaries
   const loadChatterSummaries = async () => {
