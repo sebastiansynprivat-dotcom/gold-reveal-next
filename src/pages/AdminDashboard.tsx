@@ -88,6 +88,7 @@ import GoldParticles from "@/components/GoldParticles";
 import SubAdminManager from "@/components/SubAdminManager";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { RevenuePerfMonitor } from "@/components/admin/RevenuePerfMonitor";
+import { DeferredChart, ChartSkeleton } from "@/components/admin/DeferredChart";
 
 // Extract folder ID from a full Google Drive URL or return as-is if already an ID
 const extractDriveFolderId = (input: string): string => {
@@ -3485,87 +3486,87 @@ export default function AdminDashboard() {
                       </div>
                     </div>
 
-                     <div className="relative p-4 pt-2">
-                       {(
-                       <div className="h-80" data-perf-marker="revenue-chart">
-                         <ResponsiveContainer width="100%" height="100%">
-                          <AreaChart data={revenueChartData} margin={{ top: 16, right: 12, bottom: 0, left: 0 }}>
-                            <defs>
-                              {Object.entries(PLATFORM_COLORS).map(([key, color]) => (
-                                <linearGradient key={key} id={`area-${key}`} x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="0%" stopColor={color} stopOpacity={0.65} />
-                                  <stop offset="55%" stopColor={color} stopOpacity={0.18} />
-                                  <stop offset="100%" stopColor={color} stopOpacity={0} />
-                                </linearGradient>
-                              ))}
-                              <filter id="goldGlow" x="-20%" y="-20%" width="140%" height="140%">
-                                <feGaussianBlur stdDeviation="3" result="coloredBlur" />
-                                <feMerge>
-                                  <feMergeNode in="coloredBlur" />
-                                  <feMergeNode in="SourceGraphic" />
-                                </feMerge>
-                              </filter>
-                            </defs>
-                            {!isMobileRevenueView && <CartesianGrid strokeDasharray="2 6" stroke="hsl(var(--accent))" strokeOpacity={0.08} vertical={false} />}
-                            <XAxis
-                              dataKey="date"
-                              tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))", fontWeight: 500 }}
-                              tickLine={false}
-                              axisLine={false}
-                              dy={6}
-                              interval={isMobileRevenueView ? 0 : Math.max(0, Math.floor(revenueChartData.length / 7))}
-                              tickFormatter={(v) => { try { return format(new Date(v), "dd.MM."); } catch { return v; } }}
-                            />
-                            <YAxis
-                              tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))", fontWeight: 500 }}
-                              tickLine={false}
-                              axisLine={false}
-                              tickFormatter={(v) => `${fmtK(v)}`}
-                              width={44}
-                            />
-                            {!isMobileRevenueView && <Tooltip
-                              cursor={{ stroke: "hsl(var(--accent))", strokeWidth: 1, strokeDasharray: "3 3", strokeOpacity: 0.5 }}
-                              contentStyle={{
-                                background: "hsl(0 0% 5% / 0.95)",
-                                backdropFilter: "blur(16px)",
-                                border: "1px solid hsl(var(--accent) / 0.5)",
-                                borderRadius: "14px",
-                                fontSize: "12px",
-                                boxShadow: "0 20px 60px rgba(0,0,0,0.7), 0 0 0 1px hsl(var(--accent)/0.2), inset 0 1px 0 hsl(var(--accent)/0.15)",
-                                padding: "12px 16px",
-                              }}
-                              itemStyle={{ color: "hsl(var(--foreground))", fontWeight: 600, padding: "2px 0" }}
-                              formatter={(value: number, name: string) => [`${Number(value).toLocaleString("de-DE")}`, name === "4based" ? "4Based" : name.charAt(0).toUpperCase() + name.slice(1)]}
-                              labelFormatter={(v) => { try { return format(new Date(v), "EEE, dd.MM.yyyy"); } catch { return v; } }}
-                              labelStyle={{ color: "hsl(var(--accent))", fontSize: "10px", marginBottom: "8px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em" }}
-                            />}
-                            {!isMobileRevenueView && avgPerDay > 0 && (
-                              <ReferenceLine
-                                y={avgPerDay}
-                                stroke="hsl(var(--accent))"
-                                strokeDasharray="3 6"
-                                strokeOpacity={0.5}
-                                label={{ value: `Ø ${fmtK(avgPerDay)}`, position: "right", fill: "hsl(var(--accent))", fontSize: 9, fontWeight: 700 }}
-                              />
-                            )}
-                            {platformKeys.map((key, i) => (
-                              <Area
-                                key={key}
-                                type="monotone"
-                                dataKey={key}
-                                stackId="1"
-                                stroke={(PLATFORM_COLORS as any)[key]}
-                                strokeWidth={2.25}
-                                fill={`url(#area-${key})`}
-                                activeDot={{ r: 5, strokeWidth: 2, stroke: "hsl(var(--background))", filter: isMobileRevenueView ? undefined : "url(#goldGlow)" }}
-                                isAnimationActive={false}
-                              />
-                            ))}
-                          </AreaChart>
-                        </ResponsiveContainer>
-                      </div>
-                      )}
-                    </div>
+                      <div className="relative p-4 pt-2">
+                        <div className="h-80" data-perf-marker="revenue-chart">
+                          <DeferredChart placeholder={<ChartSkeleton />}>
+                          <ResponsiveContainer width="100%" height="100%">
+                           <AreaChart data={revenueChartData} margin={{ top: 16, right: 12, bottom: 0, left: 0 }}>
+                             <defs>
+                               {Object.entries(PLATFORM_COLORS).map(([key, color]) => (
+                                 <linearGradient key={key} id={`area-${key}`} x1="0" y1="0" x2="0" y2="1">
+                                   <stop offset="0%" stopColor={color} stopOpacity={0.65} />
+                                   <stop offset="55%" stopColor={color} stopOpacity={0.18} />
+                                   <stop offset="100%" stopColor={color} stopOpacity={0} />
+                                 </linearGradient>
+                               ))}
+                               <filter id="goldGlow" x="-20%" y="-20%" width="140%" height="140%">
+                                 <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+                                 <feMerge>
+                                   <feMergeNode in="coloredBlur" />
+                                   <feMergeNode in="SourceGraphic" />
+                                 </feMerge>
+                               </filter>
+                             </defs>
+                             {!isMobileRevenueView && <CartesianGrid strokeDasharray="2 6" stroke="hsl(var(--accent))" strokeOpacity={0.08} vertical={false} />}
+                             <XAxis
+                               dataKey="date"
+                               tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))", fontWeight: 500 }}
+                               tickLine={false}
+                               axisLine={false}
+                               dy={6}
+                               interval={isMobileRevenueView ? 0 : Math.max(0, Math.floor(revenueChartData.length / 7))}
+                               tickFormatter={(v) => { try { return format(new Date(v), "dd.MM."); } catch { return v; } }}
+                             />
+                             <YAxis
+                               tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))", fontWeight: 500 }}
+                               tickLine={false}
+                               axisLine={false}
+                               tickFormatter={(v) => `${fmtK(v)}`}
+                               width={44}
+                             />
+                             {!isMobileRevenueView && <Tooltip
+                               cursor={{ stroke: "hsl(var(--accent))", strokeWidth: 1, strokeDasharray: "3 3", strokeOpacity: 0.5 }}
+                               contentStyle={{
+                                 background: "hsl(0 0% 5% / 0.95)",
+                                 backdropFilter: "blur(16px)",
+                                 border: "1px solid hsl(var(--accent) / 0.5)",
+                                 borderRadius: "14px",
+                                 fontSize: "12px",
+                                 boxShadow: "0 20px 60px rgba(0,0,0,0.7), 0 0 0 1px hsl(var(--accent)/0.2), inset 0 1px 0 hsl(var(--accent)/0.15)",
+                                 padding: "12px 16px",
+                               }}
+                               itemStyle={{ color: "hsl(var(--foreground))", fontWeight: 600, padding: "2px 0" }}
+                               formatter={(value: number, name: string) => [`${Number(value).toLocaleString("de-DE")}`, name === "4based" ? "4Based" : name.charAt(0).toUpperCase() + name.slice(1)]}
+                               labelFormatter={(v) => { try { return format(new Date(v), "EEE, dd.MM.yyyy"); } catch { return v; } }}
+                               labelStyle={{ color: "hsl(var(--accent))", fontSize: "10px", marginBottom: "8px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em" }}
+                             />}
+                             {!isMobileRevenueView && avgPerDay > 0 && (
+                               <ReferenceLine
+                                 y={avgPerDay}
+                                 stroke="hsl(var(--accent))"
+                                 strokeDasharray="3 6"
+                                 strokeOpacity={0.5}
+                                 label={{ value: `Ø ${fmtK(avgPerDay)}`, position: "right", fill: "hsl(var(--accent))", fontSize: 9, fontWeight: 700 }}
+                               />
+                             )}
+                             {platformKeys.map((key, i) => (
+                               <Area
+                                 key={key}
+                                 type="monotone"
+                                 dataKey={key}
+                                 stackId="1"
+                                 stroke={(PLATFORM_COLORS as any)[key]}
+                                 strokeWidth={2.25}
+                                 fill={`url(#area-${key})`}
+                                 activeDot={{ r: 5, strokeWidth: 2, stroke: "hsl(var(--background))", filter: isMobileRevenueView ? undefined : "url(#goldGlow)" }}
+                                 isAnimationActive={false}
+                               />
+                             ))}
+                           </AreaChart>
+                         </ResponsiveContainer>
+                         </DeferredChart>
+                       </div>
+                     </div>
                   </motion.div>
                   </>
                   )}
