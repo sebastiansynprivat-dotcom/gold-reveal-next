@@ -1556,7 +1556,7 @@ export default function AdminDashboard() {
 
   // Realtime channel — subscribe ONCE, not on every activeTab change
   useEffect(() => {
-    const isMobile = typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches;
+    // Unified behavior: mobile = desktop
     const channel = supabase
       .channel("realtime-revenue")
       .on("postgres_changes", { event: "*", schema: "public", table: "revenue_report" }, (payload) => {
