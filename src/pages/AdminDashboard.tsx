@@ -256,6 +256,14 @@ const AnimatedNumber = React.memo(function AnimatedNumber({ value, className, su
       return;
     }
 
+    // Skip RAF count-up on mobile / reduced motion — instant paint, no jank
+    const isMobile = typeof window !== "undefined" && window.matchMedia("(max-width: 768px), (prefers-reduced-motion: reduce)").matches;
+    if (isMobile) {
+      currentValue.current = end;
+      paintValue(end);
+      return;
+    }
+
     if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
 
     const delta = Math.abs(end - start);
