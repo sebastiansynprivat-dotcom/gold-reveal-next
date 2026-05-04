@@ -3297,9 +3297,9 @@ export default function AdminDashboard() {
                             {/* Share bar */}
                             <div className="mt-3 h-1 w-full rounded-full bg-secondary/40 overflow-hidden">
                               <motion.div
-                                initial={{ width: 0 }}
+                                initial={isMobileRevenueView ? false : { width: 0 }}
                                 animate={{ width: `${share}%` }}
-                                transition={{ duration: 0.9, ease: "easeOut" }}
+                                transition={{ duration: isMobileRevenueView ? 0 : 0.9, ease: "easeOut" }}
                                 className="h-full rounded-full"
                                 style={{ background: `linear-gradient(90deg, ${color}aa, ${color})` }}
                               />
