@@ -43,6 +43,10 @@ interface Chatter {
   bankIban: string;
   bankBic: string;
   bankName: string;
+  providerAddress: string;
+  providerIsBusiness: boolean;
+  providerVatId: string;
+  providerNameOverride: string;
 }
 
 // Map DB row to local interface
@@ -67,6 +71,10 @@ function rowToChatter(row: any): Chatter {
     hourlyRate: Number(row.hourly_rate) || 0,
     hoursWorked: Number(row.hours_worked) || 0,
     createdBy: row.created_by || undefined,
+    providerAddress: row.provider_address || "",
+    providerIsBusiness: row.provider_is_business || false,
+    providerVatId: row.provider_vat_id || "",
+    providerNameOverride: row.provider_name_override || "",
   };
 }
 
@@ -723,6 +731,12 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
               suggestedAmount={verdienst}
               providerName={selected.name}
               chatterName={selected.name}
+              providerEntityType="chatter"
+              providerEntityId={selected.id}
+              providerAddress={(selected as any).providerAddress || (selected as any).provider_address || ""}
+              providerIsBusiness={(selected as any).providerIsBusiness ?? (selected as any).provider_is_business ?? false}
+              providerVatId={(selected as any).providerVatId || (selected as any).provider_vat_id || ""}
+              providerNameOverride={(selected as any).providerNameOverride || (selected as any).provider_name_override || ""}
               revenuePercentage={selected.compensationType === "percentage" ? selected.revenuePercentage : 0}
               currency={selected.currency || "EUR"}
               cryptoAddress={selected.cryptoAddress || ""}
