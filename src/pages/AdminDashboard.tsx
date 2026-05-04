@@ -939,7 +939,9 @@ export default function AdminDashboard() {
   useEffect(() => {
     activeTabRef.current = activeTab;
     if (activeTab === "einnahmen") {
-      setTimeFilter("heute");
+      // Invalidate cache so today's data is freshly fetched
+      revenueCacheRef.current = {};
+      switchTimeFilter("heute");
     }
   }, [activeTab]);
 
