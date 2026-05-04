@@ -2724,11 +2724,11 @@ export default function AdminDashboard() {
             sidebarCollapsed ? "w-14" : "w-56",
           )}
         >
-          <div className="flex justify-end p-2">
+          <div className={cn("flex p-2", sidebarCollapsed ? "justify-center" : "justify-end")}>
             <button
               type="button"
               onClick={() => setSidebarCollapsed((v) => !v)}
-              className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-secondary/40 transition-colors"
+              className="p-1.5 rounded-md border border-accent/40 bg-accent/10 text-accent hover:bg-accent/20 hover:text-accent-foreground transition-colors shadow-sm"
               aria-label={sidebarCollapsed ? "Sidebar ausklappen" : "Sidebar einklappen"}
               title={sidebarCollapsed ? "Sidebar ausklappen" : "Sidebar einklappen"}
             >
