@@ -75,6 +75,12 @@ export default function CreditNoteForm({
   bankIban: modelBankIban = "",
   bankBic: modelBankBic = "",
   bankAccountHolder: modelBankAccountHolder = "",
+  providerEntityType,
+  providerEntityId,
+  providerAddress: initialProviderAddress = "",
+  providerIsBusiness: initialProviderIsBusiness = false,
+  providerVatId: initialProviderVatId = "",
+  providerNameOverride: initialProviderNameOverride = "",
 }: CreditNoteFormProps) {
   // localStorage key for persisting provider (recipient) form fields
   const storageKey = `credit-note-form-${accountId || chatterName || "default"}`;
