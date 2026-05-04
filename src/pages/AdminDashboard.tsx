@@ -968,10 +968,11 @@ export default function AdminDashboard() {
       computeTodaySnapshot("today").then((snap) => {
         if (!snap || activeTabRef.current !== "einnahmen") return;
         revenueCacheRef.current.heute = snap;
+        persistRevenueCache();
         applySnapshot(snap, true);
       });
     }
-  }, [activeTab]);
+  }, [activeTab, persistRevenueCache]);
 
   const allRevenueData = useMemo(() => generateFakeRevenueData(), []);
 
@@ -1281,6 +1282,7 @@ export default function AdminDashboard() {
         range: patchRange(todaySnap.range) || todaySnap.range,
         totalEarnings: nextTotal.maloum + nextTotal.brezzels + nextTotal["4based"],
       };
+      persistRevenueCache();
     }
 
     if (timeFilterRef.current !== "heute") return;
@@ -1304,6 +1306,7 @@ export default function AdminDashboard() {
     else if (f === "7" || f === "30" || f === "90") snap = await computeRangeSnapshot(f);
     if (snap) {
       revenueCacheRef.current[f] = snap;
+      persistRevenueCache();
       applySnapshot(snap);
     }
   };
