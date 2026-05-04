@@ -2893,7 +2893,7 @@ export default function AdminDashboard() {
                 <motion.div
                   initial="hidden"
                   animate="show"
-                  variants={{ hidden: {}, show: { transition: { staggerChildren: 0.04 } } }}
+                  variants={{ hidden: {}, show: { transition: { staggerChildren: isMobileRevenueView ? 0.015 : 0.04 } } }}
                   className="space-y-5"
                 >
                   {/* Premium Time Filter */}
@@ -3302,7 +3302,7 @@ export default function AdminDashboard() {
                     <div className="relative p-4 pt-2">
                       <div className="h-80">
                         <ResponsiveContainer width="100%" height="100%">
-                          <AreaChart data={rangeData} margin={{ top: 16, right: 12, bottom: 0, left: 0 }}>
+                          <AreaChart data={isMobileRevenueView ? rangeData.slice(-14) : rangeData} margin={{ top: 16, right: 12, bottom: 0, left: 0 }}>
                             <defs>
                               {Object.entries(PLATFORM_COLORS).map(([key, color]) => (
                                 <linearGradient key={key} id={`area-${key}`} x1="0" y1="0" x2="0" y2="1">
@@ -3326,7 +3326,7 @@ export default function AdminDashboard() {
                               tickLine={false}
                               axisLine={false}
                               dy={6}
-                              interval={Math.max(0, Math.floor(rangeData.length / 7))}
+                              interval={Math.max(0, Math.floor((isMobileRevenueView ? rangeData.slice(-14) : rangeData).length / 7))}
                               tickFormatter={(v) => { try { return format(new Date(v), "dd.MM."); } catch { return v; } }}
                             />
                             <YAxis
@@ -3370,7 +3370,7 @@ export default function AdminDashboard() {
                                 stroke={(PLATFORM_COLORS as any)[key]}
                                 strokeWidth={2.25}
                                 fill={`url(#area-${key})`}
-                                activeDot={{ r: 5, strokeWidth: 2, stroke: "hsl(var(--background))", filter: "url(#goldGlow)" }}
+                                activeDot={{ r: 5, strokeWidth: 2, stroke: "hsl(var(--background))", filter: isMobileRevenueView ? undefined : "url(#goldGlow)" }}
                                 isAnimationActive={false}
                               />
                             ))}
