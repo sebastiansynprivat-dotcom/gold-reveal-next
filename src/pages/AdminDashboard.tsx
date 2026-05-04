@@ -2922,6 +2922,7 @@ export default function AdminDashboard() {
                   acc[k] = a > 0 ? Math.round(((b - a) / a) * 1000) / 10 : 0;
                   return acc;
                 }, {} as Record<string, number>);
+                const revenueChartData = isMobileRevenueView ? rangeData.slice(-7) : rangeData;
 
                 return (
                 <motion.div
@@ -3338,7 +3339,7 @@ export default function AdminDashboard() {
                     <div className="relative p-4 pt-2">
                       <div className="h-80">
                         <ResponsiveContainer width="100%" height="100%">
-                          <AreaChart data={isMobileRevenueView ? rangeData.slice(-14) : rangeData} margin={{ top: 16, right: 12, bottom: 0, left: 0 }}>
+                          <AreaChart data={revenueChartData} margin={{ top: 16, right: 12, bottom: 0, left: 0 }}>
                             <defs>
                               {Object.entries(PLATFORM_COLORS).map(([key, color]) => (
                                 <linearGradient key={key} id={`area-${key}`} x1="0" y1="0" x2="0" y2="1">
@@ -3355,14 +3356,14 @@ export default function AdminDashboard() {
                                 </feMerge>
                               </filter>
                             </defs>
-                            <CartesianGrid strokeDasharray="2 6" stroke="hsl(var(--accent))" strokeOpacity={0.08} vertical={false} />
+                            {!isMobileRevenueView && <CartesianGrid strokeDasharray="2 6" stroke="hsl(var(--accent))" strokeOpacity={0.08} vertical={false} />}
                             <XAxis
                               dataKey="date"
                               tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))", fontWeight: 500 }}
                               tickLine={false}
                               axisLine={false}
                               dy={6}
-                              interval={Math.max(0, Math.floor((isMobileRevenueView ? rangeData.slice(-14) : rangeData).length / 7))}
+                              interval={isMobileRevenueView ? 0 : Math.max(0, Math.floor(revenueChartData.length / 7))}
                               tickFormatter={(v) => { try { return format(new Date(v), "dd.MM."); } catch { return v; } }}
                             />
                             <YAxis
