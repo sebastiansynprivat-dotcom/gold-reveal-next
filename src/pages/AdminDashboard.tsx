@@ -87,6 +87,7 @@ import ChatterDashboardTab from "@/components/ChatterDashboardTab";
 import GoldParticles from "@/components/GoldParticles";
 import SubAdminManager from "@/components/SubAdminManager";
 import { useAdminRole } from "@/hooks/useAdminRole";
+import { RevenuePerfMonitor } from "@/components/admin/RevenuePerfMonitor";
 
 // Extract folder ID from a full Google Drive URL or return as-is if already an ID
 const extractDriveFolderId = (input: string): string => {
@@ -3484,10 +3485,10 @@ export default function AdminDashboard() {
                       </div>
                     </div>
 
-                    <div className="relative p-4 pt-2">
-                      {(
-                      <div className="h-80">
-                        <ResponsiveContainer width="100%" height="100%">
+                     <div className="relative p-4 pt-2">
+                       {(
+                       <div className="h-80" data-perf-marker="revenue-chart">
+                         <ResponsiveContainer width="100%" height="100%">
                           <AreaChart data={revenueChartData} margin={{ top: 16, right: 12, bottom: 0, left: 0 }}>
                             <defs>
                               {Object.entries(PLATFORM_COLORS).map(([key, color]) => (
@@ -8005,6 +8006,7 @@ export default function AdminDashboard() {
           </div>
         </DialogContent>
       </Dialog>
+      <RevenuePerfMonitor tabActive={activeTab === "einnahmen"} />
     </div>
   );
 }
