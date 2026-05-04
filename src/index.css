@@ -121,15 +121,17 @@
     background: linear-gradient(
       120deg,
       hsl(43 56% 52%) 0%,
-      hsl(43 56% 52%) 40%,
       hsl(43 76% 68%) 50%,
-      hsl(43 56% 52%) 60%,
       hsl(43 56% 52%) 100%
     );
-    background-size: 300% 100%;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
+  }
+
+  /* Optional shimmer only when explicitly requested */
+  .text-gold-gradient-shimmer.is-animated {
+    background-size: 300% 100%;
     animation: gold-text-shimmer 8s ease-in-out infinite;
   }
 
