@@ -1085,6 +1085,7 @@ export default function AdminDashboard() {
   }, [activeTab, persistRevenueCache]);
 
   async function getRevenueToday(flag) {
+    if (revenueRowsRef.current.length > 0) return buildRevenueSnapshot(revenueRowsRef.current, flag === "today" ? "heute" : "gestern");
     const selectedDate = new Date().toISOString().slice(0, 10);
     const fromDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
@@ -1271,6 +1272,7 @@ export default function AdminDashboard() {
   }
 
   async function computeRangeSnapshot(flag: "7" | "30" | "90"): Promise<RevenueSnapshot | null> {
+    if (revenueRowsRef.current.length > 0) return buildRevenueSnapshot(revenueRowsRef.current, flag);
     const days = parseInt(flag);
     const todayDate = new Date().toISOString().slice(0, 10);
     const fromDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
@@ -1308,6 +1310,23 @@ export default function AdminDashboard() {
       rangeUpdateTimeoutRef.current = null;
     }, 420);
   };
+
+  const loadRevenueRows = useCallback(async () => {
+    const todayDate = new Date().toISOString().slice(0, 10);
+    const fromDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const { data } = await supabase
+      .from("revenue_report")
+      .select("date, platform, revenue_today")
+      .lte("date", todayDate)
+      .gte("date", fromDate)
+      .order("date", { ascending: true });
+    if (!data) return;
+    rebuildStandardRevenueCache(data as RevenueRow[]);
+    const current = timeFilterRef.current;
+    if (activeTabRef.current === "einnahmen" && current !== "custom" && current !== "vergleich") {
+      applySnapshot(revenueCacheRef.current[current]!, true);
+    }
+  }, [rebuildStandardRevenueCache]);
 
   // Batch realtime updates to avoid render storms (especially on mobile)
   const realtimePendingRef = useRef<Map<string, { platform: string; date: string; nextValue: number }>>(new Map());
