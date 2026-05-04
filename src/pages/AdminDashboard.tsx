@@ -1493,8 +1493,15 @@ export default function AdminDashboard() {
       loadPushUsers();
       loadRevenueUsers();
     }
-    if (isSuperAdmin) loadAdmins();
+  }, [activeTab]);
 
+  useEffect(() => {
+    if (isSuperAdmin) loadAdmins();
+  }, [isSuperAdmin]);
+
+  // Realtime channel — subscribe ONCE, not on every activeTab change
+  useEffect(() => {
+    const isMobile = typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches;
     const channel = supabase
       .channel("realtime-revenue")
       .on("postgres_changes", { event: "*", schema: "public", table: "revenue_report" }, (payload) => {
@@ -1510,19 +1517,14 @@ export default function AdminDashboard() {
         let diff = 0;
         let platform: string | null = null;
 
-        // 🟢 INSERT
         if (payload.eventType === "INSERT" && newRow && isToday(newRow.date)) {
           diff = newRow.revenue_today || 0;
           platform = newRow.platform;
         }
-
-        // 🔵 UPDATE
         if (payload.eventType === "UPDATE" && newRow && oldRow && isToday(newRow.date)) {
           diff = (newRow.revenue_today || 0) - (oldRow.revenue_today || 0);
           platform = newRow.platform;
         }
-
-        // 🔴 DELETE
         if (payload.eventType === "DELETE" && oldRow && isToday(oldRow.date)) {
           diff = -(oldRow.revenue_today || 0);
           platform = oldRow.platform;
@@ -1532,7 +1534,8 @@ export default function AdminDashboard() {
           const row = (newRow || oldRow) as any;
           applyRevenueRealtimeRow(platform, row?.date || null, Number(newRow?.revenue_today ?? 0), diff);
 
-          if (activeTabRef.current === "einnahmen" && timeFilterRef.current === "heute") {
+          // Skip toast on mobile — main thread killer
+          if (!isMobile && activeTabRef.current === "einnahmen" && timeFilterRef.current === "heute") {
             const sign = diff > 0 ? "+" : "";
             toast.success(`${sign}${diff.toFixed(2)}€ Umsatz Änderung`);
           }
@@ -1540,11 +1543,10 @@ export default function AdminDashboard() {
       })
       .subscribe();
 
-    // 🧹 Cleanup
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [activeTab, applyRevenueRealtimeRow, isSuperAdmin]);
+  }, [applyRevenueRealtimeRow]);
 
   // Load cached AI summaries
   const loadChatterSummaries = async () => {
