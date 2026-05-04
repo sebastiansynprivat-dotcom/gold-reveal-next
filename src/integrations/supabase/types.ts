@@ -282,6 +282,10 @@ export type Database = {
           name: string
           payment_method: string
           platform: string
+          provider_address: string
+          provider_is_business: boolean
+          provider_name_override: string
+          provider_vat_id: string
           revenue_percentage: number
           role: string
           updated_at: string
@@ -305,6 +309,10 @@ export type Database = {
           name?: string
           payment_method?: string
           platform?: string
+          provider_address?: string
+          provider_is_business?: boolean
+          provider_name_override?: string
+          provider_vat_id?: string
           revenue_percentage?: number
           role?: string
           updated_at?: string
@@ -328,6 +336,10 @@ export type Database = {
           name?: string
           payment_method?: string
           platform?: string
+          provider_address?: string
+          provider_is_business?: boolean
+          provider_name_override?: string
+          provider_vat_id?: string
           revenue_percentage?: number
           role?: string
           updated_at?: string
@@ -708,6 +720,10 @@ export type Database = {
           name: string
           notes: string | null
           payment_method: string
+          provider_address: string
+          provider_is_business: boolean
+          provider_name_override: string
+          provider_vat_id: string
           revenue_percentage: number
           updated_at: string
           username: string | null
@@ -731,6 +747,10 @@ export type Database = {
           name?: string
           notes?: string | null
           payment_method?: string
+          provider_address?: string
+          provider_is_business?: boolean
+          provider_name_override?: string
+          provider_vat_id?: string
           revenue_percentage?: number
           updated_at?: string
           username?: string | null
@@ -754,6 +774,10 @@ export type Database = {
           name?: string
           notes?: string | null
           payment_method?: string
+          provider_address?: string
+          provider_is_business?: boolean
+          provider_name_override?: string
+          provider_vat_id?: string
           revenue_percentage?: number
           updated_at?: string
           username?: string | null
