@@ -71,6 +71,10 @@ function rowToChatter(row: any): Chatter {
     hourlyRate: Number(row.hourly_rate) || 0,
     hoursWorked: Number(row.hours_worked) || 0,
     createdBy: row.created_by || undefined,
+    providerAddress: row.provider_address || "",
+    providerIsBusiness: row.provider_is_business || false,
+    providerVatId: row.provider_vat_id || "",
+    providerNameOverride: row.provider_name_override || "",
   };
 }
 
