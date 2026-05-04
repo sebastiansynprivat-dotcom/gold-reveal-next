@@ -978,6 +978,7 @@ export default function AdminDashboard() {
   const [customFrom, setCustomFrom] = useState<Date | undefined>(undefined);
   const [customTo, setCustomTo] = useState<Date | undefined>(undefined);
   const rangeUpdateTimeoutRef = useRef<number | null>(null);
+  const isMobileRevenueView = typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches;
 
   // Prefetch cache: holds precomputed totals/ranges per filter so switching is instant
   type RevenueSnapshot = { total: CurrentTotal; range: RootData; totalEarnings: number };
@@ -1206,7 +1207,7 @@ export default function AdminDashboard() {
 
     setTotalValue(snap.total);
     setTotalEarnings(snap.totalEarnings);
-    if (instantRange || !range) {
+    if (instantRange || !range || isMobileRevenueView) {
       setRange(snap.range);
       return;
     }
