@@ -88,6 +88,7 @@ import GoldParticles from "@/components/GoldParticles";
 import SubAdminManager from "@/components/SubAdminManager";
 import { useAdminRole } from "@/hooks/useAdminRole";
 import { RevenuePerfMonitor } from "@/components/admin/RevenuePerfMonitor";
+import { DeferredChart, ChartSkeleton } from "@/components/admin/DeferredChart";
 
 // Extract folder ID from a full Google Drive URL or return as-is if already an ID
 const extractDriveFolderId = (input: string): string => {
