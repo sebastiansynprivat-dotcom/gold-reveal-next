@@ -1590,7 +1590,7 @@ export default function AdminDashboard() {
           applyRevenueRealtimeRow(platform, row?.date || null, Number(newRow?.revenue_today ?? 0), diff);
 
           // Skip toast on mobile — main thread killer
-          if (!isMobile && activeTabRef.current === "einnahmen" && timeFilterRef.current === "heute") {
+          if (activeTabRef.current === "einnahmen" && timeFilterRef.current === "heute") {
             const sign = diff > 0 ? "+" : "";
             toast.success(`${sign}${diff.toFixed(2)}€ Umsatz Änderung`);
           }
