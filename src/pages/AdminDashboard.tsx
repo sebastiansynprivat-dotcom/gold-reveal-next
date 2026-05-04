@@ -87,7 +87,7 @@ import ChatterDashboardTab from "@/components/ChatterDashboardTab";
 import GoldParticles from "@/components/GoldParticles";
 import SubAdminManager from "@/components/SubAdminManager";
 import { useAdminRole } from "@/hooks/useAdminRole";
-import { RevenuePerfMonitor } from "@/components/admin/RevenuePerfMonitor";
+
 import { DeferredChart, ChartSkeleton } from "@/components/admin/DeferredChart";
 
 // Extract folder ID from a full Google Drive URL or return as-is if already an ID
@@ -8007,7 +8007,7 @@ export default function AdminDashboard() {
           </div>
         </DialogContent>
       </Dialog>
-      <RevenuePerfMonitor tabActive={activeTab === "einnahmen"} />
+      
     </div>
   );
 }
