@@ -3059,7 +3059,7 @@ export default function AdminDashboard() {
                   acc[k] = a > 0 ? Math.round(((b - a) / a) * 1000) / 10 : 0;
                   return acc;
                 }, {} as Record<string, number>);
-                const revenueChartData = isMobileRevenueView ? rangeData.slice(-7) : rangeData;
+                const revenueChartData = rangeData;
                 const mobileMaxRevenue = Math.max(1, ...revenueChartData.flatMap((d: any) => platformKeys.map((k) => Number(d[k]) || 0)));
 
                 return (
@@ -3475,32 +3475,7 @@ export default function AdminDashboard() {
                     </div>
 
                     <div className="relative p-4 pt-2">
-                      {isMobileRevenueView ? (
-                        <div className="h-56 flex items-end gap-2 px-1 pb-6 pt-3">
-                          {revenueChartData.map((day: any) => {
-                            const total = platformKeys.reduce((sum, key) => sum + (Number(day[key]) || 0), 0);
-                            return (
-                              <div key={day.date} className="flex-1 h-full flex flex-col justify-end gap-1 min-w-0">
-                                <div className="flex-1 flex items-end gap-0.5">
-                                  {platformKeys.map((key) => (
-                                    <div
-                                      key={key}
-                                      className="flex-1 rounded-t-sm min-h-[2px]"
-                                      style={{
-                                        height: `${Math.max(2, ((Number(day[key]) || 0) / mobileMaxRevenue) * 100)}%`,
-                                        backgroundColor: (PLATFORM_COLORS as any)[key],
-                                      }}
-                                    />
-                                  ))}
-                                </div>
-                                <span className="text-[9px] text-muted-foreground text-center tabular-nums">
-                                  {fmtDate(day.date)}
-                                </span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      ) : (
+                      {(
                       <div className="h-80">
                         <ResponsiveContainer width="100%" height="100%">
                           <AreaChart data={revenueChartData} margin={{ top: 16, right: 12, bottom: 0, left: 0 }}>
