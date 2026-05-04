@@ -867,7 +867,7 @@ export default function AdminDashboard() {
   const [setupStatusFilter, setSetupStatusFilter] = useState<
     "alle" | "botdm_missing" | "setup_missing" | "massdm_missing" | "bot_active" | "bot_inactive"
   >("alle");
-  const [timeFilter, setTimeFilter] = useState<TimeFilter>("30");
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>("heute");
   const [newPlatformOpen, setNewPlatformOpen] = useState(false);
   const [newPlatformName, setNewPlatformName] = useState("");
   const [poolFilter, setPoolFilter] = useState<"alle" | "frei" | "vergeben">("alle");
