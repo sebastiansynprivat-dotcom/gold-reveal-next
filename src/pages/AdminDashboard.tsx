@@ -3373,7 +3373,7 @@ export default function AdminDashboard() {
                               tickFormatter={(v) => `${fmtK(v)}`}
                               width={44}
                             />
-                            <Tooltip
+                            {!isMobileRevenueView && <Tooltip
                               cursor={{ stroke: "hsl(var(--accent))", strokeWidth: 1, strokeDasharray: "3 3", strokeOpacity: 0.5 }}
                               contentStyle={{
                                 background: "hsl(0 0% 5% / 0.95)",
@@ -3388,8 +3388,8 @@ export default function AdminDashboard() {
                               formatter={(value: number, name: string) => [`${Number(value).toLocaleString("de-DE")}`, name === "4based" ? "4Based" : name.charAt(0).toUpperCase() + name.slice(1)]}
                               labelFormatter={(v) => { try { return format(new Date(v), "EEE, dd.MM.yyyy"); } catch { return v; } }}
                               labelStyle={{ color: "hsl(var(--accent))", fontSize: "10px", marginBottom: "8px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em" }}
-                            />
-                            {avgPerDay > 0 && (
+                            />}
+                            {!isMobileRevenueView && avgPerDay > 0 && (
                               <ReferenceLine
                                 y={avgPerDay}
                                 stroke="hsl(var(--accent))"
