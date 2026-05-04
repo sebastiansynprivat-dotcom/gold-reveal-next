@@ -989,7 +989,9 @@ export default function AdminDashboard() {
   const initialRevenueCache = useMemo<Partial<Record<TimeFilter, RevenueSnapshot>>>(() => {
     if (typeof window === "undefined") return {};
     try {
-      return JSON.parse(sessionStorage.getItem("admin_revenue_cache_v1") || "{}") || {};
+      return JSON.parse(
+        localStorage.getItem("admin_revenue_cache_v1") || sessionStorage.getItem("admin_revenue_cache_v1") || "{}",
+      ) || {};
     } catch {
       return {};
     }
@@ -998,7 +1000,9 @@ export default function AdminDashboard() {
   const initialRevenueRows = useMemo<RevenueRow[]>(() => {
     if (typeof window === "undefined") return [];
     try {
-      const rows = JSON.parse(sessionStorage.getItem("admin_revenue_rows_v2") || "[]");
+      const rows = JSON.parse(
+        localStorage.getItem("admin_revenue_rows_v2") || sessionStorage.getItem("admin_revenue_rows_v2") || "[]",
+      );
       return Array.isArray(rows) ? rows : [];
     } catch {
       return [];
@@ -1032,7 +1036,9 @@ export default function AdminDashboard() {
 
   const persistRevenueCache = useCallback(() => {
     if (typeof window === "undefined") return;
-    sessionStorage.setItem("admin_revenue_cache_v1", JSON.stringify(revenueCacheRef.current));
+    const serialized = JSON.stringify(revenueCacheRef.current);
+    localStorage.setItem("admin_revenue_cache_v1", serialized);
+    sessionStorage.setItem("admin_revenue_cache_v1", serialized);
   }, []);
 
   const buildRevenueSnapshot = useCallback((rows: RevenueRow[], f: TimeFilter): RevenueSnapshot => {
@@ -1067,7 +1073,9 @@ export default function AdminDashboard() {
       revenueCacheRef.current[f] = buildRevenueSnapshot(rows, f);
     });
     if (typeof window !== "undefined") {
-      sessionStorage.setItem("admin_revenue_rows_v2", JSON.stringify(rows));
+      const serializedRows = JSON.stringify(rows);
+      localStorage.setItem("admin_revenue_rows_v2", serializedRows);
+      sessionStorage.setItem("admin_revenue_rows_v2", serializedRows);
     }
     persistRevenueCache();
   }, [buildRevenueSnapshot, persistRevenueCache]);
