@@ -2899,10 +2899,10 @@ export default function AdminDashboard() {
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
-              initial={{ opacity: 0, x: 20 }}
+              initial={isMobileRevenueView && activeTab === "einnahmen" ? false : { opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.2, ease: "easeInOut" }}
+              exit={isMobileRevenueView && activeTab === "einnahmen" ? undefined : { opacity: 0, x: -20 }}
+              transition={{ duration: isMobileRevenueView && activeTab === "einnahmen" ? 0 : 0.2, ease: "easeInOut" }}
             >
               {activeTab === "einnahmen" && (() => {
                 // Derived metrics — purely client-side, no data import changes
