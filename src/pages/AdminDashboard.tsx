@@ -255,6 +255,16 @@ const AnimatedNumber = React.memo(function AnimatedNumber({ value, className, su
   React.useEffect(() => {
     const start = currentValue.current;
     const end = target;
+    const shouldSkipCountAnimation = typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches;
+
+    if (shouldSkipCountAnimation) {
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+      currentValue.current = end;
+      paintValue(end);
+      return;
+    }
+
     if (start === end) {
       paintValue(end);
       return;
@@ -2889,10 +2899,10 @@ export default function AdminDashboard() {
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
-              initial={{ opacity: 0, x: 20 }}
+              initial={isMobileRevenueView && activeTab === "einnahmen" ? false : { opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.2, ease: "easeInOut" }}
+              exit={isMobileRevenueView && activeTab === "einnahmen" ? undefined : { opacity: 0, x: -20 }}
+              transition={{ duration: isMobileRevenueView && activeTab === "einnahmen" ? 0 : 0.2, ease: "easeInOut" }}
             >
               {activeTab === "einnahmen" && (() => {
                 // Derived metrics — purely client-side, no data import changes
@@ -3287,9 +3297,9 @@ export default function AdminDashboard() {
                             {/* Share bar */}
                             <div className="mt-3 h-1 w-full rounded-full bg-secondary/40 overflow-hidden">
                               <motion.div
-                                initial={{ width: 0 }}
+                                initial={isMobileRevenueView ? false : { width: 0 }}
                                 animate={{ width: `${share}%` }}
-                                transition={{ duration: 0.9, ease: "easeOut" }}
+                                transition={{ duration: isMobileRevenueView ? 0 : 0.9, ease: "easeOut" }}
                                 className="h-full rounded-full"
                                 style={{ background: `linear-gradient(90deg, ${color}aa, ${color})` }}
                               />
