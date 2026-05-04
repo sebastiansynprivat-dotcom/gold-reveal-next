@@ -2883,7 +2883,7 @@ export default function AdminDashboard() {
                 <motion.div
                   initial="hidden"
                   animate="show"
-                  variants={{ hidden: {}, show: { transition: { staggerChildren: 0.08 } } }}
+                  variants={{ hidden: {}, show: { transition: { staggerChildren: 0.03 } } }}
                   className="space-y-5"
                 >
                   {/* Premium Time Filter */}
@@ -3152,8 +3152,8 @@ export default function AdminDashboard() {
                                       labelFormatter={(v) => `Tag ${v}`}
                                       formatter={(value: number, name: string) => [Number(value).toLocaleString("de-DE"), name === "a" ? "Zeitraum A" : "Zeitraum B"]}
                                     />
-                                    <Area type="monotone" dataKey="a" stroke="hsl(var(--muted-foreground))" strokeWidth={2} fill="url(#cmpA)" connectNulls />
-                                    <Area type="monotone" dataKey="b" stroke="hsl(var(--accent))" strokeWidth={2.5} fill="url(#cmpB)" connectNulls />
+                                    <Area type="monotone" dataKey="a" stroke="hsl(var(--muted-foreground))" strokeWidth={2} fill="url(#cmpA)" connectNulls isAnimationActive={false} />
+                                    <Area type="monotone" dataKey="b" stroke="hsl(var(--accent))" strokeWidth={2.5} fill="url(#cmpB)" connectNulls isAnimationActive={false} />
                                   </AreaChart>
                                 </ResponsiveContainer>
                               </div>
@@ -3212,7 +3212,7 @@ export default function AdminDashboard() {
                       const share = totalEarnings > 0 ? Math.round((value / totalEarnings) * 100) : 0;
                       const pdelta = platformDeltas[key];
                       const pdeltaUp = pdelta >= 0;
-                      const sparkData = rangeData.map((d: any) => ({ v: Number(d[key]) || 0 }));
+
 
                       return (
                         <motion.div
@@ -3364,9 +3364,7 @@ export default function AdminDashboard() {
                                 strokeWidth={2.25}
                                 fill={`url(#area-${key})`}
                                 activeDot={{ r: 5, strokeWidth: 2, stroke: "hsl(var(--background))", filter: "url(#goldGlow)" }}
-                                animationDuration={1100}
-                                animationEasing="ease-out"
-                                animationBegin={i * 120}
+                                isAnimationActive={false}
                               />
                             ))}
                           </AreaChart>
