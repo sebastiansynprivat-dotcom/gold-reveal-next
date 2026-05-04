@@ -1452,18 +1452,10 @@ export default function AdminDashboard() {
         }
 
         if (diff !== 0) {
-          // ✅ update total earnings
-          setTotalEarnings((prev) => prev + diff);
+          const row = (newRow || oldRow) as any;
+          applyRevenueRealtimeRow(platform, row?.date || null, Number(newRow?.revenue_today ?? 0), diff);
 
-          // ✅ update per-platform totals safely
-          if (platform) {
-            setTotalValue((prev) => ({
-              ...prev,
-              [platform]: (prev[platform] || 0) + diff,
-            }));
-          }
-
-          if (activeTabRef.current === "einnahmen" && timeFilter === "heute") {
+          if (activeTabRef.current === "einnahmen" && timeFilterRef.current === "heute") {
             const sign = diff > 0 ? "+" : "";
             toast.success(`${sign}${diff.toFixed(2)}€ Umsatz Änderung`);
           }
@@ -1475,7 +1467,7 @@ export default function AdminDashboard() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [applyRevenueRealtimeRow, isSuperAdmin]);
 
   // Load cached AI summaries
   const loadChatterSummaries = async () => {
