@@ -256,14 +256,6 @@ const AnimatedNumber = React.memo(function AnimatedNumber({ value, className, su
       return;
     }
 
-    // Skip RAF count-up on mobile / reduced motion — instant paint, no jank
-    const isMobile = typeof window !== "undefined" && window.matchMedia("(max-width: 768px), (prefers-reduced-motion: reduce)").matches;
-    if (isMobile) {
-      currentValue.current = end;
-      paintValue(end);
-      return;
-    }
-
     if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
 
     const delta = Math.abs(end - start);
@@ -2896,7 +2888,7 @@ export default function AdminDashboard() {
                 <motion.div
                   initial="hidden"
                   animate="show"
-                  variants={{ hidden: {}, show: { transition: { staggerChildren: typeof window !== "undefined" && window.innerWidth < 768 ? 0 : 0.03 } } }}
+                  variants={{ hidden: {}, show: { transition: { staggerChildren: 0.04 } } }}
                   className="space-y-5"
                 >
                   {/* Premium Time Filter */}
