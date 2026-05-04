@@ -872,6 +872,7 @@ export default function AdminDashboard() {
     "alle" | "botdm_missing" | "setup_missing" | "massdm_missing" | "bot_active" | "bot_inactive"
   >("alle");
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("heute");
+  const timeFilterRef = useRef<TimeFilter>("heute");
   const [newPlatformOpen, setNewPlatformOpen] = useState(false);
   const [newPlatformName, setNewPlatformName] = useState("");
   const [poolFilter, setPoolFilter] = useState<"alle" | "frei" | "vergeben">("alle");
@@ -881,6 +882,10 @@ export default function AdminDashboard() {
   const [revenueUsers, setRevenueUsers] = useState<Set<string>>(new Set());
   const [pwaUsers, setPwaUsers] = useState<Set<string>>(new Set());
   const [revenueBoost, setRevenueBoost] = useState(0);
+
+  useEffect(() => {
+    timeFilterRef.current = timeFilter;
+  }, [timeFilter]);
 
   // Admin management state
   const [adminSectionOpen, setAdminSectionOpen] = useState(false);
@@ -1218,6 +1223,37 @@ export default function AdminDashboard() {
     }, 420);
   };
 
+  const applyRevenueRealtimeRow = useCallback((platform: string | null, date: string | null, nextValue: number, diff: number) => {
+    if (!platform || !date) return;
+    const patchRange = (source: RootData | undefined): RootData | undefined => {
+      const next = (source
+        ? { ...source }
+        : { maloum: [], brezzels: [], "4based": [] }) as RootData;
+      const rows = [...(((next as any)[platform] || []) as DailyTotal[])];
+      const rowIndex = rows.findIndex((row) => row.date === date);
+      if (rowIndex >= 0) rows[rowIndex] = { ...rows[rowIndex], total: nextValue };
+      else rows.push({ date, total: nextValue });
+      rows.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      (next as any)[platform] = rows.slice(-7);
+      return next;
+    };
+
+    const todaySnap = revenueCacheRef.current.heute;
+    if (todaySnap) {
+      const nextTotal = { ...todaySnap.total, [platform]: nextValue } as CurrentTotal;
+      revenueCacheRef.current.heute = {
+        total: nextTotal,
+        range: patchRange(todaySnap.range) || todaySnap.range,
+        totalEarnings: nextTotal.maloum + nextTotal.brezzels + nextTotal["4based"],
+      };
+    }
+
+    if (timeFilterRef.current !== "heute") return;
+    setTotalValue((prev) => ({ ...prev, [platform]: nextValue }));
+    setTotalEarnings((prev) => prev + diff);
+    setRange((prev) => patchRange(prev));
+  }, []);
+
   // Switch filter using cache-first strategy: instant set + animation, no flicker
   const switchTimeFilter = async (f: TimeFilter) => {
     setTimeFilter(f);
@@ -1417,18 +1453,10 @@ export default function AdminDashboard() {
         }
 
         if (diff !== 0) {
-          // ✅ update total earnings
-          setTotalEarnings((prev) => prev + diff);
+          const row = (newRow || oldRow) as any;
+          applyRevenueRealtimeRow(platform, row?.date || null, Number(newRow?.revenue_today ?? 0), diff);
 
-          // ✅ update per-platform totals safely
-          if (platform) {
-            setTotalValue((prev) => ({
-              ...prev,
-              [platform]: (prev[platform] || 0) + diff,
-            }));
-          }
-
-          if (activeTabRef.current === "einnahmen" && timeFilter === "heute") {
+          if (activeTabRef.current === "einnahmen" && timeFilterRef.current === "heute") {
             const sign = diff > 0 ? "+" : "";
             toast.success(`${sign}${diff.toFixed(2)}€ Umsatz Änderung`);
           }
@@ -1440,7 +1468,7 @@ export default function AdminDashboard() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [applyRevenueRealtimeRow, isSuperAdmin]);
 
   // Load cached AI summaries
   const loadChatterSummaries = async () => {
