@@ -2723,21 +2723,24 @@ export default function AdminDashboard() {
         {/* Desktop Sidebar – fixed so it stays visible while scrolling */}
         <aside
           className={cn(
-            "hidden md:flex flex-col shrink-0 border-r border-border/30 bg-gradient-to-b from-secondary/20 to-background/50 backdrop-blur-sm overflow-y-auto fixed left-0 top-[65px] h-[calc(100vh-65px)] z-30 transition-[width] duration-200 ease-out",
+            "hidden md:flex flex-col shrink-0 border-r border-border/30 bg-gradient-to-b from-secondary/20 to-background/50 backdrop-blur-sm overflow-y-auto fixed left-0 top-[65px] h-[calc(100vh-65px)] z-30 transition-[width] duration-200 ease-out group/sidebar",
             sidebarCollapsed ? "w-14" : "w-56",
           )}
         >
-          <div className={cn("flex p-2", sidebarCollapsed ? "justify-center" : "justify-end")}>
-            <button
-              type="button"
-              onClick={() => setSidebarCollapsed((v) => !v)}
-              className="p-1.5 rounded-md border border-accent/40 bg-accent/10 text-accent hover:bg-accent/20 hover:text-accent-foreground transition-colors shadow-sm"
-              aria-label={sidebarCollapsed ? "Sidebar ausklappen" : "Sidebar einklappen"}
-              title={sidebarCollapsed ? "Sidebar ausklappen" : "Sidebar einklappen"}
-            >
-              {sidebarCollapsed ? <PanelLeft className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => setSidebarCollapsed((v) => !v)}
+            aria-label={sidebarCollapsed ? "Sidebar ausklappen" : "Sidebar einklappen"}
+            title={sidebarCollapsed ? "Sidebar ausklappen" : "Sidebar einklappen"}
+            className={cn(
+              "absolute top-3 -right-3 z-10 h-6 w-6 rounded-full flex items-center justify-center",
+              "bg-background border border-border/60 text-muted-foreground/70",
+              "hover:text-foreground hover:border-border transition-colors",
+              "opacity-0 group-hover/sidebar:opacity-100 focus-visible:opacity-100",
+            )}
+          >
+            <ChevronLeft className={cn("h-3.5 w-3.5 transition-transform", sidebarCollapsed && "rotate-180")} />
+          </button>
           <nav className="flex flex-col gap-0.5 p-3 pt-0">
             {tabItems.map(({ key, label, icon: Icon, onClick }) => (
               <button
