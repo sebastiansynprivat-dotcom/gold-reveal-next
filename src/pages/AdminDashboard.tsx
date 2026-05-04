@@ -3226,7 +3226,7 @@ export default function AdminDashboard() {
                           <div className="relative">
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center gap-1.5">
-                                <div className="h-2.5 w-2.5 rounded-full shadow-[0_0_8px_currentColor]" style={{ backgroundColor: color, color }} />
+                                <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color, boxShadow: `0 0 8px ${color}` }} />
                                 <p className="text-[10px] text-muted-foreground font-semibold tracking-wider uppercase">{label}</p>
                               </div>
                             </div>
