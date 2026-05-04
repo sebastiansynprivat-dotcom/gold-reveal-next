@@ -1010,7 +1010,8 @@ export default function AdminDashboard() {
   const [customFrom, setCustomFrom] = useState<Date | undefined>(undefined);
   const [customTo, setCustomTo] = useState<Date | undefined>(undefined);
   const rangeUpdateTimeoutRef = useRef<number | null>(null);
-  const isMobileRevenueView = typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches;
+  // Unified rendering: mobile uses identical desktop view & logic
+  const isMobileRevenueView = false;
 
   // Prefetch cache: holds precomputed totals/ranges per filter so switching is instant
   const revenueCacheRef = useRef<Partial<Record<TimeFilter, RevenueSnapshot>>>(initialRevenueCache);
@@ -1385,7 +1386,7 @@ export default function AdminDashboard() {
     realtimePendingRef.current.set(`${platform}|${date}`, { platform, date, nextValue });
     if (realtimeFlushTimerRef.current !== null) return;
     // Mobile: batch heavier (500ms) to keep UI thread free
-    const delay = (typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches) ? 500 : 150;
+    const delay = 150;
     realtimeFlushTimerRef.current = window.setTimeout(flushRealtime, delay);
   }, [flushRealtime]);
 
@@ -1555,7 +1556,7 @@ export default function AdminDashboard() {
 
   // Realtime channel — subscribe ONCE, not on every activeTab change
   useEffect(() => {
-    const isMobile = typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches;
+    // Unified behavior: mobile = desktop
     const channel = supabase
       .channel("realtime-revenue")
       .on("postgres_changes", { event: "*", schema: "public", table: "revenue_report" }, (payload) => {
@@ -1589,7 +1590,7 @@ export default function AdminDashboard() {
           applyRevenueRealtimeRow(platform, row?.date || null, Number(newRow?.revenue_today ?? 0), diff);
 
           // Skip toast on mobile — main thread killer
-          if (!isMobile && activeTabRef.current === "einnahmen" && timeFilterRef.current === "heute") {
+          if (activeTabRef.current === "einnahmen" && timeFilterRef.current === "heute") {
             const sign = diff > 0 ? "+" : "";
             toast.success(`${sign}${diff.toFixed(2)}€ Umsatz Änderung`);
           }
