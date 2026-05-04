@@ -948,9 +948,14 @@ export default function AdminDashboard() {
   useEffect(() => {
     activeTabRef.current = activeTab;
     if (activeTab === "einnahmen") {
-      // Invalidate cache so today's data is freshly fetched
-      revenueCacheRef.current = {};
-      switchTimeFilter("heute");
+      setTimeFilter("heute");
+      const cachedToday = revenueCacheRef.current.heute;
+      if (cachedToday) applySnapshot(cachedToday, true);
+      computeTodaySnapshot("today").then((snap) => {
+        if (!snap || activeTabRef.current !== "einnahmen") return;
+        revenueCacheRef.current.heute = snap;
+        applySnapshot(snap, true);
+      });
     }
   }, [activeTab]);
 
@@ -1283,7 +1288,8 @@ export default function AdminDashboard() {
         revenueCacheRef.current["heute"] = heute;
         applySnapshot(heute, true);
       }
-      // Prefetch others in background — no UI mutation
+      if (isMobileRevenueView) return;
+      // Prefetch others in background — desktop only, no UI mutation
       const filters: Array<"gestern" | "7" | "30" | "90"> = ["gestern", "7", "30", "90"];
       await Promise.all(
         filters.map(async (f) => {
@@ -2916,12 +2922,13 @@ export default function AdminDashboard() {
                   acc[k] = a > 0 ? Math.round(((b - a) / a) * 1000) / 10 : 0;
                   return acc;
                 }, {} as Record<string, number>);
+                const revenueChartData = isMobileRevenueView ? rangeData.slice(-7) : rangeData;
 
                 return (
                 <motion.div
                   initial="hidden"
                   animate="show"
-                  variants={{ hidden: {}, show: { transition: { staggerChildren: isMobileRevenueView ? 0.015 : 0.04 } } }}
+                  variants={{ hidden: {}, show: { transition: { staggerChildren: isMobileRevenueView ? 0 : 0.04 } } }}
                   className="space-y-5"
                 >
                   {/* Premium Time Filter */}
@@ -2939,13 +2946,15 @@ export default function AdminDashboard() {
                             timeFilter === f ? "text-accent-foreground" : "text-muted-foreground hover:text-foreground",
                           )}
                         >
-                          {timeFilter === f && (
+                          {timeFilter === f && (isMobileRevenueView ? (
+                            <div className="absolute inset-0 bg-accent rounded-lg shadow-md shadow-accent/20" />
+                          ) : (
                             <motion.div
                               layoutId="activeTimeFilter"
                               className="absolute inset-0 bg-accent rounded-lg shadow-md shadow-accent/30"
                               transition={{ type: "spring", stiffness: 400, damping: 30 }}
                             />
-                          )}
+                          ))}
                           <span className="relative z-10 flex items-center gap-1">
                             {f === "custom" && <CalendarIcon className="h-3 w-3" />}
                             {f === "vergleich" && <TrendingUp className="h-3 w-3" />}
@@ -3330,7 +3339,7 @@ export default function AdminDashboard() {
                     <div className="relative p-4 pt-2">
                       <div className="h-80">
                         <ResponsiveContainer width="100%" height="100%">
-                          <AreaChart data={isMobileRevenueView ? rangeData.slice(-14) : rangeData} margin={{ top: 16, right: 12, bottom: 0, left: 0 }}>
+                          <AreaChart data={revenueChartData} margin={{ top: 16, right: 12, bottom: 0, left: 0 }}>
                             <defs>
                               {Object.entries(PLATFORM_COLORS).map(([key, color]) => (
                                 <linearGradient key={key} id={`area-${key}`} x1="0" y1="0" x2="0" y2="1">
@@ -3347,14 +3356,14 @@ export default function AdminDashboard() {
                                 </feMerge>
                               </filter>
                             </defs>
-                            <CartesianGrid strokeDasharray="2 6" stroke="hsl(var(--accent))" strokeOpacity={0.08} vertical={false} />
+                            {!isMobileRevenueView && <CartesianGrid strokeDasharray="2 6" stroke="hsl(var(--accent))" strokeOpacity={0.08} vertical={false} />}
                             <XAxis
                               dataKey="date"
                               tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))", fontWeight: 500 }}
                               tickLine={false}
                               axisLine={false}
                               dy={6}
-                              interval={Math.max(0, Math.floor((isMobileRevenueView ? rangeData.slice(-14) : rangeData).length / 7))}
+                              interval={isMobileRevenueView ? 0 : Math.max(0, Math.floor(revenueChartData.length / 7))}
                               tickFormatter={(v) => { try { return format(new Date(v), "dd.MM."); } catch { return v; } }}
                             />
                             <YAxis
@@ -3364,7 +3373,7 @@ export default function AdminDashboard() {
                               tickFormatter={(v) => `${fmtK(v)}`}
                               width={44}
                             />
-                            <Tooltip
+                            {!isMobileRevenueView && <Tooltip
                               cursor={{ stroke: "hsl(var(--accent))", strokeWidth: 1, strokeDasharray: "3 3", strokeOpacity: 0.5 }}
                               contentStyle={{
                                 background: "hsl(0 0% 5% / 0.95)",
@@ -3379,8 +3388,8 @@ export default function AdminDashboard() {
                               formatter={(value: number, name: string) => [`${Number(value).toLocaleString("de-DE")}`, name === "4based" ? "4Based" : name.charAt(0).toUpperCase() + name.slice(1)]}
                               labelFormatter={(v) => { try { return format(new Date(v), "EEE, dd.MM.yyyy"); } catch { return v; } }}
                               labelStyle={{ color: "hsl(var(--accent))", fontSize: "10px", marginBottom: "8px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em" }}
-                            />
-                            {avgPerDay > 0 && (
+                            />}
+                            {!isMobileRevenueView && avgPerDay > 0 && (
                               <ReferenceLine
                                 y={avgPerDay}
                                 stroke="hsl(var(--accent))"
