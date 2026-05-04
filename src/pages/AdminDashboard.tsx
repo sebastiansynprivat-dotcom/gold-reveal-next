@@ -3565,7 +3565,6 @@ export default function AdminDashboard() {
                          </ResponsiveContainer>
                          </DeferredChart>
                        </div>
-                       )}
                      </div>
                   </motion.div>
                   </>
