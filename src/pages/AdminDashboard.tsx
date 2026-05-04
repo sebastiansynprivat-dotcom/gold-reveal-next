@@ -885,6 +885,7 @@ export default function AdminDashboard() {
   >("alle");
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("heute");
   const timeFilterRef = useRef<TimeFilter>("heute");
+  const revenueFilterBusyRef = useRef(false);
   const [newPlatformOpen, setNewPlatformOpen] = useState(false);
   const [newPlatformName, setNewPlatformName] = useState("");
   const [poolFilter, setPoolFilter] = useState<"alle" | "frei" | "vergeben">("alle");
@@ -1390,22 +1391,22 @@ export default function AdminDashboard() {
 
   // Switch filter using cache-first strategy: instant set + animation, no flicker
   const switchTimeFilter = async (f: TimeFilter) => {
+    if (revenueFilterBusyRef.current) return;
+    revenueFilterBusyRef.current = true;
     setTimeFilter(f);
-    if (f === "custom" || f === "vergleich") return;
-    const cached = revenueCacheRef.current[f] || (revenueRowsRef.current.length > 0 ? buildRevenueSnapshot(revenueRowsRef.current, f) : null);
-    if (cached) {
-      revenueCacheRef.current[f] = cached;
-      applySnapshot(cached);
-      return;
-    }
-    let snap: RevenueSnapshot | null = null;
-    if (f === "heute") snap = await computeTodaySnapshot("today");
-    else if (f === "gestern") snap = await computeTodaySnapshot("gestern");
-    else if (f === "7" || f === "30" || f === "90") snap = await computeRangeSnapshot(f);
-    if (snap) {
-      revenueCacheRef.current[f] = snap;
-      persistRevenueCache();
-      applySnapshot(snap);
+    try {
+      if (f === "custom" || f === "vergleich") return;
+      const cached = revenueCacheRef.current[f] || (revenueRowsRef.current.length > 0 ? buildRevenueSnapshot(revenueRowsRef.current, f) : null);
+      if (cached) {
+        revenueCacheRef.current[f] = cached;
+        applySnapshot(cached, true);
+        return;
+      }
+      await loadRevenueRows();
+      const snap = revenueCacheRef.current[f];
+      if (snap) applySnapshot(snap, true);
+    } finally {
+      window.setTimeout(() => { revenueFilterBusyRef.current = false; }, 80);
     }
   };
 
