@@ -231,6 +231,12 @@
     .gold-gradient-border-animated::before {
       animation: none;
     }
+    .pulse-glow {
+      animation: none;
+    }
+    .shimmer-bar::after {
+      animation: none;
+    }
   }
 
   .pulse-glow {
