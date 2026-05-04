@@ -991,11 +991,6 @@ export default function AdminDashboard() {
     }
   }, []);
 
-  const persistRevenueCache = useCallback(() => {
-    if (typeof window === "undefined") return;
-    sessionStorage.setItem("admin_revenue_cache_v1", JSON.stringify(revenueCacheRef.current));
-  }, []);
-
   //revenue state
   const [range, setRange] = useState<RootData>(() => initialRevenueCache.heute?.range || emptyRevenueRange());
   const [totalValue, setTotalValue] = useState<CurrentTotal>(() => initialRevenueCache.heute?.total || { maloum: 0, brezzels: 0, "4based": 0 });
@@ -1007,6 +1002,11 @@ export default function AdminDashboard() {
 
   // Prefetch cache: holds precomputed totals/ranges per filter so switching is instant
   const revenueCacheRef = useRef<Partial<Record<TimeFilter, RevenueSnapshot>>>(initialRevenueCache);
+
+  const persistRevenueCache = useCallback(() => {
+    if (typeof window === "undefined") return;
+    sessionStorage.setItem("admin_revenue_cache_v1", JSON.stringify(revenueCacheRef.current));
+  }, []);
 
   // Compare mode states
   const [compareFromA, setCompareFromA] = useState<Date | undefined>(undefined);
