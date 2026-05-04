@@ -2708,8 +2708,8 @@ export default function AdminDashboard() {
       </header>
 
       <div className="flex min-h-[calc(100vh-65px)]">
-        {/* Desktop Sidebar */}
-        <aside className="hidden md:flex flex-col w-56 shrink-0 border-r border-border/30 bg-gradient-to-b from-secondary/20 to-background/50 backdrop-blur-sm overflow-y-auto sticky top-[65px] h-[calc(100vh-65px)] self-start">
+        {/* Desktop Sidebar – fixed so it stays visible while scrolling */}
+        <aside className="hidden md:flex flex-col w-56 shrink-0 border-r border-border/30 bg-gradient-to-b from-secondary/20 to-background/50 backdrop-blur-sm overflow-y-auto fixed left-0 top-[65px] h-[calc(100vh-65px)] z-30">
           <nav className="flex flex-col gap-0.5 p-3">
             {tabItems.map(({ key, label, icon: Icon, onClick }) => (
               <button
@@ -2737,6 +2737,8 @@ export default function AdminDashboard() {
             ))}
           </nav>
         </aside>
+        {/* Spacer to reserve space for fixed sidebar on desktop */}
+        <div className="hidden md:block w-56 shrink-0" aria-hidden="true" />
 
         <main className="flex-1 min-w-0 p-4 space-y-5 max-w-4xl mx-auto w-full">
           {/* Mobile Tab Navigation */}
