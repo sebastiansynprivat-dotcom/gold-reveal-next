@@ -2709,7 +2709,7 @@ export default function AdminDashboard() {
 
       <div className="flex min-h-[calc(100vh-65px)]">
         {/* Desktop Sidebar */}
-        <aside className="hidden md:flex flex-col w-56 shrink-0 border-r border-border/30 bg-gradient-to-b from-secondary/20 to-background/50 backdrop-blur-sm overflow-y-auto sticky top-0 h-[calc(100vh-65px)]">
+        <aside className="hidden md:flex flex-col w-56 shrink-0 border-r border-border/30 bg-gradient-to-b from-secondary/20 to-background/50 backdrop-blur-sm overflow-y-auto sticky top-[65px] h-[calc(100vh-65px)] self-start">
           <nav className="flex flex-col gap-0.5 p-3">
             {tabItems.map(({ key, label, icon: Icon, onClick }) => (
               <button
