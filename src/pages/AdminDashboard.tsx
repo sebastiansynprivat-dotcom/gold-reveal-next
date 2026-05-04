@@ -979,6 +979,7 @@ export default function AdminDashboard() {
   }
 
   type RevenueSnapshot = { total: CurrentTotal; range: RootData; totalEarnings: number };
+  type RevenueRow = { date: string; platform: string; revenue_today: number | null };
 
   const emptyRevenueRange = (): RootData => ({ maloum: [], brezzels: [], "4based": [] });
 
@@ -988,6 +989,16 @@ export default function AdminDashboard() {
       return JSON.parse(sessionStorage.getItem("admin_revenue_cache_v1") || "{}") || {};
     } catch {
       return {};
+    }
+  }, []);
+
+  const initialRevenueRows = useMemo<RevenueRow[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const rows = JSON.parse(sessionStorage.getItem("admin_revenue_rows_v2") || "[]");
+      return Array.isArray(rows) ? rows : [];
+    } catch {
+      return [];
     }
   }, []);
 
@@ -1002,6 +1013,7 @@ export default function AdminDashboard() {
 
   // Prefetch cache: holds precomputed totals/ranges per filter so switching is instant
   const revenueCacheRef = useRef<Partial<Record<TimeFilter, RevenueSnapshot>>>(initialRevenueCache);
+  const revenueRowsRef = useRef<RevenueRow[]>(initialRevenueRows);
 
   const persistRevenueCache = useCallback(() => {
     if (typeof window === "undefined") return;
