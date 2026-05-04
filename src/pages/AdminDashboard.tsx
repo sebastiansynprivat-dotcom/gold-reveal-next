@@ -948,9 +948,14 @@ export default function AdminDashboard() {
   useEffect(() => {
     activeTabRef.current = activeTab;
     if (activeTab === "einnahmen") {
-      // Invalidate cache so today's data is freshly fetched
-      revenueCacheRef.current = {};
-      switchTimeFilter("heute");
+      setTimeFilter("heute");
+      const cachedToday = revenueCacheRef.current.heute;
+      if (cachedToday) applySnapshot(cachedToday, true);
+      computeTodaySnapshot("today").then((snap) => {
+        if (!snap || activeTabRef.current !== "einnahmen") return;
+        revenueCacheRef.current.heute = snap;
+        applySnapshot(snap, true);
+      });
     }
   }, [activeTab]);
 
@@ -1283,7 +1288,8 @@ export default function AdminDashboard() {
         revenueCacheRef.current["heute"] = heute;
         applySnapshot(heute, true);
       }
-      // Prefetch others in background — no UI mutation
+      if (isMobileRevenueView) return;
+      // Prefetch others in background — desktop only, no UI mutation
       const filters: Array<"gestern" | "7" | "30" | "90"> = ["gestern", "7", "30", "90"];
       await Promise.all(
         filters.map(async (f) => {
