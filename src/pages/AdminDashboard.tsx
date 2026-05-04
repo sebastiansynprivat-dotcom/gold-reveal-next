@@ -2994,36 +2994,62 @@ export default function AdminDashboard() {
         />
 
         <main className="flex-1 min-w-0 p-4 space-y-5 max-w-4xl mx-auto w-full">
-          {/* Mobile Sidebar Drawer */}
+          {/* Mobile Sidebar Drawer — luxurious */}
           <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
             <SheetContent
               side="left"
-              className="w-72 p-0 bg-gradient-to-b from-secondary/30 to-background backdrop-blur-xl border-r border-border/40"
+              className="w-[300px] p-0 bg-[linear-gradient(165deg,hsl(0_0%_5%)_0%,hsl(0_0%_3%)_100%)] backdrop-blur-2xl border-r border-accent/25 shadow-[8px_0_40px_-8px_hsl(0_0%_0%/0.8)]"
             >
-              <SheetHeader className="px-4 py-4 border-b border-border/30">
-                <SheetTitle className="text-sm font-bold tracking-tight text-left">
-                  Navigation
-                </SheetTitle>
+              {/* gold edge glow */}
+              <div className="absolute top-0 right-0 bottom-0 w-px bg-gradient-to-b from-transparent via-accent/50 to-transparent" aria-hidden="true" />
+              {/* ambient gold spotlight */}
+              <div className="absolute top-0 left-0 right-0 h-40 pointer-events-none bg-[radial-gradient(ellipse_at_top_left,hsl(var(--accent)/0.15)_0%,transparent_70%)]" aria-hidden="true" />
+
+              <SheetHeader className="relative px-5 py-5 border-b border-accent/15">
+                <div className="flex items-center gap-3">
+                  <div className="relative shrink-0">
+                    <div className="absolute inset-0 rounded-full bg-accent/40 blur-lg" aria-hidden="true" />
+                    <img src={logo} alt="Logo" className="relative h-10 w-10 rounded-full ring-2 ring-accent/50" />
+                  </div>
+                  <div className="text-left">
+                    <SheetTitle className="text-base font-bold tracking-tight bg-gradient-to-r from-accent via-yellow-200 to-accent bg-clip-text text-transparent">
+                      Admin Dashboard
+                    </SheetTitle>
+                    <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground/70 font-medium">
+                      Premium Navigation
+                    </p>
+                  </div>
+                </div>
               </SheetHeader>
-              <nav className="flex flex-col gap-0.5 p-3 overflow-y-auto h-[calc(100vh-65px)]">
-                {tabItems.map(({ key, label, icon: Icon, onClick }) => (
-                  <button
-                    key={key}
-                    onClick={() => {
-                      onClick();
-                      setMobileNavOpen(false);
-                    }}
-                    className={cn(
-                      "relative flex items-center gap-2.5 px-3 py-3 rounded-lg text-sm font-medium transition-all text-left w-full",
-                      activeTab === key
-                        ? "bg-accent text-accent-foreground shadow-md shadow-accent/20"
-                        : "text-muted-foreground hover:text-foreground hover:bg-secondary/40",
-                    )}
-                  >
-                    <Icon className="h-4 w-4 shrink-0" />
-                    <span>{label}</span>
-                  </button>
-                ))}
+
+              <nav className="relative flex flex-col gap-1 p-3 overflow-y-auto h-[calc(100vh-92px)]">
+                {tabItems.map(({ key, label, icon: Icon, onClick }) => {
+                  const active = activeTab === key;
+                  return (
+                    <button
+                      key={key}
+                      onClick={() => {
+                        onClick();
+                        setMobileNavOpen(false);
+                      }}
+                      className={cn(
+                        "group relative flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium transition-all text-left w-full overflow-hidden",
+                        active
+                          ? "text-accent-foreground bg-gradient-to-r from-accent to-yellow-500 shadow-[0_8px_24px_-6px_hsl(var(--accent)/0.5),inset_0_1px_0_hsl(0_0%_100%/0.2)]"
+                          : "text-muted-foreground hover:text-foreground border border-transparent hover:border-accent/20 hover:bg-accent/[0.04]",
+                      )}
+                    >
+                      {active && (
+                        <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-full bg-yellow-100/80 shadow-[0_0_12px_hsl(var(--accent))]" aria-hidden="true" />
+                      )}
+                      <Icon className={cn("h-4 w-4 shrink-0 transition-transform group-hover:scale-110", active && "drop-shadow-[0_0_6px_hsl(0_0%_100%/0.5)]")} />
+                      <span className="tracking-wide">{label}</span>
+                      {active && (
+                        <span className="ml-auto h-1.5 w-1.5 rounded-full bg-background/80" aria-hidden="true" />
+                      )}
+                    </button>
+                  );
+                })}
               </nav>
             </SheetContent>
           </Sheet>
