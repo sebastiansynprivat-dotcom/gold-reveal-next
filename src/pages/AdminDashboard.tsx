@@ -2905,7 +2905,7 @@ export default function AdminDashboard() {
             className="flex items-center gap-3 rounded-xl text-left transition-all hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             aria-label="Admin-Verwaltung öffnen"
           >
-            <div className="relative shrink-0">
+            <div className="relative shrink-0 hidden md:block">
               <div className="absolute inset-0 rounded-full bg-accent/30 blur-md" aria-hidden="true" />
               <img src={logo} alt="Logo" className="relative h-11 w-11 rounded-full ring-2 ring-accent/50 shadow-[0_0_20px_hsl(var(--accent)/0.4)]" />
               <div className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-accent border-2 border-background shadow-[0_0_8px_hsl(var(--accent)/0.8)]" />
