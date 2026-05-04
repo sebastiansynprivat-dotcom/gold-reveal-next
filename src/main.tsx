@@ -8,11 +8,26 @@ const updateSW = registerSW({
   immediate: true,
   onNeedRefresh() {
     updateSW(true);
-    window.location.reload();
   },
   onOfflineReady() {
     console.info("App ready for offline use.");
   },
 });
+
+// Reload immediately when new SW takes control (force-update for installed PWAs)
+if ("serviceWorker" in navigator) {
+  let reloading = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (reloading) return;
+    reloading = true;
+    window.location.reload();
+  });
+  navigator.serviceWorker.addEventListener("message", (event) => {
+    if (event.data?.type === "SW_UPDATED" && !reloading) {
+      reloading = true;
+      window.location.reload();
+    }
+  });
+}
 
 createRoot(document.getElementById("root")!).render(<App />);
