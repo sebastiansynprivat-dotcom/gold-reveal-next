@@ -2679,7 +2679,7 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-background relative">
       <GoldParticles spawnRate={0.2} maxParticles={20} baseOpacity={0.15} />
       {/* Premium Header */}
-      <header className="relative border-b border-border/50 bg-gradient-to-b from-secondary/30 to-background">
+      <header className="sticky top-0 z-40 border-b border-border/50 bg-gradient-to-b from-secondary/30 to-background backdrop-blur-md">
         <div className="absolute inset-0 pointer-events-none bg-gradient-to-r from-accent/5 via-transparent to-accent/5" />
         <div className="relative z-10 flex items-center gap-3 px-4 py-4">
           <button
