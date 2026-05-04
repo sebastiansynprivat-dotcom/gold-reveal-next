@@ -255,6 +255,16 @@ const AnimatedNumber = React.memo(function AnimatedNumber({ value, className, su
   React.useEffect(() => {
     const start = currentValue.current;
     const end = target;
+    const shouldSkipCountAnimation = typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches;
+
+    if (shouldSkipCountAnimation) {
+      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+      currentValue.current = end;
+      paintValue(end);
+      return;
+    }
+
     if (start === end) {
       paintValue(end);
       return;
