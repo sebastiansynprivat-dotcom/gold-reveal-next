@@ -255,7 +255,9 @@ const AnimatedNumber = React.memo(function AnimatedNumber({ value, className, su
   React.useEffect(() => {
     const start = currentValue.current;
     const end = target;
-    // Unified: animate on all viewports
+    const mobilePerformanceMode =
+      typeof window !== "undefined" &&
+      (window.matchMedia("(max-width: 768px)").matches || navigator.maxTouchPoints > 0);
 
     if (start === end) {
       paintValue(end);
@@ -265,10 +267,18 @@ const AnimatedNumber = React.memo(function AnimatedNumber({ value, className, su
     if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
 
     const delta = Math.abs(end - start);
-    const duration = Math.min(360, Math.max(160, 140 + Math.log10(delta + 1) * 32));
+    const duration = mobilePerformanceMode
+      ? Math.min(220, Math.max(120, 100 + Math.log10(delta + 1) * 22))
+      : Math.min(360, Math.max(160, 140 + Math.log10(delta + 1) * 32));
     const startTime = performance.now();
+    let lastFrame = 0;
 
     const tick = (now: number) => {
+      if (mobilePerformanceMode && now - lastFrame < 32) {
+        rafRef.current = requestAnimationFrame(tick);
+        return;
+      }
+      lastFrame = now;
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / duration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
