@@ -995,10 +995,26 @@ export default function AdminDashboard() {
     // fansyme: DailyTotal[];
   }
 
+  const emptyRevenueRange = (): RootData => ({ maloum: [], brezzels: [], "4based": [] });
+
+  const initialRevenueCache = useMemo<Partial<Record<TimeFilter, RevenueSnapshot>>>(() => {
+    if (typeof window === "undefined") return {};
+    try {
+      return JSON.parse(sessionStorage.getItem("admin_revenue_cache_v1") || "{}") || {};
+    } catch {
+      return {};
+    }
+  }, []);
+
+  const persistRevenueCache = useCallback(() => {
+    if (typeof window === "undefined") return;
+    sessionStorage.setItem("admin_revenue_cache_v1", JSON.stringify(revenueCacheRef.current));
+  }, []);
+
   //revenue state
-  const [range, setRange] = useState<RootData>();
-  const [totalValue, setTotalValue] = useState<CurrentTotal>({ maloum: 0, brezzels: 0, "4based": 0 });
-  const [totalEarnings, setTotalEarnings] = useState(0);
+  const [range, setRange] = useState<RootData>(() => initialRevenueCache.heute?.range || emptyRevenueRange());
+  const [totalValue, setTotalValue] = useState<CurrentTotal>(() => initialRevenueCache.heute?.total || { maloum: 0, brezzels: 0, "4based": 0 });
+  const [totalEarnings, setTotalEarnings] = useState(() => initialRevenueCache.heute?.totalEarnings || 0);
   const [customFrom, setCustomFrom] = useState<Date | undefined>(undefined);
   const [customTo, setCustomTo] = useState<Date | undefined>(undefined);
   const rangeUpdateTimeoutRef = useRef<number | null>(null);
@@ -1006,7 +1022,7 @@ export default function AdminDashboard() {
 
   // Prefetch cache: holds precomputed totals/ranges per filter so switching is instant
   type RevenueSnapshot = { total: CurrentTotal; range: RootData; totalEarnings: number };
-  const revenueCacheRef = useRef<Partial<Record<TimeFilter, RevenueSnapshot>>>({});
+  const revenueCacheRef = useRef<Partial<Record<TimeFilter, RevenueSnapshot>>>(initialRevenueCache);
 
   // Compare mode states
   const [compareFromA, setCompareFromA] = useState<Date | undefined>(undefined);
