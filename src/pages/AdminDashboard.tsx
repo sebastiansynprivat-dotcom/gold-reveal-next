@@ -1223,6 +1223,36 @@ export default function AdminDashboard() {
     }, 420);
   };
 
+  const applyRevenueRealtimeRow = useCallback((platform: string | null, date: string | null, nextValue: number, diff: number) => {
+    if (!platform || !date) return;
+    const patchRange = (source: RootData | undefined): RootData | undefined => {
+      if (!source) return source;
+      const next = { ...source } as RootData;
+      const rows = [...(((next as any)[platform] || []) as DailyTotal[])];
+      const rowIndex = rows.findIndex((row) => row.date === date);
+      if (rowIndex >= 0) rows[rowIndex] = { ...rows[rowIndex], total: nextValue };
+      else rows.push({ date, total: nextValue });
+      rows.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      (next as any)[platform] = rows.slice(-7);
+      return next;
+    };
+
+    const todaySnap = revenueCacheRef.current.heute;
+    if (todaySnap) {
+      const nextTotal = { ...todaySnap.total, [platform]: nextValue } as CurrentTotal;
+      revenueCacheRef.current.heute = {
+        total: nextTotal,
+        range: patchRange(todaySnap.range) || todaySnap.range,
+        totalEarnings: nextTotal.maloum + nextTotal.brezzels + nextTotal["4based"],
+      };
+    }
+
+    if (timeFilterRef.current !== "heute") return;
+    setTotalValue((prev) => ({ ...prev, [platform]: nextValue }));
+    setTotalEarnings((prev) => prev + diff);
+    setRange((prev) => patchRange(prev));
+  }, []);
+
   // Switch filter using cache-first strategy: instant set + animation, no flicker
   const switchTimeFilter = async (f: TimeFilter) => {
     setTimeFilter(f);
