@@ -1075,14 +1075,9 @@ export default function AdminDashboard() {
       setTimeFilter("heute");
       const cachedToday = revenueCacheRef.current.heute;
       if (cachedToday) applySnapshot(cachedToday, true);
-      computeTodaySnapshot("today").then((snap) => {
-        if (!snap || activeTabRef.current !== "einnahmen") return;
-        revenueCacheRef.current.heute = snap;
-        persistRevenueCache();
-        applySnapshot(snap, true);
-      });
+      void loadRevenueRows();
     }
-  }, [activeTab, persistRevenueCache]);
+  }, [activeTab, loadRevenueRows]);
 
   async function getRevenueToday(flag) {
     if (revenueRowsRef.current.length > 0) return buildRevenueSnapshot(revenueRowsRef.current, flag === "today" ? "heute" : "gestern");
@@ -1397,8 +1392,9 @@ export default function AdminDashboard() {
   const switchTimeFilter = async (f: TimeFilter) => {
     setTimeFilter(f);
     if (f === "custom" || f === "vergleich") return;
-    const cached = revenueCacheRef.current[f];
+    const cached = revenueCacheRef.current[f] || (revenueRowsRef.current.length > 0 ? buildRevenueSnapshot(revenueRowsRef.current, f) : null);
     if (cached) {
+      revenueCacheRef.current[f] = cached;
       applySnapshot(cached);
       return;
     }
@@ -1417,27 +1413,16 @@ export default function AdminDashboard() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const heute = await computeTodaySnapshot("today");
+      const cachedToday = revenueCacheRef.current.heute;
+      if (cachedToday) applySnapshot(cachedToday, true);
+      await loadRevenueRows();
       if (cancelled) return;
-      if (heute) {
-        revenueCacheRef.current["heute"] = heute;
-        applySnapshot(heute, true);
-      }
-      if (isMobileRevenueView) return;
-      // Prefetch others in background — desktop only, no UI mutation
-      const filters: Array<"gestern" | "7" | "30" | "90"> = ["gestern", "7", "30", "90"];
-      await Promise.all(
-        filters.map(async (f) => {
-          const snap = f === "gestern" ? await computeTodaySnapshot("gestern") : await computeRangeSnapshot(f);
-          if (!cancelled && snap) revenueCacheRef.current[f] = snap;
-        })
-      );
     })();
     return () => {
       cancelled = true;
       if (rangeUpdateTimeoutRef.current !== null) window.clearTimeout(rangeUpdateTimeoutRef.current);
     };
-  }, []);
+  }, [loadRevenueRows]);
 
   const rangeData = useMemo(() => {
     if (!range) return [];
