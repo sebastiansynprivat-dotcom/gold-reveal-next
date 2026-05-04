@@ -48,6 +48,13 @@ interface CreditNoteFormProps {
   bankIban?: string;
   bankBic?: string;
   bankAccountHolder?: string;
+  // Provider recipient persistence
+  providerEntityType?: "chatter" | "model";
+  providerEntityId?: string;
+  providerAddress?: string;
+  providerIsBusiness?: boolean;
+  providerVatId?: string;
+  providerNameOverride?: string;
 }
 
 export default function CreditNoteForm({
