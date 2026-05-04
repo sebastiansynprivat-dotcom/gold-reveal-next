@@ -935,9 +935,12 @@ export default function AdminDashboard() {
     toast.success("Alle Häkchen zurückgesetzt!");
   }, []);
 
-  // Keep activeTabRef in sync
+  // Keep activeTabRef in sync + reset Einnahmen filter to "heute" on every entry
   useEffect(() => {
     activeTabRef.current = activeTab;
+    if (activeTab === "einnahmen") {
+      setTimeFilter("heute");
+    }
   }, [activeTab]);
 
   const allRevenueData = useMemo(() => generateFakeRevenueData(), []);
