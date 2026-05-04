@@ -9,15 +9,11 @@ clientsClaim();
 cleanupOutdatedCaches();
 precacheAndRoute(self.__WB_MANIFEST);
 
-// Force activate new SW immediately and reload all open tabs
+// Force activate new SW immediately and reload open tabs without nuking fresh precache assets
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
-      // Nuke all old caches
-      const names = await caches.keys();
-      await Promise.all(names.map((n) => caches.delete(n)));
       await self.clients.claim();
-      // Tell all open clients to reload to get fresh bundle
       const clients = await self.clients.matchAll({ type: "window" });
       clients.forEach((client) => {
         (client as WindowClient).postMessage({ type: "SW_UPDATED" });

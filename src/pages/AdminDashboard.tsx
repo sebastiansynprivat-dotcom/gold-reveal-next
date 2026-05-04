@@ -255,7 +255,9 @@ const AnimatedNumber = React.memo(function AnimatedNumber({ value, className, su
   React.useEffect(() => {
     const start = currentValue.current;
     const end = target;
-    // Unified: animate on all viewports
+    const mobilePerformanceMode =
+      typeof window !== "undefined" &&
+      (window.matchMedia("(max-width: 768px)").matches || navigator.maxTouchPoints > 0);
 
     if (start === end) {
       paintValue(end);
@@ -265,10 +267,18 @@ const AnimatedNumber = React.memo(function AnimatedNumber({ value, className, su
     if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
 
     const delta = Math.abs(end - start);
-    const duration = Math.min(360, Math.max(160, 140 + Math.log10(delta + 1) * 32));
+    const duration = mobilePerformanceMode
+      ? Math.min(220, Math.max(120, 100 + Math.log10(delta + 1) * 22))
+      : Math.min(360, Math.max(160, 140 + Math.log10(delta + 1) * 32));
     const startTime = performance.now();
+    let lastFrame = 0;
 
     const tick = (now: number) => {
+      if (mobilePerformanceMode && now - lastFrame < 32) {
+        rafRef.current = requestAnimationFrame(tick);
+        return;
+      }
+      lastFrame = now;
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / duration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
@@ -979,7 +989,9 @@ export default function AdminDashboard() {
   const initialRevenueCache = useMemo<Partial<Record<TimeFilter, RevenueSnapshot>>>(() => {
     if (typeof window === "undefined") return {};
     try {
-      return JSON.parse(sessionStorage.getItem("admin_revenue_cache_v1") || "{}") || {};
+      return JSON.parse(
+        localStorage.getItem("admin_revenue_cache_v1") || sessionStorage.getItem("admin_revenue_cache_v1") || "{}",
+      ) || {};
     } catch {
       return {};
     }
@@ -988,7 +1000,9 @@ export default function AdminDashboard() {
   const initialRevenueRows = useMemo<RevenueRow[]>(() => {
     if (typeof window === "undefined") return [];
     try {
-      const rows = JSON.parse(sessionStorage.getItem("admin_revenue_rows_v2") || "[]");
+      const rows = JSON.parse(
+        localStorage.getItem("admin_revenue_rows_v2") || sessionStorage.getItem("admin_revenue_rows_v2") || "[]",
+      );
       return Array.isArray(rows) ? rows : [];
     } catch {
       return [];
@@ -1002,8 +1016,19 @@ export default function AdminDashboard() {
   const [customFrom, setCustomFrom] = useState<Date | undefined>(undefined);
   const [customTo, setCustomTo] = useState<Date | undefined>(undefined);
   const rangeUpdateTimeoutRef = useRef<number | null>(null);
-  // Unified rendering: mobile uses identical desktop view & logic
-  const isMobileRevenueView = false;
+  const [isMobileRevenueView, setIsMobileRevenueView] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia("(max-width: 768px)").matches || navigator.maxTouchPoints > 0;
+  });
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const query = window.matchMedia("(max-width: 768px)");
+    const update = () => setIsMobileRevenueView(query.matches || navigator.maxTouchPoints > 0);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
 
   // Prefetch cache: holds precomputed totals/ranges per filter so switching is instant
   const revenueCacheRef = useRef<Partial<Record<TimeFilter, RevenueSnapshot>>>(initialRevenueCache);
@@ -1011,7 +1036,9 @@ export default function AdminDashboard() {
 
   const persistRevenueCache = useCallback(() => {
     if (typeof window === "undefined") return;
-    sessionStorage.setItem("admin_revenue_cache_v1", JSON.stringify(revenueCacheRef.current));
+    const serialized = JSON.stringify(revenueCacheRef.current);
+    localStorage.setItem("admin_revenue_cache_v1", serialized);
+    sessionStorage.setItem("admin_revenue_cache_v1", serialized);
   }, []);
 
   const buildRevenueSnapshot = useCallback((rows: RevenueRow[], f: TimeFilter): RevenueSnapshot => {
@@ -1046,7 +1073,9 @@ export default function AdminDashboard() {
       revenueCacheRef.current[f] = buildRevenueSnapshot(rows, f);
     });
     if (typeof window !== "undefined") {
-      sessionStorage.setItem("admin_revenue_rows_v2", JSON.stringify(rows));
+      const serializedRows = JSON.stringify(rows);
+      localStorage.setItem("admin_revenue_rows_v2", serializedRows);
+      sessionStorage.setItem("admin_revenue_rows_v2", serializedRows);
     }
     persistRevenueCache();
   }, [buildRevenueSnapshot, persistRevenueCache]);
@@ -3041,8 +3070,7 @@ export default function AdminDashboard() {
                   acc[k] = a > 0 ? Math.round(((b - a) / a) * 1000) / 10 : 0;
                   return acc;
                 }, {} as Record<string, number>);
-                const revenueChartData = isMobileRevenueView ? rangeData.slice(-7) : rangeData;
-                const mobileMaxRevenue = Math.max(1, ...revenueChartData.flatMap((d: any) => platformKeys.map((k) => Number(d[k]) || 0)));
+                const revenueChartData = rangeData;
 
                 return (
                 <motion.div
@@ -3457,32 +3485,7 @@ export default function AdminDashboard() {
                     </div>
 
                     <div className="relative p-4 pt-2">
-                      {isMobileRevenueView ? (
-                        <div className="h-56 flex items-end gap-2 px-1 pb-6 pt-3">
-                          {revenueChartData.map((day: any) => {
-                            const total = platformKeys.reduce((sum, key) => sum + (Number(day[key]) || 0), 0);
-                            return (
-                              <div key={day.date} className="flex-1 h-full flex flex-col justify-end gap-1 min-w-0">
-                                <div className="flex-1 flex items-end gap-0.5">
-                                  {platformKeys.map((key) => (
-                                    <div
-                                      key={key}
-                                      className="flex-1 rounded-t-sm min-h-[2px]"
-                                      style={{
-                                        height: `${Math.max(2, ((Number(day[key]) || 0) / mobileMaxRevenue) * 100)}%`,
-                                        backgroundColor: (PLATFORM_COLORS as any)[key],
-                                      }}
-                                    />
-                                  ))}
-                                </div>
-                                <span className="text-[9px] text-muted-foreground text-center tabular-nums">
-                                  {fmtDate(day.date)}
-                                </span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      ) : (
+                      {(
                       <div className="h-80">
                         <ResponsiveContainer width="100%" height="100%">
                           <AreaChart data={revenueChartData} margin={{ top: 16, right: 12, bottom: 0, left: 0 }}>
