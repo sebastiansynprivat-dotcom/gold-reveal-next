@@ -789,6 +789,13 @@ export default function AdminDashboard() {
   const [goalSaving, setGoalSaving] = useState(false);
   const [expandedChatter, setExpandedChatter] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>("einnahmen");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("admin_sidebar_collapsed") === "1";
+  });
+  useEffect(() => {
+    localStorage.setItem("admin_sidebar_collapsed", sidebarCollapsed ? "1" : "0");
+  }, [sidebarCollapsed]);
   const [settingsIssuer, setSettingsIssuer] = useState({ name: "", address: "", vat_id: "", kvk: "" });
   const [settingsIssuerId, setSettingsIssuerId] = useState<string | null>(null);
   const [settingsIssuerLoaded, setSettingsIssuerLoaded] = useState(false);
