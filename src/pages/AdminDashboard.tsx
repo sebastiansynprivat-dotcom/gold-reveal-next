@@ -1012,7 +1012,10 @@ export default function AdminDashboard() {
   const [customFrom, setCustomFrom] = useState<Date | undefined>(undefined);
   const [customTo, setCustomTo] = useState<Date | undefined>(undefined);
   const rangeUpdateTimeoutRef = useRef<number | null>(null);
-  const [isMobileRevenueView, setIsMobileRevenueView] = useState(false);
+  const [isMobileRevenueView, setIsMobileRevenueView] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.matchMedia("(max-width: 768px)").matches || navigator.maxTouchPoints > 0;
+  });
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -3060,7 +3063,6 @@ export default function AdminDashboard() {
                   return acc;
                 }, {} as Record<string, number>);
                 const revenueChartData = rangeData;
-                const mobileMaxRevenue = Math.max(1, ...revenueChartData.flatMap((d: any) => platformKeys.map((k) => Number(d[k]) || 0)));
 
                 return (
                 <motion.div
