@@ -821,6 +821,8 @@ export default function AdminDashboard() {
   const [assignmentsLoaded, setAssignmentsLoaded] = useState(false);
   const [assignmentsLoading, setAssignmentsLoading] = useState(false);
   const activeTabRef = useRef(activeTab);
+  const previousActiveTabRef = useRef(activeTab);
+  const adminDataBootstrapRef = useRef(false);
   const [modelRequests, setModelRequests] = useState<any[]>([]);
   const [modelRequestsLoaded, setModelRequestsLoaded] = useState(false);
   const [requestFilter, setRequestFilter] = useState<"all" | "pending" | "accepted" | "in_progress" | "rejected">(
@@ -954,21 +956,6 @@ export default function AdminDashboard() {
     toast.success("Alle Häkchen zurückgesetzt!");
   }, []);
 
-  // Keep activeTabRef in sync + reset Einnahmen filter to "heute" on every entry
-  useEffect(() => {
-    activeTabRef.current = activeTab;
-    if (activeTab === "einnahmen") {
-      setTimeFilter("heute");
-      const cachedToday = revenueCacheRef.current.heute;
-      if (cachedToday) applySnapshot(cachedToday, true);
-      computeTodaySnapshot("today").then((snap) => {
-        if (!snap || activeTabRef.current !== "einnahmen") return;
-        revenueCacheRef.current.heute = snap;
-        applySnapshot(snap, true);
-      });
-    }
-  }, [activeTab]);
-
   const allRevenueData = useMemo(() => generateFakeRevenueData(), []);
 
   //dev2 revenue
@@ -991,18 +978,35 @@ export default function AdminDashboard() {
     // fansyme: DailyTotal[];
   }
 
+  type RevenueSnapshot = { total: CurrentTotal; range: RootData; totalEarnings: number };
+
+  const emptyRevenueRange = (): RootData => ({ maloum: [], brezzels: [], "4based": [] });
+
+  const initialRevenueCache = useMemo<Partial<Record<TimeFilter, RevenueSnapshot>>>(() => {
+    if (typeof window === "undefined") return {};
+    try {
+      return JSON.parse(sessionStorage.getItem("admin_revenue_cache_v1") || "{}") || {};
+    } catch {
+      return {};
+    }
+  }, []);
+
   //revenue state
-  const [range, setRange] = useState<RootData>();
-  const [totalValue, setTotalValue] = useState<CurrentTotal>({ maloum: 0, brezzels: 0, "4based": 0 });
-  const [totalEarnings, setTotalEarnings] = useState(0);
+  const [range, setRange] = useState<RootData>(() => initialRevenueCache.heute?.range || emptyRevenueRange());
+  const [totalValue, setTotalValue] = useState<CurrentTotal>(() => initialRevenueCache.heute?.total || { maloum: 0, brezzels: 0, "4based": 0 });
+  const [totalEarnings, setTotalEarnings] = useState(() => initialRevenueCache.heute?.totalEarnings || 0);
   const [customFrom, setCustomFrom] = useState<Date | undefined>(undefined);
   const [customTo, setCustomTo] = useState<Date | undefined>(undefined);
   const rangeUpdateTimeoutRef = useRef<number | null>(null);
   const isMobileRevenueView = typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches;
 
   // Prefetch cache: holds precomputed totals/ranges per filter so switching is instant
-  type RevenueSnapshot = { total: CurrentTotal; range: RootData; totalEarnings: number };
-  const revenueCacheRef = useRef<Partial<Record<TimeFilter, RevenueSnapshot>>>({});
+  const revenueCacheRef = useRef<Partial<Record<TimeFilter, RevenueSnapshot>>>(initialRevenueCache);
+
+  const persistRevenueCache = useCallback(() => {
+    if (typeof window === "undefined") return;
+    sessionStorage.setItem("admin_revenue_cache_v1", JSON.stringify(revenueCacheRef.current));
+  }, []);
 
   // Compare mode states
   const [compareFromA, setCompareFromA] = useState<Date | undefined>(undefined);
@@ -1012,6 +1016,24 @@ export default function AdminDashboard() {
   const [compareA, setCompareA] = useState<ComparePeriodResult | null>(null);
   const [compareB, setCompareB] = useState<ComparePeriodResult | null>(null);
   const [compareLoading, setCompareLoading] = useState(false);
+
+  // Keep activeTabRef in sync + refresh Einnahmen only when returning to the tab
+  useEffect(() => {
+    const previousTab = previousActiveTabRef.current;
+    activeTabRef.current = activeTab;
+    previousActiveTabRef.current = activeTab;
+    if (activeTab === "einnahmen" && previousTab !== "einnahmen") {
+      setTimeFilter("heute");
+      const cachedToday = revenueCacheRef.current.heute;
+      if (cachedToday) applySnapshot(cachedToday, true);
+      computeTodaySnapshot("today").then((snap) => {
+        if (!snap || activeTabRef.current !== "einnahmen") return;
+        revenueCacheRef.current.heute = snap;
+        persistRevenueCache();
+        applySnapshot(snap, true);
+      });
+    }
+  }, [activeTab, persistRevenueCache]);
 
   async function getRevenueToday(flag) {
     const selectedDate = new Date().toISOString().slice(0, 10);
@@ -1261,6 +1283,7 @@ export default function AdminDashboard() {
         range: patchRange(todaySnap.range) || todaySnap.range,
         totalEarnings: nextTotal.maloum + nextTotal.brezzels + nextTotal["4based"],
       };
+      persistRevenueCache();
     }
 
     if (timeFilterRef.current !== "heute") return;
@@ -1284,6 +1307,7 @@ export default function AdminDashboard() {
     else if (f === "7" || f === "30" || f === "90") snap = await computeRangeSnapshot(f);
     if (snap) {
       revenueCacheRef.current[f] = snap;
+      persistRevenueCache();
       applySnapshot(snap);
     }
   };
@@ -1427,12 +1451,15 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
-    loadChatters();
-    loadAccounts();
-    loadOffers();
-    loadLoginStats();
-    loadPushUsers();
-    loadRevenueUsers();
+    if (!adminDataBootstrapRef.current && activeTab !== "einnahmen") {
+      adminDataBootstrapRef.current = true;
+      loadChatters();
+      loadAccounts();
+      loadOffers();
+      loadLoginStats();
+      loadPushUsers();
+      loadRevenueUsers();
+    }
     if (isSuperAdmin) loadAdmins();
 
     const channel = supabase
@@ -1484,7 +1511,7 @@ export default function AdminDashboard() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [applyRevenueRealtimeRow, isSuperAdmin]);
+  }, [activeTab, applyRevenueRealtimeRow, isSuperAdmin]);
 
   // Load cached AI summaries
   const loadChatterSummaries = async () => {
