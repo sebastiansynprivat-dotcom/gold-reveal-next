@@ -956,24 +956,6 @@ export default function AdminDashboard() {
     toast.success("Alle Häkchen zurückgesetzt!");
   }, []);
 
-  // Keep activeTabRef in sync + refresh Einnahmen only when returning to the tab
-  useEffect(() => {
-    const previousTab = previousActiveTabRef.current;
-    activeTabRef.current = activeTab;
-    previousActiveTabRef.current = activeTab;
-    if (activeTab === "einnahmen" && previousTab !== "einnahmen") {
-      setTimeFilter("heute");
-      const cachedToday = revenueCacheRef.current.heute;
-      if (cachedToday) applySnapshot(cachedToday, true);
-      computeTodaySnapshot("today").then((snap) => {
-        if (!snap || activeTabRef.current !== "einnahmen") return;
-        revenueCacheRef.current.heute = snap;
-        persistRevenueCache();
-        applySnapshot(snap, true);
-      });
-    }
-  }, [activeTab, persistRevenueCache]);
-
   const allRevenueData = useMemo(() => generateFakeRevenueData(), []);
 
   //dev2 revenue
@@ -995,6 +977,8 @@ export default function AdminDashboard() {
     brezzels: DailyTotal[];
     // fansyme: DailyTotal[];
   }
+
+  type RevenueSnapshot = { total: CurrentTotal; range: RootData; totalEarnings: number };
 
   const emptyRevenueRange = (): RootData => ({ maloum: [], brezzels: [], "4based": [] });
 
@@ -1022,7 +1006,6 @@ export default function AdminDashboard() {
   const isMobileRevenueView = typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches;
 
   // Prefetch cache: holds precomputed totals/ranges per filter so switching is instant
-  type RevenueSnapshot = { total: CurrentTotal; range: RootData; totalEarnings: number };
   const revenueCacheRef = useRef<Partial<Record<TimeFilter, RevenueSnapshot>>>(initialRevenueCache);
 
   // Compare mode states
