@@ -3068,7 +3068,7 @@ export default function AdminDashboard() {
                                 initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.2 }}
                                 className="relative gold-gradient-border-animated pulse-glow rounded-2xl p-5 overflow-hidden"
                               >
-                                <div className="absolute -top-16 right-0 h-40 w-40 rounded-full bg-accent/15 blur-3xl" />
+                                <div className="absolute -top-16 right-0 h-40 w-40 rounded-full pointer-events-none" style={{ background: "radial-gradient(circle, hsl(var(--accent) / 0.18), transparent 70%)" }} />
                                 <div className="relative">
                                   <p className="text-[9px] uppercase tracking-[0.2em] text-accent font-bold mb-2">B · {fmtDateLabel(compareFromB)} – {fmtDateLabel(compareToB)}</p>
                                   <div className="flex items-end justify-between gap-2">
