@@ -3172,6 +3172,13 @@ export default function AdminDashboard() {
                     className="relative glass-card-subtle rounded-2xl overflow-hidden"
                   >
                     <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/60 to-transparent pointer-events-none" />
+                    <div
+                      className="absolute inset-0 pointer-events-none opacity-70"
+                      style={{
+                        background:
+                          "radial-gradient(ellipse 80% 60% at 50% 0%, hsl(var(--accent) / 0.10), transparent 70%)",
+                      }}
+                    />
 
                     <div className="relative px-6 pt-8 pb-4 text-center">
                       <motion.div
