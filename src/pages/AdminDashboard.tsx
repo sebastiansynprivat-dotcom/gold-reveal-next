@@ -1226,8 +1226,9 @@ export default function AdminDashboard() {
   const applyRevenueRealtimeRow = useCallback((platform: string | null, date: string | null, nextValue: number, diff: number) => {
     if (!platform || !date) return;
     const patchRange = (source: RootData | undefined): RootData | undefined => {
-      if (!source) return source;
-      const next = { ...source } as RootData;
+      const next = (source
+        ? { ...source }
+        : { maloum: [], brezzels: [], "4based": [] }) as RootData;
       const rows = [...(((next as any)[platform] || []) as DailyTotal[])];
       const rowIndex = rows.findIndex((row) => row.date === date);
       if (rowIndex >= 0) rows[rowIndex] = { ...rows[rowIndex], total: nextValue };
