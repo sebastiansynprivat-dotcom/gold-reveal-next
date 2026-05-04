@@ -1386,7 +1386,7 @@ export default function AdminDashboard() {
     realtimePendingRef.current.set(`${platform}|${date}`, { platform, date, nextValue });
     if (realtimeFlushTimerRef.current !== null) return;
     // Mobile: batch heavier (500ms) to keep UI thread free
-    const delay = (typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches) ? 500 : 150;
+    const delay = 150;
     realtimeFlushTimerRef.current = window.setTimeout(flushRealtime, delay);
   }, [flushRealtime]);
 
