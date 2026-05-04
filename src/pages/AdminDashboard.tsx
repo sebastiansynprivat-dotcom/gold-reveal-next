@@ -1310,6 +1310,19 @@ export default function AdminDashboard() {
     }
   }, [rebuildStandardRevenueCache]);
 
+  // Keep activeTabRef in sync + refresh Einnahmen only when returning to the tab
+  useEffect(() => {
+    const previousTab = previousActiveTabRef.current;
+    activeTabRef.current = activeTab;
+    previousActiveTabRef.current = activeTab;
+    if (activeTab === "einnahmen" && previousTab !== "einnahmen") {
+      setTimeFilter("heute");
+      const cachedToday = revenueCacheRef.current.heute;
+      if (cachedToday) applySnapshot(cachedToday, true);
+      void loadRevenueRows();
+    }
+  }, [activeTab, loadRevenueRows]);
+
   // Batch realtime updates to avoid render storms (especially on mobile)
   const realtimePendingRef = useRef<Map<string, { platform: string; date: string; nextValue: number }>>(new Map());
   const realtimeFlushTimerRef = useRef<number | null>(null);
