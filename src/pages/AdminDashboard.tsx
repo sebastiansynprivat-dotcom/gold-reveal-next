@@ -872,6 +872,7 @@ export default function AdminDashboard() {
     "alle" | "botdm_missing" | "setup_missing" | "massdm_missing" | "bot_active" | "bot_inactive"
   >("alle");
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("heute");
+  const timeFilterRef = useRef<TimeFilter>("heute");
   const [newPlatformOpen, setNewPlatformOpen] = useState(false);
   const [newPlatformName, setNewPlatformName] = useState("");
   const [poolFilter, setPoolFilter] = useState<"alle" | "frei" | "vergeben">("alle");
@@ -881,6 +882,10 @@ export default function AdminDashboard() {
   const [revenueUsers, setRevenueUsers] = useState<Set<string>>(new Set());
   const [pwaUsers, setPwaUsers] = useState<Set<string>>(new Set());
   const [revenueBoost, setRevenueBoost] = useState(0);
+
+  useEffect(() => {
+    timeFilterRef.current = timeFilter;
+  }, [timeFilter]);
 
   // Admin management state
   const [adminSectionOpen, setAdminSectionOpen] = useState(false);
