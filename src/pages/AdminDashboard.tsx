@@ -1260,12 +1260,28 @@ export default function AdminDashboard() {
     }, 420);
   };
 
-  const applyRevenueRealtimeRow = useCallback((platform: string | null, date: string | null, nextValue: number, diff: number) => {
-    if (!platform || !date) return;
-    const patchRange = (source: RootData | undefined): RootData | undefined => {
-      const next = (source
-        ? { ...source }
-        : { maloum: [], brezzels: [], "4based": [] }) as RootData;
+  // Batch realtime updates to avoid render storms (especially on mobile)
+  const realtimePendingRef = useRef<Map<string, { platform: string; date: string; nextValue: number }>>(new Map());
+  const realtimeFlushTimerRef = useRef<number | null>(null);
+  const persistCacheTimerRef = useRef<number | null>(null);
+
+  const schedulePersistCache = useCallback(() => {
+    if (persistCacheTimerRef.current !== null) return;
+    persistCacheTimerRef.current = window.setTimeout(() => {
+      persistCacheTimerRef.current = null;
+      persistRevenueCache();
+    }, 1500);
+  }, [persistRevenueCache]);
+
+  const flushRealtime = useCallback(() => {
+    realtimeFlushTimerRef.current = null;
+    const pending = realtimePendingRef.current;
+    if (pending.size === 0) return;
+    const updates = Array.from(pending.values());
+    pending.clear();
+
+    const patchRange = (source: RootData | undefined, platform: string, date: string, nextValue: number): RootData => {
+      const next = (source ? { ...source } : { maloum: [], brezzels: [], "4based": [] }) as RootData;
       const rows = [...(((next as any)[platform] || []) as DailyTotal[])];
       const rowIndex = rows.findIndex((row) => row.date === date);
       if (rowIndex >= 0) rows[rowIndex] = { ...rows[rowIndex], total: nextValue };
@@ -1275,22 +1291,39 @@ export default function AdminDashboard() {
       return next;
     };
 
-    const todaySnap = revenueCacheRef.current.heute;
+    // Update cache
+    let todaySnap = revenueCacheRef.current.heute;
+    for (const u of updates) {
+      if (todaySnap) {
+        const nextTotal = { ...todaySnap.total, [u.platform]: u.nextValue } as CurrentTotal;
+        todaySnap = {
+          total: nextTotal,
+          range: patchRange(todaySnap.range, u.platform, u.date, u.nextValue),
+          totalEarnings: nextTotal.maloum + nextTotal.brezzels + nextTotal["4based"],
+        };
+      }
+    }
     if (todaySnap) {
-      const nextTotal = { ...todaySnap.total, [platform]: nextValue } as CurrentTotal;
-      revenueCacheRef.current.heute = {
-        total: nextTotal,
-        range: patchRange(todaySnap.range) || todaySnap.range,
-        totalEarnings: nextTotal.maloum + nextTotal.brezzels + nextTotal["4based"],
-      };
-      persistRevenueCache();
+      revenueCacheRef.current.heute = todaySnap;
+      schedulePersistCache();
     }
 
-    if (timeFilterRef.current !== "heute") return;
-    setTotalValue((prev) => ({ ...prev, [platform]: nextValue }));
-    setTotalEarnings((prev) => prev + diff);
-    setRange((prev) => patchRange(prev));
-  }, []);
+    if (timeFilterRef.current !== "heute" || activeTabRef.current !== "einnahmen") return;
+    if (todaySnap) {
+      setTotalValue(todaySnap.total);
+      setTotalEarnings(todaySnap.totalEarnings);
+      setRange(todaySnap.range);
+    }
+  }, [schedulePersistCache]);
+
+  const applyRevenueRealtimeRow = useCallback((platform: string | null, date: string | null, nextValue: number, _diff: number) => {
+    if (!platform || !date) return;
+    realtimePendingRef.current.set(`${platform}|${date}`, { platform, date, nextValue });
+    if (realtimeFlushTimerRef.current !== null) return;
+    // Mobile: batch heavier (500ms) to keep UI thread free
+    const delay = (typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches) ? 500 : 150;
+    realtimeFlushTimerRef.current = window.setTimeout(flushRealtime, delay);
+  }, [flushRealtime]);
 
   // Switch filter using cache-first strategy: instant set + animation, no flicker
   const switchTimeFilter = async (f: TimeFilter) => {
