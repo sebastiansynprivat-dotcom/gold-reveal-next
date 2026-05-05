@@ -807,6 +807,9 @@ export default function ModelDashboardTab() {
                         Maloum: "#d4af37",
                         Brezzels: "#3b82f6",
                         FansyMe: "#ec4899",
+                        Admireme: "#ec4899",
+                        VisitX: "#0ea5e9",
+                        Slushy: "#8b5cf6",
                       };
                       // Map platform to the correct revenue field
                       const platformFieldMap: Record<string, string> = {
