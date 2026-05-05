@@ -224,12 +224,7 @@ interface AccountEntry {
   model_id?: string | null;
 }
 
-const PLATFORM_STYLES: Record<string, { bg: string; text: string; border: string; dot: string }> = {
-  maloum: { bg: "bg-yellow-500/10", text: "text-yellow-400", border: "border-yellow-500/30", dot: "bg-yellow-500" },
-  brezzels: { bg: "bg-blue-500/10", text: "text-blue-400", border: "border-blue-500/30", dot: "bg-blue-500" },
-  "4based": { bg: "bg-cyan-500/10", text: "text-cyan-400", border: "border-cyan-500/30", dot: "bg-cyan-500" },
-  fansyme: { bg: "bg-purple-500/10", text: "text-purple-400", border: "border-purple-500/30", dot: "bg-purple-500" },
-};
+const PLATFORM_STYLES = PLATFORM_STYLES_GLOBAL;
 
 const AnimatedNumber = React.memo(function AnimatedNumber({ value, className, suffix = "€", align = "center" }: { value: number; className?: string; suffix?: string; align?: "left" | "center" | "right" }) {
   const target = Number.isFinite(value) ? value : 0;
