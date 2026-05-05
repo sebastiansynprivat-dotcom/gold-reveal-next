@@ -130,11 +130,7 @@ const revokeDriveAccess = async (accountIds: string[], userId: string) => {
 };
 
 // Platform colors – premium aesthetic matching gold/dark theme
-const PLATFORM_COLORS = {
-  maloum: "#d4af37", // gold
-  brezzels: "#3b82f6", // brand blue
-  "4based": "#22d3ee", // cyan
-};
+import { PLATFORMS, PLATFORM_COLORS, PLATFORM_STYLES as PLATFORM_STYLES_GLOBAL, PLATFORM_LABELS } from "@/lib/platforms";
 
 // Generate 90 days of fictional revenue data with upward trend
 const generateFakeRevenueData = () => {
