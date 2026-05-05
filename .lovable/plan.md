@@ -1,45 +1,38 @@
-# Neue Plattformen: Admireme, VisitX & Slushy
+## Goal
+Allow installing the Admin area as its own PWA on iOS that opens directly on `/admin` — separate icon, name, and start URL from the user app.
 
-Fokus auf das Wesentliche zuerst: Du kannst im Admin neue **Accounts** für diese 3 Plattformen anlegen, und sie tauchen überall dort auf, wo Plattformen heute schon angezeigt werden (Account-Pool, Zuweisungen, Dashboards, Filter). Revenue-Tracking, Onboarding-Routes, Bots etc. machen wir bewusst **nicht** in diesem Schritt — erst wenn die Basis steht.
+## Changes
 
-## Was sich ändert
+### 1. New file: `public/manifest-admin.webmanifest`
+Static manifest mirroring the user manifest but with admin-specific values:
+- `name`: "SheX Admin"
+- `short_name`: "SheX Admin"
+- `start_url`: "/admin"
+- `id`: "/admin"
+- `scope`: "/admin"
+- `display`: "standalone"
+- `theme_color` / `background_color`: "#0a0a0a"
+- Icons: reuse `/pwa-192.png` and `/pwa-512.png` for now (user can supply a distinct admin icon later if wanted)
 
-### 1. Zentrale Plattform-Liste (Frontend)
-Heute sind die Plattformen an vielen Stellen hartkodiert (`onlyfans`, `fansly`, `maloum`, `4based`, `brezzels`, `fansyme`, …). Wir legen eine zentrale Konstante an:
+### 2. `index.html`
+Add a tiny inline script in `<head>` that runs **before** anything else and swaps the manifest link + Apple meta tags when the path starts with `/admin`:
+- Replace `<link rel="manifest" href="/manifest.webmanifest">` with `/manifest-admin.webmanifest`
+- Update `apple-mobile-web-app-title` to "SheX Admin"
+- (Optional) swap `apple-touch-icon` if a separate icon is added later
 
-```
-src/lib/platforms.ts
-  → PLATFORMS = [{ id, label, color, icon }]
-```
+This way Safari sees the correct manifest at "Add to Home Screen" time depending on which page the user installs from.
 
-Alle Komponenten ziehen ihre Liste von dort:
-- `AdminDashboard` (Account-Pool gruppiert nach Plattform, Badges, Filter)
-- `SubAdminManager` / Account-Anlegen-Dialog (Plattform-Dropdown)
-- `ChatterDashboardTab` & `ModelDashboardTab` (Plattform-Auswahl)
-- Auto-Assign-UI / Filter (`Admin Chatter Filters`)
-- `CreditNoteForm` (Plattform-Label im PDF)
+### 3. `vite.config.ts`
+No change to the existing VitePWA `manifest` block (stays `/dashboard`). The second manifest is a static file in `public/` and is served as-is — VitePWA does not need to know about it. The injected service worker continues to handle both scopes.
 
-So ist die nächste Plattform danach ein 1-Zeilen-Change.
+### 4. Note on existing installs
+The current homescreen icon on the user's iPhone has `start_url: "/dashboard"` baked in and cannot be updated. They must:
+1. Delete the existing icon
+2. Open `/admin` in Safari → Share → Add to Home Screen → gets "SheX Admin" with `/admin` start URL
+3. Open `/dashboard` in Safari → Share → Add to Home Screen → gets "SheX 💛" with `/dashboard` start URL
 
-### 2. Plattform-Werte in der DB
-Die `accounts.platform` Spalte ist heute schon ein `text` (kein Enum) — daher reicht es, die neuen Werte `admireme`, `visitx`, `slushy` in der zentralen Liste zu ergänzen. **Keine Migration nötig** für die reine Account-Anlage.
+Result: two separate apps on the homescreen, each opening on its intended page.
 
-`revenue_report.platform` ist ein USER-DEFINED Enum — das fassen wir erst an, wenn wir Revenue-Tracking für die neuen Plattformen wirklich aktivieren (Schritt 2, separat).
-
-### 3. UI-Anpassungen
-- **Account-Pool (Admin)**: Drei neue Plattform-Sektionen mit Badges/Farben (Admireme = pink, VisitX = blau, Slushy = lila — anpassbar).
-- **Account anlegen / bearbeiten**: Neue Plattformen im Dropdown verfügbar.
-- **Auto-Assign-Flow**: Neue Plattformen als Auswahl.
-- **Chatter-/Model-Dashboard**: Plattform-Anzeige & -Auswahl kennt die neuen Werte (Anzeige als Badge, kein neues Revenue-Feld in dieser Phase).
-
-## Was bewusst NICHT enthalten ist (für später)
-- Revenue-Spalten (`admireme_revenue`, …) in `chatters` / `model_dashboard`
-- Onboarding-Status-Flags (submitted / botdm / massdm)
-- Eigene Offer-Pages, Telegram-Bots, `quiz_routes`
-- `revenue_report` Enum-Erweiterung & `ingest-revenue` Edge-Function
-- Charts/Aggregationen im Admin-Dashboard
-
-Wenn die Basis läuft, ergänzen wir diese Bereiche gezielt nach Bedarf.
-
-## Ergebnis
-Du kannst sofort Accounts für Admireme, VisitX und Slushy anlegen, im Pool sehen, zuweisen und in den Dashboards ausweisen — mit der gleichen UX wie bei den bestehenden Plattformen.
+## Files touched
+- `public/manifest-admin.webmanifest` (new)
+- `index.html` (small inline script + conditional manifest link)
