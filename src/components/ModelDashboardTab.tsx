@@ -1484,7 +1484,7 @@ export default function ModelDashboardTab() {
                 accountId={modelAccounts[0]?.id || ""}
                 providerEntityType="model"
                 providerEntityId={selectedModelId}
-                providerAddress={(modelForm as any).provider_address || ""}
+                providerAddress={modelForm.address || (modelForm as any).provider_address || ""}
                 providerIsBusiness={(modelForm as any).provider_is_business ?? false}
                 providerVatId={(modelForm as any).provider_vat_id || ""}
                 providerNameOverride={(modelForm as any).provider_name_override || ""}
