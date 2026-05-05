@@ -90,13 +90,18 @@ interface ChatterProfile {
   account_email: string | null;
 }
 
+import { PLATFORMS as PLATFORM_DEFS } from "@/lib/platforms";
+
 const CURRENCIES = ["EUR", "USD", "GBP", "CHF", "AED"] as const;
-const PLATFORMS = ["4Based", "Maloum", "Brezzels", "FansyMe"] as const;
+const PLATFORMS = PLATFORM_DEFS.map((p) => p.label);
 const PLATFORM_DOMAINS: Record<string, string> = {
   "4Based": "4based.com",
   Maloum: "malum.com",
   Brezzels: "brezzels.com",
   FansyMe: "fansyme.com",
+  Admireme: "admireme.com",
+  VisitX: "visit-x.net",
+  Slushy: "slushy.com",
 };
 
 // ─── Animated counter ───
@@ -171,6 +176,9 @@ const platformColors: Record<string, string> = {
   Maloum: "bg-purple-500/15 text-purple-400 border-purple-500/30",
   Brezzels: "bg-orange-500/15 text-orange-400 border-orange-500/30",
   FansyMe: "bg-pink-500/15 text-pink-400 border-pink-500/30",
+  Admireme: "bg-pink-500/15 text-pink-400 border-pink-500/30",
+  VisitX: "bg-sky-500/15 text-sky-400 border-sky-500/30",
+  Slushy: "bg-violet-500/15 text-violet-400 border-violet-500/30",
 };
 
 // ─── Main Component ───
@@ -799,6 +807,9 @@ export default function ModelDashboardTab() {
                         Maloum: "#d4af37",
                         Brezzels: "#3b82f6",
                         FansyMe: "#ec4899",
+                        Admireme: "#ec4899",
+                        VisitX: "#0ea5e9",
+                        Slushy: "#8b5cf6",
                       };
                       // Map platform to the correct revenue field
                       const platformFieldMap: Record<string, string> = {

@@ -130,11 +130,7 @@ const revokeDriveAccess = async (accountIds: string[], userId: string) => {
 };
 
 // Platform colors – premium aesthetic matching gold/dark theme
-const PLATFORM_COLORS = {
-  maloum: "#d4af37", // gold
-  brezzels: "#3b82f6", // brand blue
-  "4based": "#22d3ee", // cyan
-};
+import { PLATFORMS, PLATFORM_COLORS, PLATFORM_STYLES as PLATFORM_STYLES_GLOBAL, PLATFORM_LABELS } from "@/lib/platforms";
 
 // Generate 90 days of fictional revenue data with upward trend
 const generateFakeRevenueData = () => {
@@ -228,12 +224,7 @@ interface AccountEntry {
   model_id?: string | null;
 }
 
-const PLATFORM_STYLES: Record<string, { bg: string; text: string; border: string; dot: string }> = {
-  maloum: { bg: "bg-yellow-500/10", text: "text-yellow-400", border: "border-yellow-500/30", dot: "bg-yellow-500" },
-  brezzels: { bg: "bg-blue-500/10", text: "text-blue-400", border: "border-blue-500/30", dot: "bg-blue-500" },
-  "4based": { bg: "bg-cyan-500/10", text: "text-cyan-400", border: "border-cyan-500/30", dot: "bg-cyan-500" },
-  fansyme: { bg: "bg-purple-500/10", text: "text-purple-400", border: "border-purple-500/30", dot: "bg-purple-500" },
-};
+const PLATFORM_STYLES = PLATFORM_STYLES_GLOBAL;
 
 const AnimatedNumber = React.memo(function AnimatedNumber({ value, className, suffix = "€", align = "center" }: { value: number; className?: string; suffix?: string; align?: "left" | "center" | "right" }) {
   const target = Number.isFinite(value) ? value : 0;
@@ -2283,7 +2274,7 @@ export default function AdminDashboard() {
     loadAccounts();
   };
 
-  const DEFAULT_PLATFORMS = ["Maloum", "Brezzels", "4Based", "FansyMe"];
+  const DEFAULT_PLATFORMS = PLATFORM_LABELS;
   const platforms = DEFAULT_PLATFORMS;
   const manualPlatforms = [
     ...new Set(
