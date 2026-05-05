@@ -2274,7 +2274,7 @@ export default function AdminDashboard() {
     loadAccounts();
   };
 
-  const DEFAULT_PLATFORMS = ["Maloum", "Brezzels", "4Based", "FansyMe"];
+  const DEFAULT_PLATFORMS = PLATFORM_LABELS;
   const platforms = DEFAULT_PLATFORMS;
   const manualPlatforms = [
     ...new Set(
