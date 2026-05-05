@@ -519,7 +519,51 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
                   <label className="text-xs font-medium text-muted-foreground">Plattform</label>
                   <div className="input-gold-shimmer rounded-lg">
                     <Input value={selected.platform} onChange={e => updateSelected({ platform: e.target.value })} className="text-sm border-transparent" />
+              </div>
+
+              {/* Anschrift (wird automatisch in Provider Invoice übernommen) */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                  <MapPin className="h-3 w-3 text-accent" />
+                  Anschrift
+                  <span className="text-[10px] text-muted-foreground/70">(wird in Provider Invoice übernommen)</span>
+                </label>
+                <div className="input-gold-shimmer rounded-lg">
+                  <Textarea
+                    value={selected.providerAddress}
+                    onChange={e => updateSelected({ providerAddress: e.target.value })}
+                    placeholder="Straße, PLZ, Ort, Land"
+                    rows={2}
+                    className="text-sm border-transparent resize-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="glass-card rounded-lg p-3 flex items-center justify-between">
+                  <div>
+                    <div className="text-xs font-medium text-foreground">Gewerblich / Business</div>
+                    <div className="text-[10px] text-muted-foreground">Mit USt-ID?</div>
                   </div>
+                  <Switch
+                    checked={selected.providerIsBusiness}
+                    onCheckedChange={(v) => updateSelected({ providerIsBusiness: v })}
+                  />
+                </div>
+                {selected.providerIsBusiness && (
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-muted-foreground">USt-ID / VAT ID</label>
+                    <div className="input-gold-shimmer rounded-lg">
+                      <Input
+                        value={selected.providerVatId}
+                        onChange={e => updateSelected({ providerVatId: e.target.value })}
+                        placeholder="z.B. DE123456789"
+                        className="text-sm border-transparent"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
                 </div>
               </div>
 
