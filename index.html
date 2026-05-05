@@ -23,9 +23,22 @@
   
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="SheX">
+  <meta name="apple-mobile-web-app-title" content="SheX" id="apple-app-title">
   <link rel="apple-touch-icon" href="/pwa-192.png">
-  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="manifest" href="/manifest.webmanifest" id="app-manifest">
+  <script>
+    (function () {
+      try {
+        if (location.pathname.toLowerCase().startsWith('/admin')) {
+          var m = document.getElementById('app-manifest');
+          if (m) m.setAttribute('href', '/manifest-admin.webmanifest');
+          var t = document.getElementById('apple-app-title');
+          if (t) t.setAttribute('content', 'SheX Admin');
+          document.title = 'SheX Admin';
+        }
+      } catch (e) {}
+    })();
+  </script>
   
   
   
