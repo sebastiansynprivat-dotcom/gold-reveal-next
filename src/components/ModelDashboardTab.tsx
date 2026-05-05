@@ -90,13 +90,18 @@ interface ChatterProfile {
   account_email: string | null;
 }
 
+import { PLATFORMS as PLATFORM_DEFS } from "@/lib/platforms";
+
 const CURRENCIES = ["EUR", "USD", "GBP", "CHF", "AED"] as const;
-const PLATFORMS = ["4Based", "Maloum", "Brezzels", "FansyMe"] as const;
+const PLATFORMS = PLATFORM_DEFS.map((p) => p.label);
 const PLATFORM_DOMAINS: Record<string, string> = {
   "4Based": "4based.com",
   Maloum: "malum.com",
   Brezzels: "brezzels.com",
   FansyMe: "fansyme.com",
+  Admireme: "admireme.com",
+  VisitX: "visit-x.net",
+  Slushy: "slushy.com",
 };
 
 // ─── Animated counter ───
