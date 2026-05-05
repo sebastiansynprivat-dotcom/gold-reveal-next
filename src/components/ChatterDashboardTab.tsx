@@ -184,6 +184,9 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
         bank_iban: chatter.bankIban,
         bank_bic: chatter.bankBic,
         bank_name: chatter.bankName,
+        provider_address: chatter.providerAddress,
+        provider_is_business: chatter.providerIsBusiness,
+        provider_vat_id: chatter.providerVatId,
       })
       .eq("id", chatter.id);
 
