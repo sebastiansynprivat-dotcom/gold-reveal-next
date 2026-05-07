@@ -174,14 +174,16 @@ export default function MonthlyStreakTracker({ dailyRevenue }: { dailyRevenue: n
           30-Tage-Challenge
         </h2>
         <div className="flex items-center gap-2">
-          <button
-            onClick={startDemo}
-            className="text-[10px] text-muted-foreground hover:text-accent transition-colors flex items-center gap-1 opacity-50 hover:opacity-100"
-            title="Demo starten"
-          >
-            <Play className="h-3 w-3" />
-            Demo
-          </button>
+          {isDemoMode() && (
+            <button
+              onClick={startDemo}
+              className="text-[10px] text-muted-foreground hover:text-accent transition-colors flex items-center gap-1 opacity-50 hover:opacity-100"
+              title="Demo starten"
+            >
+              <Play className="h-3 w-3" />
+              Demo
+            </button>
+          )}
           <span className="text-2xl font-bold text-gold-gradient">{consecutiveDays}</span>
           <span className="text-xs text-muted-foreground">/ {STREAK_GOAL} Tage</span>
         </div>
