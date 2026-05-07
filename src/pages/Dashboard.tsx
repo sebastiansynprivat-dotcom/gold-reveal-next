@@ -1563,15 +1563,17 @@ export default function Dashboard() {
           <DailyChecklist />
         </div>
 
-        {/* Bonus Model - alles in einer Karte */}
-        <BonusModelSection
-          monthlyRevenue={monthlyRevenue}
-          currentTier={currentTier}
-          nextTier={nextTier}
-          progressToNext={progressToNext}
-          isTopTier={isTopTier}
-          umsatz={umsatz}
-        />
+        {/* Bonus Model - alles in einer Karte (nur im Demo-Modus sichtbar) */}
+        {isDemoMode() && (
+          <BonusModelSection
+            monthlyRevenue={monthlyRevenue}
+            currentTier={currentTier}
+            nextTier={nextTier}
+            progressToNext={progressToNext}
+            isTopTier={isTopTier}
+            umsatz={umsatz}
+          />
+        )}
 
         {/* Billing countdown + Invoice button */}
         <DashboardBillingInfo onNavigate={() => navigate("/rechnung")} groupName={groupName} />

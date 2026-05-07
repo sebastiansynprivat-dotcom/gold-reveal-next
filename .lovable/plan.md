@@ -1,36 +1,17 @@
-# Demo-Modus für Chatter-Dashboard ausblendbar machen
+# Bonus-Modell hinter Demo-Flag verstecken
 
-## Ziel
-Alle Demo-Buttons (Loot-Box Demo, 30-Tage-Streak Demo, Bonus-Tier Demo, Account-Zuweisung Demo, Model aktiv/inaktiv Demo) verschwinden standardmäßig aus dem Chatter-Dashboard — können aber jederzeit ohne Code-Änderung wieder eingeblendet werden.
+Die komplette `BonusModelSection` (Staffel/Bonus-Modell-Karte) im Chatter-Dashboard wird nur noch gerendert, wenn der bestehende Demo-Flag aktiv ist — gleiche Mechanik wie bei den anderen Demo-Elementen.
 
-## Lösung: Ein zentraler Demo-Flag
+## Änderung
 
-Neue Datei `src/lib/demoMode.ts` mit einem kleinen Helper `isDemoMode()`:
-- Liest `localStorage.shex_demo_mode === "1"`
-- Zusätzlich: URL-Parameter `?demo=1` setzt den Flag (persistent), `?demo=0` entfernt ihn
-- React-Hook `useDemoMode()` für reaktive Komponenten
+In `src/pages/Dashboard.tsx` (Zeile ~1566–1574) den Aufruf von `<BonusModelSection ... />` mit `{isDemoMode() && (...)}` umschließen.
 
-So kannst **du** den Demo-Modus jederzeit aktivieren, indem du einmal `https://shex-dashboard.com/dashboard?demo=1` aufrufst — der Flag bleibt im Browser bestehen, bis du `?demo=0` aufrufst. Für normale Chatter ist alles unsichtbar.
+`isDemoMode` ist bereits oben in der Datei importiert.
 
-## Betroffene Stellen (alle bekommen `if (!isDemoMode) return null` o.ä.)
-
-1. **`src/components/MonthlyStreakTracker.tsx`** — "Demo"-Button neben Streak-Counter (Zeile ~177–185)
-2. **`src/components/LootBoxReward.tsx`** — "🧪 Demo: Loot-Box Meilenstein öffnen"-Karte (Zeile ~188–198)
-3. **`src/pages/Dashboard.tsx`**
-   - "🧪 Demo: Account-Zuweisung simulieren"-Button (Zeile ~1045–1063)
-   - "🧪 Demo: Model aktiv/inaktiv"-Toggle (Zeile ~1297–1310)
-   - Bonus-Tier-Demo-Toggle inkl. Controls (Zeile ~1634–1700)
-
-Bestehende `demoMode`/`demoModelInactive`-State-Logik bleibt erhalten — nur die UI-Schalter werden konditional gerendert. Wenn der globale Flag aus ist, gibt es schlicht keinen Trigger mehr → kein Demo-State wird je aktiviert → echte Daten werden angezeigt.
-
-## Bedienung nach Implementierung
-
-- **Demo einschalten**: `https://.../dashboard?demo=1` einmal öffnen → bleibt aktiv
-- **Demo ausschalten**: `https://.../dashboard?demo=0` einmal öffnen → wieder versteckt
-- Alternativ in der Browser-Konsole: `localStorage.setItem('shex_demo_mode','1')` bzw. `removeItem`
+## Bedienung
+- **Aus** (Standardzustand für alle Chatter): nichts zu tun, Bonus-Modell ist weg
+- **Ein** für dich: einmal `https://shex-dashboard.com/dashboard?demo=1` öffnen → Bonus-Modell + alle anderen Demo-Schalter erscheinen wieder
+- **Wieder aus**: `?demo=0`
 
 ## Geänderte Dateien
-- `src/lib/demoMode.ts` (neu)
-- `src/components/MonthlyStreakTracker.tsx`
-- `src/components/LootBoxReward.tsx`
 - `src/pages/Dashboard.tsx`
