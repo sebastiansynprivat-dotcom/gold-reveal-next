@@ -42,6 +42,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
+import { isDemoMode } from "@/lib/demoMode";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import DashboardChat from "@/components/DashboardChat";
@@ -1042,24 +1043,26 @@ export default function Dashboard() {
               {assignedAccounts.length === 0 ? (
                 <div className="space-y-3">
                   <p className="text-xs text-muted-foreground">Noch keine Accounts zugewiesen.</p>
-                  <button
-                    onClick={() =>
-                      setAssignedAccounts([
-                        {
-                          id: "demo-account",
-                          account_email: "demo@example.com",
-                          account_password: "demo-password-123",
-                          account_domain: "demo-platform.com",
-                          platform: "Demo",
-                          assigned_at: new Date().toISOString(),
-                          drive_folder_id: "1ABC_demoFolderId123",
-                        },
-                      ])
-                    }
-                    className="flex items-center gap-2 w-full rounded-lg border border-dashed border-accent/40 bg-accent/5 px-3 py-2.5 text-xs font-medium text-accent hover:bg-accent/10 hover:border-accent/60 transition-all"
-                  >
-                    🧪 Demo: Account-Zuweisung simulieren
-                  </button>
+                  {isDemoMode() && (
+                    <button
+                      onClick={() =>
+                        setAssignedAccounts([
+                          {
+                            id: "demo-account",
+                            account_email: "demo@example.com",
+                            account_password: "demo-password-123",
+                            account_domain: "demo-platform.com",
+                            platform: "Demo",
+                            assigned_at: new Date().toISOString(),
+                            drive_folder_id: "1ABC_demoFolderId123",
+                          },
+                        ])
+                      }
+                      className="flex items-center gap-2 w-full rounded-lg border border-dashed border-accent/40 bg-accent/5 px-3 py-2.5 text-xs font-medium text-accent hover:bg-accent/10 hover:border-accent/60 transition-all"
+                    >
+                      🧪 Demo: Account-Zuweisung simulieren
+                    </button>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -1295,17 +1298,19 @@ export default function Dashboard() {
           )}
 
           {/* Demo Toggle für Model aktiv/inaktiv */}
-          <div className="border-t border-border/30 px-4 py-2 lg:px-6 flex items-center gap-2">
-            <span className="text-[10px] text-muted-foreground">🧪 Demo:</span>
-            <Button
-              variant={demoModelInactive ? "destructive" : "outline"}
-              size="sm"
-              className="h-6 text-[10px] px-2"
-              onClick={() => setDemoModelInactive(!demoModelInactive)}
-            >
-              {demoModelInactive ? "Model inaktiv" : "Model aktiv"}
-            </Button>
-          </div>
+          {isDemoMode() && (
+            <div className="border-t border-border/30 px-4 py-2 lg:px-6 flex items-center gap-2">
+              <span className="text-[10px] text-muted-foreground">🧪 Demo:</span>
+              <Button
+                variant={demoModelInactive ? "destructive" : "outline"}
+                size="sm"
+                className="h-6 text-[10px] px-2"
+                onClick={() => setDemoModelInactive(!demoModelInactive)}
+              >
+                {demoModelInactive ? "Model inaktiv" : "Model aktiv"}
+              </Button>
+            </div>
+          )}
 
           {/* Anfrage an das Model – oder Inaktiv-Hinweis */}
           <div className="border-t border-border/30">
@@ -1651,21 +1656,23 @@ function BonusModelSection({
               <Trophy className="h-3 w-3" />
               Zur Bestenliste
             </button>
-            <button
-              onClick={() => {
-                setDemoMode(!demoMode);
-                setDemoTierIndex(0);
-              }}
-              className={cn(
-                "flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-medium transition-all",
-                demoMode
-                  ? "bg-accent/20 text-accent border border-accent/30"
-                  : "bg-secondary/50 text-muted-foreground border border-border/30 hover:border-accent/20 hover:text-foreground",
-              )}
-            >
-              {demoMode ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-              {demoMode ? "Demo beenden" : "Demo"}
-            </button>
+            {isDemoMode() && (
+              <button
+                onClick={() => {
+                  setDemoMode(!demoMode);
+                  setDemoTierIndex(0);
+                }}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-full px-3 py-1 text-[10px] font-medium transition-all",
+                  demoMode
+                    ? "bg-accent/20 text-accent border border-accent/30"
+                    : "bg-secondary/50 text-muted-foreground border border-border/30 hover:border-accent/20 hover:text-foreground",
+                )}
+              >
+                {demoMode ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                {demoMode ? "Demo beenden" : "Demo"}
+              </button>
+            )}
           </div>
         </div>
         <div className="mt-2 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />

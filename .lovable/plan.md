@@ -1,38 +1,36 @@
-## Goal
-Allow installing the Admin area as its own PWA on iOS that opens directly on `/admin` — separate icon, name, and start URL from the user app.
+# Demo-Modus für Chatter-Dashboard ausblendbar machen
 
-## Changes
+## Ziel
+Alle Demo-Buttons (Loot-Box Demo, 30-Tage-Streak Demo, Bonus-Tier Demo, Account-Zuweisung Demo, Model aktiv/inaktiv Demo) verschwinden standardmäßig aus dem Chatter-Dashboard — können aber jederzeit ohne Code-Änderung wieder eingeblendet werden.
 
-### 1. New file: `public/manifest-admin.webmanifest`
-Static manifest mirroring the user manifest but with admin-specific values:
-- `name`: "SheX Admin"
-- `short_name`: "SheX Admin"
-- `start_url`: "/admin"
-- `id`: "/admin"
-- `scope`: "/admin"
-- `display`: "standalone"
-- `theme_color` / `background_color`: "#0a0a0a"
-- Icons: reuse `/pwa-192.png` and `/pwa-512.png` for now (user can supply a distinct admin icon later if wanted)
+## Lösung: Ein zentraler Demo-Flag
 
-### 2. `index.html`
-Add a tiny inline script in `<head>` that runs **before** anything else and swaps the manifest link + Apple meta tags when the path starts with `/admin`:
-- Replace `<link rel="manifest" href="/manifest.webmanifest">` with `/manifest-admin.webmanifest`
-- Update `apple-mobile-web-app-title` to "SheX Admin"
-- (Optional) swap `apple-touch-icon` if a separate icon is added later
+Neue Datei `src/lib/demoMode.ts` mit einem kleinen Helper `isDemoMode()`:
+- Liest `localStorage.shex_demo_mode === "1"`
+- Zusätzlich: URL-Parameter `?demo=1` setzt den Flag (persistent), `?demo=0` entfernt ihn
+- React-Hook `useDemoMode()` für reaktive Komponenten
 
-This way Safari sees the correct manifest at "Add to Home Screen" time depending on which page the user installs from.
+So kannst **du** den Demo-Modus jederzeit aktivieren, indem du einmal `https://shex-dashboard.com/dashboard?demo=1` aufrufst — der Flag bleibt im Browser bestehen, bis du `?demo=0` aufrufst. Für normale Chatter ist alles unsichtbar.
 
-### 3. `vite.config.ts`
-No change to the existing VitePWA `manifest` block (stays `/dashboard`). The second manifest is a static file in `public/` and is served as-is — VitePWA does not need to know about it. The injected service worker continues to handle both scopes.
+## Betroffene Stellen (alle bekommen `if (!isDemoMode) return null` o.ä.)
 
-### 4. Note on existing installs
-The current homescreen icon on the user's iPhone has `start_url: "/dashboard"` baked in and cannot be updated. They must:
-1. Delete the existing icon
-2. Open `/admin` in Safari → Share → Add to Home Screen → gets "SheX Admin" with `/admin` start URL
-3. Open `/dashboard` in Safari → Share → Add to Home Screen → gets "SheX 💛" with `/dashboard` start URL
+1. **`src/components/MonthlyStreakTracker.tsx`** — "Demo"-Button neben Streak-Counter (Zeile ~177–185)
+2. **`src/components/LootBoxReward.tsx`** — "🧪 Demo: Loot-Box Meilenstein öffnen"-Karte (Zeile ~188–198)
+3. **`src/pages/Dashboard.tsx`**
+   - "🧪 Demo: Account-Zuweisung simulieren"-Button (Zeile ~1045–1063)
+   - "🧪 Demo: Model aktiv/inaktiv"-Toggle (Zeile ~1297–1310)
+   - Bonus-Tier-Demo-Toggle inkl. Controls (Zeile ~1634–1700)
 
-Result: two separate apps on the homescreen, each opening on its intended page.
+Bestehende `demoMode`/`demoModelInactive`-State-Logik bleibt erhalten — nur die UI-Schalter werden konditional gerendert. Wenn der globale Flag aus ist, gibt es schlicht keinen Trigger mehr → kein Demo-State wird je aktiviert → echte Daten werden angezeigt.
 
-## Files touched
-- `public/manifest-admin.webmanifest` (new)
-- `index.html` (small inline script + conditional manifest link)
+## Bedienung nach Implementierung
+
+- **Demo einschalten**: `https://.../dashboard?demo=1` einmal öffnen → bleibt aktiv
+- **Demo ausschalten**: `https://.../dashboard?demo=0` einmal öffnen → wieder versteckt
+- Alternativ in der Browser-Konsole: `localStorage.setItem('shex_demo_mode','1')` bzw. `removeItem`
+
+## Geänderte Dateien
+- `src/lib/demoMode.ts` (neu)
+- `src/components/MonthlyStreakTracker.tsx`
+- `src/components/LootBoxReward.tsx`
+- `src/pages/Dashboard.tsx`
