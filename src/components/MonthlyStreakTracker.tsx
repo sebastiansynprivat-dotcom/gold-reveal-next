@@ -12,6 +12,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
+import { isDemoMode } from "@/lib/demoMode";
 
 const STREAK_GOAL = 30;
 const DAILY_TARGET = 100;
