@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/compone
 import confetti from "canvas-confetti";
 import { Gift } from "lucide-react";
 import goldenBox from "@/assets/golden-lootbox.png";
+import { isDemoMode } from "@/lib/demoMode";
 
 const MILESTONES = [
   { amount: 500, tier: "Bronze", emoji: "🥉", rate: "21%" },
@@ -185,17 +186,19 @@ export default function LootBoxReward({ monthlyRevenue }: { monthlyRevenue: numb
 
   return (
     <>
-      {/* Demo Button – always visible */}
-      <button
-        onClick={triggerDemo}
-        className="w-full flex items-center gap-3 glass-card-subtle rounded-xl p-3 lg:p-4 border border-accent/30 bg-accent/5 text-left cursor-pointer hover:bg-accent/10 hover:border-accent/50 transition-all"
-      >
-        <Gift className="h-5 w-5 text-accent shrink-0 animate-pulse" />
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-foreground">🧪 Demo: Loot-Box Meilenstein öffnen</p>
-          <p className="text-xs text-muted-foreground mt-0.5">Klicke hier um die Loot-Box Animation zu testen</p>
-        </div>
-      </button>
+      {/* Demo Button – only visible when demo mode is enabled */}
+      {isDemoMode() && (
+        <button
+          onClick={triggerDemo}
+          className="w-full flex items-center gap-3 glass-card-subtle rounded-xl p-3 lg:p-4 border border-accent/30 bg-accent/5 text-left cursor-pointer hover:bg-accent/10 hover:border-accent/50 transition-all"
+        >
+          <Gift className="h-5 w-5 text-accent shrink-0 animate-pulse" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-foreground">🧪 Demo: Loot-Box Meilenstein öffnen</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Klicke hier um die Loot-Box Animation zu testen</p>
+          </div>
+        </button>
+      )}
 
       <Dialog open={dialogOpen} onOpenChange={() => { /* prevent close via X/overlay/escape */ }}>
         <DialogContent
