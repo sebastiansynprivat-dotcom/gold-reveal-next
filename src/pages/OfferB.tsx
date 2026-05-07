@@ -300,7 +300,7 @@ const OfferB = () => {
               >
                 <div className="glass-card-subtle rounded-xl p-5 mt-3 space-y-5">
                   <p className="text-sm text-foreground font-medium text-center">
-                    Bitte schicke folgendes in deine WhatsApp-Gruppe:
+                    Bitte schick folgendes in deine Gruppe:
                   </p>
 
                   <div className="space-y-2">
