@@ -7,14 +7,8 @@ export interface InputProps extends React.ComponentProps<"input"> {
   nativeInput?: boolean;
 }
 
-// Types that MUST stay native (passwords, numeric keyboards, special pickers, autofill-critical)
+// Only true controls/pickers stay native. Text-like types use contenteditable to avoid the iOS form assistant bar.
 const NATIVE_TYPES = new Set([
-  "password",
-  "number",
-  "email",
-  "tel",
-  "url",
-  "search",
   "date",
   "datetime-local",
   "time",
@@ -34,6 +28,25 @@ const NATIVE_TYPES = new Set([
 
 const baseClasses =
   "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm";
+
+const getInputMode = (type: string | undefined, inputMode: React.HTMLAttributes<HTMLDivElement>["inputMode"]) => {
+  if (inputMode) return inputMode;
+  if (type === "number") return "decimal";
+  if (type === "email") return "email";
+  if (type === "tel") return "tel";
+  if (type === "url") return "url";
+  if (type === "search") return "search";
+  return "text";
+};
+
+const placeCaretAtEnd = (el: HTMLDivElement) => {
+  const range = document.createRange();
+  range.selectNodeContents(el);
+  range.collapse(false);
+  const selection = window.getSelection();
+  selection?.removeAllRanges();
+  selection?.addRange(range);
+};
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, type, nativeInput, value, defaultValue, onChange, onInput, placeholder, disabled, readOnly, ...props }, ref) => {
@@ -71,6 +84,8 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             if (prop === "value") return target.textContent ?? "";
             if (prop === "focus") return target.focus.bind(target);
             if (prop === "blur") return target.blur.bind(target);
+            if (prop === "setSelectionRange") return () => placeCaretAtEnd(target);
+            if (prop === "selectionStart" || prop === "selectionEnd") return (target.textContent ?? "").length;
             const v = (target as any)[prop];
             return typeof v === "function" ? v.bind(target) : v;
           },
@@ -106,7 +121,14 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     }, []);
 
     const fireChange = (el: HTMLDivElement) => {
-      const text = el.textContent ?? "";
+      const maxLength = typeof props.maxLength === "number" ? props.maxLength : undefined;
+      const rawText = el.textContent ?? "";
+      const sanitized = type === "number" ? rawText.replace(/[^0-9.,-]/g, "") : rawText;
+      const text = maxLength ? sanitized.slice(0, maxLength) : sanitized;
+      if (text !== rawText) {
+        el.textContent = text;
+        placeCaretAtEnd(el);
+      }
       const synthetic = {
         target: Object.assign(el, { value: text, name: (props as any).name }),
         currentTarget: el,
@@ -132,8 +154,9 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         suppressContentEditableWarning
         data-placeholder={placeholder}
         spellCheck={(props as any).spellCheck}
-        inputMode={(props as any).inputMode ?? "text"}
+        inputMode={getInputMode(type, (props as any).inputMode)}
         onInput={(e) => fireChange(e.currentTarget)}
+        onFocus={(e) => (props as any).onFocus?.(e)}
         onBlur={(e) => {
           (props as any).onBlur?.(e);
         }}
