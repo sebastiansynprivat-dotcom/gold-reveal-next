@@ -1707,6 +1707,11 @@ export default function ModelDashboardTab() {
                   }),
                   { fourbased: 0, maloum: 0, brezzels: 0 },
                 )}
+                platformPercentages={{
+                  fourbased: modelForm.revenue_percentage_fourbased || 0,
+                  maloum: modelForm.revenue_percentage_maloum || 0,
+                  brezzels: modelForm.revenue_percentage_brezzels || 0,
+                }}
               />
             </Section>
           </motion.div>
