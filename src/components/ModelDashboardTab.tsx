@@ -143,6 +143,9 @@ interface ModelRow {
   username: string;
   address: string;
   revenue_percentage: number;
+  revenue_percentage_fourbased?: number;
+  revenue_percentage_maloum?: number;
+  revenue_percentage_brezzels?: number;
   crypto_address: string;
   currency: string;
   contract_file_path: string;
