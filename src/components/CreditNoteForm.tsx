@@ -68,6 +68,7 @@ export default function CreditNoteForm({
   revenuePercentage = 0,
   currency = "EUR",
   platformRevenue,
+  platformPercentages,
   compensationType = "percentage",
   hourlyRate = 0,
   hoursWorked = 0,
