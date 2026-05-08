@@ -1,32 +1,31 @@
 ## Ziel
-Im Admin Mitarbeiter-Dashboard (Tab "Mitarbeiter-Dashboard") werden auf dem Handy keine Mitarbeiter-Namen mehr angezeigt, weil das Tabellen-Grid zu breit ist. Layout für Mobile clean machen, alles lesbar.
 
-## Problem
-Datei `src/components/ChatterDashboardTab.tsx`, ab Zeile 405 — Liste nutzt:
-```
-grid-cols-[1fr_80px_80px_80px_80px_32px]
-```
-Das ergibt ~352px feste Spalten. Bei einem Viewport von ~375px bleibt für den Namen nur ein Stummel — Name + Sub-Label werden komplett abgeschnitten.
+Alle Accounts der Plattform **Maloum** sollen rückwirkend die Domain `maloum.com` bekommen. Logins (E-Mail + Passwort) bleiben unverändert.
+
+## Aktueller Stand in der Datenbank
+
+In der Tabelle `accounts` gibt es für Plattform = `Maloum`:
+
+- 163 Einträge mit Domain `malum.com`
+- 62 Einträge mit Domain `maloum.com`
+
+(Im Code selbst ist keine Domain hartkodiert — die Domain kommt ausschließlich aus der DB-Spalte `account_domain`.)
 
 ## Änderung
-Datei: `src/components/ChatterDashboardTab.tsx`
 
-Für die Mitarbeiter-Liste eine **Mobile-First Doppel-Darstellung** einführen:
+Ein einziges Update auf der `accounts`-Tabelle:
 
-- **Mobile (< sm):**
-  - Tabellen-Header ausblenden (`hidden sm:grid`).
-  - Jede Zeile als kompakte Karte:
-    - Obere Zeile: Name (truncate, fett) + Verdienst rechts (gold, tabular-nums).
-    - Untere Zeile: kleine Badges (Plattform, Rolle) + Gesamt-Umsatz dezent + Trash-Icon ganz rechts.
-  - Klick-Verhalten (Auswahl + Scroll-to-Detail) bleibt identisch.
-- **Desktop (≥ sm):**
-  - Bestehendes Grid `1fr_80px_80px_80px_80px_32px` bleibt unverändert.
+```sql
+UPDATE public.accounts
+SET account_domain = 'maloum.com'
+WHERE platform = 'Maloum'
+  AND account_domain <> 'maloum.com';
+```
 
-Konkret: Header-Div bekommt `hidden sm:grid`, Row-Container wird ein konditionaler Wrapper `sm:grid sm:grid-cols-[1fr_80px_80px_80px_80px_32px]` + auf Mobile `flex flex-col gap-1 p-3`. Innerhalb der Row werden die einzelnen Zellen mit `hidden sm:flex` / `sm:hidden` gesteuert, damit auf Mobile die kompakte Karten-Variante und auf Desktop die Tabellen-Zellen sichtbar sind.
+- Betrifft **nur** das Feld `account_domain`
+- `account_email`, `account_password`, Zuweisungen, Drive-Folder etc. bleiben unangetastet
+- Wirkt sofort auch für alle bestehenden Accounts (rückwirkend)
 
-Falls der "Gewerblich"-Sub-Label unter dem Namen (`↳ admin@…`) für Super-Admins angezeigt wird, bleibt er erhalten, kommt aber jetzt vollständig sichtbar unter dem Namen (`truncate` statt abgeschnitten in 23px Spalte).
+## Frage zur Bestätigung
 
-## Nicht-Änderungen
-- Daten, Filter, Such-, Add-, Delete-Logik unverändert.
-- Detail-View und übrige Sektionen unverändert.
-- Desktop-Layout bleibt 1:1 wie heute.
+Deine Nachricht erwähnt sowohl „Maloum.com" als auch „Malum.com". Ich gehe davon aus, dass **alle** Maloum-Accounts künftig auf `maloum.com` laufen sollen (also auch die 163 alten `malum.com`-Einträge auf `maloum.com` umgestellt werden). Falls du stattdessen das Gegenteil willst (alles auf `malum.com`), bitte kurz Bescheid geben — sonst führe ich den Plan wie oben aus.
