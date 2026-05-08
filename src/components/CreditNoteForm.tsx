@@ -1005,9 +1005,9 @@ export default function CreditNoteForm({
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">TxHash</Label>
+              <Label className="text-xs text-muted-foreground">Collect Exchange ID</Label>
               <div className="input-gold-shimmer rounded-lg">
-                <Input value={txHash} onChange={e => setTxHash(e.target.value)} placeholder="Transaction Hash" className="text-sm border-transparent font-mono text-xs" />
+                <Input value={txHash} onChange={e => setTxHash(e.target.value)} placeholder="Collect Exchange ID" className="text-sm border-transparent font-mono text-xs" />
               </div>
             </div>
           </>
