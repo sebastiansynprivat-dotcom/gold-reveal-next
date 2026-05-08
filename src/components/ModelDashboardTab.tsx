@@ -51,6 +51,92 @@ const extractDriveFolderId = (input: string): string => {
   const match = input.match(/\/folders\/([a-zA-Z0-9_-]+)/);
   return match ? match[1] : input;
 };
+
+// ─── Referrer Tag combobox (free-text + suggestions from prior tags) ───
+function ReferrerTagInput({
+  value,
+  onChange,
+  suggestions,
+  placeholder = "z.B. Instagram Anna",
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  suggestions: string[];
+  placeholder?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const onDocClick = (e: MouseEvent) => {
+      if (!containerRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, []);
+
+  const filtered = useMemo(() => {
+    const q = value.trim().toLowerCase();
+    return suggestions
+      .filter((s) => s && (!q || s.toLowerCase().includes(q)) && s.toLowerCase() !== q)
+      .slice(0, 8);
+  }, [suggestions, value]);
+
+  return (
+    <div ref={containerRef} className="relative">
+      <div className="relative">
+        <Tag className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+        <Input
+          value={value}
+          onChange={(e) => {
+            onChange(e.target.value);
+            setOpen(true);
+          }}
+          onFocus={() => setOpen(true)}
+          placeholder={placeholder}
+          className="bg-secondary/40 border-border/50 text-sm h-9 pl-8 pr-8"
+        />
+        {suggestions.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setOpen((v) => !v)}
+            className="absolute right-1.5 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
+          >
+            <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", open && "rotate-180")} />
+          </button>
+        )}
+      </div>
+      <AnimatePresence>
+        {open && filtered.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.12 }}
+            className="absolute left-0 right-0 z-50 mt-1 rounded-lg border border-border/60 bg-popover/95 backdrop-blur-md shadow-lg overflow-hidden"
+          >
+            <div className="max-h-48 overflow-y-auto py-1">
+              {filtered.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => {
+                    onChange(s);
+                    setOpen(false);
+                  }}
+                  className="w-full text-left px-3 py-1.5 text-xs text-foreground hover:bg-accent/15 hover:text-accent flex items-center gap-2"
+                >
+                  <Tag className="h-3 w-3 text-accent/70" />
+                  {s}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
 interface ModelRow {
   id: string;
   name: string;
