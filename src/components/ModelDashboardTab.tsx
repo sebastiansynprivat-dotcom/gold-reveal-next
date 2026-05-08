@@ -1151,10 +1151,10 @@ export default function ModelDashboardTab() {
                   </div>
                 )}
 
-                {/* Percentage slider */}
+                {/* Standard percentage slider (fallback) */}
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-foreground">Revenue-Anteil:</span>
+                    <span className="text-sm text-foreground">Standard Revenue-Anteil:</span>
                     <div className="gold-gradient-border-animated rounded-lg px-3 py-1">
                       <span className="text-sm font-bold text-gold-gradient tabular-nums">
                         {modelForm.revenue_percentage || 0}%
@@ -1168,7 +1168,75 @@ export default function ModelDashboardTab() {
                     max={100}
                     step={1}
                   />
+                  <p className="text-[10px] text-muted-foreground">
+                    Wird verwendet, wenn der Plattform-spezifische Wert auf 0 steht.
+                  </p>
                 </div>
+
+                {/* Per-platform custom percentages */}
+                {(() => {
+                  const fallback = modelForm.revenue_percentage || 0;
+                  const totals = selectedModelPlatformRevenue.reduce(
+                    (acc, p) => ({
+                      fourbased: acc.fourbased + (p.fourbased || 0),
+                      maloum: acc.maloum + (p.maloum || 0),
+                      brezzels: acc.brezzels + (p.brezzels || 0),
+                    }),
+                    { fourbased: 0, maloum: 0, brezzels: 0 },
+                  );
+                  const rows: Array<{ key: "fourbased" | "maloum" | "brezzels"; label: string; rev: number; pctField: keyof ModelRow }> = [
+                    { key: "fourbased", label: "4Based", rev: totals.fourbased, pctField: "revenue_percentage_fourbased" },
+                    { key: "maloum", label: "Maloum", rev: totals.maloum, pctField: "revenue_percentage_maloum" },
+                    { key: "brezzels", label: "Brezzels", rev: totals.brezzels, pctField: "revenue_percentage_brezzels" },
+                  ];
+                  const currency = modelForm.currency || "EUR";
+                  return (
+                    <div className="space-y-3 rounded-xl border border-accent/15 bg-accent/[0.02] p-3">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                        Custom % pro Plattform
+                      </p>
+                      {rows.map((r) => {
+                        const pct = (modelForm[r.pctField] as number) || 0;
+                        const usingFallback = pct === 0;
+                        const effective = usingFallback ? fallback : pct;
+                        const earn = Math.round((r.rev * effective) / 100);
+                        return (
+                          <div key={r.key} className="space-y-1.5">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-xs font-medium text-foreground w-16 shrink-0">{r.label}</span>
+                              <div className="flex-1 flex items-center gap-2 min-w-0">
+                                <Slider
+                                  value={[pct]}
+                                  onValueChange={([v]) =>
+                                    setModelForm((prev) => ({ ...prev, [r.pctField]: v }))
+                                  }
+                                  min={0}
+                                  max={100}
+                                  step={1}
+                                  className="flex-1"
+                                />
+                                <span className="text-xs font-bold text-gold-gradient tabular-nums w-10 text-right">
+                                  {pct}%
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex justify-between items-center pl-[4.5rem] text-[10px] text-muted-foreground tabular-nums">
+                              <span>
+                                Umsatz: {r.rev.toLocaleString("de-DE")} {currency}
+                                {usingFallback && pct === 0 && fallback > 0 && (
+                                  <span className="ml-1 text-accent/70">(Standard {fallback}%)</span>
+                                )}
+                              </span>
+                              <span className="text-accent/80">
+                                → {earn.toLocaleString("de-DE")} {currency}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
 
                 {/* Currency */}
                 <div className="flex justify-end">
@@ -1193,7 +1261,7 @@ export default function ModelDashboardTab() {
                 {verdienst > 0 && (
                   <div className="rounded-xl border border-accent/20 bg-accent/5 p-3 text-center space-y-1">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                      Verdienst Model ({modelForm.revenue_percentage}%)
+                      Verdienst Model (gewichtet pro Plattform)
                     </p>
                     <p className="text-2xl font-bold text-accent tabular-nums">
                       <AnimatedGoldValue value={verdienst} suffix={` ${modelForm.currency || "EUR"}`} />
