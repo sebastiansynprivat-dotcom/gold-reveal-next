@@ -40,6 +40,7 @@ interface CreditNoteFormProps {
   revenuePercentage?: number;
   currency?: string;
   platformRevenue?: PlatformRevenue;
+  platformPercentages?: { fourbased: number; maloum: number; brezzels: number };
   compensationType?: "percentage" | "hourly";
   hourlyRate?: number;
   hoursWorked?: number;
