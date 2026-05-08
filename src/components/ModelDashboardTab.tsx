@@ -435,10 +435,18 @@ export default function ModelDashboardTab() {
   }, [modelAccounts, dashboardRevenues]);
 
   const verdienst = useMemo(() => {
-    const pct = modelForm.revenue_percentage || 0;
-    if (pct <= 0 || totalRevenue <= 0) return 0;
-    return Math.round(totalRevenue * pct) / 100;
-  }, [totalRevenue, modelForm.revenue_percentage]);
+    const fallback = modelForm.revenue_percentage || 0;
+    const pctFb = modelForm.revenue_percentage_fourbased || fallback;
+    const pctMl = modelForm.revenue_percentage_maloum || fallback;
+    const pctBr = modelForm.revenue_percentage_brezzels || fallback;
+    let sum = 0;
+    for (const p of selectedModelPlatformRevenue) {
+      sum += (p.fourbased || 0) * pctFb / 100;
+      sum += (p.maloum || 0) * pctMl / 100;
+      sum += (p.brezzels || 0) * pctBr / 100;
+    }
+    return Math.round(sum);
+  }, [selectedModelPlatformRevenue, modelForm.revenue_percentage, modelForm.revenue_percentage_fourbased, modelForm.revenue_percentage_maloum, modelForm.revenue_percentage_brezzels]);
 
   // ─── Create model ───
   const handleCreateModel = async () => {
