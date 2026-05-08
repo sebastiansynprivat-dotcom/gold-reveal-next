@@ -431,19 +431,25 @@ export default function CreditNoteForm({
       y += 7;
     } else {
       // Table row(s) – one per platform if breakdown exists, otherwise single row
-      const hasPlatformBreakdown = platformRevenue && revenuePercentage > 0 && (platformRevenue.fourbased > 0 || platformRevenue.maloum > 0 || platformRevenue.brezzels > 0);
+      const pctFor = (key: "fourbased" | "maloum" | "brezzels") => {
+        const custom = platformPercentages?.[key] || 0;
+        return custom > 0 ? custom : revenuePercentage;
+      };
+      const hasAnyPct = revenuePercentage > 0
+        || (platformPercentages && (platformPercentages.fourbased > 0 || platformPercentages.maloum > 0 || platformPercentages.brezzels > 0));
+      const hasPlatformBreakdown = platformRevenue && hasAnyPct && (platformRevenue.fourbased > 0 || platformRevenue.maloum > 0 || platformRevenue.brezzels > 0);
       const platforms = hasPlatformBreakdown
         ? [
-            { name: "4Based", rev: platformRevenue!.fourbased },
-            { name: "Maloum", rev: platformRevenue!.maloum },
-            { name: "Brezzels", rev: platformRevenue!.brezzels },
-          ].filter(p => p.rev > 0)
+            { name: "4Based", rev: platformRevenue!.fourbased, pct: pctFor("fourbased") },
+            { name: "Maloum", rev: platformRevenue!.maloum, pct: pctFor("maloum") },
+            { name: "Brezzels", rev: platformRevenue!.brezzels, pct: pctFor("brezzels") },
+          ].filter(p => p.rev > 0 && p.pct > 0)
         : [];
 
       if (hasPlatformBreakdown) {
         platforms.forEach((p, i) => {
           const rowBg: [number, number, number] = i % 2 === 0 ? [20, 20, 20] : [25, 25, 25];
-          const payout = (p.rev * revenuePercentage / 100);
+          const payout = (p.rev * p.pct / 100);
           const rowH = 7;
           doc.setFillColor(...rowBg);
           doc.rect(m, y - 3.5, cw, rowH, "F");
