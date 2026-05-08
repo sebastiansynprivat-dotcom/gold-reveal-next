@@ -724,6 +724,7 @@ export type Database = {
           provider_is_business: boolean
           provider_name_override: string
           provider_vat_id: string
+          referrer_tag: string
           revenue_percentage: number
           updated_at: string
           username: string | null
@@ -751,6 +752,7 @@ export type Database = {
           provider_is_business?: boolean
           provider_name_override?: string
           provider_vat_id?: string
+          referrer_tag?: string
           revenue_percentage?: number
           updated_at?: string
           username?: string | null
@@ -778,6 +780,7 @@ export type Database = {
           provider_is_business?: boolean
           provider_name_override?: string
           provider_vat_id?: string
+          referrer_tag?: string
           revenue_percentage?: number
           updated_at?: string
           username?: string | null
