@@ -102,13 +102,15 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       [],
     );
 
-    // Sync external value -> DOM only when different (avoids caret jump)
+    // Sync external value -> DOM only when different and not focused (avoids caret jump / iOS IME breakage)
     React.useEffect(() => {
       if (value === undefined) return;
       const el = divRef.current;
       if (!el) return;
       const str = value == null ? "" : String(value);
-      if (el.textContent !== str) el.textContent = str;
+      if (el.textContent === str) return;
+      if (document.activeElement === el) return;
+      el.textContent = str;
     }, [value]);
 
     // Set initial defaultValue once

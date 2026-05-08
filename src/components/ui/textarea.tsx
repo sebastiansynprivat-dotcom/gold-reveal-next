@@ -62,7 +62,9 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
       const el = divRef.current;
       if (!el) return;
       const str = value == null ? "" : String(value);
-      if (el.innerText !== str) el.innerText = str;
+      if (el.innerText === str) return;
+      if (document.activeElement === el) return;
+      el.innerText = str;
     }, [value]);
 
     React.useEffect(() => {
