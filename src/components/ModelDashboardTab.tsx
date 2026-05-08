@@ -675,7 +675,7 @@ export default function ModelDashboardTab() {
 
         <div className="overflow-x-auto scrollbar-none">
           {/* Header */}
-          <div className="grid grid-cols-[1fr_100px_80px] gap-0 bg-accent/10 border-b border-accent/20">
+          <div className="grid grid-cols-[1fr_100px_80px] gap-0 bg-accent/10 border-b border-accent/20 sticky top-0 z-10 backdrop-blur-md">
             <div className="px-3 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold">Name</div>
             <div className="px-2 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">
               Benutzername
@@ -686,7 +686,7 @@ export default function ModelDashboardTab() {
           </div>
 
           {/* Rows */}
-          <ScrollArea className="max-h-[350px]">
+          <ScrollArea className="h-[60vh] max-h-[600px]">
             {filteredModels.length === 0 ? (
               <p className="text-xs text-muted-foreground text-center py-8">
                 {models.length === 0 ? "Noch keine Models angelegt." : "Keine Models gefunden."}
