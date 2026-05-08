@@ -360,6 +360,7 @@ export default function ModelDashboardTab() {
         model_language: newModel.model_language,
         model_agency: newModel.model_agency,
         model_active: newModel.model_active,
+        referrer_tag: newModel.referrer_tag.trim(),
         created_by: userId,
       })
       .select("id")
