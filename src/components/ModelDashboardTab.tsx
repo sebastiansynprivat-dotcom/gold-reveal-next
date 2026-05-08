@@ -74,6 +74,7 @@ interface ModelRow {
   created_at: string;
   updated_at: string;
   referrer_tag?: string;
+}
 
 interface AccountRow {
   id: string;
