@@ -459,7 +459,7 @@ export default function CreditNoteForm({
           doc.setFontSize(8);
           doc.setTextColor(...white);
           doc.text(`${i + 1}`, m + 2, y);
-          doc.text(`${description} – ${p.name}`, m + 15, y);
+          doc.text(`${description} – ${p.name} (${p.pct}%)`, m + 15, y);
           doc.setTextColor(...muted);
           doc.text(p.rev.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), rCol - 52, y, { align: "right" });
           doc.setTextColor(...white);
