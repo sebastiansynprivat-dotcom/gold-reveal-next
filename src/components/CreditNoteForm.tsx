@@ -867,38 +867,33 @@ export default function CreditNoteForm({
         </div>
 
         {/* Platform Breakdown */}
-        {compensationType !== "hourly" && platformRevenue && (platformRevenue.fourbased > 0 || platformRevenue.maloum > 0 || platformRevenue.brezzels > 0) && revenuePercentage > 0 && (
-          <div className="rounded-lg bg-secondary/20 border border-border/40 p-3 space-y-1.5">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Plattform-Aufschlüsselung</p>
-            {platformRevenue.fourbased > 0 && (
-              <div className="flex justify-between text-xs">
-                <span className="text-muted-foreground">4Based</span>
-                <span className="font-mono text-foreground">
-                  {platformRevenue.fourbased.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}
-                  <span className="text-muted-foreground ml-1.5">→ {(platformRevenue.fourbased * revenuePercentage / 100).toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}</span>
-                </span>
-              </div>
-            )}
-            {platformRevenue.maloum > 0 && (
-              <div className="flex justify-between text-xs">
-                <span className="text-muted-foreground">Maloum</span>
-                <span className="font-mono text-foreground">
-                  {platformRevenue.maloum.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}
-                  <span className="text-muted-foreground ml-1.5">→ {(platformRevenue.maloum * revenuePercentage / 100).toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}</span>
-                </span>
-              </div>
-            )}
-            {platformRevenue.brezzels > 0 && (
-              <div className="flex justify-between text-xs">
-                <span className="text-muted-foreground">Brezzels</span>
-                <span className="font-mono text-foreground">
-                  {platformRevenue.brezzels.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}
-                  <span className="text-muted-foreground ml-1.5">→ {(platformRevenue.brezzels * revenuePercentage / 100).toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}</span>
-                </span>
-              </div>
-            )}
-          </div>
-        )}
+        {(() => {
+          if (compensationType === "hourly" || !platformRevenue) return null;
+          const pctFor = (k: "fourbased" | "maloum" | "brezzels") => {
+            const c = platformPercentages?.[k] || 0;
+            return c > 0 ? c : revenuePercentage;
+          };
+          const rows = [
+            { key: "fourbased" as const, label: "4Based", rev: platformRevenue.fourbased, pct: pctFor("fourbased") },
+            { key: "maloum" as const, label: "Maloum", rev: platformRevenue.maloum, pct: pctFor("maloum") },
+            { key: "brezzels" as const, label: "Brezzels", rev: platformRevenue.brezzels, pct: pctFor("brezzels") },
+          ].filter(r => r.rev > 0 && r.pct > 0);
+          if (rows.length === 0) return null;
+          return (
+            <div className="rounded-lg bg-secondary/20 border border-border/40 p-3 space-y-1.5">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Plattform-Aufschlüsselung</p>
+              {rows.map(r => (
+                <div key={r.key} className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">{r.label} <span className="text-accent/70">({r.pct}%)</span></span>
+                  <span className="font-mono text-foreground">
+                    {r.rev.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}
+                    <span className="text-muted-foreground ml-1.5">→ {(r.rev * r.pct / 100).toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}</span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
 
         {/* Summary */}
         <div className="rounded-lg bg-secondary/30 border border-border/50 p-3 space-y-1.5">
