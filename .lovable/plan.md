@@ -1,17 +1,32 @@
 ## Ziel
-In der Admin Model-Verwaltung (Tab "Model-Dashboard" → Sektion "Alle Models") sollen wirklich alle Models in der Liste sichtbar/erreichbar sein, indem die Liste zuverlässig scrollbar wird.
+Im Admin Mitarbeiter-Dashboard (Tab "Mitarbeiter-Dashboard") werden auf dem Handy keine Mitarbeiter-Namen mehr angezeigt, weil das Tabellen-Grid zu breit ist. Layout für Mobile clean machen, alles lesbar.
 
 ## Problem
-In `src/components/ModelDashboardTab.tsx` (Zeile 689) wird `<ScrollArea className="max-h-[350px]">` verwendet. Radix `ScrollArea` braucht eine **explizite Höhe** auf dem Viewport, damit der interne Scrollbalken greift — `max-h` allein reicht in dieser Konstellation nicht, weshalb bei vielen Models einige unten abgeschnitten oder gar nicht erreichbar sind.
+Datei `src/components/ChatterDashboardTab.tsx`, ab Zeile 405 — Liste nutzt:
+```
+grid-cols-[1fr_80px_80px_80px_80px_32px]
+```
+Das ergibt ~352px feste Spalten. Bei einem Viewport von ~375px bleibt für den Namen nur ein Stummel — Name + Sub-Label werden komplett abgeschnitten.
 
 ## Änderung
-Datei: `src/components/ModelDashboardTab.tsx`, ca. Zeile 689
+Datei: `src/components/ChatterDashboardTab.tsx`
 
-- ScrollArea-Höhe auf eine feste, viewport-relative Höhe setzen, damit sie auf jedem Bildschirm sinnvoll skaliert und intern scrollt:
-  - `h-[60vh] max-h-[600px]` statt `max-h-[350px]`
-- Sicherstellen, dass der Scroll-Indikator (dezenter goldener Scrollbalken) sichtbar ist, damit Admins erkennen, dass weitere Models darunter liegen.
-- Sticky Tabellen-Header (Zeile 678) im scrollbaren Bereich behalten, damit die Spaltenüberschriften beim Scrollen sichtbar bleiben (`sticky top-0 z-10` + leicht erhöhter Background-Blur, damit Inhalte darunter nicht durchscheinen).
+Für die Mitarbeiter-Liste eine **Mobile-First Doppel-Darstellung** einführen:
+
+- **Mobile (< sm):**
+  - Tabellen-Header ausblenden (`hidden sm:grid`).
+  - Jede Zeile als kompakte Karte:
+    - Obere Zeile: Name (truncate, fett) + Verdienst rechts (gold, tabular-nums).
+    - Untere Zeile: kleine Badges (Plattform, Rolle) + Gesamt-Umsatz dezent + Trash-Icon ganz rechts.
+  - Klick-Verhalten (Auswahl + Scroll-to-Detail) bleibt identisch.
+- **Desktop (≥ sm):**
+  - Bestehendes Grid `1fr_80px_80px_80px_80px_32px` bleibt unverändert.
+
+Konkret: Header-Div bekommt `hidden sm:grid`, Row-Container wird ein konditionaler Wrapper `sm:grid sm:grid-cols-[1fr_80px_80px_80px_80px_32px]` + auf Mobile `flex flex-col gap-1 p-3`. Innerhalb der Row werden die einzelnen Zellen mit `hidden sm:flex` / `sm:hidden` gesteuert, damit auf Mobile die kompakte Karten-Variante und auf Desktop die Tabellen-Zellen sichtbar sind.
+
+Falls der "Gewerblich"-Sub-Label unter dem Namen (`↳ admin@…`) für Super-Admins angezeigt wird, bleibt er erhalten, kommt aber jetzt vollständig sichtbar unter dem Namen (`truncate` statt abgeschnitten in 23px Spalte).
 
 ## Nicht-Änderungen
-- Layout, Spaltenstruktur, Stil und Filterlogik bleiben identisch.
-- Keine Änderung am Detail-View, an Suche/Filtern oder anderen Bereichen.
+- Daten, Filter, Such-, Add-, Delete-Logik unverändert.
+- Detail-View und übrige Sektionen unverändert.
+- Desktop-Layout bleibt 1:1 wie heute.

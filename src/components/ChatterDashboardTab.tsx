@@ -404,8 +404,8 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
           {/* Table */}
           {filteredChatters.length > 0 ? (
             <div className="rounded-lg border border-border/50 overflow-hidden">
-              {/* Header */}
-              <div className="grid grid-cols-[1fr_80px_80px_80px_80px_32px] gap-0 bg-accent/10 border-b border-accent/20">
+              {/* Header (Desktop only) */}
+              <div className="hidden sm:grid grid-cols-[1fr_80px_80px_80px_80px_32px] gap-0 bg-accent/10 border-b border-accent/20">
                 <div className="px-3 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold">Name</div>
                 <div className="px-2 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">Plattform</div>
                 <div className="px-2 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">Rolle</div>
@@ -429,13 +429,50 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
                         setTimeout(() => chatterDetailRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 150);
                       }}
                       className={cn(
-                        "grid grid-cols-[1fr_80px_80px_80px_80px_32px] gap-0 items-center border-b border-border/30 cursor-pointer transition-colors",
+                        "border-b border-border/30 cursor-pointer transition-colors",
+                        "sm:grid sm:grid-cols-[1fr_80px_80px_80px_80px_32px] sm:gap-0 sm:items-center",
+                        "flex flex-col gap-1.5 p-3 sm:p-0",
                         isSelected
                           ? "bg-accent/15 border-l-2 border-l-accent"
                           : i % 2 === 0 ? "bg-card/40 hover:bg-accent/5" : "bg-card/20 hover:bg-accent/5"
                       )}
                     >
-                      <div className="px-3 py-2 min-w-0">
+                      {/* Mobile: top row (name + earnings) */}
+                      <div className="flex items-center justify-between gap-2 sm:hidden">
+                        <div className="min-w-0 flex-1">
+                          <p className={cn("text-sm font-semibold truncate", isSelected ? "text-accent" : "text-foreground")}>{c.name}</p>
+                          {isSuperAdmin && c.createdBy && (
+                            <p className="text-[10px] text-muted-foreground truncate">
+                              {adminEmails[c.createdBy] ? `↳ ${adminEmails[c.createdBy]}` : "↳ Super-Admin"}
+                            </p>
+                          )}
+                        </div>
+                        <span className="text-sm tabular-nums text-accent font-semibold shrink-0">
+                          {isHourlyRow ? "–" : `${earnings.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`}
+                        </span>
+                      </div>
+                      {/* Mobile: bottom row (badges + total + delete) */}
+                      <div className="flex items-center gap-2 sm:hidden">
+                        <span className="text-[10px] bg-secondary/50 text-muted-foreground border border-border/30 rounded px-1.5 py-0.5 capitalize truncate max-w-[110px]">{c.platform || "—"}</span>
+                        <span className={cn(
+                          "text-[10px] border rounded px-1.5 py-0.5 capitalize",
+                          c.role === "mitarbeiter"
+                            ? "bg-primary/10 text-primary border-primary/30"
+                            : "bg-accent/10 text-accent border-accent/30"
+                        )}>{c.role}</span>
+                        <span className="ml-auto text-[10px] tabular-nums text-muted-foreground">
+                          Gesamt: <span className="text-foreground font-medium">{isHourlyRow ? "–" : total.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                        </span>
+                        <button
+                          onClick={e => { e.stopPropagation(); deleteChatter(c.id); }}
+                          className="p-1 rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors shrink-0"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+
+                      {/* Desktop cells */}
+                      <div className="hidden sm:block px-3 py-2 min-w-0">
                         <p className={cn("text-xs font-medium truncate", isSelected ? "text-accent" : "text-foreground")}>{c.name}</p>
                         {isSuperAdmin && c.createdBy && (
                           <p className="text-[9px] text-muted-foreground truncate">
@@ -443,10 +480,10 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
                           </p>
                         )}
                       </div>
-                      <div className="px-2 py-2 flex justify-center">
+                      <div className="hidden sm:flex px-2 py-2 justify-center">
                         <span className="text-[9px] bg-secondary/50 text-muted-foreground border border-border/30 rounded px-1.5 py-0.5 capitalize truncate max-w-[70px]">{c.platform}</span>
                       </div>
-                      <div className="px-2 py-2 flex justify-center">
+                      <div className="hidden sm:flex px-2 py-2 justify-center">
                         <span className={cn(
                           "text-[9px] border rounded px-1.5 py-0.5 capitalize",
                           c.role === "mitarbeiter"
@@ -454,13 +491,13 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
                             : "bg-accent/10 text-accent border-accent/30"
                         )}>{c.role}</span>
                       </div>
-                      <div className="px-1 py-2 text-right">
+                      <div className="hidden sm:block px-1 py-2 text-right">
                         <span className="text-[11px] tabular-nums font-semibold text-foreground">{isHourlyRow ? "–" : total.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                       </div>
-                      <div className="px-1 py-2 text-right">
+                      <div className="hidden sm:block px-1 py-2 text-right">
                         <span className="text-[11px] tabular-nums text-accent font-medium">{isHourlyRow ? "–" : earnings.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                       </div>
-                      <div className="flex justify-center py-2">
+                      <div className="hidden sm:flex justify-center py-2">
                         <button
                           onClick={e => { e.stopPropagation(); deleteChatter(c.id); }}
                           className="p-1 rounded hover:bg-destructive/20 text-muted-foreground hover:text-destructive transition-colors"
