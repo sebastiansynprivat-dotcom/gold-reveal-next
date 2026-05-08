@@ -1049,6 +1049,14 @@ export default function ModelDashboardTab() {
                       />
                     </div>
                   </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Referrer Tag</Label>
+                    <ReferrerTagInput
+                      value={modelForm.referrer_tag || ""}
+                      onChange={(v) => setModelForm((prev) => ({ ...prev, referrer_tag: v }))}
+                      suggestions={referrerSuggestions}
+                    />
+                  </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
                       <Label className="text-xs text-muted-foreground">Sprache</Label>
