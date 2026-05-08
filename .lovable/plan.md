@@ -1,24 +1,17 @@
-# Dialog-Zentrierung & Layout fixen
+## Ziel
+In der Admin Model-Verwaltung (Tab "Model-Dashboard" → Sektion "Alle Models") sollen wirklich alle Models in der Liste sichtbar/erreichbar sein, indem die Liste zuverlässig scrollbar wird.
 
 ## Problem
-Pop-Ups (alle `<Dialog>`-basierten Modals im Dashboard) sind nicht mehr sauber mittig und teils oben/unten "abgeschnitten". Ursache liegt in `src/components/ui/dialog.tsx`:
+In `src/components/ModelDashboardTab.tsx` (Zeile 689) wird `<ScrollArea className="max-h-[350px]">` verwendet. Radix `ScrollArea` braucht eine **explizite Höhe** auf dem Viewport, damit der interne Scrollbalken greift — `max-h` allein reicht in dieser Konstellation nicht, weshalb bei vielen Models einige unten abgeschnitten oder gar nicht erreichbar sind.
 
-- `w-full` ohne seitlichen Margin → auf Mobile bündig zum Rand
-- `slide-in-from-top-[48%]` + `slide-in-from-left-1/2` Animationen erzeugen sichtbaren Versatz beim Öffnen, der bei mancher Render-Reihenfolge "stehen bleibt"
-- Keine `max-height` + kein `overflow-y-auto` → langer Inhalt (z. B. Diamond-Dialog, Tutorial, Trustpilot) wird oben/unten abgeschnitten
-- Übersetzungen `translate-x-[-50%]/translate-y-[-50%]` mit Tailwind-Bracket-Syntax — funktioniert, aber kombiniert mit den Slide-Animationen entsteht das verrutschte Erscheinungsbild
+## Änderung
+Datei: `src/components/ModelDashboardTab.tsx`, ca. Zeile 689
 
-## Fix (eine Datei: `src/components/ui/dialog.tsx`)
+- ScrollArea-Höhe auf eine feste, viewport-relative Höhe setzen, damit sie auf jedem Bildschirm sinnvoll skaliert und intern scrollt:
+  - `h-[60vh] max-h-[600px]` statt `max-h-[350px]`
+- Sicherstellen, dass der Scroll-Indikator (dezenter goldener Scrollbalken) sichtbar ist, damit Admins erkennen, dass weitere Models darunter liegen.
+- Sticky Tabellen-Header (Zeile 678) im scrollbaren Bereich behalten, damit die Spaltenüberschriften beim Scrollen sichtbar bleiben (`sticky top-0 z-10` + leicht erhöhter Background-Blur, damit Inhalte darunter nicht durchscheinen).
 
-`DialogContent`-Klassen ersetzen durch:
-- `left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2` (saubere Zentrierung)
-- `w-[calc(100%-2rem)] max-w-lg` (auf Mobile 1rem Abstand links/rechts)
-- `max-h-[calc(100dvh-2rem)] overflow-y-auto` (nie mehr abgeschnitten, scrollt bei Bedarf)
-- `bg-background` als Fallback (falls `glass-card` durch Override entfernt wird)
-- Slide-Animationen entfernen, nur `fade-in-0 zoom-in-95` behalten → kein Versatz
-- `overflow-hidden` raus (verhinderte Scroll bei langem Inhalt)
-
-Das wirkt global auf **alle** Dashboard-Dialoge (Diamond-Streak, Loot-Box, Push-Opt-In, Trustpilot, Billing-Info, Gewerbe-Dialog, Frage-Memo, Account-Memo, Mass-DM, Tutorial, etc.), da alle die gemeinsame `Dialog`-Komponente nutzen.
-
-## Geänderte Datei
-- `src/components/ui/dialog.tsx`
+## Nicht-Änderungen
+- Layout, Spaltenstruktur, Stil und Filterlogik bleiben identisch.
+- Keine Änderung am Detail-View, an Suche/Filtern oder anderen Bereichen.
