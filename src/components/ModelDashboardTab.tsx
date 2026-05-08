@@ -39,6 +39,8 @@ import {
   User,
   FolderTree,
   Pencil,
+  Tag,
+  ChevronDown,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import CreditNoteForm from "@/components/CreditNoteForm";
