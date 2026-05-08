@@ -217,11 +217,10 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
                 <Label className="text-xs text-foreground">Was ist der Kunde bereit zu bezahlen? (€) *</Label>
                 <div className="input-gold-shimmer rounded-lg">
                   <Input
-                    type="number"
+                    inputMode="decimal"
                     placeholder="z.B. 50"
                     value={price}
-                    onChange={(e) => setPrice(e.target.value)}
-                    min={0}
+                    onChange={(e) => setPrice(e.target.value.replace(/[^0-9.,]/g, ""))}
                     className="border-transparent"
                   />
                 </div>
