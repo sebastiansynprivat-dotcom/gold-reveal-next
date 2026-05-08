@@ -398,6 +398,7 @@ export default function ModelDashboardTab() {
       model_language: "de",
       model_agency: "shex",
       model_active: true,
+      referrer_tag: "",
     });
     setCreateAccounts(emptyAccountEntries());
     setCreateDialogOpen(false);
