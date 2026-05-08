@@ -278,6 +278,15 @@ export default function ModelDashboardTab() {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
 
+  // Distinct referrer tags from existing models for autocomplete
+  const referrerSuggestions = useMemo(
+    () =>
+      Array.from(
+        new Set(models.map((m) => (m.referrer_tag || "").trim()).filter(Boolean)),
+      ).sort((a, b) => a.localeCompare(b)),
+    [models],
+  );
+
   // Selected model form state
   const [modelForm, setModelForm] = useState<Partial<ModelRow>>({});
   const [saving, setSaving] = useState(false);
