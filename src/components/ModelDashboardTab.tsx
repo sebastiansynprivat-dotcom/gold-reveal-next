@@ -433,6 +433,7 @@ export default function ModelDashboardTab() {
         bank_iban: modelForm.bank_iban || "",
         bank_bic: modelForm.bank_bic || "",
         bank_account_holder: modelForm.bank_account_holder || "",
+        referrer_tag: (modelForm.referrer_tag || "").trim(),
       })
       .eq("id", selectedModelId);
     // Also update all accounts with model-level fields
