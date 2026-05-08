@@ -223,6 +223,7 @@ export default function ModelDashboardTab() {
     model_language: "de" as "de" | "en",
     model_agency: "shex" as "shex" | "syn",
     model_active: true,
+    referrer_tag: "",
   });
   const [creating, setCreating] = useState(false);
   const [createAccounts, setCreateAccounts] = useState(emptyAccountEntries);
