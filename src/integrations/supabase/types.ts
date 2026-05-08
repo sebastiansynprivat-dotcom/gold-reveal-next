@@ -726,6 +726,9 @@ export type Database = {
           provider_vat_id: string
           referrer_tag: string
           revenue_percentage: number
+          revenue_percentage_brezzels: number
+          revenue_percentage_fourbased: number
+          revenue_percentage_maloum: number
           updated_at: string
           username: string | null
         }
@@ -754,6 +757,9 @@ export type Database = {
           provider_vat_id?: string
           referrer_tag?: string
           revenue_percentage?: number
+          revenue_percentage_brezzels?: number
+          revenue_percentage_fourbased?: number
+          revenue_percentage_maloum?: number
           updated_at?: string
           username?: string | null
         }
@@ -782,6 +788,9 @@ export type Database = {
           provider_vat_id?: string
           referrer_tag?: string
           revenue_percentage?: number
+          revenue_percentage_brezzels?: number
+          revenue_percentage_fourbased?: number
+          revenue_percentage_maloum?: number
           updated_at?: string
           username?: string | null
         }
