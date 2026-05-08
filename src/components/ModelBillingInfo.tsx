@@ -121,7 +121,7 @@ Exchange Rate: 1 USDT = 0.999 €`;
                   <li>Wechselkurs</li>
                   <li>Wallet-Adresse</li>
                   <li>Datum</li>
-                  <li>Transaction Hash</li>
+                  <li>Collect Exchange ID</li>
                 </ul>
 
                 <p className="text-sm font-semibold text-foreground mt-3">Beispiel:</p>
