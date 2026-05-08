@@ -583,7 +583,7 @@ export default function CreditNoteForm({
           y += 4.5;
         }
         if (txHash) {
-          doc.text(`TxHash: ${txHash}`, m, y);
+          doc.text(`Collect Exchange ID: ${txHash}`, m, y);
           y += 4.5;
         }
       }
