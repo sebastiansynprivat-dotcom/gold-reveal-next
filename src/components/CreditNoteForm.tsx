@@ -40,6 +40,7 @@ interface CreditNoteFormProps {
   revenuePercentage?: number;
   currency?: string;
   platformRevenue?: PlatformRevenue;
+  platformPercentages?: { fourbased: number; maloum: number; brezzels: number };
   compensationType?: "percentage" | "hourly";
   hourlyRate?: number;
   hoursWorked?: number;
@@ -67,6 +68,7 @@ export default function CreditNoteForm({
   revenuePercentage = 0,
   currency = "EUR",
   platformRevenue,
+  platformPercentages,
   compensationType = "percentage",
   hourlyRate = 0,
   hoursWorked = 0,
@@ -429,19 +431,25 @@ export default function CreditNoteForm({
       y += 7;
     } else {
       // Table row(s) – one per platform if breakdown exists, otherwise single row
-      const hasPlatformBreakdown = platformRevenue && revenuePercentage > 0 && (platformRevenue.fourbased > 0 || platformRevenue.maloum > 0 || platformRevenue.brezzels > 0);
+      const pctFor = (key: "fourbased" | "maloum" | "brezzels") => {
+        const custom = platformPercentages?.[key] || 0;
+        return custom > 0 ? custom : revenuePercentage;
+      };
+      const hasAnyPct = revenuePercentage > 0
+        || (platformPercentages && (platformPercentages.fourbased > 0 || platformPercentages.maloum > 0 || platformPercentages.brezzels > 0));
+      const hasPlatformBreakdown = platformRevenue && hasAnyPct && (platformRevenue.fourbased > 0 || platformRevenue.maloum > 0 || platformRevenue.brezzels > 0);
       const platforms = hasPlatformBreakdown
         ? [
-            { name: "4Based", rev: platformRevenue!.fourbased },
-            { name: "Maloum", rev: platformRevenue!.maloum },
-            { name: "Brezzels", rev: platformRevenue!.brezzels },
-          ].filter(p => p.rev > 0)
+            { name: "4Based", rev: platformRevenue!.fourbased, pct: pctFor("fourbased") },
+            { name: "Maloum", rev: platformRevenue!.maloum, pct: pctFor("maloum") },
+            { name: "Brezzels", rev: platformRevenue!.brezzels, pct: pctFor("brezzels") },
+          ].filter(p => p.rev > 0 && p.pct > 0)
         : [];
 
       if (hasPlatformBreakdown) {
         platforms.forEach((p, i) => {
           const rowBg: [number, number, number] = i % 2 === 0 ? [20, 20, 20] : [25, 25, 25];
-          const payout = (p.rev * revenuePercentage / 100);
+          const payout = (p.rev * p.pct / 100);
           const rowH = 7;
           doc.setFillColor(...rowBg);
           doc.rect(m, y - 3.5, cw, rowH, "F");
@@ -451,7 +459,7 @@ export default function CreditNoteForm({
           doc.setFontSize(8);
           doc.setTextColor(...white);
           doc.text(`${i + 1}`, m + 2, y);
-          doc.text(`${description} – ${p.name}`, m + 15, y);
+          doc.text(`${description} – ${p.name} (${p.pct}%)`, m + 15, y);
           doc.setTextColor(...muted);
           doc.text(p.rev.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), rCol - 52, y, { align: "right" });
           doc.setTextColor(...white);
@@ -859,38 +867,33 @@ export default function CreditNoteForm({
         </div>
 
         {/* Platform Breakdown */}
-        {compensationType !== "hourly" && platformRevenue && (platformRevenue.fourbased > 0 || platformRevenue.maloum > 0 || platformRevenue.brezzels > 0) && revenuePercentage > 0 && (
-          <div className="rounded-lg bg-secondary/20 border border-border/40 p-3 space-y-1.5">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Plattform-Aufschlüsselung</p>
-            {platformRevenue.fourbased > 0 && (
-              <div className="flex justify-between text-xs">
-                <span className="text-muted-foreground">4Based</span>
-                <span className="font-mono text-foreground">
-                  {platformRevenue.fourbased.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}
-                  <span className="text-muted-foreground ml-1.5">→ {(platformRevenue.fourbased * revenuePercentage / 100).toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}</span>
-                </span>
-              </div>
-            )}
-            {platformRevenue.maloum > 0 && (
-              <div className="flex justify-between text-xs">
-                <span className="text-muted-foreground">Maloum</span>
-                <span className="font-mono text-foreground">
-                  {platformRevenue.maloum.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}
-                  <span className="text-muted-foreground ml-1.5">→ {(platformRevenue.maloum * revenuePercentage / 100).toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}</span>
-                </span>
-              </div>
-            )}
-            {platformRevenue.brezzels > 0 && (
-              <div className="flex justify-between text-xs">
-                <span className="text-muted-foreground">Brezzels</span>
-                <span className="font-mono text-foreground">
-                  {platformRevenue.brezzels.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}
-                  <span className="text-muted-foreground ml-1.5">→ {(platformRevenue.brezzels * revenuePercentage / 100).toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}</span>
-                </span>
-              </div>
-            )}
-          </div>
-        )}
+        {(() => {
+          if (compensationType === "hourly" || !platformRevenue) return null;
+          const pctFor = (k: "fourbased" | "maloum" | "brezzels") => {
+            const c = platformPercentages?.[k] || 0;
+            return c > 0 ? c : revenuePercentage;
+          };
+          const rows = [
+            { key: "fourbased" as const, label: "4Based", rev: platformRevenue.fourbased, pct: pctFor("fourbased") },
+            { key: "maloum" as const, label: "Maloum", rev: platformRevenue.maloum, pct: pctFor("maloum") },
+            { key: "brezzels" as const, label: "Brezzels", rev: platformRevenue.brezzels, pct: pctFor("brezzels") },
+          ].filter(r => r.rev > 0 && r.pct > 0);
+          if (rows.length === 0) return null;
+          return (
+            <div className="rounded-lg bg-secondary/20 border border-border/40 p-3 space-y-1.5">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Plattform-Aufschlüsselung</p>
+              {rows.map(r => (
+                <div key={r.key} className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">{r.label} <span className="text-accent/70">({r.pct}%)</span></span>
+                  <span className="font-mono text-foreground">
+                    {r.rev.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}
+                    <span className="text-muted-foreground ml-1.5">→ {(r.rev * r.pct / 100).toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}</span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          );
+        })()}
 
         {/* Summary */}
         <div className="rounded-lg bg-secondary/30 border border-border/50 p-3 space-y-1.5">
