@@ -1680,6 +1680,17 @@ export default function ModelDashboardTab() {
                   className="bg-secondary/40 border-border/50 text-xs h-8"
                 />
               </div>
+              <div className="space-y-1.5">
+                <Label className="text-[10px] text-muted-foreground">Referrer Tag</Label>
+                <ReferrerTagInput
+                  value={newModel.referrer_tag}
+                  onChange={(v) => setNewModel((prev) => ({ ...prev, referrer_tag: v }))}
+                  suggestions={referrerSuggestions}
+                />
+                <p className="text-[10px] text-muted-foreground/70">
+                  Quelle dieses Models (frei wählbar – frühere Tags erscheinen als Vorschläge).
+                </p>
+              </div>
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
                   <Label className="text-[10px] text-muted-foreground">Sprache</Label>
