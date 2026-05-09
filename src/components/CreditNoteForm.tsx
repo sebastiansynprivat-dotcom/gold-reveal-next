@@ -903,30 +903,37 @@ export default function CreditNoteForm({
           </div>
         </div>
 
-        <div className="space-y-1.5">
-          <Label className="text-xs text-muted-foreground">Netto-Betrag ({currency}) *</Label>
-          <div className="input-gold-shimmer rounded-lg">
-            <Input
-              value={netAmount}
-              onChange={e => setNetAmount(e.target.value)}
-              placeholder="0,00"
-              className="text-sm border-transparent font-mono"
-            />
-          </div>
-          {suggestedAmount > 0 && netAmount !== suggestedAmount.toFixed(2) && (
-            <button
-              onClick={() => setNetAmount(suggestedAmount.toFixed(2))}
-              className="text-[10px] text-accent hover:underline"
-            >
-              Vorschlag übernehmen: {suggestedAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}
-              {revenuePercentage > 0 && ` (${revenuePercentage}%)`}
-            </button>
-          )}
-        </div>
+        {(() => {
+          const fxRate = currency === invoiceCurrency ? 1 : (liveExchangeRate || 1);
+          const suggestedConverted = suggestedAmount * fxRate;
+          return (
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Netto-Betrag ({invoiceCurrency}) *</Label>
+              <div className="input-gold-shimmer rounded-lg">
+                <Input
+                  value={netAmount}
+                  onChange={e => setNetAmount(e.target.value)}
+                  placeholder="0,00"
+                  className="text-sm border-transparent font-mono"
+                />
+              </div>
+              {suggestedAmount > 0 && netAmount !== suggestedConverted.toFixed(2) && (
+                <button
+                  onClick={() => setNetAmount(suggestedConverted.toFixed(2))}
+                  className="text-[10px] text-accent hover:underline"
+                >
+                  Vorschlag übernehmen: {suggestedConverted.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {invoiceCurrency}
+                  {revenuePercentage > 0 && ` (${revenuePercentage}%)`}
+                </button>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Platform Breakdown */}
         {(() => {
           if (compensationType === "hourly" || !platformRevenue) return null;
+          const fxRate = currency === invoiceCurrency ? 1 : (liveExchangeRate || 1);
           const pctFor = (k: "fourbased" | "maloum" | "brezzels") => {
             const c = platformPercentages?.[k] || 0;
             return c > 0 ? c : revenuePercentage;
@@ -942,16 +949,23 @@ export default function CreditNoteForm({
           if (rows.length === 0) return null;
           return (
             <div className="rounded-lg bg-secondary/20 border border-border/40 p-3 space-y-1.5">
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Plattform-Aufschlüsselung</p>
-              {rows.map(r => (
-                <div key={r.key} className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">{r.label} <span className="text-accent/70">({r.pct}%)</span></span>
-                  <span className="font-mono text-foreground">
-                    {r.rev.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}
-                    <span className="text-muted-foreground ml-1.5">→ {(r.rev * r.pct / 100).toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}</span>
-                  </span>
-                </div>
-              ))}
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                Plattform-Aufschlüsselung
+                {currency !== invoiceCurrency && <span className="ml-1 text-accent/60 normal-case">(in {invoiceCurrency} umgerechnet)</span>}
+              </p>
+              {rows.map(r => {
+                const revConv = r.rev * fxRate;
+                const payoutConv = revConv * r.pct / 100;
+                return (
+                  <div key={r.key} className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">{r.label} <span className="text-accent/70">({r.pct}%)</span></span>
+                    <span className="font-mono text-foreground">
+                      {revConv.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {invoiceCurrency}
+                      <span className="text-muted-foreground ml-1.5">→ {payoutConv.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {invoiceCurrency}</span>
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           );
         })()}
