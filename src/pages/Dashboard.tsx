@@ -2089,29 +2089,6 @@ function DashboardBillingInfo({ onNavigate, groupName }: { onNavigate: () => voi
           </div>
         </DialogContent>
       </Dialog>
-
-      <Dialog open={telegramHelpOpen} onOpenChange={setTelegramHelpOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Das ist nicht deine Telegram-ID</DialogTitle>
-            <DialogDescription className="space-y-3 pt-2 text-sm">
-              <p>
-                Deine Telegram-ID besteht aus mindestens <span className="font-semibold text-foreground">7 Ziffern</span> (z.B. <span className="font-mono">123456789</span>) – nicht dein @username.
-              </p>
-              <p className="font-semibold text-foreground">So findest du sie:</p>
-              <ol className="list-decimal list-inside space-y-1.5 text-muted-foreground">
-                <li>Öffne Telegram und suche nach <span className="font-semibold text-foreground">@userinfobot</span></li>
-                <li>Starte den Bot mit <span className="font-mono">/start</span></li>
-                <li>Der Bot zeigt dir deine numerische ID an</li>
-                <li>Kopiere die Zahlen und füge sie hier ein</li>
-              </ol>
-            </DialogDescription>
-          </DialogHeader>
-          <Button onClick={() => setTelegramHelpOpen(false)} className="w-full">
-            Verstanden
-          </Button>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
