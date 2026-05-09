@@ -1141,6 +1141,43 @@ export default function ModelDashboardTab() {
             {/* ── Revenue & Payout ── */}
             <Section icon={TrendingUp} title="Einnahmen & Anteil" delay={0.05}>
               <div className="space-y-4">
+                {/* Currency selector – top of section, supports custom code */}
+                <div className="flex items-center justify-between gap-2 rounded-lg border border-accent/15 bg-accent/[0.02] px-3 py-2">
+                  <span className="text-xs uppercase tracking-wider text-muted-foreground">Währung</span>
+                  <div className="flex items-center gap-2">
+                    <Select
+                      value={CURRENCIES.includes((modelForm.currency || "EUR") as any) ? (modelForm.currency || "EUR") : "__custom__"}
+                      onValueChange={(v) => {
+                        if (v === "__custom__") {
+                          setModelForm((prev) => ({ ...prev, currency: prev.currency && !CURRENCIES.includes(prev.currency as any) ? prev.currency : "" }));
+                        } else {
+                          setModelForm((prev) => ({ ...prev, currency: v }));
+                        }
+                      }}
+                    >
+                      <SelectTrigger className="w-[110px] text-sm h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CURRENCIES.map((c) => (
+                          <SelectItem key={c} value={c}>{c}</SelectItem>
+                        ))}
+                        <SelectItem value="__custom__">Custom…</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {!CURRENCIES.includes((modelForm.currency || "EUR") as any) && (
+                      <Input
+                        value={modelForm.currency || ""}
+                        onChange={(e) =>
+                          setModelForm((prev) => ({ ...prev, currency: e.target.value.toUpperCase().slice(0, 6) }))
+                        }
+                        placeholder="z.B. USDT"
+                        className="w-[110px] text-sm h-9 font-mono uppercase"
+                      />
+                    )}
+                  </div>
+                </div>
+
                 {/* Total revenue from all platform accounts */}
                 {totalRevenue > 0 && (
                   <div className="text-center py-3">
@@ -1237,25 +1274,6 @@ export default function ModelDashboardTab() {
                     </div>
                   );
                 })()}
-
-                {/* Currency */}
-                <div className="flex justify-end">
-                  <Select
-                    value={modelForm.currency || "EUR"}
-                    onValueChange={(v) => setModelForm((prev) => ({ ...prev, currency: v }))}
-                  >
-                    <SelectTrigger className="w-[100px] text-sm h-9">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CURRENCIES.map((c) => (
-                        <SelectItem key={c} value={c}>
-                          {c}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
 
                 {/* Verdienst */}
                 {verdienst > 0 && (
