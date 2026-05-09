@@ -665,6 +665,36 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
                     </div>
                   </div>
 
+                  {/* Custom Platform */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">Custom Plattform (optional)</label>
+                      <div className="input-gold-shimmer rounded-lg">
+                        <Input
+                          value={selected.customPlatformName}
+                          onChange={e => updateSelected({ customPlatformName: e.target.value })}
+                          placeholder="z.B. Miami, OnlyFans …"
+                          className="text-sm border-transparent"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">Custom Revenue</label>
+                      <div className="input-gold-shimmer rounded-lg">
+                        <Input
+                          type="number"
+                          inputMode="decimal"
+                          step="0.01"
+                          min={0}
+                          value={selected.customRevenue || ""}
+                          onChange={e => updateSelected({ customRevenue: Math.round((Number(e.target.value.replace(",", ".")) || 0) * 100) / 100 })}
+                          className="text-sm border-transparent tabular-nums"
+                          placeholder="0,00"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="glass-card rounded-lg p-3 flex items-center justify-between">
                       <span className="text-xs font-medium text-muted-foreground">Gesamt</span>
@@ -845,6 +875,9 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
                 fourbased: selected.fourbasedRevenue || 0,
                 maloum: selected.maloumRevenue || 0,
                 brezzels: selected.brezzelsRevenue || 0,
+                custom: (selected.customRevenue || 0) > 0 && selected.customPlatformName.trim()
+                  ? { name: selected.customPlatformName.trim(), rev: selected.customRevenue }
+                  : undefined,
               }}
             />
           </Section>
