@@ -466,8 +466,11 @@ export default function CreditNoteForm({
         || (platformPercentages && (platformPercentages.fourbased > 0 || platformPercentages.maloum > 0 || platformPercentages.brezzels > 0));
       const customEntry = platformRevenue?.custom;
       const hasCustom = !!(customEntry && customEntry.rev > 0 && customEntry.name && revenuePercentage > 0);
-      const hasPlatformBreakdown = platformRevenue && hasAnyPct && (platformRevenue.fourbased > 0 || platformRevenue.maloum > 0 || platformRevenue.brezzels > 0 || hasCustom);
-      const platforms = hasPlatformBreakdown
+      const useExplicitBreakdown = platformBreakdown && platformBreakdown.length > 0;
+      const hasPlatformBreakdown = useExplicitBreakdown || (platformRevenue && hasAnyPct && (platformRevenue.fourbased > 0 || platformRevenue.maloum > 0 || platformRevenue.brezzels > 0 || hasCustom));
+      const platforms = useExplicitBreakdown
+        ? platformBreakdown!.filter(p => p.rev > 0 && p.pct > 0)
+        : hasPlatformBreakdown
         ? [
             { name: "4Based", rev: platformRevenue!.fourbased, pct: pctFor("fourbased") },
             { name: "Maloum", rev: platformRevenue!.maloum, pct: pctFor("maloum") },
