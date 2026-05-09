@@ -33,6 +33,38 @@ interface PlatformRevenue {
 
 const TARGET_CURRENCIES = ["EUR", "USD", "GBP", "CHF", "AED"] as const;
 
+// Fetch FX rate with fallback chain (Frankfurter is blocked by CORS in some envs)
+async function fetchFxRate(from: string, to: string): Promise<number | null> {
+  if (!from || !to || from === to) return 1;
+  const endpoints = [
+    async () => {
+      const r = await fetch(`https://open.er-api.com/v6/latest/${from}`);
+      const d = await r.json();
+      const v = d?.rates?.[to];
+      return typeof v === "number" ? v : null;
+    },
+    async () => {
+      const r = await fetch(`https://api.exchangerate.host/latest?base=${from}&symbols=${to}`);
+      const d = await r.json();
+      const v = d?.rates?.[to];
+      return typeof v === "number" ? v : null;
+    },
+    async () => {
+      const r = await fetch(`https://api.frankfurter.app/latest?from=${from}&to=${to}`);
+      const d = await r.json();
+      const v = d?.rates?.[to];
+      return typeof v === "number" ? v : null;
+    },
+  ];
+  for (const ep of endpoints) {
+    try {
+      const v = await ep();
+      if (v && isFinite(v) && v > 0) return v;
+    } catch { /* try next */ }
+  }
+  return null;
+}
+
 interface CreditNoteFormProps {
   suggestedAmount?: number;
   defaultDescription?: string;
@@ -204,41 +236,56 @@ export default function CreditNoteForm({
   const [generating, setGenerating] = useState(false);
   const [liveExchangeRate, setLiveExchangeRate] = useState<number | null>(null);
   const [rateLoading, setRateLoading] = useState(false);
-  const [targetCurrency, setTargetCurrency] = useState<string>(saved.targetCurrency || (currency === "EUR" ? "USD" : "EUR"));
+  // Invoice display currency (the currency the invoice is actually issued in)
+  const [invoiceCurrency, setInvoiceCurrency] = useState<string>(saved.invoiceCurrency || saved.targetCurrency || currency);
 
-  // Fetch live exchange rate from `currency` to `targetCurrency` (bidirectional)
+  // Fetch live exchange rate from chatter `currency` to selected `invoiceCurrency`
   useEffect(() => {
-    if (!currency || !targetCurrency || currency === targetCurrency) {
-      setLiveExchangeRate(null);
+    let cancelled = false;
+    if (!currency || !invoiceCurrency || currency === invoiceCurrency) {
+      setLiveExchangeRate(1);
       return;
     }
-    let cancelled = false;
     setRateLoading(true);
-    fetch(`https://api.frankfurter.app/latest?from=${currency}&to=${targetCurrency}`)
-      .then(r => r.json())
-      .then(data => {
-        if (!cancelled && data?.rates?.[targetCurrency]) {
-          const rate = data.rates[targetCurrency];
-          setLiveExchangeRate(rate);
-          if (!exchangeRate) {
-            setExchangeRate(`1 ${currency} = ${rate.toFixed(4)} ${targetCurrency}`);
-          }
-        }
-      })
-      .catch(() => { if (!cancelled) setLiveExchangeRate(null); })
-      .finally(() => { if (!cancelled) setRateLoading(false); });
+    fetchFxRate(currency, invoiceCurrency).then(rate => {
+      if (cancelled) return;
+      setLiveExchangeRate(rate);
+      if (rate && !exchangeRate) {
+        setExchangeRate(`1 ${currency} = ${rate.toFixed(4)} ${invoiceCurrency}`);
+      }
+      setRateLoading(false);
+    });
     return () => { cancelled = true; };
-  }, [currency, targetCurrency]);
+  }, [currency, invoiceCurrency]);
+
+  // Switch invoice currency and auto-convert the entered net amount
+  const handleInvoiceCurrencyChange = useCallback(async (newCur: string) => {
+    if (newCur === invoiceCurrency) return;
+    const oldCur = invoiceCurrency;
+    setInvoiceCurrency(newCur);
+    const currentNet = parseFloat(netAmount.replace(",", ".")) || 0;
+    if (currentNet <= 0) return;
+    // Convert via chatter currency as intermediate base
+    const oldRate = oldCur === currency ? 1 : await fetchFxRate(currency, oldCur);
+    const newRate = newCur === currency ? 1 : await fetchFxRate(currency, newCur);
+    if (!oldRate || !newRate) {
+      toast.warning("Kurs nicht verfügbar – Betrag wurde nicht automatisch umgerechnet.");
+      return;
+    }
+    const netInChatter = currentNet / oldRate;
+    const converted = netInChatter * newRate;
+    setNetAmount(converted.toFixed(2));
+  }, [invoiceCurrency, netAmount, currency]);
 
   // Auto-save remaining UI-only fields to localStorage (provider fields are persisted in DB)
   useEffect(() => {
     const timer = setTimeout(() => {
       localStorage.setItem(storageKey, JSON.stringify({
-        description, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet, targetCurrency,
+        description, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet, invoiceCurrency,
       }));
     }, 500);
     return () => clearTimeout(timer);
-  }, [description, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet, targetCurrency, storageKey]);
+  }, [description, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet, invoiceCurrency, storageKey]);
 
   // Calculations
   const net = parseFloat(netAmount.replace(",", ".")) || 0;
@@ -402,14 +449,14 @@ export default function CreditNoteForm({
     const hasHourlyDetails = isHourly && hourlyRate > 0 && hoursWorked > 0;
 
     if (hasHourlyDetails) {
-      doc.text(`Rate (${currency})`, rCol - 70, y, { align: "right" });
+      doc.text(`Rate (${invoiceCurrency})`, rCol - 70, y, { align: "right" });
       doc.text("Hours", rCol - 35, y, { align: "right" });
-      doc.text(`Amount (${currency})`, rCol - 2, y, { align: "right" });
+      doc.text(`Amount (${invoiceCurrency})`, rCol - 2, y, { align: "right" });
     } else if (isHourly) {
-      doc.text(`Amount (${currency})`, rCol - 2, y, { align: "right" });
+      doc.text(`Amount (${invoiceCurrency})`, rCol - 2, y, { align: "right" });
     } else {
-      doc.text(`Revenue (${currency})`, rCol - 52, y, { align: "right" });
-      doc.text(`Share ${revenuePercentage}% (${currency})`, rCol - 2, y, { align: "right" });
+      doc.text(`Revenue (${invoiceCurrency})`, rCol - 52, y, { align: "right" });
+      doc.text(`Share ${revenuePercentage}% (${invoiceCurrency})`, rCol - 2, y, { align: "right" });
     }
     y += 7;
 
@@ -454,10 +501,13 @@ export default function CreditNoteForm({
           ].filter(p => p.rev > 0 && p.pct > 0)
         : [];
 
+      const fxRate = currency === invoiceCurrency ? 1 : (liveExchangeRate || 1);
+
       if (hasPlatformBreakdown) {
         platforms.forEach((p, i) => {
           const rowBg: [number, number, number] = i % 2 === 0 ? [20, 20, 20] : [25, 25, 25];
-          const payout = (p.rev * p.pct / 100);
+          const revConv = p.rev * fxRate;
+          const payoutConv = revConv * p.pct / 100;
           const rowH = 7;
           doc.setFillColor(...rowBg);
           doc.rect(m, y - 3.5, cw, rowH, "F");
@@ -469,13 +519,13 @@ export default function CreditNoteForm({
           doc.text(`${i + 1}`, m + 2, y);
           doc.text(`${description} – ${p.name} (${p.pct}%)`, m + 15, y);
           doc.setTextColor(...muted);
-          doc.text(p.rev.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), rCol - 52, y, { align: "right" });
+          doc.text(revConv.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), rCol - 52, y, { align: "right" });
           doc.setTextColor(...white);
-          doc.text(payout.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), rCol - 2, y, { align: "right" });
+          doc.text(payoutConv.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), rCol - 2, y, { align: "right" });
           y += rowH;
         });
 
-        const totalRev = platforms.reduce((s, p) => s + p.rev, 0);
+        const totalRevConv = platforms.reduce((s, p) => s + p.rev * fxRate, 0);
         doc.setFillColor(18, 18, 18);
         doc.rect(m, y - 3.5, cw, 7, "F");
         doc.setDrawColor(50, 50, 50);
@@ -484,7 +534,7 @@ export default function CreditNoteForm({
         doc.setFontSize(7.5);
         doc.setTextColor(...goldLight);
         doc.text("Total", m + 15, y);
-        doc.text(totalRev.toLocaleString("de-DE", { minimumFractionDigits: 2 }), rCol - 52, y, { align: "right" });
+        doc.text(totalRevConv.toLocaleString("de-DE", { minimumFractionDigits: 2 }), rCol - 52, y, { align: "right" });
         doc.setTextColor(...gold);
         doc.text(formattedNet, rCol - 2, y, { align: "right" });
         y += 7;
@@ -512,14 +562,14 @@ export default function CreditNoteForm({
     doc.setFontSize(8.5);
     doc.setTextColor(...softWhite);
     doc.text("Net Amount:", subtotalX, y);
-    doc.text(`${formattedNet} ${currency}`, rCol - 2, y, { align: "right" });
+    doc.text(`${formattedNet} ${invoiceCurrency}`, rCol - 2, y, { align: "right" });
     y += 5;
 
     const vatLabel = !isBusiness
       ? "VAT (0% – not subject to VAT):"
       : `VAT (${vatRate}%):`;
     doc.text(vatLabel, subtotalX - 15, y);
-    doc.text(`${vatAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} ${currency}`, rCol - 2, y, { align: "right" });
+    doc.text(`${vatAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} ${invoiceCurrency}`, rCol - 2, y, { align: "right" });
     y += 5;
 
     // Total line
@@ -531,7 +581,7 @@ export default function CreditNoteForm({
     doc.setFontSize(11);
     doc.setTextColor(...gold);
     doc.text("Total:", subtotalX, y);
-    doc.text(`${grossAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} ${currency}`, rCol - 2, y, { align: "right" });
+    doc.text(`${grossAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} ${invoiceCurrency}`, rCol - 2, y, { align: "right" });
 
 
 
@@ -552,7 +602,7 @@ export default function CreditNoteForm({
 
     // ── Payment Information ──
     const isBank = modelPaymentMethod === "bank";
-    const hasFxNote = liveExchangeRate && currency !== targetCurrency;
+    const hasFxNote = !!liveExchangeRate && currency !== invoiceCurrency;
     if (isBank || cryptoCoin || txHash || hasFxNote) {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(7.5);
@@ -597,9 +647,9 @@ export default function CreditNoteForm({
         }
       }
       if (hasFxNote) {
-        doc.text(`Exchange Rate: 1 ${currency} = ${liveExchangeRate!.toFixed(4)} ${targetCurrency}`, m, y);
+        doc.text(`Exchange Rate: 1 ${currency} = ${liveExchangeRate!.toFixed(4)} ${invoiceCurrency}`, m, y);
         y += 4.5;
-        doc.text(`Total in ${targetCurrency}: ${(grossAmount * liveExchangeRate!).toLocaleString("de-DE", { minimumFractionDigits: 2 })} ${targetCurrency}`, m, y);
+        doc.text(`Invoice issued in ${invoiceCurrency} (converted from chatter base ${currency})`, m, y);
         y += 4.5;
       }
       if (paymentDate) {
@@ -856,30 +906,37 @@ export default function CreditNoteForm({
           </div>
         </div>
 
-        <div className="space-y-1.5">
-          <Label className="text-xs text-muted-foreground">Netto-Betrag ({currency}) *</Label>
-          <div className="input-gold-shimmer rounded-lg">
-            <Input
-              value={netAmount}
-              onChange={e => setNetAmount(e.target.value)}
-              placeholder="0,00"
-              className="text-sm border-transparent font-mono"
-            />
-          </div>
-          {suggestedAmount > 0 && netAmount !== suggestedAmount.toFixed(2) && (
-            <button
-              onClick={() => setNetAmount(suggestedAmount.toFixed(2))}
-              className="text-[10px] text-accent hover:underline"
-            >
-              Vorschlag übernehmen: {suggestedAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}
-              {revenuePercentage > 0 && ` (${revenuePercentage}%)`}
-            </button>
-          )}
-        </div>
+        {(() => {
+          const fxRate = currency === invoiceCurrency ? 1 : (liveExchangeRate || 1);
+          const suggestedConverted = suggestedAmount * fxRate;
+          return (
+            <div className="space-y-1.5">
+              <Label className="text-xs text-muted-foreground">Netto-Betrag ({invoiceCurrency}) *</Label>
+              <div className="input-gold-shimmer rounded-lg">
+                <Input
+                  value={netAmount}
+                  onChange={e => setNetAmount(e.target.value)}
+                  placeholder="0,00"
+                  className="text-sm border-transparent font-mono"
+                />
+              </div>
+              {suggestedAmount > 0 && netAmount !== suggestedConverted.toFixed(2) && (
+                <button
+                  onClick={() => setNetAmount(suggestedConverted.toFixed(2))}
+                  className="text-[10px] text-accent hover:underline"
+                >
+                  Vorschlag übernehmen: {suggestedConverted.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {invoiceCurrency}
+                  {revenuePercentage > 0 && ` (${revenuePercentage}%)`}
+                </button>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Platform Breakdown */}
         {(() => {
           if (compensationType === "hourly" || !platformRevenue) return null;
+          const fxRate = currency === invoiceCurrency ? 1 : (liveExchangeRate || 1);
           const pctFor = (k: "fourbased" | "maloum" | "brezzels") => {
             const c = platformPercentages?.[k] || 0;
             return c > 0 ? c : revenuePercentage;
@@ -895,16 +952,23 @@ export default function CreditNoteForm({
           if (rows.length === 0) return null;
           return (
             <div className="rounded-lg bg-secondary/20 border border-border/40 p-3 space-y-1.5">
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Plattform-Aufschlüsselung</p>
-              {rows.map(r => (
-                <div key={r.key} className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">{r.label} <span className="text-accent/70">({r.pct}%)</span></span>
-                  <span className="font-mono text-foreground">
-                    {r.rev.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}
-                    <span className="text-muted-foreground ml-1.5">→ {(r.rev * r.pct / 100).toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}</span>
-                  </span>
-                </div>
-              ))}
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                Plattform-Aufschlüsselung
+                {currency !== invoiceCurrency && <span className="ml-1 text-accent/60 normal-case">(in {invoiceCurrency} umgerechnet)</span>}
+              </p>
+              {rows.map(r => {
+                const revConv = r.rev * fxRate;
+                const payoutConv = revConv * r.pct / 100;
+                return (
+                  <div key={r.key} className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">{r.label} <span className="text-accent/70">({r.pct}%)</span></span>
+                    <span className="font-mono text-foreground">
+                      {revConv.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {invoiceCurrency}
+                      <span className="text-muted-foreground ml-1.5">→ {payoutConv.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {invoiceCurrency}</span>
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           );
         })()}
@@ -913,47 +977,39 @@ export default function CreditNoteForm({
         <div className="rounded-lg bg-secondary/30 border border-border/50 p-3 space-y-1.5">
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>Netto</span>
-            <span className="font-mono">{net.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}</span>
+            <span className="font-mono">{net.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {invoiceCurrency}</span>
           </div>
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>MwSt. ({vatRate}%)</span>
-            <span className="font-mono">{vatAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}</span>
+            <span className="font-mono">{vatAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {invoiceCurrency}</span>
           </div>
           <div className="border-t border-border/30 pt-1.5 flex justify-between text-sm font-bold text-foreground">
             <span>Gesamt</span>
-            <span className="font-mono text-accent">{grossAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}</span>
+            <span className="font-mono text-accent">{grossAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {invoiceCurrency}</span>
           </div>
-          {/* Bidirectional currency conversion */}
+          {/* Invoice currency selector with auto-conversion */}
           <div className="border-t border-border/30 pt-2 mt-1 space-y-1.5">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Umrechnen in</span>
-              <Select value={targetCurrency} onValueChange={setTargetCurrency}>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Rechnungswährung</span>
+              <Select value={invoiceCurrency} onValueChange={handleInvoiceCurrencyChange}>
                 <SelectTrigger className="h-7 w-[100px] text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {TARGET_CURRENCIES.filter(c => c !== currency).map(c => (
+                  {TARGET_CURRENCIES.map(c => (
                     <SelectItem key={c} value={c}>{c}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            {currency !== targetCurrency && liveExchangeRate && net > 0 && (
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>≈ in {targetCurrency}</span>
-                <span className="font-mono text-accent/70">
-                  {rateLoading ? "…" : `≈ ${(grossAmount * liveExchangeRate).toLocaleString("de-DE", { minimumFractionDigits: 2 })} ${targetCurrency}`}
-                </span>
+            {currency !== invoiceCurrency && liveExchangeRate && (
+              <div className="text-[10px] text-muted-foreground/60 text-right">
+                {rateLoading ? "Kurs lädt…" : `Live-Kurs: 1 ${currency} = ${liveExchangeRate.toFixed(4)} ${invoiceCurrency}`}
               </div>
             )}
-            {currency !== targetCurrency && liveExchangeRate && (
-              <div className="text-[10px] text-muted-foreground/60 text-right">
-                Kurs: 1 {currency} = {liveExchangeRate.toFixed(4)} {targetCurrency} (live)
-              </div>
-            )}
-            {currency !== targetCurrency && !liveExchangeRate && !rateLoading && (
-              <div className="text-[10px] text-muted-foreground/60 text-right">
-                Kurs nicht verfügbar
+            {currency !== invoiceCurrency && !liveExchangeRate && !rateLoading && (
+              <div className="text-[10px] text-destructive/80 text-right">
+                Kurs nicht verfügbar – bitte Betrag manuell eintragen.
               </div>
             )}
           </div>

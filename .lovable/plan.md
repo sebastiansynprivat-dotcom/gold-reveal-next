@@ -1,57 +1,54 @@
-## Ziel
+## Problem
 
-Im **Chatter Dashboard** (Mitarbeiter Dashboard) und in der **Provider Invoice** (Model + Mitarbeiter Dashboard) sollen zwei Probleme gelöst werden:
-
-1. **Custom Platform** statt nur fixe Plattformen (4Based / Maloum / Brezzels) — damit z.B. Miami-Chatter ohne Plattform-Bezug erfasst werden können.
-2. **Bidirektionale Währungsumrechnung** EUR ↔ USD (und die anderen verfügbaren Währungen) im Provider Invoice — heute funktioniert die Live-Rate nur „Fremdwährung → EUR".
+1. **Live-Kurs zeigt „nicht verfügbar"** — die Frankfurter-API blockt CORS aus dem Lovable-Sandbox (alle Requests scheitern mit `Failed to fetch`).
+2. Die Umrechnung ist nur eine **Anzeige unten** — die Rechnung selbst läuft weiter in der Chatter-Währung. Du willst aber die **Rechnungswährung selbst umstellen** und die Beträge automatisch umrechnen lassen.
 
 ---
 
-### 1. Chatter-Anlage: „Custom" als zusätzliche Plattform-Option
+## Lösung
 
-Im Chatter-Detailbereich (`ChatterDashboardTab.tsx`) wird zusätzlich zu den 3 Plattform-Feldern (4Based / Maloum / Brezzels) ein **vierter Block „Custom Revenue"** ergänzt:
+### 1. FX-API ersetzen (mit Fallback-Kette)
 
-- Eingabe **Plattform-Name** (Freitext, z.B. „Miami", „OnlyFans", …)
-- Eingabe **Total Revenue** (Zahl)
-- Wird in `totalRevenue` und damit auch in den Verdienst-Anteil eingerechnet
-- Wird in der Provider-Invoice-PDF in der Plattform-Aufschlüsselung als zusätzliche Zeile mit dem eingegebenen Namen angezeigt
+Die Frankfurter-API funktioniert nicht zuverlässig. Wir nutzen stattdessen mehrere Quellen mit Fallback:
 
-So bleibt die saubere Aufschlüsselung („Plattform X: Revenue → Anteil") erhalten, auch wenn eine der Standardplattformen nicht passt.
+```
+open.er-api.com  →  exchangerate.host  →  Frankfurter
+```
 
-### 2. Provider Invoice: Währungsumrechnung in beide Richtungen
+So bleibt der Live-Kurs auch verfügbar, wenn eine API ausfällt. Die Anzeige „Kurs nicht verfügbar" wird damit nur noch erscheinen, wenn wirklich alle Quellen ausfallen (sehr selten).
 
-Aktuell holt das Formular per Frankfurter-API nur den Kurs `Fremdwährung → EUR` (z.B. `USD → EUR`).
+### 2. Echte Rechnungswährung umstellbar + automatische Umrechnung
 
-Erweiterung:
+Im Provider-Invoice-Formular bekommst du oben einen neuen Bereich **„Rechnungswährung"**:
 
-- Live-Kurs wird **immer** geladen, auch wenn die Hauptwährung EUR ist (dann z.B. `EUR → USD`)
-- Im Formular erscheint ein neuer Bereich **„Umrechnung"**:
-  - Auswahl **Zielwährung** (USD, EUR, GBP, CHF, AED — gleiches Set wie Chatter)
-  - Anzeige des Live-Kurses (z.B. `1 EUR = 1,0850 USD`)
-  - Anzeige der umgerechneten Beträge (Netto / Brutto) in Zielwährung
-- Diese Umrechnung wird auch in die **PDF** übernommen (Hinweiszeile + ggf. Betrag in Zielwährung) — speziell für Krypto-Auszahlung in USDT, wenn die Buchhaltung in EUR / USD aufgeschlüsselt sein muss.
+- Dropdown mit `EUR / USD / GBP / CHF / AED`
+- Standard = die Chatter-Währung (z.B. EUR)
+- Wenn du auf USD umstellst:
+  - Live-Kurs `EUR → USD` wird geladen
+  - Der Netto-Betrag wird **automatisch in USD umgerechnet** und ins Eingabefeld geschrieben
+  - Alle Anzeigen (Netto / MwSt / Brutto / PDF-Tabelle / „Suggested amount") laufen ab sofort in USD
+  - Plattform-Aufschlüsselung (4Based / Maloum / … / Custom) zeigt die Beträge ebenfalls in USD
+- In der PDF wird die Rechnung komplett in der gewählten Währung erstellt
+- Im Footer steht zusätzlich der verwendete Kurs (z.B. `Exchange Rate: 1 EUR = 1,0850 USD`)
 
-### 3. Konsistenz Model + Mitarbeiter Dashboard
+Wenn du die Währung wieder zurückstellst, werden die Beträge erneut zurückgerechnet — du arbeitest also immer mit korrekt umgerechneten Zahlen.
 
-Die Provider-Invoice-Komponente (`CreditNoteForm.tsx`) wird in beiden Bereichen verwendet — die Änderung wirkt automatisch in beiden Dashboards.
+### 3. Manuelle Override-Möglichkeit
 
-Die Custom-Platform-Erweiterung gilt für die Chatter/Mitarbeiter-Anlage; im Model Dashboard bleiben die plattformspezifischen Felder bestehen, da Models klar auf einer Plattform laufen.
+Du kannst den Netto-Betrag jederzeit von Hand überschreiben (z.B. wenn der Auszahlungs-Kurs der Exchange leicht abweicht). Die automatische Konvertierung passiert nur:
+- beim Wechsel der Rechnungswährung
+- oder per Klick auf „Vorschlag übernehmen"
 
 ---
 
 ## Technische Details
 
-**Schema-Änderungen (Migration nötig):**
-- `chatters`: Spalten `custom_platform_name TEXT DEFAULT ''` und `custom_revenue NUMERIC DEFAULT 0`
+**`src/components/CreditNoteForm.tsx`:**
 
-**Code-Änderungen:**
-- `ChatterDashboardTab.tsx`: 4. Plattform-Block (Name + Revenue), `totalRevenue`-Berechnung erweitert, Save/Load erweitert, `platformRevenue`-Prop an `CreditNoteForm` erweitert um `{ name, rev }[]`-Liste
-- `CreditNoteForm.tsx`:
-  - `PlatformRevenue`-Typ erweitert um optionales `custom?: { name: string; rev: number }`
-  - PDF-Aufschlüsselung rendert Custom-Zeile mit eingegebenem Namen
-  - Frankfurter-Fetch funktioniert in beide Richtungen (Quelle = `currency`, Ziel = neue State `targetCurrency`)
-  - Neues UI-Feld „Umrechnen in" + Anzeige Netto/Brutto in Zielwährung
-  - PDF-Footer erhält Umrechnungs-Hinweis auch wenn Quelle EUR ist
-
-**Was unverändert bleibt:**
-- Bestehende Plattform-Felder, bestehende DB-Spalten, Collect Exchange ID, Crypto-Felder.
+- Neuer Helper `fetchFxRate(from, to)` mit try-Kette über 3 Endpoints, kurzer Timeout.
+- Neuer State `invoiceCurrency` (default = Prop `currency`); ersetzt das bisherige `targetCurrency`-Konzept.
+- Live-Rate `chatterCurrency → invoiceCurrency` wird geladen, sobald sich eine Seite ändert.
+- Beim Umschalten der `invoiceCurrency` wird `netAmount` automatisch via Rate umgerechnet (nur wenn Kurs verfügbar).
+- Alle UI-Anzeigen (`{currency}` → `{invoiceCurrency}`), Plattform-Tabelle, „Suggested"-Knopf und die PDF-Generierung verwenden konsequent `invoiceCurrency` und ggf. den Rate-Faktor zur Umrechnung der Plattform-Revenues.
+- PDF Footer: Kurs-Hinweis nur, wenn Chatter-Währung ≠ Rechnungswährung.
+- Fallback bei API-Fehler: das Dropdown bleibt nutzbar, die Auto-Umrechnung wird übersprungen, ein dezenter Warnhinweis erscheint („Kurs nicht verfügbar — bitte manuell eintragen").
