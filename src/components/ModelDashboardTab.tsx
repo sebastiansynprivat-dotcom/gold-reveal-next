@@ -1827,6 +1827,14 @@ export default function ModelDashboardTab() {
                   maloum: modelForm.revenue_percentage_maloum || 0,
                   brezzels: modelForm.revenue_percentage_brezzels || 0,
                 }}
+                platformFxRates={modelAccounts
+                  .filter((a) => (a.currency || baseCurrency) !== baseCurrency)
+                  .map((a) => {
+                    const from = (a.currency || baseCurrency).trim();
+                    const rate = fxRates[`${from}->${baseCurrency}`];
+                    return rate ? { platform: a.platform, from, to: baseCurrency, rate } : null;
+                  })
+                  .filter((x): x is { platform: string; from: string; to: string; rate: number } => !!x)}
               />
             </Section>
           </motion.div>
