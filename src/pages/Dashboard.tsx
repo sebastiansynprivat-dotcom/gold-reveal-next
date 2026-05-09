@@ -197,6 +197,7 @@ export default function Dashboard() {
   const [telegramId, setTelegramId] = useState("");
   const [telegramSaved, setTelegramSaved] = useState(false);
   const [telegramLoading, setTelegramLoading] = useState(true);
+  const [telegramHelpOpen, setTelegramHelpOpen] = useState(false);
 
   const [groupName, setGroupName] = useState("");
   const [groupNameSaved, setGroupNameSaved] = useState(false);
