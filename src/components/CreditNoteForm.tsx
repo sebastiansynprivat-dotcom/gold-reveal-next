@@ -197,7 +197,14 @@ export default function CreditNoteForm({
   const [servicePeriodEnd, setServicePeriodEnd] = useState(format(endOfMonth(lastMonth), "yyyy-MM-dd"));
 
   // Line item
-  const [description, setDescription] = useState(saved.description || defaultDescription);
+  const [description, setDescription] = useState(() => {
+    const s = (saved.description || "").trim();
+    const legacy = ["Revenue share payout", "Revenue share", "Revenue share –", "Revenue share -"];
+    if (!s || legacy.some(l => s.toLowerCase().startsWith(l.toLowerCase()))) {
+      return defaultDescription;
+    }
+    return s;
+  });
   const [netAmount, setNetAmount] = useState(suggestedAmount > 0 ? suggestedAmount.toFixed(2) : "");
 
   // Payment
