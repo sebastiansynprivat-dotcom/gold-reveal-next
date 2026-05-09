@@ -204,39 +204,41 @@ export default function CreditNoteForm({
   const [generating, setGenerating] = useState(false);
   const [liveExchangeRate, setLiveExchangeRate] = useState<number | null>(null);
   const [rateLoading, setRateLoading] = useState(false);
+  const [targetCurrency, setTargetCurrency] = useState<string>(saved.targetCurrency || (currency === "EUR" ? "USD" : "EUR"));
 
-  // Fetch live exchange rate to EUR when currency is not EUR
+  // Fetch live exchange rate from `currency` to `targetCurrency` (bidirectional)
   useEffect(() => {
-    if (currency === "EUR") {
+    if (!currency || !targetCurrency || currency === targetCurrency) {
       setLiveExchangeRate(null);
       return;
     }
     let cancelled = false;
     setRateLoading(true);
-    fetch(`https://api.frankfurter.app/latest?from=${currency}&to=EUR`)
+    fetch(`https://api.frankfurter.app/latest?from=${currency}&to=${targetCurrency}`)
       .then(r => r.json())
       .then(data => {
-        if (!cancelled && data?.rates?.EUR) {
-          setLiveExchangeRate(data.rates.EUR);
+        if (!cancelled && data?.rates?.[targetCurrency]) {
+          const rate = data.rates[targetCurrency];
+          setLiveExchangeRate(rate);
           if (!exchangeRate) {
-            setExchangeRate(`1 ${currency} = ${data.rates.EUR.toFixed(4)} EUR`);
+            setExchangeRate(`1 ${currency} = ${rate.toFixed(4)} ${targetCurrency}`);
           }
         }
       })
       .catch(() => { if (!cancelled) setLiveExchangeRate(null); })
       .finally(() => { if (!cancelled) setRateLoading(false); });
     return () => { cancelled = true; };
-  }, [currency]);
+  }, [currency, targetCurrency]);
 
   // Auto-save remaining UI-only fields to localStorage (provider fields are persisted in DB)
   useEffect(() => {
     const timer = setTimeout(() => {
       localStorage.setItem(storageKey, JSON.stringify({
-        description, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet,
+        description, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet, targetCurrency,
       }));
     }, 500);
     return () => clearTimeout(timer);
-  }, [description, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet, storageKey]);
+  }, [description, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet, targetCurrency, storageKey]);
 
   // Calculations
   const net = parseFloat(netAmount.replace(",", ".")) || 0;
