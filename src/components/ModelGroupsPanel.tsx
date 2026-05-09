@@ -295,6 +295,133 @@ export default function ModelGroupsPanel({
     toast.success("Abrechnung in Zwischenablage kopiert");
   };
 
+  const [invoiceLoading, setInvoiceLoading] = useState<string | null>(null);
+
+  const generateInvoice = async (item: LineItem) => {
+    if (!selected) return;
+    const model = models.find((m) => m.id === item.model_id);
+    if (!model) {
+      toast.error("Model nicht gefunden");
+      return;
+    }
+    if (item.net_payout <= 0) {
+      toast.error("Kein Auszahlungsbetrag – Umsatz fehlt.");
+      return;
+    }
+    setInvoiceLoading(item.model_id);
+    try {
+      // Issuer settings
+      const { data: issuer } = await supabase
+        .from("issuer_settings" as any)
+        .select("*")
+        .limit(1)
+        .single();
+
+      // Next invoice number
+      const { data: rpcData, error: rpcError } = await supabase.rpc(
+        "next_credit_note_number" as any
+      );
+      if (rpcError) throw rpcError;
+      const creditNoteNumber = rpcData as string;
+
+      const providerName = model.provider_name_override || model.name;
+      const isBusiness = !!model.provider_is_business;
+      const providerVatId = model.provider_vat_id || "";
+      const providerAddress = model.provider_address || "";
+      const currency = item.currency || "EUR";
+
+      const lines = item.breakdown.length > 0
+        ? item.breakdown.map((b) => ({
+            name: b.name,
+            gross: b.gross,
+            pct: item.commission_pct,
+          }))
+        : [{ name: "Revenue Share", gross: item.gross, pct: item.commission_pct }];
+
+      const isBank = (model.payment_method || "crypto") === "bank";
+      const payment = isBank
+        ? {
+            method: "Bank Transfer",
+            bankAccountHolder: model.bank_account_holder || "",
+            bankIban: model.bank_iban || "",
+            bankBic: model.bank_bic || "",
+            bankName: model.bank_name || "",
+            paymentDate: format(new Date(), "yyyy-MM-dd"),
+          }
+        : {
+            method: "USDT (TRC20)",
+            wallet: model.crypto_address || "",
+            paymentDate: format(new Date(), "yyyy-MM-dd"),
+          };
+
+      // Save record
+      const { data: u } = await supabase.auth.getUser();
+      await supabase.from("credit_notes" as any).insert({
+        credit_note_number: creditNoteNumber,
+        credit_note_date: format(new Date(), "yyyy-MM-dd"),
+        service_period_start: billingPeriod.from,
+        service_period_end: billingPeriod.to,
+        provider_name: providerName,
+        provider_address: providerAddress,
+        provider_is_business: isBusiness,
+        provider_vat_id: isBusiness ? providerVatId : "",
+        description: `Revenue share – ${selected.name}`,
+        net_amount: item.net_payout,
+        vat_rate: 0,
+        vat_amount: 0,
+        gross_amount: item.net_payout,
+        payment_method: payment.method,
+        crypto_coin: isBank ? "" : "USDT",
+        tx_hash: "",
+        exchange_rate: "",
+        payment_date: format(new Date(), "yyyy-MM-dd"),
+        account_id: null,
+        chatter_name: model.name,
+        created_by: u.user?.id,
+      } as any);
+
+      const doc = generateProviderInvoicePdf({
+        creditNoteNumber,
+        creditNoteDate: format(new Date(), "yyyy-MM-dd"),
+        servicePeriodStart: billingPeriod.from,
+        servicePeriodEnd: billingPeriod.to,
+        issuer: {
+          name: issuer?.name || "Sharify Media Limited",
+          address: issuer?.address || "Palaion Patron Germanou 11, 8011, Paphos, Cyprus",
+          vatId: issuer?.vat_id || "CY60329590T",
+        },
+        provider: {
+          name: providerName,
+          address: providerAddress,
+          isBusiness,
+          vatId: providerVatId,
+        },
+        description: `Revenue share – ${selected.name}`,
+        currency,
+        lines,
+        net: item.net_payout,
+        payment,
+      });
+      downloadPdf(doc, `ProviderInvoice_${creditNoteNumber.replace(/\//g, "-")}_${model.name.replace(/\s+/g, "_")}.pdf`);
+      toast.success(`Provider Invoice ${creditNoteNumber} erstellt`);
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e.message || "Fehler bei Invoice-Erstellung");
+    } finally {
+      setInvoiceLoading(null);
+    }
+  };
+
+  const generateAllInvoices = async () => {
+    for (const item of billingItems) {
+      if (item.net_payout > 0) {
+        // Sequential to avoid number conflicts
+        // eslint-disable-next-line no-await-in-loop
+        await generateInvoice(item);
+      }
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl bg-card border-accent/20 p-0 overflow-hidden">
