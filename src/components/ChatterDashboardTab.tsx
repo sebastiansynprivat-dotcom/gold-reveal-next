@@ -31,6 +31,8 @@ interface Chatter {
   fourbasedRevenue: number;
   maloumRevenue: number;
   brezzelsRevenue: number;
+  customPlatformName: string;
+  customRevenue: number;
   revenuePercentage: number;
   currency: string;
   cryptoAddress: string;
@@ -59,6 +61,8 @@ function rowToChatter(row: any): Chatter {
     fourbasedRevenue: Number(row.fourbased_revenue) || 0,
     maloumRevenue: Number(row.maloum_revenue) || 0,
     brezzelsRevenue: Number(row.brezzels_revenue) || 0,
+    customPlatformName: row.custom_platform_name || "",
+    customRevenue: Number(row.custom_revenue) || 0,
     revenuePercentage: Number(row.revenue_percentage) || 0,
     currency: row.currency || "EUR",
     cryptoAddress: row.crypto_address || "",
@@ -178,6 +182,8 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
         fourbased_revenue: chatter.fourbasedRevenue,
         maloum_revenue: chatter.maloumRevenue,
         brezzels_revenue: chatter.brezzelsRevenue,
+        custom_platform_name: chatter.customPlatformName,
+        custom_revenue: chatter.customRevenue,
         currency: chatter.currency,
         crypto_address: chatter.cryptoAddress,
         payment_method: chatter.paymentMethod,
@@ -210,7 +216,7 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
 
   const totalRevenue = useMemo(() => {
     if (!selected) return 0;
-    return (selected.fourbasedRevenue || 0) + (selected.maloumRevenue || 0) + (selected.brezzelsRevenue || 0);
+    return (selected.fourbasedRevenue || 0) + (selected.maloumRevenue || 0) + (selected.brezzelsRevenue || 0) + (selected.customRevenue || 0);
   }, [selected]);
 
   const verdienst = useMemo(() => {
@@ -236,6 +242,8 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
       fourbased_revenue: 0,
       maloum_revenue: 0,
       brezzels_revenue: 0,
+      custom_platform_name: "",
+      custom_revenue: 0,
       currency: "EUR",
       crypto_address: "",
       payment_method: "crypto",
@@ -287,7 +295,7 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
   };
 
   const getVerdienst = (c: Chatter) => {
-    const total = (c.fourbasedRevenue || 0) + (c.maloumRevenue || 0) + (c.brezzelsRevenue || 0);
+    const total = (c.fourbasedRevenue || 0) + (c.maloumRevenue || 0) + (c.brezzelsRevenue || 0) + (c.customRevenue || 0);
     if (c.compensationType === "hourly") return Math.round(c.hourlyRate * c.hoursWorked * 100) / 100;
     if (c.revenuePercentage <= 0) return 0;
     return Math.round(total * c.revenuePercentage) / 100;
@@ -657,6 +665,36 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
                     </div>
                   </div>
 
+                  {/* Custom Platform */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">Custom Plattform (optional)</label>
+                      <div className="input-gold-shimmer rounded-lg">
+                        <Input
+                          value={selected.customPlatformName}
+                          onChange={e => updateSelected({ customPlatformName: e.target.value })}
+                          placeholder="z.B. Miami, OnlyFans …"
+                          className="text-sm border-transparent"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-medium text-muted-foreground">Custom Revenue</label>
+                      <div className="input-gold-shimmer rounded-lg">
+                        <Input
+                          type="number"
+                          inputMode="decimal"
+                          step="0.01"
+                          min={0}
+                          value={selected.customRevenue || ""}
+                          onChange={e => updateSelected({ customRevenue: Math.round((Number(e.target.value.replace(",", ".")) || 0) * 100) / 100 })}
+                          className="text-sm border-transparent tabular-nums"
+                          placeholder="0,00"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="glass-card rounded-lg p-3 flex items-center justify-between">
                       <span className="text-xs font-medium text-muted-foreground">Gesamt</span>
@@ -837,6 +875,9 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
                 fourbased: selected.fourbasedRevenue || 0,
                 maloum: selected.maloumRevenue || 0,
                 brezzels: selected.brezzelsRevenue || 0,
+                custom: (selected.customRevenue || 0) > 0 && selected.customPlatformName.trim()
+                  ? { name: selected.customPlatformName.trim(), rev: selected.customRevenue }
+                  : undefined,
               }}
             />
           </Section>

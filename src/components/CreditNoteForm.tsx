@@ -28,7 +28,10 @@ interface PlatformRevenue {
   fourbased: number;
   maloum: number;
   brezzels: number;
+  custom?: { name: string; rev: number };
 }
+
+const TARGET_CURRENCIES = ["EUR", "USD", "GBP", "CHF", "AED"] as const;
 
 interface CreditNoteFormProps {
   suggestedAmount?: number;
@@ -201,39 +204,41 @@ export default function CreditNoteForm({
   const [generating, setGenerating] = useState(false);
   const [liveExchangeRate, setLiveExchangeRate] = useState<number | null>(null);
   const [rateLoading, setRateLoading] = useState(false);
+  const [targetCurrency, setTargetCurrency] = useState<string>(saved.targetCurrency || (currency === "EUR" ? "USD" : "EUR"));
 
-  // Fetch live exchange rate to EUR when currency is not EUR
+  // Fetch live exchange rate from `currency` to `targetCurrency` (bidirectional)
   useEffect(() => {
-    if (currency === "EUR") {
+    if (!currency || !targetCurrency || currency === targetCurrency) {
       setLiveExchangeRate(null);
       return;
     }
     let cancelled = false;
     setRateLoading(true);
-    fetch(`https://api.frankfurter.app/latest?from=${currency}&to=EUR`)
+    fetch(`https://api.frankfurter.app/latest?from=${currency}&to=${targetCurrency}`)
       .then(r => r.json())
       .then(data => {
-        if (!cancelled && data?.rates?.EUR) {
-          setLiveExchangeRate(data.rates.EUR);
+        if (!cancelled && data?.rates?.[targetCurrency]) {
+          const rate = data.rates[targetCurrency];
+          setLiveExchangeRate(rate);
           if (!exchangeRate) {
-            setExchangeRate(`1 ${currency} = ${data.rates.EUR.toFixed(4)} EUR`);
+            setExchangeRate(`1 ${currency} = ${rate.toFixed(4)} ${targetCurrency}`);
           }
         }
       })
       .catch(() => { if (!cancelled) setLiveExchangeRate(null); })
       .finally(() => { if (!cancelled) setRateLoading(false); });
     return () => { cancelled = true; };
-  }, [currency]);
+  }, [currency, targetCurrency]);
 
   // Auto-save remaining UI-only fields to localStorage (provider fields are persisted in DB)
   useEffect(() => {
     const timer = setTimeout(() => {
       localStorage.setItem(storageKey, JSON.stringify({
-        description, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet,
+        description, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet, targetCurrency,
       }));
     }, 500);
     return () => clearTimeout(timer);
-  }, [description, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet, storageKey]);
+  }, [description, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet, targetCurrency, storageKey]);
 
   // Calculations
   const net = parseFloat(netAmount.replace(",", ".")) || 0;
@@ -437,12 +442,15 @@ export default function CreditNoteForm({
       };
       const hasAnyPct = revenuePercentage > 0
         || (platformPercentages && (platformPercentages.fourbased > 0 || platformPercentages.maloum > 0 || platformPercentages.brezzels > 0));
-      const hasPlatformBreakdown = platformRevenue && hasAnyPct && (platformRevenue.fourbased > 0 || platformRevenue.maloum > 0 || platformRevenue.brezzels > 0);
+      const customEntry = platformRevenue?.custom;
+      const hasCustom = !!(customEntry && customEntry.rev > 0 && customEntry.name && revenuePercentage > 0);
+      const hasPlatformBreakdown = platformRevenue && hasAnyPct && (platformRevenue.fourbased > 0 || platformRevenue.maloum > 0 || platformRevenue.brezzels > 0 || hasCustom);
       const platforms = hasPlatformBreakdown
         ? [
             { name: "4Based", rev: platformRevenue!.fourbased, pct: pctFor("fourbased") },
             { name: "Maloum", rev: platformRevenue!.maloum, pct: pctFor("maloum") },
             { name: "Brezzels", rev: platformRevenue!.brezzels, pct: pctFor("brezzels") },
+            ...(hasCustom ? [{ name: customEntry!.name, rev: customEntry!.rev, pct: revenuePercentage }] : []),
           ].filter(p => p.rev > 0 && p.pct > 0)
         : [];
 
@@ -544,7 +552,8 @@ export default function CreditNoteForm({
 
     // ── Payment Information ──
     const isBank = modelPaymentMethod === "bank";
-    if (isBank || cryptoCoin || txHash || (currency !== "EUR" && liveExchangeRate)) {
+    const hasFxNote = liveExchangeRate && currency !== targetCurrency;
+    if (isBank || cryptoCoin || txHash || hasFxNote) {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(7.5);
       doc.setTextColor(...goldLight);
@@ -587,8 +596,10 @@ export default function CreditNoteForm({
           y += 4.5;
         }
       }
-      if (currency !== "EUR" && liveExchangeRate) {
-        doc.text(`Exchange Rate: 1 ${currency} = ${liveExchangeRate.toFixed(4)} EUR`, m, y);
+      if (hasFxNote) {
+        doc.text(`Exchange Rate: 1 ${currency} = ${liveExchangeRate!.toFixed(4)} ${targetCurrency}`, m, y);
+        y += 4.5;
+        doc.text(`Total in ${targetCurrency}: ${(grossAmount * liveExchangeRate!).toLocaleString("de-DE", { minimumFractionDigits: 2 })} ${targetCurrency}`, m, y);
         y += 4.5;
       }
       if (paymentDate) {
@@ -877,6 +888,9 @@ export default function CreditNoteForm({
             { key: "fourbased" as const, label: "4Based", rev: platformRevenue.fourbased, pct: pctFor("fourbased") },
             { key: "maloum" as const, label: "Maloum", rev: platformRevenue.maloum, pct: pctFor("maloum") },
             { key: "brezzels" as const, label: "Brezzels", rev: platformRevenue.brezzels, pct: pctFor("brezzels") },
+            ...(platformRevenue.custom && platformRevenue.custom.rev > 0 && platformRevenue.custom.name && revenuePercentage > 0
+              ? [{ key: "custom" as const, label: platformRevenue.custom.name, rev: platformRevenue.custom.rev, pct: revenuePercentage }]
+              : []),
           ].filter(r => r.rev > 0 && r.pct > 0);
           if (rows.length === 0) return null;
           return (
@@ -909,19 +923,40 @@ export default function CreditNoteForm({
             <span>Gesamt</span>
             <span className="font-mono text-accent">{grossAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}</span>
           </div>
-          {currency !== "EUR" && liveExchangeRate && net > 0 && (
-            <div className="border-t border-border/30 pt-1.5 flex justify-between text-xs text-muted-foreground">
-              <span>≈ in EUR</span>
-              <span className="font-mono text-accent/70">
-                {rateLoading ? "…" : `≈ ${(grossAmount * liveExchangeRate).toLocaleString("de-DE", { minimumFractionDigits: 2 })} EUR`}
-              </span>
+          {/* Bidirectional currency conversion */}
+          <div className="border-t border-border/30 pt-2 mt-1 space-y-1.5">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Umrechnen in</span>
+              <Select value={targetCurrency} onValueChange={setTargetCurrency}>
+                <SelectTrigger className="h-7 w-[100px] text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {TARGET_CURRENCIES.filter(c => c !== currency).map(c => (
+                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-          )}
-          {currency !== "EUR" && liveExchangeRate && (
-            <div className="text-[10px] text-muted-foreground/60 text-right">
-              Kurs: 1 {currency} = {liveExchangeRate.toFixed(4)} EUR (live)
-            </div>
-          )}
+            {currency !== targetCurrency && liveExchangeRate && net > 0 && (
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>≈ in {targetCurrency}</span>
+                <span className="font-mono text-accent/70">
+                  {rateLoading ? "…" : `≈ ${(grossAmount * liveExchangeRate).toLocaleString("de-DE", { minimumFractionDigits: 2 })} ${targetCurrency}`}
+                </span>
+              </div>
+            )}
+            {currency !== targetCurrency && liveExchangeRate && (
+              <div className="text-[10px] text-muted-foreground/60 text-right">
+                Kurs: 1 {currency} = {liveExchangeRate.toFixed(4)} {targetCurrency} (live)
+              </div>
+            )}
+            {currency !== targetCurrency && !liveExchangeRate && !rateLoading && (
+              <div className="text-[10px] text-muted-foreground/60 text-right">
+                Kurs nicht verfügbar
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

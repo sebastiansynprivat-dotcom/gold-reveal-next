@@ -274,6 +274,8 @@ export type Database = {
           created_by: string | null
           crypto_address: string
           currency: string
+          custom_platform_name: string
+          custom_revenue: number
           fourbased_revenue: number
           hourly_rate: number
           hours_worked: number
@@ -301,6 +303,8 @@ export type Database = {
           created_by?: string | null
           crypto_address?: string
           currency?: string
+          custom_platform_name?: string
+          custom_revenue?: number
           fourbased_revenue?: number
           hourly_rate?: number
           hours_worked?: number
@@ -328,6 +332,8 @@ export type Database = {
           created_by?: string | null
           crypto_address?: string
           currency?: string
+          custom_platform_name?: string
+          custom_revenue?: number
           fourbased_revenue?: number
           hourly_rate?: number
           hours_worked?: number
