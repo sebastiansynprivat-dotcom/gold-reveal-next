@@ -1965,6 +1965,50 @@ export default function ModelDashboardTab() {
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
+                  <Label className="text-[10px] text-muted-foreground">Gruppe</Label>
+                  <Select
+                    value={newModel.group_id || "__none__"}
+                    onValueChange={(v) =>
+                      setNewModel((prev) => ({ ...prev, group_id: v === "__none__" ? "" : v }))
+                    }
+                  >
+                    <SelectTrigger className="h-8 text-xs bg-secondary/40 border-border/50">
+                      <SelectValue placeholder="Keine" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">Keine Gruppe</SelectItem>
+                      {groupsList.map((g) => (
+                        <SelectItem key={g.id} value={g.id}>
+                          {g.name} ({g.default_commission}%)
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-[10px] text-muted-foreground">Override %</Label>
+                  <Input
+                    type="number"
+                    value={newModel.commission_override}
+                    onChange={(e) =>
+                      setNewModel((prev) => ({ ...prev, commission_override: e.target.value }))
+                    }
+                    placeholder="Default Gruppe"
+                    className="h-8 text-xs bg-secondary/40 border-border/50"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] text-muted-foreground">Referral-Quelle</Label>
+                <Input
+                  value={newModel.referral_source}
+                  onChange={(e) => setNewModel((prev) => ({ ...prev, referral_source: e.target.value }))}
+                  placeholder="z. B. Partner XY (überschreibt Gruppen-Default)"
+                  className="h-8 text-xs bg-secondary/40 border-border/50"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
                   <Label className="text-[10px] text-muted-foreground">Sprache</Label>
                   <div className="flex gap-1">
                     <button
