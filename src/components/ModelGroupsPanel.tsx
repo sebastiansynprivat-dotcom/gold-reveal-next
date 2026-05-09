@@ -724,6 +724,7 @@ export default function ModelGroupsPanel({
                         <th className="text-right">%</th>
                         <th className="text-right">Commission</th>
                         <th className="text-right">Net Payout</th>
+                        <th className="text-right pl-2">Invoice</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -736,6 +737,21 @@ export default function ModelGroupsPanel({
                           <td className="text-right num">€{i.commission_amount.toFixed(2)}</td>
                           <td className="text-right num font-semibold text-accent">
                             €{i.net_payout.toFixed(2)}
+                          </td>
+                          <td className="text-right pl-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 px-2 border-accent/30"
+                              disabled={invoiceLoading === i.model_id || i.net_payout <= 0}
+                              onClick={() => generateInvoice(i)}
+                            >
+                              {invoiceLoading === i.model_id ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <FileDown className="h-3 w-3" />
+                              )}
+                            </Button>
                           </td>
                         </tr>
                       ))}
