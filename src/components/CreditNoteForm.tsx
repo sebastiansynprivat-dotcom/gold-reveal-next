@@ -236,41 +236,56 @@ export default function CreditNoteForm({
   const [generating, setGenerating] = useState(false);
   const [liveExchangeRate, setLiveExchangeRate] = useState<number | null>(null);
   const [rateLoading, setRateLoading] = useState(false);
-  const [targetCurrency, setTargetCurrency] = useState<string>(saved.targetCurrency || (currency === "EUR" ? "USD" : "EUR"));
+  // Invoice display currency (the currency the invoice is actually issued in)
+  const [invoiceCurrency, setInvoiceCurrency] = useState<string>(saved.invoiceCurrency || saved.targetCurrency || currency);
 
-  // Fetch live exchange rate from `currency` to `targetCurrency` (bidirectional)
+  // Fetch live exchange rate from chatter `currency` to selected `invoiceCurrency`
   useEffect(() => {
-    if (!currency || !targetCurrency || currency === targetCurrency) {
-      setLiveExchangeRate(null);
+    let cancelled = false;
+    if (!currency || !invoiceCurrency || currency === invoiceCurrency) {
+      setLiveExchangeRate(1);
       return;
     }
-    let cancelled = false;
     setRateLoading(true);
-    fetch(`https://api.frankfurter.app/latest?from=${currency}&to=${targetCurrency}`)
-      .then(r => r.json())
-      .then(data => {
-        if (!cancelled && data?.rates?.[targetCurrency]) {
-          const rate = data.rates[targetCurrency];
-          setLiveExchangeRate(rate);
-          if (!exchangeRate) {
-            setExchangeRate(`1 ${currency} = ${rate.toFixed(4)} ${targetCurrency}`);
-          }
-        }
-      })
-      .catch(() => { if (!cancelled) setLiveExchangeRate(null); })
-      .finally(() => { if (!cancelled) setRateLoading(false); });
+    fetchFxRate(currency, invoiceCurrency).then(rate => {
+      if (cancelled) return;
+      setLiveExchangeRate(rate);
+      if (rate && !exchangeRate) {
+        setExchangeRate(`1 ${currency} = ${rate.toFixed(4)} ${invoiceCurrency}`);
+      }
+      setRateLoading(false);
+    });
     return () => { cancelled = true; };
-  }, [currency, targetCurrency]);
+  }, [currency, invoiceCurrency]);
+
+  // Switch invoice currency and auto-convert the entered net amount
+  const handleInvoiceCurrencyChange = useCallback(async (newCur: string) => {
+    if (newCur === invoiceCurrency) return;
+    const oldCur = invoiceCurrency;
+    setInvoiceCurrency(newCur);
+    const currentNet = parseFloat(netAmount.replace(",", ".")) || 0;
+    if (currentNet <= 0) return;
+    // Convert via chatter currency as intermediate base
+    const oldRate = oldCur === currency ? 1 : await fetchFxRate(currency, oldCur);
+    const newRate = newCur === currency ? 1 : await fetchFxRate(currency, newCur);
+    if (!oldRate || !newRate) {
+      toast.warning("Kurs nicht verfügbar – Betrag wurde nicht automatisch umgerechnet.");
+      return;
+    }
+    const netInChatter = currentNet / oldRate;
+    const converted = netInChatter * newRate;
+    setNetAmount(converted.toFixed(2));
+  }, [invoiceCurrency, netAmount, currency]);
 
   // Auto-save remaining UI-only fields to localStorage (provider fields are persisted in DB)
   useEffect(() => {
     const timer = setTimeout(() => {
       localStorage.setItem(storageKey, JSON.stringify({
-        description, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet, targetCurrency,
+        description, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet, invoiceCurrency,
       }));
     }, 500);
     return () => clearTimeout(timer);
-  }, [description, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet, targetCurrency, storageKey]);
+  }, [description, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet, invoiceCurrency, storageKey]);
 
   // Calculations
   const net = parseFloat(netAmount.replace(",", ".")) || 0;
