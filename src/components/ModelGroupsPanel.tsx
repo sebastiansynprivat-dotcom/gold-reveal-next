@@ -311,8 +311,8 @@ export default function ModelGroupsPanel({
     setInvoiceLoading(item.model_id);
     try {
       // Issuer settings
-      const { data: issuer } = await supabase
-        .from("issuer_settings" as any)
+      const { data: issuer } = await (supabase as any)
+        .from("issuer_settings")
         .select("*")
         .limit(1)
         .single();
