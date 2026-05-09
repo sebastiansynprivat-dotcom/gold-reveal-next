@@ -8,10 +8,8 @@ import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import logo from "@/assets/logo.png";
 import { toast } from "sonner";
-import { useAdminScope } from "@/hooks/useAdminScope";
 
 const AdminLogin = () => {
-  useAdminScope();
   const { user, loading, signIn } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState<"login" | "totp" | "setup">("login");
@@ -138,7 +136,7 @@ const AdminLogin = () => {
 
   if (loading) {
     return (
-      <div className="admin-scope min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -147,7 +145,7 @@ const AdminLogin = () => {
   // If user is logged in but not admin, show error
   if (loginCompleted && user && isAdmin === false) {
     return (
-      <div className="admin-scope min-h-screen flex flex-col items-center justify-center px-4 bg-background">
+      <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-background">
         <Shield className="h-16 w-16 text-destructive mb-4" />
         <h1 className="text-xl font-bold text-foreground mb-2">Zugriff verweigert</h1>
         <p className="text-muted-foreground text-sm text-center mb-6">
@@ -161,7 +159,7 @@ const AdminLogin = () => {
   }
 
   return (
-    <div className="admin-scope min-h-screen flex flex-col items-center justify-center px-4 bg-background">
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-background">
       <div className="w-full max-w-sm animate-fade-in">
         {/* Logo & Header */}
         <div className="flex flex-col items-center mb-8">
