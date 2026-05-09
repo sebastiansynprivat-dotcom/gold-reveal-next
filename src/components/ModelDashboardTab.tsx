@@ -812,6 +812,15 @@ export default function ModelDashboardTab() {
           <p className="text-xs text-muted-foreground">{models.length} Models registriert</p>
         </div>
         <Button
+          onClick={() => setGroupsPanelOpen(true)}
+          size="sm"
+          variant="outline"
+          className="gap-1.5 border-accent/30 text-accent hover:bg-accent/10"
+        >
+          <Tag className="h-3.5 w-3.5" />
+          Gruppen
+        </Button>
+        <Button
           onClick={() => setCreateDialogOpen(true)}
           size="sm"
           className="gap-1.5 bg-accent hover:bg-accent/90 text-accent-foreground gold-glow"
