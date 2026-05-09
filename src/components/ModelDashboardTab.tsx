@@ -44,6 +44,7 @@ import {
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import CreditNoteForm from "@/components/CreditNoteForm";
+import ModelGroupsPanel from "@/components/ModelGroupsPanel";
 import { fetchFxRate } from "@/lib/fx";
 
 // ─── Types ───
