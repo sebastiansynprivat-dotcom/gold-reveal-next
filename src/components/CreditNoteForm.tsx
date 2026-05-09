@@ -88,7 +88,8 @@ export default function CreditNoteForm({
   providerIsBusiness: initialProviderIsBusiness = false,
   providerVatId: initialProviderVatId = "",
   providerNameOverride: initialProviderNameOverride = "",
-}: CreditNoteFormProps) {
+  platformFxRates = [],
+}: CreditNoteFormProps & { platformFxRates?: Array<{ platform: string; from: string; to: string; rate: number }> }) {
   // localStorage key for persisting provider (recipient) form fields
   const storageKey = `credit-note-form-${accountId || chatterName || "default"}`;
 
@@ -573,7 +574,8 @@ export default function CreditNoteForm({
     // ── Payment Information ──
     const isBank = modelPaymentMethod === "bank";
     const hasFxNote = !!liveExchangeRate && currency !== invoiceCurrency;
-    if (isBank || cryptoCoin || txHash || hasFxNote) {
+    const hasPlatformFx = platformFxRates && platformFxRates.length > 0;
+    if (isBank || cryptoCoin || txHash || hasFxNote || hasPlatformFx) {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(7.5);
       doc.setTextColor(...goldLight);
@@ -619,6 +621,12 @@ export default function CreditNoteForm({
       if (hasFxNote) {
         doc.text(`Exchange Rate: 1 ${currency} = ${liveExchangeRate!.toFixed(4)} ${invoiceCurrency}`, m, y);
         y += 4.5;
+      }
+      if (hasPlatformFx) {
+        for (const fx of platformFxRates!) {
+          doc.text(`Exchange Rate (${fx.platform}): 1 ${fx.from} = ${fx.rate.toFixed(4)} ${fx.to}`, m, y);
+          y += 4.5;
+        }
       }
       if (paymentDate) {
         doc.setFontSize(8.5);
