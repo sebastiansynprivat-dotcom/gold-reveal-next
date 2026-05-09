@@ -6,8 +6,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo.png";
+import { useAdminScope } from "@/hooks/useAdminScope";
 
 export default function AdminNotifications() {
+  useAdminScope();
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
@@ -68,7 +70,7 @@ export default function AdminNotifications() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="admin-scope min-h-screen bg-background">
       <header className="border-b border-border">
         <div className="container max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
           <img src={logo} alt="Logo" className="h-9 w-9 rounded-full" />

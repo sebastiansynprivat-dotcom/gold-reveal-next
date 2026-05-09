@@ -89,6 +89,7 @@ import ChatterDashboardTab from "@/components/ChatterDashboardTab";
 import GoldParticles from "@/components/GoldParticles";
 import SubAdminManager from "@/components/SubAdminManager";
 import { useAdminRole } from "@/hooks/useAdminRole";
+import { useAdminScope } from "@/hooks/useAdminScope";
 
 import { DeferredChart, ChartSkeleton } from "@/components/admin/DeferredChart";
 
@@ -724,6 +725,7 @@ function ChatterOverviewTab({
 }
 
 export default function AdminDashboard() {
+  useAdminScope();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { isSuperAdmin } = useAdminRole();
@@ -2873,7 +2875,7 @@ export default function AdminDashboard() {
     : allTabItems.filter((t) => !SUPER_ADMIN_TABS.has(t.key));
 
   return (
-    <div className="min-h-screen bg-background relative">
+    <div className="admin-scope min-h-screen bg-background relative">
       <GoldParticles spawnRate={0.2} maxParticles={20} baseOpacity={0.15} />
       {/* Premium Header — luxurious black & gold */}
       <header className="fixed top-0 left-0 right-0 z-40 border-b border-accent/20 bg-[linear-gradient(180deg,hsl(0_0%_4%/0.95)_0%,hsl(0_0%_6%/0.85)_100%)] backdrop-blur-2xl shadow-[0_8px_32px_-8px_hsl(0_0%_0%/0.6)]">
