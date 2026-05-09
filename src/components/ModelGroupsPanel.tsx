@@ -779,6 +779,18 @@ export default function ModelGroupsPanel({
                   <Button variant="outline" onClick={copyBillingCSV} className="border-accent/30">
                     <Copy className="h-3 w-3 mr-1" /> Als CSV kopieren
                   </Button>
+                  <Button
+                    onClick={generateAllInvoices}
+                    disabled={!!invoiceLoading || billingItems.every((i) => i.net_payout <= 0)}
+                    className="bg-accent text-accent-foreground gold-glow"
+                  >
+                    {invoiceLoading ? (
+                      <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                    ) : (
+                      <FileDown className="h-3 w-3 mr-1" />
+                    )}
+                    Alle Provider Invoices
+                  </Button>
                   <Button onClick={() => setBillingOpen(false)} variant="ghost">
                     <X className="h-3 w-3 mr-1" /> Schließen
                   </Button>
