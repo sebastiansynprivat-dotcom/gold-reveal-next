@@ -22,7 +22,10 @@ import {
   Save,
   Copy,
   X,
+  FileDown,
 } from "lucide-react";
+import { generateProviderInvoicePdf, downloadPdf } from "@/lib/providerInvoicePdf";
+import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
 
 type Group = {
   id: string;
@@ -43,6 +46,17 @@ type ModelLite = {
   commission_override: number | null;
   referral_source: string;
   revenue_percentage: number;
+  currency: string;
+  crypto_address: string | null;
+  payment_method: string;
+  bank_name: string | null;
+  bank_iban: string | null;
+  bank_bic: string | null;
+  bank_account_holder: string | null;
+  provider_name_override: string;
+  provider_address: string;
+  provider_is_business: boolean;
+  provider_vat_id: string;
 };
 
 type LineItem = {
@@ -53,6 +67,8 @@ type LineItem = {
   commission_pct: number;
   commission_amount: number;
   net_payout: number;
+  breakdown: Array<{ name: string; gross: number }>;
+  currency: string;
 };
 
 const slugify = (s: string) =>
@@ -96,7 +112,9 @@ export default function ModelGroupsPanel({
       supabase.from("model_groups").select("*").order("name"),
       supabase
         .from("models")
-        .select("id, name, username, group_id, commission_override, referral_source, revenue_percentage")
+        .select(
+          "id, name, username, group_id, commission_override, referral_source, revenue_percentage, currency, crypto_address, payment_method, bank_name, bank_iban, bank_bic, bank_account_holder, provider_name_override, provider_address, provider_is_business, provider_vat_id"
+        )
         .order("name"),
     ]);
     setGroups((gs as any) || []);
@@ -176,28 +194,48 @@ export default function ModelGroupsPanel({
     setBillingLoading(true);
     setBillingOpen(true);
     try {
-      // For each model in group: sum daily_revenue via account_assignments → accounts.model_id
       const items: LineItem[] = [];
       for (const m of groupModels) {
-        const { data: accs } = await supabase.from("accounts").select("id").eq("model_id", m.id);
+        // All accounts of this model
+        const { data: accs } = await supabase
+          .from("accounts")
+          .select("id, platform")
+          .eq("model_id", m.id);
         const accountIds = (accs || []).map((a: any) => a.id);
+        const platformByAcc = new Map<string, string>(
+          (accs || []).map((a: any) => [a.id, a.platform])
+        );
+
+        // Manually entered revenue (model_dashboard) — primary source
         let gross = 0;
+        const breakdown: Array<{ name: string; gross: number }> = [];
         if (accountIds.length > 0) {
-          const { data: revs } = await supabase
-            .from("daily_revenue")
-            .select("amount, user_id, date")
-            .gte("date", billingPeriod.from)
-            .lte("date", billingPeriod.to);
-          // Filter via account_assignments where account_id in accountIds and matches user_id+date window
-          const { data: asg } = await supabase
-            .from("account_assignments")
-            .select("account_id, user_id")
+          const { data: md } = await supabase
+            .from("model_dashboard")
+            .select(
+              "account_id, fourbased_revenue, maloum_revenue, brezzels_revenue, monthly_revenue"
+            )
             .in("account_id", accountIds);
-          const validUsers = new Set((asg || []).map((a: any) => a.user_id));
-          gross = (revs || [])
-            .filter((r: any) => validUsers.has(r.user_id))
-            .reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+          (md || []).forEach((d: any) => {
+            const fb = Number(d.fourbased_revenue) || 0;
+            const ml = Number(d.maloum_revenue) || 0;
+            const br = Number(d.brezzels_revenue) || 0;
+            const sum = fb + ml + br;
+            const total = sum || Number(d.monthly_revenue) || 0;
+            if (total <= 0) return;
+            const platform = platformByAcc.get(d.account_id) || "Account";
+            // If sum exists, push detailed; else push aggregated
+            if (sum > 0) {
+              if (fb > 0) breakdown.push({ name: "4Based", gross: fb });
+              if (ml > 0) breakdown.push({ name: "Maloum", gross: ml });
+              if (br > 0) breakdown.push({ name: "Brezzels", gross: br });
+            } else {
+              breakdown.push({ name: platform, gross: total });
+            }
+            gross += total;
+          });
         }
+
         const pct =
           m.commission_override != null && m.commission_override !== 0
             ? Number(m.commission_override)
@@ -212,6 +250,8 @@ export default function ModelGroupsPanel({
           commission_pct: pct,
           commission_amount,
           net_payout,
+          breakdown,
+          currency: m.currency || "EUR",
         });
       }
       setBillingItems(items);
@@ -253,6 +293,133 @@ export default function ModelGroupsPanel({
       [header, ...rows, `TOTAL,,${totals.g.toFixed(2)},,${totals.c.toFixed(2)},${totals.n.toFixed(2)}`].join("\n");
     navigator.clipboard.writeText(csv);
     toast.success("Abrechnung in Zwischenablage kopiert");
+  };
+
+  const [invoiceLoading, setInvoiceLoading] = useState<string | null>(null);
+
+  const generateInvoice = async (item: LineItem) => {
+    if (!selected) return;
+    const model = models.find((m) => m.id === item.model_id);
+    if (!model) {
+      toast.error("Model nicht gefunden");
+      return;
+    }
+    if (item.net_payout <= 0) {
+      toast.error("Kein Auszahlungsbetrag – Umsatz fehlt.");
+      return;
+    }
+    setInvoiceLoading(item.model_id);
+    try {
+      // Issuer settings
+      const { data: issuer } = await (supabase as any)
+        .from("issuer_settings")
+        .select("*")
+        .limit(1)
+        .single();
+
+      // Next invoice number
+      const { data: rpcData, error: rpcError } = await supabase.rpc(
+        "next_credit_note_number" as any
+      );
+      if (rpcError) throw rpcError;
+      const creditNoteNumber = rpcData as string;
+
+      const providerName = model.provider_name_override || model.name;
+      const isBusiness = !!model.provider_is_business;
+      const providerVatId = model.provider_vat_id || "";
+      const providerAddress = model.provider_address || "";
+      const currency = item.currency || "EUR";
+
+      const lines = item.breakdown.length > 0
+        ? item.breakdown.map((b) => ({
+            name: b.name,
+            gross: b.gross,
+            pct: item.commission_pct,
+          }))
+        : [{ name: "Revenue Share", gross: item.gross, pct: item.commission_pct }];
+
+      const isBank = (model.payment_method || "crypto") === "bank";
+      const payment = isBank
+        ? {
+            method: "Bank Transfer",
+            bankAccountHolder: model.bank_account_holder || "",
+            bankIban: model.bank_iban || "",
+            bankBic: model.bank_bic || "",
+            bankName: model.bank_name || "",
+            paymentDate: format(new Date(), "yyyy-MM-dd"),
+          }
+        : {
+            method: "USDT (TRC20)",
+            wallet: model.crypto_address || "",
+            paymentDate: format(new Date(), "yyyy-MM-dd"),
+          };
+
+      // Save record
+      const { data: u } = await supabase.auth.getUser();
+      await supabase.from("credit_notes" as any).insert({
+        credit_note_number: creditNoteNumber,
+        credit_note_date: format(new Date(), "yyyy-MM-dd"),
+        service_period_start: billingPeriod.from,
+        service_period_end: billingPeriod.to,
+        provider_name: providerName,
+        provider_address: providerAddress,
+        provider_is_business: isBusiness,
+        provider_vat_id: isBusiness ? providerVatId : "",
+        description: `Revenue share – ${selected.name}`,
+        net_amount: item.net_payout,
+        vat_rate: 0,
+        vat_amount: 0,
+        gross_amount: item.net_payout,
+        payment_method: payment.method,
+        crypto_coin: isBank ? "" : "USDT",
+        tx_hash: "",
+        exchange_rate: "",
+        payment_date: format(new Date(), "yyyy-MM-dd"),
+        account_id: null,
+        chatter_name: model.name,
+        created_by: u.user?.id,
+      } as any);
+
+      const doc = generateProviderInvoicePdf({
+        creditNoteNumber,
+        creditNoteDate: format(new Date(), "yyyy-MM-dd"),
+        servicePeriodStart: billingPeriod.from,
+        servicePeriodEnd: billingPeriod.to,
+        issuer: {
+          name: issuer?.name || "Sharify Media Limited",
+          address: issuer?.address || "Palaion Patron Germanou 11, 8011, Paphos, Cyprus",
+          vatId: issuer?.vat_id || "CY60329590T",
+        },
+        provider: {
+          name: providerName,
+          address: providerAddress,
+          isBusiness,
+          vatId: providerVatId,
+        },
+        description: `Revenue share – ${selected.name}`,
+        currency,
+        lines,
+        net: item.net_payout,
+        payment,
+      });
+      downloadPdf(doc, `ProviderInvoice_${creditNoteNumber.replace(/\//g, "-")}_${model.name.replace(/\s+/g, "_")}.pdf`);
+      toast.success(`Provider Invoice ${creditNoteNumber} erstellt`);
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e.message || "Fehler bei Invoice-Erstellung");
+    } finally {
+      setInvoiceLoading(null);
+    }
+  };
+
+  const generateAllInvoices = async () => {
+    for (const item of billingItems) {
+      if (item.net_payout > 0) {
+        // Sequential to avoid number conflicts
+        // eslint-disable-next-line no-await-in-loop
+        await generateInvoice(item);
+      }
+    }
   };
 
   return (
@@ -557,6 +724,7 @@ export default function ModelGroupsPanel({
                         <th className="text-right">%</th>
                         <th className="text-right">Commission</th>
                         <th className="text-right">Net Payout</th>
+                        <th className="text-right pl-2">Invoice</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -569,6 +737,21 @@ export default function ModelGroupsPanel({
                           <td className="text-right num">€{i.commission_amount.toFixed(2)}</td>
                           <td className="text-right num font-semibold text-accent">
                             €{i.net_payout.toFixed(2)}
+                          </td>
+                          <td className="text-right pl-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 px-2 border-accent/30"
+                              disabled={invoiceLoading === i.model_id || i.net_payout <= 0}
+                              onClick={() => generateInvoice(i)}
+                            >
+                              {invoiceLoading === i.model_id ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <FileDown className="h-3 w-3" />
+                              )}
+                            </Button>
                           </td>
                         </tr>
                       ))}
@@ -595,6 +778,18 @@ export default function ModelGroupsPanel({
                 <div className="flex justify-end gap-2 pt-2">
                   <Button variant="outline" onClick={copyBillingCSV} className="border-accent/30">
                     <Copy className="h-3 w-3 mr-1" /> Als CSV kopieren
+                  </Button>
+                  <Button
+                    onClick={generateAllInvoices}
+                    disabled={!!invoiceLoading || billingItems.every((i) => i.net_payout <= 0)}
+                    className="bg-accent text-accent-foreground gold-glow"
+                  >
+                    {invoiceLoading ? (
+                      <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                    ) : (
+                      <FileDown className="h-3 w-3 mr-1" />
+                    )}
+                    Alle Provider Invoices
                   </Button>
                   <Button onClick={() => setBillingOpen(false)} variant="ghost">
                     <X className="h-3 w-3 mr-1" /> Schließen
