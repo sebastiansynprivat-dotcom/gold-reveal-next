@@ -89,7 +89,11 @@ export default function CreditNoteForm({
   providerVatId: initialProviderVatId = "",
   providerNameOverride: initialProviderNameOverride = "",
   platformFxRates = [],
-}: CreditNoteFormProps & { platformFxRates?: Array<{ platform: string; from: string; to: string; rate: number }> }) {
+  platformBreakdown = [],
+}: CreditNoteFormProps & {
+  platformFxRates?: Array<{ platform: string; from: string; to: string; rate: number }>;
+  platformBreakdown?: Array<{ name: string; rev: number; pct: number }>;
+}) {
   // localStorage key for persisting provider (recipient) form fields
   const storageKey = `credit-note-form-${accountId || chatterName || "default"}`;
 
