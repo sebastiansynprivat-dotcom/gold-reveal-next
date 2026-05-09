@@ -6,8 +6,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo.png";
+import { useAdminScope } from "@/hooks/useAdminScope";
 
 export default function AdminNotifications() {
+  useAdminScope();
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
   const [sending, setSending] = useState(false);
