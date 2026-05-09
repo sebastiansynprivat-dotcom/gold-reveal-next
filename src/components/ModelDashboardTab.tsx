@@ -592,6 +592,12 @@ export default function ModelDashboardTab() {
         bank_bic: modelForm.bank_bic || "",
         bank_account_holder: modelForm.bank_account_holder || "",
         referrer_tag: (modelForm.referrer_tag || "").trim(),
+        group_id: (modelForm as any).group_id || null,
+        commission_override:
+          (modelForm as any).commission_override === "" || (modelForm as any).commission_override == null
+            ? null
+            : Number((modelForm as any).commission_override),
+        referral_source: ((modelForm as any).referral_source || "").trim(),
       })
       .eq("id", selectedModelId);
     // Also update all accounts with model-level fields
