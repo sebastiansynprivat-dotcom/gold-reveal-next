@@ -165,6 +165,9 @@ interface ModelRow {
   created_at: string;
   updated_at: string;
   referrer_tag?: string;
+  group_id?: string | null;
+  commission_override?: number | null;
+  referral_source?: string;
 }
 
 interface AccountRow {
