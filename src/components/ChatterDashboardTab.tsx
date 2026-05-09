@@ -31,6 +31,8 @@ interface Chatter {
   fourbasedRevenue: number;
   maloumRevenue: number;
   brezzelsRevenue: number;
+  customPlatformName: string;
+  customRevenue: number;
   revenuePercentage: number;
   currency: string;
   cryptoAddress: string;
@@ -59,6 +61,8 @@ function rowToChatter(row: any): Chatter {
     fourbasedRevenue: Number(row.fourbased_revenue) || 0,
     maloumRevenue: Number(row.maloum_revenue) || 0,
     brezzelsRevenue: Number(row.brezzels_revenue) || 0,
+    customPlatformName: row.custom_platform_name || "",
+    customRevenue: Number(row.custom_revenue) || 0,
     revenuePercentage: Number(row.revenue_percentage) || 0,
     currency: row.currency || "EUR",
     cryptoAddress: row.crypto_address || "",
@@ -178,6 +182,8 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
         fourbased_revenue: chatter.fourbasedRevenue,
         maloum_revenue: chatter.maloumRevenue,
         brezzels_revenue: chatter.brezzelsRevenue,
+        custom_platform_name: chatter.customPlatformName,
+        custom_revenue: chatter.customRevenue,
         currency: chatter.currency,
         crypto_address: chatter.cryptoAddress,
         payment_method: chatter.paymentMethod,
@@ -210,7 +216,7 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
 
   const totalRevenue = useMemo(() => {
     if (!selected) return 0;
-    return (selected.fourbasedRevenue || 0) + (selected.maloumRevenue || 0) + (selected.brezzelsRevenue || 0);
+    return (selected.fourbasedRevenue || 0) + (selected.maloumRevenue || 0) + (selected.brezzelsRevenue || 0) + (selected.customRevenue || 0);
   }, [selected]);
 
   const verdienst = useMemo(() => {
@@ -236,6 +242,8 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
       fourbased_revenue: 0,
       maloum_revenue: 0,
       brezzels_revenue: 0,
+      custom_platform_name: "",
+      custom_revenue: 0,
       currency: "EUR",
       crypto_address: "",
       payment_method: "crypto",
@@ -287,7 +295,7 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
   };
 
   const getVerdienst = (c: Chatter) => {
-    const total = (c.fourbasedRevenue || 0) + (c.maloumRevenue || 0) + (c.brezzelsRevenue || 0);
+    const total = (c.fourbasedRevenue || 0) + (c.maloumRevenue || 0) + (c.brezzelsRevenue || 0) + (c.customRevenue || 0);
     if (c.compensationType === "hourly") return Math.round(c.hourlyRate * c.hoursWorked * 100) / 100;
     if (c.revenuePercentage <= 0) return 0;
     return Math.round(total * c.revenuePercentage) / 100;
