@@ -574,7 +574,8 @@ export default function CreditNoteForm({
     // ── Payment Information ──
     const isBank = modelPaymentMethod === "bank";
     const hasFxNote = !!liveExchangeRate && currency !== invoiceCurrency;
-    if (isBank || cryptoCoin || txHash || hasFxNote) {
+    const hasPlatformFx = platformFxRates && platformFxRates.length > 0;
+    if (isBank || cryptoCoin || txHash || hasFxNote || hasPlatformFx) {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(7.5);
       doc.setTextColor(...goldLight);
