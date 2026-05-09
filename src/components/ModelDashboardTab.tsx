@@ -1356,13 +1356,13 @@ export default function ModelDashboardTab() {
                             </div>
                             <div className="flex justify-between items-center pl-[4.5rem] text-[10px] text-muted-foreground tabular-nums">
                               <span>
-                                Umsatz: {r.rev.toLocaleString("de-DE")} {currencyForPlatform(r.label)}
+                                Umsatz: {r.rev.toLocaleString("de-DE")} {baseCurrency}
                                 {usingFallback && pct === 0 && fallback > 0 && (
                                   <span className="ml-1 text-accent/70">(Standard {fallback}%)</span>
                                 )}
                               </span>
                               <span className="text-accent/80">
-                                → {earn.toLocaleString("de-DE")} {currencyForPlatform(r.label)}
+                                → {earn.toLocaleString("de-DE")} {baseCurrency}
                               </span>
                             </div>
                           </div>
