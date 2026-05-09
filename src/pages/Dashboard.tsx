@@ -361,7 +361,13 @@ export default function Dashboard() {
   }, [user, isPwaInstalled]);
   const saveTelegram = async () => {
     if (!user) return;
-    const { error } = await supabase.from("profiles").update({ telegram_id: telegramId.trim() }).eq("user_id", user.id);
+    const trimmed = telegramId.trim();
+    const digitCount = (trimmed.match(/\d/g) || []).length;
+    if (digitCount < 7) {
+      setTelegramHelpOpen(true);
+      return;
+    }
+    const { error } = await supabase.from("profiles").update({ telegram_id: trimmed }).eq("user_id", user.id);
     if (error) {
       toast.error("Fehler beim Speichern");
       return;
