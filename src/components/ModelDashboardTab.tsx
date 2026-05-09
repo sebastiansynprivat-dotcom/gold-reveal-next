@@ -44,6 +44,7 @@ import {
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import CreditNoteForm from "@/components/CreditNoteForm";
+import ModelGroupsPanel from "@/components/ModelGroupsPanel";
 import { fetchFxRate } from "@/lib/fx";
 
 // ─── Types ───
@@ -164,6 +165,9 @@ interface ModelRow {
   created_at: string;
   updated_at: string;
   referrer_tag?: string;
+  group_id?: string | null;
+  commission_override?: number | null;
+  referral_source?: string;
 }
 
 interface AccountRow {
@@ -315,6 +319,15 @@ export default function ModelDashboardTab() {
 
   // Create model dialog
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [groupsPanelOpen, setGroupsPanelOpen] = useState(false);
+  const [groupsList, setGroupsList] = useState<{ id: string; name: string; default_commission: number; referral_source: string }[]>([]);
+  const loadGroups = useCallback(async () => {
+    const { data } = await supabase.from("model_groups").select("id, name, default_commission, referral_source").order("name");
+    setGroupsList((data as any) || []);
+  }, []);
+  useEffect(() => {
+    loadGroups();
+  }, [loadGroups]);
   const [newModel, setNewModel] = useState({
     name: "",
     username: "",
@@ -324,6 +337,9 @@ export default function ModelDashboardTab() {
     model_agency: "shex" as "shex" | "syn",
     model_active: true,
     referrer_tag: "",
+    group_id: "" as string,
+    commission_override: "" as string,
+    referral_source: "",
   });
   const [creating, setCreating] = useState(false);
   const [createAccounts, setCreateAccounts] = useState(emptyAccountEntries);
@@ -502,6 +518,10 @@ export default function ModelDashboardTab() {
         model_agency: newModel.model_agency,
         model_active: newModel.model_active,
         referrer_tag: newModel.referrer_tag.trim(),
+        group_id: newModel.group_id || null,
+        commission_override:
+          newModel.commission_override === "" ? null : Number(newModel.commission_override),
+        referral_source: (newModel.referral_source || "").trim(),
         created_by: userId,
       })
       .select("id")
@@ -541,6 +561,9 @@ export default function ModelDashboardTab() {
       model_agency: "shex",
       model_active: true,
       referrer_tag: "",
+      group_id: "",
+      commission_override: "",
+      referral_source: "",
     });
     setCreateAccounts(emptyAccountEntries());
     setCreateDialogOpen(false);
@@ -578,6 +601,12 @@ export default function ModelDashboardTab() {
         bank_bic: modelForm.bank_bic || "",
         bank_account_holder: modelForm.bank_account_holder || "",
         referrer_tag: (modelForm.referrer_tag || "").trim(),
+        group_id: (modelForm as any).group_id || null,
+        commission_override:
+          (modelForm as any).commission_override === "" || (modelForm as any).commission_override == null
+            ? null
+            : Number((modelForm as any).commission_override),
+        referral_source: ((modelForm as any).referral_source || "").trim(),
       })
       .eq("id", selectedModelId);
     // Also update all accounts with model-level fields
@@ -782,6 +811,15 @@ export default function ModelDashboardTab() {
           <h1 className="text-lg font-bold text-gold-gradient-shimmer tracking-wide">Model-Verwaltung</h1>
           <p className="text-xs text-muted-foreground">{models.length} Models registriert</p>
         </div>
+        <Button
+          onClick={() => setGroupsPanelOpen(true)}
+          size="sm"
+          variant="outline"
+          className="gap-1.5 border-accent/30 text-accent hover:bg-accent/10"
+        >
+          <Tag className="h-3.5 w-3.5" />
+          Gruppen
+        </Button>
         <Button
           onClick={() => setCreateDialogOpen(true)}
           size="sm"
@@ -1162,6 +1200,55 @@ export default function ModelDashboardTab() {
                       value={modelForm.referrer_tag || ""}
                       onChange={(v) => setModelForm((prev) => ({ ...prev, referrer_tag: v }))}
                       suggestions={referrerSuggestions}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Gruppe</Label>
+                      <Select
+                        value={(modelForm as any).group_id || "__none__"}
+                        onValueChange={(v) =>
+                          setModelForm((prev) => ({ ...(prev as any), group_id: v === "__none__" ? null : v }))
+                        }
+                      >
+                        <SelectTrigger className="h-9 bg-secondary/40 border-border/50 text-sm">
+                          <SelectValue placeholder="Keine" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__none__">Keine Gruppe</SelectItem>
+                          {groupsList.map((g) => (
+                            <SelectItem key={g.id} value={g.id}>
+                              {g.name} ({g.default_commission}%)
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Override %</Label>
+                      <Input
+                        type="number"
+                        value={(modelForm as any).commission_override ?? ""}
+                        onChange={(e) =>
+                          setModelForm((prev) => ({
+                            ...(prev as any),
+                            commission_override: e.target.value === "" ? null : Number(e.target.value),
+                          }))
+                        }
+                        placeholder="Default Gruppe"
+                        className="h-9 bg-secondary/40 border-border/50 text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Referral-Quelle</Label>
+                    <Input
+                      value={(modelForm as any).referral_source || ""}
+                      onChange={(e) =>
+                        setModelForm((prev) => ({ ...(prev as any), referral_source: e.target.value }))
+                      }
+                      placeholder="z. B. Partner XY"
+                      className="h-9 bg-secondary/40 border-border/50 text-sm"
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-3">
@@ -1927,6 +2014,50 @@ export default function ModelDashboardTab() {
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
+                  <Label className="text-[10px] text-muted-foreground">Gruppe</Label>
+                  <Select
+                    value={newModel.group_id || "__none__"}
+                    onValueChange={(v) =>
+                      setNewModel((prev) => ({ ...prev, group_id: v === "__none__" ? "" : v }))
+                    }
+                  >
+                    <SelectTrigger className="h-8 text-xs bg-secondary/40 border-border/50">
+                      <SelectValue placeholder="Keine" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">Keine Gruppe</SelectItem>
+                      {groupsList.map((g) => (
+                        <SelectItem key={g.id} value={g.id}>
+                          {g.name} ({g.default_commission}%)
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-[10px] text-muted-foreground">Override %</Label>
+                  <Input
+                    type="number"
+                    value={newModel.commission_override}
+                    onChange={(e) =>
+                      setNewModel((prev) => ({ ...prev, commission_override: e.target.value }))
+                    }
+                    placeholder="Default Gruppe"
+                    className="h-8 text-xs bg-secondary/40 border-border/50"
+                  />
+                </div>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] text-muted-foreground">Referral-Quelle</Label>
+                <Input
+                  value={newModel.referral_source}
+                  onChange={(e) => setNewModel((prev) => ({ ...prev, referral_source: e.target.value }))}
+                  placeholder="z. B. Partner XY (überschreibt Gruppen-Default)"
+                  className="h-8 text-xs bg-secondary/40 border-border/50"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
                   <Label className="text-[10px] text-muted-foreground">Sprache</Label>
                   <div className="flex gap-1">
                     <button
@@ -2315,6 +2446,15 @@ export default function ModelDashboardTab() {
           )}
         </DialogContent>
       </Dialog>
+
+      <ModelGroupsPanel
+        open={groupsPanelOpen}
+        onOpenChange={setGroupsPanelOpen}
+        onChanged={() => {
+          loadGroups();
+          loadModels();
+        }}
+      />
     </div>
   );
 }

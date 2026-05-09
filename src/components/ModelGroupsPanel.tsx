@@ -1,0 +1,610 @@
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { motion, AnimatePresence } from "framer-motion";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Slider } from "@/components/ui/slider";
+import {
+  Plus,
+  Tag,
+  Pencil,
+  Trash2,
+  Users,
+  Loader2,
+  ArrowLeft,
+  Receipt,
+  Save,
+  Copy,
+  X,
+} from "lucide-react";
+
+type Group = {
+  id: string;
+  name: string;
+  slug: string;
+  default_commission: number;
+  referral_source: string;
+  color: string;
+  notes: string;
+  created_at: string;
+};
+
+type ModelLite = {
+  id: string;
+  name: string;
+  username: string | null;
+  group_id: string | null;
+  commission_override: number | null;
+  referral_source: string;
+  revenue_percentage: number;
+};
+
+type LineItem = {
+  model_id: string;
+  model_name: string;
+  referral_source: string;
+  gross: number;
+  commission_pct: number;
+  commission_amount: number;
+  net_payout: number;
+};
+
+const slugify = (s: string) =>
+  s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") ||
+  Math.random().toString(36).slice(2, 8);
+
+export default function ModelGroupsPanel({
+  open,
+  onOpenChange,
+  onChanged,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  onChanged?: () => void;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [models, setModels] = useState<ModelLite[]>([]);
+  const [selected, setSelected] = useState<Group | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [billingOpen, setBillingOpen] = useState(false);
+  const [billingItems, setBillingItems] = useState<LineItem[]>([]);
+  const [billingPeriod, setBillingPeriod] = useState({
+    from: new Date(new Date().getFullYear(), new Date().getMonth() - 1, 1).toISOString().slice(0, 10),
+    to: new Date(new Date().getFullYear(), new Date().getMonth(), 0).toISOString().slice(0, 10),
+  });
+  const [billingLoading, setBillingLoading] = useState(false);
+
+  const [form, setForm] = useState({
+    name: "",
+    default_commission: 30,
+    referral_source: "",
+    color: "#D4AF37",
+    notes: "",
+  });
+  const [editingGroup, setEditingGroup] = useState<Group | null>(null);
+
+  const load = async () => {
+    setLoading(true);
+    const [{ data: gs }, { data: ms }] = await Promise.all([
+      supabase.from("model_groups").select("*").order("name"),
+      supabase
+        .from("models")
+        .select("id, name, username, group_id, commission_override, referral_source, revenue_percentage")
+        .order("name"),
+    ]);
+    setGroups((gs as any) || []);
+    setModels((ms as any) || []);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    if (open) load();
+  }, [open]);
+
+  const groupModels = useMemo(
+    () => (selected ? models.filter((m) => m.group_id === selected.id) : []),
+    [models, selected]
+  );
+
+  const resetForm = () => {
+    setForm({ name: "", default_commission: 30, referral_source: "", color: "#D4AF37", notes: "" });
+    setEditingGroup(null);
+  };
+
+  const saveGroup = async () => {
+    if (!form.name.trim()) {
+      toast.error("Name fehlt");
+      return;
+    }
+    const { data: u } = await supabase.auth.getUser();
+    const payload = {
+      name: form.name.trim(),
+      slug: slugify(form.name),
+      default_commission: form.default_commission,
+      referral_source: form.referral_source.trim(),
+      color: form.color,
+      notes: form.notes,
+      ...(editingGroup ? {} : { created_by: u.user?.id }),
+    };
+    const q = editingGroup
+      ? supabase.from("model_groups").update(payload).eq("id", editingGroup.id)
+      : supabase.from("model_groups").insert(payload);
+    const { error } = await q;
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success(editingGroup ? "Gruppe aktualisiert" : "Gruppe erstellt");
+    setCreateOpen(false);
+    resetForm();
+    await load();
+    onChanged?.();
+  };
+
+  const deleteGroup = async (g: Group) => {
+    if (!confirm(`Gruppe "${g.name}" wirklich löschen? Models bleiben erhalten.`)) return;
+    const { error } = await supabase.from("model_groups").delete().eq("id", g.id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Gruppe gelöscht");
+    setSelected(null);
+    await load();
+    onChanged?.();
+  };
+
+  const updateModelField = async (id: string, patch: Partial<ModelLite>) => {
+    const { error } = await supabase.from("models").update(patch as any).eq("id", id);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    setModels((prev) => prev.map((m) => (m.id === id ? { ...m, ...patch } : m)));
+    onChanged?.();
+  };
+
+  const generateBilling = async () => {
+    if (!selected) return;
+    setBillingLoading(true);
+    setBillingOpen(true);
+    try {
+      // For each model in group: sum daily_revenue via account_assignments → accounts.model_id
+      const items: LineItem[] = [];
+      for (const m of groupModels) {
+        const { data: accs } = await supabase.from("accounts").select("id").eq("model_id", m.id);
+        const accountIds = (accs || []).map((a: any) => a.id);
+        let gross = 0;
+        if (accountIds.length > 0) {
+          const { data: revs } = await supabase
+            .from("daily_revenue")
+            .select("amount, user_id, date")
+            .gte("date", billingPeriod.from)
+            .lte("date", billingPeriod.to);
+          // Filter via account_assignments where account_id in accountIds and matches user_id+date window
+          const { data: asg } = await supabase
+            .from("account_assignments")
+            .select("account_id, user_id")
+            .in("account_id", accountIds);
+          const validUsers = new Set((asg || []).map((a: any) => a.user_id));
+          gross = (revs || [])
+            .filter((r: any) => validUsers.has(r.user_id))
+            .reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+        }
+        const pct =
+          m.commission_override != null && m.commission_override !== 0
+            ? Number(m.commission_override)
+            : Number(selected.default_commission);
+        const commission_amount = +(gross * (pct / 100)).toFixed(2);
+        const net_payout = commission_amount;
+        items.push({
+          model_id: m.id,
+          model_name: m.name,
+          referral_source: m.referral_source || selected.referral_source || "",
+          gross: +gross.toFixed(2),
+          commission_pct: pct,
+          commission_amount,
+          net_payout,
+        });
+      }
+      setBillingItems(items);
+
+      // Persist snapshot
+      const total_gross = items.reduce((s, i) => s + i.gross, 0);
+      const total_commission = items.reduce((s, i) => s + i.commission_amount, 0);
+      const total_net = items.reduce((s, i) => s + i.net_payout, 0);
+      const { data: u } = await supabase.auth.getUser();
+      await supabase.from("group_billings").insert({
+        group_id: selected.id,
+        group_name: selected.name,
+        period_start: billingPeriod.from,
+        period_end: billingPeriod.to,
+        total_gross,
+        total_commission,
+        total_net,
+        line_items: items as any,
+        created_by: u.user?.id,
+      });
+    } catch (e: any) {
+      toast.error(e.message || "Fehler bei Abrechnung");
+    } finally {
+      setBillingLoading(false);
+    }
+  };
+
+  const copyBillingCSV = () => {
+    const header = "Model,Referral,Gross,Commission %,Commission Amount,Net Payout";
+    const rows = billingItems.map(
+      (i) =>
+        `${i.model_name},${i.referral_source},${i.gross.toFixed(2)},${i.commission_pct}%,${i.commission_amount.toFixed(2)},${i.net_payout.toFixed(2)}`
+    );
+    const totals = billingItems.reduce(
+      (a, i) => ({ g: a.g + i.gross, c: a.c + i.commission_amount, n: a.n + i.net_payout }),
+      { g: 0, c: 0, n: 0 }
+    );
+    const csv =
+      [header, ...rows, `TOTAL,,${totals.g.toFixed(2)},,${totals.c.toFixed(2)},${totals.n.toFixed(2)}`].join("\n");
+    navigator.clipboard.writeText(csv);
+    toast.success("Abrechnung in Zwischenablage kopiert");
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-4xl bg-card border-accent/20 p-0 overflow-hidden">
+        <DialogHeader className="px-6 pt-6 pb-3 border-b border-accent/10">
+          <DialogTitle className="text-foreground flex items-center gap-2">
+            {selected ? (
+              <>
+                <Button variant="ghost" size="sm" className="h-7 -ml-2" onClick={() => setSelected(null)}>
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <span className="text-gold-gradient-shimmer">{selected.name}</span>
+                <Badge variant="outline" className="border-accent/30 text-accent ml-2">
+                  Default {selected.default_commission}%
+                </Badge>
+              </>
+            ) : (
+              <>
+                <Tag className="h-4 w-4 text-accent" />
+                <span className="text-gold-gradient-shimmer">Model-Gruppen</span>
+              </>
+            )}
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="p-6">
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="h-6 w-6 animate-spin text-accent" />
+            </div>
+          ) : selected ? (
+            // ── Group detail ──
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-muted-foreground">
+                  {groupModels.length} Models · Referral: {selected.referral_source || "—"}
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-accent/30"
+                    onClick={() => {
+                      setEditingGroup(selected);
+                      setForm({
+                        name: selected.name,
+                        default_commission: selected.default_commission,
+                        referral_source: selected.referral_source,
+                        color: selected.color,
+                        notes: selected.notes,
+                      });
+                      setCreateOpen(true);
+                    }}
+                  >
+                    <Pencil className="h-3 w-3 mr-1" /> Bearbeiten
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-destructive/30 text-destructive"
+                    onClick={() => deleteGroup(selected)}
+                  >
+                    <Trash2 className="h-3 w-3 mr-1" /> Löschen
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="bg-accent text-accent-foreground gold-glow"
+                    onClick={generateBilling}
+                  >
+                    <Receipt className="h-3 w-3 mr-1" /> Abrechnung erstellen
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex items-end gap-3 p-3 rounded-lg bg-muted/30 border border-accent/10">
+                <div className="flex-1">
+                  <Label className="text-[10px] text-muted-foreground">Zeitraum von</Label>
+                  <Input
+                    type="date"
+                    value={billingPeriod.from}
+                    onChange={(e) => setBillingPeriod((p) => ({ ...p, from: e.target.value }))}
+                    className="h-8"
+                  />
+                </div>
+                <div className="flex-1">
+                  <Label className="text-[10px] text-muted-foreground">bis</Label>
+                  <Input
+                    type="date"
+                    value={billingPeriod.to}
+                    onChange={(e) => setBillingPeriod((p) => ({ ...p, to: e.target.value }))}
+                    className="h-8"
+                  />
+                </div>
+              </div>
+
+              <ScrollArea className="max-h-[420px] pr-2">
+                <div className="space-y-2">
+                  {groupModels.length === 0 && (
+                    <p className="text-center text-sm text-muted-foreground py-8">
+                      Keine Models in dieser Gruppe. Setze die Gruppe beim Anlegen oder Bearbeiten eines Models.
+                    </p>
+                  )}
+                  {groupModels.map((m) => {
+                    const effective =
+                      m.commission_override != null && m.commission_override !== 0
+                        ? m.commission_override
+                        : selected.default_commission;
+                    return (
+                      <div
+                        key={m.id}
+                        className="grid grid-cols-12 gap-2 items-center p-3 rounded-lg bg-card border border-accent/10 hover:border-accent/30 transition"
+                      >
+                        <div className="col-span-4">
+                          <p className="text-sm font-medium text-foreground">{m.name}</p>
+                          <p className="text-[10px] text-muted-foreground">@{m.username || "—"}</p>
+                        </div>
+                        <div className="col-span-4">
+                          <Label className="text-[10px] text-muted-foreground">Referral</Label>
+                          <Input
+                            defaultValue={m.referral_source}
+                            onBlur={(e) =>
+                              e.target.value !== m.referral_source &&
+                              updateModelField(m.id, { referral_source: e.target.value })
+                            }
+                            className="h-7 text-xs"
+                            placeholder={selected.referral_source || "—"}
+                          />
+                        </div>
+                        <div className="col-span-3">
+                          <Label className="text-[10px] text-muted-foreground">
+                            Override (sonst {selected.default_commission}%)
+                          </Label>
+                          <Input
+                            type="number"
+                            defaultValue={m.commission_override ?? ""}
+                            onBlur={(e) => {
+                              const v = e.target.value === "" ? null : Number(e.target.value);
+                              if (v !== m.commission_override) updateModelField(m.id, { commission_override: v });
+                            }}
+                            className="h-7 text-xs"
+                            placeholder={String(selected.default_commission)}
+                          />
+                        </div>
+                        <div className="col-span-1 text-right">
+                          <Badge variant="outline" className="border-accent/40 text-accent text-[10px]">
+                            {effective}%
+                          </Badge>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </ScrollArea>
+            </div>
+          ) : (
+            // ── Group list ──
+            <div className="space-y-3">
+              <div className="flex justify-end">
+                <Button
+                  size="sm"
+                  className="bg-accent text-accent-foreground gold-glow"
+                  onClick={() => {
+                    resetForm();
+                    setCreateOpen(true);
+                  }}
+                >
+                  <Plus className="h-3 w-3 mr-1" /> Neue Gruppe
+                </Button>
+              </div>
+              {groups.length === 0 ? (
+                <p className="text-center text-sm text-muted-foreground py-12">
+                  Noch keine Gruppen. Lege z. B. "Opus" oder "DI" an.
+                </p>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {groups.map((g) => {
+                    const count = models.filter((m) => m.group_id === g.id).length;
+                    return (
+                      <motion.div
+                        key={g.id}
+                        whileHover={{ y: -2 }}
+                        onClick={() => setSelected(g)}
+                        className="cursor-pointer p-4 rounded-xl bg-card border border-accent/15 hover:border-accent/40 hover:gold-glow transition"
+                        style={{ borderLeftColor: g.color, borderLeftWidth: 3 }}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <p className="font-semibold text-foreground">{g.name}</p>
+                            <p className="text-[11px] text-muted-foreground">
+                              {g.referral_source || "—"} · {count} Models
+                            </p>
+                          </div>
+                          <Badge variant="outline" className="border-accent/30 text-accent">
+                            {g.default_commission}%
+                          </Badge>
+                        </div>
+                        {g.notes && (
+                          <p className="text-[11px] text-muted-foreground mt-2 line-clamp-2">{g.notes}</p>
+                        )}
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Create / edit group dialog */}
+        <Dialog open={createOpen} onOpenChange={setCreateOpen}>
+          <DialogContent className="bg-card border-accent/20">
+            <DialogHeader>
+              <DialogTitle>{editingGroup ? "Gruppe bearbeiten" : "Neue Gruppe"}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <div>
+                <Label className="text-xs">Name</Label>
+                <Input
+                  value={form.name}
+                  onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+                  placeholder="z. B. Opus"
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Referral-Quelle</Label>
+                <Input
+                  value={form.referral_source}
+                  onChange={(e) => setForm((p) => ({ ...p, referral_source: e.target.value }))}
+                  placeholder="z. B. Partner XY / Telegram-Pool"
+                />
+              </div>
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <Label className="text-xs">Default Commission</Label>
+                  <Badge variant="outline" className="border-accent/40 text-accent">
+                    {form.default_commission}%
+                  </Badge>
+                </div>
+                <Slider
+                  value={[form.default_commission]}
+                  onValueChange={([v]) => setForm((p) => ({ ...p, default_commission: v }))}
+                  min={0}
+                  max={100}
+                  step={1}
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Notizen</Label>
+                <Textarea
+                  value={form.notes}
+                  onChange={(e) => setForm((p) => ({ ...p, notes: e.target.value }))}
+                  rows={2}
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Farbe</Label>
+                <Input
+                  type="color"
+                  value={form.color}
+                  onChange={(e) => setForm((p) => ({ ...p, color: e.target.value }))}
+                  className="h-9 w-20"
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="ghost" onClick={() => setCreateOpen(false)}>
+                  Abbrechen
+                </Button>
+                <Button onClick={saveGroup} className="bg-accent text-accent-foreground">
+                  <Save className="h-3 w-3 mr-1" /> Speichern
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Billing result dialog */}
+        <Dialog open={billingOpen} onOpenChange={setBillingOpen}>
+          <DialogContent className="max-w-3xl bg-card border-accent/20">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Receipt className="h-4 w-4 text-accent" />
+                Abrechnung – {selected?.name}
+                <span className="text-xs text-muted-foreground ml-2">
+                  {billingPeriod.from} → {billingPeriod.to}
+                </span>
+              </DialogTitle>
+            </DialogHeader>
+            {billingLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-6 w-6 animate-spin text-accent" />
+              </div>
+            ) : (
+              <>
+                <ScrollArea className="max-h-[420px] pr-2">
+                  <table className="w-full text-xs">
+                    <thead className="text-muted-foreground border-b border-accent/10">
+                      <tr>
+                        <th className="text-left py-2">Model</th>
+                        <th className="text-left">Referral</th>
+                        <th className="text-right">Gross</th>
+                        <th className="text-right">%</th>
+                        <th className="text-right">Commission</th>
+                        <th className="text-right">Net Payout</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {billingItems.map((i) => (
+                        <tr key={i.model_id} className="border-b border-accent/5">
+                          <td className="py-2 text-foreground">{i.model_name}</td>
+                          <td className="text-muted-foreground">{i.referral_source || "—"}</td>
+                          <td className="text-right num">€{i.gross.toFixed(2)}</td>
+                          <td className="text-right text-accent num">{i.commission_pct}%</td>
+                          <td className="text-right num">€{i.commission_amount.toFixed(2)}</td>
+                          <td className="text-right num font-semibold text-accent">
+                            €{i.net_payout.toFixed(2)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot className="border-t border-accent/20">
+                      <tr>
+                        <td colSpan={2} className="py-2 font-semibold">
+                          Total
+                        </td>
+                        <td className="text-right num font-semibold">
+                          €{billingItems.reduce((s, i) => s + i.gross, 0).toFixed(2)}
+                        </td>
+                        <td></td>
+                        <td className="text-right num font-semibold">
+                          €{billingItems.reduce((s, i) => s + i.commission_amount, 0).toFixed(2)}
+                        </td>
+                        <td className="text-right num font-bold text-accent">
+                          €{billingItems.reduce((s, i) => s + i.net_payout, 0).toFixed(2)}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </ScrollArea>
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button variant="outline" onClick={copyBillingCSV} className="border-accent/30">
+                    <Copy className="h-3 w-3 mr-1" /> Als CSV kopieren
+                  </Button>
+                  <Button onClick={() => setBillingOpen(false)} variant="ghost">
+                    <X className="h-3 w-3 mr-1" /> Schließen
+                  </Button>
+                </div>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
+      </DialogContent>
+    </Dialog>
+  );
+}
