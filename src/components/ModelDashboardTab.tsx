@@ -545,6 +545,9 @@ export default function ModelDashboardTab() {
       model_agency: "shex",
       model_active: true,
       referrer_tag: "",
+      group_id: "",
+      commission_override: "",
+      referral_source: "",
     });
     setCreateAccounts(emptyAccountEntries());
     setCreateDialogOpen(false);
