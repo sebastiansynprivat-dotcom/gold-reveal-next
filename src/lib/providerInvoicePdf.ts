@@ -111,7 +111,7 @@ export function generateProviderInvoicePdf(d: ProviderInvoiceData): jsPDF {
     doc.setDrawColor(50, 50, 50); doc.rect(m, y - 3.5, cw, 7, "S");
     doc.setFont("helvetica", "normal"); doc.setFontSize(8); doc.setTextColor(...white);
     doc.text(`${i + 1}`, m + 2, y);
-    doc.text(`${d.description} – ${p.name} (${p.pct}%)`, m + 15, y);
+    doc.text(`Creator revenue share for digital content – ${p.name} (${p.pct}%)`, m + 15, y);
     doc.setTextColor(...muted);
     doc.text(p.gross.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), rCol - 52, y, { align: "right" });
     doc.setTextColor(...white);
