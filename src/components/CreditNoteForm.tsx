@@ -501,10 +501,13 @@ export default function CreditNoteForm({
           ].filter(p => p.rev > 0 && p.pct > 0)
         : [];
 
+      const fxRate = currency === invoiceCurrency ? 1 : (liveExchangeRate || 1);
+
       if (hasPlatformBreakdown) {
         platforms.forEach((p, i) => {
           const rowBg: [number, number, number] = i % 2 === 0 ? [20, 20, 20] : [25, 25, 25];
-          const payout = (p.rev * p.pct / 100);
+          const revConv = p.rev * fxRate;
+          const payoutConv = revConv * p.pct / 100;
           const rowH = 7;
           doc.setFillColor(...rowBg);
           doc.rect(m, y - 3.5, cw, rowH, "F");
@@ -516,13 +519,13 @@ export default function CreditNoteForm({
           doc.text(`${i + 1}`, m + 2, y);
           doc.text(`${description} – ${p.name} (${p.pct}%)`, m + 15, y);
           doc.setTextColor(...muted);
-          doc.text(p.rev.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), rCol - 52, y, { align: "right" });
+          doc.text(revConv.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), rCol - 52, y, { align: "right" });
           doc.setTextColor(...white);
-          doc.text(payout.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), rCol - 2, y, { align: "right" });
+          doc.text(payoutConv.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), rCol - 2, y, { align: "right" });
           y += rowH;
         });
 
-        const totalRev = platforms.reduce((s, p) => s + p.rev, 0);
+        const totalRevConv = platforms.reduce((s, p) => s + p.rev * fxRate, 0);
         doc.setFillColor(18, 18, 18);
         doc.rect(m, y - 3.5, cw, 7, "F");
         doc.setDrawColor(50, 50, 50);
@@ -531,7 +534,7 @@ export default function CreditNoteForm({
         doc.setFontSize(7.5);
         doc.setTextColor(...goldLight);
         doc.text("Total", m + 15, y);
-        doc.text(totalRev.toLocaleString("de-DE", { minimumFractionDigits: 2 }), rCol - 52, y, { align: "right" });
+        doc.text(totalRevConv.toLocaleString("de-DE", { minimumFractionDigits: 2 }), rCol - 52, y, { align: "right" });
         doc.setTextColor(...gold);
         doc.text(formattedNet, rCol - 2, y, { align: "right" });
         y += 7;
@@ -559,14 +562,14 @@ export default function CreditNoteForm({
     doc.setFontSize(8.5);
     doc.setTextColor(...softWhite);
     doc.text("Net Amount:", subtotalX, y);
-    doc.text(`${formattedNet} ${currency}`, rCol - 2, y, { align: "right" });
+    doc.text(`${formattedNet} ${invoiceCurrency}`, rCol - 2, y, { align: "right" });
     y += 5;
 
     const vatLabel = !isBusiness
       ? "VAT (0% – not subject to VAT):"
       : `VAT (${vatRate}%):`;
     doc.text(vatLabel, subtotalX - 15, y);
-    doc.text(`${vatAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} ${currency}`, rCol - 2, y, { align: "right" });
+    doc.text(`${vatAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} ${invoiceCurrency}`, rCol - 2, y, { align: "right" });
     y += 5;
 
     // Total line
@@ -578,7 +581,7 @@ export default function CreditNoteForm({
     doc.setFontSize(11);
     doc.setTextColor(...gold);
     doc.text("Total:", subtotalX, y);
-    doc.text(`${grossAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} ${currency}`, rCol - 2, y, { align: "right" });
+    doc.text(`${grossAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} ${invoiceCurrency}`, rCol - 2, y, { align: "right" });
 
 
 
