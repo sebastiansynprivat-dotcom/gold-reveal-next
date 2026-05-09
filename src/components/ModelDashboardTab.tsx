@@ -325,6 +325,9 @@ export default function ModelDashboardTab() {
     model_agency: "shex" as "shex" | "syn",
     model_active: true,
     referrer_tag: "",
+    group_id: "" as string,
+    commission_override: "" as string,
+    referral_source: "",
   });
   const [creating, setCreating] = useState(false);
   const [createAccounts, setCreateAccounts] = useState(emptyAccountEntries);
