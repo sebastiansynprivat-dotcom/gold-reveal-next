@@ -442,12 +442,15 @@ export default function CreditNoteForm({
       };
       const hasAnyPct = revenuePercentage > 0
         || (platformPercentages && (platformPercentages.fourbased > 0 || platformPercentages.maloum > 0 || platformPercentages.brezzels > 0));
-      const hasPlatformBreakdown = platformRevenue && hasAnyPct && (platformRevenue.fourbased > 0 || platformRevenue.maloum > 0 || platformRevenue.brezzels > 0);
+      const customEntry = platformRevenue?.custom;
+      const hasCustom = !!(customEntry && customEntry.rev > 0 && customEntry.name && revenuePercentage > 0);
+      const hasPlatformBreakdown = platformRevenue && hasAnyPct && (platformRevenue.fourbased > 0 || platformRevenue.maloum > 0 || platformRevenue.brezzels > 0 || hasCustom);
       const platforms = hasPlatformBreakdown
         ? [
             { name: "4Based", rev: platformRevenue!.fourbased, pct: pctFor("fourbased") },
             { name: "Maloum", rev: platformRevenue!.maloum, pct: pctFor("maloum") },
             { name: "Brezzels", rev: platformRevenue!.brezzels, pct: pctFor("brezzels") },
+            ...(hasCustom ? [{ name: customEntry!.name, rev: customEntry!.rev, pct: revenuePercentage }] : []),
           ].filter(p => p.rev > 0 && p.pct > 0)
         : [];
 
@@ -549,7 +552,8 @@ export default function CreditNoteForm({
 
     // ── Payment Information ──
     const isBank = modelPaymentMethod === "bank";
-    if (isBank || cryptoCoin || txHash || (currency !== "EUR" && liveExchangeRate)) {
+    const hasFxNote = liveExchangeRate && currency !== targetCurrency;
+    if (isBank || cryptoCoin || txHash || hasFxNote) {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(7.5);
       doc.setTextColor(...goldLight);
@@ -592,8 +596,10 @@ export default function CreditNoteForm({
           y += 4.5;
         }
       }
-      if (currency !== "EUR" && liveExchangeRate) {
-        doc.text(`Exchange Rate: 1 ${currency} = ${liveExchangeRate.toFixed(4)} EUR`, m, y);
+      if (hasFxNote) {
+        doc.text(`Exchange Rate: 1 ${currency} = ${liveExchangeRate!.toFixed(4)} ${targetCurrency}`, m, y);
+        y += 4.5;
+        doc.text(`Total in ${targetCurrency}: ${(grossAmount * liveExchangeRate!).toLocaleString("de-DE", { minimumFractionDigits: 2 })} ${targetCurrency}`, m, y);
         y += 4.5;
       }
       if (paymentDate) {
