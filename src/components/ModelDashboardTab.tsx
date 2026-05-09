@@ -414,27 +414,60 @@ export default function ModelDashboardTab() {
     return models.filter((m) => m.name.toLowerCase().includes(q) || (m.username || "").toLowerCase().includes(q));
   }, [models, searchQuery]);
 
-  // ─── Per-model platform revenue (for selected model) ───
+  // ─── Live FX rates: any per-account currency → model base currency ───
+  const baseCurrency = modelForm.currency || "EUR";
+  const [fxRates, setFxRates] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    const need = new Set<string>();
+    modelAccounts.forEach((a) => {
+      const c = (a.currency || baseCurrency).trim();
+      if (c && c !== baseCurrency) need.add(c);
+    });
+    need.forEach(async (c) => {
+      const key = `${c}->${baseCurrency}`;
+      if (fxRates[key]) return;
+      const r = await fetchFxRate(c, baseCurrency);
+      if (r) setFxRates((p) => ({ ...p, [key]: r }));
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modelAccounts, baseCurrency]);
+
+  const convertToBase = useCallback(
+    (amount: number, fromCur?: string | null) => {
+      const c = (fromCur || baseCurrency).trim();
+      if (!c || c === baseCurrency) return amount;
+      const rate = fxRates[`${c}->${baseCurrency}`];
+      return rate ? amount * rate : amount;
+    },
+    [fxRates, baseCurrency],
+  );
+
+  // ─── Per-model platform revenue (for selected model) — converted to base currency ───
   const selectedModelPlatformRevenue = useMemo(() => {
     if (!selectedModelId || modelAccounts.length === 0) return [];
     const platformMap: Record<string, { fourbased: number; maloum: number; brezzels: number; total: number }> = {};
     for (const acc of modelAccounts) {
       const pr = platformRevenues[acc.id];
       const rev = dashboardRevenues[acc.id] || 0;
+      const accCur = acc.currency || baseCurrency;
       if (!platformMap[acc.platform]) platformMap[acc.platform] = { fourbased: 0, maloum: 0, brezzels: 0, total: 0 };
       if (pr) {
-        platformMap[acc.platform].fourbased += pr.fourbased;
-        platformMap[acc.platform].maloum += pr.maloum;
-        platformMap[acc.platform].brezzels += pr.brezzels;
+        platformMap[acc.platform].fourbased += convertToBase(pr.fourbased, accCur);
+        platformMap[acc.platform].maloum += convertToBase(pr.maloum, accCur);
+        platformMap[acc.platform].brezzels += convertToBase(pr.brezzels, accCur);
       }
-      platformMap[acc.platform].total += rev;
+      platformMap[acc.platform].total += convertToBase(rev, accCur);
     }
     return Object.entries(platformMap).map(([platform, data]) => ({ platform, ...data }));
-  }, [selectedModelId, modelAccounts, platformRevenues, dashboardRevenues]);
+  }, [selectedModelId, modelAccounts, platformRevenues, dashboardRevenues, convertToBase, baseCurrency]);
 
   const totalRevenue = useMemo(() => {
-    return modelAccounts.reduce((sum, acc) => sum + (dashboardRevenues[acc.id] || 0), 0);
-  }, [modelAccounts, dashboardRevenues]);
+    return modelAccounts.reduce(
+      (sum, acc) => sum + convertToBase(dashboardRevenues[acc.id] || 0, acc.currency || baseCurrency),
+      0,
+    );
+  }, [modelAccounts, dashboardRevenues, convertToBase, baseCurrency]);
 
   const verdienst = useMemo(() => {
     const fallback = modelForm.revenue_percentage || 0;
