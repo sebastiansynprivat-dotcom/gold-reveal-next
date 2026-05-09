@@ -28,7 +28,10 @@ interface PlatformRevenue {
   fourbased: number;
   maloum: number;
   brezzels: number;
+  custom?: { name: string; rev: number };
 }
+
+const TARGET_CURRENCIES = ["EUR", "USD", "GBP", "CHF", "AED"] as const;
 
 interface CreditNoteFormProps {
   suggestedAmount?: number;
