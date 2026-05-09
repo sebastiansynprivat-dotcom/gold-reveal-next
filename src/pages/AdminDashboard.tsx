@@ -725,6 +725,7 @@ function ChatterOverviewTab({
 }
 
 export default function AdminDashboard() {
+  useAdminScope();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { isSuperAdmin } = useAdminRole();
