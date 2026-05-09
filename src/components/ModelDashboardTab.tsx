@@ -2353,6 +2353,15 @@ export default function ModelDashboardTab() {
           )}
         </DialogContent>
       </Dialog>
+
+      <ModelGroupsPanel
+        open={groupsPanelOpen}
+        onOpenChange={setGroupsPanelOpen}
+        onChanged={() => {
+          loadGroups();
+          loadModels();
+        }}
+      />
     </div>
   );
 }
