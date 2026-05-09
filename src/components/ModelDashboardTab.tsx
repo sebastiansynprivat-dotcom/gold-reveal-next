@@ -1275,25 +1275,6 @@ export default function ModelDashboardTab() {
                   );
                 })()}
 
-                {/* Currency */}
-                <div className="flex justify-end">
-                  <Select
-                    value={modelForm.currency || "EUR"}
-                    onValueChange={(v) => setModelForm((prev) => ({ ...prev, currency: v }))}
-                  >
-                    <SelectTrigger className="w-[100px] text-sm h-9">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CURRENCIES.map((c) => (
-                        <SelectItem key={c} value={c}>
-                          {c}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
                 {/* Verdienst */}
                 {verdienst > 0 && (
                   <div className="rounded-xl border border-accent/20 bg-accent/5 p-3 text-center space-y-1">
