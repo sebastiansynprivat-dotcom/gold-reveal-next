@@ -599,7 +599,7 @@ export default function CreditNoteForm({
 
     // ── Payment Information ──
     const isBank = modelPaymentMethod === "bank";
-    const hasFxNote = liveExchangeRate && currency !== targetCurrency;
+    const hasFxNote = !!liveExchangeRate && currency !== invoiceCurrency;
     if (isBank || cryptoCoin || txHash || hasFxNote) {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(7.5);
@@ -644,9 +644,9 @@ export default function CreditNoteForm({
         }
       }
       if (hasFxNote) {
-        doc.text(`Exchange Rate: 1 ${currency} = ${liveExchangeRate!.toFixed(4)} ${targetCurrency}`, m, y);
+        doc.text(`Exchange Rate: 1 ${currency} = ${liveExchangeRate!.toFixed(4)} ${invoiceCurrency}`, m, y);
         y += 4.5;
-        doc.text(`Total in ${targetCurrency}: ${(grossAmount * liveExchangeRate!).toLocaleString("de-DE", { minimumFractionDigits: 2 })} ${targetCurrency}`, m, y);
+        doc.text(`Invoice issued in ${invoiceCurrency} (converted from chatter base ${currency})`, m, y);
         y += 4.5;
       }
       if (paymentDate) {
