@@ -1,0 +1,441 @@
+/* ============================================================
+   ADMIN-ONLY DESIGN TOKENS — Drop-in
+   Aktiv ausschließlich innerhalb von Elementen mit `.admin-scope`.
+   Außerhalb des Admin bleibt das App-Design unverändert.
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&display=swap');
+
+/* --------------------------------------------------------------
+   Scoped Tokens
+   -------------------------------------------------------------- */
+.admin-scope {
+  /* neue Champagner-Gold-Tokens */
+  --gold:            hsl(40, 45%, 55%);
+  --gold-light:      hsl(40, 50%, 65%);
+  --gold-dark:       hsl(40, 40%, 42%);
+
+  --surface-1:       hsl(240, 6%, 5%);
+  --surface-2:       hsla(0, 0%, 100%, 0.02);
+  --surface-3:       hsla(0, 0%, 100%, 0.04);
+
+  --text-strong:     hsl(0, 0%, 96%);
+  --text:            hsl(0, 0%, 84%);
+  --text-muted:      hsl(0, 0%, 64%);
+  --text-subtle:     hsl(0, 0%, 46%);
+
+  --status-success:  hsl(155, 60%, 50%);
+  --status-warning:  hsl(45, 85%, 55%);
+  --status-high:     hsl(25, 85%, 55%);
+  --status-critical: hsl(0, 75%, 58%);
+
+  --bronze:          hsl(25, 60%, 45%);
+  --silver:          hsl(0, 0%, 65%);
+
+  --easing:          cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* shadcn / Tailwind-Brücke (HSL-Tripel ohne hsl()) — überschreibt
+     bg-background, text-foreground, border-border, text-accent etc.
+     nur innerhalb des Admin-Bereichs. */
+  --background: 240 6% 4%;
+  --foreground: 0 0% 96%;
+  --card: 240 6% 5%;
+  --card-foreground: 0 0% 96%;
+  --popover: 240 6% 5%;
+  --popover-foreground: 0 0% 96%;
+  --muted: 240 6% 8%;
+  --muted-foreground: 0 0% 64%;
+  --accent: 40 45% 55%;
+  --accent-foreground: 240 6% 4%;
+  --primary: 40 45% 55%;
+  --primary-foreground: 240 6% 4%;
+  --secondary: 240 6% 9%;
+  --secondary-foreground: 0 0% 96%;
+  --border: 0 0% 100%;          /* Tailwind nutzt border-border = hsl(var(--border)); Opacity via /N */
+  --input: 240 6% 12%;
+  --ring: 40 45% 55%;
+  --radius: 0.75rem;
+
+  /* Body-Look */
+  background-color: hsl(240, 6%, 4%);
+  background-image: radial-gradient(
+    ellipse 80% 40% at 50% 0%,
+    hsl(40, 30%, 8%) 0%,
+    transparent 70%
+  );
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  min-height: 100dvh;
+}
+
+/* Wenn .admin-scope auf <body> liegt: Tap-Highlight + Overscroll glätten */
+body.admin-scope {
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+}
+
+/* --------------------------------------------------------------
+   Scrollbars nur im Admin ausblenden
+   -------------------------------------------------------------- */
+.admin-scope,
+.admin-scope * {
+  scrollbar-width: none;
+}
+.admin-scope::-webkit-scrollbar,
+.admin-scope *::-webkit-scrollbar {
+  display: none;
+}
+
+/* --------------------------------------------------------------
+   Typografie
+   -------------------------------------------------------------- */
+.admin-scope h1,
+.admin-scope h2,
+.admin-scope h3,
+.admin-scope h4,
+.admin-scope h5,
+.admin-scope h6 {
+  font-weight: 300;
+  letter-spacing: -0.02em;
+  color: var(--text-strong);
+}
+
+.admin-scope .num,
+.admin-scope [data-numeric],
+.admin-scope .price,
+.admin-scope .kpi-value {
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-scope .kpi-value {
+  font-size: clamp(1.75rem, 2vw + 1rem, 2.5rem);
+  font-weight: 500;
+  color: var(--text-strong);
+}
+
+.admin-scope .kpi-label,
+.admin-scope .label-caps {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--text-subtle);
+  font-weight: 400;
+}
+
+/* --------------------------------------------------------------
+   Premium Glass Card (auch automatisch für bestehende .glass-card)
+   -------------------------------------------------------------- */
+.admin-scope .premium-card,
+.admin-scope .glass-card {
+  background: linear-gradient(
+    160deg,
+    hsla(0, 0%, 100%, 0.05) 0%,
+    hsla(0, 0%, 0%, 0.22) 100%
+  );
+  backdrop-filter: blur(40px) saturate(160%);
+  -webkit-backdrop-filter: blur(40px) saturate(160%);
+  border: 1px solid hsla(0, 0%, 100%, 0.07);
+  border-radius: var(--radius);
+  box-shadow:
+    inset 0 1px 0 hsla(0, 0%, 100%, 0.08),
+    0 0 0 1px hsla(0, 0%, 0%, 0.3),
+    0 4px 16px hsla(0, 0%, 0%, 0.4),
+    0 16px 40px hsla(0, 0%, 0%, 0.25);
+  position: relative;
+  transition:
+    transform 320ms var(--easing),
+    border-color 320ms var(--easing),
+    box-shadow 320ms var(--easing);
+}
+
+.admin-scope .premium-card::before,
+.admin-scope .glass-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(
+    180deg,
+    hsla(0, 0%, 100%, 0.05) 0%,
+    transparent 40%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.admin-scope .premium-card:hover,
+.admin-scope .glass-card:hover {
+  transform: translateY(-2px);
+  border-color: hsla(0, 0%, 100%, 0.12);
+  box-shadow:
+    inset 0 1px 0 hsla(0, 0%, 100%, 0.08),
+    0 0 0 1px hsla(0, 0%, 0%, 0.3),
+    0 4px 16px hsla(0, 0%, 0%, 0.4),
+    0 16px 40px hsla(0, 0%, 0%, 0.25),
+    0 0 32px hsla(40, 45%, 55%, 0.06);
+}
+
+.admin-scope .premium-stat {
+  background: linear-gradient(
+    160deg,
+    hsla(0, 0%, 100%, 0.03) 0%,
+    hsla(0, 0%, 0%, 0.15) 100%
+  );
+  border: 1px solid hsla(0, 0%, 100%, 0.06);
+  border-radius: var(--radius);
+  box-shadow:
+    inset 0 1px 0 hsla(0, 0%, 100%, 0.06),
+    0 2px 8px hsla(0, 0%, 0%, 0.3);
+}
+
+.admin-scope .premium-chip {
+  background: hsla(0, 0%, 100%, 0.06);
+  border: 1px solid hsla(0, 0%, 100%, 0.08);
+  border-radius: 100px;
+  padding: 2px 8px;
+  font-size: 12px;
+  color: var(--text-muted);
+  box-shadow: inset 0 1px 0 hsla(0, 0%, 100%, 0.06);
+}
+
+/* --------------------------------------------------------------
+   Buttons
+   -------------------------------------------------------------- */
+.admin-scope .btn-gold {
+  background: linear-gradient(135deg, var(--gold) 0%, var(--gold-light) 100%);
+  color: hsl(240, 6%, 4%);
+  border: none;
+  border-radius: var(--radius);
+  padding: 10px 20px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 200ms var(--easing);
+  letter-spacing: 0.01em;
+}
+.admin-scope .btn-gold:hover {
+  box-shadow: 0 0 20px hsla(40, 45%, 55%, 0.3);
+  transform: translateY(-1px);
+}
+.admin-scope .btn-gold:active { transform: scale(0.992); }
+.admin-scope .btn-gold:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.admin-scope .btn-ghost {
+  background: transparent;
+  border: 1px solid hsla(0, 0%, 100%, 0.1);
+  color: var(--text);
+  border-radius: var(--radius);
+  padding: 10px 20px;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 200ms var(--easing);
+}
+.admin-scope .btn-ghost:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+.admin-scope .btn-ghost:active { transform: scale(0.992); }
+
+/* --------------------------------------------------------------
+   Inputs (nur native, lässt shadcn-Komponenten überleben)
+   -------------------------------------------------------------- */
+.admin-scope input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+.admin-scope textarea {
+  background: hsla(0, 0%, 100%, 0.04);
+  border: 1px solid hsla(0, 0%, 100%, 0.08);
+  border-radius: var(--radius);
+  color: var(--text-strong);
+  font-family: 'Inter', sans-serif;
+}
+.admin-scope input::placeholder,
+.admin-scope textarea::placeholder {
+  color: var(--text-subtle);
+}
+.admin-scope input:focus,
+.admin-scope textarea:focus {
+  border-color: hsla(0, 0%, 100%, 0.2);
+  box-shadow: 0 0 0 3px hsla(40, 45%, 55%, 0.08);
+}
+
+/* --------------------------------------------------------------
+   Sidebar
+   -------------------------------------------------------------- */
+.admin-scope .sidebar-premium {
+  background: var(--surface-1);
+  background-image: radial-gradient(
+    ellipse 120% 60% at -10% 0%,
+    hsl(40, 30%, 8%) 0%,
+    transparent 60%
+  );
+  border-right: 1px solid hsla(0, 0%, 100%, 0.05);
+  box-shadow: 32px 0 64px hsla(0, 0%, 0%, 0.3);
+}
+
+.admin-scope .nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: color 200ms var(--easing), background 200ms var(--easing);
+  user-select: none;
+}
+.admin-scope .nav-item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 0%;
+  background: var(--gold);
+  border-radius: 0 2px 2px 0;
+  transition: height 320ms var(--easing), box-shadow 320ms var(--easing);
+}
+.admin-scope .nav-item:hover {
+  color: var(--text);
+  background: hsla(0, 0%, 100%, 0.03);
+}
+.admin-scope .nav-item:hover::before { height: 50%; }
+.admin-scope .nav-item.active {
+  color: var(--gold);
+  background: linear-gradient(90deg, hsla(40, 45%, 55%, 0.08) 0%, transparent 100%);
+}
+.admin-scope .nav-item.active::before {
+  height: 65%;
+  box-shadow: 0 0 8px hsla(40, 45%, 55%, 0.5);
+}
+
+/* --------------------------------------------------------------
+   Listen-Rows
+   -------------------------------------------------------------- */
+.admin-scope .list-row {
+  position: relative;
+  cursor: pointer;
+  transition: background 200ms var(--easing);
+  padding: 12px 16px;
+}
+.admin-scope .list-row::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 2px;
+  height: 0%;
+  background: var(--gold);
+  transform: translateY(-50%) scaleY(0);
+  transform-origin: center;
+  border-radius: 0 2px 2px 0;
+  transition: transform 240ms var(--easing), height 240ms var(--easing);
+}
+.admin-scope .list-row:hover { background: hsla(0, 0%, 100%, 0.02); }
+.admin-scope .list-row:hover::before {
+  transform: translateY(-50%) scaleY(1);
+  height: 60%;
+}
+.admin-scope .list-row.active {
+  background: linear-gradient(90deg, hsla(40, 45%, 55%, 0.06) 0%, transparent 100%);
+}
+
+/* --------------------------------------------------------------
+   Tabs
+   -------------------------------------------------------------- */
+.admin-scope .tab-bar {
+  display: flex;
+  border-bottom: 1px solid hsla(0, 0%, 100%, 0.06);
+  gap: 4px;
+}
+.admin-scope .tab {
+  position: relative;
+  padding: 10px 16px;
+  font-size: 14px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 200ms var(--easing);
+  user-select: none;
+}
+.admin-scope .tab::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  transform: translateX(-50%) scaleX(0.4);
+  width: 70%;
+  height: 1.5px;
+  background: linear-gradient(90deg, transparent 0%, var(--gold) 50%, transparent 100%);
+  box-shadow: 0 0 8px hsla(40, 45%, 55%, 0.4);
+  opacity: 0;
+  transition: transform 320ms var(--easing), opacity 320ms var(--easing);
+}
+.admin-scope .tab.active { color: var(--text-strong); }
+.admin-scope .tab.active::after {
+  transform: translateX(-50%) scaleX(1);
+  opacity: 1;
+}
+
+/* --------------------------------------------------------------
+   Animationen (Keyframes global, Klassen scoped)
+   -------------------------------------------------------------- */
+@keyframes admin-reveal {
+  from { opacity: 0; transform: translateY(8px); filter: blur(4px); }
+  to   { opacity: 1; transform: translateY(0);   filter: blur(0); }
+}
+.admin-scope .reveal { animation: admin-reveal 500ms var(--easing) both; }
+.admin-scope .reveal-delay-1 { animation-delay: 60ms; }
+.admin-scope .reveal-delay-2 { animation-delay: 120ms; }
+.admin-scope .reveal-delay-3 { animation-delay: 180ms; }
+.admin-scope .reveal-delay-4 { animation-delay: 240ms; }
+
+@keyframes admin-breathe {
+  0%, 100% { opacity: 0.6; transform: scale(0.9); }
+  50%      { opacity: 1;   transform: scale(1.1); }
+}
+.admin-scope .breathe { animation: admin-breathe 3s ease-in-out infinite; }
+
+@keyframes admin-shimmer {
+  from { background-position: -200% center; }
+  to   { background-position:  200% center; }
+}
+.admin-scope .shimmer {
+  background: linear-gradient(90deg, transparent 0%, hsla(40, 45%, 55%, 0.15) 50%, transparent 100%);
+  background-size: 200% auto;
+  animation: admin-shimmer 2.4s linear infinite;
+}
+
+@keyframes admin-critical-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 hsla(0, 75%, 58%, 0.4); }
+  50%      { box-shadow: 0 0 0 6px hsla(0, 75%, 58%, 0); }
+}
+.admin-scope .critical-pulse { animation: admin-critical-pulse 2.6s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-scope, .admin-scope *, .admin-scope *::before, .admin-scope *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* --------------------------------------------------------------
+   Online-Status Dots
+   -------------------------------------------------------------- */
+.admin-scope .status-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.admin-scope .status-dot.online {
+  background: var(--status-success);
+  box-shadow: 0 0 6px hsla(155, 60%, 50%, 0.6);
+  animation: admin-breathe 3s ease-in-out infinite;
+}
+.admin-scope .status-dot.away    { background: var(--status-warning); }
+.admin-scope .status-dot.offline { background: hsl(0, 0%, 30%); }
