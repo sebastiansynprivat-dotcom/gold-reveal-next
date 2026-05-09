@@ -22,7 +22,10 @@ import {
   Save,
   Copy,
   X,
+  FileDown,
 } from "lucide-react";
+import { generateProviderInvoicePdf, downloadPdf } from "@/lib/providerInvoicePdf";
+import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
 
 type Group = {
   id: string;
@@ -43,6 +46,17 @@ type ModelLite = {
   commission_override: number | null;
   referral_source: string;
   revenue_percentage: number;
+  currency: string;
+  crypto_address: string | null;
+  payment_method: string;
+  bank_name: string | null;
+  bank_iban: string | null;
+  bank_bic: string | null;
+  bank_account_holder: string | null;
+  provider_name_override: string;
+  provider_address: string;
+  provider_is_business: boolean;
+  provider_vat_id: string;
 };
 
 type LineItem = {
