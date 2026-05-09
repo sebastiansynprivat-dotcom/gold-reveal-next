@@ -495,6 +495,56 @@ export type Database = {
         }
         Relationships: []
       }
+      group_billings: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          group_id: string
+          group_name: string
+          id: string
+          line_items: Json
+          period_end: string
+          period_start: string
+          total_commission: number
+          total_gross: number
+          total_net: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          group_id: string
+          group_name: string
+          id?: string
+          line_items?: Json
+          period_end: string
+          period_start: string
+          total_commission?: number
+          total_gross?: number
+          total_net?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          group_id?: string
+          group_name?: string
+          id?: string
+          line_items?: Json
+          period_end?: string
+          period_start?: string
+          total_commission?: number
+          total_gross?: number
+          total_net?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_billings_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "model_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       issuer_settings: {
         Row: {
           address: string
@@ -635,6 +685,45 @@ export type Database = {
           },
         ]
       }
+      model_groups: {
+        Row: {
+          color: string
+          created_at: string
+          created_by: string | null
+          default_commission: number
+          id: string
+          name: string
+          notes: string
+          referral_source: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          created_by?: string | null
+          default_commission?: number
+          id?: string
+          name: string
+          notes?: string
+          referral_source?: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          created_by?: string | null
+          default_commission?: number
+          id?: string
+          name?: string
+          notes?: string
+          referral_source?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       model_requests: {
         Row: {
           admin_comment: string | null
@@ -716,12 +805,14 @@ export type Database = {
           bank_bic: string | null
           bank_iban: string | null
           bank_name: string | null
+          commission_override: number | null
           contract_file_path: string | null
           created_at: string
           created_by: string | null
           crypto_address: string | null
           currency: string
           drive_folder_id: string | null
+          group_id: string | null
           id: string
           model_active: boolean
           model_agency: string
@@ -733,6 +824,7 @@ export type Database = {
           provider_is_business: boolean
           provider_name_override: string
           provider_vat_id: string
+          referral_source: string
           referrer_tag: string
           revenue_percentage: number
           revenue_percentage_brezzels: number
@@ -747,12 +839,14 @@ export type Database = {
           bank_bic?: string | null
           bank_iban?: string | null
           bank_name?: string | null
+          commission_override?: number | null
           contract_file_path?: string | null
           created_at?: string
           created_by?: string | null
           crypto_address?: string | null
           currency?: string
           drive_folder_id?: string | null
+          group_id?: string | null
           id?: string
           model_active?: boolean
           model_agency?: string
@@ -764,6 +858,7 @@ export type Database = {
           provider_is_business?: boolean
           provider_name_override?: string
           provider_vat_id?: string
+          referral_source?: string
           referrer_tag?: string
           revenue_percentage?: number
           revenue_percentage_brezzels?: number
@@ -778,12 +873,14 @@ export type Database = {
           bank_bic?: string | null
           bank_iban?: string | null
           bank_name?: string | null
+          commission_override?: number | null
           contract_file_path?: string | null
           created_at?: string
           created_by?: string | null
           crypto_address?: string | null
           currency?: string
           drive_folder_id?: string | null
+          group_id?: string | null
           id?: string
           model_active?: boolean
           model_agency?: string
@@ -795,6 +892,7 @@ export type Database = {
           provider_is_business?: boolean
           provider_name_override?: string
           provider_vat_id?: string
+          referral_source?: string
           referrer_tag?: string
           revenue_percentage?: number
           revenue_percentage_brezzels?: number
@@ -803,7 +901,15 @@ export type Database = {
           updated_at?: string
           username?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "models_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "model_groups"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notification_templates: {
         Row: {
