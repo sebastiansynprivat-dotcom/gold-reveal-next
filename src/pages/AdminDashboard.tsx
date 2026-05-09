@@ -89,6 +89,7 @@ import ChatterDashboardTab from "@/components/ChatterDashboardTab";
 import GoldParticles from "@/components/GoldParticles";
 import SubAdminManager from "@/components/SubAdminManager";
 import { useAdminRole } from "@/hooks/useAdminRole";
+import { useAdminScope } from "@/hooks/useAdminScope";
 
 import { DeferredChart, ChartSkeleton } from "@/components/admin/DeferredChart";
 
