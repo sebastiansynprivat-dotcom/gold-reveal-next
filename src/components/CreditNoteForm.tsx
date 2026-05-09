@@ -431,7 +431,7 @@ export default function CreditNoteForm({
       doc.text(`Amount (${invoiceCurrency})`, rCol - 2, y, { align: "right" });
     } else {
       doc.text(`Revenue (${invoiceCurrency})`, rCol - 52, y, { align: "right" });
-      doc.text(`Share ${revenuePercentage}% (${invoiceCurrency})`, rCol - 2, y, { align: "right" });
+      doc.text(`Share (${invoiceCurrency})`, rCol - 2, y, { align: "right" });
     }
     y += 7;
 
