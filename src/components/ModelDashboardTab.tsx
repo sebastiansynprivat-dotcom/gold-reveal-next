@@ -319,6 +319,15 @@ export default function ModelDashboardTab() {
 
   // Create model dialog
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [groupsPanelOpen, setGroupsPanelOpen] = useState(false);
+  const [groupsList, setGroupsList] = useState<{ id: string; name: string; default_commission: number; referral_source: string }[]>([]);
+  const loadGroups = useCallback(async () => {
+    const { data } = await supabase.from("model_groups").select("id, name, default_commission, referral_source").order("name");
+    setGroupsList((data as any) || []);
+  }, []);
+  useEffect(() => {
+    loadGroups();
+  }, [loadGroups]);
   const [newModel, setNewModel] = useState({
     name: "",
     username: "",
