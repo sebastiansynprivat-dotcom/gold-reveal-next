@@ -174,6 +174,7 @@ interface AccountRow {
   model_id: string | null;
   assigned_to: string | null;
   model_active: boolean;
+  currency?: string;
 }
 
 interface ChatterProfile {
@@ -370,7 +371,7 @@ export default function ModelDashboardTab() {
     const { data } = await supabase
       .from("accounts")
       .select(
-        "id, account_email, account_domain, account_password, platform, model_id, assigned_to, model_active" as any,
+        "id, account_email, account_domain, account_password, platform, model_id, assigned_to, model_active, currency" as any,
       )
       .eq("model_id", modelId)
       .order("platform");
@@ -935,6 +936,9 @@ export default function ModelDashboardTab() {
                       };
                       const revenueField = platformFieldMap[acc.platform] || "monthly_revenue";
 
+                      const accCurrency = acc.currency || modelForm.currency || "EUR";
+                      const isCustomCur = !CURRENCIES.includes(accCurrency as any);
+
                       return (
                         <div key={acc.id} className="glass-card-subtle rounded-xl p-3 space-y-2">
                           <div className="flex items-center justify-between">
@@ -950,11 +954,11 @@ export default function ModelDashboardTab() {
                             </div>
                             <p className="text-sm font-bold text-foreground tabular-nums">
                               {rev > 0
-                                ? `${rev.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}€`
+                                ? `${rev.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${accCurrency}`
                                 : "–"}
                             </p>
                           </div>
-                          {/* Inline edit revenue */}
+                          {/* Inline edit revenue + per-platform currency */}
                           <div className="flex items-center gap-2">
                             <div className="flex-1 input-gold-shimmer rounded-lg">
                               <Input
@@ -969,12 +973,10 @@ export default function ModelDashboardTab() {
                                   const raw = e.target.value.replace(",", ".");
                                   const newVal = Math.round((Number(raw) || 0) * 100) / 100;
                                   if (newVal === rev) return;
-                                  // Upsert into model_dashboard
                                   const updateData: Record<string, any> = {
                                     [revenueField]: newVal,
                                     monthly_revenue: newVal,
                                   };
-                                  // Check if row exists
                                   const { data: existing } = await supabase
                                     .from("model_dashboard")
                                     .select("id")
@@ -996,9 +998,52 @@ export default function ModelDashboardTab() {
                                 }}
                               />
                             </div>
-                            <span className="text-[10px] text-muted-foreground shrink-0">
-                              {modelForm.currency || "EUR"}
-                            </span>
+                            <Select
+                              value={isCustomCur ? "__custom__" : accCurrency}
+                              onValueChange={async (v) => {
+                                let newCur = v;
+                                if (v === "__custom__") newCur = "";
+                                setModelAccounts((prev) =>
+                                  prev.map((a) => (a.id === acc.id ? { ...a, currency: newCur } : a)),
+                                );
+                                if (v !== "__custom__") {
+                                  await supabase
+                                    .from("accounts")
+                                    .update({ currency: newCur } as any)
+                                    .eq("id", acc.id);
+                                }
+                              }}
+                            >
+                              <SelectTrigger className="w-[90px] h-8 text-xs">
+                                <SelectValue placeholder="Währung" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {CURRENCIES.map((c) => (
+                                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                                ))}
+                                <SelectItem value="__custom__">Custom…</SelectItem>
+                              </SelectContent>
+                            </Select>
+                            {isCustomCur && (
+                              <Input
+                                value={accCurrency === "EUR" ? "" : accCurrency}
+                                onChange={(e) => {
+                                  const v = e.target.value.toUpperCase().slice(0, 6);
+                                  setModelAccounts((prev) =>
+                                    prev.map((a) => (a.id === acc.id ? { ...a, currency: v } : a)),
+                                  );
+                                }}
+                                onBlur={async (e) => {
+                                  const v = e.target.value.toUpperCase().slice(0, 6);
+                                  await supabase
+                                    .from("accounts")
+                                    .update({ currency: v } as any)
+                                    .eq("id", acc.id);
+                                }}
+                                placeholder="USDT"
+                                className="w-[80px] h-8 text-xs font-mono uppercase"
+                              />
+                            )}
                           </div>
                         </div>
                       );
@@ -1226,7 +1271,11 @@ export default function ModelDashboardTab() {
                     { key: "maloum", label: "Maloum", rev: totals.maloum, pctField: "revenue_percentage_maloum" },
                     { key: "brezzels", label: "Brezzels", rev: totals.brezzels, pctField: "revenue_percentage_brezzels" },
                   ];
-                  const currency = modelForm.currency || "EUR";
+                  // Resolve currency per-platform from the matching account
+                  const currencyForPlatform = (label: string): string => {
+                    const acc = modelAccounts.find((a) => a.platform === label);
+                    return acc?.currency || modelForm.currency || "EUR";
+                  };
                   return (
                     <div className="space-y-3 rounded-xl border border-accent/15 bg-accent/[0.02] p-3">
                       <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -1259,13 +1308,13 @@ export default function ModelDashboardTab() {
                             </div>
                             <div className="flex justify-between items-center pl-[4.5rem] text-[10px] text-muted-foreground tabular-nums">
                               <span>
-                                Umsatz: {r.rev.toLocaleString("de-DE")} {currency}
+                                Umsatz: {r.rev.toLocaleString("de-DE")} {currencyForPlatform(r.label)}
                                 {usingFallback && pct === 0 && fallback > 0 && (
                                   <span className="ml-1 text-accent/70">(Standard {fallback}%)</span>
                                 )}
                               </span>
                               <span className="text-accent/80">
-                                → {earn.toLocaleString("de-DE")} {currency}
+                                → {earn.toLocaleString("de-DE")} {currencyForPlatform(r.label)}
                               </span>
                             </div>
                           </div>
