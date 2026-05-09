@@ -110,7 +110,9 @@ export default function ModelGroupsPanel({
       supabase.from("model_groups").select("*").order("name"),
       supabase
         .from("models")
-        .select("id, name, username, group_id, commission_override, referral_source, revenue_percentage")
+        .select(
+          "id, name, username, group_id, commission_override, referral_source, revenue_percentage, currency, crypto_address, payment_method, bank_name, bank_iban, bank_bic, bank_account_holder, provider_name_override, provider_address, provider_is_business, provider_vat_id"
+        )
         .order("name"),
     ]);
     setGroups((gs as any) || []);
