@@ -960,47 +960,39 @@ export default function CreditNoteForm({
         <div className="rounded-lg bg-secondary/30 border border-border/50 p-3 space-y-1.5">
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>Netto</span>
-            <span className="font-mono">{net.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}</span>
+            <span className="font-mono">{net.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {invoiceCurrency}</span>
           </div>
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>MwSt. ({vatRate}%)</span>
-            <span className="font-mono">{vatAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}</span>
+            <span className="font-mono">{vatAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {invoiceCurrency}</span>
           </div>
           <div className="border-t border-border/30 pt-1.5 flex justify-between text-sm font-bold text-foreground">
             <span>Gesamt</span>
-            <span className="font-mono text-accent">{grossAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {currency}</span>
+            <span className="font-mono text-accent">{grossAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {invoiceCurrency}</span>
           </div>
-          {/* Bidirectional currency conversion */}
+          {/* Invoice currency selector with auto-conversion */}
           <div className="border-t border-border/30 pt-2 mt-1 space-y-1.5">
             <div className="flex items-center justify-between gap-2">
-              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Umrechnen in</span>
-              <Select value={targetCurrency} onValueChange={setTargetCurrency}>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Rechnungswährung</span>
+              <Select value={invoiceCurrency} onValueChange={handleInvoiceCurrencyChange}>
                 <SelectTrigger className="h-7 w-[100px] text-xs">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {TARGET_CURRENCIES.filter(c => c !== currency).map(c => (
+                  {TARGET_CURRENCIES.map(c => (
                     <SelectItem key={c} value={c}>{c}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            {currency !== targetCurrency && liveExchangeRate && net > 0 && (
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>≈ in {targetCurrency}</span>
-                <span className="font-mono text-accent/70">
-                  {rateLoading ? "…" : `≈ ${(grossAmount * liveExchangeRate).toLocaleString("de-DE", { minimumFractionDigits: 2 })} ${targetCurrency}`}
-                </span>
+            {currency !== invoiceCurrency && liveExchangeRate && (
+              <div className="text-[10px] text-muted-foreground/60 text-right">
+                {rateLoading ? "Kurs lädt…" : `Live-Kurs: 1 ${currency} = ${liveExchangeRate.toFixed(4)} ${invoiceCurrency}`}
               </div>
             )}
-            {currency !== targetCurrency && liveExchangeRate && (
-              <div className="text-[10px] text-muted-foreground/60 text-right">
-                Kurs: 1 {currency} = {liveExchangeRate.toFixed(4)} {targetCurrency} (live)
-              </div>
-            )}
-            {currency !== targetCurrency && !liveExchangeRate && !rateLoading && (
-              <div className="text-[10px] text-muted-foreground/60 text-right">
-                Kurs nicht verfügbar
+            {currency !== invoiceCurrency && !liveExchangeRate && !rateLoading && (
+              <div className="text-[10px] text-destructive/80 text-right">
+                Kurs nicht verfügbar – bitte Betrag manuell eintragen.
               </div>
             )}
           </div>
