@@ -619,8 +619,6 @@ export default function CreditNoteForm({
       if (hasFxNote) {
         doc.text(`Exchange Rate: 1 ${currency} = ${liveExchangeRate!.toFixed(4)} ${invoiceCurrency}`, m, y);
         y += 4.5;
-        doc.text(`Invoice issued in ${invoiceCurrency} (converted from chatter base ${currency})`, m, y);
-        y += 4.5;
       }
       if (paymentDate) {
         doc.setFontSize(8.5);
