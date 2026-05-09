@@ -1204,6 +1204,55 @@ export default function ModelDashboardTab() {
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Gruppe</Label>
+                      <Select
+                        value={(modelForm as any).group_id || "__none__"}
+                        onValueChange={(v) =>
+                          setModelForm((prev) => ({ ...(prev as any), group_id: v === "__none__" ? null : v }))
+                        }
+                      >
+                        <SelectTrigger className="h-9 bg-secondary/40 border-border/50 text-sm">
+                          <SelectValue placeholder="Keine" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__none__">Keine Gruppe</SelectItem>
+                          {groupsList.map((g) => (
+                            <SelectItem key={g.id} value={g.id}>
+                              {g.name} ({g.default_commission}%)
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs text-muted-foreground">Override %</Label>
+                      <Input
+                        type="number"
+                        value={(modelForm as any).commission_override ?? ""}
+                        onChange={(e) =>
+                          setModelForm((prev) => ({
+                            ...(prev as any),
+                            commission_override: e.target.value === "" ? null : Number(e.target.value),
+                          }))
+                        }
+                        placeholder="Default Gruppe"
+                        className="h-9 bg-secondary/40 border-border/50 text-sm"
+                      />
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs text-muted-foreground">Referral-Quelle</Label>
+                    <Input
+                      value={(modelForm as any).referral_source || ""}
+                      onChange={(e) =>
+                        setModelForm((prev) => ({ ...(prev as any), referral_source: e.target.value }))
+                      }
+                      placeholder="z. B. Partner XY"
+                      className="h-9 bg-secondary/40 border-border/50 text-sm"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
                       <Label className="text-xs text-muted-foreground">Sprache</Label>
                       <div className="flex gap-1.5">
                         <button
