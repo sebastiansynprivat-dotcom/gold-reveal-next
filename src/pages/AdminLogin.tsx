@@ -8,8 +8,10 @@ import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import logo from "@/assets/logo.png";
 import { toast } from "sonner";
+import { useAdminScope } from "@/hooks/useAdminScope";
 
 const AdminLogin = () => {
+  useAdminScope();
   const { user, loading, signIn } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState<"login" | "totp" | "setup">("login");
