@@ -194,28 +194,48 @@ export default function ModelGroupsPanel({
     setBillingLoading(true);
     setBillingOpen(true);
     try {
-      // For each model in group: sum daily_revenue via account_assignments → accounts.model_id
       const items: LineItem[] = [];
       for (const m of groupModels) {
-        const { data: accs } = await supabase.from("accounts").select("id").eq("model_id", m.id);
+        // All accounts of this model
+        const { data: accs } = await supabase
+          .from("accounts")
+          .select("id, platform")
+          .eq("model_id", m.id);
         const accountIds = (accs || []).map((a: any) => a.id);
+        const platformByAcc = new Map<string, string>(
+          (accs || []).map((a: any) => [a.id, a.platform])
+        );
+
+        // Manually entered revenue (model_dashboard) — primary source
         let gross = 0;
+        const breakdown: Array<{ name: string; gross: number }> = [];
         if (accountIds.length > 0) {
-          const { data: revs } = await supabase
-            .from("daily_revenue")
-            .select("amount, user_id, date")
-            .gte("date", billingPeriod.from)
-            .lte("date", billingPeriod.to);
-          // Filter via account_assignments where account_id in accountIds and matches user_id+date window
-          const { data: asg } = await supabase
-            .from("account_assignments")
-            .select("account_id, user_id")
+          const { data: md } = await supabase
+            .from("model_dashboard")
+            .select(
+              "account_id, fourbased_revenue, maloum_revenue, brezzels_revenue, monthly_revenue"
+            )
             .in("account_id", accountIds);
-          const validUsers = new Set((asg || []).map((a: any) => a.user_id));
-          gross = (revs || [])
-            .filter((r: any) => validUsers.has(r.user_id))
-            .reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+          (md || []).forEach((d: any) => {
+            const fb = Number(d.fourbased_revenue) || 0;
+            const ml = Number(d.maloum_revenue) || 0;
+            const br = Number(d.brezzels_revenue) || 0;
+            const sum = fb + ml + br;
+            const total = sum || Number(d.monthly_revenue) || 0;
+            if (total <= 0) return;
+            const platform = platformByAcc.get(d.account_id) || "Account";
+            // If sum exists, push detailed; else push aggregated
+            if (sum > 0) {
+              if (fb > 0) breakdown.push({ name: "4Based", gross: fb });
+              if (ml > 0) breakdown.push({ name: "Maloum", gross: ml });
+              if (br > 0) breakdown.push({ name: "Brezzels", gross: br });
+            } else {
+              breakdown.push({ name: platform, gross: total });
+            }
+            gross += total;
+          });
         }
+
         const pct =
           m.commission_override != null && m.commission_override !== 0
             ? Number(m.commission_override)
@@ -230,6 +250,8 @@ export default function ModelGroupsPanel({
           commission_pct: pct,
           commission_amount,
           net_payout,
+          breakdown,
+          currency: m.currency || "EUR",
         });
       }
       setBillingItems(items);
