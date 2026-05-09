@@ -1587,6 +1587,29 @@ export default function Dashboard() {
       </main>
 
       <DashboardChat externalOpen={chatOpen} onExternalOpenChange={setChatOpen} />
+
+      <Dialog open={telegramHelpOpen} onOpenChange={setTelegramHelpOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Das ist nicht deine Telegram-ID</DialogTitle>
+            <DialogDescription className="space-y-3 pt-2 text-sm">
+              <span className="block">
+                Deine Telegram-ID besteht aus mindestens <span className="font-semibold text-foreground">7 Ziffern</span> (z.B. <span className="font-mono">123456789</span>) – nicht dein @username.
+              </span>
+              <span className="block font-semibold text-foreground">So findest du sie:</span>
+            </DialogDescription>
+          </DialogHeader>
+          <ol className="list-decimal list-inside space-y-1.5 text-sm text-muted-foreground">
+            <li>Öffne Telegram und suche nach <span className="font-semibold text-foreground">@userinfobot</span></li>
+            <li>Starte den Bot mit <span className="font-mono">/start</span></li>
+            <li>Der Bot zeigt dir deine numerische ID an</li>
+            <li>Kopiere die Zahlen und füge sie hier ein</li>
+          </ol>
+          <Button onClick={() => setTelegramHelpOpen(false)} className="w-full">
+            Verstanden
+          </Button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
