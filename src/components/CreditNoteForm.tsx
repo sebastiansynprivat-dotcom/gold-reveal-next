@@ -449,14 +449,14 @@ export default function CreditNoteForm({
     const hasHourlyDetails = isHourly && hourlyRate > 0 && hoursWorked > 0;
 
     if (hasHourlyDetails) {
-      doc.text(`Rate (${currency})`, rCol - 70, y, { align: "right" });
+      doc.text(`Rate (${invoiceCurrency})`, rCol - 70, y, { align: "right" });
       doc.text("Hours", rCol - 35, y, { align: "right" });
-      doc.text(`Amount (${currency})`, rCol - 2, y, { align: "right" });
+      doc.text(`Amount (${invoiceCurrency})`, rCol - 2, y, { align: "right" });
     } else if (isHourly) {
-      doc.text(`Amount (${currency})`, rCol - 2, y, { align: "right" });
+      doc.text(`Amount (${invoiceCurrency})`, rCol - 2, y, { align: "right" });
     } else {
-      doc.text(`Revenue (${currency})`, rCol - 52, y, { align: "right" });
-      doc.text(`Share ${revenuePercentage}% (${currency})`, rCol - 2, y, { align: "right" });
+      doc.text(`Revenue (${invoiceCurrency})`, rCol - 52, y, { align: "right" });
+      doc.text(`Share ${revenuePercentage}% (${invoiceCurrency})`, rCol - 2, y, { align: "right" });
     }
     y += 7;
 
