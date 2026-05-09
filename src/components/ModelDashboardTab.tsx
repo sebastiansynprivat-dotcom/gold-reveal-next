@@ -1271,7 +1271,11 @@ export default function ModelDashboardTab() {
                     { key: "maloum", label: "Maloum", rev: totals.maloum, pctField: "revenue_percentage_maloum" },
                     { key: "brezzels", label: "Brezzels", rev: totals.brezzels, pctField: "revenue_percentage_brezzels" },
                   ];
-                  const currency = modelForm.currency || "EUR";
+                  // Resolve currency per-platform from the matching account
+                  const currencyForPlatform = (label: string): string => {
+                    const acc = modelAccounts.find((a) => a.platform === label);
+                    return acc?.currency || modelForm.currency || "EUR";
+                  };
                   return (
                     <div className="space-y-3 rounded-xl border border-accent/15 bg-accent/[0.02] p-3">
                       <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -1304,13 +1308,13 @@ export default function ModelDashboardTab() {
                             </div>
                             <div className="flex justify-between items-center pl-[4.5rem] text-[10px] text-muted-foreground tabular-nums">
                               <span>
-                                Umsatz: {r.rev.toLocaleString("de-DE")} {currency}
+                                Umsatz: {r.rev.toLocaleString("de-DE")} {currencyForPlatform(r.label)}
                                 {usingFallback && pct === 0 && fallback > 0 && (
                                   <span className="ml-1 text-accent/70">(Standard {fallback}%)</span>
                                 )}
                               </span>
                               <span className="text-accent/80">
-                                → {earn.toLocaleString("de-DE")} {currency}
+                                → {earn.toLocaleString("de-DE")} {currencyForPlatform(r.label)}
                               </span>
                             </div>
                           </div>
