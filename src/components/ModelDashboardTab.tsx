@@ -986,11 +986,25 @@ export default function ModelDashboardTab() {
                                 {acc.account_email || acc.account_domain}
                               </Badge>
                             </div>
-                            <p className="text-sm font-bold text-foreground tabular-nums">
-                              {rev > 0
-                                ? `${rev.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${accCurrency}`
-                                : "–"}
-                            </p>
+                            <div className="text-right">
+                              <p className="text-sm font-bold text-foreground tabular-nums">
+                                {rev > 0
+                                  ? `${rev.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${accCurrency}`
+                                  : "–"}
+                              </p>
+                              {rev > 0 && accCurrency !== baseCurrency && (
+                                <p className="text-[10px] text-accent/80 tabular-nums">
+                                  ≈ {convertToBase(rev, accCurrency).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {baseCurrency}
+                                  {fxRates[`${accCurrency}->${baseCurrency}`] ? (
+                                    <span className="text-muted-foreground ml-1">
+                                      (1 {accCurrency} = {fxRates[`${accCurrency}->${baseCurrency}`].toFixed(4)} {baseCurrency})
+                                    </span>
+                                  ) : (
+                                    <span className="text-muted-foreground ml-1">(Kurs lädt…)</span>
+                                  )}
+                                </p>
+                              )}
+                            </div>
                           </div>
                           {/* Inline edit revenue + per-platform currency */}
                           <div className="flex items-center gap-2">
