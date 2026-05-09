@@ -506,6 +506,10 @@ export default function ModelDashboardTab() {
         model_agency: newModel.model_agency,
         model_active: newModel.model_active,
         referrer_tag: newModel.referrer_tag.trim(),
+        group_id: newModel.group_id || null,
+        commission_override:
+          newModel.commission_override === "" ? null : Number(newModel.commission_override),
+        referral_source: (newModel.referral_source || "").trim(),
         created_by: userId,
       })
       .select("id")
