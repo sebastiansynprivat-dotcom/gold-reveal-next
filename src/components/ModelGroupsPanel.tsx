@@ -67,6 +67,8 @@ type LineItem = {
   commission_pct: number;
   commission_amount: number;
   net_payout: number;
+  breakdown: Array<{ name: string; gross: number }>;
+  currency: string;
 };
 
 const slugify = (s: string) =>
