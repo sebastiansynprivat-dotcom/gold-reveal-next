@@ -65,7 +65,7 @@ interface CreditNoteFormProps {
 
 export default function CreditNoteForm({
   suggestedAmount = 0,
-  defaultDescription = "Revenue share payout",
+  defaultDescription = "Creator revenue share for digital content",
   providerName: initialProviderName = "",
   cryptoAddress = "",
   accountId,
