@@ -1834,6 +1834,23 @@ export default function ModelDashboardTab() {
                     return rate ? { platform: a.platform, from, to: baseCurrency, rate } : null;
                   })
                   .filter((x): x is { platform: string; from: string; to: string; rate: number } => !!x)}
+                platformBreakdown={(() => {
+                  const fallback = modelForm.revenue_percentage || 0;
+                  const pctMap: Record<string, number> = {
+                    "4Based": modelForm.revenue_percentage_fourbased || 0,
+                    Maloum: modelForm.revenue_percentage_maloum || 0,
+                    Brezzels: modelForm.revenue_percentage_brezzels || 0,
+                  };
+                  // Aggregate per-platform across multiple accounts (same platform → sum)
+                  const agg: Record<string, { rev: number; pct: number }> = {};
+                  for (const acc of modelAccounts) {
+                    const rev = convertToBase(dashboardRevenues[acc.id] || 0, acc.currency || baseCurrency);
+                    const pct = pctMap[acc.platform] > 0 ? pctMap[acc.platform] : fallback;
+                    if (!agg[acc.platform]) agg[acc.platform] = { rev: 0, pct };
+                    agg[acc.platform].rev += rev;
+                  }
+                  return Object.entries(agg).map(([name, v]) => ({ name, rev: v.rev, pct: v.pct }));
+                })()}
               />
             </Section>
           </motion.div>
