@@ -44,6 +44,7 @@ import {
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import CreditNoteForm from "@/components/CreditNoteForm";
+import { fetchFxRate } from "@/lib/fx";
 
 // ─── Types ───
 const extractDriveFolderId = (input: string): string => {
