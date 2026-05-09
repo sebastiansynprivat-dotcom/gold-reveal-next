@@ -622,6 +622,12 @@ export default function CreditNoteForm({
         doc.text(`Exchange Rate: 1 ${currency} = ${liveExchangeRate!.toFixed(4)} ${invoiceCurrency}`, m, y);
         y += 4.5;
       }
+      if (hasPlatformFx) {
+        for (const fx of platformFxRates!) {
+          doc.text(`Exchange Rate (${fx.platform}): 1 ${fx.from} = ${fx.rate.toFixed(4)} ${fx.to}`, m, y);
+          y += 4.5;
+        }
+      }
       if (paymentDate) {
         doc.setFontSize(8.5);
         doc.text(`Payment Date: ${format(new Date(paymentDate), "dd.MM.yyyy")}`, m, y);
