@@ -888,6 +888,9 @@ export default function CreditNoteForm({
             { key: "fourbased" as const, label: "4Based", rev: platformRevenue.fourbased, pct: pctFor("fourbased") },
             { key: "maloum" as const, label: "Maloum", rev: platformRevenue.maloum, pct: pctFor("maloum") },
             { key: "brezzels" as const, label: "Brezzels", rev: platformRevenue.brezzels, pct: pctFor("brezzels") },
+            ...(platformRevenue.custom && platformRevenue.custom.rev > 0 && platformRevenue.custom.name && revenuePercentage > 0
+              ? [{ key: "custom" as const, label: platformRevenue.custom.name, rev: platformRevenue.custom.rev, pct: revenuePercentage }]
+              : []),
           ].filter(r => r.rev > 0 && r.pct > 0);
           if (rows.length === 0) return null;
           return (
