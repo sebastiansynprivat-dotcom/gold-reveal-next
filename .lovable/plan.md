@@ -1,54 +1,63 @@
-## Problem
+## Ziel
+Das gelieferte Drop-in Design Sheet wird **ausschließlich im Admin-Bereich** (`/admin`, `/admin/login`, `/admin/notifications`) angewendet. Außerhalb des Admin bleibt alles unverändert (User-Dashboard, Landing, Onboarding, Quiz, Model etc.).
 
-1. **Live-Kurs zeigt „nicht verfügbar"** — die Frankfurter-API blockt CORS aus dem Lovable-Sandbox (alle Requests scheitern mit `Failed to fetch`).
-2. Die Umrechnung ist nur eine **Anzeige unten** — die Rechnung selbst läuft weiter in der Chatter-Währung. Du willst aber die **Rechnungswährung selbst umstellen** und die Beträge automatisch umrechnen lassen.
+## Vorgehen
 
----
+### 1. Neue CSS-Datei `src/styles/admin-design.css`
+- Inhalt = das gelieferte Token-Sheet, aber **alle globalen Selektoren scoped** auf `.admin-scope`:
+  - `body { … }` → `.admin-scope { … }` (Hintergrund, Font, min-height etc.)
+  - `* { scrollbar-width: none }` → `.admin-scope *`
+  - `*::-webkit-scrollbar` → `.admin-scope *::-webkit-scrollbar`
+  - `h1…h6`, `input`, `textarea` → mit `.admin-scope`-Präfix
+  - `.premium-card`, `.btn-gold`, `.nav-item`, `.list-row`, `.tab`, `.status-dot`, Animationen, `.kpi-value` etc. → unverändert (Klassen wirken nur dort, wo gesetzt)
+  - `:root` Tokens werden auf `.admin-scope` gelegt, damit `var(--gold)` etc. nur dort verfügbar sind und nichts global überschreiben
+- Inter-Font-Import (`@import url(...Inter...)`) bleibt — wirkt nur, wo `.admin-scope` font-family setzt
+- `@media (prefers-reduced-motion)` bleibt global (harmlos)
 
-## Lösung
+### 2. Globaler Import
+- In `src/index.css` ganz unten: `@import "./styles/admin-design.css";`
+- Tokens sind geladen, aber inaktiv außerhalb von `.admin-scope`
 
-### 1. FX-API ersetzen (mit Fallback-Kette)
+### 3. Wrapper-Klasse setzen
+Auf jeder Admin-Seite den Root-Container mit `admin-scope` versehen:
+- `src/pages/AdminDashboard.tsx`
+- `src/pages/AdminLogin.tsx`
+- `src/pages/AdminNotifications.tsx`
 
-Die Frankfurter-API funktioniert nicht zuverlässig. Wir nutzen stattdessen mehrere Quellen mit Fallback:
+Zusätzlich setzen wir auf `<body>` per `useEffect` die Klasse `admin-scope`, solange eine Admin-Route aktiv ist (für Portale/Dialoge/Toasts, die außerhalb des Page-Trees in den Body rendern). Beim Unmount wird sie wieder entfernt.
 
+### 4. Komplett-Override-Brücke (zu bestehenden Tailwind-Tokens)
+Damit der Override wirklich greift ohne tausende Komponenten umzuschreiben, mappen wir innerhalb von `.admin-scope` die zentralen shadcn-Tokens auf die neuen Werte:
+
+```css
+.admin-scope {
+  --background: 240 6% 4%;
+  --foreground: 0 0% 96%;
+  --card: 240 6% 5%;
+  --muted-foreground: 0 0% 64%;
+  --border: 0 0% 100% / 0.07;
+  --accent: 40 45% 55%;
+  --primary: 40 45% 55%;
+  --radius: 0.75rem;
+}
 ```
-open.er-api.com  →  exchangerate.host  →  Frankfurter
-```
+(HSL-Tripel-Format passend zu Tailwind/shadcn — Werte aus dem Drop-in übernommen.)
 
-So bleibt der Live-Kurs auch verfügbar, wenn eine API ausfällt. Die Anzeige „Kurs nicht verfügbar" wird damit nur noch erscheinen, wenn wirklich alle Quellen ausfallen (sehr selten).
+Damit übernehmen bestehende Klassen wie `bg-background`, `text-foreground`, `border-border`, `text-accent` automatisch die neue Champagner-Gold-Palette **nur im Admin**, ohne dass jede Komponente angefasst werden muss.
 
-### 2. Echte Rechnungswährung umstellbar + automatische Umrechnung
+Zusätzlich wird `.glass-card` innerhalb von `.admin-scope` auf das neue `.premium-card`-Look gemappt (gleicher Gradient/Border/Shadow), damit alle bestehenden Karten sofort den Premium-Look bekommen.
 
-Im Provider-Invoice-Formular bekommst du oben einen neuen Bereich **„Rechnungswährung"**:
+### 5. Verifikation
+- Preview auf `/admin` öffnen → Hintergrund leicht warm-schwarz mit Vignette, Inter geladen, Karten mit Glas-Effekt, Gold-Akzente.
+- Preview auf `/dashboard` (User) → unverändert.
+- Scrollbars im Admin verschwunden, anderswo sichtbar.
+- Runtime-Errors prüfen.
 
-- Dropdown mit `EUR / USD / GBP / CHF / AED`
-- Standard = die Chatter-Währung (z.B. EUR)
-- Wenn du auf USD umstellst:
-  - Live-Kurs `EUR → USD` wird geladen
-  - Der Netto-Betrag wird **automatisch in USD umgerechnet** und ins Eingabefeld geschrieben
-  - Alle Anzeigen (Netto / MwSt / Brutto / PDF-Tabelle / „Suggested amount") laufen ab sofort in USD
-  - Plattform-Aufschlüsselung (4Based / Maloum / … / Custom) zeigt die Beträge ebenfalls in USD
-- In der PDF wird die Rechnung komplett in der gewählten Währung erstellt
-- Im Footer steht zusätzlich der verwendete Kurs (z.B. `Exchange Rate: 1 EUR = 1,0850 USD`)
+## Was NICHT geändert wird
+- Keine Logik in Komponenten
+- Keine bestehenden Tailwind-Klassen entfernt
+- Keine globalen Body-/Font-Styles außerhalb `.admin-scope`
+- User-, Model-, Landing-, Onboarding-, Quiz-Seiten bleiben 1:1 wie heute
 
-Wenn du die Währung wieder zurückstellst, werden die Beträge erneut zurückgerechnet — du arbeitest also immer mit korrekt umgerechneten Zahlen.
-
-### 3. Manuelle Override-Möglichkeit
-
-Du kannst den Netto-Betrag jederzeit von Hand überschreiben (z.B. wenn der Auszahlungs-Kurs der Exchange leicht abweicht). Die automatische Konvertierung passiert nur:
-- beim Wechsel der Rechnungswährung
-- oder per Klick auf „Vorschlag übernehmen"
-
----
-
-## Technische Details
-
-**`src/components/CreditNoteForm.tsx`:**
-
-- Neuer Helper `fetchFxRate(from, to)` mit try-Kette über 3 Endpoints, kurzer Timeout.
-- Neuer State `invoiceCurrency` (default = Prop `currency`); ersetzt das bisherige `targetCurrency`-Konzept.
-- Live-Rate `chatterCurrency → invoiceCurrency` wird geladen, sobald sich eine Seite ändert.
-- Beim Umschalten der `invoiceCurrency` wird `netAmount` automatisch via Rate umgerechnet (nur wenn Kurs verfügbar).
-- Alle UI-Anzeigen (`{currency}` → `{invoiceCurrency}`), Plattform-Tabelle, „Suggested"-Knopf und die PDF-Generierung verwenden konsequent `invoiceCurrency` und ggf. den Rate-Faktor zur Umrechnung der Plattform-Revenues.
-- PDF Footer: Kurs-Hinweis nur, wenn Chatter-Währung ≠ Rechnungswährung.
-- Fallback bei API-Fehler: das Dropdown bleibt nutzbar, die Auto-Umrechnung wird übersprungen, ein dezenter Warnhinweis erscheint („Kurs nicht verfügbar — bitte manuell eintragen").
+## Memory-Update nach Implementierung
+Neuer Eintrag `mem://style/admin-design-tokens` mit Hinweis: Admin nutzt eigenes Champagner-Gold-Token-Sheet, scoped via `.admin-scope`.
