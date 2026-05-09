@@ -174,6 +174,7 @@ interface AccountRow {
   model_id: string | null;
   assigned_to: string | null;
   model_active: boolean;
+  currency?: string;
 }
 
 interface ChatterProfile {
@@ -370,7 +371,7 @@ export default function ModelDashboardTab() {
     const { data } = await supabase
       .from("accounts")
       .select(
-        "id, account_email, account_domain, account_password, platform, model_id, assigned_to, model_active" as any,
+        "id, account_email, account_domain, account_password, platform, model_id, assigned_to, model_active, currency" as any,
       )
       .eq("model_id", modelId)
       .order("platform");
