@@ -425,25 +425,24 @@ export default function ModelDashboardTab() {
     }
   }, [selectedModelId, models, loadModelAccounts]);
 
-  // Auto-load login credentials when accounts change
+  // Auto-load model login when selected model changes
   useEffect(() => {
-    if (modelAccounts.length === 0) {
-      setAccountLogins({});
+    if (!selectedModelId) {
+      setCurrentModelLogin(null);
       return;
     }
-    const ids = modelAccounts.map((a) => a.id);
     supabase
       .from("model_users")
-      .select("account_id, email, plaintext_password")
-      .in("account_id", ids)
+      .select("email, plaintext_password")
+      .eq("model_id", selectedModelId)
+      .maybeSingle()
       .then(({ data }) => {
-        const map: Record<string, { email: string; password: string }> = {};
-        (data || []).forEach((row: any) => {
-          map[row.account_id] = { email: row.email || "", password: row.plaintext_password || "" };
-        });
-        setAccountLogins(map);
+        setCurrentModelLogin(
+          data ? { email: (data as any).email || "", password: (data as any).plaintext_password || "" } : null,
+        );
       });
-  }, [modelAccounts]);
+  }, [selectedModelId]);
+
 
 
   // ─── Filter models ───
