@@ -53,6 +53,7 @@ import {
   ChevronLeft,
   PanelLeft,
   Menu,
+  ArrowLeftRight,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -7327,6 +7328,30 @@ export default function AdminDashboard() {
                               }}
                             >
                               <RefreshCw className="h-3 w-3" />
+                            </Button>
+                          )}
+                          {!acc.assigned_to && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 text-muted-foreground hover:text-accent"
+                              title={acc.is_manual ? "In Account-Pool verschieben" : "In Freie Accounts verschieben"}
+                              onClick={async () => {
+                                const { error } = await supabase
+                                  .from("accounts")
+                                  .update({ is_manual: !acc.is_manual })
+                                  .eq("id", acc.id);
+                                if (error) {
+                                  toast.error("Verschieben fehlgeschlagen");
+                                  return;
+                                }
+                                toast.success(
+                                  acc.is_manual ? "→ Account-Pool" : "→ Freie Accounts",
+                                );
+                                loadAccounts();
+                              }}
+                            >
+                              <ArrowLeftRight className="h-3 w-3" />
                             </Button>
                           )}
                           {!acc.assigned_to && (
