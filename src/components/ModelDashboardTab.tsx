@@ -2605,8 +2605,7 @@ export default function ModelDashboardTab() {
           </DialogHeader>
           <div className="space-y-3">
             <p className="text-xs text-muted-foreground">
-              Ein Login pro Model — gilt für <span className="text-accent font-medium">alle Plattformen</span> dieses Models.<br />
-              Login-URL: <span className="text-foreground font-mono">{window.location.origin}/model/login</span>
+              Ein Login pro Model — gilt für <span className="text-accent font-medium">alle Plattformen</span> dieses Models.
             </p>
 
             {!currentModelLogin ? (
