@@ -366,6 +366,10 @@ export default function ModelDashboardTab() {
   const [currentModelLogin, setCurrentModelLogin] = useState<{ email: string; password: string } | null>(null);
   const [revealManagerPw, setRevealManagerPw] = useState(false);
 
+  // Steckbrief / Model Profile
+  const [modelProfile, setModelProfile] = useState<import("@/lib/modelProfilePdf").ModelProfileData | null>(null);
+  const [filledProfileIds, setFilledProfileIds] = useState<Set<string>>(new Set());
+
   // Revenue from model_dashboard (per-platform)
   const [dashboardRevenues, setDashboardRevenues] = useState<Record<string, number>>({});
   const [platformRevenues, setPlatformRevenues] = useState<
