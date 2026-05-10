@@ -142,16 +142,6 @@ export default function ModelProfileForm({ modelId, defaultAccountName }: Props)
         </div>
       </div>
 
-      {/* Account name */}
-      <div className="glass-card rounded-xl p-5 space-y-2">
-        <Label className="text-xs uppercase tracking-wider text-muted-foreground">Account name</Label>
-        <Input
-          value={profile.account_name ?? ""}
-          onChange={(e) => set("account_name", e.target.value)}
-          className="bg-background/50"
-        />
-      </div>
-
       {/* Personal Info */}
       <section className="glass-card rounded-xl p-5 space-y-4">
         <div className="flex items-center gap-2">
