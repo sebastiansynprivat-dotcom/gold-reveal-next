@@ -1,50 +1,42 @@
-## Ziel
+## Problem
 
-Chatter sehen im Dashboard direkt über dem Bereich "Custom-Anfragen" einen neuen Button **"Steckbrief"**. Klick öffnet ein Pop-up (Dialog) mit allen ausgefüllten Steckbrief-Feldern des zugewiesenen Models. Falls noch kein Steckbrief existiert, zeigt das Pop-up einen freundlichen Hinweis.
+Im "Accounts verwalten"-Dialog (RefreshCw beim Chatter) wird aktuell nur der Bereich **Freie Accounts** (manuell hinzugefügte) gerendert. Die hunderten Accounts aus den **Account-Pools** (`is_manual = false`) werden bereits in `poolAccounts` / `poolPlatforms` berechnet, aber nirgends angezeigt — daher siehst du nur "1 frei".
 
-## Sichtbarkeit & Logik
+## Lösung
 
-- Button erscheint nur, wenn dem Chatter mindestens ein Account zugewiesen ist, der eine `model_id` hat.
-- Bei mehreren Accounts mit unterschiedlichen Models: Im Pop-up oben kleiner Tab-Switcher (Model-Name) — meist hat ein Chatter aber 1 Model.
-- Read-only (Chatter können nichts bearbeiten).
-- Sprache fest auf Deutsch im Chatter-Dashboard (Labels wie im Steckbrief-Formular auf Deutsch).
+Im Dialog (`src/pages/AdminDashboard.tsx`, ~Zeile 7886) **oberhalb** der Sektion "Freie Accounts" eine neue Sektion **"Account-Pools"** hinzufügen — analog gestylt, aber mit goldenem statt gelbem Indikator zur Unterscheidung.
 
-## UI
+### Aufbau
 
-- Neuer Block in `src/pages/Dashboard.tsx` direkt vor dem Custom-Anfragen-Block (`{/* Anfrage an das Model */}`).
-- Stil: glass-card-Zeile mit Icon (`UserCircle` o. ä.), Titel **"Steckbrief deines Models"**, Untertitel "Alle wichtigen Infos auf einen Blick", rechts Chevron/„Öffnen"-Button.
-- Pop-up: vorhandenes `Dialog`-Component, scrollbar, gruppiert in Sektionen:
-  - Allgemein (Name, Alter, Stadt, Geburtsort, Beruf, Sprachen, Ausbildung)
-  - Aussehen (Größe, Gewicht, Haare, BH-/Schuhgröße, besondere Merkmale)
-  - Persönliches (Hobbys, Lieblingsfilm, -essen, -musik, -farbe, Traum)
-  - Content (Vorlieben, No-Gos, Zusatzinfos)
-- Leere Felder werden im Pop-up als "—" angezeigt oder ausgeblendet.
+```text
+ACCOUNT ZUWEISEN
+[Suchfeld]
 
-## Datenfluss
+▸ ● ACCOUNT-POOLS                    [387 verfügbar]
+   Maloum  (224)
+     [Liste klickbarer Accounts mit Owner-Badge]
+   Brezzels (101)
+     ...
+   4Based (62)
+     ...
 
-- `accounts`-Query in Dashboard.tsx erweitern: zusätzlich `model_id` selecten.
-- Neuer State `modelProfile` + Fetch: `supabase.from("model_profiles").select("*").eq("model_id", <id>).maybeSingle()`.
-
-## Backend / RLS
-
-Aktuelle RLS auf `model_profiles` erlaubt nur Admins und das Model selbst. Chatter müssen lesen können, sofern sie einem Account mit dieser `model_id` zugewiesen sind. Neue zusätzliche SELECT-Policy:
-
-```sql
-CREATE POLICY "Assigned chatters can view model profile"
-ON public.model_profiles FOR SELECT
-USING (
-  EXISTS (
-    SELECT 1 FROM public.accounts a
-    WHERE a.assigned_to = auth.uid()
-      AND a.model_id = model_profiles.model_id
-  )
-);
+▸ ● FREIE ACCOUNTS                       [1 frei]
+   ...
 ```
 
-## Geänderte/neue Dateien
+### Verhalten
 
-- `src/pages/Dashboard.tsx` — Button + Dialog + Profile-Fetch, `model_id` zur Account-Query hinzufügen.
-- Neu: `src/components/ModelProfileViewDialog.tsx` — read-only Anzeige mit Sektionen.
-- Neue Migration für die zusätzliche RLS-Policy auf `model_profiles`.
+- Klick auf Pool-Account → `reassignAccount(acc.id)` (existierende Funktion, kann sowohl freie als auch fremd-zugewiesene Accounts übertragen — Bestätigung-Dialog ist schon implementiert)
+- Sektion standardmäßig zugeklappt (eigener State `reassignPoolSectionOpen`, existiert bereits laut grep auf Zeile 795)
+- Suche filtert beide Sektionen gleichzeitig (Filter bereits in `freeAccs` aktiv)
+- Owner-Badge "→ Chatter X" / "frei" wird bereits über `renderAccountList` mitgerendert
+- Pool-Accounts haben i.d.R. **keine** `folder_name` → einfache Platform-Gruppierung via `renderAccountList(poolAccounts, platform)` reicht
 
-Soll ich es so umsetzen?
+### Technische Details
+
+- Datei: `src/pages/AdminDashboard.tsx`, Insert nach Zeile 7887 (`<div className="space-y-4">`)
+- Neue Sektion nutzt bereits vorhandenes `setReassignPoolSectionOpen` State
+- Indikator-Farbe: `bg-accent` (Gold) für Pools vs. `bg-amber-400` (gelb) für Freie Accounts
+- Reuse bestehender `renderAccountList(poolAccounts, platform)` Helper
+
+Keine DB-Änderungen, kein neues Backend, rein UI.
