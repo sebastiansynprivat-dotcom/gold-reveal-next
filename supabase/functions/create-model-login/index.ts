@@ -35,9 +35,9 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: corsHeaders });
     }
 
-    const { account_id, email, action } = await req.json();
-    if (!account_id) {
-      return new Response(JSON.stringify({ error: "account_id required" }), { status: 400, headers: corsHeaders });
+    const { model_id, email, action } = await req.json();
+    if (!model_id) {
+      return new Response(JSON.stringify({ error: "model_id required" }), { status: 400, headers: corsHeaders });
     }
 
     const adminClient = createClient(supabaseUrl, serviceKey);
@@ -46,10 +46,10 @@ Deno.serve(async (req) => {
     const { data: existing } = await adminClient
       .from("model_users")
       .select("id, user_id, email, plaintext_password")
-      .eq("account_id", account_id)
+      .eq("model_id", model_id)
       .maybeSingle();
 
-    // ── ACTION: reset password (only if exists) ──
+    // ── reset ──
     if (action === "reset") {
       if (!existing) {
         return new Response(JSON.stringify({ error: "Kein Login zum Zurücksetzen" }), { status: 404, headers: corsHeaders });
@@ -70,31 +70,38 @@ Deno.serve(async (req) => {
       });
     }
 
-    // ── ACTION: delete login ──
+    // ── delete ──
     if (action === "delete") {
       if (!existing) {
         return new Response(JSON.stringify({ error: "Kein Login vorhanden" }), { status: 404, headers: corsHeaders });
       }
       await adminClient.from("user_roles").delete().eq("user_id", existing.user_id);
-      await adminClient.from("model_users").delete().eq("id", existing.id);
+      await adminClient.from("model_users").delete().eq("user_id", existing.user_id);
       await adminClient.auth.admin.deleteUser(existing.user_id);
       return new Response(JSON.stringify({ success: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // ── DEFAULT: create new login ──
+    // ── create ──
     if (existing) {
       return new Response(JSON.stringify({ error: "Login existiert bereits für dieses Model." }), { status: 409, headers: corsHeaders });
     }
 
-    const { data: account } = await adminClient
-      .from("accounts")
-      .select("account_email")
-      .eq("id", account_id)
+    const { data: model } = await adminClient
+      .from("models")
+      .select("name, username")
+      .eq("id", model_id)
       .single();
 
-    const modelEmail = email || `model+${account?.account_email || account_id}@shex.app`;
+    const slug = (model?.username || model?.name || model_id)
+      .toString()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 32);
+
+    const modelEmail = email || `model+${slug}-${model_id.slice(0, 6)}@shex.app`;
     const password = generatePassword(12);
 
     const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
@@ -112,7 +119,8 @@ Deno.serve(async (req) => {
     await adminClient.from("user_roles").insert({ user_id: userId, role: "model" });
     await adminClient.from("model_users").insert({
       user_id: userId,
-      account_id,
+      model_id,
+      account_id: null,
       email: modelEmail,
       plaintext_password: password,
     });
