@@ -2472,119 +2472,108 @@ export default function ModelDashboardTab() {
               Model-Logins · {selectedModel?.name}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-2">
+          <div className="space-y-3">
             <p className="text-xs text-muted-foreground">
+              Ein Login pro Model — gilt für <span className="text-accent font-medium">alle Plattformen</span> dieses Models.<br />
               Login-URL: <span className="text-foreground font-mono">{window.location.origin}/model/login</span>
             </p>
-            {modelAccounts.length === 0 && (
-              <p className="text-sm text-muted-foreground py-8 text-center">Keine Plattform-Accounts vorhanden.</p>
-            )}
-            {modelAccounts.map((acc) => {
-              const login = accountLogins[acc.id];
-              const revealed = revealedLoginIds.has(acc.id);
-              const isLoading = modelLoginLoading && loginAccountId === acc.id;
-              return (
-                <div key={acc.id} className="rounded-lg border border-border/40 bg-secondary/20 p-3 space-y-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-accent/15 text-accent border border-accent/30">
-                        {acc.platform}
-                      </span>
-                      <span className="text-xs text-muted-foreground truncate">{acc.account_email || "—"}</span>
+
+            {!currentModelLogin ? (
+              <div className="rounded-lg border border-dashed border-border/40 bg-secondary/10 p-6 text-center space-y-3">
+                <p className="text-sm text-muted-foreground">Noch kein Login für dieses Model.</p>
+                <Button
+                  onClick={generateModelLogin}
+                  disabled={modelLoginLoading || !selectedModelId}
+                  className="gap-2 bg-gradient-to-r from-accent to-accent/80 text-accent-foreground font-semibold shadow-[0_0_18px_-2px_hsl(var(--accent)/0.6)]"
+                >
+                  <Plus className="h-4 w-4" />
+                  {modelLoginLoading ? "Erstelle..." : "Model-Login generieren"}
+                </Button>
+              </div>
+            ) : (
+              <div className="rounded-lg border border-accent/30 bg-secondary/20 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_hsl(142_76%_60%)]" />
+                    Login aktiv
+                  </span>
+                  <div className="flex gap-1">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={resetModelLogin}
+                      disabled={modelLoginLoading}
+                      className="h-7 text-[10px] gap-1 text-accent hover:bg-accent/10"
+                    >
+                      <KeyRound className="h-3 w-3" />
+                      Reset
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={deleteModelLogin}
+                      className="h-7 text-[10px] text-destructive hover:bg-destructive/10"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="flex items-center gap-1.5 px-2.5 py-2 rounded-md bg-background/40 border border-border/30 min-w-0">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[9px] uppercase tracking-wider text-muted-foreground">E-Mail</p>
+                      <p className="text-xs font-mono text-foreground truncate">{currentModelLogin.email || "—"}</p>
                     </div>
-                    {!login ? (
-                      <Button
-                        size="sm"
-                        onClick={() => generateModelLogin(acc.id)}
-                        disabled={isLoading}
-                        className="h-7 text-[10px] gap-1 bg-accent hover:bg-accent/90 text-accent-foreground"
+                    {currentModelLogin.email && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(currentModelLogin.email);
+                          toast.success("E-Mail kopiert");
+                        }}
+                        className="shrink-0 text-muted-foreground hover:text-accent"
                       >
-                        <Plus className="h-3 w-3" />
-                        {isLoading ? "..." : "Login erstellen"}
-                      </Button>
-                    ) : (
-                      <div className="flex gap-1">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => resetModelLogin(acc.id)}
-                          disabled={isLoading}
-                          className="h-7 text-[10px] gap-1 text-accent hover:bg-accent/10"
-                        >
-                          <KeyRound className="h-3 w-3" />
-                          Reset
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => deleteModelLogin(acc.id)}
-                          className="h-7 text-[10px] text-destructive hover:bg-destructive/10"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
+                        <Copy className="h-3.5 w-3.5" />
+                      </button>
                     )}
                   </div>
-                  {login && (
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-md bg-background/40 border border-border/30 min-w-0">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[9px] uppercase tracking-wider text-muted-foreground">E-Mail</p>
-                          <p className="text-[11px] font-mono text-foreground truncate">{login.email}</p>
-                        </div>
+                  <div className="flex items-center gap-1.5 px-2.5 py-2 rounded-md bg-background/40 border border-border/30 min-w-0">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[9px] uppercase tracking-wider text-muted-foreground">Passwort</p>
+                      <p className="text-xs font-mono text-foreground truncate">
+                        {currentModelLogin.password ? (
+                          revealManagerPw ? currentModelLogin.password : "••••••••••••"
+                        ) : (
+                          <span className="italic text-muted-foreground/70">Reset für neues PW</span>
+                        )}
+                      </p>
+                    </div>
+                    {currentModelLogin.password && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setRevealManagerPw((v) => !v)}
+                          className="shrink-0 text-muted-foreground hover:text-accent"
+                        >
+                          {revealManagerPw ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                        </button>
                         <button
                           type="button"
                           onClick={() => {
-                            navigator.clipboard.writeText(login.email);
-                            toast.success("E-Mail kopiert");
+                            navigator.clipboard.writeText(currentModelLogin.password);
+                            toast.success("Passwort kopiert");
                           }}
                           className="shrink-0 text-muted-foreground hover:text-accent"
                         >
-                          <Copy className="h-3 w-3" />
+                          <Copy className="h-3.5 w-3.5" />
                         </button>
-                      </div>
-                      <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-md bg-background/40 border border-border/30 min-w-0">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[9px] uppercase tracking-wider text-muted-foreground">Passwort</p>
-                          <p className="text-[11px] font-mono text-foreground truncate">
-                            {login.password
-                              ? revealed
-                                ? login.password
-                                : "••••••••••••"
-                              : <span className="italic text-muted-foreground/70">Reset für neues PW</span>}
-                          </p>
-                        </div>
-                        {login.password && (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const next = new Set(revealedLoginIds);
-                                next.has(acc.id) ? next.delete(acc.id) : next.add(acc.id);
-                                setRevealedLoginIds(next);
-                              }}
-                              className="shrink-0 text-muted-foreground hover:text-accent"
-                            >
-                              {revealed ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                navigator.clipboard.writeText(login.password);
-                                toast.success("Passwort kopiert");
-                              }}
-                              className="shrink-0 text-muted-foreground hover:text-accent"
-                            >
-                              <Copy className="h-3 w-3" />
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  )}
+                      </>
+                    )}
+                  </div>
                 </div>
-              );
-            })}
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
