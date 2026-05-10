@@ -761,6 +761,8 @@ export default function AdminDashboard() {
   const [reassignManualSectionOpen, setReassignManualSectionOpen] = useState(false);
   const [deletingPool, setDeletingPool] = useState(false);
   const [deletePoolConfirm, setDeletePoolConfirm] = useState(false);
+  const [moveConfirm, setMoveConfirm] = useState<{ id: string; toPool: boolean } | null>(null);
+  const [moving, setMoving] = useState(false);
   const [offers, setOffers] = useState<{ name: string; target_path: string }[]>([]);
   const [quizRoutes, setQuizRoutes] = useState<
     { id: string; name: string; target_path: string; free_count: number; is_active: boolean }[]
