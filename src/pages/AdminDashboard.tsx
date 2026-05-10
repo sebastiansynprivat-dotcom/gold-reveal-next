@@ -7904,23 +7904,56 @@ export default function AdminDashboard() {
                           {poolAccounts.length} verfügbar
                         </Badge>
                       </button>
-                      {reassignPoolSectionOpen &&
-                        poolPlatforms.map((p) => {
-                          const platAccs = poolAccounts.filter((a) => a.platform === p);
-                          return (
-                            <div key={p} className="space-y-1.5 pl-6">
-                              <div className="flex items-center gap-1.5 px-1">
-                                <Badge className="text-[9px] px-1.5 py-0 bg-accent/15 text-accent border-accent/25">
-                                  {p}
-                                </Badge>
-                                <span className="text-[9px] text-muted-foreground">
+                      {reassignPoolSectionOpen && !reassignOpenPoolPlatform && (
+                        <div className="grid grid-cols-2 gap-1.5 pl-6">
+                          {poolPlatforms.sort().map((p) => {
+                            const platAccs = poolAccounts.filter((a) => a.platform === p);
+                            const platColor =
+                              (PLATFORM_COLORS as Record<string, string>)[p.toLowerCase()] ||
+                              "hsl(var(--accent))";
+                            return (
+                              <button
+                                key={p}
+                                onClick={() => setReassignOpenPoolPlatform(p)}
+                                className="rounded-xl p-2.5 text-left transition-all duration-200 border border-border/30 hover:border-accent/30 hover:scale-[1.02] glass-card-subtle card-inner-glow"
+                              >
+                                <div className="flex items-center gap-1.5 mb-1">
+                                  <div
+                                    className="h-2.5 w-2.5 rounded-sm shrink-0"
+                                    style={{ backgroundColor: platColor }}
+                                  />
+                                  <span className="text-[10px] font-semibold text-foreground truncate flex-1">
+                                    {p}
+                                  </span>
+                                  <ChevronRight className="h-2.5 w-2.5 text-muted-foreground shrink-0" />
+                                </div>
+                                <Badge variant="secondary" className="text-[8px]">
                                   {platAccs.length} verfügbar
-                                </span>
-                              </div>
-                              {renderAccountList(poolAccounts, p)}
-                            </div>
-                          );
-                        })}
+                                </Badge>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                      {reassignPoolSectionOpen && reassignOpenPoolPlatform && (
+                        <div className="space-y-1.5 pl-6">
+                          <button
+                            onClick={() => setReassignOpenPoolPlatform(null)}
+                            className="flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-foreground transition-colors"
+                          >
+                            <ChevronRight className="h-3 w-3 rotate-180" /> Zurück
+                          </button>
+                          <div className="flex items-center gap-1.5 px-1">
+                            <Badge className="text-[9px] px-1.5 py-0 bg-accent/15 text-accent border-accent/25">
+                              {reassignOpenPoolPlatform}
+                            </Badge>
+                            <span className="text-[9px] text-muted-foreground">
+                              {poolAccounts.filter((a) => a.platform === reassignOpenPoolPlatform).length} verfügbar
+                            </span>
+                          </div>
+                          {renderAccountList(poolAccounts, reassignOpenPoolPlatform)}
+                        </div>
+                      )}
                     </div>
                   )}
                   {/* Freie Accounts */}
