@@ -363,6 +363,9 @@ export default function ModelDashboardTab() {
   const [modelLoginCreds, setModelLoginCreds] = useState<{ email: string; password: string } | null>(null);
   const [showLoginPassword, setShowLoginPassword] = useState(false);
   const [loginAccountId, setLoginAccountId] = useState<string>("");
+  const [loginsManagerOpen, setLoginsManagerOpen] = useState(false);
+  const [accountLogins, setAccountLogins] = useState<Record<string, { email: string; password: string }>>({});
+  const [revealedLoginIds, setRevealedLoginIds] = useState<Set<string>>(new Set());
 
   // Revenue from model_dashboard (per-platform)
   const [dashboardRevenues, setDashboardRevenues] = useState<Record<string, number>>({});
