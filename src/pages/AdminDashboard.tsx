@@ -7354,6 +7354,7 @@ export default function AdminDashboard() {
                               <ArrowLeftRight className="h-3 w-3" />
                             </Button>
                           )}
+                          {!acc.assigned_to && (
                             <AssignAccountToChatterButton
                               account={acc as any}
                               chatters={chatters as any}
