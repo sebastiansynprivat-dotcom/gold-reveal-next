@@ -736,35 +736,90 @@ export default function ModelDashboardTab() {
     }
   };
 
-  // ─── Generate model login ───
+  // ─── Model logins (manage existing + create) ───
+  const callLoginEndpoint = async (accountId: string, action?: "reset" | "delete") => {
+    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+    const session = (await supabase.auth.getSession()).data.session;
+    const res = await fetch(`https://${projectId}.supabase.co/functions/v1/create-model-login`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session?.access_token}`,
+        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+      },
+      body: JSON.stringify({ account_id: accountId, ...(action ? { action } : {}) }),
+    });
+    return { ok: res.ok, data: await res.json() };
+  };
+
   const generateModelLogin = async (accountId: string) => {
     setLoginAccountId(accountId);
     setModelLoginLoading(true);
-    setModelLoginCreds(null);
     try {
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const session = (await supabase.auth.getSession()).data.session;
-      const res = await fetch(`https://${projectId}.supabase.co/functions/v1/create-model-login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session?.access_token}`,
-          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-        },
-        body: JSON.stringify({ account_id: accountId }),
-      });
-      const data = await res.json();
-      if (!res.ok) toast.error(data.error || "Fehler");
+      const { ok, data } = await callLoginEndpoint(accountId);
+      if (!ok) toast.error(data.error || "Fehler");
       else {
         setModelLoginCreds({ email: data.email, password: data.password });
         setModelLoginDialog(true);
         toast.success("Login erstellt ✅");
+        await loadAccountLogins();
       }
     } catch (err: any) {
       toast.error(err.message);
     }
     setModelLoginLoading(false);
   };
+
+  const resetModelLogin = async (accountId: string) => {
+    if (!confirm("Passwort wirklich zurücksetzen? Das alte wird ungültig.")) return;
+    setLoginAccountId(accountId);
+    setModelLoginLoading(true);
+    try {
+      const { ok, data } = await callLoginEndpoint(accountId, "reset");
+      if (!ok) toast.error(data.error || "Fehler");
+      else {
+        setModelLoginCreds({ email: data.email, password: data.password });
+        setModelLoginDialog(true);
+        toast.success("Passwort zurückgesetzt ✅");
+        await loadAccountLogins();
+      }
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+    setModelLoginLoading(false);
+  };
+
+  const deleteModelLogin = async (accountId: string) => {
+    if (!confirm("Login wirklich löschen? Das Model kann sich danach nicht mehr einloggen.")) return;
+    try {
+      const { ok, data } = await callLoginEndpoint(accountId, "delete");
+      if (!ok) toast.error(data.error || "Fehler");
+      else {
+        toast.success("Login gelöscht");
+        await loadAccountLogins();
+      }
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+  };
+
+  const loadAccountLogins = useCallback(async () => {
+    if (modelAccounts.length === 0) {
+      setAccountLogins({});
+      return;
+    }
+    const ids = modelAccounts.map((a) => a.id);
+    const { data } = await supabase
+      .from("model_users")
+      .select("account_id, email, plaintext_password")
+      .in("account_id", ids);
+    const map: Record<string, { email: string; password: string }> = {};
+    (data || []).forEach((row: any) => {
+      map[row.account_id] = { email: row.email || "", password: row.plaintext_password || "" };
+    });
+    setAccountLogins(map);
+  }, [modelAccounts]);
+
 
   // ─── Delete model ───
   const deleteModel = async () => {
