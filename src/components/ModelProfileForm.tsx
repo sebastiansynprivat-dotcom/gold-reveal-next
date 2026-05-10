@@ -174,7 +174,7 @@ export default function ModelProfileForm({ modelId, defaultAccountName }: Props)
           value={profile.content_preferences ?? ""}
           onChange={(e) => set("content_preferences", e.target.value)}
           className="bg-background/50 min-h-[100px]"
-          placeholder="z.B. Solo, Toys, Lingerie, …"
+          placeholder="e.g. Solo, Toys, Lingerie, …"
         />
       </section>
 
