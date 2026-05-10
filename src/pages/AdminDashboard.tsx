@@ -64,6 +64,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
+import AssignAccountToChatterButton from "@/components/admin/AssignAccountToChatterButton";
 
 import {
   AlertDialog,
@@ -7326,6 +7327,16 @@ export default function AdminDashboard() {
                             >
                               <RefreshCw className="h-3 w-3" />
                             </Button>
+                          )}
+                          {!acc.assigned_to && (
+                            <AssignAccountToChatterButton
+                              account={acc as any}
+                              chatters={chatters as any}
+                              onAssigned={() => {
+                                loadAccounts();
+                                loadChatters();
+                              }}
+                            />
                           )}
                           <Button
                             variant="ghost"
