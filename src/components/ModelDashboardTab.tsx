@@ -1765,15 +1765,6 @@ export default function ModelDashboardTab() {
                                         >
                                           <Pencil className="h-3 w-3" />
                                         </Button>
-                                        {accountLogins[acc.id] && (
-                                          <span
-                                            title="Model-Login aktiv – im 'Model-Logins'-Dialog verwalten"
-                                            className="inline-flex items-center gap-1 h-7 px-2 rounded-md text-[10px] text-accent bg-accent/10 border border-accent/30"
-                                          >
-                                            <KeyRound className="h-3 w-3" />
-                                            Login
-                                          </span>
-                                        )}
                                         <Button
                                           size="sm"
                                           variant="ghost"
