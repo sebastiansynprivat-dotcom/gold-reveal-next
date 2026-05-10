@@ -756,6 +756,7 @@ export default function AdminDashboard() {
   const [reassigning, setReassigning] = useState(false);
   const [reassignOpenFolder, setReassignOpenFolder] = useState<string | null>(null);
   const [reassignPoolSectionOpen, setReassignPoolSectionOpen] = useState(false);
+  const [reassignOpenPoolPlatform, setReassignOpenPoolPlatform] = useState<string | null>(null);
   const [reassignManualSectionOpen, setReassignManualSectionOpen] = useState(false);
   const [deletingPool, setDeletingPool] = useState(false);
   const [deletePoolConfirm, setDeletePoolConfirm] = useState(false);
