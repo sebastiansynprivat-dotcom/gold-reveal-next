@@ -2480,6 +2480,132 @@ export default function ModelDashboardTab() {
         </DialogContent>
       </Dialog>
 
+      {/* ── Model Logins Manager Dialog ── */}
+      <Dialog open={loginsManagerOpen} onOpenChange={setLoginsManagerOpen}>
+        <DialogContent className="glass-card border-border sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-foreground flex items-center gap-2">
+              <KeyRound className="h-4 w-4 text-accent" />
+              Model-Logins · {selectedModel?.name}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground">
+              Login-URL: <span className="text-foreground font-mono">{window.location.origin}/model/login</span>
+            </p>
+            {modelAccounts.length === 0 && (
+              <p className="text-sm text-muted-foreground py-8 text-center">Keine Plattform-Accounts vorhanden.</p>
+            )}
+            {modelAccounts.map((acc) => {
+              const login = accountLogins[acc.id];
+              const revealed = revealedLoginIds.has(acc.id);
+              const isLoading = modelLoginLoading && loginAccountId === acc.id;
+              return (
+                <div key={acc.id} className="rounded-lg border border-border/40 bg-secondary/20 p-3 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-accent/15 text-accent border border-accent/30">
+                        {acc.platform}
+                      </span>
+                      <span className="text-xs text-muted-foreground truncate">{acc.account_email || "—"}</span>
+                    </div>
+                    {!login ? (
+                      <Button
+                        size="sm"
+                        onClick={() => generateModelLogin(acc.id)}
+                        disabled={isLoading}
+                        className="h-7 text-[10px] gap-1 bg-accent hover:bg-accent/90 text-accent-foreground"
+                      >
+                        <Plus className="h-3 w-3" />
+                        {isLoading ? "..." : "Login erstellen"}
+                      </Button>
+                    ) : (
+                      <div className="flex gap-1">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => resetModelLogin(acc.id)}
+                          disabled={isLoading}
+                          className="h-7 text-[10px] gap-1 text-accent hover:bg-accent/10"
+                        >
+                          <KeyRound className="h-3 w-3" />
+                          Reset
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => deleteModelLogin(acc.id)}
+                          className="h-7 text-[10px] text-destructive hover:bg-destructive/10"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                  {login && (
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-md bg-background/40 border border-border/30 min-w-0">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[9px] uppercase tracking-wider text-muted-foreground">E-Mail</p>
+                          <p className="text-[11px] font-mono text-foreground truncate">{login.email}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(login.email);
+                            toast.success("E-Mail kopiert");
+                          }}
+                          className="shrink-0 text-muted-foreground hover:text-accent"
+                        >
+                          <Copy className="h-3 w-3" />
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-md bg-background/40 border border-border/30 min-w-0">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[9px] uppercase tracking-wider text-muted-foreground">Passwort</p>
+                          <p className="text-[11px] font-mono text-foreground truncate">
+                            {login.password
+                              ? revealed
+                                ? login.password
+                                : "••••••••••••"
+                              : <span className="italic text-muted-foreground/70">Reset für neues PW</span>}
+                          </p>
+                        </div>
+                        {login.password && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const next = new Set(revealedLoginIds);
+                                next.has(acc.id) ? next.delete(acc.id) : next.add(acc.id);
+                                setRevealedLoginIds(next);
+                              }}
+                              className="shrink-0 text-muted-foreground hover:text-accent"
+                            >
+                              {revealed ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard.writeText(login.password);
+                                toast.success("Passwort kopiert");
+                              }}
+                              className="shrink-0 text-muted-foreground hover:text-accent"
+                            >
+                              <Copy className="h-3 w-3" />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* ── Model Login Dialog ── */}
       <Dialog open={modelLoginDialog} onOpenChange={setModelLoginDialog}>
         <DialogContent className="glass-card border-border sm:max-w-md">
