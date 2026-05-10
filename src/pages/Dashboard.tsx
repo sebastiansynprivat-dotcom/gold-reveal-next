@@ -215,9 +215,11 @@ export default function Dashboard() {
       drive_folder_id?: string;
       model_language?: string;
       model_active?: boolean;
+      model_id?: string | null;
     }[]
   >([]);
   const [modelInactiveInfoOpen, setModelInactiveInfoOpen] = useState(false);
+  const [profileViewOpen, setProfileViewOpen] = useState(false);
   const [demoModelInactive, setDemoModelInactive] = useState(false);
   const [accountsOpen, setAccountsOpen] = useState(true);
   const [myRequests, setMyRequests] = useState<any[]>([]);
