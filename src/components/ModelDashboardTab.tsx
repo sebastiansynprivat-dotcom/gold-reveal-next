@@ -428,8 +428,23 @@ export default function ModelDashboardTab() {
 
   // Auto-load login credentials when accounts change
   useEffect(() => {
-    loadAccountLogins();
-  }, [loadAccountLogins]);
+    if (modelAccounts.length === 0) {
+      setAccountLogins({});
+      return;
+    }
+    const ids = modelAccounts.map((a) => a.id);
+    supabase
+      .from("model_users")
+      .select("account_id, email, plaintext_password")
+      .in("account_id", ids)
+      .then(({ data }) => {
+        const map: Record<string, { email: string; password: string }> = {};
+        (data || []).forEach((row: any) => {
+          map[row.account_id] = { email: row.email || "", password: row.plaintext_password || "" };
+        });
+        setAccountLogins(map);
+      });
+  }, [modelAccounts]);
 
 
   // ─── Filter models ───
