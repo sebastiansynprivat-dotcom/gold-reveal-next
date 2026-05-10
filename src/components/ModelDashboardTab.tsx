@@ -426,6 +426,12 @@ export default function ModelDashboardTab() {
     }
   }, [selectedModelId, models, loadModelAccounts]);
 
+  // Auto-load login credentials when accounts change
+  useEffect(() => {
+    loadAccountLogins();
+  }, [loadAccountLogins]);
+
+
   // ─── Filter models ───
   const filteredModels = useMemo(() => {
     if (!searchQuery) return models;
