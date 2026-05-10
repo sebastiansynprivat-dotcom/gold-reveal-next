@@ -186,13 +186,13 @@ export default function ModelProfileForm({ modelId, defaultAccountName }: Props)
         </div>
         <Label className="text-xs text-muted-foreground">
           Things you don't want to do on camera (so the chatter won't tease them).
-          Beispiele: Anal fingering, Anal plug, Anal penetration, Squirt, Orgasm/moaning a special name, Roleplay in costumes, Extras
+          Examples: Anal fingering, Anal plug, Anal penetration, Squirt, Orgasm/moaning a special name, Roleplay in costumes, Extras
         </Label>
         <Textarea
           value={profile.no_gos ?? ""}
           onChange={(e) => set("no_gos", e.target.value)}
           className="bg-background/50 min-h-[120px]"
-          placeholder="Liste deine No-Gos hier auf…"
+          placeholder="List your no-gos here…"
         />
       </section>
 
