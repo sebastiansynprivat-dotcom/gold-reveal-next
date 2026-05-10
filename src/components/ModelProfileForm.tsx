@@ -134,10 +134,10 @@ export default function ModelProfileForm({ modelId, defaultAccountName }: Props)
           <User className="h-5 w-5 text-accent" />
         </div>
         <div className="flex-1 min-w-0">
-          <h2 className="text-lg font-bold text-foreground">Steckbrief</h2>
+          <h2 className="text-lg font-bold text-foreground">Profile</h2>
           <p className="text-sm text-muted-foreground">
-            Fülle dein Profil aus — diese Infos helfen den Chattern, dich authentisch zu repräsentieren.
-            Du kannst echte Infos, fake oder eine Mischung verwenden.
+            Fill out your profile — this info helps the chatters represent you authentically.
+            You can use real info, fake or a mix of both.
           </p>
         </div>
       </div>
