@@ -1092,6 +1092,98 @@ export default function ModelDashboardTab() {
               </div>
             </div>
 
+            {/* ── Steckbrief / Model Profile ── */}
+            <Section icon={User} title="Steckbrief" delay={0.03}>
+              {(() => {
+                const profile = modelProfile;
+                const filledFields = profile
+                  ? Object.entries(profile).filter(([k, v]) =>
+                      ["name","age","city","place_of_birth","favorite_color","favorite_movie","favorite_food","favorite_music","occupation","hobbies","dream","work","education","languages","special_marks","natural_hair","shoe_size","bra_size","height","weight","content_preferences","no_gos","additional_info"].includes(k) && (v as string)?.trim?.()
+                    ).length
+                  : 0;
+                const totalFields = 23;
+                const isFilled = filledFields > 0;
+                return (
+                  <div className="space-y-3">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className={cn(
+                            "h-2.5 w-2.5 rounded-full",
+                            isFilled
+                              ? "bg-emerald-400 shadow-[0_0_8px_hsl(142_76%_60%)]"
+                              : "bg-red-400/70 shadow-[0_0_8px_hsl(0_76%_60%)]",
+                          )}
+                        />
+                        <p className="text-sm font-semibold text-foreground">
+                          {isFilled ? "Ausgefüllt" : "Noch nicht ausgefüllt"}
+                        </p>
+                        <Badge variant="outline" className="text-[10px] border-accent/30 text-accent">
+                          {filledFields}/{totalFields} Felder
+                        </Badge>
+                      </div>
+                    </div>
+                    {isFilled && (profile?.name || profile?.age || profile?.city) && (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px]">
+                        {profile?.name && (
+                          <div className="glass-card-subtle rounded-lg px-2.5 py-1.5">
+                            <p className="text-muted-foreground text-[9px] uppercase">Name</p>
+                            <p className="text-foreground truncate">{profile.name}</p>
+                          </div>
+                        )}
+                        {profile?.age && (
+                          <div className="glass-card-subtle rounded-lg px-2.5 py-1.5">
+                            <p className="text-muted-foreground text-[9px] uppercase">Alter</p>
+                            <p className="text-foreground truncate">{profile.age}</p>
+                          </div>
+                        )}
+                        {profile?.city && (
+                          <div className="glass-card-subtle rounded-lg px-2.5 py-1.5">
+                            <p className="text-muted-foreground text-[9px] uppercase">Stadt</p>
+                            <p className="text-foreground truncate">{profile.city}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      <Button
+                        size="sm"
+                        disabled={!isFilled}
+                        onClick={async () => {
+                          const { downloadModelProfilePdf } = await import("@/lib/modelProfilePdf");
+                          await downloadModelProfilePdf(profile!, selectedModel!.name, "de");
+                          toast.success("Steckbrief PDF (DE) wird heruntergeladen");
+                        }}
+                        className="text-xs gap-1.5 bg-gradient-to-r from-accent to-accent/80 text-accent-foreground shadow-[0_0_12px_-2px_hsl(var(--accent)/0.5)] hover:scale-[1.02] transition-all disabled:opacity-50"
+                      >
+                        <FileDown className="h-3 w-3" />
+                        PDF · Deutsch
+                      </Button>
+                      <Button
+                        size="sm"
+                        disabled={!isFilled}
+                        variant="outline"
+                        onClick={async () => {
+                          const { downloadModelProfilePdf } = await import("@/lib/modelProfilePdf");
+                          await downloadModelProfilePdf(profile!, selectedModel!.name, "en");
+                          toast.success("Profile PDF (EN) is downloading");
+                        }}
+                        className="text-xs gap-1.5 border-accent/40 text-accent hover:bg-accent/10 disabled:opacity-50"
+                      >
+                        <FileDown className="h-3 w-3" />
+                        PDF · English
+                      </Button>
+                    </div>
+                    {!isFilled && (
+                      <p className="text-[11px] text-muted-foreground italic">
+                        Das Model hat den Steckbrief noch nicht im Model-Dashboard ausgefüllt.
+                      </p>
+                    )}
+                  </div>
+                );
+              })()}
+            </Section>
+
             {/* ── Revenue per Platform ── */}
             {modelAccounts.length > 0 && (
               <Section icon={TrendingUp} title="Einnahmen" delay={0.05}>
