@@ -26,6 +26,7 @@ import {
   EyeOff,
   Check,
   Trophy,
+  UserCircle,
 } from "lucide-react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import {
@@ -67,6 +68,7 @@ import LootBoxReward from "@/components/LootBoxReward";
 import AccountMemoDialog from "@/components/AccountMemoDialog";
 import FrageMemoDialog from "@/components/FrageMemoDialog";
 import ModelRequestDialog, { EditRequestData } from "@/components/ModelRequestDialog";
+import ModelProfileViewDialog from "@/components/ModelProfileViewDialog";
 import RevenueChart from "@/components/RevenueChart";
 import MonthSummaryWidget from "@/components/MonthSummaryWidget";
 import QuickActionBar from "@/components/QuickActionBar";
@@ -215,9 +217,11 @@ export default function Dashboard() {
       drive_folder_id?: string;
       model_language?: string;
       model_active?: boolean;
+      model_id?: string | null;
     }[]
   >([]);
   const [modelInactiveInfoOpen, setModelInactiveInfoOpen] = useState(false);
+  const [profileViewOpen, setProfileViewOpen] = useState(false);
   const [demoModelInactive, setDemoModelInactive] = useState(false);
   const [accountsOpen, setAccountsOpen] = useState(true);
   const [myRequests, setMyRequests] = useState<any[]>([]);
@@ -318,7 +322,7 @@ export default function Dashboard() {
     supabase
       .from("accounts")
       .select(
-        "id, account_email, account_password, account_domain, platform, assigned_at, drive_folder_id, model_language, model_active",
+        "id, account_email, account_password, account_domain, platform, assigned_at, drive_folder_id, model_language, model_active, model_id",
       )
       .eq("assigned_to", user.id)
       .order("created_at", { ascending: true })
@@ -1318,6 +1322,34 @@ export default function Dashboard() {
               </Button>
             </div>
           )}
+
+          {/* Steckbrief deines Models */}
+          {(() => {
+            const modelId = assignedAccounts.find((a) => a.model_id)?.model_id || null;
+            if (!modelId) return null;
+            return (
+              <div className="border-t border-border/30">
+                <button
+                  onClick={() => setProfileViewOpen(true)}
+                  className="w-full flex items-center gap-3 px-4 py-4 lg:px-6 lg:py-5 hover:bg-accent/5 transition-colors text-left"
+                >
+                  <div className="h-10 w-10 rounded-full bg-accent/15 flex items-center justify-center shrink-0">
+                    <UserCircle className="h-5 w-5 text-accent" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-foreground">Steckbrief deines Models</p>
+                    <p className="text-[11px] text-muted-foreground">Alle wichtigen Infos auf einen Blick</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                </button>
+                <ModelProfileViewDialog
+                  open={profileViewOpen}
+                  onOpenChange={setProfileViewOpen}
+                  modelId={modelId}
+                />
+              </div>
+            );
+          })()}
 
           {/* Anfrage an das Model – oder Inaktiv-Hinweis */}
           <div className="border-t border-border/30">
