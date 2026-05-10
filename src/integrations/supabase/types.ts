@@ -724,6 +724,99 @@ export type Database = {
         }
         Relationships: []
       }
+      model_profiles: {
+        Row: {
+          account_name: string | null
+          additional_info: string | null
+          age: string | null
+          bra_size: string | null
+          city: string | null
+          content_preferences: string | null
+          created_at: string
+          dream: string | null
+          education: string | null
+          favorite_color: string | null
+          favorite_food: string | null
+          favorite_movie: string | null
+          favorite_music: string | null
+          height: string | null
+          hobbies: string | null
+          id: string
+          languages: string | null
+          model_id: string
+          name: string | null
+          natural_hair: string | null
+          no_gos: string | null
+          occupation: string | null
+          place_of_birth: string | null
+          shoe_size: string | null
+          special_marks: string | null
+          updated_at: string
+          weight: string | null
+          work: string | null
+        }
+        Insert: {
+          account_name?: string | null
+          additional_info?: string | null
+          age?: string | null
+          bra_size?: string | null
+          city?: string | null
+          content_preferences?: string | null
+          created_at?: string
+          dream?: string | null
+          education?: string | null
+          favorite_color?: string | null
+          favorite_food?: string | null
+          favorite_movie?: string | null
+          favorite_music?: string | null
+          height?: string | null
+          hobbies?: string | null
+          id?: string
+          languages?: string | null
+          model_id: string
+          name?: string | null
+          natural_hair?: string | null
+          no_gos?: string | null
+          occupation?: string | null
+          place_of_birth?: string | null
+          shoe_size?: string | null
+          special_marks?: string | null
+          updated_at?: string
+          weight?: string | null
+          work?: string | null
+        }
+        Update: {
+          account_name?: string | null
+          additional_info?: string | null
+          age?: string | null
+          bra_size?: string | null
+          city?: string | null
+          content_preferences?: string | null
+          created_at?: string
+          dream?: string | null
+          education?: string | null
+          favorite_color?: string | null
+          favorite_food?: string | null
+          favorite_movie?: string | null
+          favorite_music?: string | null
+          height?: string | null
+          hobbies?: string | null
+          id?: string
+          languages?: string | null
+          model_id?: string
+          name?: string | null
+          natural_hair?: string | null
+          no_gos?: string | null
+          occupation?: string | null
+          place_of_birth?: string | null
+          shoe_size?: string | null
+          special_marks?: string | null
+          updated_at?: string
+          weight?: string | null
+          work?: string | null
+        }
+        Relationships: []
+      }
       model_requests: {
         Row: {
           admin_comment: string | null

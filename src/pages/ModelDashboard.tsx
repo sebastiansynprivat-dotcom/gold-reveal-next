@@ -1,52 +1,15 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { motion } from "framer-motion";
-import { TrendingUp, Wallet, Crown, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import logo from "@/assets/logo.png";
-import ModelBillingInfo from "@/components/ModelBillingInfo";
-
-function useAnimatedCounter(target: number, duration = 1200) {
-  const [value, setValue] = useState(0);
-  const prevTarget = useRef(0);
-  useEffect(() => {
-    const start = prevTarget.current;
-    prevTarget.current = target;
-    if (start === target) { setValue(target); return; }
-    const startTime = performance.now();
-    let raf: number;
-    const anim = (now: number) => {
-      const elapsed = now - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setValue(Math.round(start + (target - start) * eased));
-      if (progress < 1) raf = requestAnimationFrame(anim);
-    };
-    raf = requestAnimationFrame(anim);
-    return () => cancelAnimationFrame(raf);
-  }, [target, duration]);
-  return value;
-}
-
-function AnimatedValue({ value, suffix = "€", className }: { value: number; suffix?: string; className?: string }) {
-  const animated = useAnimatedCounter(value);
-  return <span className={className}>{animated.toLocaleString("de-DE")}{suffix}</span>;
-}
-
-const staggerContainer = { hidden: {}, show: { transition: { staggerChildren: 0.1 } } };
-const staggerItem = {
-  hidden: { opacity: 0, y: 16, filter: "blur(4px)" },
-  show: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.5 } },
-};
+import ModelProfileForm from "@/components/ModelProfileForm";
 
 export default function ModelDashboard() {
   const { user, signOut } = useAuth();
   const [accountName, setAccountName] = useState("");
-  const [revenuePercentage, setRevenuePercentage] = useState(0);
-  const [monthlyRevenue, setMonthlyRevenue] = useState(0);
-  const [cryptoAddress, setCryptoAddress] = useState("");
-  const [currency, setCurrency] = useState("EUR");
+  const [modelId, setModelId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -54,42 +17,32 @@ export default function ModelDashboard() {
     const load = async () => {
       const { data: mu } = await supabase
         .from("model_users")
-        .select("account_id")
+        .select("account_id, model_id")
         .eq("user_id", user.id)
         .maybeSingle();
 
       if (!mu) { setLoading(false); return; }
 
-      const { data: acc } = await supabase
-        .from("accounts")
-        .select("account_email, account_domain")
-        .eq("id", mu.account_id)
-        .single();
+      let resolvedModelId = (mu as any).model_id as string | null;
 
-      if (acc) setAccountName(acc.account_email || acc.account_domain);
+      if (mu.account_id) {
+        const { data: acc } = await supabase
+          .from("accounts")
+          .select("account_email, account_domain, model_id")
+          .eq("id", mu.account_id)
+          .maybeSingle();
 
-      const { data: md } = await supabase
-        .from("model_dashboard")
-        .select("revenue_percentage, crypto_address, monthly_revenue")
-        .eq("account_id", mu.account_id)
-        .maybeSingle();
-
-      if (md) {
-        setRevenuePercentage(md.revenue_percentage || 0);
-        setCryptoAddress(md.crypto_address || "");
-        setMonthlyRevenue(Number(md.monthly_revenue) || 0);
-        setCurrency((md as any).currency || "EUR");
+        if (acc) {
+          setAccountName(acc.account_email || acc.account_domain || "");
+          if (!resolvedModelId) resolvedModelId = (acc as any).model_id ?? null;
+        }
       }
 
+      setModelId(resolvedModelId);
       setLoading(false);
     };
     load();
   }, [user]);
-
-  const verdienst = useMemo(() => {
-    if (revenuePercentage <= 0) return 0;
-    return Math.round(monthlyRevenue * revenuePercentage / 100);
-  }, [monthlyRevenue, revenuePercentage]);
 
   if (loading) {
     return (
@@ -116,48 +69,14 @@ export default function ModelDashboard() {
         </div>
       </header>
 
-      <div className="container max-w-5xl mx-auto px-4 pt-6 space-y-5">
-        {/* Big golden revenue card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20, scale: 0.97 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="gold-gradient-border-animated pulse-glow rounded-xl p-6 text-center space-y-3"
-        >
-          <Crown className="h-8 w-8 text-accent mx-auto" />
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Monatsumsatz</p>
-          <p className="text-5xl font-black text-gold-gradient tabular-nums leading-none">
-            <AnimatedValue value={monthlyRevenue} suffix={` ${currency}`} />
-          </p>
-        </motion.div>
-
-        {/* Verdienst card */}
-        {revenuePercentage > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
-            className="glass-card rounded-xl p-5 flex items-center gap-4"
-          >
-            <div className="h-12 w-12 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
-              <Wallet className="h-5 w-5 text-accent" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Dein Verdienst ({revenuePercentage}%)</p>
-              <p className="text-2xl font-bold text-accent tabular-nums">
-                <AnimatedValue value={verdienst} suffix={` ${currency}`} />
-              </p>
-            </div>
-          </motion.div>
+      <div className="container max-w-3xl mx-auto px-4 pt-6">
+        {modelId ? (
+          <ModelProfileForm modelId={modelId} defaultAccountName={accountName} />
+        ) : (
+          <div className="glass-card rounded-xl p-6 text-center text-sm text-muted-foreground">
+            Dein Model-Profil ist noch nicht verknüpft. Bitte kontaktiere das Team.
+          </div>
         )}
-
-        <ModelBillingInfo
-          accountName={accountName}
-          monthlyRevenue={monthlyRevenue}
-          revenuePercentage={revenuePercentage}
-          verdienst={verdienst}
-          cryptoAddress={cryptoAddress}
-        />
       </div>
     </div>
   );
