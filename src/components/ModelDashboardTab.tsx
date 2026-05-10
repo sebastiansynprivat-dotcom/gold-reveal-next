@@ -1028,17 +1028,37 @@ export default function ModelDashboardTab() {
                   {modelAccounts.length} Plattform-Account{modelAccounts.length !== 1 ? "s" : ""}
                 </p>
               </div>
-              {modelAccounts.length < PLATFORMS.length && (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => setAddAccountOpen(true)}
-                  className="shrink-0 text-xs gap-1.5 border-accent/30 text-accent hover:bg-accent/10"
-                >
-                  <Plus className="h-3 w-3" />
-                  Account
-                </Button>
-              )}
+              <div className="flex gap-1.5 shrink-0">
+                {modelAccounts.length > 0 && (
+                  <Button
+                    size="sm"
+                    onClick={() => {
+                      setRevealedLoginIds(new Set());
+                      setLoginsManagerOpen(true);
+                    }}
+                    className="text-xs gap-1.5 font-semibold bg-gradient-to-r from-accent to-accent/80 text-accent-foreground shadow-[0_0_12px_-2px_hsl(var(--accent)/0.6)] hover:shadow-[0_0_18px_-2px_hsl(var(--accent)/0.85)] hover:scale-[1.02] transition-all"
+                  >
+                    <KeyRound className="h-3 w-3" />
+                    Model-Logins
+                    {Object.keys(accountLogins).length > 0 && (
+                      <span className="ml-0.5 px-1.5 rounded-full bg-background/30 text-[10px]">
+                        {Object.keys(accountLogins).length}
+                      </span>
+                    )}
+                  </Button>
+                )}
+                {modelAccounts.length < PLATFORMS.length && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setAddAccountOpen(true)}
+                    className="text-xs gap-1.5 border-accent/30 text-accent hover:bg-accent/10"
+                  >
+                    <Plus className="h-3 w-3" />
+                    Account
+                  </Button>
+                )}
+              </div>
             </div>
 
             {/* ── Revenue per Platform ── */}
