@@ -1003,9 +1003,20 @@ export default function ModelDashboardTab() {
                     )}
                   >
                     <div className="px-3 py-2.5 min-w-0">
-                      <p className={cn("text-xs font-medium truncate", isSelected ? "text-accent" : "text-foreground")}>
-                        {model.name || "Unbenannt"}
-                      </p>
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className={cn(
+                            "h-1.5 w-1.5 rounded-full shrink-0",
+                            filledProfileIds.has(model.id)
+                              ? "bg-emerald-400 shadow-[0_0_6px_hsl(142_76%_60%)]"
+                              : "bg-muted-foreground/30",
+                          )}
+                          title={filledProfileIds.has(model.id) ? "Steckbrief ausgefüllt" : "Steckbrief leer"}
+                        />
+                        <p className={cn("text-xs font-medium truncate", isSelected ? "text-accent" : "text-foreground")}>
+                          {model.name || "Unbenannt"}
+                        </p>
+                      </div>
                       {model.address && <p className="text-[10px] text-muted-foreground truncate">{model.address}</p>}
                     </div>
                     <div className="px-2 py-2 text-center">
