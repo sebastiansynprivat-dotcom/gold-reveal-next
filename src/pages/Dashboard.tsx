@@ -67,6 +67,7 @@ import LootBoxReward from "@/components/LootBoxReward";
 import AccountMemoDialog from "@/components/AccountMemoDialog";
 import FrageMemoDialog from "@/components/FrageMemoDialog";
 import ModelRequestDialog, { EditRequestData } from "@/components/ModelRequestDialog";
+import ModelProfileViewDialog from "@/components/ModelProfileViewDialog";
 import RevenueChart from "@/components/RevenueChart";
 import MonthSummaryWidget from "@/components/MonthSummaryWidget";
 import QuickActionBar from "@/components/QuickActionBar";
