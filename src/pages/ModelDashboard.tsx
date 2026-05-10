@@ -74,7 +74,7 @@ export default function ModelDashboard() {
           <ModelProfileForm modelId={modelId} defaultAccountName={accountName} />
         ) : (
           <div className="glass-card rounded-xl p-6 text-center text-sm text-muted-foreground">
-            Dein Model-Profil ist noch nicht verknüpft. Bitte kontaktiere das Team.
+            Your model profile is not linked yet. Please contact the team.
           </div>
         )}
       </div>
