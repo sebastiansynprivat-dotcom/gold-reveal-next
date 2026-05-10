@@ -773,19 +773,25 @@ export type Database = {
         Row: {
           account_id: string
           created_at: string
+          email: string | null
           id: string
+          plaintext_password: string | null
           user_id: string
         }
         Insert: {
           account_id: string
           created_at?: string
+          email?: string | null
           id?: string
+          plaintext_password?: string | null
           user_id: string
         }
         Update: {
           account_id?: string
           created_at?: string
+          email?: string | null
           id?: string
+          plaintext_password?: string | null
           user_id?: string
         }
         Relationships: [
