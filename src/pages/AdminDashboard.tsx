@@ -8175,6 +8175,50 @@ export default function AdminDashboard() {
         </AlertDialogContent>
       </AlertDialog>
 
+      <AlertDialog open={!!moveConfirm} onOpenChange={(o) => !o && !moving && setMoveConfirm(null)}>
+        <AlertDialogContent className="glass-card border-accent/30">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-foreground">
+              <ArrowLeftRight className="h-5 w-5 text-accent" />
+              Account verschieben
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
+              Soll dieser Account wirklich in{" "}
+              <span className="font-semibold text-accent">
+                {moveConfirm?.toPool ? "Account-Pool" : "Freie Accounts"}
+              </span>{" "}
+              verschoben werden?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={moving}>Abbrechen</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={moving}
+              className="bg-gradient-to-r from-accent to-accent/80 text-accent-foreground hover:opacity-90"
+              onClick={async (e) => {
+                e.preventDefault();
+                if (!moveConfirm) return;
+                setMoving(true);
+                const { error } = await supabase
+                  .from("accounts")
+                  .update({ is_manual: moveConfirm.toPool })
+                  .eq("id", moveConfirm.id);
+                setMoving(false);
+                if (error) {
+                  toast.error("Verschieben fehlgeschlagen");
+                  return;
+                }
+                toast.success(moveConfirm.toPool ? "→ Account-Pool" : "→ Freie Accounts");
+                setMoveConfirm(null);
+                loadAccounts();
+              }}
+            >
+              {moving ? "Wird verschoben..." : "Verschieben"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Daily Goal Dialog */}
       <Dialog
         open={!!goalTarget}
