@@ -42,7 +42,7 @@ export default function AssignAccountToChatterButton({ account, chatters, onAssi
             (c.email || "").toLowerCase().includes(q),
         )
       : chatters;
-    return list.slice(0, 100);
+    return list;
   }, [chatters, query]);
 
   const assign = async (chatter: ChatterLite) => {
