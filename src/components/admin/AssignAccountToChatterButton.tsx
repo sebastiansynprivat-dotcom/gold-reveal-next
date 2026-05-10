@@ -42,7 +42,7 @@ export default function AssignAccountToChatterButton({ account, chatters, onAssi
             (c.email || "").toLowerCase().includes(q),
         )
       : chatters;
-    return list.slice(0, 100);
+    return list;
   }, [chatters, query]);
 
   const assign = async (chatter: ChatterLite) => {
@@ -100,18 +100,18 @@ export default function AssignAccountToChatterButton({ account, chatters, onAssi
           <UserPlus className="h-3 w-3" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-64 p-2 glass-card">
+      <PopoverContent align="end" className="w-72 p-2 glass-card">
         <div className="relative mb-2">
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Chatter suchen..."
+            placeholder={`Chatter suchen (${chatters.length})...`}
             className="pl-7 h-8 text-xs"
             autoFocus
           />
         </div>
-        <div className="max-h-64 overflow-y-auto space-y-1">
+        <div className="max-h-80 overflow-y-auto space-y-1">
           {filtered.length === 0 ? (
             <p className="text-[11px] text-muted-foreground text-center py-3">Keine Chatter gefunden</p>
           ) : (
