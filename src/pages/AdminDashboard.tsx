@@ -761,6 +761,8 @@ export default function AdminDashboard() {
   const [reassignManualSectionOpen, setReassignManualSectionOpen] = useState(false);
   const [deletingPool, setDeletingPool] = useState(false);
   const [deletePoolConfirm, setDeletePoolConfirm] = useState(false);
+  const [moveConfirm, setMoveConfirm] = useState<{ id: string; toPool: boolean } | null>(null);
+  const [moving, setMoving] = useState(false);
   const [offers, setOffers] = useState<{ name: string; target_path: string }[]>([]);
   const [quizRoutes, setQuizRoutes] = useState<
     { id: string; name: string; target_path: string; free_count: number; is_active: boolean }[]
@@ -7336,23 +7338,8 @@ export default function AdminDashboard() {
                               size="sm"
                               className="h-6 w-6 p-0 text-muted-foreground hover:text-accent"
                               title={acc.is_manual ? "In Account-Pool verschieben" : "In Freie Accounts verschieben"}
-                              onClick={async () => {
-                                const target = acc.is_manual ? "Account-Pool" : "Freie Accounts";
-                                if (!window.confirm(`Account wirklich in "${target}" verschieben?`)) {
-                                  return;
-                                }
-                                const { error } = await supabase
-                                  .from("accounts")
-                                  .update({ is_manual: !acc.is_manual })
-                                  .eq("id", acc.id);
-                                if (error) {
-                                  toast.error("Verschieben fehlgeschlagen");
-                                  return;
-                                }
-                                toast.success(
-                                  acc.is_manual ? "→ Account-Pool" : "→ Freie Accounts",
-                                );
-                                loadAccounts();
+                              onClick={() => {
+                                setMoveConfirm({ id: acc.id, toPool: !acc.is_manual });
                               }}
                             >
                               <ArrowLeftRight className="h-3 w-3" />
@@ -8183,6 +8170,50 @@ export default function AdminDashboard() {
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               {deletingPool ? "Wird gelöscht..." : "Pool löschen"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={!!moveConfirm} onOpenChange={(o) => !o && !moving && setMoveConfirm(null)}>
+        <AlertDialogContent className="glass-card border-accent/30">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-foreground">
+              <ArrowLeftRight className="h-5 w-5 text-accent" />
+              Account verschieben
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground">
+              Soll dieser Account wirklich in{" "}
+              <span className="font-semibold text-accent">
+                {moveConfirm?.toPool ? "Account-Pool" : "Freie Accounts"}
+              </span>{" "}
+              verschoben werden?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={moving}>Abbrechen</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={moving}
+              className="bg-gradient-to-r from-accent to-accent/80 text-accent-foreground hover:opacity-90"
+              onClick={async (e) => {
+                e.preventDefault();
+                if (!moveConfirm) return;
+                setMoving(true);
+                const { error } = await supabase
+                  .from("accounts")
+                  .update({ is_manual: moveConfirm.toPool })
+                  .eq("id", moveConfirm.id);
+                setMoving(false);
+                if (error) {
+                  toast.error("Verschieben fehlgeschlagen");
+                  return;
+                }
+                toast.success(moveConfirm.toPool ? "→ Account-Pool" : "→ Freie Accounts");
+                setMoveConfirm(null);
+                loadAccounts();
+              }}
+            >
+              {moving ? "Wird verschoben..." : "Verschieben"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
