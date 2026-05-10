@@ -7337,6 +7337,10 @@ export default function AdminDashboard() {
                               className="h-6 w-6 p-0 text-muted-foreground hover:text-accent"
                               title={acc.is_manual ? "In Account-Pool verschieben" : "In Freie Accounts verschieben"}
                               onClick={async () => {
+                                const target = acc.is_manual ? "Account-Pool" : "Freie Accounts";
+                                if (!window.confirm(`Account "${acc.email || acc.id}" wirklich in "${target}" verschieben?`)) {
+                                  return;
+                                }
                                 const { error } = await supabase
                                   .from("accounts")
                                   .update({ is_manual: !acc.is_manual })
