@@ -362,10 +362,9 @@ export default function ModelDashboardTab() {
   const [modelLoginLoading, setModelLoginLoading] = useState(false);
   const [modelLoginCreds, setModelLoginCreds] = useState<{ email: string; password: string } | null>(null);
   const [showLoginPassword, setShowLoginPassword] = useState(false);
-  const [loginAccountId, setLoginAccountId] = useState<string>("");
   const [loginsManagerOpen, setLoginsManagerOpen] = useState(false);
-  const [accountLogins, setAccountLogins] = useState<Record<string, { email: string; password: string }>>({});
-  const [revealedLoginIds, setRevealedLoginIds] = useState<Set<string>>(new Set());
+  const [currentModelLogin, setCurrentModelLogin] = useState<{ email: string; password: string } | null>(null);
+  const [revealManagerPw, setRevealManagerPw] = useState(false);
 
   // Revenue from model_dashboard (per-platform)
   const [dashboardRevenues, setDashboardRevenues] = useState<Record<string, number>>({});
@@ -426,25 +425,24 @@ export default function ModelDashboardTab() {
     }
   }, [selectedModelId, models, loadModelAccounts]);
 
-  // Auto-load login credentials when accounts change
+  // Auto-load model login when selected model changes
   useEffect(() => {
-    if (modelAccounts.length === 0) {
-      setAccountLogins({});
+    if (!selectedModelId) {
+      setCurrentModelLogin(null);
       return;
     }
-    const ids = modelAccounts.map((a) => a.id);
     supabase
       .from("model_users")
-      .select("account_id, email, plaintext_password")
-      .in("account_id", ids)
+      .select("email, plaintext_password")
+      .eq("model_id", selectedModelId)
+      .maybeSingle()
       .then(({ data }) => {
-        const map: Record<string, { email: string; password: string }> = {};
-        (data || []).forEach((row: any) => {
-          map[row.account_id] = { email: row.email || "", password: row.plaintext_password || "" };
-        });
-        setAccountLogins(map);
+        setCurrentModelLogin(
+          data ? { email: (data as any).email || "", password: (data as any).plaintext_password || "" } : null,
+        );
       });
-  }, [modelAccounts]);
+  }, [selectedModelId]);
+
 
 
   // ─── Filter models ───
@@ -760,8 +758,8 @@ export default function ModelDashboardTab() {
     }
   };
 
-  // ─── Model logins (manage existing + create) ───
-  const callLoginEndpoint = async (accountId: string, action?: "reset" | "delete") => {
+  // ─── Model login (one per model, all platforms) ───
+  const callLoginEndpoint = async (modelId: string, action?: "reset" | "delete") => {
     const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
     const session = (await supabase.auth.getSession()).data.session;
     const res = await fetch(`https://${projectId}.supabase.co/functions/v1/create-model-login`, {
@@ -771,22 +769,22 @@ export default function ModelDashboardTab() {
         Authorization: `Bearer ${session?.access_token}`,
         apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
       },
-      body: JSON.stringify({ account_id: accountId, ...(action ? { action } : {}) }),
+      body: JSON.stringify({ model_id: modelId, ...(action ? { action } : {}) }),
     });
     return { ok: res.ok, data: await res.json() };
   };
 
-  const generateModelLogin = async (accountId: string) => {
-    setLoginAccountId(accountId);
+  const generateModelLogin = async () => {
+    if (!selectedModelId) return;
     setModelLoginLoading(true);
     try {
-      const { ok, data } = await callLoginEndpoint(accountId);
+      const { ok, data } = await callLoginEndpoint(selectedModelId);
       if (!ok) toast.error(data.error || "Fehler");
       else {
         setModelLoginCreds({ email: data.email, password: data.password });
         setModelLoginDialog(true);
         toast.success("Login erstellt ✅");
-        await loadAccountLogins();
+        await loadModelLogin();
       }
     } catch (err: any) {
       toast.error(err.message);
@@ -794,18 +792,18 @@ export default function ModelDashboardTab() {
     setModelLoginLoading(false);
   };
 
-  const resetModelLogin = async (accountId: string) => {
+  const resetModelLogin = async () => {
+    if (!selectedModelId) return;
     if (!confirm("Passwort wirklich zurücksetzen? Das alte wird ungültig.")) return;
-    setLoginAccountId(accountId);
     setModelLoginLoading(true);
     try {
-      const { ok, data } = await callLoginEndpoint(accountId, "reset");
+      const { ok, data } = await callLoginEndpoint(selectedModelId, "reset");
       if (!ok) toast.error(data.error || "Fehler");
       else {
         setModelLoginCreds({ email: data.email, password: data.password });
         setModelLoginDialog(true);
         toast.success("Passwort zurückgesetzt ✅");
-        await loadAccountLogins();
+        await loadModelLogin();
       }
     } catch (err: any) {
       toast.error(err.message);
@@ -813,36 +811,34 @@ export default function ModelDashboardTab() {
     setModelLoginLoading(false);
   };
 
-  const deleteModelLogin = async (accountId: string) => {
+  const deleteModelLogin = async () => {
+    if (!selectedModelId) return;
     if (!confirm("Login wirklich löschen? Das Model kann sich danach nicht mehr einloggen.")) return;
     try {
-      const { ok, data } = await callLoginEndpoint(accountId, "delete");
+      const { ok, data } = await callLoginEndpoint(selectedModelId, "delete");
       if (!ok) toast.error(data.error || "Fehler");
       else {
         toast.success("Login gelöscht");
-        await loadAccountLogins();
+        await loadModelLogin();
       }
     } catch (err: any) {
       toast.error(err.message);
     }
   };
 
-  const loadAccountLogins = useCallback(async () => {
-    if (modelAccounts.length === 0) {
-      setAccountLogins({});
+  const loadModelLogin = useCallback(async () => {
+    if (!selectedModelId) {
+      setCurrentModelLogin(null);
       return;
     }
-    const ids = modelAccounts.map((a) => a.id);
     const { data } = await supabase
       .from("model_users")
-      .select("account_id, email, plaintext_password")
-      .in("account_id", ids);
-    const map: Record<string, { email: string; password: string }> = {};
-    (data || []).forEach((row: any) => {
-      map[row.account_id] = { email: row.email || "", password: row.plaintext_password || "" };
-    });
-    setAccountLogins(map);
-  }, [modelAccounts]);
+      .select("email, plaintext_password")
+      .eq("model_id", selectedModelId)
+      .maybeSingle();
+    setCurrentModelLogin(data ? { email: (data as any).email || "", password: (data as any).plaintext_password || "" } : null);
+  }, [selectedModelId]);
+
 
 
   // ─── Delete model ───
@@ -1029,24 +1025,20 @@ export default function ModelDashboardTab() {
                 </p>
               </div>
               <div className="flex gap-1.5 shrink-0">
-                {modelAccounts.length > 0 && (
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      setRevealedLoginIds(new Set());
-                      setLoginsManagerOpen(true);
-                    }}
-                    className="text-xs gap-1.5 font-semibold bg-gradient-to-r from-accent to-accent/80 text-accent-foreground shadow-[0_0_12px_-2px_hsl(var(--accent)/0.6)] hover:shadow-[0_0_18px_-2px_hsl(var(--accent)/0.85)] hover:scale-[1.02] transition-all"
-                  >
-                    <KeyRound className="h-3 w-3" />
-                    Model-Logins
-                    {Object.keys(accountLogins).length > 0 && (
-                      <span className="ml-0.5 px-1.5 rounded-full bg-background/30 text-[10px]">
-                        {Object.keys(accountLogins).length}
-                      </span>
-                    )}
-                  </Button>
-                )}
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    setRevealManagerPw(false);
+                    setLoginsManagerOpen(true);
+                  }}
+                  className="text-xs gap-1.5 font-semibold bg-gradient-to-r from-accent to-accent/80 text-accent-foreground shadow-[0_0_12px_-2px_hsl(var(--accent)/0.6)] hover:shadow-[0_0_18px_-2px_hsl(var(--accent)/0.85)] hover:scale-[1.02] transition-all"
+                >
+                  <KeyRound className="h-3 w-3" />
+                  Model-Login
+                  {currentModelLogin && (
+                    <span className="ml-0.5 h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_hsl(142_76%_60%)]" />
+                  )}
+                </Button>
                 {modelAccounts.length < PLATFORMS.length && (
                   <Button
                     size="sm"
@@ -1773,15 +1765,6 @@ export default function ModelDashboardTab() {
                                         >
                                           <Pencil className="h-3 w-3" />
                                         </Button>
-                                        {accountLogins[acc.id] && (
-                                          <span
-                                            title="Model-Login aktiv – im 'Model-Logins'-Dialog verwalten"
-                                            className="inline-flex items-center gap-1 h-7 px-2 rounded-md text-[10px] text-accent bg-accent/10 border border-accent/30"
-                                          >
-                                            <KeyRound className="h-3 w-3" />
-                                            Login
-                                          </span>
-                                        )}
                                         <Button
                                           size="sm"
                                           variant="ghost"
@@ -2489,119 +2472,108 @@ export default function ModelDashboardTab() {
               Model-Logins · {selectedModel?.name}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-2">
+          <div className="space-y-3">
             <p className="text-xs text-muted-foreground">
+              Ein Login pro Model — gilt für <span className="text-accent font-medium">alle Plattformen</span> dieses Models.<br />
               Login-URL: <span className="text-foreground font-mono">{window.location.origin}/model/login</span>
             </p>
-            {modelAccounts.length === 0 && (
-              <p className="text-sm text-muted-foreground py-8 text-center">Keine Plattform-Accounts vorhanden.</p>
-            )}
-            {modelAccounts.map((acc) => {
-              const login = accountLogins[acc.id];
-              const revealed = revealedLoginIds.has(acc.id);
-              const isLoading = modelLoginLoading && loginAccountId === acc.id;
-              return (
-                <div key={acc.id} className="rounded-lg border border-border/40 bg-secondary/20 p-3 space-y-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-accent/15 text-accent border border-accent/30">
-                        {acc.platform}
-                      </span>
-                      <span className="text-xs text-muted-foreground truncate">{acc.account_email || "—"}</span>
+
+            {!currentModelLogin ? (
+              <div className="rounded-lg border border-dashed border-border/40 bg-secondary/10 p-6 text-center space-y-3">
+                <p className="text-sm text-muted-foreground">Noch kein Login für dieses Model.</p>
+                <Button
+                  onClick={generateModelLogin}
+                  disabled={modelLoginLoading || !selectedModelId}
+                  className="gap-2 bg-gradient-to-r from-accent to-accent/80 text-accent-foreground font-semibold shadow-[0_0_18px_-2px_hsl(var(--accent)/0.6)]"
+                >
+                  <Plus className="h-4 w-4" />
+                  {modelLoginLoading ? "Erstelle..." : "Model-Login generieren"}
+                </Button>
+              </div>
+            ) : (
+              <div className="rounded-lg border border-accent/30 bg-secondary/20 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_hsl(142_76%_60%)]" />
+                    Login aktiv
+                  </span>
+                  <div className="flex gap-1">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={resetModelLogin}
+                      disabled={modelLoginLoading}
+                      className="h-7 text-[10px] gap-1 text-accent hover:bg-accent/10"
+                    >
+                      <KeyRound className="h-3 w-3" />
+                      Reset
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={deleteModelLogin}
+                      className="h-7 text-[10px] text-destructive hover:bg-destructive/10"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <div className="flex items-center gap-1.5 px-2.5 py-2 rounded-md bg-background/40 border border-border/30 min-w-0">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[9px] uppercase tracking-wider text-muted-foreground">E-Mail</p>
+                      <p className="text-xs font-mono text-foreground truncate">{currentModelLogin.email || "—"}</p>
                     </div>
-                    {!login ? (
-                      <Button
-                        size="sm"
-                        onClick={() => generateModelLogin(acc.id)}
-                        disabled={isLoading}
-                        className="h-7 text-[10px] gap-1 bg-accent hover:bg-accent/90 text-accent-foreground"
+                    {currentModelLogin.email && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(currentModelLogin.email);
+                          toast.success("E-Mail kopiert");
+                        }}
+                        className="shrink-0 text-muted-foreground hover:text-accent"
                       >
-                        <Plus className="h-3 w-3" />
-                        {isLoading ? "..." : "Login erstellen"}
-                      </Button>
-                    ) : (
-                      <div className="flex gap-1">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => resetModelLogin(acc.id)}
-                          disabled={isLoading}
-                          className="h-7 text-[10px] gap-1 text-accent hover:bg-accent/10"
-                        >
-                          <KeyRound className="h-3 w-3" />
-                          Reset
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => deleteModelLogin(acc.id)}
-                          className="h-7 text-[10px] text-destructive hover:bg-destructive/10"
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
+                        <Copy className="h-3.5 w-3.5" />
+                      </button>
                     )}
                   </div>
-                  {login && (
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-md bg-background/40 border border-border/30 min-w-0">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[9px] uppercase tracking-wider text-muted-foreground">E-Mail</p>
-                          <p className="text-[11px] font-mono text-foreground truncate">{login.email}</p>
-                        </div>
+                  <div className="flex items-center gap-1.5 px-2.5 py-2 rounded-md bg-background/40 border border-border/30 min-w-0">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[9px] uppercase tracking-wider text-muted-foreground">Passwort</p>
+                      <p className="text-xs font-mono text-foreground truncate">
+                        {currentModelLogin.password ? (
+                          revealManagerPw ? currentModelLogin.password : "••••••••••••"
+                        ) : (
+                          <span className="italic text-muted-foreground/70">Reset für neues PW</span>
+                        )}
+                      </p>
+                    </div>
+                    {currentModelLogin.password && (
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => setRevealManagerPw((v) => !v)}
+                          className="shrink-0 text-muted-foreground hover:text-accent"
+                        >
+                          {revealManagerPw ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                        </button>
                         <button
                           type="button"
                           onClick={() => {
-                            navigator.clipboard.writeText(login.email);
-                            toast.success("E-Mail kopiert");
+                            navigator.clipboard.writeText(currentModelLogin.password);
+                            toast.success("Passwort kopiert");
                           }}
                           className="shrink-0 text-muted-foreground hover:text-accent"
                         >
-                          <Copy className="h-3 w-3" />
+                          <Copy className="h-3.5 w-3.5" />
                         </button>
-                      </div>
-                      <div className="flex items-center gap-1.5 px-2 py-1.5 rounded-md bg-background/40 border border-border/30 min-w-0">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[9px] uppercase tracking-wider text-muted-foreground">Passwort</p>
-                          <p className="text-[11px] font-mono text-foreground truncate">
-                            {login.password
-                              ? revealed
-                                ? login.password
-                                : "••••••••••••"
-                              : <span className="italic text-muted-foreground/70">Reset für neues PW</span>}
-                          </p>
-                        </div>
-                        {login.password && (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                const next = new Set(revealedLoginIds);
-                                next.has(acc.id) ? next.delete(acc.id) : next.add(acc.id);
-                                setRevealedLoginIds(next);
-                              }}
-                              className="shrink-0 text-muted-foreground hover:text-accent"
-                            >
-                              {revealed ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                navigator.clipboard.writeText(login.password);
-                                toast.success("Passwort kopiert");
-                              }}
-                              className="shrink-0 text-muted-foreground hover:text-accent"
-                            >
-                              <Copy className="h-3 w-3" />
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  )}
+                      </>
+                    )}
+                  </div>
                 </div>
-              );
-            })}
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>

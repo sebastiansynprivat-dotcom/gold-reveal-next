@@ -771,26 +771,29 @@ export type Database = {
       }
       model_users: {
         Row: {
-          account_id: string
+          account_id: string | null
           created_at: string
           email: string | null
           id: string
+          model_id: string | null
           plaintext_password: string | null
           user_id: string
         }
         Insert: {
-          account_id: string
+          account_id?: string | null
           created_at?: string
           email?: string | null
           id?: string
+          model_id?: string | null
           plaintext_password?: string | null
           user_id: string
         }
         Update: {
-          account_id?: string
+          account_id?: string | null
           created_at?: string
           email?: string | null
           id?: string
+          model_id?: string | null
           plaintext_password?: string | null
           user_id?: string
         }
@@ -800,6 +803,13 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "model_users_model_id_fkey"
+            columns: ["model_id"]
+            isOneToOne: false
+            referencedRelation: "models"
             referencedColumns: ["id"]
           },
         ]
