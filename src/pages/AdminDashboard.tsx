@@ -7338,23 +7338,8 @@ export default function AdminDashboard() {
                               size="sm"
                               className="h-6 w-6 p-0 text-muted-foreground hover:text-accent"
                               title={acc.is_manual ? "In Account-Pool verschieben" : "In Freie Accounts verschieben"}
-                              onClick={async () => {
-                                const target = acc.is_manual ? "Account-Pool" : "Freie Accounts";
-                                if (!window.confirm(`Account wirklich in "${target}" verschieben?`)) {
-                                  return;
-                                }
-                                const { error } = await supabase
-                                  .from("accounts")
-                                  .update({ is_manual: !acc.is_manual })
-                                  .eq("id", acc.id);
-                                if (error) {
-                                  toast.error("Verschieben fehlgeschlagen");
-                                  return;
-                                }
-                                toast.success(
-                                  acc.is_manual ? "→ Account-Pool" : "→ Freie Accounts",
-                                );
-                                loadAccounts();
+                              onClick={() => {
+                                setMoveConfirm({ id: acc.id, toPool: !acc.is_manual });
                               }}
                             >
                               <ArrowLeftRight className="h-3 w-3" />
