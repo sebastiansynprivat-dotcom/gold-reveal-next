@@ -105,11 +105,11 @@ export default function ModelProfileForm({ modelId, defaultAccountName }: Props)
       .upsert(profile, { onConflict: "model_id" });
     setSaving(false);
     if (error) {
-      toast.error("Speichern fehlgeschlagen");
+      toast.error("Failed to save");
       return;
     }
     setSavedAt(Date.now());
-    toast.success("Steckbrief gespeichert");
+    toast.success("Profile saved");
     setTimeout(() => setSavedAt(null), 2500);
   };
 
