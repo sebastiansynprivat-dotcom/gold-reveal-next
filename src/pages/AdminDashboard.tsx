@@ -7793,16 +7793,19 @@ export default function AdminDashboard() {
               />
             </div>
 
-            {/* Free accounts grouped by source */}
+            {/* Free + already-assigned accounts grouped by source */}
             {(() => {
+              const chatterById = new Map(chatters.map((c) => [c.user_id, c]));
               const freeAccs = accounts.filter((a) => {
-                if (a.assigned_to) return false;
+                if (a.assigned_to === reassignTarget?.user_id) return false;
                 if (reassignSearchQuery.trim()) {
                   const q = reassignSearchQuery.toLowerCase();
+                  const owner = a.assigned_to ? chatterById.get(a.assigned_to) : null;
                   return (
                     a.account_email?.toLowerCase().includes(q) ||
                     a.account_domain?.toLowerCase().includes(q) ||
-                    a.folder_name?.toLowerCase().includes(q)
+                    a.folder_name?.toLowerCase().includes(q) ||
+                    (owner?.group_name || "").toLowerCase().includes(q)
                   );
                 }
                 return true;
@@ -7813,7 +7816,7 @@ export default function AdminDashboard() {
                     <div className="h-10 w-10 rounded-full bg-muted/50 flex items-center justify-center mx-auto mb-3">
                       <Package className="h-5 w-5 text-muted-foreground opacity-40" />
                     </div>
-                    <p className="text-xs text-muted-foreground">Keine freien Accounts verfügbar</p>
+                    <p className="text-xs text-muted-foreground">Keine Accounts verfügbar</p>
                   </div>
                 );
               }
@@ -7828,10 +7831,20 @@ export default function AdminDashboard() {
                 <div className="divide-y divide-border/30 rounded-xl overflow-hidden border border-border/30 glass-card-subtle">
                   {accs
                     .filter((a) => a.platform === platform)
-                    .map((acc) => (
+                    .map((acc) => {
+                      const owner = acc.assigned_to ? chatterById.get(acc.assigned_to) : null;
+                      return (
                       <button
                         key={acc.id}
-                        onClick={() => reassignAccount(acc.id)}
+                        onClick={() => {
+                          if (owner) {
+                            const ok = window.confirm(
+                              `Dieser Account ist aktuell ${owner.group_name || "einem Chatter"} zugewiesen. Wirklich übertragen?`,
+                            );
+                            if (!ok) return;
+                          }
+                          reassignAccount(acc.id);
+                        }}
                         disabled={reassigning}
                         className="w-full p-3 text-left hover:bg-accent/5 transition-all duration-200 disabled:opacity-50 group/item"
                       >
@@ -7842,13 +7855,22 @@ export default function AdminDashboard() {
                                 {acc.account_email}
                               </p>
                             </div>
-                            <div className="flex items-center gap-1.5">
+                            <div className="flex items-center gap-1.5 flex-wrap">
                               {acc.account_domain && (
                                 <p className="text-[10px] text-muted-foreground truncate">{acc.account_domain}</p>
                               )}
                               <Badge variant="secondary" className="text-[8px] px-1 py-0 shrink-0">
                                 {acc.model_language === "en" ? "🇬🇧" : "🇩🇪"}
                               </Badge>
+                              {owner ? (
+                                <Badge className="text-[8px] px-1 py-0 shrink-0 bg-amber-500/15 text-amber-400 border-amber-500/30">
+                                  → {owner.group_name || owner.telegram_id || "Chatter"}
+                                </Badge>
+                              ) : (
+                                <Badge className="text-[8px] px-1 py-0 shrink-0 bg-emerald-500/15 text-emerald-400 border-emerald-500/30">
+                                  frei
+                                </Badge>
+                              )}
                             </div>
                           </div>
                           <div className="h-7 w-7 rounded-lg bg-accent/10 flex items-center justify-center shrink-0 group-hover/item:bg-accent/20 group-hover/item:scale-110 transition-all duration-200">
@@ -7856,7 +7878,8 @@ export default function AdminDashboard() {
                           </div>
                         </div>
                       </button>
-                    ))}
+                      );
+                    })}
                 </div>
               );
 
