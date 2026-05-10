@@ -221,7 +221,7 @@ export default function ModelProfileForm({ modelId, defaultAccountName }: Props)
           className="bg-gradient-to-r from-accent to-accent/80 text-accent-foreground font-semibold shadow-[0_0_20px_-4px_hsl(var(--accent)/0.6)] hover:scale-[1.03] transition-transform"
         >
           {savedAt ? <Check className="h-4 w-4 mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-          {saving ? "Speichern…" : savedAt ? "Gespeichert" : "Steckbrief speichern"}
+          {saving ? "Saving…" : savedAt ? "Saved" : "Save profile"}
         </Button>
       </div>
     </motion.div>
