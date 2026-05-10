@@ -1025,24 +1025,20 @@ export default function ModelDashboardTab() {
                 </p>
               </div>
               <div className="flex gap-1.5 shrink-0">
-                {modelAccounts.length > 0 && (
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      setRevealedLoginIds(new Set());
-                      setLoginsManagerOpen(true);
-                    }}
-                    className="text-xs gap-1.5 font-semibold bg-gradient-to-r from-accent to-accent/80 text-accent-foreground shadow-[0_0_12px_-2px_hsl(var(--accent)/0.6)] hover:shadow-[0_0_18px_-2px_hsl(var(--accent)/0.85)] hover:scale-[1.02] transition-all"
-                  >
-                    <KeyRound className="h-3 w-3" />
-                    Model-Logins
-                    {Object.keys(accountLogins).length > 0 && (
-                      <span className="ml-0.5 px-1.5 rounded-full bg-background/30 text-[10px]">
-                        {Object.keys(accountLogins).length}
-                      </span>
-                    )}
-                  </Button>
-                )}
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    setRevealManagerPw(false);
+                    setLoginsManagerOpen(true);
+                  }}
+                  className="text-xs gap-1.5 font-semibold bg-gradient-to-r from-accent to-accent/80 text-accent-foreground shadow-[0_0_12px_-2px_hsl(var(--accent)/0.6)] hover:shadow-[0_0_18px_-2px_hsl(var(--accent)/0.85)] hover:scale-[1.02] transition-all"
+                >
+                  <KeyRound className="h-3 w-3" />
+                  Model-Login
+                  {currentModelLogin && (
+                    <span className="ml-0.5 h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_hsl(142_76%_60%)]" />
+                  )}
+                </Button>
                 {modelAccounts.length < PLATFORMS.length && (
                   <Button
                     size="sm"
