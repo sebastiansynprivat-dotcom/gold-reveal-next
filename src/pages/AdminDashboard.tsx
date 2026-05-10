@@ -7687,6 +7687,7 @@ export default function AdminDashboard() {
             setReassignTarget(null);
             setReassignOpenFolder(null);
             setReassignPoolSectionOpen(false);
+            setReassignOpenPoolPlatform(null);
             setReassignManualSectionOpen(false);
             setReassignSearchQuery("");
           }
