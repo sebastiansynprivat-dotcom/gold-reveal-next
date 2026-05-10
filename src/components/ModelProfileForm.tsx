@@ -105,11 +105,11 @@ export default function ModelProfileForm({ modelId, defaultAccountName }: Props)
       .upsert(profile, { onConflict: "model_id" });
     setSaving(false);
     if (error) {
-      toast.error("Speichern fehlgeschlagen");
+      toast.error("Failed to save");
       return;
     }
     setSavedAt(Date.now());
-    toast.success("Steckbrief gespeichert");
+    toast.success("Profile saved");
     setTimeout(() => setSavedAt(null), 2500);
   };
 
@@ -134,10 +134,10 @@ export default function ModelProfileForm({ modelId, defaultAccountName }: Props)
           <User className="h-5 w-5 text-accent" />
         </div>
         <div className="flex-1 min-w-0">
-          <h2 className="text-lg font-bold text-foreground">Steckbrief</h2>
+          <h2 className="text-lg font-bold text-foreground">Profile</h2>
           <p className="text-sm text-muted-foreground">
-            Fülle dein Profil aus — diese Infos helfen den Chattern, dich authentisch zu repräsentieren.
-            Du kannst echte Infos, fake oder eine Mischung verwenden.
+            Fill out your profile — this info helps the chatters represent you authentically.
+            You can use real info, fake or a mix of both.
           </p>
         </div>
       </div>
@@ -174,7 +174,7 @@ export default function ModelProfileForm({ modelId, defaultAccountName }: Props)
           value={profile.content_preferences ?? ""}
           onChange={(e) => set("content_preferences", e.target.value)}
           className="bg-background/50 min-h-[100px]"
-          placeholder="z.B. Solo, Toys, Lingerie, …"
+          placeholder="e.g. Solo, Toys, Lingerie, …"
         />
       </section>
 
@@ -186,13 +186,13 @@ export default function ModelProfileForm({ modelId, defaultAccountName }: Props)
         </div>
         <Label className="text-xs text-muted-foreground">
           Things you don't want to do on camera (so the chatter won't tease them).
-          Beispiele: Anal fingering, Anal plug, Anal penetration, Squirt, Orgasm/moaning a special name, Roleplay in costumes, Extras
+          Examples: Anal fingering, Anal plug, Anal penetration, Squirt, Orgasm/moaning a special name, Roleplay in costumes, Extras
         </Label>
         <Textarea
           value={profile.no_gos ?? ""}
           onChange={(e) => set("no_gos", e.target.value)}
           className="bg-background/50 min-h-[120px]"
-          placeholder="Liste deine No-Gos hier auf…"
+          placeholder="List your no-gos here…"
         />
       </section>
 
@@ -221,7 +221,7 @@ export default function ModelProfileForm({ modelId, defaultAccountName }: Props)
           className="bg-gradient-to-r from-accent to-accent/80 text-accent-foreground font-semibold shadow-[0_0_20px_-4px_hsl(var(--accent)/0.6)] hover:scale-[1.03] transition-transform"
         >
           {savedAt ? <Check className="h-4 w-4 mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-          {saving ? "Speichern…" : savedAt ? "Gespeichert" : "Steckbrief speichern"}
+          {saving ? "Saving…" : savedAt ? "Saved" : "Save profile"}
         </Button>
       </div>
     </motion.div>
