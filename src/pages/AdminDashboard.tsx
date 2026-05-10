@@ -5673,6 +5673,79 @@ export default function AdminDashboard() {
                                       </button>
                                     </div>
 
+                                    {/* Posting Behavior (Placeholder — alle Plattformen) */}
+                                    <div className="glass-card-subtle rounded-xl p-4 space-y-3 border border-border/40">
+                                      <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-[9px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-red-500/15 text-red-400 border border-red-500/30">
+                                            Media Not Found
+                                          </span>
+                                        </div>
+                                        <button
+                                          type="button"
+                                          disabled
+                                          className="text-[10px] font-semibold px-2.5 py-1 rounded-md bg-red-500/80 text-white opacity-70 cursor-not-allowed"
+                                        >
+                                          Reset Media
+                                        </button>
+                                      </div>
+
+                                      <h3 className="text-sm font-bold text-foreground">
+                                        Edit [{acc.account_email}] Posting Behavior
+                                      </h3>
+
+                                      <div className="flex items-center gap-2">
+                                        <Switch checked={false} disabled />
+                                        <span className="text-[11px] font-semibold text-muted-foreground">OFF</span>
+                                      </div>
+
+                                      <div className="text-[11px] text-foreground">
+                                        <span className="font-semibold">Posts Per Day:</span>{" "}
+                                        <span className="text-muted-foreground">4</span>
+                                      </div>
+
+                                      <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px]">
+                                        <div className="text-muted-foreground">
+                                          <span className="font-semibold text-foreground">Active Media:</span> —
+                                        </div>
+                                        <div className="text-muted-foreground">
+                                          <span className="font-semibold text-foreground">Posted Media:</span> —
+                                        </div>
+                                        <div className="text-muted-foreground">
+                                          <span className="font-semibold text-foreground">Failed Media:</span> —
+                                        </div>
+                                        <div className="text-muted-foreground">
+                                          <span className="font-semibold text-foreground">Remaining Media:</span> —
+                                        </div>
+                                      </div>
+
+                                      <div className="pt-1">
+                                        <p className="text-[11px] font-semibold text-foreground mb-1.5">Last 7 days</p>
+                                        <div className="rounded-lg border border-border/40 overflow-hidden">
+                                          <div className="grid grid-cols-[80px_1fr] text-[10px]">
+                                            <div className="bg-secondary/30 px-2 py-1.5 uppercase tracking-wider text-muted-foreground font-semibold border-b border-border/30">
+                                              Dates
+                                            </div>
+                                            <div className="px-2 py-1.5 text-center font-semibold text-foreground border-b border-border/30">
+                                              No Data found.
+                                            </div>
+                                            <div className="bg-secondary/30 px-2 py-1.5 uppercase tracking-wider text-muted-foreground font-semibold border-b border-border/30">
+                                              Posts
+                                            </div>
+                                            <div className="px-2 py-1.5 text-center text-muted-foreground border-b border-border/30">
+                                              No Data found.
+                                            </div>
+                                            <div className="bg-secondary/30 px-2 py-1.5 uppercase tracking-wider text-muted-foreground font-semibold">
+                                              Failed
+                                            </div>
+                                            <div className="px-2 py-1.5 text-center text-muted-foreground">
+                                              No Data found.
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+
                                     {/* Bot Message + Follow-up + Save + Aktiv — only for Maloum */}
                                     {acc.platform === "Maloum" && (
                                       <>
