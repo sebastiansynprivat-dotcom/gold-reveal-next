@@ -447,6 +447,30 @@ export default function ModelDashboardTab() {
       });
   }, [selectedModelId]);
 
+  // Load model profile (Steckbrief) for selected model
+  useEffect(() => {
+    if (!selectedModelId) {
+      setModelProfile(null);
+      return;
+    }
+    supabase
+      .from("model_profiles" as any)
+      .select("*")
+      .eq("model_id", selectedModelId)
+      .maybeSingle()
+      .then(({ data }) => setModelProfile((data as any) || null));
+  }, [selectedModelId]);
+
+  // Load list of model_ids that have a profile (for the list badge)
+  useEffect(() => {
+    supabase
+      .from("model_profiles" as any)
+      .select("model_id")
+      .then(({ data }) => {
+        if (data) setFilledProfileIds(new Set((data as any[]).map((r) => r.model_id)));
+      });
+  }, [selectedModelId]);
+
 
 
   // ─── Filter models ───
