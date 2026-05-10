@@ -53,6 +53,7 @@ import {
   ChevronLeft,
   PanelLeft,
   Menu,
+  ArrowLeftRight,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
