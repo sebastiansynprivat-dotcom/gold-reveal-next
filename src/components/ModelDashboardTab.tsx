@@ -1773,15 +1773,15 @@ export default function ModelDashboardTab() {
                                         >
                                           <Pencil className="h-3 w-3" />
                                         </Button>
-                                        <Button
-                                          size="sm"
-                                          onClick={() => generateModelLogin(acc.id)}
-                                          disabled={modelLoginLoading && loginAccountId === acc.id}
-                                          className="h-7 px-2.5 text-[10px] gap-1 font-semibold bg-gradient-to-r from-accent to-accent/80 text-accent-foreground shadow-[0_0_12px_-2px_hsl(var(--accent)/0.6)] hover:shadow-[0_0_18px_-2px_hsl(var(--accent)/0.8)] hover:scale-[1.03] transition-all"
-                                        >
-                                          <KeyRound className="h-3 w-3" />
-                                          Model-Login
-                                        </Button>
+                                        {accountLogins[acc.id] && (
+                                          <span
+                                            title="Model-Login aktiv – im 'Model-Logins'-Dialog verwalten"
+                                            className="inline-flex items-center gap-1 h-7 px-2 rounded-md text-[10px] text-accent bg-accent/10 border border-accent/30"
+                                          >
+                                            <KeyRound className="h-3 w-3" />
+                                            Login
+                                          </span>
+                                        )}
                                         <Button
                                           size="sm"
                                           variant="ghost"
