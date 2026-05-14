@@ -1,42 +1,18 @@
-## Problem
+## Plan: "Collect Exchange ID" → "TX Hash" zurückbenennen
 
-Im "Accounts verwalten"-Dialog (RefreshCw beim Chatter) wird aktuell nur der Bereich **Freie Accounts** (manuell hinzugefügte) gerendert. Die hunderten Accounts aus den **Account-Pools** (`is_manual = false`) werden bereits in `poolAccounts` / `poolPlatforms` berechnet, aber nirgends angezeigt — daher siehst du nur "1 frei".
+Alle Vorkommen im Code auf Provider Invoices und zugehörigen UIs zurück auf `TX Hash` ändern.
 
-## Lösung
+**Änderungen:**
 
-Im Dialog (`src/pages/AdminDashboard.tsx`, ~Zeile 7886) **oberhalb** der Sektion "Freie Accounts" eine neue Sektion **"Account-Pools"** hinzufügen — analog gestylt, aber mit goldenem statt gelbem Indikator zur Unterscheidung.
+1. `src/lib/providerInvoicePdf.ts` (Zeile 160)
+   - `Collect Exchange ID: ...` → `TX Hash: ...`
 
-### Aufbau
+2. `src/components/CreditNoteForm.tsx`
+   - Zeile 631 (PDF-Output): `Collect Exchange ID: ...` → `TX Hash: ...`
+   - Zeile 1089 (Label): `Collect Exchange ID` → `TX Hash`
+   - Zeile 1091 (Input placeholder): `Collect Exchange ID` → `TX Hash`
 
-```text
-ACCOUNT ZUWEISEN
-[Suchfeld]
+3. `src/components/ModelBillingInfo.tsx` (Zeile 124)
+   - Listeneintrag `Collect Exchange ID` → `TX Hash`
 
-▸ ● ACCOUNT-POOLS                    [387 verfügbar]
-   Maloum  (224)
-     [Liste klickbarer Accounts mit Owner-Badge]
-   Brezzels (101)
-     ...
-   4Based (62)
-     ...
-
-▸ ● FREIE ACCOUNTS                       [1 frei]
-   ...
-```
-
-### Verhalten
-
-- Klick auf Pool-Account → `reassignAccount(acc.id)` (existierende Funktion, kann sowohl freie als auch fremd-zugewiesene Accounts übertragen — Bestätigung-Dialog ist schon implementiert)
-- Sektion standardmäßig zugeklappt (eigener State `reassignPoolSectionOpen`, existiert bereits laut grep auf Zeile 795)
-- Suche filtert beide Sektionen gleichzeitig (Filter bereits in `freeAccs` aktiv)
-- Owner-Badge "→ Chatter X" / "frei" wird bereits über `renderAccountList` mitgerendert
-- Pool-Accounts haben i.d.R. **keine** `folder_name` → einfache Platform-Gruppierung via `renderAccountList(poolAccounts, platform)` reicht
-
-### Technische Details
-
-- Datei: `src/pages/AdminDashboard.tsx`, Insert nach Zeile 7887 (`<div className="space-y-4">`)
-- Neue Sektion nutzt bereits vorhandenes `setReassignPoolSectionOpen` State
-- Indikator-Farbe: `bg-accent` (Gold) für Pools vs. `bg-amber-400` (gelb) für Freie Accounts
-- Reuse bestehender `renderAccountList(poolAccounts, platform)` Helper
-
-Keine DB-Änderungen, kein neues Backend, rein UI.
+Keine DB-Änderungen nötig (Spaltenname `tx_hash` bleibt).

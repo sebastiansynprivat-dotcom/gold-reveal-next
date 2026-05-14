@@ -157,7 +157,7 @@ export function generateProviderInvoicePdf(d: ProviderInvoiceData): jsPDF {
     if (p.bankBic) { doc.text(`BIC/SWIFT: ${p.bankBic}`, m, y); y += 4.5; }
     if (p.bankName) { doc.text(`Bank: ${p.bankName}`, m, y); y += 4.5; }
     if (p.wallet) { doc.text(`Receiver Wallet: ${p.wallet}`, m, y); y += 4.5; }
-    if (p.txHash) { doc.text(`Collect Exchange ID: ${p.txHash}`, m, y); y += 4.5; }
+    if (p.txHash) { doc.text(`TX Hash: ${p.txHash}`, m, y); y += 4.5; }
     if (p.paymentDate) { doc.text(`Payment Date: ${format(new Date(p.paymentDate), "dd.MM.yyyy")}`, m, y); y += 4.5; }
     y += 6;
   }
