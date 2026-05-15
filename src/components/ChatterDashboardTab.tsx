@@ -616,6 +616,8 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
                   <label className="text-xs font-medium text-muted-foreground">Plattform</label>
                   <div className="input-gold-shimmer rounded-lg">
                     <Input value={selected.platform} onChange={e => updateSelected({ platform: e.target.value })} className="text-sm border-transparent" />
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
