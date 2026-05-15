@@ -1062,8 +1062,8 @@ export default function AdminDashboard() {
     const map = usernameAgencyMapRef.current;
     let sum = 0;
     for (const [user, vals] of Object.entries(data as Record<string, unknown>)) {
-      const agency = map[String(user).trim().toLowerCase()] || "shex";
-      if (agency !== filter) continue;
+      const agency = map[String(user).trim().toLowerCase()];
+      if (!agency || agency !== filter) continue;
       if (Array.isArray(vals)) {
         for (const v of vals) sum += Number(v) || 0;
       }
