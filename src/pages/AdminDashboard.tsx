@@ -983,7 +983,8 @@ export default function AdminDashboard() {
   }
 
   type RevenueSnapshot = { total: CurrentTotal; range: RootData; totalEarnings: number };
-  type RevenueRow = { date: string; platform: string; revenue_today: number | null };
+  type AgencyFilter = "all" | "shex" | "syn";
+  type RevenueRow = { date: string; platform: string; revenue_today: number | null; data?: Record<string, number[]> | null };
 
   const emptyRevenueRange = (): RootData => ({ maloum: [], brezzels: [], "4based": [] });
 
