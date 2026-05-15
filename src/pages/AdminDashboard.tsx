@@ -3181,6 +3181,38 @@ export default function AdminDashboard() {
                     </div>
                   </motion.div>
 
+                  {/* Agency Filter (SheX / SYN) */}
+                  <motion.div variants={{ hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0 } }} className="overflow-x-auto scrollbar-none -mx-4 px-4">
+                    <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-secondary/40 backdrop-blur-sm border border-border/30 relative">
+                      <span className="px-2 text-[9px] uppercase tracking-[0.18em] text-muted-foreground font-bold">Agentur</span>
+                      {([
+                        { key: "all", label: "Alle" },
+                        { key: "shex", label: "SheX" },
+                        { key: "syn", label: "SYN" },
+                      ] as { key: AgencyFilter; label: string }[]).map((opt) => (
+                        <button
+                          key={opt.key}
+                          onClick={() => setAgencyFilter(opt.key)}
+                          className={cn(
+                            "relative px-3 py-1.5 rounded-lg text-xs font-medium transition-colors duration-200 whitespace-nowrap z-10",
+                            agencyFilter === opt.key ? "text-accent-foreground" : "text-muted-foreground hover:text-foreground",
+                          )}
+                        >
+                          {agencyFilter === opt.key && (isMobileRevenueView ? (
+                            <div className="absolute inset-0 bg-accent rounded-lg shadow-md shadow-accent/20" />
+                          ) : (
+                            <motion.div
+                              layoutId="activeAgencyFilter"
+                              className="absolute inset-0 bg-accent rounded-lg shadow-md shadow-accent/30"
+                              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                            />
+                          ))}
+                          <span className="relative z-10">{opt.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+
                   {timeFilter === "custom" && (
                     <div className="flex gap-2 items-center glass-card-subtle rounded-xl p-3">
                       <Popover>
