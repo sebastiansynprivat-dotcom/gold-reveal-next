@@ -628,7 +628,7 @@ export default function CreditNoteForm({
           y += 4.5;
         }
         if (txHash) {
-          doc.text(`TX Hash: ${txHash}`, m, y);
+          doc.text(`TxHash: ${txHash}`, m, y);
           y += 4.5;
         }
       }
@@ -1086,9 +1086,9 @@ export default function CreditNoteForm({
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">TX Hash</Label>
+              <Label className="text-xs text-muted-foreground">TxHash:</Label>
               <div className="input-gold-shimmer rounded-lg">
-                <Input value={txHash} onChange={e => setTxHash(e.target.value)} placeholder="TX Hash" className="text-sm border-transparent font-mono text-xs" />
+                <Input value={txHash} onChange={e => setTxHash(e.target.value)} placeholder="TxHash" className="text-sm border-transparent font-mono text-xs" />
               </div>
             </div>
           </>
