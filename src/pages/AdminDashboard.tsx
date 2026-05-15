@@ -985,7 +985,7 @@ export default function AdminDashboard() {
   type RevenueSnapshot = { total: CurrentTotal; range: RootData; totalEarnings: number };
   type AgencyFilter = "all" | "shex" | "syn";
   type RevenueRow = { date: string; platform: string; revenue_today: number | null; data?: Record<string, number[]> | null };
-  const normalizeAgency = (value: unknown): AgencyFilter | null => {
+  const normalizeAgency = (value: unknown): "shex" | "syn" | null => {
     const normalized = String(value || "").trim().toLowerCase();
     return normalized === "shex" || normalized === "syn" ? normalized : null;
   };
