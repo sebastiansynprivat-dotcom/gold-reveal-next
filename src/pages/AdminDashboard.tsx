@@ -1094,19 +1094,19 @@ export default function AdminDashboard() {
     const total = platforms.reduce((acc, platform) => {
       const platformRows = rowsForRange.filter((r) => r.platform === platform);
       const value = f === "heute" || f === "gestern"
-        ? Number(platformRows.at(f === "heute" ? -1 : -2)?.revenue_today || 0)
-        : platformRows.reduce((sum, r) => sum + Number(r.revenue_today || 0), 0);
+        ? effectiveRevenue(platformRows.at(f === "heute" ? -1 : -2))
+        : platformRows.reduce((sum, r) => sum + effectiveRevenue(r), 0);
       return { ...acc, [platform]: value };
     }, {} as CurrentTotal);
     const range = platforms.reduce((acc, platform) => ({
       ...acc,
       [platform]: rowsForRange
         .filter((r) => r.platform === platform)
-        .map((r) => ({ date: r.date, total: Number(r.revenue_today || 0) }))
+        .map((r) => ({ date: r.date, total: effectiveRevenue(r) }))
         .slice(f === "gestern" ? -3 : f === "heute" ? -7 : undefined),
     }), {} as RootData);
     return { total, range, totalEarnings: total.maloum + total.brezzels + total["4based"] };
-  }, []);
+  }, [effectiveRevenue]);
 
   const rebuildStandardRevenueCache = useCallback((rows: RevenueRow[]) => {
     revenueRowsRef.current = rows;
