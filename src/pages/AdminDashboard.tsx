@@ -1354,7 +1354,7 @@ export default function AdminDashboard() {
     const fromDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
     const { data } = await supabase
       .from("revenue_report")
-      .select("date, platform, revenue_today")
+      .select("date, platform, revenue_today, data")
       .lte("date", todayDate)
       .gte("date", fromDate)
       .order("date", { ascending: true });
