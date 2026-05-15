@@ -203,6 +203,11 @@ export default function CreditNoteForm({
   const providerHydratedRef = useRef(false);
   const invoiceSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const invoiceHydratedRef = useRef(false);
+  const onProviderDataChangeRef = useRef(onProviderDataChange);
+  const onInvoiceDataChangeRef = useRef(onInvoiceDataChange);
+
+  useEffect(() => { onProviderDataChangeRef.current = onProviderDataChange; }, [onProviderDataChange]);
+  useEffect(() => { onInvoiceDataChangeRef.current = onInvoiceDataChange; }, [onInvoiceDataChange]);
 
   // Re-hydrate when switching between chatters/models
   useEffect(() => {
@@ -230,7 +235,7 @@ export default function CreditNoteForm({
           provider_vat_id: providerVatId,
           provider_name_override: providerName,
         }).eq("id", providerEntityId);
-        onProviderDataChange?.({
+        onProviderDataChangeRef.current?.({
           providerNameOverride: providerName,
           providerAddress,
           providerIsBusiness: isBusiness,
@@ -239,7 +244,7 @@ export default function CreditNoteForm({
       } catch { /* silent */ }
     }, 800);
     return () => { if (providerSaveTimerRef.current) clearTimeout(providerSaveTimerRef.current); };
-  }, [providerName, providerAddress, isBusiness, providerVatId, providerEntityType, providerEntityId, onProviderDataChange]);
+  }, [providerName, providerAddress, isBusiness, providerVatId, providerEntityType, providerEntityId]);
 
   // Metadata – default service period = previous month
   const lastMonth = subMonths(new Date(), 1);
@@ -365,7 +370,7 @@ export default function CreditNoteForm({
       };
       try {
         await (supabase.from as any)(table).update(payload).eq("id", providerEntityId);
-        onInvoiceDataChange?.({
+        onInvoiceDataChangeRef.current?.({
           invoiceDescription: description,
           invoiceNetAmount: payload.invoice_net_amount,
           invoiceCurrency,
@@ -383,7 +388,7 @@ export default function CreditNoteForm({
     return () => { if (invoiceSaveTimerRef.current) clearTimeout(invoiceSaveTimerRef.current); };
   }, [
     description, netAmount, invoiceCurrency, servicePeriodStart, servicePeriodEnd, paymentDate, cryptoNetwork,
-    cryptoCoin, txHash, exchangeRate, receiverWallet, providerEntityType, providerEntityId, onInvoiceDataChange,
+    cryptoCoin, txHash, exchangeRate, receiverWallet, providerEntityType, providerEntityId,
   ]);
 
   // Calculations
