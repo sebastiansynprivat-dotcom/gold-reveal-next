@@ -272,6 +272,30 @@ export default function CreditNoteForm({
   // Invoice display currency (the currency the invoice is actually issued in)
   const [invoiceCurrency, setInvoiceCurrency] = useState<string>(initialInvoiceCurrency || saved.invoiceCurrency || saved.targetCurrency || currency);
 
+  useEffect(() => {
+    invoiceHydratedRef.current = false;
+    const s = (initialInvoiceDescription || saved.description || "").trim();
+    const legacy = ["Revenue share payout", "Revenue share", "Revenue share –", "Revenue share -"];
+    setDescription(!s || legacy.some(l => s.toLowerCase().startsWith(l.toLowerCase())) ? defaultDescription : s);
+    setNetAmount(initialInvoiceNetAmount > 0 ? initialInvoiceNetAmount.toFixed(2) : suggestedAmount > 0 ? suggestedAmount.toFixed(2) : "");
+    setServicePeriodStart(initialInvoiceServicePeriodStart || format(startOfMonth(lastMonth), "yyyy-MM-dd"));
+    setServicePeriodEnd(initialInvoiceServicePeriodEnd || format(endOfMonth(lastMonth), "yyyy-MM-dd"));
+    setCryptoNetwork(initialInvoiceCryptoNetwork || saved.cryptoNetwork || "TRC20");
+    setCryptoCoin(initialInvoiceCryptoCoin || saved.cryptoCoin || "USDT");
+    setTxHash(initialInvoiceTxHash || saved.txHash || "");
+    setReceiverWallet(initialInvoiceReceiverWallet || saved.receiverWallet || cryptoAddress || "");
+    setExchangeRate(initialInvoiceExchangeRate || saved.exchangeRate || "");
+    setPaymentDate(initialInvoicePaymentDate || format(new Date(), "yyyy-MM-dd"));
+    setInvoiceCurrency(initialInvoiceCurrency || saved.invoiceCurrency || saved.targetCurrency || currency);
+    const t = setTimeout(() => { invoiceHydratedRef.current = true; }, 50);
+    return () => clearTimeout(t);
+  }, [
+    providerEntityId, providerEntityType, storageKey, defaultDescription, suggestedAmount, currency, cryptoAddress,
+    initialInvoiceDescription, initialInvoiceNetAmount, initialInvoiceCurrency, initialInvoiceServicePeriodStart,
+    initialInvoiceServicePeriodEnd, initialInvoicePaymentDate, initialInvoiceCryptoNetwork, initialInvoiceCryptoCoin,
+    initialInvoiceTxHash, initialInvoiceExchangeRate, initialInvoiceReceiverWallet,
+  ]);
+
   // Fetch live exchange rate from chatter `currency` to selected `invoiceCurrency`
   useEffect(() => {
     let cancelled = false;
@@ -314,11 +338,53 @@ export default function CreditNoteForm({
   useEffect(() => {
     const timer = setTimeout(() => {
       localStorage.setItem(storageKey, JSON.stringify({
-        description, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet, invoiceCurrency,
+        description, netAmount, servicePeriodStart, servicePeriodEnd, paymentDate, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet, invoiceCurrency,
       }));
     }, 500);
     return () => clearTimeout(timer);
-  }, [description, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet, invoiceCurrency, storageKey]);
+  }, [description, netAmount, servicePeriodStart, servicePeriodEnd, paymentDate, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet, invoiceCurrency, storageKey]);
+
+  useEffect(() => {
+    if (!providerEntityType || !providerEntityId) return;
+    if (!invoiceHydratedRef.current) return;
+    if (invoiceSaveTimerRef.current) clearTimeout(invoiceSaveTimerRef.current);
+    invoiceSaveTimerRef.current = setTimeout(async () => {
+      const table = providerEntityType === "chatter" ? "chatters" : "models";
+      const payload = {
+        invoice_description: description,
+        invoice_net_amount: parseFloat(netAmount.replace(",", ".")) || 0,
+        invoice_currency: invoiceCurrency,
+        invoice_service_period_start: servicePeriodStart || null,
+        invoice_service_period_end: servicePeriodEnd || null,
+        invoice_payment_date: paymentDate || null,
+        invoice_crypto_network: cryptoNetwork,
+        invoice_crypto_coin: cryptoCoin,
+        invoice_tx_hash: txHash,
+        invoice_exchange_rate: exchangeRate,
+        invoice_receiver_wallet: receiverWallet,
+      };
+      try {
+        await (supabase.from as any)(table).update(payload).eq("id", providerEntityId);
+        onInvoiceDataChange?.({
+          invoiceDescription: description,
+          invoiceNetAmount: payload.invoice_net_amount,
+          invoiceCurrency,
+          invoiceServicePeriodStart: servicePeriodStart,
+          invoiceServicePeriodEnd: servicePeriodEnd,
+          invoicePaymentDate: paymentDate,
+          invoiceCryptoNetwork: cryptoNetwork,
+          invoiceCryptoCoin: cryptoCoin,
+          invoiceTxHash: txHash,
+          invoiceExchangeRate: exchangeRate,
+          invoiceReceiverWallet: receiverWallet,
+        });
+      } catch { /* silent */ }
+    }, 800);
+    return () => { if (invoiceSaveTimerRef.current) clearTimeout(invoiceSaveTimerRef.current); };
+  }, [
+    description, netAmount, invoiceCurrency, servicePeriodStart, servicePeriodEnd, paymentDate, cryptoNetwork,
+    cryptoCoin, txHash, exchangeRate, receiverWallet, providerEntityType, providerEntityId, onInvoiceDataChange,
+  ]);
 
   // Calculations
   const net = parseFloat(netAmount.replace(",", ".")) || 0;
