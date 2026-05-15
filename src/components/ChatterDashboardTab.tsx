@@ -194,6 +194,7 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
         provider_address: chatter.providerAddress,
         provider_is_business: chatter.providerIsBusiness,
         provider_vat_id: chatter.providerVatId,
+        provider_name_override: chatter.providerNameOverride,
       })
       .eq("id", chatter.id);
 
