@@ -50,6 +50,19 @@ interface Chatter {
   providerIsBusiness: boolean;
   providerVatId: string;
   providerNameOverride: string;
+  invoiceDescription: string;
+  invoiceNetAmount: number;
+  invoiceCurrency: string;
+  invoiceServicePeriodStart: string | null;
+  invoiceServicePeriodEnd: string | null;
+  invoicePaymentDate: string | null;
+  invoiceCryptoNetwork: string;
+  invoiceCryptoCoin: string;
+  invoiceTxHash: string;
+  invoiceExchangeRate: string;
+  invoiceReceiverWallet: string;
+  invoiceLastCreditNoteNumber: string;
+  invoiceLastGeneratedAt: string | null;
 }
 
 // Map DB row to local interface
@@ -80,6 +93,19 @@ function rowToChatter(row: any): Chatter {
     providerIsBusiness: row.provider_is_business || false,
     providerVatId: row.provider_vat_id || "",
     providerNameOverride: row.provider_name_override || "",
+    invoiceDescription: row.invoice_description || "",
+    invoiceNetAmount: Number(row.invoice_net_amount) || 0,
+    invoiceCurrency: row.invoice_currency || "",
+    invoiceServicePeriodStart: row.invoice_service_period_start || null,
+    invoiceServicePeriodEnd: row.invoice_service_period_end || null,
+    invoicePaymentDate: row.invoice_payment_date || null,
+    invoiceCryptoNetwork: row.invoice_crypto_network || "",
+    invoiceCryptoCoin: row.invoice_crypto_coin || "",
+    invoiceTxHash: row.invoice_tx_hash || "",
+    invoiceExchangeRate: row.invoice_exchange_rate || "",
+    invoiceReceiverWallet: row.invoice_receiver_wallet || "",
+    invoiceLastCreditNoteNumber: row.invoice_last_credit_note_number || "",
+    invoiceLastGeneratedAt: row.invoice_last_generated_at || null,
   };
 }
 
@@ -195,6 +221,17 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
         provider_is_business: chatter.providerIsBusiness,
         provider_vat_id: chatter.providerVatId,
         provider_name_override: chatter.providerNameOverride,
+        invoice_description: chatter.invoiceDescription,
+        invoice_net_amount: chatter.invoiceNetAmount,
+        invoice_currency: chatter.invoiceCurrency,
+        invoice_service_period_start: chatter.invoiceServicePeriodStart,
+        invoice_service_period_end: chatter.invoiceServicePeriodEnd,
+        invoice_payment_date: chatter.invoicePaymentDate,
+        invoice_crypto_network: chatter.invoiceCryptoNetwork,
+        invoice_crypto_coin: chatter.invoiceCryptoCoin,
+        invoice_tx_hash: chatter.invoiceTxHash,
+        invoice_exchange_rate: chatter.invoiceExchangeRate,
+        invoice_receiver_wallet: chatter.invoiceReceiverWallet,
       })
       .eq("id", chatter.id);
 
@@ -252,6 +289,19 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
       bank_iban: "",
       bank_bic: "",
       bank_name: "",
+      provider_address: "",
+      provider_is_business: false,
+      provider_vat_id: "",
+      provider_name_override: "",
+      invoice_description: "",
+      invoice_net_amount: 0,
+      invoice_currency: "",
+      invoice_crypto_network: "",
+      invoice_crypto_coin: "",
+      invoice_tx_hash: "",
+      invoice_exchange_rate: "",
+      invoice_receiver_wallet: "",
+      invoice_last_credit_note_number: "",
       created_by: user?.id,
     };
 
@@ -557,32 +607,45 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">Name</label>
+                  <label className="text-xs font-medium text-muted-foreground">Nickname / Anzeigename</label>
                   <div className="input-gold-shimmer rounded-lg">
-                    <Input value={selected.name} onChange={e => updateSelected({ name: e.target.value })} className="text-sm border-transparent" />
+                    <Input value={selected.name} onChange={e => updateSelected({ name: e.target.value })} placeholder="z.B. Anna, Tom, Alex" className="text-sm border-transparent" />
                   </div>
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-muted-foreground">Plattform</label>
                   <div className="input-gold-shimmer rounded-lg">
                     <Input value={selected.platform} onChange={e => updateSelected({ platform: e.target.value })} className="text-sm border-transparent" />
+                  </div>
+                </div>
               </div>
 
-              {/* Anschrift (wird automatisch in Provider Invoice übernommen) */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-                  <MapPin className="h-3 w-3 text-accent" />
-                  Anschrift
-                  <span className="text-[10px] text-muted-foreground/70">(wird in Provider Invoice übernommen)</span>
-                </label>
-                <div className="input-gold-shimmer rounded-lg">
-                  <Textarea
-                    value={selected.providerAddress}
-                    onChange={e => updateSelected({ providerAddress: e.target.value })}
-                    placeholder="Straße, PLZ, Ort, Land"
-                    rows={2}
-                    className="text-sm border-transparent resize-none"
-                  />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Voller Rechnungsname</label>
+                  <div className="input-gold-shimmer rounded-lg">
+                    <Input
+                      value={selected.providerNameOverride}
+                      onChange={e => updateSelected({ providerNameOverride: e.target.value })}
+                      placeholder="Vor- und Nachname für Provider Invoice"
+                      className="text-sm border-transparent"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                    <MapPin className="h-3 w-3 text-accent" />
+                    Rechnungsadresse
+                  </label>
+                  <div className="input-gold-shimmer rounded-lg">
+                    <Textarea
+                      value={selected.providerAddress}
+                      onChange={e => updateSelected({ providerAddress: e.target.value })}
+                      placeholder="Straße, PLZ, Ort, Land"
+                      rows={2}
+                      className="text-sm border-transparent resize-none"
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -610,8 +673,6 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
                     </div>
                   </div>
                 )}
-              </div>
-                </div>
               </div>
 
               {/* Role toggle in detail */}
@@ -863,6 +924,19 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
               providerNameOverride={(selected as any).providerNameOverride || (selected as any).provider_name_override || ""}
               revenuePercentage={selected.compensationType === "percentage" ? selected.revenuePercentage : 0}
               currency={selected.currency || "EUR"}
+              invoiceDescription={selected.invoiceDescription}
+              invoiceNetAmount={selected.invoiceNetAmount}
+              invoiceCurrency={selected.invoiceCurrency}
+              invoiceServicePeriodStart={selected.invoiceServicePeriodStart}
+              invoiceServicePeriodEnd={selected.invoiceServicePeriodEnd}
+              invoicePaymentDate={selected.invoicePaymentDate}
+              invoiceCryptoNetwork={selected.invoiceCryptoNetwork}
+              invoiceCryptoCoin={selected.invoiceCryptoCoin}
+              invoiceTxHash={selected.invoiceTxHash}
+              invoiceExchangeRate={selected.invoiceExchangeRate}
+              invoiceReceiverWallet={selected.invoiceReceiverWallet}
+              onProviderDataChange={(patch) => updateSelected(patch)}
+              onInvoiceDataChange={(patch) => updateSelected(patch)}
               cryptoAddress={selected.cryptoAddress || ""}
               compensationType={selected.compensationType}
               hourlyRate={selected.hourlyRate}

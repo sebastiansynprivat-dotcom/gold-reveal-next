@@ -283,6 +283,19 @@ export type Database = {
           hourly_rate: number
           hours_worked: number
           id: string
+          invoice_crypto_coin: string
+          invoice_crypto_network: string
+          invoice_currency: string
+          invoice_description: string
+          invoice_exchange_rate: string
+          invoice_last_credit_note_number: string
+          invoice_last_generated_at: string | null
+          invoice_net_amount: number
+          invoice_payment_date: string | null
+          invoice_receiver_wallet: string
+          invoice_service_period_end: string | null
+          invoice_service_period_start: string | null
+          invoice_tx_hash: string
           maloum_revenue: number
           name: string
           payment_method: string
@@ -312,6 +325,19 @@ export type Database = {
           hourly_rate?: number
           hours_worked?: number
           id?: string
+          invoice_crypto_coin?: string
+          invoice_crypto_network?: string
+          invoice_currency?: string
+          invoice_description?: string
+          invoice_exchange_rate?: string
+          invoice_last_credit_note_number?: string
+          invoice_last_generated_at?: string | null
+          invoice_net_amount?: number
+          invoice_payment_date?: string | null
+          invoice_receiver_wallet?: string
+          invoice_service_period_end?: string | null
+          invoice_service_period_start?: string | null
+          invoice_tx_hash?: string
           maloum_revenue?: number
           name?: string
           payment_method?: string
@@ -341,6 +367,19 @@ export type Database = {
           hourly_rate?: number
           hours_worked?: number
           id?: string
+          invoice_crypto_coin?: string
+          invoice_crypto_network?: string
+          invoice_currency?: string
+          invoice_description?: string
+          invoice_exchange_rate?: string
+          invoice_last_credit_note_number?: string
+          invoice_last_generated_at?: string | null
+          invoice_net_amount?: number
+          invoice_payment_date?: string | null
+          invoice_receiver_wallet?: string
+          invoice_service_period_end?: string | null
+          invoice_service_period_start?: string | null
+          invoice_tx_hash?: string
           maloum_revenue?: number
           name?: string
           payment_method?: string
@@ -923,6 +962,19 @@ export type Database = {
           drive_folder_id: string | null
           group_id: string | null
           id: string
+          invoice_crypto_coin: string
+          invoice_crypto_network: string
+          invoice_currency: string
+          invoice_description: string
+          invoice_exchange_rate: string
+          invoice_last_credit_note_number: string
+          invoice_last_generated_at: string | null
+          invoice_net_amount: number
+          invoice_payment_date: string | null
+          invoice_receiver_wallet: string
+          invoice_service_period_end: string | null
+          invoice_service_period_start: string | null
+          invoice_tx_hash: string
           model_active: boolean
           model_agency: string
           model_language: string
@@ -957,6 +1009,19 @@ export type Database = {
           drive_folder_id?: string | null
           group_id?: string | null
           id?: string
+          invoice_crypto_coin?: string
+          invoice_crypto_network?: string
+          invoice_currency?: string
+          invoice_description?: string
+          invoice_exchange_rate?: string
+          invoice_last_credit_note_number?: string
+          invoice_last_generated_at?: string | null
+          invoice_net_amount?: number
+          invoice_payment_date?: string | null
+          invoice_receiver_wallet?: string
+          invoice_service_period_end?: string | null
+          invoice_service_period_start?: string | null
+          invoice_tx_hash?: string
           model_active?: boolean
           model_agency?: string
           model_language?: string
@@ -991,6 +1056,19 @@ export type Database = {
           drive_folder_id?: string | null
           group_id?: string | null
           id?: string
+          invoice_crypto_coin?: string
+          invoice_crypto_network?: string
+          invoice_currency?: string
+          invoice_description?: string
+          invoice_exchange_rate?: string
+          invoice_last_credit_note_number?: string
+          invoice_last_generated_at?: string | null
+          invoice_net_amount?: number
+          invoice_payment_date?: string | null
+          invoice_receiver_wallet?: string
+          invoice_service_period_end?: string | null
+          invoice_service_period_start?: string | null
+          invoice_tx_hash?: string
           model_active?: boolean
           model_agency?: string
           model_language?: string

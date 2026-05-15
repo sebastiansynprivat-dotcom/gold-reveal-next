@@ -38,6 +38,36 @@ import { fetchFxRate } from "@/lib/fx";
 interface CreditNoteFormProps {
   suggestedAmount?: number;
   defaultDescription?: string;
+  invoiceDescription?: string;
+  invoiceNetAmount?: number;
+  invoiceCurrency?: string;
+  invoiceServicePeriodStart?: string | null;
+  invoiceServicePeriodEnd?: string | null;
+  invoicePaymentDate?: string | null;
+  invoiceCryptoNetwork?: string;
+  invoiceCryptoCoin?: string;
+  invoiceTxHash?: string;
+  invoiceExchangeRate?: string;
+  invoiceReceiverWallet?: string;
+  onProviderDataChange?: (patch: {
+    providerNameOverride: string;
+    providerAddress: string;
+    providerIsBusiness: boolean;
+    providerVatId: string;
+  }) => void;
+  onInvoiceDataChange?: (patch: {
+    invoiceDescription: string;
+    invoiceNetAmount: number;
+    invoiceCurrency: string;
+    invoiceServicePeriodStart: string;
+    invoiceServicePeriodEnd: string;
+    invoicePaymentDate: string;
+    invoiceCryptoNetwork: string;
+    invoiceCryptoCoin: string;
+    invoiceTxHash: string;
+    invoiceExchangeRate: string;
+    invoiceReceiverWallet: string;
+  }) => void;
   providerName?: string;
   cryptoAddress?: string;
   accountId?: string;
@@ -66,6 +96,19 @@ interface CreditNoteFormProps {
 export default function CreditNoteForm({
   suggestedAmount = 0,
   defaultDescription = "Creator revenue share for digital content",
+  invoiceDescription: initialInvoiceDescription = "",
+  invoiceNetAmount: initialInvoiceNetAmount = 0,
+  invoiceCurrency: initialInvoiceCurrency = "",
+  invoiceServicePeriodStart: initialInvoiceServicePeriodStart = null,
+  invoiceServicePeriodEnd: initialInvoiceServicePeriodEnd = null,
+  invoicePaymentDate: initialInvoicePaymentDate = null,
+  invoiceCryptoNetwork: initialInvoiceCryptoNetwork = "",
+  invoiceCryptoCoin: initialInvoiceCryptoCoin = "",
+  invoiceTxHash: initialInvoiceTxHash = "",
+  invoiceExchangeRate: initialInvoiceExchangeRate = "",
+  invoiceReceiverWallet: initialInvoiceReceiverWallet = "",
+  onProviderDataChange,
+  onInvoiceDataChange,
   providerName: initialProviderName = "",
   cryptoAddress = "",
   accountId,
@@ -95,7 +138,7 @@ export default function CreditNoteForm({
   platformBreakdown?: Array<{ name: string; rev: number; pct: number }>;
 }) {
   // localStorage key for persisting provider (recipient) form fields
-  const storageKey = `credit-note-form-${accountId || chatterName || "default"}`;
+  const storageKey = `credit-note-form-${providerEntityType && providerEntityId ? `${providerEntityType}-${providerEntityId}` : accountId || chatterName || "default"}`;
 
   // Load persisted provider values
   const loadSaved = () => {
@@ -158,6 +201,13 @@ export default function CreditNoteForm({
   const [providerVatId, setProviderVatId] = useState(initialProviderVatId);
   const providerSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const providerHydratedRef = useRef(false);
+  const invoiceSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const invoiceHydratedRef = useRef(false);
+  const onProviderDataChangeRef = useRef(onProviderDataChange);
+  const onInvoiceDataChangeRef = useRef(onInvoiceDataChange);
+
+  useEffect(() => { onProviderDataChangeRef.current = onProviderDataChange; }, [onProviderDataChange]);
+  useEffect(() => { onInvoiceDataChangeRef.current = onInvoiceDataChange; }, [onInvoiceDataChange]);
 
   // Re-hydrate when switching between chatters/models
   useEffect(() => {
@@ -183,43 +233,73 @@ export default function CreditNoteForm({
           provider_address: providerAddress,
           provider_is_business: isBusiness,
           provider_vat_id: providerVatId,
-          provider_name_override: providerName !== initialProviderName ? providerName : "",
+          provider_name_override: providerName,
         }).eq("id", providerEntityId);
+        onProviderDataChangeRef.current?.({
+          providerNameOverride: providerName,
+          providerAddress,
+          providerIsBusiness: isBusiness,
+          providerVatId,
+        });
       } catch { /* silent */ }
     }, 800);
     return () => { if (providerSaveTimerRef.current) clearTimeout(providerSaveTimerRef.current); };
-  }, [providerName, providerAddress, isBusiness, providerVatId, providerEntityType, providerEntityId, initialProviderName]);
+  }, [providerName, providerAddress, isBusiness, providerVatId, providerEntityType, providerEntityId]);
 
   // Metadata – default service period = previous month
   const lastMonth = subMonths(new Date(), 1);
   const [creditNoteDate, setCreditNoteDate] = useState(format(new Date(), "yyyy-MM-dd"));
-  const [servicePeriodStart, setServicePeriodStart] = useState(format(startOfMonth(lastMonth), "yyyy-MM-dd"));
-  const [servicePeriodEnd, setServicePeriodEnd] = useState(format(endOfMonth(lastMonth), "yyyy-MM-dd"));
+  const [servicePeriodStart, setServicePeriodStart] = useState(initialInvoiceServicePeriodStart || format(startOfMonth(lastMonth), "yyyy-MM-dd"));
+  const [servicePeriodEnd, setServicePeriodEnd] = useState(initialInvoiceServicePeriodEnd || format(endOfMonth(lastMonth), "yyyy-MM-dd"));
 
   // Line item
   const [description, setDescription] = useState(() => {
-    const s = (saved.description || "").trim();
+    const s = (initialInvoiceDescription || saved.description || "").trim();
     const legacy = ["Revenue share payout", "Revenue share", "Revenue share –", "Revenue share -"];
     if (!s || legacy.some(l => s.toLowerCase().startsWith(l.toLowerCase()))) {
       return defaultDescription;
     }
     return s;
   });
-  const [netAmount, setNetAmount] = useState(suggestedAmount > 0 ? suggestedAmount.toFixed(2) : "");
+  const [netAmount, setNetAmount] = useState(initialInvoiceNetAmount > 0 ? initialInvoiceNetAmount.toFixed(2) : suggestedAmount > 0 ? suggestedAmount.toFixed(2) : "");
 
   // Payment
-  const [cryptoNetwork, setCryptoNetwork] = useState(saved.cryptoNetwork || "TRC20");
-  const [cryptoCoin, setCryptoCoin] = useState(saved.cryptoCoin || "USDT");
-  const [txHash, setTxHash] = useState(saved.txHash || "");
-  const [receiverWallet, setReceiverWallet] = useState(saved.receiverWallet || cryptoAddress || "");
-  const [exchangeRate, setExchangeRate] = useState(saved.exchangeRate || "");
-  const [paymentDate, setPaymentDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [cryptoNetwork, setCryptoNetwork] = useState(initialInvoiceCryptoNetwork || saved.cryptoNetwork || "TRC20");
+  const [cryptoCoin, setCryptoCoin] = useState(initialInvoiceCryptoCoin || saved.cryptoCoin || "USDT");
+  const [txHash, setTxHash] = useState(initialInvoiceTxHash || saved.txHash || "");
+  const [receiverWallet, setReceiverWallet] = useState(initialInvoiceReceiverWallet || saved.receiverWallet || cryptoAddress || "");
+  const [exchangeRate, setExchangeRate] = useState(initialInvoiceExchangeRate || saved.exchangeRate || "");
+  const [paymentDate, setPaymentDate] = useState(initialInvoicePaymentDate || format(new Date(), "yyyy-MM-dd"));
 
   const [generating, setGenerating] = useState(false);
   const [liveExchangeRate, setLiveExchangeRate] = useState<number | null>(null);
   const [rateLoading, setRateLoading] = useState(false);
   // Invoice display currency (the currency the invoice is actually issued in)
-  const [invoiceCurrency, setInvoiceCurrency] = useState<string>(saved.invoiceCurrency || saved.targetCurrency || currency);
+  const [invoiceCurrency, setInvoiceCurrency] = useState<string>(initialInvoiceCurrency || saved.invoiceCurrency || saved.targetCurrency || currency);
+
+  useEffect(() => {
+    invoiceHydratedRef.current = false;
+    const s = (initialInvoiceDescription || saved.description || "").trim();
+    const legacy = ["Revenue share payout", "Revenue share", "Revenue share –", "Revenue share -"];
+    setDescription(!s || legacy.some(l => s.toLowerCase().startsWith(l.toLowerCase())) ? defaultDescription : s);
+    setNetAmount(initialInvoiceNetAmount > 0 ? initialInvoiceNetAmount.toFixed(2) : suggestedAmount > 0 ? suggestedAmount.toFixed(2) : "");
+    setServicePeriodStart(initialInvoiceServicePeriodStart || format(startOfMonth(lastMonth), "yyyy-MM-dd"));
+    setServicePeriodEnd(initialInvoiceServicePeriodEnd || format(endOfMonth(lastMonth), "yyyy-MM-dd"));
+    setCryptoNetwork(initialInvoiceCryptoNetwork || saved.cryptoNetwork || "TRC20");
+    setCryptoCoin(initialInvoiceCryptoCoin || saved.cryptoCoin || "USDT");
+    setTxHash(initialInvoiceTxHash || saved.txHash || "");
+    setReceiverWallet(initialInvoiceReceiverWallet || saved.receiverWallet || cryptoAddress || "");
+    setExchangeRate(initialInvoiceExchangeRate || saved.exchangeRate || "");
+    setPaymentDate(initialInvoicePaymentDate || format(new Date(), "yyyy-MM-dd"));
+    setInvoiceCurrency(initialInvoiceCurrency || saved.invoiceCurrency || saved.targetCurrency || currency);
+    const t = setTimeout(() => { invoiceHydratedRef.current = true; }, 50);
+    return () => clearTimeout(t);
+  }, [
+    providerEntityId, providerEntityType, storageKey, defaultDescription, suggestedAmount, currency, cryptoAddress,
+    initialInvoiceDescription, initialInvoiceNetAmount, initialInvoiceCurrency, initialInvoiceServicePeriodStart,
+    initialInvoiceServicePeriodEnd, initialInvoicePaymentDate, initialInvoiceCryptoNetwork, initialInvoiceCryptoCoin,
+    initialInvoiceTxHash, initialInvoiceExchangeRate, initialInvoiceReceiverWallet,
+  ]);
 
   // Fetch live exchange rate from chatter `currency` to selected `invoiceCurrency`
   useEffect(() => {
@@ -263,11 +343,53 @@ export default function CreditNoteForm({
   useEffect(() => {
     const timer = setTimeout(() => {
       localStorage.setItem(storageKey, JSON.stringify({
-        description, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet, invoiceCurrency,
+        description, netAmount, servicePeriodStart, servicePeriodEnd, paymentDate, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet, invoiceCurrency,
       }));
     }, 500);
     return () => clearTimeout(timer);
-  }, [description, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet, invoiceCurrency, storageKey]);
+  }, [description, netAmount, servicePeriodStart, servicePeriodEnd, paymentDate, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet, invoiceCurrency, storageKey]);
+
+  useEffect(() => {
+    if (!providerEntityType || !providerEntityId) return;
+    if (!invoiceHydratedRef.current) return;
+    if (invoiceSaveTimerRef.current) clearTimeout(invoiceSaveTimerRef.current);
+    invoiceSaveTimerRef.current = setTimeout(async () => {
+      const table = providerEntityType === "chatter" ? "chatters" : "models";
+      const payload = {
+        invoice_description: description,
+        invoice_net_amount: parseFloat(netAmount.replace(",", ".")) || 0,
+        invoice_currency: invoiceCurrency,
+        invoice_service_period_start: servicePeriodStart || null,
+        invoice_service_period_end: servicePeriodEnd || null,
+        invoice_payment_date: paymentDate || null,
+        invoice_crypto_network: cryptoNetwork,
+        invoice_crypto_coin: cryptoCoin,
+        invoice_tx_hash: txHash,
+        invoice_exchange_rate: exchangeRate,
+        invoice_receiver_wallet: receiverWallet,
+      };
+      try {
+        await (supabase.from as any)(table).update(payload).eq("id", providerEntityId);
+        onInvoiceDataChangeRef.current?.({
+          invoiceDescription: description,
+          invoiceNetAmount: payload.invoice_net_amount,
+          invoiceCurrency,
+          invoiceServicePeriodStart: servicePeriodStart,
+          invoiceServicePeriodEnd: servicePeriodEnd,
+          invoicePaymentDate: paymentDate,
+          invoiceCryptoNetwork: cryptoNetwork,
+          invoiceCryptoCoin: cryptoCoin,
+          invoiceTxHash: txHash,
+          invoiceExchangeRate: exchangeRate,
+          invoiceReceiverWallet: receiverWallet,
+        });
+      } catch { /* silent */ }
+    }, 800);
+    return () => { if (invoiceSaveTimerRef.current) clearTimeout(invoiceSaveTimerRef.current); };
+  }, [
+    description, netAmount, invoiceCurrency, servicePeriodStart, servicePeriodEnd, paymentDate, cryptoNetwork,
+    cryptoCoin, txHash, exchangeRate, receiverWallet, providerEntityType, providerEntityId,
+  ]);
 
   // Calculations
   const net = parseFloat(netAmount.replace(",", ".")) || 0;
@@ -731,6 +853,29 @@ export default function CreditNoteForm({
       } as any);
 
       if (insertError) throw insertError;
+
+      if (providerEntityType && providerEntityId) {
+        const table = providerEntityType === "chatter" ? "chatters" : "models";
+        await (supabase.from as any)(table).update({
+          provider_name_override: providerName,
+          provider_address: providerAddress,
+          provider_is_business: isBusiness,
+          provider_vat_id: providerVatId,
+          invoice_description: description,
+          invoice_net_amount: net,
+          invoice_currency: invoiceCurrency,
+          invoice_service_period_start: servicePeriodStart || null,
+          invoice_service_period_end: servicePeriodEnd || null,
+          invoice_payment_date: paymentDate || null,
+          invoice_crypto_network: cryptoNetwork,
+          invoice_crypto_coin: cryptoCoin,
+          invoice_tx_hash: txHash,
+          invoice_exchange_rate: exchangeRate,
+          invoice_receiver_wallet: receiverWallet,
+          invoice_last_credit_note_number: creditNoteNumber,
+          invoice_last_generated_at: new Date().toISOString(),
+        }).eq("id", providerEntityId);
+      }
 
       // Generate PDF
       const doc = generatePDF(creditNoteNumber);
