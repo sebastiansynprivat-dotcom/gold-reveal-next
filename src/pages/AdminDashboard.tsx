@@ -983,7 +983,8 @@ export default function AdminDashboard() {
   }
 
   type RevenueSnapshot = { total: CurrentTotal; range: RootData; totalEarnings: number };
-  type RevenueRow = { date: string; platform: string; revenue_today: number | null };
+  type AgencyFilter = "all" | "shex" | "syn";
+  type RevenueRow = { date: string; platform: string; revenue_today: number | null; data?: Record<string, number[]> | null };
 
   const emptyRevenueRange = (): RootData => ({ maloum: [], brezzels: [], "4based": [] });
 
@@ -1002,7 +1003,7 @@ export default function AdminDashboard() {
     if (typeof window === "undefined") return [];
     try {
       const rows = JSON.parse(
-        localStorage.getItem("admin_revenue_rows_v2") || sessionStorage.getItem("admin_revenue_rows_v2") || "[]",
+        localStorage.getItem("admin_revenue_rows_v3") || sessionStorage.getItem("admin_revenue_rows_v3") || "[]",
       );
       return Array.isArray(rows) ? rows : [];
     } catch {
@@ -1031,6 +1032,45 @@ export default function AdminDashboard() {
     return () => query.removeEventListener("change", update);
   }, []);
 
+  // Agency filter (SheX / SYN) for revenue overview
+  const [agencyFilter, setAgencyFilter] = useState<AgencyFilter>("all");
+  const agencyFilterRef = useRef<AgencyFilter>("all");
+  useEffect(() => { agencyFilterRef.current = agencyFilter; }, [agencyFilter]);
+  const usernameAgencyMapRef = useRef<Record<string, "shex" | "syn">>({});
+  const [usernameMapVersion, setUsernameMapVersion] = useState(0);
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.from("models").select("username, model_agency");
+      if (!data) return;
+      const map: Record<string, "shex" | "syn"> = {};
+      for (const m of data as any[]) {
+        if (m.username) {
+          map[String(m.username).trim().toLowerCase()] = m.model_agency === "syn" ? "syn" : "shex";
+        }
+      }
+      usernameAgencyMapRef.current = map;
+      setUsernameMapVersion((v) => v + 1);
+    })();
+  }, []);
+
+  const effectiveRevenue = useCallback((row: any): number => {
+    const filter = agencyFilterRef.current;
+    if (!row) return 0;
+    if (filter === "all") return Number(row.revenue_today || 0);
+    const data = row.data;
+    if (!data || typeof data !== "object") return 0;
+    const map = usernameAgencyMapRef.current;
+    let sum = 0;
+    for (const [user, vals] of Object.entries(data as Record<string, unknown>)) {
+      const agency = map[String(user).trim().toLowerCase()] || "shex";
+      if (agency !== filter) continue;
+      if (Array.isArray(vals)) {
+        for (const v of vals) sum += Number(v) || 0;
+      }
+    }
+    return sum;
+  }, []);
+
   // Prefetch cache: holds precomputed totals/ranges per filter so switching is instant
   const revenueCacheRef = useRef<Partial<Record<TimeFilter, RevenueSnapshot>>>(initialRevenueCache);
   const revenueRowsRef = useRef<RevenueRow[]>(initialRevenueRows);
@@ -1054,19 +1094,19 @@ export default function AdminDashboard() {
     const total = platforms.reduce((acc, platform) => {
       const platformRows = rowsForRange.filter((r) => r.platform === platform);
       const value = f === "heute" || f === "gestern"
-        ? Number(platformRows.at(f === "heute" ? -1 : -2)?.revenue_today || 0)
-        : platformRows.reduce((sum, r) => sum + Number(r.revenue_today || 0), 0);
+        ? effectiveRevenue(platformRows.at(f === "heute" ? -1 : -2))
+        : platformRows.reduce((sum, r) => sum + effectiveRevenue(r), 0);
       return { ...acc, [platform]: value };
     }, {} as CurrentTotal);
     const range = platforms.reduce((acc, platform) => ({
       ...acc,
       [platform]: rowsForRange
         .filter((r) => r.platform === platform)
-        .map((r) => ({ date: r.date, total: Number(r.revenue_today || 0) }))
+        .map((r) => ({ date: r.date, total: effectiveRevenue(r) }))
         .slice(f === "gestern" ? -3 : f === "heute" ? -7 : undefined),
     }), {} as RootData);
     return { total, range, totalEarnings: total.maloum + total.brezzels + total["4based"] };
-  }, []);
+  }, [effectiveRevenue]);
 
   const rebuildStandardRevenueCache = useCallback((rows: RevenueRow[]) => {
     revenueRowsRef.current = rows;
@@ -1075,8 +1115,8 @@ export default function AdminDashboard() {
     });
     if (typeof window !== "undefined") {
       const serializedRows = JSON.stringify(rows);
-      localStorage.setItem("admin_revenue_rows_v2", serializedRows);
-      sessionStorage.setItem("admin_revenue_rows_v2", serializedRows);
+      localStorage.setItem("admin_revenue_rows_v3", serializedRows);
+      sessionStorage.setItem("admin_revenue_rows_v3", serializedRows);
     }
     persistRevenueCache();
   }, [buildRevenueSnapshot, persistRevenueCache]);
@@ -1205,7 +1245,7 @@ export default function AdminDashboard() {
   async function getRevenueRangebyDates(dateRange) {
     let { data, error } = await supabase
       .from("revenue_report")
-      .select("date, platform, revenue_today")
+      .select("date, platform, revenue_today, data")
       .order("date", { ascending: true })
       .gte("date", dateRange.from)
       .lte("date", dateRange.to);
@@ -1214,20 +1254,13 @@ export default function AdminDashboard() {
 
     const revenueTotal = (platform, data) => {
       const filtered = data.filter((x) => x.platform == platform);
-
-      return filtered.length > 0 ? filtered.reduce((sum, x) => sum + x.revenue_today, 0) : 0;
+      return filtered.length > 0 ? filtered.reduce((sum, x) => sum + effectiveRevenue(x), 0) : 0;
     };
 
     const revenueRange = (platform, data) => {
       const filtered = data.filter((x) => x.platform == platform);
-
       if (filtered.length == 0) return [];
-      const rangeData = filtered.map((x) => ({
-        date: x.date,
-        total: x.revenue_today || 0,
-      }));
-
-      return rangeData;
+      return filtered.map((x) => ({ date: x.date, total: effectiveRevenue(x) }));
     };
 
     const total = {
@@ -1241,7 +1274,6 @@ export default function AdminDashboard() {
       brezzels: revenueRange("brezzels", data),
       "4based": revenueRange("4based", data),
     };
-    console.log(range);
 
     setTotalValue(total);
     setRange(range);
@@ -1322,7 +1354,7 @@ export default function AdminDashboard() {
     const fromDate = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
     const { data } = await supabase
       .from("revenue_report")
-      .select("date, platform, revenue_today")
+      .select("date, platform, revenue_today, data")
       .lte("date", todayDate)
       .gte("date", fromDate)
       .order("date", { ascending: true });
@@ -1492,7 +1524,7 @@ export default function AdminDashboard() {
     const toStr = to.toISOString().slice(0, 10);
     const { data } = await supabase
       .from("revenue_report")
-      .select("date, platform, revenue_today")
+      .select("date, platform, revenue_today, data")
       .order("date", { ascending: true })
       .gte("date", fromStr)
       .lte("date", toStr);
@@ -1501,7 +1533,7 @@ export default function AdminDashboard() {
     for (const row of rows) {
       const d = row.date as string;
       if (!dateMap[d]) dateMap[d] = { date: d, total: 0, maloum: 0, brezzels: 0, "4based": 0 };
-      const amount = Number(row.revenue_today) || 0;
+      const amount = effectiveRevenue(row);
       const plat = row.platform as "maloum" | "brezzels" | "4based";
       if (plat === "maloum" || plat === "brezzels" || plat === "4based") {
         dateMap[d][plat] += amount;
@@ -1526,14 +1558,34 @@ export default function AdminDashboard() {
     if (!compareFromA || !compareToA) { setCompareA(null); return; }
     setCompareLoading(true);
     fetchComparePeriod(compareFromA, compareToA).then(setCompareA).finally(() => setCompareLoading(false));
-  }, [compareFromA, compareToA, timeFilter]);
+  }, [compareFromA, compareToA, timeFilter, agencyFilter, usernameMapVersion]);
 
   useEffect(() => {
     if (timeFilter !== "vergleich") return;
     if (!compareFromB || !compareToB) { setCompareB(null); return; }
     setCompareLoading(true);
     fetchComparePeriod(compareFromB, compareToB).then(setCompareB).finally(() => setCompareLoading(false));
-  }, [compareFromB, compareToB, timeFilter]);
+  }, [compareFromB, compareToB, timeFilter, agencyFilter, usernameMapVersion]);
+
+  // Re-apply revenue snapshots when the agency filter (or username→agency map) changes
+  useEffect(() => {
+    if (revenueRowsRef.current.length === 0) return;
+    rebuildStandardRevenueCache(revenueRowsRef.current);
+    const f = timeFilterRef.current;
+    if (f === "custom") {
+      if (customFrom && customTo) {
+        getRevenueRangebyDates({
+          from: customFrom.toISOString().slice(0, 10),
+          to: customTo.toISOString().slice(0, 10),
+        });
+      }
+      return;
+    }
+    if (f === "vergleich") return;
+    const snap = revenueCacheRef.current[f];
+    if (snap) applySnapshot(snap, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [agencyFilter, usernameMapVersion]);
 
 
   const filterLabels: Record<TimeFilter, string> = {
@@ -1595,21 +1647,21 @@ export default function AdminDashboard() {
         let platform: string | null = null;
 
         if (payload.eventType === "INSERT" && newRow && isToday(newRow.date)) {
-          diff = newRow.revenue_today || 0;
+          diff = effectiveRevenue(newRow);
           platform = newRow.platform;
         }
         if (payload.eventType === "UPDATE" && newRow && oldRow && isToday(newRow.date)) {
-          diff = (newRow.revenue_today || 0) - (oldRow.revenue_today || 0);
+          diff = effectiveRevenue(newRow) - effectiveRevenue(oldRow);
           platform = newRow.platform;
         }
         if (payload.eventType === "DELETE" && oldRow && isToday(oldRow.date)) {
-          diff = -(oldRow.revenue_today || 0);
+          diff = -effectiveRevenue(oldRow);
           platform = oldRow.platform;
         }
 
         if (diff !== 0) {
           const row = (newRow || oldRow) as any;
-          applyRevenueRealtimeRow(platform, row?.date || null, Number(newRow?.revenue_today ?? 0), diff);
+          applyRevenueRealtimeRow(platform, row?.date || null, effectiveRevenue(newRow), diff);
 
           // Skip toast on mobile — main thread killer
           if (activeTabRef.current === "einnahmen" && timeFilterRef.current === "heute") {
@@ -1623,7 +1675,7 @@ export default function AdminDashboard() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [applyRevenueRealtimeRow]);
+  }, [applyRevenueRealtimeRow, effectiveRevenue]);
 
   // Load cached AI summaries
   const loadChatterSummaries = async () => {
@@ -3124,6 +3176,38 @@ export default function AdminDashboard() {
                             {f === "vergleich" && <TrendingUp className="h-3 w-3" />}
                             {filterLabels[f]}
                           </span>
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+
+                  {/* Agency Filter (SheX / SYN) */}
+                  <motion.div variants={{ hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0 } }} className="overflow-x-auto scrollbar-none -mx-4 px-4">
+                    <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-secondary/40 backdrop-blur-sm border border-border/30 relative">
+                      <span className="px-2 text-[9px] uppercase tracking-[0.18em] text-muted-foreground font-bold">Agentur</span>
+                      {([
+                        { key: "all", label: "Alle" },
+                        { key: "shex", label: "SheX" },
+                        { key: "syn", label: "SYN" },
+                      ] as { key: AgencyFilter; label: string }[]).map((opt) => (
+                        <button
+                          key={opt.key}
+                          onClick={() => setAgencyFilter(opt.key)}
+                          className={cn(
+                            "relative px-3 py-1.5 rounded-lg text-xs font-medium transition-colors duration-200 whitespace-nowrap z-10",
+                            agencyFilter === opt.key ? "text-accent-foreground" : "text-muted-foreground hover:text-foreground",
+                          )}
+                        >
+                          {agencyFilter === opt.key && (isMobileRevenueView ? (
+                            <div className="absolute inset-0 bg-accent rounded-lg shadow-md shadow-accent/20" />
+                          ) : (
+                            <motion.div
+                              layoutId="activeAgencyFilter"
+                              className="absolute inset-0 bg-accent rounded-lg shadow-md shadow-accent/30"
+                              transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                            />
+                          ))}
+                          <span className="relative z-10">{opt.label}</span>
                         </button>
                       ))}
                     </div>
