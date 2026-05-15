@@ -849,6 +849,29 @@ export default function CreditNoteForm({
 
       if (insertError) throw insertError;
 
+      if (providerEntityType && providerEntityId) {
+        const table = providerEntityType === "chatter" ? "chatters" : "models";
+        await (supabase.from as any)(table).update({
+          provider_name_override: providerName,
+          provider_address: providerAddress,
+          provider_is_business: isBusiness,
+          provider_vat_id: providerVatId,
+          invoice_description: description,
+          invoice_net_amount: net,
+          invoice_currency: invoiceCurrency,
+          invoice_service_period_start: servicePeriodStart || null,
+          invoice_service_period_end: servicePeriodEnd || null,
+          invoice_payment_date: paymentDate || null,
+          invoice_crypto_network: cryptoNetwork,
+          invoice_crypto_coin: cryptoCoin,
+          invoice_tx_hash: txHash,
+          invoice_exchange_rate: exchangeRate,
+          invoice_receiver_wallet: receiverWallet,
+          invoice_last_credit_note_number: creditNoteNumber,
+          invoice_last_generated_at: new Date().toISOString(),
+        }).eq("id", providerEntityId);
+      }
+
       // Generate PDF
       const doc = generatePDF(creditNoteNumber);
       const filename = `ProviderInvoice_${creditNoteNumber.replace(/\//g, "-")}.pdf`;
