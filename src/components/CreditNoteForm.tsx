@@ -228,43 +228,49 @@ export default function CreditNoteForm({
           provider_address: providerAddress,
           provider_is_business: isBusiness,
           provider_vat_id: providerVatId,
-          provider_name_override: providerName !== initialProviderName ? providerName : "",
+          provider_name_override: providerName,
         }).eq("id", providerEntityId);
+        onProviderDataChange?.({
+          providerNameOverride: providerName,
+          providerAddress,
+          providerIsBusiness: isBusiness,
+          providerVatId,
+        });
       } catch { /* silent */ }
     }, 800);
     return () => { if (providerSaveTimerRef.current) clearTimeout(providerSaveTimerRef.current); };
-  }, [providerName, providerAddress, isBusiness, providerVatId, providerEntityType, providerEntityId, initialProviderName]);
+  }, [providerName, providerAddress, isBusiness, providerVatId, providerEntityType, providerEntityId, onProviderDataChange]);
 
   // Metadata – default service period = previous month
   const lastMonth = subMonths(new Date(), 1);
   const [creditNoteDate, setCreditNoteDate] = useState(format(new Date(), "yyyy-MM-dd"));
-  const [servicePeriodStart, setServicePeriodStart] = useState(format(startOfMonth(lastMonth), "yyyy-MM-dd"));
-  const [servicePeriodEnd, setServicePeriodEnd] = useState(format(endOfMonth(lastMonth), "yyyy-MM-dd"));
+  const [servicePeriodStart, setServicePeriodStart] = useState(initialInvoiceServicePeriodStart || format(startOfMonth(lastMonth), "yyyy-MM-dd"));
+  const [servicePeriodEnd, setServicePeriodEnd] = useState(initialInvoiceServicePeriodEnd || format(endOfMonth(lastMonth), "yyyy-MM-dd"));
 
   // Line item
   const [description, setDescription] = useState(() => {
-    const s = (saved.description || "").trim();
+    const s = (initialInvoiceDescription || saved.description || "").trim();
     const legacy = ["Revenue share payout", "Revenue share", "Revenue share –", "Revenue share -"];
     if (!s || legacy.some(l => s.toLowerCase().startsWith(l.toLowerCase()))) {
       return defaultDescription;
     }
     return s;
   });
-  const [netAmount, setNetAmount] = useState(suggestedAmount > 0 ? suggestedAmount.toFixed(2) : "");
+  const [netAmount, setNetAmount] = useState(initialInvoiceNetAmount > 0 ? initialInvoiceNetAmount.toFixed(2) : suggestedAmount > 0 ? suggestedAmount.toFixed(2) : "");
 
   // Payment
-  const [cryptoNetwork, setCryptoNetwork] = useState(saved.cryptoNetwork || "TRC20");
-  const [cryptoCoin, setCryptoCoin] = useState(saved.cryptoCoin || "USDT");
-  const [txHash, setTxHash] = useState(saved.txHash || "");
-  const [receiverWallet, setReceiverWallet] = useState(saved.receiverWallet || cryptoAddress || "");
-  const [exchangeRate, setExchangeRate] = useState(saved.exchangeRate || "");
-  const [paymentDate, setPaymentDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [cryptoNetwork, setCryptoNetwork] = useState(initialInvoiceCryptoNetwork || saved.cryptoNetwork || "TRC20");
+  const [cryptoCoin, setCryptoCoin] = useState(initialInvoiceCryptoCoin || saved.cryptoCoin || "USDT");
+  const [txHash, setTxHash] = useState(initialInvoiceTxHash || saved.txHash || "");
+  const [receiverWallet, setReceiverWallet] = useState(initialInvoiceReceiverWallet || saved.receiverWallet || cryptoAddress || "");
+  const [exchangeRate, setExchangeRate] = useState(initialInvoiceExchangeRate || saved.exchangeRate || "");
+  const [paymentDate, setPaymentDate] = useState(initialInvoicePaymentDate || format(new Date(), "yyyy-MM-dd"));
 
   const [generating, setGenerating] = useState(false);
   const [liveExchangeRate, setLiveExchangeRate] = useState<number | null>(null);
   const [rateLoading, setRateLoading] = useState(false);
   // Invoice display currency (the currency the invoice is actually issued in)
-  const [invoiceCurrency, setInvoiceCurrency] = useState<string>(saved.invoiceCurrency || saved.targetCurrency || currency);
+  const [invoiceCurrency, setInvoiceCurrency] = useState<string>(initialInvoiceCurrency || saved.invoiceCurrency || saved.targetCurrency || currency);
 
   // Fetch live exchange rate from chatter `currency` to selected `invoiceCurrency`
   useEffect(() => {
