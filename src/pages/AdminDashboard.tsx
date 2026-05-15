@@ -1533,7 +1533,7 @@ export default function AdminDashboard() {
     for (const row of rows) {
       const d = row.date as string;
       if (!dateMap[d]) dateMap[d] = { date: d, total: 0, maloum: 0, brezzels: 0, "4based": 0 };
-      const amount = Number(row.revenue_today) || 0;
+      const amount = effectiveRevenue(row);
       const plat = row.platform as "maloum" | "brezzels" | "4based";
       if (plat === "maloum" || plat === "brezzels" || plat === "4based") {
         dateMap[d][plat] += amount;
