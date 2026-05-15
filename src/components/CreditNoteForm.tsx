@@ -869,7 +869,7 @@ export default function CreditNoteForm({
           invoice_payment_date: paymentDate || null,
           invoice_crypto_network: cryptoNetwork,
           invoice_crypto_coin: cryptoCoin,
-          invoice_tx_hash: txHash,
+          invoice_tx_hash: "",
           invoice_exchange_rate: exchangeRate,
           invoice_receiver_wallet: receiverWallet,
           invoice_last_credit_note_number: creditNoteNumber,
