@@ -1675,7 +1675,7 @@ export default function AdminDashboard() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [applyRevenueRealtimeRow]);
+  }, [applyRevenueRealtimeRow, effectiveRevenue]);
 
   // Load cached AI summaries
   const loadChatterSummaries = async () => {
