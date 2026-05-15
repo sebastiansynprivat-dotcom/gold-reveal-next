@@ -985,6 +985,10 @@ export default function AdminDashboard() {
   type RevenueSnapshot = { total: CurrentTotal; range: RootData; totalEarnings: number };
   type AgencyFilter = "all" | "shex" | "syn";
   type RevenueRow = { date: string; platform: string; revenue_today: number | null; data?: Record<string, number[]> | null };
+  const normalizeAgency = (value: unknown): AgencyFilter | null => {
+    const normalized = String(value || "").trim().toLowerCase();
+    return normalized === "shex" || normalized === "syn" ? normalized : null;
+  };
 
   const emptyRevenueRange = (): RootData => ({ maloum: [], brezzels: [], "4based": [] });
 
@@ -1044,8 +1048,9 @@ export default function AdminDashboard() {
       if (!data) return;
       const map: Record<string, "shex" | "syn"> = {};
       for (const m of data as any[]) {
-        if (m.username) {
-          map[String(m.username).trim().toLowerCase()] = m.model_agency === "syn" ? "syn" : "shex";
+        const agency = normalizeAgency(m.model_agency);
+        if (m.username && agency) {
+          map[String(m.username).trim().toLowerCase()] = agency;
         }
       }
       usernameAgencyMapRef.current = map;
@@ -1057,6 +1062,8 @@ export default function AdminDashboard() {
     const filter = agencyFilterRef.current;
     if (!row) return 0;
     if (filter === "all") return Number(row.revenue_today || 0);
+    const platform = String(row.platform || "").trim().toLowerCase();
+    if (filter === "shex" && (platform === "4based" || platform === "fourbased")) return 0;
     const data = row.data;
     if (!data || typeof data !== "object") return 0;
     const map = usernameAgencyMapRef.current;
