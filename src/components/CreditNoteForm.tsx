@@ -38,6 +38,36 @@ import { fetchFxRate } from "@/lib/fx";
 interface CreditNoteFormProps {
   suggestedAmount?: number;
   defaultDescription?: string;
+  invoiceDescription?: string;
+  invoiceNetAmount?: number;
+  invoiceCurrency?: string;
+  invoiceServicePeriodStart?: string | null;
+  invoiceServicePeriodEnd?: string | null;
+  invoicePaymentDate?: string | null;
+  invoiceCryptoNetwork?: string;
+  invoiceCryptoCoin?: string;
+  invoiceTxHash?: string;
+  invoiceExchangeRate?: string;
+  invoiceReceiverWallet?: string;
+  onProviderDataChange?: (patch: {
+    providerNameOverride: string;
+    providerAddress: string;
+    providerIsBusiness: boolean;
+    providerVatId: string;
+  }) => void;
+  onInvoiceDataChange?: (patch: {
+    invoiceDescription: string;
+    invoiceNetAmount: number;
+    invoiceCurrency: string;
+    invoiceServicePeriodStart: string;
+    invoiceServicePeriodEnd: string;
+    invoicePaymentDate: string;
+    invoiceCryptoNetwork: string;
+    invoiceCryptoCoin: string;
+    invoiceTxHash: string;
+    invoiceExchangeRate: string;
+    invoiceReceiverWallet: string;
+  }) => void;
   providerName?: string;
   cryptoAddress?: string;
   accountId?: string;
@@ -66,6 +96,19 @@ interface CreditNoteFormProps {
 export default function CreditNoteForm({
   suggestedAmount = 0,
   defaultDescription = "Creator revenue share for digital content",
+  invoiceDescription: initialInvoiceDescription = "",
+  invoiceNetAmount: initialInvoiceNetAmount = 0,
+  invoiceCurrency: initialInvoiceCurrency = "",
+  invoiceServicePeriodStart: initialInvoiceServicePeriodStart = null,
+  invoiceServicePeriodEnd: initialInvoiceServicePeriodEnd = null,
+  invoicePaymentDate: initialInvoicePaymentDate = null,
+  invoiceCryptoNetwork: initialInvoiceCryptoNetwork = "",
+  invoiceCryptoCoin: initialInvoiceCryptoCoin = "",
+  invoiceTxHash: initialInvoiceTxHash = "",
+  invoiceExchangeRate: initialInvoiceExchangeRate = "",
+  invoiceReceiverWallet: initialInvoiceReceiverWallet = "",
+  onProviderDataChange,
+  onInvoiceDataChange,
   providerName: initialProviderName = "",
   cryptoAddress = "",
   accountId,
@@ -95,7 +138,7 @@ export default function CreditNoteForm({
   platformBreakdown?: Array<{ name: string; rev: number; pct: number }>;
 }) {
   // localStorage key for persisting provider (recipient) form fields
-  const storageKey = `credit-note-form-${accountId || chatterName || "default"}`;
+  const storageKey = `credit-note-form-${providerEntityType && providerEntityId ? `${providerEntityType}-${providerEntityId}` : accountId || chatterName || "default"}`;
 
   // Load persisted provider values
   const loadSaved = () => {
@@ -158,6 +201,8 @@ export default function CreditNoteForm({
   const [providerVatId, setProviderVatId] = useState(initialProviderVatId);
   const providerSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const providerHydratedRef = useRef(false);
+  const invoiceSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const invoiceHydratedRef = useRef(false);
 
   // Re-hydrate when switching between chatters/models
   useEffect(() => {
