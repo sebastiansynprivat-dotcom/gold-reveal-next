@@ -1032,6 +1032,45 @@ export default function AdminDashboard() {
     return () => query.removeEventListener("change", update);
   }, []);
 
+  // Agency filter (SheX / SYN) for revenue overview
+  const [agencyFilter, setAgencyFilter] = useState<AgencyFilter>("all");
+  const agencyFilterRef = useRef<AgencyFilter>("all");
+  useEffect(() => { agencyFilterRef.current = agencyFilter; }, [agencyFilter]);
+  const usernameAgencyMapRef = useRef<Record<string, "shex" | "syn">>({});
+  const [usernameMapVersion, setUsernameMapVersion] = useState(0);
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase.from("models").select("username, model_agency");
+      if (!data) return;
+      const map: Record<string, "shex" | "syn"> = {};
+      for (const m of data as any[]) {
+        if (m.username) {
+          map[String(m.username).trim().toLowerCase()] = m.model_agency === "syn" ? "syn" : "shex";
+        }
+      }
+      usernameAgencyMapRef.current = map;
+      setUsernameMapVersion((v) => v + 1);
+    })();
+  }, []);
+
+  const effectiveRevenue = useCallback((row: any): number => {
+    const filter = agencyFilterRef.current;
+    if (!row) return 0;
+    if (filter === "all") return Number(row.revenue_today || 0);
+    const data = row.data;
+    if (!data || typeof data !== "object") return 0;
+    const map = usernameAgencyMapRef.current;
+    let sum = 0;
+    for (const [user, vals] of Object.entries(data as Record<string, unknown>)) {
+      const agency = map[String(user).trim().toLowerCase()] || "shex";
+      if (agency !== filter) continue;
+      if (Array.isArray(vals)) {
+        for (const v of vals) sum += Number(v) || 0;
+      }
+    }
+    return sum;
+  }, []);
+
   // Prefetch cache: holds precomputed totals/ranges per filter so switching is instant
   const revenueCacheRef = useRef<Partial<Record<TimeFilter, RevenueSnapshot>>>(initialRevenueCache);
   const revenueRowsRef = useRef<RevenueRow[]>(initialRevenueRows);
