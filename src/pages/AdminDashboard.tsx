@@ -1115,8 +1115,8 @@ export default function AdminDashboard() {
     });
     if (typeof window !== "undefined") {
       const serializedRows = JSON.stringify(rows);
-      localStorage.setItem("admin_revenue_rows_v2", serializedRows);
-      sessionStorage.setItem("admin_revenue_rows_v2", serializedRows);
+      localStorage.setItem("admin_revenue_rows_v3", serializedRows);
+      sessionStorage.setItem("admin_revenue_rows_v3", serializedRows);
     }
     persistRevenueCache();
   }, [buildRevenueSnapshot, persistRevenueCache]);
