@@ -1245,7 +1245,7 @@ export default function AdminDashboard() {
   async function getRevenueRangebyDates(dateRange) {
     let { data, error } = await supabase
       .from("revenue_report")
-      .select("date, platform, revenue_today")
+      .select("date, platform, revenue_today, data")
       .order("date", { ascending: true })
       .gte("date", dateRange.from)
       .lte("date", dateRange.to);
@@ -1254,20 +1254,13 @@ export default function AdminDashboard() {
 
     const revenueTotal = (platform, data) => {
       const filtered = data.filter((x) => x.platform == platform);
-
-      return filtered.length > 0 ? filtered.reduce((sum, x) => sum + x.revenue_today, 0) : 0;
+      return filtered.length > 0 ? filtered.reduce((sum, x) => sum + effectiveRevenue(x), 0) : 0;
     };
 
     const revenueRange = (platform, data) => {
       const filtered = data.filter((x) => x.platform == platform);
-
       if (filtered.length == 0) return [];
-      const rangeData = filtered.map((x) => ({
-        date: x.date,
-        total: x.revenue_today || 0,
-      }));
-
-      return rangeData;
+      return filtered.map((x) => ({ date: x.date, total: effectiveRevenue(x) }));
     };
 
     const total = {
@@ -1281,7 +1274,6 @@ export default function AdminDashboard() {
       brezzels: revenueRange("brezzels", data),
       "4based": revenueRange("4based", data),
     };
-    console.log(range);
 
     setTotalValue(total);
     setRange(range);
