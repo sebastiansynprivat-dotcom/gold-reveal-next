@@ -1003,7 +1003,7 @@ export default function AdminDashboard() {
     if (typeof window === "undefined") return [];
     try {
       const rows = JSON.parse(
-        localStorage.getItem("admin_revenue_rows_v2") || sessionStorage.getItem("admin_revenue_rows_v2") || "[]",
+        localStorage.getItem("admin_revenue_rows_v3") || sessionStorage.getItem("admin_revenue_rows_v3") || "[]",
       );
       return Array.isArray(rows) ? rows : [];
     } catch {
