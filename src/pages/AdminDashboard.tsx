@@ -1647,21 +1647,21 @@ export default function AdminDashboard() {
         let platform: string | null = null;
 
         if (payload.eventType === "INSERT" && newRow && isToday(newRow.date)) {
-          diff = newRow.revenue_today || 0;
+          diff = effectiveRevenue(newRow);
           platform = newRow.platform;
         }
         if (payload.eventType === "UPDATE" && newRow && oldRow && isToday(newRow.date)) {
-          diff = (newRow.revenue_today || 0) - (oldRow.revenue_today || 0);
+          diff = effectiveRevenue(newRow) - effectiveRevenue(oldRow);
           platform = newRow.platform;
         }
         if (payload.eventType === "DELETE" && oldRow && isToday(oldRow.date)) {
-          diff = -(oldRow.revenue_today || 0);
+          diff = -effectiveRevenue(oldRow);
           platform = oldRow.platform;
         }
 
         if (diff !== 0) {
           const row = (newRow || oldRow) as any;
-          applyRevenueRealtimeRow(platform, row?.date || null, Number(newRow?.revenue_today ?? 0), diff);
+          applyRevenueRealtimeRow(platform, row?.date || null, effectiveRevenue(newRow), diff);
 
           // Skip toast on mobile — main thread killer
           if (activeTabRef.current === "einnahmen" && timeFilterRef.current === "heute") {
