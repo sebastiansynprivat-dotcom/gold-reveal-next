@@ -674,8 +674,6 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
                   </div>
                 )}
               </div>
-                </div>
-              </div>
 
               {/* Role toggle in detail */}
               <div className="space-y-1.5">
