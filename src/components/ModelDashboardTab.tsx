@@ -2101,10 +2101,42 @@ export default function ModelDashboardTab() {
                 accountId={modelAccounts[0]?.id || ""}
                 providerEntityType="model"
                 providerEntityId={selectedModelId}
-                providerAddress={modelForm.address || (modelForm as any).provider_address || ""}
+                providerAddress={(modelForm as any).provider_address || modelForm.address || ""}
                 providerIsBusiness={(modelForm as any).provider_is_business ?? false}
                 providerVatId={(modelForm as any).provider_vat_id || ""}
                 providerNameOverride={(modelForm as any).provider_name_override || ""}
+                invoiceDescription={(modelForm as any).invoice_description || ""}
+                invoiceNetAmount={Number((modelForm as any).invoice_net_amount) || 0}
+                invoiceCurrency={(modelForm as any).invoice_currency || ""}
+                invoiceServicePeriodStart={(modelForm as any).invoice_service_period_start || null}
+                invoiceServicePeriodEnd={(modelForm as any).invoice_service_period_end || null}
+                invoicePaymentDate={(modelForm as any).invoice_payment_date || null}
+                invoiceCryptoNetwork={(modelForm as any).invoice_crypto_network || ""}
+                invoiceCryptoCoin={(modelForm as any).invoice_crypto_coin || ""}
+                invoiceTxHash={(modelForm as any).invoice_tx_hash || ""}
+                invoiceExchangeRate={(modelForm as any).invoice_exchange_rate || ""}
+                invoiceReceiverWallet={(modelForm as any).invoice_receiver_wallet || ""}
+                onProviderDataChange={(patch) => setModelForm((prev) => ({
+                  ...prev,
+                  provider_name_override: patch.providerNameOverride,
+                  provider_address: patch.providerAddress,
+                  provider_is_business: patch.providerIsBusiness,
+                  provider_vat_id: patch.providerVatId,
+                } as any))}
+                onInvoiceDataChange={(patch) => setModelForm((prev) => ({
+                  ...prev,
+                  invoice_description: patch.invoiceDescription,
+                  invoice_net_amount: patch.invoiceNetAmount,
+                  invoice_currency: patch.invoiceCurrency,
+                  invoice_service_period_start: patch.invoiceServicePeriodStart,
+                  invoice_service_period_end: patch.invoiceServicePeriodEnd,
+                  invoice_payment_date: patch.invoicePaymentDate,
+                  invoice_crypto_network: patch.invoiceCryptoNetwork,
+                  invoice_crypto_coin: patch.invoiceCryptoCoin,
+                  invoice_tx_hash: patch.invoiceTxHash,
+                  invoice_exchange_rate: patch.invoiceExchangeRate,
+                  invoice_receiver_wallet: patch.invoiceReceiverWallet,
+                } as any))}
                 cryptoAddress={modelForm.crypto_address || ""}
                 revenuePercentage={modelForm.revenue_percentage || 0}
                 currency={modelForm.currency || "EUR"}
