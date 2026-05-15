@@ -607,9 +607,9 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
             <div className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-muted-foreground">Name</label>
+                  <label className="text-xs font-medium text-muted-foreground">Nickname / Anzeigename</label>
                   <div className="input-gold-shimmer rounded-lg">
-                    <Input value={selected.name} onChange={e => updateSelected({ name: e.target.value })} className="text-sm border-transparent" />
+                    <Input value={selected.name} onChange={e => updateSelected({ name: e.target.value })} placeholder="z.B. Anna, Tom, Alex" className="text-sm border-transparent" />
                   </div>
                 </div>
                 <div className="space-y-1.5">
@@ -618,21 +618,32 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
                     <Input value={selected.platform} onChange={e => updateSelected({ platform: e.target.value })} className="text-sm border-transparent" />
               </div>
 
-              {/* Anschrift (wird automatisch in Provider Invoice übernommen) */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-                  <MapPin className="h-3 w-3 text-accent" />
-                  Anschrift
-                  <span className="text-[10px] text-muted-foreground/70">(wird in Provider Invoice übernommen)</span>
-                </label>
-                <div className="input-gold-shimmer rounded-lg">
-                  <Textarea
-                    value={selected.providerAddress}
-                    onChange={e => updateSelected({ providerAddress: e.target.value })}
-                    placeholder="Straße, PLZ, Ort, Land"
-                    rows={2}
-                    className="text-sm border-transparent resize-none"
-                  />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground">Voller Rechnungsname</label>
+                  <div className="input-gold-shimmer rounded-lg">
+                    <Input
+                      value={selected.providerNameOverride}
+                      onChange={e => updateSelected({ providerNameOverride: e.target.value })}
+                      placeholder="Vor- und Nachname für Provider Invoice"
+                      className="text-sm border-transparent"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
+                    <MapPin className="h-3 w-3 text-accent" />
+                    Rechnungsadresse
+                  </label>
+                  <div className="input-gold-shimmer rounded-lg">
+                    <Textarea
+                      value={selected.providerAddress}
+                      onChange={e => updateSelected({ providerAddress: e.target.value })}
+                      placeholder="Straße, PLZ, Ort, Land"
+                      rows={2}
+                      className="text-sm border-transparent resize-none"
+                    />
+                  </div>
                 </div>
               </div>
 
