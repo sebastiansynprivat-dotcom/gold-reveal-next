@@ -50,6 +50,19 @@ interface Chatter {
   providerIsBusiness: boolean;
   providerVatId: string;
   providerNameOverride: string;
+  invoiceDescription: string;
+  invoiceNetAmount: number;
+  invoiceCurrency: string;
+  invoiceServicePeriodStart: string | null;
+  invoiceServicePeriodEnd: string | null;
+  invoicePaymentDate: string | null;
+  invoiceCryptoNetwork: string;
+  invoiceCryptoCoin: string;
+  invoiceTxHash: string;
+  invoiceExchangeRate: string;
+  invoiceReceiverWallet: string;
+  invoiceLastCreditNoteNumber: string;
+  invoiceLastGeneratedAt: string | null;
 }
 
 // Map DB row to local interface
@@ -80,6 +93,19 @@ function rowToChatter(row: any): Chatter {
     providerIsBusiness: row.provider_is_business || false,
     providerVatId: row.provider_vat_id || "",
     providerNameOverride: row.provider_name_override || "",
+    invoiceDescription: row.invoice_description || "",
+    invoiceNetAmount: Number(row.invoice_net_amount) || 0,
+    invoiceCurrency: row.invoice_currency || "",
+    invoiceServicePeriodStart: row.invoice_service_period_start || null,
+    invoiceServicePeriodEnd: row.invoice_service_period_end || null,
+    invoicePaymentDate: row.invoice_payment_date || null,
+    invoiceCryptoNetwork: row.invoice_crypto_network || "",
+    invoiceCryptoCoin: row.invoice_crypto_coin || "",
+    invoiceTxHash: row.invoice_tx_hash || "",
+    invoiceExchangeRate: row.invoice_exchange_rate || "",
+    invoiceReceiverWallet: row.invoice_receiver_wallet || "",
+    invoiceLastCreditNoteNumber: row.invoice_last_credit_note_number || "",
+    invoiceLastGeneratedAt: row.invoice_last_generated_at || null,
   };
 }
 
@@ -195,6 +221,17 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
         provider_is_business: chatter.providerIsBusiness,
         provider_vat_id: chatter.providerVatId,
         provider_name_override: chatter.providerNameOverride,
+        invoice_description: chatter.invoiceDescription,
+        invoice_net_amount: chatter.invoiceNetAmount,
+        invoice_currency: chatter.invoiceCurrency,
+        invoice_service_period_start: chatter.invoiceServicePeriodStart,
+        invoice_service_period_end: chatter.invoiceServicePeriodEnd,
+        invoice_payment_date: chatter.invoicePaymentDate,
+        invoice_crypto_network: chatter.invoiceCryptoNetwork,
+        invoice_crypto_coin: chatter.invoiceCryptoCoin,
+        invoice_tx_hash: chatter.invoiceTxHash,
+        invoice_exchange_rate: chatter.invoiceExchangeRate,
+        invoice_receiver_wallet: chatter.invoiceReceiverWallet,
       })
       .eq("id", chatter.id);
 
@@ -252,6 +289,19 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
       bank_iban: "",
       bank_bic: "",
       bank_name: "",
+      provider_address: "",
+      provider_is_business: false,
+      provider_vat_id: "",
+      provider_name_override: "",
+      invoice_description: "",
+      invoice_net_amount: 0,
+      invoice_currency: "",
+      invoice_crypto_network: "",
+      invoice_crypto_coin: "",
+      invoice_tx_hash: "",
+      invoice_exchange_rate: "",
+      invoice_receiver_wallet: "",
+      invoice_last_credit_note_number: "",
       created_by: user?.id,
     };
 
