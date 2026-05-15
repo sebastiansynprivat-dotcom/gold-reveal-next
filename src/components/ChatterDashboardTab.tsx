@@ -924,6 +924,19 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
               providerNameOverride={(selected as any).providerNameOverride || (selected as any).provider_name_override || ""}
               revenuePercentage={selected.compensationType === "percentage" ? selected.revenuePercentage : 0}
               currency={selected.currency || "EUR"}
+              invoiceDescription={selected.invoiceDescription}
+              invoiceNetAmount={selected.invoiceNetAmount}
+              invoiceCurrency={selected.invoiceCurrency}
+              invoiceServicePeriodStart={selected.invoiceServicePeriodStart}
+              invoiceServicePeriodEnd={selected.invoiceServicePeriodEnd}
+              invoicePaymentDate={selected.invoicePaymentDate}
+              invoiceCryptoNetwork={selected.invoiceCryptoNetwork}
+              invoiceCryptoCoin={selected.invoiceCryptoCoin}
+              invoiceTxHash={selected.invoiceTxHash}
+              invoiceExchangeRate={selected.invoiceExchangeRate}
+              invoiceReceiverWallet={selected.invoiceReceiverWallet}
+              onProviderDataChange={(patch) => updateSelected(patch)}
+              onInvoiceDataChange={(patch) => updateSelected(patch)}
               cryptoAddress={selected.cryptoAddress || ""}
               compensationType={selected.compensationType}
               hourlyRate={selected.hourlyRate}
