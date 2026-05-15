@@ -40,7 +40,7 @@ Date: ${today}`;
 
   const cryptoText = `Payout: ${verdienst.toLocaleString("de-DE")} €
 Paid via USDT
-TX Hash: 0x821ad72...
+TxHash: 0x821ad72...
 Exchange Rate: 1 USDT = 0.999 €`;
 
   const copyText = async (text: string, type: "self" | "crypto") => {
@@ -121,7 +121,7 @@ Exchange Rate: 1 USDT = 0.999 €`;
                   <li>Wechselkurs</li>
                   <li>Wallet-Adresse</li>
                   <li>Datum</li>
-                  <li>TX Hash</li>
+                  <li>TxHash</li>
                 </ul>
 
                 <p className="text-sm font-semibold text-foreground mt-3">Beispiel:</p>
