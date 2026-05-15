@@ -1558,14 +1558,34 @@ export default function AdminDashboard() {
     if (!compareFromA || !compareToA) { setCompareA(null); return; }
     setCompareLoading(true);
     fetchComparePeriod(compareFromA, compareToA).then(setCompareA).finally(() => setCompareLoading(false));
-  }, [compareFromA, compareToA, timeFilter]);
+  }, [compareFromA, compareToA, timeFilter, agencyFilter, usernameMapVersion]);
 
   useEffect(() => {
     if (timeFilter !== "vergleich") return;
     if (!compareFromB || !compareToB) { setCompareB(null); return; }
     setCompareLoading(true);
     fetchComparePeriod(compareFromB, compareToB).then(setCompareB).finally(() => setCompareLoading(false));
-  }, [compareFromB, compareToB, timeFilter]);
+  }, [compareFromB, compareToB, timeFilter, agencyFilter, usernameMapVersion]);
+
+  // Re-apply revenue snapshots when the agency filter (or username→agency map) changes
+  useEffect(() => {
+    if (revenueRowsRef.current.length === 0) return;
+    rebuildStandardRevenueCache(revenueRowsRef.current);
+    const f = timeFilterRef.current;
+    if (f === "custom") {
+      if (customFrom && customTo) {
+        getRevenueRangebyDates({
+          from: customFrom.toISOString().slice(0, 10),
+          to: customTo.toISOString().slice(0, 10),
+        });
+      }
+      return;
+    }
+    if (f === "vergleich") return;
+    const snap = revenueCacheRef.current[f];
+    if (snap) applySnapshot(snap, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [agencyFilter, usernameMapVersion]);
 
 
   const filterLabels: Record<TimeFilter, string> = {
