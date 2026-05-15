@@ -1524,7 +1524,7 @@ export default function AdminDashboard() {
     const toStr = to.toISOString().slice(0, 10);
     const { data } = await supabase
       .from("revenue_report")
-      .select("date, platform, revenue_today")
+      .select("date, platform, revenue_today, data")
       .order("date", { ascending: true })
       .gte("date", fromStr)
       .lte("date", toStr);
