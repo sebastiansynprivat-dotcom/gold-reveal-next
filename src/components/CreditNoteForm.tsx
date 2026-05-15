@@ -194,13 +194,14 @@ export default function CreditNoteForm({
     return () => { if (issuerSaveTimerRef.current) clearTimeout(issuerSaveTimerRef.current); };
   }, [issuerName, issuerAddress, issuerVatId, issuerKvk, saveIssuerToDb]);
 
-  // Provider (recipient) — persisted in DB per chatter/model
-  const [providerName, setProviderName] = useState(initialProviderNameOverride || initialProviderName);
-  const [providerAddress, setProviderAddress] = useState(initialProviderAddress);
-  const [isBusiness, setIsBusiness] = useState(initialProviderIsBusiness);
-  const [providerVatId, setProviderVatId] = useState(initialProviderVatId);
-  const providerSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const providerHydratedRef = useRef(false);
+  // Provider (recipient) — single source of truth = parent (chatter/model row).
+  // We mirror props into local state for editing and immediately propagate every
+  // change back to the parent, which debounces the DB save. No local DB autosave
+  // here, to avoid races that could overwrite freshly-typed values.
+  const [providerName, setProviderNameState] = useState(initialProviderNameOverride || initialProviderName);
+  const [providerAddress, setProviderAddressState] = useState(initialProviderAddress);
+  const [isBusiness, setIsBusinessState] = useState(initialProviderIsBusiness);
+  const [providerVatId, setProviderVatIdState] = useState(initialProviderVatId);
   const invoiceSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const invoiceHydratedRef = useRef(false);
   const onProviderDataChangeRef = useRef(onProviderDataChange);
@@ -209,42 +210,32 @@ export default function CreditNoteForm({
   useEffect(() => { onProviderDataChangeRef.current = onProviderDataChange; }, [onProviderDataChange]);
   useEffect(() => { onInvoiceDataChangeRef.current = onInvoiceDataChange; }, [onInvoiceDataChange]);
 
-  // Re-hydrate when switching between chatters/models
+  // Re-hydrate ONLY when switching between chatters/models (entity id changes).
+  // Do NOT depend on the individual prop values — otherwise echoing a saved value
+  // back from the parent triggers a reset that can clobber in-progress typing.
   useEffect(() => {
-    providerHydratedRef.current = false;
-    setProviderName(initialProviderNameOverride || initialProviderName);
-    setProviderAddress(initialProviderAddress);
-    setIsBusiness(initialProviderIsBusiness);
-    setProviderVatId(initialProviderVatId);
-    // Mark hydrated next tick so the auto-save effect below doesn't fire on initial sync
-    const t = setTimeout(() => { providerHydratedRef.current = true; }, 50);
-    return () => clearTimeout(t);
-  }, [providerEntityId, providerEntityType, initialProviderName, initialProviderNameOverride, initialProviderAddress, initialProviderIsBusiness, initialProviderVatId]);
+    setProviderNameState(initialProviderNameOverride || initialProviderName);
+    setProviderAddressState(initialProviderAddress);
+    setIsBusinessState(initialProviderIsBusiness);
+    setProviderVatIdState(initialProviderVatId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [providerEntityId, providerEntityType]);
 
-  // Auto-save provider fields to DB (debounced)
-  useEffect(() => {
-    if (!providerEntityType || !providerEntityId) return;
-    if (!providerHydratedRef.current) return;
-    if (providerSaveTimerRef.current) clearTimeout(providerSaveTimerRef.current);
-    providerSaveTimerRef.current = setTimeout(async () => {
-      const table = providerEntityType === "chatter" ? "chatters" : "models";
-      try {
-        await (supabase.from as any)(table).update({
-          provider_address: providerAddress,
-          provider_is_business: isBusiness,
-          provider_vat_id: providerVatId,
-          provider_name_override: providerName,
-        }).eq("id", providerEntityId);
-        onProviderDataChangeRef.current?.({
-          providerNameOverride: providerName,
-          providerAddress,
-          providerIsBusiness: isBusiness,
-          providerVatId,
-        });
-      } catch { /* silent */ }
-    }, 800);
-    return () => { if (providerSaveTimerRef.current) clearTimeout(providerSaveTimerRef.current); };
-  }, [providerName, providerAddress, isBusiness, providerVatId, providerEntityType, providerEntityId]);
+  // Setters that update local state AND immediately notify parent.
+  // Parent's updateSelected() debounces the actual DB write, so a single source
+  // of truth performs the save and there's no race.
+  const emit = (next: { providerName?: string; providerAddress?: string; isBusiness?: boolean; providerVatId?: string }) => {
+    onProviderDataChangeRef.current?.({
+      providerNameOverride: next.providerName ?? providerName,
+      providerAddress: next.providerAddress ?? providerAddress,
+      providerIsBusiness: next.isBusiness ?? isBusiness,
+      providerVatId: next.providerVatId ?? providerVatId,
+    });
+  };
+  const setProviderName = (v: string) => { setProviderNameState(v); emit({ providerName: v }); };
+  const setProviderAddress = (v: string) => { setProviderAddressState(v); emit({ providerAddress: v }); };
+  const setIsBusiness = (v: boolean) => { setIsBusinessState(v); emit({ isBusiness: v }); };
+  const setProviderVatId = (v: string) => { setProviderVatIdState(v); emit({ providerVatId: v }); };
 
   // Metadata – default service period = previous month
   const lastMonth = subMonths(new Date(), 1);
