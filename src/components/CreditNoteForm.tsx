@@ -1150,6 +1150,23 @@ export default function CreditNoteForm({
                 Kurs nicht verfügbar – bitte Betrag manuell eintragen.
               </div>
             )}
+            {invoiceCurrency === "EUR" && (
+              <div className="flex items-center justify-between gap-2 pt-1">
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">USD-Betrag (für PDF)</span>
+                <div className="relative">
+                  <Input
+                    type="number"
+                    inputMode="decimal"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={usdEquivalent}
+                    onChange={(e) => setUsdEquivalent(e.target.value)}
+                    className="h-7 w-[120px] text-xs pr-6 text-right"
+                  />
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">$</span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
