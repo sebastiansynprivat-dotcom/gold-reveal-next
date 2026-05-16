@@ -989,10 +989,16 @@ export default function AdminDashboard() {
     const normalized = String(value || "").trim().toLowerCase();
     return normalized === "shex" || normalized === "syn" ? normalized : null;
   };
+  const normalizePlatform = (value: unknown): "maloum" | "brezzels" | "4based" | null => {
+    const normalized = String(value || "").trim().toLowerCase();
+    if (normalized === "fourbased" || normalized === "4based") return "4based";
+    if (normalized === "maloum" || normalized === "brezzels") return normalized;
+    return null;
+  };
 
   const emptyRevenueRange = (): RootData => ({ maloum: [], brezzels: [], "4based": [] });
-  const revenueCacheKey = "admin_revenue_cache_v3";
-  const revenueRowsKey = "admin_revenue_rows_v4";
+  const revenueCacheKey = "admin_revenue_cache_v4";
+  const revenueRowsKey = "admin_revenue_rows_v5";
 
   // Wrap cache by agency filter so a stale snapshot from a different filter
   // (e.g. "all") can never be displayed when the user selects "shex"/"syn".
@@ -1071,6 +1077,8 @@ export default function AdminDashboard() {
   const effectiveRevenue = useCallback((row: any): number => {
     const filter = agencyFilterRef.current;
     if (!row) return 0;
+    const platform = normalizePlatform(row.platform);
+    if (filter === "shex" && platform === "4based") return 0;
     if (filter === "all") return Number(row.revenue_today || 0);
     const data = row.data;
     if (!data || typeof data !== "object") return 0;
