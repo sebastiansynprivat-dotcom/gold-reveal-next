@@ -991,15 +991,23 @@ export default function AdminDashboard() {
   };
 
   const emptyRevenueRange = (): RootData => ({ maloum: [], brezzels: [], "4based": [] });
-  const revenueCacheKey = "admin_revenue_cache_v2";
+  const revenueCacheKey = "admin_revenue_cache_v3";
   const revenueRowsKey = "admin_revenue_rows_v4";
 
+  // Wrap cache by agency filter so a stale snapshot from a different filter
+  // (e.g. "all") can never be displayed when the user selects "shex"/"syn".
   const initialRevenueCache = useMemo<Partial<Record<TimeFilter, RevenueSnapshot>>>(() => {
     if (typeof window === "undefined") return {};
     try {
-      return JSON.parse(
-        localStorage.getItem(revenueCacheKey) || sessionStorage.getItem(revenueCacheKey) || "{}",
-      ) || {};
+      const raw = localStorage.getItem(revenueCacheKey) || sessionStorage.getItem(revenueCacheKey);
+      if (!raw) return {};
+      const parsed = JSON.parse(raw);
+      // Only restore cache if it was stored for the default ("all") filter,
+      // since component initializes with agencyFilter = "all".
+      if (parsed && typeof parsed === "object" && parsed.filter === "all" && parsed.snapshots) {
+        return parsed.snapshots;
+      }
+      return {};
     } catch {
       return {};
     }
