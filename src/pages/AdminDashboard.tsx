@@ -991,12 +991,14 @@ export default function AdminDashboard() {
   };
 
   const emptyRevenueRange = (): RootData => ({ maloum: [], brezzels: [], "4based": [] });
+  const revenueCacheKey = "admin_revenue_cache_v2";
+  const revenueRowsKey = "admin_revenue_rows_v4";
 
   const initialRevenueCache = useMemo<Partial<Record<TimeFilter, RevenueSnapshot>>>(() => {
     if (typeof window === "undefined") return {};
     try {
       return JSON.parse(
-        localStorage.getItem("admin_revenue_cache_v1") || sessionStorage.getItem("admin_revenue_cache_v1") || "{}",
+        localStorage.getItem(revenueCacheKey) || sessionStorage.getItem(revenueCacheKey) || "{}",
       ) || {};
     } catch {
       return {};
@@ -1007,7 +1009,7 @@ export default function AdminDashboard() {
     if (typeof window === "undefined") return [];
     try {
       const rows = JSON.parse(
-        localStorage.getItem("admin_revenue_rows_v3") || sessionStorage.getItem("admin_revenue_rows_v3") || "[]",
+        localStorage.getItem(revenueRowsKey) || sessionStorage.getItem(revenueRowsKey) || "[]",
       );
       return Array.isArray(rows) ? rows : [];
     } catch {
