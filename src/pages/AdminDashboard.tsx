@@ -1092,7 +1092,8 @@ export default function AdminDashboard() {
 
   const persistRevenueCache = useCallback(() => {
     if (typeof window === "undefined") return;
-    const serialized = JSON.stringify(revenueCacheRef.current);
+    const payload = { filter: agencyFilterRef.current, snapshots: revenueCacheRef.current };
+    const serialized = JSON.stringify(payload);
     localStorage.setItem(revenueCacheKey, serialized);
     sessionStorage.setItem(revenueCacheKey, serialized);
   }, []);
