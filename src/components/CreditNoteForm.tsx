@@ -336,11 +336,11 @@ export default function CreditNoteForm({
   useEffect(() => {
     const timer = setTimeout(() => {
       localStorage.setItem(storageKey, JSON.stringify({
-        description, netAmount, servicePeriodStart, servicePeriodEnd, paymentDate, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet, invoiceCurrency,
+        description, netAmount, servicePeriodStart, servicePeriodEnd, paymentDate, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet, invoiceCurrency, usdEquivalent,
       }));
     }, 500);
     return () => clearTimeout(timer);
-  }, [description, netAmount, servicePeriodStart, servicePeriodEnd, paymentDate, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet, invoiceCurrency, storageKey]);
+  }, [description, netAmount, servicePeriodStart, servicePeriodEnd, paymentDate, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet, invoiceCurrency, usdEquivalent, storageKey]);
 
   useEffect(() => {
     if (!providerEntityType || !providerEntityId) return;
