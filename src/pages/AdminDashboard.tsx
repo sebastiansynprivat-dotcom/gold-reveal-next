@@ -991,12 +991,14 @@ export default function AdminDashboard() {
   };
 
   const emptyRevenueRange = (): RootData => ({ maloum: [], brezzels: [], "4based": [] });
+  const revenueCacheKey = "admin_revenue_cache_v2";
+  const revenueRowsKey = "admin_revenue_rows_v4";
 
   const initialRevenueCache = useMemo<Partial<Record<TimeFilter, RevenueSnapshot>>>(() => {
     if (typeof window === "undefined") return {};
     try {
       return JSON.parse(
-        localStorage.getItem("admin_revenue_cache_v1") || sessionStorage.getItem("admin_revenue_cache_v1") || "{}",
+        localStorage.getItem(revenueCacheKey) || sessionStorage.getItem(revenueCacheKey) || "{}",
       ) || {};
     } catch {
       return {};
@@ -1007,7 +1009,7 @@ export default function AdminDashboard() {
     if (typeof window === "undefined") return [];
     try {
       const rows = JSON.parse(
-        localStorage.getItem("admin_revenue_rows_v3") || sessionStorage.getItem("admin_revenue_rows_v3") || "[]",
+        localStorage.getItem(revenueRowsKey) || sessionStorage.getItem(revenueRowsKey) || "[]",
       );
       return Array.isArray(rows) ? rows : [];
     } catch {
@@ -1062,8 +1064,6 @@ export default function AdminDashboard() {
     const filter = agencyFilterRef.current;
     if (!row) return 0;
     if (filter === "all") return Number(row.revenue_today || 0);
-    const platform = String(row.platform || "").trim().toLowerCase();
-    if (filter === "shex" && (platform === "4based" || platform === "fourbased")) return 0;
     const data = row.data;
     if (!data || typeof data !== "object") return 0;
     const map = usernameAgencyMapRef.current;
@@ -1085,8 +1085,8 @@ export default function AdminDashboard() {
   const persistRevenueCache = useCallback(() => {
     if (typeof window === "undefined") return;
     const serialized = JSON.stringify(revenueCacheRef.current);
-    localStorage.setItem("admin_revenue_cache_v1", serialized);
-    sessionStorage.setItem("admin_revenue_cache_v1", serialized);
+    localStorage.setItem(revenueCacheKey, serialized);
+    sessionStorage.setItem(revenueCacheKey, serialized);
   }, []);
 
   const buildRevenueSnapshot = useCallback((rows: RevenueRow[], f: TimeFilter): RevenueSnapshot => {
@@ -1122,8 +1122,8 @@ export default function AdminDashboard() {
     });
     if (typeof window !== "undefined") {
       const serializedRows = JSON.stringify(rows);
-      localStorage.setItem("admin_revenue_rows_v3", serializedRows);
-      sessionStorage.setItem("admin_revenue_rows_v3", serializedRows);
+      localStorage.setItem(revenueRowsKey, serializedRows);
+      sessionStorage.setItem(revenueRowsKey, serializedRows);
     }
     persistRevenueCache();
   }, [buildRevenueSnapshot, persistRevenueCache]);
