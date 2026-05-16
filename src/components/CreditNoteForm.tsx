@@ -759,6 +759,13 @@ export default function CreditNoteForm({
           y += 4.5;
         }
       }
+      if (hasUsdNote) {
+        const netNum = parseFloat(netAmount.replace(",", ".")) || 0;
+        const eurStr = netNum.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const usdStr = usdNum.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        doc.text(`Exchange Rate: ${eurStr}\u20AC = ${usdStr}$`, m, y);
+        y += 4.5;
+      }
       if (paymentDate) {
         doc.setFontSize(8.5);
         doc.text(`Payment Date: ${format(new Date(paymentDate), "dd.MM.yyyy")}`, m, y);
