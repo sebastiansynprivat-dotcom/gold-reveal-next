@@ -704,7 +704,9 @@ export default function CreditNoteForm({
     const isBank = modelPaymentMethod === "bank";
     const hasFxNote = !!liveExchangeRate && currency !== invoiceCurrency;
     const hasPlatformFx = platformFxRates && platformFxRates.length > 0;
-    if (isBank || cryptoCoin || txHash || hasFxNote || hasPlatformFx) {
+    const usdNum = parseFloat((usdEquivalent || "").replace(",", ".")) || 0;
+    const hasUsdNote = invoiceCurrency === "EUR" && usdNum > 0;
+    if (isBank || cryptoCoin || txHash || hasFxNote || hasPlatformFx || hasUsdNote) {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(7.5);
       doc.setTextColor(...goldLight);
