@@ -267,6 +267,8 @@ export default function CreditNoteForm({
   const [rateLoading, setRateLoading] = useState(false);
   // Invoice display currency (the currency the invoice is actually issued in)
   const [invoiceCurrency, setInvoiceCurrency] = useState<string>(initialInvoiceCurrency || saved.invoiceCurrency || saved.targetCurrency || currency);
+  // Manual USD equivalent (only used when invoice currency is EUR)
+  const [usdEquivalent, setUsdEquivalent] = useState<string>(saved.usdEquivalent || "");
 
   useEffect(() => {
     invoiceHydratedRef.current = false;
