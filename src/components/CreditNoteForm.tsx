@@ -267,6 +267,8 @@ export default function CreditNoteForm({
   const [rateLoading, setRateLoading] = useState(false);
   // Invoice display currency (the currency the invoice is actually issued in)
   const [invoiceCurrency, setInvoiceCurrency] = useState<string>(initialInvoiceCurrency || saved.invoiceCurrency || saved.targetCurrency || currency);
+  // Manual USD equivalent (only used when invoice currency is EUR)
+  const [usdEquivalent, setUsdEquivalent] = useState<string>(saved.usdEquivalent || "");
 
   useEffect(() => {
     invoiceHydratedRef.current = false;
@@ -334,11 +336,11 @@ export default function CreditNoteForm({
   useEffect(() => {
     const timer = setTimeout(() => {
       localStorage.setItem(storageKey, JSON.stringify({
-        description, netAmount, servicePeriodStart, servicePeriodEnd, paymentDate, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet, invoiceCurrency,
+        description, netAmount, servicePeriodStart, servicePeriodEnd, paymentDate, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet, invoiceCurrency, usdEquivalent,
       }));
     }, 500);
     return () => clearTimeout(timer);
-  }, [description, netAmount, servicePeriodStart, servicePeriodEnd, paymentDate, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet, invoiceCurrency, storageKey]);
+  }, [description, netAmount, servicePeriodStart, servicePeriodEnd, paymentDate, cryptoNetwork, cryptoCoin, txHash, exchangeRate, receiverWallet, invoiceCurrency, usdEquivalent, storageKey]);
 
   useEffect(() => {
     if (!providerEntityType || !providerEntityId) return;
@@ -702,7 +704,9 @@ export default function CreditNoteForm({
     const isBank = modelPaymentMethod === "bank";
     const hasFxNote = !!liveExchangeRate && currency !== invoiceCurrency;
     const hasPlatformFx = platformFxRates && platformFxRates.length > 0;
-    if (isBank || cryptoCoin || txHash || hasFxNote || hasPlatformFx) {
+    const usdNum = parseFloat((usdEquivalent || "").replace(",", ".")) || 0;
+    const hasUsdNote = invoiceCurrency === "EUR" && usdNum > 0;
+    if (isBank || cryptoCoin || txHash || hasFxNote || hasPlatformFx || hasUsdNote) {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(7.5);
       doc.setTextColor(...goldLight);
@@ -754,6 +758,13 @@ export default function CreditNoteForm({
           doc.text(`Exchange Rate (${fx.platform}): 1 ${fx.from} = ${fx.rate.toFixed(4)} ${fx.to}`, m, y);
           y += 4.5;
         }
+      }
+      if (hasUsdNote) {
+        const netNum = parseFloat(netAmount.replace(",", ".")) || 0;
+        const eurStr = netNum.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const usdStr = usdNum.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        doc.text(`Exchange Rate: ${eurStr}\u20AC = ${usdStr}$`, m, y);
+        y += 4.5;
       }
       if (paymentDate) {
         doc.setFontSize(8.5);
@@ -1137,6 +1148,23 @@ export default function CreditNoteForm({
             {currency !== invoiceCurrency && !liveExchangeRate && !rateLoading && (
               <div className="text-[10px] text-destructive/80 text-right">
                 Kurs nicht verfügbar – bitte Betrag manuell eintragen.
+              </div>
+            )}
+            {invoiceCurrency === "EUR" && (
+              <div className="flex items-center justify-between gap-2 pt-1">
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">USD-Betrag (für PDF)</span>
+                <div className="relative">
+                  <Input
+                    type="number"
+                    inputMode="decimal"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={usdEquivalent}
+                    onChange={(e) => setUsdEquivalent(e.target.value)}
+                    className="h-7 w-[120px] text-xs pr-6 text-right"
+                  />
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">$</span>
+                </div>
               </div>
             )}
           </div>
