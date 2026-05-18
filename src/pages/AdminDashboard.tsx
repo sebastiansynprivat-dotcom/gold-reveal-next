@@ -1332,7 +1332,7 @@ export default function AdminDashboard() {
       const filtered = data.filter((x: any) => x.platform === platform);
       return filtered.map((x: any) => ({ date: x.date, total: x.revenue_today || 0 })).slice(flag === "today" ? -7 : -3);
     };
-    const total = { maloum: revenueTotal("maloum"), brezzels: revenueTotal("brezzels"), "4based": revenueTotal("4based") } as CurrentTotal;
+    const total = buildRevenueSnapshot(data as RevenueRow[], flag === "today" ? "heute" : "gestern").total;
     const rng = { maloum: revenueRange("maloum"), brezzels: revenueRange("brezzels"), "4based": revenueRange("4based") } as RootData;
     return { total, range: rng, totalEarnings: total.maloum + total.brezzels + total["4based"] };
   }
@@ -1353,7 +1353,7 @@ export default function AdminDashboard() {
       data.filter((x: any) => x.platform === platform).reduce((s: number, x: any) => s + (x.revenue_today || 0), 0);
     const revenueRange = (platform: string) =>
       data.filter((x: any) => x.platform === platform).map((x: any) => ({ date: x.date, total: x.revenue_today || 0 }));
-    const total = { maloum: revenueTotal("maloum"), brezzels: revenueTotal("brezzels"), "4based": revenueTotal("4based") } as CurrentTotal;
+    const total = buildRevenueSnapshot(data as RevenueRow[], flag).total;
     const rng = { maloum: revenueRange("maloum"), brezzels: revenueRange("brezzels"), "4based": revenueRange("4based") } as RootData;
     return { total, range: rng, totalEarnings: total.maloum + total.brezzels + total["4based"] };
   }
