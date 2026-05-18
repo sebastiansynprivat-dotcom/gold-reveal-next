@@ -998,8 +998,8 @@ export default function AdminDashboard() {
   };
 
   const emptyRevenueRange = (): RootData => ({ maloum: [], brezzels: [], "4based": [] });
-  const revenueCacheKey = "admin_revenue_cache_v7";
-  const revenueRowsKey = "admin_revenue_rows_v8";
+  const revenueCacheKey = "admin_revenue_cache_v8";
+  const revenueRowsKey = "admin_revenue_rows_v9";
 
   // Wrap cache by agency filter so a stale snapshot from a different filter
   // (e.g. "all") can never be displayed when the user selects "shex"/"syn".
@@ -1072,23 +1072,53 @@ export default function AdminDashboard() {
   const [unmatchedUsers, setUnmatchedUsers] = useState<Array<{ user: string; platform: string; total: number }>>([]);
   useEffect(() => {
     (async () => {
-      const { data } = await supabase.from("models").select("name, username, model_agency");
-      if (!data) return;
       const map: Record<string, "shex" | "syn"> = {};
-      for (const m of data as any[]) {
+      const addKey = (raw: unknown, agency: "shex" | "syn") => {
+        const k = normalizeUsernameKey(raw);
+        if (!k) return;
+        if (!map[k]) map[k] = agency;
+        // Also index with trailing digits stripped (e.g. "mandyjane92" -> "mandyjane")
+        // so feed usernames without version suffix still resolve.
+        const stripped = k.replace(/\d+$/, "");
+        if (stripped && stripped !== k && !map[stripped]) map[stripped] = agency;
+      };
+
+      // 1) Models table — canonical source of agency assignment.
+      const { data: models } = await supabase
+        .from("models")
+        .select("name, username, model_agency")
+        .range(0, 9999);
+      for (const m of (models as any[]) || []) {
         const agency = normalizeAgency(m.model_agency);
         if (!agency) continue;
-        // Index by BOTH normalized username and normalized name so we catch
-        // models whose feed alias differs from their stored username.
-        const uKey = normalizeUsernameKey(m.username);
-        const nKey = normalizeUsernameKey(m.name);
-        if (uKey) map[uKey] = agency;
-        if (nKey && !map[nKey]) map[nKey] = agency;
+        addKey(m.username, agency);
+        addKey(m.name, agency);
       }
+
+      // 2) Accounts table — per-platform aliases (account_email, folder names).
+      //    A model's agency is fixed; any platform account linked to that model
+      //    inherits the same agency, so we widen the lookup with every alias
+      //    we know about (email prefix, folder, subfolder, account_domain).
+      const { data: accounts } = await supabase
+        .from("accounts")
+        .select("account_email, account_domain, folder_name, subfolder_name, model_agency, models(model_agency)")
+        .range(0, 9999);
+      for (const a of (accounts as any[]) || []) {
+        const agency =
+          normalizeAgency(a?.models?.model_agency) || normalizeAgency(a.model_agency);
+        if (!agency) continue;
+        const emailPrefix = String(a.account_email || "").split("@")[0];
+        addKey(emailPrefix, agency);
+        addKey(a.account_domain, agency);
+        addKey(a.folder_name, agency);
+        addKey(a.subfolder_name, agency);
+      }
+
       usernameAgencyMapRef.current = map;
       setUsernameMapVersion((v) => v + 1);
     })();
   }, []);
+
 
   const effectiveRevenue = useCallback((row: any): number => {
     const filter = agencyFilterRef.current;
@@ -1109,7 +1139,7 @@ export default function AdminDashboard() {
     let sum = 0;
     for (const [user, vals] of Object.entries(data as Record<string, unknown>)) {
       const key = normalizeUsernameKey(user);
-      const agency = map[key];
+      const agency = map[key] || map[key.replace(/\d+$/, "")];
       if (!agency || agency !== filter) continue;
       if (Array.isArray(vals)) {
         for (const v of vals) sum += Number(v) || 0;
@@ -1119,6 +1149,7 @@ export default function AdminDashboard() {
     }
     return sum;
   }, []);
+
 
   // Prefetch cache: holds precomputed totals/ranges per filter so switching is instant
   const revenueCacheRef = useRef<Partial<Record<TimeFilter, RevenueSnapshot>>>(initialRevenueCache);
@@ -3292,65 +3323,6 @@ export default function AdminDashboard() {
                       ))}
                     </div>
                   </motion.div>
-
-                  {/* Unmatched usernames warning — these revenues are excluded from SheX/SYN totals */}
-                  {agencyFilter !== "all" && unmatchedUsers.length > 0 && (
-                    <motion.div
-                      variants={{ hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0 } }}
-                      className="glass-card-subtle rounded-xl p-3 border border-yellow-500/30 bg-yellow-500/5"
-                    >
-                      <div className="flex items-start gap-2">
-                        <div className="text-yellow-500 text-xs font-bold uppercase tracking-wider shrink-0">⚠ Nicht zugeordnet</div>
-                        <div className="text-[10px] text-muted-foreground flex-1">
-                          Diese Usernames erscheinen im Revenue-Feed, sind aber keinem Model zugeordnet und fehlen daher in den SheX/SYN-Summen (Differenz zu „Alle"). Bitte als Model anlegen oder Username korrigieren:
-                        </div>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="h-7 text-[10px] shrink-0"
-                          onClick={() => {
-                            const header = "username,platform,revenue_30d_eur";
-                            const lines = unmatchedUsers.map((u) => {
-                              const safeUser = `"${String(u.user).replace(/"/g, '""')}"`;
-                              const safePlatform = `"${String(u.platform).replace(/"/g, '""')}"`;
-                              return `${safeUser},${safePlatform},${u.total.toFixed(2)}`;
-                            });
-                            const csv = "\ufeff" + [header, ...lines].join("\n");
-                            const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-                            const url = URL.createObjectURL(blob);
-                            const a = document.createElement("a");
-                            const today = new Date().toISOString().slice(0, 10);
-                            a.href = url;
-                            a.download = `unmatched_models_${today}.csv`;
-                            document.body.appendChild(a);
-                            a.click();
-                            document.body.removeChild(a);
-                            URL.revokeObjectURL(url);
-                            toast.success(`${unmatchedUsers.length} Usernames exportiert`);
-                          }}
-                        >
-                          <Download className="h-3 w-3 mr-1" />
-                          CSV Export
-                        </Button>
-                      </div>
-                      <div className="mt-2 max-h-40 overflow-y-auto flex flex-wrap gap-1.5">
-                        {unmatchedUsers.slice(0, 60).map((u) => (
-                          <span
-                            key={`${u.platform}-${u.user}`}
-                            className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-background/60 border border-border/40 text-[10px]"
-                            title={`${u.platform} • ${u.total.toFixed(2)} € (letzte 30 Tage)`}
-                          >
-                            <span className="font-mono text-foreground">{u.user}</span>
-                            <span className="text-muted-foreground">{u.platform}</span>
-                            <span className="text-yellow-500 font-medium">{u.total.toFixed(0)}€</span>
-                          </span>
-                        ))}
-                        {unmatchedUsers.length > 60 && (
-                          <span className="text-[10px] text-muted-foreground self-center">+ {unmatchedUsers.length - 60} weitere</span>
-                        )}
-                      </div>
-                    </motion.div>
-                  )}
 
                   {timeFilter === "custom" && (
                     <div className="flex gap-2 items-center glass-card-subtle rounded-xl p-3">
