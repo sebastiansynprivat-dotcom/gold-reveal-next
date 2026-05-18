@@ -3260,6 +3260,37 @@ export default function AdminDashboard() {
                     </div>
                   </motion.div>
 
+                  {/* Unmatched usernames warning — these revenues are excluded from SheX/SYN totals */}
+                  {agencyFilter !== "all" && unmatchedUsers.length > 0 && (
+                    <motion.div
+                      variants={{ hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0 } }}
+                      className="glass-card-subtle rounded-xl p-3 border border-yellow-500/30 bg-yellow-500/5"
+                    >
+                      <div className="flex items-start gap-2">
+                        <div className="text-yellow-500 text-xs font-bold uppercase tracking-wider shrink-0">⚠ Nicht zugeordnet</div>
+                        <div className="text-[10px] text-muted-foreground">
+                          Diese Usernames erscheinen im Revenue-Feed, sind aber keinem Model zugeordnet und fehlen daher in den SheX/SYN-Summen (Differenz zu „Alle"). Bitte als Model anlegen oder Username korrigieren:
+                        </div>
+                      </div>
+                      <div className="mt-2 max-h-40 overflow-y-auto flex flex-wrap gap-1.5">
+                        {unmatchedUsers.slice(0, 60).map((u) => (
+                          <span
+                            key={`${u.platform}-${u.user}`}
+                            className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-background/60 border border-border/40 text-[10px]"
+                            title={`${u.platform} • ${u.total.toFixed(2)} € (letzte 30 Tage)`}
+                          >
+                            <span className="font-mono text-foreground">{u.user}</span>
+                            <span className="text-muted-foreground">{u.platform}</span>
+                            <span className="text-yellow-500 font-medium">{u.total.toFixed(0)}€</span>
+                          </span>
+                        ))}
+                        {unmatchedUsers.length > 60 && (
+                          <span className="text-[10px] text-muted-foreground self-center">+ {unmatchedUsers.length - 60} weitere</span>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+
                   {/* Agency Filter (SheX / SYN) */}
                   <motion.div variants={{ hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0 } }} className="overflow-x-auto scrollbar-none -mx-4 px-4">
                     <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-secondary/40 backdrop-blur-sm border border-border/30 relative">
