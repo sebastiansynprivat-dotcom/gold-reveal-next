@@ -1139,7 +1139,7 @@ export default function AdminDashboard() {
     let sum = 0;
     for (const [user, vals] of Object.entries(data as Record<string, unknown>)) {
       const key = normalizeUsernameKey(user);
-      const agency = map[key];
+      const agency = map[key] || map[key.replace(/\d+$/, "")];
       if (!agency || agency !== filter) continue;
       if (Array.isArray(vals)) {
         for (const v of vals) sum += Number(v) || 0;
@@ -1149,6 +1149,7 @@ export default function AdminDashboard() {
     }
     return sum;
   }, []);
+
 
   // Prefetch cache: holds precomputed totals/ranges per filter so switching is instant
   const revenueCacheRef = useRef<Partial<Record<TimeFilter, RevenueSnapshot>>>(initialRevenueCache);
