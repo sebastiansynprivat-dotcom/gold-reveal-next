@@ -1165,7 +1165,7 @@ export default function AdminDashboard() {
 
     let { data, error } = await supabase
       .from("revenue_report")
-      .select("date, platform, revenue_today")
+      .select("date, platform, revenue_today, data")
       .lte("date", selectedDate)
       .gte("date", fromDate)
       .order("date", { ascending: true });
@@ -1177,23 +1177,23 @@ export default function AdminDashboard() {
     }
 
     const revenueTotal = (platform, data) => {
-      const filtered = data.filter((x) => x.platform === platform);
+      const filtered = data.filter((x) => normalizePlatform(x.platform) === platform);
 
       if (filtered.length === 0) return 0;
 
       const index = flag === "today" ? -1 : -2;
       const item = filtered.at(index);
 
-      return item ? item.revenue_today || 0 : 0;
+      return item ? effectiveRevenue(item) : 0;
     };
 
     const revenueRange = (platform, data) => {
-      const filtered = data.filter((x) => x.platform === platform);
+      const filtered = data.filter((x) => normalizePlatform(x.platform) === platform);
 
       return filtered
         .map((x) => ({
           date: x.date,
-          total: x.revenue_today || 0,
+          total: effectiveRevenue(x),
         }))
         .slice(flag === "today" ? -7 : -3);
     };
