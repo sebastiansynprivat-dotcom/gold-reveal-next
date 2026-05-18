@@ -1056,18 +1056,33 @@ export default function AdminDashboard() {
   const [agencyFilter, setAgencyFilter] = useState<AgencyFilter>("all");
   const agencyFilterRef = useRef<AgencyFilter>("all");
   useEffect(() => { agencyFilterRef.current = agencyFilter; }, [agencyFilter]);
+  // Normalize usernames to be tolerant of formatting differences between
+  // the revenue feed (e.g. "lena_lehmann") and the models table (e.g. "Lena.lehmann").
+  // We strip dots, underscores, hyphens and spaces and lowercase the result so
+  // that "Lena.lehmann" and "lena_lehmann" match the same model.
+  const normalizeUsernameKey = (value: unknown): string =>
+    String(value || "").trim().toLowerCase().replace(/[._\-\s]+/g, "");
+
   const usernameAgencyMapRef = useRef<Record<string, "shex" | "syn">>({});
   const [usernameMapVersion, setUsernameMapVersion] = useState(0);
+  // Usernames that appear in revenue_report.data but cannot be matched to any
+  // model — these are silently dropped from agency-filtered totals, so we
+  // surface them in the UI to prevent unnoticed data loss going forward.
+  const [unmatchedUsers, setUnmatchedUsers] = useState<Array<{ user: string; platform: string; total: number }>>([]);
   useEffect(() => {
     (async () => {
-      const { data } = await supabase.from("models").select("username, model_agency");
+      const { data } = await supabase.from("models").select("name, username, model_agency");
       if (!data) return;
       const map: Record<string, "shex" | "syn"> = {};
       for (const m of data as any[]) {
         const agency = normalizeAgency(m.model_agency);
-        if (m.username && agency) {
-          map[String(m.username).trim().toLowerCase()] = agency;
-        }
+        if (!agency) continue;
+        // Index by BOTH normalized username and normalized name so we catch
+        // models whose feed alias differs from their stored username.
+        const uKey = normalizeUsernameKey(m.username);
+        const nKey = normalizeUsernameKey(m.name);
+        if (uKey) map[uKey] = agency;
+        if (nKey && !map[nKey]) map[nKey] = agency;
       }
       usernameAgencyMapRef.current = map;
       setUsernameMapVersion((v) => v + 1);
@@ -1079,9 +1094,12 @@ export default function AdminDashboard() {
     if (!row) return 0;
     const platform = normalizePlatform(row.platform);
     const rowTotal = Number(row.revenue_today || 0);
+    // 4Based is an SYN-only platform — enforce this at the source of truth so
+    // that even unmapped 4based usernames stay on SYN's books.
     if (platform === "4based") {
       if (filter === "shex") return 0;
       if (filter === "syn") return rowTotal;
+      return rowTotal; // "all"
     }
     if (filter === "all") return rowTotal;
     const data = row.data;
@@ -1089,10 +1107,13 @@ export default function AdminDashboard() {
     const map = usernameAgencyMapRef.current;
     let sum = 0;
     for (const [user, vals] of Object.entries(data as Record<string, unknown>)) {
-      const agency = map[String(user).trim().toLowerCase()];
+      const key = normalizeUsernameKey(user);
+      const agency = map[key];
       if (!agency || agency !== filter) continue;
       if (Array.isArray(vals)) {
         for (const v of vals) sum += Number(v) || 0;
+      } else if (typeof vals === "number") {
+        sum += vals;
       }
     }
     return sum;
