@@ -1344,15 +1344,15 @@ export default function AdminDashboard() {
     const fromDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
     const { data, error } = await supabase
       .from("revenue_report")
-      .select("date, platform, revenue_today")
+      .select("date, platform, revenue_today, data")
       .lte("date", todayDate)
       .gte("date", fromDate)
       .order("date", { ascending: true });
     if (error || !data) return null;
     const revenueTotal = (platform: string) =>
-      data.filter((x: any) => x.platform === platform).reduce((s: number, x: any) => s + (x.revenue_today || 0), 0);
+      data.filter((x: any) => normalizePlatform(x.platform) === platform).reduce((s: number, x: any) => s + effectiveRevenue(x), 0);
     const revenueRange = (platform: string) =>
-      data.filter((x: any) => x.platform === platform).map((x: any) => ({ date: x.date, total: x.revenue_today || 0 }));
+      data.filter((x: any) => normalizePlatform(x.platform) === platform).map((x: any) => ({ date: x.date, total: effectiveRevenue(x) }));
     const total = buildRevenueSnapshot(data as RevenueRow[], flag).total;
     const rng = { maloum: revenueRange("maloum"), brezzels: revenueRange("brezzels"), "4based": revenueRange("4based") } as RootData;
     return { total, range: rng, totalEarnings: total.maloum + total.brezzels + total["4based"] };
