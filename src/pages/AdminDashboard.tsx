@@ -997,8 +997,8 @@ export default function AdminDashboard() {
   };
 
   const emptyRevenueRange = (): RootData => ({ maloum: [], brezzels: [], "4based": [] });
-  const revenueCacheKey = "admin_revenue_cache_v4";
-  const revenueRowsKey = "admin_revenue_rows_v5";
+  const revenueCacheKey = "admin_revenue_cache_v5";
+  const revenueRowsKey = "admin_revenue_rows_v6";
 
   // Wrap cache by agency filter so a stale snapshot from a different filter
   // (e.g. "all") can never be displayed when the user selects "shex"/"syn".
@@ -1078,8 +1078,12 @@ export default function AdminDashboard() {
     const filter = agencyFilterRef.current;
     if (!row) return 0;
     const platform = normalizePlatform(row.platform);
-    if (filter === "shex" && platform === "4based") return 0;
-    if (filter === "all") return Number(row.revenue_today || 0);
+    const rowTotal = Number(row.revenue_today || 0);
+    if (platform === "4based") {
+      if (filter === "shex") return 0;
+      if (filter === "syn") return rowTotal;
+    }
+    if (filter === "all") return rowTotal;
     const data = row.data;
     if (!data || typeof data !== "object") return 0;
     const map = usernameAgencyMapRef.current;
@@ -1116,7 +1120,7 @@ export default function AdminDashboard() {
       : sorted.filter((r) => r.date >= start(7) && r.date <= today);
     const platforms = ["maloum", "brezzels", "4based"] as const;
     const total = platforms.reduce((acc, platform) => {
-      const platformRows = rowsForRange.filter((r) => r.platform === platform);
+      const platformRows = rowsForRange.filter((r) => normalizePlatform(r.platform) === platform);
       const value = f === "heute" || f === "gestern"
         ? effectiveRevenue(platformRows.at(f === "heute" ? -1 : -2))
         : platformRows.reduce((sum, r) => sum + effectiveRevenue(r), 0);
@@ -1125,7 +1129,7 @@ export default function AdminDashboard() {
     const range = platforms.reduce((acc, platform) => ({
       ...acc,
       [platform]: rowsForRange
-        .filter((r) => r.platform === platform)
+        .filter((r) => normalizePlatform(r.platform) === platform)
         .map((r) => ({ date: r.date, total: effectiveRevenue(r) }))
         .slice(f === "gestern" ? -3 : f === "heute" ? -7 : undefined),
     }), {} as RootData);
@@ -1161,7 +1165,7 @@ export default function AdminDashboard() {
 
     let { data, error } = await supabase
       .from("revenue_report")
-      .select("date, platform, revenue_today")
+      .select("date, platform, revenue_today, data")
       .lte("date", selectedDate)
       .gte("date", fromDate)
       .order("date", { ascending: true });
@@ -1173,23 +1177,23 @@ export default function AdminDashboard() {
     }
 
     const revenueTotal = (platform, data) => {
-      const filtered = data.filter((x) => x.platform === platform);
+      const filtered = data.filter((x) => normalizePlatform(x.platform) === platform);
 
       if (filtered.length === 0) return 0;
 
       const index = flag === "today" ? -1 : -2;
       const item = filtered.at(index);
 
-      return item ? item.revenue_today || 0 : 0;
+      return item ? effectiveRevenue(item) : 0;
     };
 
     const revenueRange = (platform, data) => {
-      const filtered = data.filter((x) => x.platform === platform);
+      const filtered = data.filter((x) => normalizePlatform(x.platform) === platform);
 
       return filtered
         .map((x) => ({
           date: x.date,
-          total: x.revenue_today || 0,
+          total: effectiveRevenue(x),
         }))
         .slice(flag === "today" ? -7 : -3);
     };
@@ -1222,7 +1226,7 @@ export default function AdminDashboard() {
 
     let { data, error } = await supabase
       .from("revenue_report")
-      .select("date, platform, revenue_today")
+      .select("date, platform, revenue_today, data")
       .lte("date", todayDate)
       .gte("date", fromDate)
       .order("date", { ascending: true });
@@ -1231,18 +1235,18 @@ export default function AdminDashboard() {
     if (error) console.log(error);
 
     const revenueTotal = (platform, data) => {
-      const filtered = data.filter((x) => x.platform == platform);
+      const filtered = data.filter((x) => normalizePlatform(x.platform) === platform);
 
-      return filtered.length > 0 ? filtered.reduce((sum, x) => sum + x.revenue_today, 0) : 0;
+      return filtered.length > 0 ? filtered.reduce((sum, x) => sum + effectiveRevenue(x), 0) : 0;
     };
 
     const revenueRange = (platform, data) => {
-      const filtered = data.filter((x) => x.platform === platform);
+      const filtered = data.filter((x) => normalizePlatform(x.platform) === platform);
 
       if (filtered.length == 0) return [];
       const rangeData = filtered.map((x) => ({
         date: x.date,
-        total: x.revenue_today || 0,
+        total: effectiveRevenue(x),
       }));
 
       return rangeData;
@@ -1277,12 +1281,12 @@ export default function AdminDashboard() {
     if (error) console.log(error);
 
     const revenueTotal = (platform, data) => {
-      const filtered = data.filter((x) => x.platform == platform);
+      const filtered = data.filter((x) => normalizePlatform(x.platform) === platform);
       return filtered.length > 0 ? filtered.reduce((sum, x) => sum + effectiveRevenue(x), 0) : 0;
     };
 
     const revenueRange = (platform, data) => {
-      const filtered = data.filter((x) => x.platform == platform);
+      const filtered = data.filter((x) => normalizePlatform(x.platform) === platform);
       if (filtered.length == 0) return [];
       return filtered.map((x) => ({ date: x.date, total: effectiveRevenue(x) }));
     };
@@ -1312,23 +1316,23 @@ export default function AdminDashboard() {
     const fromDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
     const { data, error } = await supabase
       .from("revenue_report")
-      .select("date, platform, revenue_today")
+      .select("date, platform, revenue_today, data")
       .lte("date", selectedDate)
       .gte("date", fromDate)
       .order("date", { ascending: true });
     if (error || !data) return null;
     const revenueTotal = (platform: string) => {
-      const filtered = data.filter((x: any) => x.platform === platform);
+      const filtered = data.filter((x: any) => normalizePlatform(x.platform) === platform);
       if (filtered.length === 0) return 0;
       const index = flag === "today" ? -1 : -2;
       const item: any = filtered.at(index);
-      return item ? item.revenue_today || 0 : 0;
+      return item ? effectiveRevenue(item) : 0;
     };
     const revenueRange = (platform: string) => {
-      const filtered = data.filter((x: any) => x.platform === platform);
-      return filtered.map((x: any) => ({ date: x.date, total: x.revenue_today || 0 })).slice(flag === "today" ? -7 : -3);
+      const filtered = data.filter((x: any) => normalizePlatform(x.platform) === platform);
+      return filtered.map((x: any) => ({ date: x.date, total: effectiveRevenue(x) })).slice(flag === "today" ? -7 : -3);
     };
-    const total = { maloum: revenueTotal("maloum"), brezzels: revenueTotal("brezzels"), "4based": revenueTotal("4based") } as CurrentTotal;
+    const total = buildRevenueSnapshot(data as RevenueRow[], flag === "today" ? "heute" : "gestern").total;
     const rng = { maloum: revenueRange("maloum"), brezzels: revenueRange("brezzels"), "4based": revenueRange("4based") } as RootData;
     return { total, range: rng, totalEarnings: total.maloum + total.brezzels + total["4based"] };
   }
@@ -1340,16 +1344,16 @@ export default function AdminDashboard() {
     const fromDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
     const { data, error } = await supabase
       .from("revenue_report")
-      .select("date, platform, revenue_today")
+      .select("date, platform, revenue_today, data")
       .lte("date", todayDate)
       .gte("date", fromDate)
       .order("date", { ascending: true });
     if (error || !data) return null;
     const revenueTotal = (platform: string) =>
-      data.filter((x: any) => x.platform === platform).reduce((s: number, x: any) => s + (x.revenue_today || 0), 0);
+      data.filter((x: any) => normalizePlatform(x.platform) === platform).reduce((s: number, x: any) => s + effectiveRevenue(x), 0);
     const revenueRange = (platform: string) =>
-      data.filter((x: any) => x.platform === platform).map((x: any) => ({ date: x.date, total: x.revenue_today || 0 }));
-    const total = { maloum: revenueTotal("maloum"), brezzels: revenueTotal("brezzels"), "4based": revenueTotal("4based") } as CurrentTotal;
+      data.filter((x: any) => normalizePlatform(x.platform) === platform).map((x: any) => ({ date: x.date, total: effectiveRevenue(x) }));
+    const total = buildRevenueSnapshot(data as RevenueRow[], flag).total;
     const rng = { maloum: revenueRange("maloum"), brezzels: revenueRange("brezzels"), "4based": revenueRange("4based") } as RootData;
     return { total, range: rng, totalEarnings: total.maloum + total.brezzels + total["4based"] };
   }
