@@ -3294,7 +3294,7 @@ export default function AdminDashboard() {
                   </motion.div>
 
                   {/* Unmatched usernames warning — these revenues are excluded from SheX/SYN totals */}
-                  {agencyFilter !== "all" && unmatchedUsers.length > 0 && (
+                  {unmatchedUsers.length > 0 && (
                     <motion.div
                       variants={{ hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0 } }}
                       className="glass-card-subtle rounded-xl p-3 border border-yellow-500/30 bg-yellow-500/5"
