@@ -1072,23 +1072,53 @@ export default function AdminDashboard() {
   const [unmatchedUsers, setUnmatchedUsers] = useState<Array<{ user: string; platform: string; total: number }>>([]);
   useEffect(() => {
     (async () => {
-      const { data } = await supabase.from("models").select("name, username, model_agency");
-      if (!data) return;
       const map: Record<string, "shex" | "syn"> = {};
-      for (const m of data as any[]) {
+      const addKey = (raw: unknown, agency: "shex" | "syn") => {
+        const k = normalizeUsernameKey(raw);
+        if (!k) return;
+        if (!map[k]) map[k] = agency;
+        // Also index with trailing digits stripped (e.g. "mandyjane92" -> "mandyjane")
+        // so feed usernames without version suffix still resolve.
+        const stripped = k.replace(/\d+$/, "");
+        if (stripped && stripped !== k && !map[stripped]) map[stripped] = agency;
+      };
+
+      // 1) Models table — canonical source of agency assignment.
+      const { data: models } = await supabase
+        .from("models")
+        .select("name, username, model_agency")
+        .range(0, 9999);
+      for (const m of (models as any[]) || []) {
         const agency = normalizeAgency(m.model_agency);
         if (!agency) continue;
-        // Index by BOTH normalized username and normalized name so we catch
-        // models whose feed alias differs from their stored username.
-        const uKey = normalizeUsernameKey(m.username);
-        const nKey = normalizeUsernameKey(m.name);
-        if (uKey) map[uKey] = agency;
-        if (nKey && !map[nKey]) map[nKey] = agency;
+        addKey(m.username, agency);
+        addKey(m.name, agency);
       }
+
+      // 2) Accounts table — per-platform aliases (account_email, folder names).
+      //    A model's agency is fixed; any platform account linked to that model
+      //    inherits the same agency, so we widen the lookup with every alias
+      //    we know about (email prefix, folder, subfolder, account_domain).
+      const { data: accounts } = await supabase
+        .from("accounts")
+        .select("account_email, account_domain, folder_name, subfolder_name, model_agency, models(model_agency)")
+        .range(0, 9999);
+      for (const a of (accounts as any[]) || []) {
+        const agency =
+          normalizeAgency(a?.models?.model_agency) || normalizeAgency(a.model_agency);
+        if (!agency) continue;
+        const emailPrefix = String(a.account_email || "").split("@")[0];
+        addKey(emailPrefix, agency);
+        addKey(a.account_domain, agency);
+        addKey(a.folder_name, agency);
+        addKey(a.subfolder_name, agency);
+      }
+
       usernameAgencyMapRef.current = map;
       setUsernameMapVersion((v) => v + 1);
     })();
   }, []);
+
 
   const effectiveRevenue = useCallback((row: any): number => {
     const filter = agencyFilterRef.current;
