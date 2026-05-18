@@ -997,8 +997,8 @@ export default function AdminDashboard() {
   };
 
   const emptyRevenueRange = (): RootData => ({ maloum: [], brezzels: [], "4based": [] });
-  const revenueCacheKey = "admin_revenue_cache_v5";
-  const revenueRowsKey = "admin_revenue_rows_v6";
+  const revenueCacheKey = "admin_revenue_cache_v7";
+  const revenueRowsKey = "admin_revenue_rows_v8";
 
   // Wrap cache by agency filter so a stale snapshot from a different filter
   // (e.g. "all") can never be displayed when the user selects "shex"/"syn".
@@ -1056,18 +1056,33 @@ export default function AdminDashboard() {
   const [agencyFilter, setAgencyFilter] = useState<AgencyFilter>("all");
   const agencyFilterRef = useRef<AgencyFilter>("all");
   useEffect(() => { agencyFilterRef.current = agencyFilter; }, [agencyFilter]);
+  // Normalize usernames to be tolerant of formatting differences between
+  // the revenue feed (e.g. "lena_lehmann") and the models table (e.g. "Lena.lehmann").
+  // We strip dots, underscores, hyphens and spaces and lowercase the result so
+  // that "Lena.lehmann" and "lena_lehmann" match the same model.
+  const normalizeUsernameKey = (value: unknown): string =>
+    String(value || "").trim().toLowerCase().replace(/[._\-\s]+/g, "");
+
   const usernameAgencyMapRef = useRef<Record<string, "shex" | "syn">>({});
   const [usernameMapVersion, setUsernameMapVersion] = useState(0);
+  // Usernames that appear in revenue_report.data but cannot be matched to any
+  // model — these are silently dropped from agency-filtered totals, so we
+  // surface them in the UI to prevent unnoticed data loss going forward.
+  const [unmatchedUsers, setUnmatchedUsers] = useState<Array<{ user: string; platform: string; total: number }>>([]);
   useEffect(() => {
     (async () => {
-      const { data } = await supabase.from("models").select("username, model_agency");
+      const { data } = await supabase.from("models").select("name, username, model_agency");
       if (!data) return;
       const map: Record<string, "shex" | "syn"> = {};
       for (const m of data as any[]) {
         const agency = normalizeAgency(m.model_agency);
-        if (m.username && agency) {
-          map[String(m.username).trim().toLowerCase()] = agency;
-        }
+        if (!agency) continue;
+        // Index by BOTH normalized username and normalized name so we catch
+        // models whose feed alias differs from their stored username.
+        const uKey = normalizeUsernameKey(m.username);
+        const nKey = normalizeUsernameKey(m.name);
+        if (uKey) map[uKey] = agency;
+        if (nKey && !map[nKey]) map[nKey] = agency;
       }
       usernameAgencyMapRef.current = map;
       setUsernameMapVersion((v) => v + 1);
@@ -1079,9 +1094,12 @@ export default function AdminDashboard() {
     if (!row) return 0;
     const platform = normalizePlatform(row.platform);
     const rowTotal = Number(row.revenue_today || 0);
+    // 4Based is an SYN-only platform — enforce this at the source of truth so
+    // that even unmapped 4based usernames stay on SYN's books.
     if (platform === "4based") {
       if (filter === "shex") return 0;
       if (filter === "syn") return rowTotal;
+      return rowTotal; // "all"
     }
     if (filter === "all") return rowTotal;
     const data = row.data;
@@ -1089,10 +1107,13 @@ export default function AdminDashboard() {
     const map = usernameAgencyMapRef.current;
     let sum = 0;
     for (const [user, vals] of Object.entries(data as Record<string, unknown>)) {
-      const agency = map[String(user).trim().toLowerCase()];
+      const key = normalizeUsernameKey(user);
+      const agency = map[key];
       if (!agency || agency !== filter) continue;
       if (Array.isArray(vals)) {
         for (const v of vals) sum += Number(v) || 0;
+      } else if (typeof vals === "number") {
+        sum += vals;
       }
     }
     return sum;
@@ -1388,11 +1409,40 @@ export default function AdminDashboard() {
       .order("date", { ascending: true });
     if (!data) return;
     rebuildStandardRevenueCache(data as RevenueRow[]);
+    computeUnmatchedUsers(data as RevenueRow[]);
     const current = timeFilterRef.current;
     if (activeTabRef.current === "einnahmen" && current !== "custom" && current !== "vergleich") {
       applySnapshot(revenueCacheRef.current[current]!, true);
     }
   }, [rebuildStandardRevenueCache]);
+
+  // Aggregate any usernames found in revenue feed that don't map to a model.
+  // These are excluded from agency-filtered totals (so SheX+SYN < Alle), and
+  // we surface them in the UI so they can be assigned to their proper model.
+  const computeUnmatchedUsers = useCallback((rows: RevenueRow[]) => {
+    const map = usernameAgencyMapRef.current;
+    const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const agg = new Map<string, { user: string; platform: string; total: number }>();
+    for (const row of rows) {
+      if (row.date < cutoff) continue;
+      const platform = normalizePlatform(row.platform);
+      if (!platform || platform === "4based") continue; // 4based is fully attributed to SYN regardless
+      const data = row.data;
+      if (!data || typeof data !== "object") continue;
+      for (const [user, vals] of Object.entries(data as Record<string, unknown>)) {
+        if (map[normalizeUsernameKey(user)]) continue;
+        let amount = 0;
+        if (Array.isArray(vals)) for (const v of vals) amount += Number(v) || 0;
+        else if (typeof vals === "number") amount = vals;
+        if (amount <= 0) continue;
+        const key = `${platform}::${user.toLowerCase()}`;
+        const prev = agg.get(key);
+        if (prev) prev.total += amount;
+        else agg.set(key, { user, platform, total: amount });
+      }
+    }
+    setUnmatchedUsers(Array.from(agg.values()).sort((a, b) => b.total - a.total));
+  }, []);
 
   // Keep activeTabRef in sync + refresh Einnahmen only when returning to the tab
   useEffect(() => {
@@ -1599,6 +1649,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (revenueRowsRef.current.length === 0) return;
     rebuildStandardRevenueCache(revenueRowsRef.current);
+    computeUnmatchedUsers(revenueRowsRef.current);
     const f = timeFilterRef.current;
     if (f === "custom") {
       if (customFrom && customTo) {
@@ -3240,6 +3291,37 @@ export default function AdminDashboard() {
                       ))}
                     </div>
                   </motion.div>
+
+                  {/* Unmatched usernames warning — these revenues are excluded from SheX/SYN totals */}
+                  {agencyFilter !== "all" && unmatchedUsers.length > 0 && (
+                    <motion.div
+                      variants={{ hidden: { opacity: 0, y: 8 }, show: { opacity: 1, y: 0 } }}
+                      className="glass-card-subtle rounded-xl p-3 border border-yellow-500/30 bg-yellow-500/5"
+                    >
+                      <div className="flex items-start gap-2">
+                        <div className="text-yellow-500 text-xs font-bold uppercase tracking-wider shrink-0">⚠ Nicht zugeordnet</div>
+                        <div className="text-[10px] text-muted-foreground">
+                          Diese Usernames erscheinen im Revenue-Feed, sind aber keinem Model zugeordnet und fehlen daher in den SheX/SYN-Summen (Differenz zu „Alle"). Bitte als Model anlegen oder Username korrigieren:
+                        </div>
+                      </div>
+                      <div className="mt-2 max-h-40 overflow-y-auto flex flex-wrap gap-1.5">
+                        {unmatchedUsers.slice(0, 60).map((u) => (
+                          <span
+                            key={`${u.platform}-${u.user}`}
+                            className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-background/60 border border-border/40 text-[10px]"
+                            title={`${u.platform} • ${u.total.toFixed(2)} € (letzte 30 Tage)`}
+                          >
+                            <span className="font-mono text-foreground">{u.user}</span>
+                            <span className="text-muted-foreground">{u.platform}</span>
+                            <span className="text-yellow-500 font-medium">{u.total.toFixed(0)}€</span>
+                          </span>
+                        ))}
+                        {unmatchedUsers.length > 60 && (
+                          <span className="text-[10px] text-muted-foreground self-center">+ {unmatchedUsers.length - 60} weitere</span>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
 
                   {timeFilter === "custom" && (
                     <div className="flex gap-2 items-center glass-card-subtle rounded-xl p-3">
