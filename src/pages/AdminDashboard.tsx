@@ -998,8 +998,8 @@ export default function AdminDashboard() {
   };
 
   const emptyRevenueRange = (): RootData => ({ maloum: [], brezzels: [], "4based": [] });
-  const revenueCacheKey = "admin_revenue_cache_v7";
-  const revenueRowsKey = "admin_revenue_rows_v8";
+  const revenueCacheKey = "admin_revenue_cache_v8";
+  const revenueRowsKey = "admin_revenue_rows_v9";
 
   // Wrap cache by agency filter so a stale snapshot from a different filter
   // (e.g. "all") can never be displayed when the user selects "shex"/"syn".
