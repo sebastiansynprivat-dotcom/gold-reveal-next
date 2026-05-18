@@ -1649,6 +1649,7 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (revenueRowsRef.current.length === 0) return;
     rebuildStandardRevenueCache(revenueRowsRef.current);
+    computeUnmatchedUsers(revenueRowsRef.current);
     const f = timeFilterRef.current;
     if (f === "custom") {
       if (customFrom && customTo) {
