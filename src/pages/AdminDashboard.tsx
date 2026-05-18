@@ -997,8 +997,8 @@ export default function AdminDashboard() {
   };
 
   const emptyRevenueRange = (): RootData => ({ maloum: [], brezzels: [], "4based": [] });
-  const revenueCacheKey = "admin_revenue_cache_v4";
-  const revenueRowsKey = "admin_revenue_rows_v5";
+  const revenueCacheKey = "admin_revenue_cache_v5";
+  const revenueRowsKey = "admin_revenue_rows_v6";
 
   // Wrap cache by agency filter so a stale snapshot from a different filter
   // (e.g. "all") can never be displayed when the user selects "shex"/"syn".
@@ -1078,8 +1078,12 @@ export default function AdminDashboard() {
     const filter = agencyFilterRef.current;
     if (!row) return 0;
     const platform = normalizePlatform(row.platform);
-    if (filter === "shex" && platform === "4based") return 0;
-    if (filter === "all") return Number(row.revenue_today || 0);
+    const rowTotal = Number(row.revenue_today || 0);
+    if (platform === "4based") {
+      if (filter === "shex") return 0;
+      if (filter === "syn") return rowTotal;
+    }
+    if (filter === "all") return rowTotal;
     const data = row.data;
     if (!data || typeof data !== "object") return 0;
     const map = usernameAgencyMapRef.current;
@@ -1116,7 +1120,7 @@ export default function AdminDashboard() {
       : sorted.filter((r) => r.date >= start(7) && r.date <= today);
     const platforms = ["maloum", "brezzels", "4based"] as const;
     const total = platforms.reduce((acc, platform) => {
-      const platformRows = rowsForRange.filter((r) => r.platform === platform);
+      const platformRows = rowsForRange.filter((r) => normalizePlatform(r.platform) === platform);
       const value = f === "heute" || f === "gestern"
         ? effectiveRevenue(platformRows.at(f === "heute" ? -1 : -2))
         : platformRows.reduce((sum, r) => sum + effectiveRevenue(r), 0);
@@ -1125,7 +1129,7 @@ export default function AdminDashboard() {
     const range = platforms.reduce((acc, platform) => ({
       ...acc,
       [platform]: rowsForRange
-        .filter((r) => r.platform === platform)
+        .filter((r) => normalizePlatform(r.platform) === platform)
         .map((r) => ({ date: r.date, total: effectiveRevenue(r) }))
         .slice(f === "gestern" ? -3 : f === "heute" ? -7 : undefined),
     }), {} as RootData);
