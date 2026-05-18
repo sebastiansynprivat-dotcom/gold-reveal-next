@@ -54,6 +54,7 @@ import {
   PanelLeft,
   Menu,
   ArrowLeftRight,
+  Download,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -3300,9 +3301,37 @@ export default function AdminDashboard() {
                     >
                       <div className="flex items-start gap-2">
                         <div className="text-yellow-500 text-xs font-bold uppercase tracking-wider shrink-0">⚠ Nicht zugeordnet</div>
-                        <div className="text-[10px] text-muted-foreground">
+                        <div className="text-[10px] text-muted-foreground flex-1">
                           Diese Usernames erscheinen im Revenue-Feed, sind aber keinem Model zugeordnet und fehlen daher in den SheX/SYN-Summen (Differenz zu „Alle"). Bitte als Model anlegen oder Username korrigieren:
                         </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-7 text-[10px] shrink-0"
+                          onClick={() => {
+                            const header = "username,platform,revenue_30d_eur";
+                            const lines = unmatchedUsers.map((u) => {
+                              const safeUser = `"${String(u.user).replace(/"/g, '""')}"`;
+                              const safePlatform = `"${String(u.platform).replace(/"/g, '""')}"`;
+                              return `${safeUser},${safePlatform},${u.total.toFixed(2)}`;
+                            });
+                            const csv = "\ufeff" + [header, ...lines].join("\n");
+                            const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement("a");
+                            const today = new Date().toISOString().slice(0, 10);
+                            a.href = url;
+                            a.download = `unmatched_models_${today}.csv`;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(url);
+                            toast.success(`${unmatchedUsers.length} Usernames exportiert`);
+                          }}
+                        >
+                          <Download className="h-3 w-3 mr-1" />
+                          CSV Export
+                        </Button>
                       </div>
                       <div className="mt-2 max-h-40 overflow-y-auto flex flex-wrap gap-1.5">
                         {unmatchedUsers.slice(0, 60).map((u) => (
