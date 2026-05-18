@@ -1409,11 +1409,40 @@ export default function AdminDashboard() {
       .order("date", { ascending: true });
     if (!data) return;
     rebuildStandardRevenueCache(data as RevenueRow[]);
+    computeUnmatchedUsers(data as RevenueRow[]);
     const current = timeFilterRef.current;
     if (activeTabRef.current === "einnahmen" && current !== "custom" && current !== "vergleich") {
       applySnapshot(revenueCacheRef.current[current]!, true);
     }
   }, [rebuildStandardRevenueCache]);
+
+  // Aggregate any usernames found in revenue feed that don't map to a model.
+  // These are excluded from agency-filtered totals (so SheX+SYN < Alle), and
+  // we surface them in the UI so they can be assigned to their proper model.
+  const computeUnmatchedUsers = useCallback((rows: RevenueRow[]) => {
+    const map = usernameAgencyMapRef.current;
+    const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+    const agg = new Map<string, { user: string; platform: string; total: number }>();
+    for (const row of rows) {
+      if (row.date < cutoff) continue;
+      const platform = normalizePlatform(row.platform);
+      if (!platform || platform === "4based") continue; // 4based is fully attributed to SYN regardless
+      const data = row.data;
+      if (!data || typeof data !== "object") continue;
+      for (const [user, vals] of Object.entries(data as Record<string, unknown>)) {
+        if (map[normalizeUsernameKey(user)]) continue;
+        let amount = 0;
+        if (Array.isArray(vals)) for (const v of vals) amount += Number(v) || 0;
+        else if (typeof vals === "number") amount = vals;
+        if (amount <= 0) continue;
+        const key = `${platform}::${user.toLowerCase()}`;
+        const prev = agg.get(key);
+        if (prev) prev.total += amount;
+        else agg.set(key, { user, platform, total: amount });
+      }
+    }
+    setUnmatchedUsers(Array.from(agg.values()).sort((a, b) => b.total - a.total));
+  }, []);
 
   // Keep activeTabRef in sync + refresh Einnahmen only when returning to the tab
   useEffect(() => {
