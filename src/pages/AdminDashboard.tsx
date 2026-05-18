@@ -1281,12 +1281,12 @@ export default function AdminDashboard() {
     if (error) console.log(error);
 
     const revenueTotal = (platform, data) => {
-      const filtered = data.filter((x) => x.platform == platform);
+      const filtered = data.filter((x) => normalizePlatform(x.platform) === platform);
       return filtered.length > 0 ? filtered.reduce((sum, x) => sum + effectiveRevenue(x), 0) : 0;
     };
 
     const revenueRange = (platform, data) => {
-      const filtered = data.filter((x) => x.platform == platform);
+      const filtered = data.filter((x) => normalizePlatform(x.platform) === platform);
       if (filtered.length == 0) return [];
       return filtered.map((x) => ({ date: x.date, total: effectiveRevenue(x) }));
     };
@@ -1316,21 +1316,21 @@ export default function AdminDashboard() {
     const fromDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
     const { data, error } = await supabase
       .from("revenue_report")
-      .select("date, platform, revenue_today")
+      .select("date, platform, revenue_today, data")
       .lte("date", selectedDate)
       .gte("date", fromDate)
       .order("date", { ascending: true });
     if (error || !data) return null;
     const revenueTotal = (platform: string) => {
-      const filtered = data.filter((x: any) => x.platform === platform);
+      const filtered = data.filter((x: any) => normalizePlatform(x.platform) === platform);
       if (filtered.length === 0) return 0;
       const index = flag === "today" ? -1 : -2;
       const item: any = filtered.at(index);
-      return item ? item.revenue_today || 0 : 0;
+      return item ? effectiveRevenue(item) : 0;
     };
     const revenueRange = (platform: string) => {
-      const filtered = data.filter((x: any) => x.platform === platform);
-      return filtered.map((x: any) => ({ date: x.date, total: x.revenue_today || 0 })).slice(flag === "today" ? -7 : -3);
+      const filtered = data.filter((x: any) => normalizePlatform(x.platform) === platform);
+      return filtered.map((x: any) => ({ date: x.date, total: effectiveRevenue(x) })).slice(flag === "today" ? -7 : -3);
     };
     const total = buildRevenueSnapshot(data as RevenueRow[], flag === "today" ? "heute" : "gestern").total;
     const rng = { maloum: revenueRange("maloum"), brezzels: revenueRange("brezzels"), "4based": revenueRange("4based") } as RootData;
