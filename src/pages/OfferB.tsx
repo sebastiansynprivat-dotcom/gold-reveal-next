@@ -265,16 +265,22 @@ const OfferB = () => {
                 href={link.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={`glass-card-subtle rounded-xl p-5 flex items-start gap-4 hover:scale-[1.02] transition-all duration-300 group ${
+                className={`glass-card-subtle rounded-xl p-5 flex flex-col gap-4 hover:scale-[1.02] transition-all duration-300 group cursor-pointer ${
                   completedSteps.has(link.step) ? "opacity-60" : ""
                 }`}
               >
-                <StepBadge step={link.step} completed={completedSteps.has(link.step)} />
-                <div className="flex-1">
-                  <h3 className="text-foreground font-semibold group-hover:text-primary transition-colors">
-                    {link.title}
-                  </h3>
-                  <p className="text-muted-foreground text-sm mt-1">{link.description}</p>
+                <div className="flex items-start gap-4">
+                  <StepBadge step={link.step} completed={completedSteps.has(link.step)} />
+                  <div className="flex-1">
+                    <h3 className="text-foreground font-semibold group-hover:text-primary transition-colors">
+                      {link.title}
+                    </h3>
+                    <p className="text-muted-foreground text-sm mt-1">{link.description}</p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-center gap-2 text-sm font-semibold text-primary-foreground bg-primary group-hover:bg-primary/90 transition-colors rounded-lg px-4 py-2.5 shadow-lg shadow-primary/20">
+                  <ExternalLink className="w-4 h-4" />
+                  👉 HIER KLICKEN — Bot öffnen
                 </div>
               </a>
             ))}
