@@ -332,7 +332,7 @@ const OfferB = () => {
                           className="flex items-center justify-center gap-2 text-sm font-semibold text-primary-foreground bg-primary hover:bg-primary/90 transition-colors rounded-lg px-4 py-2.5 shadow-lg shadow-primary/20"
                         >
                           <ExternalLink className="w-4 h-4" />
-                          Brezzels Notifications öffnen
+                          👉 HIER KLICKEN — Bot öffnen
                         </a>
                       </div>
 
@@ -348,7 +348,7 @@ const OfferB = () => {
                           className="flex items-center justify-center gap-2 text-sm font-semibold text-primary-foreground bg-primary hover:bg-primary/90 transition-colors rounded-lg px-4 py-2.5 shadow-lg shadow-primary/20"
                         >
                           <ExternalLink className="w-4 h-4" />
-                          My ID Bot öffnen
+                          👉 HIER KLICKEN — Bot öffnen
                         </a>
                       </div>
                     </div>
