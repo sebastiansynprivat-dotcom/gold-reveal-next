@@ -302,9 +302,9 @@ const OfferA = () => {
                           href="https://t.me/Xalvebot"
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center justify-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors font-medium"
+                          className="flex items-center justify-center gap-2 text-sm font-semibold text-primary-foreground bg-primary hover:bg-primary/90 transition-colors rounded-lg px-4 py-2.5 shadow-lg shadow-primary/20"
                         >
-                          <ExternalLink className="w-3 h-3" />
+                          <ExternalLink className="w-4 h-4" />
                           Maloum Notifications öffnen
                         </a>
                       </div>
@@ -318,9 +318,9 @@ const OfferA = () => {
                           href="https://t.me/myidbot"
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="flex items-center justify-center gap-1.5 text-xs text-primary hover:text-primary/80 transition-colors font-medium"
+                          className="flex items-center justify-center gap-2 text-sm font-semibold text-primary-foreground bg-primary hover:bg-primary/90 transition-colors rounded-lg px-4 py-2.5 shadow-lg shadow-primary/20"
                         >
-                          <ExternalLink className="w-3 h-3" />
+                          <ExternalLink className="w-4 h-4" />
                           My ID Bot öffnen
                         </a>
                       </div>
