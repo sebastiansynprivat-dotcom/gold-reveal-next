@@ -3748,7 +3748,7 @@ export default function AdminDashboard() {
                         return d >= win30Start.getTime() && d <= now.getTime();
                       })
                       .reduce((sum, r) => sum + (r.revenue_today || 0), 0);
-                    const avgPerModel = activeModels > 0 ? Math.round(earnings30 / activeModels) : 0;
+                    const avgPerModel = totalModels > 0 ? Math.round(earnings30 / totalModels) : 0;
 
                     return (
                       <motion.div
