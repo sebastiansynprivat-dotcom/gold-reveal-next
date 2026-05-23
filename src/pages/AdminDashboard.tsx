@@ -3700,7 +3700,30 @@ export default function AdminDashboard() {
                     const totalModels = filtered.length;
                     const activeModels = filtered.filter((m) => m.model_active).length;
 
-                    // Always use last 30 days vs previous 30 days as reference
+                    // Zeitraum-basierte "neu" Zahl
+                    let startDate: Date | null = null;
+                    let endDate: Date | null = new Date(); endDate.setHours(23,59,59,999);
+                    const today = new Date();
+                    if (timeFilter === "heute") {
+                      startDate = new Date(today); startDate.setHours(0, 0, 0, 0);
+                    } else if (timeFilter === "gestern") {
+                      startDate = new Date(today); startDate.setDate(startDate.getDate() - 1); startDate.setHours(0, 0, 0, 0);
+                      endDate = new Date(today); endDate.setDate(endDate.getDate() - 1); endDate.setHours(23, 59, 59, 999);
+                    } else if (timeFilter === "7" || timeFilter === "30" || timeFilter === "90") {
+                      const days = Number(timeFilter);
+                      startDate = new Date(today); startDate.setDate(startDate.getDate() - days + 1); startDate.setHours(0, 0, 0, 0);
+                    } else if (timeFilter === "custom" && customFrom && customTo) {
+                      startDate = new Date(customFrom); startDate.setHours(0, 0, 0, 0);
+                      endDate = new Date(customTo); endDate.setHours(23, 59, 59, 999);
+                    }
+                    const newInPeriod = startDate
+                      ? filtered.filter((m) => {
+                          const c = new Date(m.created_at).getTime();
+                          return c >= startDate!.getTime() && c <= (endDate || new Date()).getTime();
+                        }).length
+                      : 0;
+
+                    // Always use last 30 days vs previous 30 days as reference for growth %
                     const now = new Date();
                     const ms30 = 30 * 24 * 60 * 60 * 1000;
                     const win30Start = new Date(now.getTime() - ms30);
@@ -3731,27 +3754,16 @@ export default function AdminDashboard() {
                     return (
                       <motion.div
                         variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { duration: 0.5 } } }}
-                        className="grid grid-cols-1 sm:grid-cols-3 gap-3"
+                        className="grid grid-cols-1 sm:grid-cols-2 gap-3"
                       >
                         <div className="relative glass-card-subtle rounded-2xl p-4 overflow-hidden">
                           <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
-                          <p className="text-[10px] text-muted-foreground font-semibold tracking-wider uppercase mb-2">Models gesamt</p>
+                          <p className="text-[10px] text-muted-foreground font-semibold tracking-wider uppercase mb-2">Models · Gesamtanzahl & Wachstum</p>
                           <p className="text-3xl font-black text-accent tabular-nums" style={{ textShadow: "0 0 10px hsl(var(--accent) / 0.25)" }}>
                             <AnimatedNumber value={totalModels} />
                           </p>
                           <p className="mt-1 text-[10px] text-muted-foreground">
-                            <span className="text-foreground/80 font-semibold tabular-nums">{activeModels}</span> aktiv
-                          </p>
-                        </div>
-
-                        <div className="relative glass-card-subtle rounded-2xl p-4 overflow-hidden">
-                          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
-                          <p className="text-[10px] text-muted-foreground font-semibold tracking-wider uppercase mb-2">Wachstum · 30 Tage</p>
-                          <p className="text-3xl font-black text-accent tabular-nums" style={{ textShadow: "0 0 10px hsl(var(--accent) / 0.25)" }}>
-                            {growthUp ? "+" : ""}<AnimatedNumber value={growthPct} />%
-                          </p>
-                          <p className="mt-1 text-[10px] text-muted-foreground">
-                            <span className="text-foreground/80 font-semibold tabular-nums">{newInRange}</span> neu · zuvor <span className="tabular-nums">{prevInRange}</span>
+                            <span className={growthUp ? "text-emerald-400" : "text-red-400"}>{growthUp ? "+" : ""}{growthPct}%</span> Wachstum (30 Tage) · <span className="text-foreground/80 font-semibold tabular-nums">{newInPeriod}</span> neu im Zeitraum
                           </p>
                         </div>
 
