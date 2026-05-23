@@ -32,12 +32,6 @@ export const PLATFORMS: PlatformDef[] = [
     styles: { bg: "bg-cyan-500/10", text: "text-cyan-400", border: "border-cyan-500/30", dot: "bg-cyan-500" },
   },
   {
-    label: "FansyMe",
-    key: "fansyme",
-    color: "#a855f7",
-    styles: { bg: "bg-purple-500/10", text: "text-purple-400", border: "border-purple-500/30", dot: "bg-purple-500" },
-  },
-  {
     label: "Admireme",
     key: "admireme",
     color: "#ec4899",
