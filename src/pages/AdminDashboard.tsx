@@ -3762,7 +3762,7 @@ export default function AdminDashboard() {
                             <AnimatedNumber value={totalModels} />
                           </p>
                           <p className="mt-1 text-[10px] text-muted-foreground">
-                            <span className={growthUp ? "text-emerald-400" : "text-red-400"}>{growthUp ? "+" : ""}{growthPct}%</span> Wachstum (30 Tage) · <span className="text-foreground/80 font-semibold tabular-nums">{newInPeriod}</span> neu im Zeitraum
+                            <span className="text-foreground/70">{growthUp ? "+" : ""}{growthPct}%</span> Wachstum (30 Tage) · <span className="text-foreground/80 font-semibold tabular-nums">{newInPeriod}</span> neu im Zeitraum
                           </p>
                         </div>
 
