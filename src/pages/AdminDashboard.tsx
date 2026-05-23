@@ -3784,7 +3784,7 @@ export default function AdminDashboard() {
                           <p className="text-3xl font-black text-accent tabular-nums" style={{ textShadow: "0 0 10px hsl(var(--accent) / 0.25)" }}>
                             <AnimatedNumber value={avgPerModel} suffix="€" />
                           </p>
-                          <p className="mt-1 text-[10px] text-muted-foreground">letzte 30 Tage · {activeModels} aktive Models</p>
+                          <p className="mt-1 text-[10px] text-muted-foreground">letzte 30 Tage · {totalModels} Models</p>
                         </div>
 
                       </motion.div>
