@@ -3672,6 +3672,96 @@ export default function AdminDashboard() {
                     })}
                   </motion.div>
 
+                  {/* MODELS OVERVIEW — Tracking */}
+                  {(() => {
+                    const today = new Date();
+                    let startDate: Date | null = null;
+                    let endDate: Date = today;
+                    if (timeFilter === "heute") {
+                      startDate = new Date(today); startDate.setHours(0, 0, 0, 0);
+                    } else if (timeFilter === "gestern") {
+                      startDate = new Date(today); startDate.setDate(startDate.getDate() - 1); startDate.setHours(0, 0, 0, 0);
+                      endDate = new Date(today); endDate.setDate(endDate.getDate() - 1); endDate.setHours(23, 59, 59, 999);
+                    } else if (timeFilter === "7" || timeFilter === "30" || timeFilter === "90") {
+                      const days = Number(timeFilter);
+                      startDate = new Date(today); startDate.setDate(startDate.getDate() - days + 1); startDate.setHours(0, 0, 0, 0);
+                    } else if (timeFilter === "custom" && customFrom && customTo) {
+                      startDate = new Date(customFrom); startDate.setHours(0, 0, 0, 0);
+                      endDate = new Date(customTo); endDate.setHours(23, 59, 59, 999);
+                    }
+
+                    const agencyMatch = (m: { model_agency: string | null }) => {
+                      if (agencyFilter === "all") return true;
+                      const a = (m.model_agency || "").toLowerCase();
+                      return agencyFilter === "shex" ? a === "shex" : (a === "syn" || a === "simp");
+                    };
+
+                    const filtered = modelsAll.filter(agencyMatch);
+                    const totalModels = filtered.length;
+                    const activeModels = filtered.filter((m) => m.model_active).length;
+
+                    let growthPct = 0;
+                    let newInRange = 0;
+                    let prevInRange = 0;
+                    if (startDate) {
+                      const rangeMs = endDate.getTime() - startDate.getTime();
+                      const prevEnd = new Date(startDate.getTime() - 1);
+                      const prevStart = new Date(prevEnd.getTime() - rangeMs);
+                      newInRange = filtered.filter((m) => {
+                        const c = new Date(m.created_at).getTime();
+                        return c >= startDate!.getTime() && c <= endDate.getTime();
+                      }).length;
+                      prevInRange = filtered.filter((m) => {
+                        const c = new Date(m.created_at).getTime();
+                        return c >= prevStart.getTime() && c <= prevEnd.getTime();
+                      }).length;
+                      const baseBefore = filtered.filter((m) => new Date(m.created_at).getTime() < startDate!.getTime()).length;
+                      growthPct = baseBefore > 0 ? Math.round((newInRange / baseBefore) * 1000) / 10 : (newInRange > 0 ? 100 : 0);
+                    }
+                    const growthUp = growthPct >= 0;
+                    const avgPerModel = activeModels > 0 ? Math.round(totalEarnings / activeModels) : 0;
+
+                    return (
+                      <motion.div
+                        variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { duration: 0.5 } } }}
+                        className="grid grid-cols-1 sm:grid-cols-3 gap-3"
+                      >
+                        <div className="relative glass-card-subtle rounded-2xl p-4 overflow-hidden">
+                          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
+                          <p className="text-[10px] text-muted-foreground font-semibold tracking-wider uppercase mb-2">Models gesamt</p>
+                          <p className="text-3xl font-black text-accent tabular-nums" style={{ textShadow: "0 0 10px hsl(var(--accent) / 0.25)" }}>
+                            <AnimatedNumber value={totalModels} />
+                          </p>
+                          <p className="mt-1 text-[10px] text-muted-foreground">
+                            <span className="text-foreground/80 font-semibold tabular-nums">{activeModels}</span> aktiv
+                          </p>
+                        </div>
+
+                        <div className="relative glass-card-subtle rounded-2xl p-4 overflow-hidden">
+                          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
+                          <p className="text-[10px] text-muted-foreground font-semibold tracking-wider uppercase mb-2">Wachstum · {filterLabels[timeFilter]}</p>
+                          <div className="flex items-baseline gap-2">
+                            <p className={cn("text-3xl font-black tabular-nums", growthUp ? "text-emerald-400" : "text-red-400")}>
+                              {growthUp ? "+" : ""}{growthPct.toLocaleString("de-DE")}%
+                            </p>
+                          </div>
+                          <p className="mt-1 text-[10px] text-muted-foreground">
+                            <span className="text-foreground/80 font-semibold tabular-nums">{newInRange}</span> neu · zuvor <span className="tabular-nums">{prevInRange}</span>
+                          </p>
+                        </div>
+
+                        <div className="relative glass-card-subtle rounded-2xl p-4 overflow-hidden">
+                          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
+                          <p className="text-[10px] text-muted-foreground font-semibold tracking-wider uppercase mb-2">Ø Verdienst / Model</p>
+                          <p className="text-3xl font-black text-accent tabular-nums" style={{ textShadow: "0 0 10px hsl(var(--accent) / 0.25)" }}>
+                            <AnimatedNumber value={avgPerModel} />
+                          </p>
+                          <p className="mt-1 text-[10px] text-muted-foreground">{filterLabels[timeFilter]} · {activeModels} aktive Models</p>
+                        </div>
+                      </motion.div>
+                    );
+                  })()}
+
                   {/* UMSATZVERLAUF — Luxury Cockpit */}
                   <motion.div
                     variants={{ hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0, transition: { duration: 0.5 } } }}
