@@ -3762,7 +3762,19 @@ export default function AdminDashboard() {
                             <AnimatedNumber value={totalModels} suffix="" />
                           </p>
                           <p className="mt-1 text-[10px] text-muted-foreground">
-                            <span className="text-foreground/70">{growthUp ? "+" : ""}{growthPct}%</span> Wachstum (30 Tage) · <span className="text-foreground/80 font-semibold tabular-nums">{newInPeriod}</span> neu im Zeitraum
+                            <span className="text-foreground/70">{growthUp ? "+" : ""}{growthPct}%</span> Wachstum (30 Tage) · <span className="text-foreground/80 font-semibold tabular-nums">{newInPeriod}</span> {(() => {
+                              const labelMap: Record<string, string> = {
+                                heute: "seit heute",
+                                gestern: "seit gestern",
+                                "7": "seit 7 Tagen",
+                                "30": "seit 30 Tagen",
+                                "90": "seit 90 Tagen",
+                              };
+                              const label = timeFilter === "custom" && customFrom && customTo
+                                ? `im Zeitraum`
+                                : (labelMap[timeFilter] || "seit Start");
+                              return `Models neu ${label}`;
+                            })()}
                           </p>
                         </div>
 
@@ -3770,7 +3782,7 @@ export default function AdminDashboard() {
                           <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
                           <p className="text-[10px] text-muted-foreground font-semibold tracking-wider uppercase mb-2">Ø Verdienst / Model</p>
                           <p className="text-3xl font-black text-accent tabular-nums" style={{ textShadow: "0 0 10px hsl(var(--accent) / 0.25)" }}>
-                            <AnimatedNumber value={avgPerModel} suffix="" />
+                            <AnimatedNumber value={avgPerModel} suffix="€" />
                           </p>
                           <p className="mt-1 text-[10px] text-muted-foreground">letzte 30 Tage · {activeModels} aktive Models</p>
                         </div>
