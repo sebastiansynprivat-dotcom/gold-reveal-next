@@ -1217,7 +1217,7 @@ export default function ModelDashboardTab() {
                         "4Based": "#22d3ee",
                         Maloum: "#d4af37",
                         Brezzels: "#3b82f6",
-                        FansyMe: "#ec4899",
+                        
                         Admireme: "#ec4899",
                         VisitX: "#0ea5e9",
                         Slushy: "#8b5cf6",
