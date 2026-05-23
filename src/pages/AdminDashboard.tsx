@@ -3701,9 +3701,8 @@ export default function AdminDashboard() {
                     const activeModels = filtered.filter((m) => m.model_active).length;
 
                     // Zeitraum-basierte "neu" Zahl
-                    let startDate: Date | null = null;
-                    let endDate: Date | null = new Date(); endDate.setHours(23,59,59,999);
-                    const today = new Date();
+                    startDate = null;
+                    endDate = new Date(); endDate.setHours(23,59,59,999);
                     if (timeFilter === "heute") {
                       startDate = new Date(today); startDate.setHours(0, 0, 0, 0);
                     } else if (timeFilter === "gestern") {
