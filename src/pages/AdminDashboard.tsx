@@ -899,6 +899,17 @@ export default function AdminDashboard() {
   const [revenueUsers, setRevenueUsers] = useState<Set<string>>(new Set());
   const [pwaUsers, setPwaUsers] = useState<Set<string>>(new Set());
   const [revenueBoost, setRevenueBoost] = useState(0);
+  const [modelsAll, setModelsAll] = useState<{ created_at: string; model_agency: string | null; model_active: boolean }[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("models")
+        .select("created_at, model_agency, model_active")
+        .range(0, 9999);
+      if (data) setModelsAll(data as any);
+    })();
+  }, []);
 
   useEffect(() => {
     timeFilterRef.current = timeFilter;
