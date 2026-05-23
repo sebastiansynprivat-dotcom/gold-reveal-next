@@ -196,7 +196,7 @@ const PLATFORM_DOMAINS: Record<string, string> = {
   "4Based": "4based.com",
   Maloum: "malum.com",
   Brezzels: "brezzels.com",
-  FansyMe: "fansyme.com",
+  
   Admireme: "admireme.com",
   VisitX: "visit-x.net",
   Slushy: "slushy.com",
@@ -273,7 +273,7 @@ const platformColors: Record<string, string> = {
   "4Based": "bg-blue-500/15 text-blue-400 border-blue-500/30",
   Maloum: "bg-purple-500/15 text-purple-400 border-purple-500/30",
   Brezzels: "bg-orange-500/15 text-orange-400 border-orange-500/30",
-  FansyMe: "bg-pink-500/15 text-pink-400 border-pink-500/30",
+  
   Admireme: "bg-pink-500/15 text-pink-400 border-pink-500/30",
   VisitX: "bg-sky-500/15 text-sky-400 border-sky-500/30",
   Slushy: "bg-violet-500/15 text-violet-400 border-violet-500/30",
@@ -1217,7 +1217,7 @@ export default function ModelDashboardTab() {
                         "4Based": "#22d3ee",
                         Maloum: "#d4af37",
                         Brezzels: "#3b82f6",
-                        FansyMe: "#ec4899",
+                        
                         Admireme: "#ec4899",
                         VisitX: "#0ea5e9",
                         Slushy: "#8b5cf6",
