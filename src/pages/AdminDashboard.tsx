@@ -3748,7 +3748,7 @@ export default function AdminDashboard() {
                         return d >= win30Start.getTime() && d <= now.getTime();
                       })
                       .reduce((sum, r) => sum + (r.revenue_today || 0), 0);
-                    const avgPerModel = activeModels > 0 ? Math.round(earnings30 / activeModels) : 0;
+                    const avgPerModel = totalModels > 0 ? Math.round(earnings30 / totalModels) : 0;
 
                     return (
                       <motion.div
@@ -3784,7 +3784,7 @@ export default function AdminDashboard() {
                           <p className="text-3xl font-black text-accent tabular-nums" style={{ textShadow: "0 0 10px hsl(var(--accent) / 0.25)" }}>
                             <AnimatedNumber value={avgPerModel} suffix="€" />
                           </p>
-                          <p className="mt-1 text-[10px] text-muted-foreground">letzte 30 Tage · {activeModels} aktive Models</p>
+                          <p className="mt-1 text-[10px] text-muted-foreground">letzte 30 Tage · {totalModels} Models</p>
                         </div>
 
                       </motion.div>
