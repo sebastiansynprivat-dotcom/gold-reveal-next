@@ -3700,26 +3700,33 @@ export default function AdminDashboard() {
                     const totalModels = filtered.length;
                     const activeModels = filtered.filter((m) => m.model_active).length;
 
-                    let growthPct = 0;
-                    let newInRange = 0;
-                    let prevInRange = 0;
-                    if (startDate) {
-                      const rangeMs = endDate.getTime() - startDate.getTime();
-                      const prevEnd = new Date(startDate.getTime() - 1);
-                      const prevStart = new Date(prevEnd.getTime() - rangeMs);
-                      newInRange = filtered.filter((m) => {
-                        const c = new Date(m.created_at).getTime();
-                        return c >= startDate!.getTime() && c <= endDate.getTime();
-                      }).length;
-                      prevInRange = filtered.filter((m) => {
-                        const c = new Date(m.created_at).getTime();
-                        return c >= prevStart.getTime() && c <= prevEnd.getTime();
-                      }).length;
-                      const baseBefore = filtered.filter((m) => new Date(m.created_at).getTime() < startDate!.getTime()).length;
-                      growthPct = baseBefore > 0 ? Math.round((newInRange / baseBefore) * 1000) / 10 : (newInRange > 0 ? 100 : 0);
-                    }
+                    // Always use last 30 days vs previous 30 days as reference
+                    const now = new Date();
+                    const ms30 = 30 * 24 * 60 * 60 * 1000;
+                    const win30Start = new Date(now.getTime() - ms30);
+                    const prev30Start = new Date(now.getTime() - 2 * ms30);
+
+                    const newInRange = filtered.filter((m) => {
+                      const c = new Date(m.created_at).getTime();
+                      return c >= win30Start.getTime() && c <= now.getTime();
+                    }).length;
+                    const prevInRange = filtered.filter((m) => {
+                      const c = new Date(m.created_at).getTime();
+                      return c >= prev30Start.getTime() && c < win30Start.getTime();
+                    }).length;
+                    const growthPct = prevInRange > 0
+                      ? Math.round(((newInRange - prevInRange) / prevInRange) * 1000) / 10
+                      : (newInRange > 0 ? 100 : 0);
                     const growthUp = growthPct >= 0;
-                    const avgPerModel = activeModels > 0 ? Math.round(totalEarnings / activeModels) : 0;
+
+                    // Avg per model: earnings over last 30 days
+                    const earnings30 = revenueRowsRef.current
+                      .filter((r) => {
+                        const d = new Date(r.date).getTime();
+                        return d >= win30Start.getTime() && d <= now.getTime();
+                      })
+                      .reduce((sum, r) => sum + (r.revenue_today || 0), 0);
+                    const avgPerModel = activeModels > 0 ? Math.round(earnings30 / activeModels) : 0;
 
                     return (
                       <motion.div
@@ -3739,12 +3746,10 @@ export default function AdminDashboard() {
 
                         <div className="relative glass-card-subtle rounded-2xl p-4 overflow-hidden">
                           <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
-                          <p className="text-[10px] text-muted-foreground font-semibold tracking-wider uppercase mb-2">Wachstum · {filterLabels[timeFilter]}</p>
-                          <div className="flex items-baseline gap-2">
-                            <p className={cn("text-3xl font-black tabular-nums", growthUp ? "text-emerald-400" : "text-red-400")}>
-                              {growthUp ? "+" : ""}{growthPct.toLocaleString("de-DE")}%
-                            </p>
-                          </div>
+                          <p className="text-[10px] text-muted-foreground font-semibold tracking-wider uppercase mb-2">Wachstum · 30 Tage</p>
+                          <p className="text-3xl font-black text-accent tabular-nums" style={{ textShadow: "0 0 10px hsl(var(--accent) / 0.25)" }}>
+                            {growthUp ? "+" : ""}<AnimatedNumber value={growthPct} />%
+                          </p>
                           <p className="mt-1 text-[10px] text-muted-foreground">
                             <span className="text-foreground/80 font-semibold tabular-nums">{newInRange}</span> neu · zuvor <span className="tabular-nums">{prevInRange}</span>
                           </p>
@@ -3756,8 +3761,9 @@ export default function AdminDashboard() {
                           <p className="text-3xl font-black text-accent tabular-nums" style={{ textShadow: "0 0 10px hsl(var(--accent) / 0.25)" }}>
                             <AnimatedNumber value={avgPerModel} />
                           </p>
-                          <p className="mt-1 text-[10px] text-muted-foreground">{filterLabels[timeFilter]} · {activeModels} aktive Models</p>
+                          <p className="mt-1 text-[10px] text-muted-foreground">letzte 30 Tage · {activeModels} aktive Models</p>
                         </div>
+
                       </motion.div>
                     );
                   })()}
