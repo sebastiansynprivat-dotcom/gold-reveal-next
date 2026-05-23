@@ -3759,7 +3759,7 @@ export default function AdminDashboard() {
                           <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/50 to-transparent" />
                           <p className="text-[10px] text-muted-foreground font-semibold tracking-wider uppercase mb-2">Models · Gesamtanzahl & Wachstum</p>
                           <p className="text-3xl font-black text-accent tabular-nums" style={{ textShadow: "0 0 10px hsl(var(--accent) / 0.25)" }}>
-                            <AnimatedNumber value={totalModels} />
+                            <AnimatedNumber value={totalModels} suffix="" />
                           </p>
                           <p className="mt-1 text-[10px] text-muted-foreground">
                             <span className="text-foreground/70">{growthUp ? "+" : ""}{growthPct}%</span> Wachstum (30 Tage) · <span className="text-foreground/80 font-semibold tabular-nums">{newInPeriod}</span> neu im Zeitraum
