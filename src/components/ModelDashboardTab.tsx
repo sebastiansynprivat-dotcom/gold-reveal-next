@@ -196,7 +196,7 @@ const PLATFORM_DOMAINS: Record<string, string> = {
   "4Based": "4based.com",
   Maloum: "malum.com",
   Brezzels: "brezzels.com",
-  FansyMe: "fansyme.com",
+  
   Admireme: "admireme.com",
   VisitX: "visit-x.net",
   Slushy: "slushy.com",
