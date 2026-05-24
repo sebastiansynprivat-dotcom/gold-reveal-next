@@ -59,6 +59,7 @@ export default function FanvueDashboard() {
   const { user } = useAuth();
   const { isSuperAdmin } = useAdminRole();
   const [models, setModels] = useState<FanvueModel[]>([]);
+  const [snapshots, setSnapshots] = useState<Record<string, { followers: number; recorded_at: string }[]>>({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -66,6 +67,8 @@ export default function FanvueDashboard() {
   const [form, setForm] = useState<typeof emptyModel>(emptyModel);
   const [saving, setSaving] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [snapshotFor, setSnapshotFor] = useState<FanvueModel | null>(null);
+  const [snapshotValue, setSnapshotValue] = useState("");
 
   const load = async () => {
     setLoading(true);
