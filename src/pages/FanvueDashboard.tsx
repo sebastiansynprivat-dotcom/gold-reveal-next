@@ -490,9 +490,116 @@ export default function FanvueDashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Instagram Snapshot Dialog */}
+      <Dialog open={!!snapshotFor} onOpenChange={(o) => !o && setSnapshotFor(null)}>
+        <DialogContent className="max-w-sm bg-card border-accent/30">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Instagram className="h-4 w-4 text-accent" />
+              Follower-Stand eintragen
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 py-2">
+            <p className="text-xs text-muted-foreground">
+              {snapshotFor?.name} — aktuelle Instagram Follower
+            </p>
+            <Input
+              type="text"
+              inputMode="numeric"
+              autoFocus
+              placeholder="z.B. 12450"
+              value={snapshotValue}
+              onChange={(e) => setSnapshotValue(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") saveSnapshot(); }}
+            />
+            {(() => {
+              const hist = snapshotFor ? snapshots[snapshotFor.id] || [] : [];
+              const last = hist[hist.length - 1];
+              return last ? (
+                <p className="text-[11px] text-muted-foreground">
+                  Letzter Stand: {last.followers.toLocaleString("de-DE")} ({new Date(last.recorded_at).toLocaleDateString("de-DE")})
+                </p>
+              ) : null;
+            })()}
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setSnapshotFor(null)}>Abbrechen</Button>
+            <Button onClick={saveSnapshot} className="bg-accent text-accent-foreground hover:bg-accent/90">
+              Speichern
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
+function IgGrowthBlock({ snaps, onLog }: { snaps: { followers: number; recorded_at: string }[]; onLog: () => void }) {
+  const latest = snaps[snaps.length - 1];
+  const prev = snaps.length >= 2 ? snaps[snaps.length - 2] : null;
+  const first = snaps[0];
+  const delta = latest && prev ? latest.followers - prev.followers : 0;
+  const totalDelta = latest && first && first !== latest ? latest.followers - first.followers : 0;
+  const TrendIcon = delta > 0 ? TrendingUp : delta < 0 ? TrendingDown : Minus;
+  const trendColor = delta > 0 ? "text-emerald-400" : delta < 0 ? "text-red-400" : "text-muted-foreground";
+
+  // Sparkline
+  const w = 100, h = 24;
+  let path = "";
+  if (snaps.length >= 2) {
+    const vals = snaps.map((s) => s.followers);
+    const min = Math.min(...vals), max = Math.max(...vals);
+    const range = max - min || 1;
+    path = snaps.map((s, i) => {
+      const x = (i / (snaps.length - 1)) * w;
+      const y = h - ((s.followers - min) / range) * h;
+      return `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`;
+    }).join(" ");
+  }
+
+  return (
+    <div className="border-t border-border/30 pt-3 mt-3">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-1.5">
+          <Instagram className="h-3 w-3 text-accent/70" />
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground">IG Wachstum</span>
+        </div>
+        <Button size="sm" variant="ghost" onClick={onLog} className="h-6 px-2 text-[10px] text-accent hover:bg-accent/10">
+          <Plus className="h-3 w-3 mr-1" /> Eintragen
+        </Button>
+      </div>
+      {!latest ? (
+        <p className="text-[11px] text-muted-foreground/70 italic">Noch keine Follower-Daten</p>
+      ) : (
+        <div className="flex items-end justify-between gap-2">
+          <div>
+            <div className="text-lg font-bold text-foreground leading-none">
+              {latest.followers.toLocaleString("de-DE")}
+            </div>
+            <div className={`flex items-center gap-1 text-[11px] mt-1 ${trendColor}`}>
+              <TrendIcon className="h-3 w-3" />
+              {prev ? (
+                <span>{delta > 0 ? "+" : ""}{delta.toLocaleString("de-DE")} vs. letzter</span>
+              ) : (
+                <span className="text-muted-foreground">Erster Eintrag</span>
+              )}
+              {totalDelta !== 0 && snaps.length > 2 && (
+                <span className="text-muted-foreground ml-1">· gesamt {totalDelta > 0 ? "+" : ""}{totalDelta.toLocaleString("de-DE")}</span>
+              )}
+            </div>
+          </div>
+          {path && (
+            <svg width={w} height={h} className="shrink-0 overflow-visible">
+              <path d={path} fill="none" stroke="hsl(var(--accent))" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 
 function StatusRow({ icon: Icon, label, active, extra }: { icon: any; label: string; active: boolean; extra?: string }) {
   return (
