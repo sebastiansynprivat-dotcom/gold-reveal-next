@@ -3033,6 +3033,12 @@ export default function AdminDashboard() {
         void loadAdmins();
       },
     },
+    {
+      key: "fanvue" as const,
+      label: "Fanvue Dashboard",
+      icon: Star,
+      onClick: () => { window.location.assign("/fanvue"); },
+    },
   ];
 
   // Dynamic sub-admin tabs for super-admin view
