@@ -2954,7 +2954,7 @@ export default function AdminDashboard() {
     return c?.group_name || c?.telegram_id || userId.slice(0, 8);
   };
 
-  const SUPER_ADMIN_TABS = new Set(["notifications", "kiprompt", "platzhalter", "gdrive", "settings", "admin_mgmt"]);
+  const SUPER_ADMIN_TABS = new Set(["notifications", "kiprompt", "platzhalter", "gdrive", "settings", "admin_mgmt", "fanvue"]);
 
   const allTabItems = [
     { key: "einnahmen" as const, label: "Einnahmen", icon: TrendingUp, onClick: () => { setActiveTab("einnahmen"); setTimeFilter("heute"); } },
@@ -3033,6 +3033,12 @@ export default function AdminDashboard() {
         void loadAdmins();
       },
     },
+    {
+      key: "fanvue" as const,
+      label: "Fanvue Dashboard",
+      icon: Star,
+      onClick: () => { window.location.assign("/fanvue"); },
+    },
   ];
 
   // Dynamic sub-admin tabs for super-admin view
@@ -3088,17 +3094,6 @@ export default function AdminDashboard() {
             </div>
           </button>
           <div className="flex-1" />
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={() => window.location.assign("/fanvue")}
-            className="shrink-0 border border-accent/30 bg-accent/5 text-accent hover:bg-accent/15 hover:border-accent/50 transition-all shadow-[inset_0_1px_0_hsl(var(--accent)/0.15)] mr-2"
-            title="Fanvue Dashboard öffnen"
-          >
-            <Users className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Fanvue</span>
-          </Button>
           {isSuperAdmin && (
             <Button
               type="button"

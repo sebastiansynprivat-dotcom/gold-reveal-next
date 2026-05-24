@@ -11,9 +11,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Pencil, Trash2, LogOut, Instagram, Music2, Twitter, Globe, UserCheck, MessageCircle, CheckCircle2, Search, Users } from "lucide-react";
+import { Plus, Pencil, Trash2, LogOut, Instagram, Music2, Twitter, Globe, UserCheck, MessageCircle, CheckCircle2, Search, Users, ArrowLeft } from "lucide-react";
 import logo from "@/assets/logo.png";
 import GoldParticles from "@/components/GoldParticles";
+import { useAdminRole } from "@/hooks/useAdminRole";
 
 type Marketer = { name: string; instagram: string };
 
@@ -56,6 +57,7 @@ const emptyModel: Omit<FanvueModel, "id" | "created_at"> = {
 export default function FanvueDashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isSuperAdmin } = useAdminRole();
   const [models, setModels] = useState<FanvueModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -177,6 +179,18 @@ export default function FanvueDashboard() {
             <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground/70 font-medium">Model Kartei</p>
           </div>
           <div className="flex-1" />
+          {isSuperAdmin && (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => navigate("/admin")}
+              className="shrink-0 border border-accent/30 bg-accent/5 text-accent hover:bg-accent/15 hover:border-accent/50 transition-all shadow-[inset_0_1px_0_hsl(var(--accent)/0.15)] mr-2"
+              title="Zurück zum Admin Dashboard"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline ml-1.5">Admin Dashboard</span>
+            </Button>
+          )}
           <Button variant="ghost" size="sm" onClick={handleLogout} className="text-muted-foreground hover:text-foreground">
             <LogOut className="h-4 w-4" />
             <span className="hidden sm:inline ml-2">Abmelden</span>
