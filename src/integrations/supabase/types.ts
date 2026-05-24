@@ -534,6 +534,69 @@ export type Database = {
         }
         Relationships: []
       }
+      fanvue_models: {
+        Row: {
+          account_setup: boolean
+          chatter_assigned: boolean
+          chatter_name: string
+          created_at: string
+          created_by: string | null
+          id: string
+          instagram_url: string
+          is_active: boolean
+          marketers: Json
+          name: string
+          notes: string
+          other_social: string
+          social_linked: boolean
+          status: string
+          tiktok_url: string
+          twitter_url: string
+          updated_at: string
+          username: string
+        }
+        Insert: {
+          account_setup?: boolean
+          chatter_assigned?: boolean
+          chatter_name?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          instagram_url?: string
+          is_active?: boolean
+          marketers?: Json
+          name?: string
+          notes?: string
+          other_social?: string
+          social_linked?: boolean
+          status?: string
+          tiktok_url?: string
+          twitter_url?: string
+          updated_at?: string
+          username?: string
+        }
+        Update: {
+          account_setup?: boolean
+          chatter_assigned?: boolean
+          chatter_name?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          instagram_url?: string
+          is_active?: boolean
+          marketers?: Json
+          name?: string
+          notes?: string
+          other_social?: string
+          social_linked?: boolean
+          status?: string
+          tiktok_url?: string
+          twitter_url?: string
+          updated_at?: string
+          username?: string
+        }
+        Relationships: []
+      }
       group_billings: {
         Row: {
           created_at: string
@@ -1607,6 +1670,7 @@ export type Database = {
         | "model"
         | "super_admin"
         | "sub_admin"
+        | "fanvue_partner"
       platform: "new" | "maloum" | "4based" | "brezzels"
     }
     CompositeTypes: {
@@ -1758,6 +1822,7 @@ export const Constants = {
         "model",
         "super_admin",
         "sub_admin",
+        "fanvue_partner",
       ],
       platform: ["new", "maloum", "4based", "brezzels"],
     },

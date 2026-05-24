@@ -21,6 +21,8 @@ import Invoice from "./pages/Invoice";
 import ModelLogin from "./pages/ModelLogin";
 import ModelDashboard from "./pages/ModelDashboard";
 import Leaderboard from "./pages/Leaderboard";
+import FanvueLogin from "./pages/FanvueLogin";
+import FanvueDashboard from "./pages/FanvueDashboard";
 
 const queryClient = new QueryClient();
 
@@ -92,6 +94,34 @@ const ModelProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+const FanvueProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, loading } = useAuth();
+  const [hasAccess, setHasAccess] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    import("@/integrations/supabase/client").then(({ supabase }) => {
+      supabase.from("user_roles").select("role").eq("user_id", user.id)
+        .in("role", ["fanvue_partner", "super_admin", "admin"])
+        .maybeSingle()
+        .then(({ data }) => setHasAccess(!!data));
+    });
+  }, [user]);
+
+  if (loading || (user && hasAccess === null)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) return <Navigate to="/fanvue/login" replace />;
+  if (hasAccess === false) return <Navigate to="/fanvue/login" replace />;
+
+  return <>{children}</>;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
@@ -115,6 +145,8 @@ const App = () => (
             <Route path="/rechnung" element={<ProtectedRoute><Invoice /></ProtectedRoute>} />
             <Route path="/model/login" element={<ModelLogin />} />
             <Route path="/model" element={<ModelProtectedRoute><ModelDashboard /></ModelProtectedRoute>} />
+            <Route path="/fanvue/login" element={<FanvueLogin />} />
+            <Route path="/fanvue" element={<FanvueProtectedRoute><FanvueDashboard /></FanvueProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
