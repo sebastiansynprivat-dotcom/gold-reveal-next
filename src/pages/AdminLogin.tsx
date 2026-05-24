@@ -187,6 +187,7 @@ const AdminLogin = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                nativeInput
                 name="email"
                 id="admin-email"
                 autoComplete="username"
@@ -205,6 +206,7 @@ const AdminLogin = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                nativeInput
                 name="password"
                 id="admin-password"
                 autoComplete="current-password"

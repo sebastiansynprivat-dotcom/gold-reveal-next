@@ -317,6 +317,9 @@ const Auth = () => {
                 <div className="input-gold-shimmer rounded-xl">
                   <input
                     type="text"
+                    name="group_name"
+                    id="signup-group-name"
+                    autoComplete="off"
                     placeholder="Gruppenname (Beispiel: ⬜️ (M) Max Mu)"
                     value={groupName}
                     onChange={(e) => setGroupName(e.target.value)}
@@ -351,6 +354,13 @@ const Auth = () => {
             <div className="input-gold-shimmer rounded-xl">
               <input
                 type="email"
+                name="email"
+                id="auth-email"
+                autoComplete="username"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                inputMode="email"
                 placeholder="E-Mail Adresse"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -361,6 +371,9 @@ const Auth = () => {
             <div className="input-gold-shimmer rounded-xl">
               <input
                 type="password"
+                name="password"
+                id="auth-password"
+                autoComplete={isSignUp ? "new-password" : "current-password"}
                 placeholder="Passwort (min. 6 Zeichen)"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
