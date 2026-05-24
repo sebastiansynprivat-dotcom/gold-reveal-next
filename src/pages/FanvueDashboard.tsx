@@ -334,6 +334,12 @@ export default function FanvueDashboard() {
                     </div>
                   )}
 
+                  <IgGrowthBlock
+                    snaps={snapshots[m.id] || []}
+                    onLog={() => { setSnapshotFor(m); setSnapshotValue(""); }}
+                  />
+
+
                   {m.marketers.length > 0 && (
                     <div className="border-t border-border/30 pt-3 mt-3">
                       <div className="flex items-center gap-1.5 mb-2">
