@@ -534,6 +534,41 @@ export type Database = {
         }
         Relationships: []
       }
+      fanvue_instagram_snapshots: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          followers: number
+          id: string
+          model_id: string
+          recorded_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          followers: number
+          id?: string
+          model_id: string
+          recorded_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          followers?: number
+          id?: string
+          model_id?: string
+          recorded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fanvue_instagram_snapshots_model_id_fkey"
+            columns: ["model_id"]
+            isOneToOne: false
+            referencedRelation: "fanvue_models"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fanvue_models: {
         Row: {
           account_setup: boolean
