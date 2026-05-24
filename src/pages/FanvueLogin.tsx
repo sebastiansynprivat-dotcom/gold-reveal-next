@@ -130,10 +130,10 @@ export default function FanvueLogin() {
         </p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="input-gold-shimmer rounded-xl">
-            <input type="email" placeholder="E-Mail Adresse" value={email} onChange={(e) => setEmail(e.target.value)} required className={inputClass} />
+            <input type="email" name="email" id="fanvue-email" autoComplete="username" autoCapitalize="none" autoCorrect="off" spellCheck={false} inputMode="email" placeholder="E-Mail Adresse" value={email} onChange={(e) => setEmail(e.target.value)} required className={inputClass} />
           </div>
           <div className="input-gold-shimmer rounded-xl">
-            <input type="password" placeholder="Passwort" value={password} onChange={(e) => setPassword(e.target.value)} required className={inputClass} />
+            <input type="password" name="password" id="fanvue-password" autoComplete="current-password" placeholder="Passwort" value={password} onChange={(e) => setPassword(e.target.value)} required className={inputClass} />
           </div>
           {error && <p className="text-destructive text-sm text-center animate-fade-in">{error}</p>}
           <button type="submit" disabled={submitting} className="w-full px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold tracking-wide hover:scale-[1.02] transition-all duration-200 disabled:opacity-50">
