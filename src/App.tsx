@@ -145,6 +145,8 @@ const App = () => (
             <Route path="/rechnung" element={<ProtectedRoute><Invoice /></ProtectedRoute>} />
             <Route path="/model/login" element={<ModelLogin />} />
             <Route path="/model" element={<ModelProtectedRoute><ModelDashboard /></ModelProtectedRoute>} />
+            <Route path="/fanvue/login" element={<FanvueLogin />} />
+            <Route path="/fanvue" element={<FanvueProtectedRoute><FanvueDashboard /></FanvueProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
