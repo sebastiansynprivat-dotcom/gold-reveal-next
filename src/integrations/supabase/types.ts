@@ -1607,6 +1607,7 @@ export type Database = {
         | "model"
         | "super_admin"
         | "sub_admin"
+        | "fanvue_partner"
       platform: "new" | "maloum" | "4based" | "brezzels"
     }
     CompositeTypes: {
@@ -1758,6 +1759,7 @@ export const Constants = {
         "model",
         "super_admin",
         "sub_admin",
+        "fanvue_partner",
       ],
       platform: ["new", "maloum", "4based", "brezzels"],
     },
