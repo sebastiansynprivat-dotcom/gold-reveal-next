@@ -1,18 +1,18 @@
-## Plan: "Collect Exchange ID" → "TX Hash" zurückbenennen
+## Änderungen
 
-Alle Vorkommen im Code auf Provider Invoices und zugehörigen UIs zurück auf `TX Hash` ändern.
+**1. Fanvue-Eintrag in Navigation verschieben**
+- In `AdminDashboard.tsx` den separaten "Fanvue"-Button aus dem Header entfernen.
+- Stattdessen einen neuen Menüpunkt **"Fanvue Dashboard"** (Stern- oder Sparkles-Icon) im Seitenmenü direkt unter "Admin-Verwaltung" einfügen — nur sichtbar für Super-Admins.
 
-**Änderungen:**
+**2. Admin-Layout beim Aufruf von /fanvue beibehalten**
+- Aktuell ist `/fanvue` eine eigenständige Seite ohne Admin-Navigation.
+- Lösung: Wenn ein eingeloggter Admin `/fanvue` öffnet, soll die bekannte Admin-Sidebar (das Premium-Navigationsmenü aus dem Screenshot) sichtbar bleiben, damit er per Klick zurück zu Einnahmen, Chatter, etc. springen kann.
+- Umsetzung: In `FanvueDashboard.tsx` prüfen, ob der User die Rolle `super_admin`/`admin` hat. Falls ja → das vorhandene Admin-Sidebar-Component (gleiches wie in `AdminDashboard`) mitrendern und den Fanvue-Content im Hauptbereich daneben platzieren.
+- Für reine `fanvue_partner`-User bleibt die Ansicht wie bisher (ohne Admin-Sidebar, nur Fanvue-Content + Logout).
 
-1. `src/lib/providerInvoicePdf.ts` (Zeile 160)
-   - `Collect Exchange ID: ...` → `TX Hash: ...`
+**3. Keine Logik-Änderungen**
+- RLS, Datenbank, Partner-Login, CRUD an Models bleiben unverändert.
+- Nur UI/Navigation wird angepasst.
 
-2. `src/components/CreditNoteForm.tsx`
-   - Zeile 631 (PDF-Output): `Collect Exchange ID: ...` → `TX Hash: ...`
-   - Zeile 1089 (Label): `Collect Exchange ID` → `TX Hash`
-   - Zeile 1091 (Input placeholder): `Collect Exchange ID` → `TX Hash`
-
-3. `src/components/ModelBillingInfo.tsx` (Zeile 124)
-   - Listeneintrag `Collect Exchange ID` → `TX Hash`
-
-Keine DB-Änderungen nötig (Spaltenname `tx_hash` bleibt).
+## Offene Frage
+Soll der Menüpunkt "Fanvue Dashboard" heißen, oder lieber kürzer "Fanvue"?
