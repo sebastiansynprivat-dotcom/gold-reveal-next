@@ -3088,6 +3088,17 @@ export default function AdminDashboard() {
             </div>
           </button>
           <div className="flex-1" />
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={() => window.location.assign("/fanvue")}
+            className="shrink-0 border border-accent/30 bg-accent/5 text-accent hover:bg-accent/15 hover:border-accent/50 transition-all shadow-[inset_0_1px_0_hsl(var(--accent)/0.15)] mr-2"
+            title="Fanvue Dashboard öffnen"
+          >
+            <Users className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Fanvue</span>
+          </Button>
           {isSuperAdmin && (
             <Button
               type="button"
