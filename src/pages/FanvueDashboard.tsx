@@ -119,6 +119,10 @@ export default function FanvueDashboard() {
     load();
   };
 
+  useEffect(() => { load(); }, []);
+
+
+
   const openCreate = () => {
     setEditing(null);
     setForm(emptyModel);
