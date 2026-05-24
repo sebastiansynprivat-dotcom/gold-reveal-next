@@ -57,6 +57,7 @@ const emptyModel: Omit<FanvueModel, "id" | "created_at"> = {
 export default function FanvueDashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isSuperAdmin } = useAdminRole();
   const [models, setModels] = useState<FanvueModel[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
