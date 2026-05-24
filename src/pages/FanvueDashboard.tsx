@@ -84,10 +84,40 @@ export default function FanvueDashboard() {
         marketers: Array.isArray(m.marketers) ? m.marketers : [],
       })));
     }
+    // Load all IG snapshots
+    const { data: snaps } = await supabase
+      .from("fanvue_instagram_snapshots" as any)
+      .select("model_id, followers, recorded_at")
+      .order("recorded_at", { ascending: true });
+    const grouped: Record<string, { followers: number; recorded_at: string }[]> = {};
+    ((snaps || []) as any[]).forEach((s) => {
+      (grouped[s.model_id] ||= []).push({ followers: s.followers, recorded_at: s.recorded_at });
+    });
+    setSnapshots(grouped);
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, []);
+  const saveSnapshot = async () => {
+    if (!snapshotFor) return;
+    const v = parseInt(snapshotValue.replace(/\D/g, ""), 10);
+    if (!Number.isFinite(v) || v < 0) {
+      toast.error("Bitte gültige Followerzahl eingeben");
+      return;
+    }
+    const { error } = await supabase.from("fanvue_instagram_snapshots" as any).insert({
+      model_id: snapshotFor.id,
+      followers: v,
+      created_by: user?.id,
+    });
+    if (error) {
+      toast.error("Speichern fehlgeschlagen: " + error.message);
+      return;
+    }
+    toast.success("Follower-Stand gespeichert");
+    setSnapshotFor(null);
+    setSnapshotValue("");
+    load();
+  };
 
   const openCreate = () => {
     setEditing(null);
