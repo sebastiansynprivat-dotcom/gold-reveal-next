@@ -21,6 +21,8 @@ import Invoice from "./pages/Invoice";
 import ModelLogin from "./pages/ModelLogin";
 import ModelDashboard from "./pages/ModelDashboard";
 import Leaderboard from "./pages/Leaderboard";
+import FanvueLogin from "./pages/FanvueLogin";
+import FanvueDashboard from "./pages/FanvueDashboard";
 
 const queryClient = new QueryClient();
 
