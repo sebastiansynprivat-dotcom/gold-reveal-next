@@ -222,6 +222,17 @@ export default function CreditNoteForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [providerEntityId, providerEntityType]);
 
+  // Auto-apply suggested amount when parent triggers calculation
+  useEffect(() => {
+    if (!autoApplyTrigger || suggestedAmount <= 0) return;
+    const fxRate = currency === invoiceCurrency ? 1 : (liveExchangeRate || 1);
+    const converted = suggestedAmount * fxRate;
+    if (converted > 0) {
+      setNetAmount(converted.toFixed(2));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoApplyTrigger]);
+
   // Setters that update local state AND immediately notify parent.
   // Parent's updateSelected() debounces the actual DB write, so a single source
   // of truth performs the save and there's no race.
