@@ -25,10 +25,12 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [groupName, setGroupName] = useState("");
+  const [telegramId, setTelegramId] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [signUpSuccess, setSignUpSuccess] = useState(false);
   const [showGroupHelp, setShowGroupHelp] = useState(false);
+  const [showTelegramHelp, setShowTelegramHelp] = useState(false);
   const [showGroupConfirm, setShowGroupConfirm] = useState(false);
   const pendingSubmitRef = useRef<React.FormEvent | null>(null);
 
@@ -183,6 +185,12 @@ const Auth = () => {
         setError("Bitte gib deinen Gruppennamen ein.");
         return;
       }
+      const cleanedTgId = telegramId.replace(/\s+/g, "");
+      if (!/^\d{5,}$/.test(cleanedTgId)) {
+        setError("Bitte gib eine gültige Telegram-ID ein (nur Zahlen, mindestens 5 Stellen).");
+        return;
+      }
+      localStorage.setItem("pending_telegram_id", cleanedTgId);
       // Show confirmation popup first
       pendingSubmitRef.current = e;
       setShowGroupConfirm(true);
@@ -346,6 +354,55 @@ const Auth = () => {
                     </p>
                     <p className="text-primary font-semibold">
                       ⚠️ Es ist extrem wichtig, dass du den richtigen Gruppennamen angibst, damit du korrekt abgerechnet werden kannst!
+                    </p>
+                  </motion.div>
+                )}
+              </div>
+            )}
+            {isSignUp && (
+              <div>
+                <div className="input-gold-shimmer rounded-xl">
+                  <input
+                    type="text"
+                    name="telegram_id"
+                    id="signup-telegram-id"
+                    inputMode="numeric"
+                    autoComplete="off"
+                    placeholder="Telegram-ID (z. B. 123456789)"
+                    value={telegramId}
+                    onChange={(e) => setTelegramId(e.target.value)}
+                    required
+                    className={inputClass}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowTelegramHelp((v) => !v)}
+                  className="mt-1.5 w-full text-center text-xs text-primary hover:text-primary/80 transition-colors underline underline-offset-2"
+                >
+                  Wo finde ich meine Telegram-ID?
+                </button>
+                {showTelegramHelp && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-2 p-3 rounded-xl bg-card border border-border text-xs text-muted-foreground leading-relaxed space-y-2"
+                  >
+                    <p>
+                      Öffne Telegram und starte den Bot{" "}
+                      <a
+                        href="https://t.me/userinfobot"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary font-medium underline underline-offset-2"
+                      >
+                        @userinfobot
+                      </a>
+                      . Er schickt dir sofort deine numerische ID zurück – kopiere diese 1:1 hier rein.
+                    </p>
+                    <p className="text-primary font-semibold">
+                      ⚠️ Nur Zahlen, kein @username – die ID brauchen wir für deine Benachrichtigungen.
                     </p>
                   </motion.div>
                 )}
