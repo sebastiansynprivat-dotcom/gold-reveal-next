@@ -19,9 +19,9 @@ const placeholderPdfs = [
     title: "Verkaufs-Skripte",
     subtitle: "Wort-für-Wort Vorlagen, die wirklich kaufen lassen",
     accent: "from-yellow-400/20 to-yellow-600/5",
-    route: null,
-    contentKey: null,
-    badge: null,
+    route: "/bibliothek/verkaufs-skripte",
+    contentKey: "sales-scripts",
+    badge: "NEU",
   },
   {
     icon: FileText,
