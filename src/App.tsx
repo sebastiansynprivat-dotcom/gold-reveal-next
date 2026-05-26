@@ -20,6 +20,7 @@ import NotFound from "./pages/NotFound";
 import Invoice from "./pages/Invoice";
 import ModelLogin from "./pages/ModelLogin";
 import ModelDashboard from "./pages/ModelDashboard";
+import AdminModelView from "./pages/AdminModelView";
 import Leaderboard from "./pages/Leaderboard";
 import FanvueLogin from "./pages/FanvueLogin";
 import FanvueDashboard from "./pages/FanvueDashboard";
