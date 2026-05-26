@@ -1,18 +1,31 @@
-## Änderungen
+## Ziel
+Auf der Registrierungs-Seite (`/auth`) direkt unter dem Gruppennamen-Feld ein neues Eingabefeld für die **Telegram-ID** hinzufügen – inklusive ausklappbarem Hilfe-Link „Wo finde ich meine Telegram-ID?".
 
-**1. Fanvue-Eintrag in Navigation verschieben**
-- In `AdminDashboard.tsx` den separaten "Fanvue"-Button aus dem Header entfernen.
-- Stattdessen einen neuen Menüpunkt **"Fanvue Dashboard"** (Stern- oder Sparkles-Icon) im Seitenmenü direkt unter "Admin-Verwaltung" einfügen — nur sichtbar für Super-Admins.
+## Änderungen in `src/pages/Auth.tsx`
 
-**2. Admin-Layout beim Aufruf von /fanvue beibehalten**
-- Aktuell ist `/fanvue` eine eigenständige Seite ohne Admin-Navigation.
-- Lösung: Wenn ein eingeloggter Admin `/fanvue` öffnet, soll die bekannte Admin-Sidebar (das Premium-Navigationsmenü aus dem Screenshot) sichtbar bleiben, damit er per Klick zurück zu Einnahmen, Chatter, etc. springen kann.
-- Umsetzung: In `FanvueDashboard.tsx` prüfen, ob der User die Rolle `super_admin`/`admin` hat. Falls ja → das vorhandene Admin-Sidebar-Component (gleiches wie in `AdminDashboard`) mitrendern und den Fanvue-Content im Hauptbereich daneben platzieren.
-- Für reine `fanvue_partner`-User bleibt die Ansicht wie bisher (ohne Admin-Sidebar, nur Fanvue-Content + Logout).
+1. **Neuer State**
+   - `telegramId` (string)
+   - `showTelegramHelp` (boolean)
 
-**3. Keine Logik-Änderungen**
-- RLS, Datenbank, Partner-Login, CRUD an Models bleiben unverändert.
-- Nur UI/Navigation wird angepasst.
+2. **Neues Eingabefeld** direkt unter dem Gruppennamen-Block (nur bei `isSignUp`)
+   - Gleicher Glass-Stil wie Gruppenname (`input-gold-shimmer rounded-xl` + `inputClass`)
+   - Placeholder: `Telegram-ID (z. B. 123456789)`
+   - `inputMode="numeric"`, Pflichtfeld
+   - Darunter Toggle-Button „Wo finde ich meine Telegram-ID?" (gleicher Stil wie Gruppennamen-Hilfe)
+   - Aufgeklapptes Hilfepanel mit Kurzanleitung:
+     - Telegram öffnen → Bot **@userinfobot** starten → sendet automatisch die numerische ID zurück
+     - Externer Link `https://t.me/userinfobot` (öffnet in neuem Tab)
+     - Hinweis: nur Zahlen, kein @username
 
-## Offene Frage
-Soll der Menüpunkt "Fanvue Dashboard" heißen, oder lieber kürzer "Fanvue"?
+3. **Validierung in `handleSubmit`** (nur bei Signup)
+   - Pflichtfeld, muss aus Ziffern bestehen (min. 5 Stellen)
+   - Bei Fehler: passende Fehlermeldung
+
+4. **Speicherung**
+   - Vor `signUp`: `localStorage.setItem("pending_telegram_id", telegramId)`
+   - Der bestehende Post-Auth-Sync (Zeile 104–115) übernimmt die ID dann automatisch ins Profil – keine weitere Logik nötig.
+
+## Nicht geändert
+- Kein DB-Schema-Change (Spalte `telegram_id` existiert bereits im Profil)
+- Keine anderen Seiten/Flows
+- Login-Modus unverändert
