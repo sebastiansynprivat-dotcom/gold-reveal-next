@@ -95,14 +95,19 @@ export default function ChatBreakdown() {
             </a>
           </div>
         </div>
-        {/* Progress bar */}
-        <div className="h-1 bg-secondary/40">
-          <motion.div
-            className="h-full bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500"
-            initial={{ width: 0 }}
-            animate={{ width: `${completed ? 100 : Math.round((maxSeen / PAGES.length) * 100)}%` }}
-            transition={{ duration: 0.4 }}
-          />
+        {/* Progress bar + % */}
+        <div className="max-w-4xl mx-auto px-4 pb-2 flex items-center gap-3">
+          <div className="flex-1 h-1.5 rounded-full bg-secondary/40 overflow-hidden">
+            <motion.div
+              className="h-full bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500"
+              initial={{ width: 0 }}
+              animate={{ width: `${completed ? 100 : Math.round((maxSeen / PAGES.length) * 100)}%` }}
+              transition={{ duration: 0.4 }}
+            />
+          </div>
+          <span className="text-[11px] font-bold text-muted-foreground tabular-nums whitespace-nowrap">
+            {completed ? 100 : Math.round((maxSeen / PAGES.length) * 100)}% gelesen · Seite {Math.min(maxSeen, PAGES.length)}/{PAGES.length}
+          </span>
         </div>
       </header>
 
