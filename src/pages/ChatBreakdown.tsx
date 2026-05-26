@@ -3,12 +3,13 @@ import { ArrowLeft, Download } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const PDF_URL = "/content/chat-breakdown-01.pdf";
+const PAGES = Array.from({ length: 8 }, (_, i) => `/content/breakdown-01/page-${i + 1}.jpg`);
 
 export default function ChatBreakdown() {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <header className="sticky top-0 z-20 backdrop-blur-lg bg-background/80 border-b border-border/60">
-        <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <Link
             to="/dashboard"
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-accent transition-colors"
@@ -30,32 +31,35 @@ export default function ChatBreakdown() {
         </div>
       </header>
 
-      <motion.main
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.4 }}
-        className="flex-1 max-w-6xl w-full mx-auto p-2 sm:p-4"
-      >
-        <div className="rounded-2xl overflow-hidden border border-border/60 shadow-[0_0_40px_rgba(212,175,55,0.15)] bg-secondary/30">
-          <object
-            data={PDF_URL}
-            type="application/pdf"
-            className="w-full h-[calc(100vh-140px)]"
+      <main className="flex-1 max-w-4xl w-full mx-auto p-3 sm:p-6 space-y-4">
+        {PAGES.map((src, i) => (
+          <motion.div
+            key={src}
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: i * 0.05 }}
+            className="rounded-xl overflow-hidden border border-border/60 shadow-[0_0_30px_rgba(212,175,55,0.12)] bg-secondary/20"
           >
-            <iframe
-              src={PDF_URL}
-              className="w-full h-[calc(100vh-140px)]"
-              title="Chat Breakdown PDF"
+            <img
+              src={src}
+              alt={`Seite ${i + 1}`}
+              loading={i < 2 ? "eager" : "lazy"}
+              className="w-full h-auto block"
             />
-            <div className="p-8 text-center text-sm text-muted-foreground">
-              Dein Browser kann das PDF nicht direkt anzeigen.{" "}
-              <a href={PDF_URL} download className="text-accent underline">
-                Hier herunterladen
-              </a>
-            </div>
-          </object>
+          </motion.div>
+        ))}
+
+        <div className="text-center py-6">
+          <a
+            href={PDF_URL}
+            download="SheX_Chat_Breakdown_01.pdf"
+            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-black font-bold px-6 py-3 text-sm shadow-[0_4px_20px_rgba(212,175,55,0.35)] hover:brightness-110 transition"
+          >
+            <Download className="h-4 w-4" />
+            Als PDF herunterladen
+          </a>
         </div>
-      </motion.main>
+      </main>
     </div>
   );
 }
