@@ -26,6 +26,7 @@ import FanvueDashboard from "./pages/FanvueDashboard";
 import ChatBreakdown from "./pages/ChatBreakdown";
 import CoachingBasics from "./pages/CoachingBasics";
 import SalesScripts from "./pages/SalesScripts";
+import Library from "./pages/Library";
 
 
 const queryClient = new QueryClient();
@@ -151,6 +152,7 @@ const App = () => (
             <Route path="/model" element={<ModelProtectedRoute><ModelDashboard /></ModelProtectedRoute>} />
             <Route path="/fanvue/login" element={<FanvueLogin />} />
             <Route path="/fanvue" element={<FanvueProtectedRoute><FanvueDashboard /></FanvueProtectedRoute>} />
+            <Route path="/bibliothek" element={<ProtectedRoute><Library /></ProtectedRoute>} />
             <Route path="/bibliothek/chat-breakdown-01" element={<ProtectedRoute><ChatBreakdown /></ProtectedRoute>} />
             <Route path="/bibliothek/coaching-basics" element={<ProtectedRoute><CoachingBasics /></ProtectedRoute>} />
             <Route path="/bibliothek/verkaufs-skripte" element={<ProtectedRoute><SalesScripts /></ProtectedRoute>} />

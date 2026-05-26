@@ -159,7 +159,7 @@ export default function InspirationLibrary() {
 
       {/* CTA */}
       <motion.button
-        onClick={() => handleClick(ctaItem)}
+        onClick={() => navigate("/bibliothek")}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 bg-[length:200%_100%] hover:bg-[position:100%_0] text-black font-bold py-3 text-sm transition-[background-position] duration-500 shadow-[0_4px_20px_rgba(212,175,55,0.35)]"
