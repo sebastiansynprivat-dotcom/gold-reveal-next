@@ -191,15 +191,15 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
       .upsert(payload, { onConflict: "model_id" });
     setSaving(false);
     if (error) {
-      toast.error("Speichern fehlgeschlagen");
+      toast.error(copy.saveError);
       return;
     }
     setSavedAt(Date.now());
     if (submit) {
-      toast.success("Steckbrief abgesendet ✅");
+      toast.success(copy.submittedToast);
       onSubmitted?.();
     } else {
-      toast.success("Gespeichert");
+      toast.success(copy.savedToast);
     }
     setTimeout(() => setSavedAt(null), 2500);
   };
@@ -225,10 +225,9 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
           <User className="h-5 w-5 text-accent" />
         </div>
         <div className="flex-1 min-w-0">
-          <h2 className="text-lg font-bold text-foreground">Profile</h2>
+          <h2 className="text-lg font-bold text-foreground">{copy.title}</h2>
           <p className="text-sm text-muted-foreground">
-            Fill out your profile — this info helps the chatters represent you authentically.
-            You can use real info, fake or a mix of both.
+            {copy.intro}
           </p>
         </div>
       </div>
@@ -237,10 +236,10 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
       <section className="glass-card rounded-xl p-5 space-y-4">
         <div className="flex items-center gap-2">
           <User className="h-4 w-4 text-accent" />
-          <h3 className="text-base font-bold text-foreground">Personal Information</h3>
+          <h3 className="text-base font-bold text-foreground">{copy.personal}</h3>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {PERSONAL_FIELDS.map((f) => (
+          {PERSONAL_FIELDS[lang].map((f) => (
             <div key={f.key as string} className="space-y-1.5">
               <Label className="text-xs font-medium text-foreground">{f.label}</Label>
               <Input
@@ -258,14 +257,14 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
       <section className="glass-card rounded-xl p-5 space-y-3">
         <div className="flex items-center gap-2">
           <Camera className="h-4 w-4 text-accent" />
-          <h3 className="text-base font-bold text-foreground">Content Information</h3>
+          <h3 className="text-base font-bold text-foreground">{copy.content}</h3>
         </div>
-        <Label className="text-xs text-muted-foreground">What content do you prefer doing?</Label>
+        <Label className="text-xs text-muted-foreground">{copy.contentLabel}</Label>
         <Textarea
           value={profile.content_preferences ?? ""}
           onChange={(e) => set("content_preferences", e.target.value)}
           className="bg-background/50 min-h-[100px]"
-          placeholder="e.g. Solo, Toys, Lingerie, …"
+          placeholder={copy.contentPlaceholder}
         />
       </section>
 
@@ -276,14 +275,13 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
           <h3 className="text-base font-bold text-foreground">No Gos</h3>
         </div>
         <Label className="text-xs text-muted-foreground">
-          Things you don't want to do on camera (so the chatter won't tease them).
-          Examples: Anal fingering, Anal plug, Anal penetration, Squirt, Orgasm/moaning a special name, Roleplay in costumes, Extras
+          {copy.noGosLabel}
         </Label>
         <Textarea
           value={profile.no_gos ?? ""}
           onChange={(e) => set("no_gos", e.target.value)}
           className="bg-background/50 min-h-[120px]"
-          placeholder="List your no-gos here…"
+          placeholder={copy.noGosPlaceholder}
         />
       </section>
 
@@ -291,10 +289,10 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
       <section className="glass-card rounded-xl p-5 space-y-3">
         <div className="flex items-center gap-2">
           <Info className="h-4 w-4 text-accent" />
-          <h3 className="text-base font-bold text-foreground">Additional Information</h3>
+          <h3 className="text-base font-bold text-foreground">{copy.additional}</h3>
         </div>
         <Label className="text-xs text-muted-foreground">
-          What is important for you, and what should we take care of?
+          {copy.additionalLabel}
         </Label>
         <Textarea
           value={profile.additional_info ?? ""}
@@ -315,17 +313,17 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
               className="border-accent/30 text-accent hover:bg-accent/10"
             >
               <Save className="h-4 w-4 mr-2" />
-              Zwischenspeichern
+              {copy.saveDraft}
             </Button>
             <Button
               onClick={() => handleSave(true)}
               disabled={saving || requiredMissing}
               size="lg"
               className="bg-gradient-to-r from-accent to-accent/80 text-accent-foreground font-semibold shadow-[0_0_20px_-4px_hsl(var(--accent)/0.6)] hover:scale-[1.03] transition-transform"
-              title={requiredMissing ? "Bitte mindestens Name, Alter und Stadt ausfüllen" : ""}
+              title={requiredMissing ? copy.missingTitle : ""}
             >
               <Check className="h-4 w-4 mr-2" />
-              {saving ? "Sende…" : "Steckbrief absenden"}
+              {saving ? copy.submitting : copy.submit}
             </Button>
           </>
         ) : (
@@ -336,7 +334,7 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
             className="bg-gradient-to-r from-accent to-accent/80 text-accent-foreground font-semibold shadow-[0_0_20px_-4px_hsl(var(--accent)/0.6)] hover:scale-[1.03] transition-transform"
           >
             {savedAt ? <Check className="h-4 w-4 mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-            {saving ? "Speichere…" : savedAt ? "Gespeichert" : "Speichern"}
+            {saving ? copy.saving : savedAt ? copy.saved : copy.save}
           </Button>
         )}
       </div>
