@@ -11,6 +11,10 @@ import { toast } from "sonner";
 interface Props {
   modelId: string;
   defaultAccountName?: string;
+  /** When true, this is the mandatory first submission flow (shows "Absenden"). */
+  isInitialSubmission?: boolean;
+  /** Called after a successful initial submission. */
+  onSubmitted?: () => void;
 }
 
 type ProfileRow = {
@@ -65,7 +69,7 @@ const PERSONAL_FIELDS: { key: keyof ProfileRow; label: string; hint?: string }[]
   { key: "weight", label: "Weight" },
 ];
 
-export default function ModelProfileForm({ modelId, defaultAccountName }: Props) {
+export default function ModelProfileForm({ modelId, defaultAccountName, isInitialSubmission = false, onSubmitted }: Props) {
   const empty: ProfileRow = {
     model_id: modelId,
     account_name: defaultAccountName ?? "",
@@ -98,18 +102,31 @@ export default function ModelProfileForm({ modelId, defaultAccountName }: Props)
   const set = (key: keyof ProfileRow, value: string) =>
     setProfile((p) => ({ ...p, [key]: value }));
 
-  const handleSave = async () => {
+  const requiredMissing = isInitialSubmission && (
+    !(profile.name || "").trim() ||
+    !(profile.age || "").trim() ||
+    !(profile.city || "").trim()
+  );
+
+  const handleSave = async (submit = false) => {
     setSaving(true);
+    const payload: any = { ...profile };
+    if (submit) payload.submitted_at = new Date().toISOString();
     const { error } = await supabase
       .from("model_profiles")
-      .upsert(profile, { onConflict: "model_id" });
+      .upsert(payload, { onConflict: "model_id" });
     setSaving(false);
     if (error) {
-      toast.error("Failed to save");
+      toast.error("Speichern fehlgeschlagen");
       return;
     }
     setSavedAt(Date.now());
-    toast.success("Profile saved");
+    if (submit) {
+      toast.success("Steckbrief abgesendet ✅");
+      onSubmitted?.();
+    } else {
+      toast.success("Gespeichert");
+    }
     setTimeout(() => setSavedAt(null), 2500);
   };
 
@@ -212,17 +229,42 @@ export default function ModelProfileForm({ modelId, defaultAccountName }: Props)
         />
       </section>
 
-      {/* Save Button */}
-      <div className="sticky bottom-4 flex justify-end">
-        <Button
-          onClick={handleSave}
-          disabled={saving}
-          size="lg"
-          className="bg-gradient-to-r from-accent to-accent/80 text-accent-foreground font-semibold shadow-[0_0_20px_-4px_hsl(var(--accent)/0.6)] hover:scale-[1.03] transition-transform"
-        >
-          {savedAt ? <Check className="h-4 w-4 mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-          {saving ? "Saving…" : savedAt ? "Saved" : "Save profile"}
-        </Button>
+      {/* Save / Submit */}
+      <div className="sticky bottom-4 flex flex-col sm:flex-row gap-2 sm:justify-end">
+        {isInitialSubmission ? (
+          <>
+            <Button
+              variant="outline"
+              onClick={() => handleSave(false)}
+              disabled={saving}
+              size="lg"
+              className="border-accent/30 text-accent hover:bg-accent/10"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              Zwischenspeichern
+            </Button>
+            <Button
+              onClick={() => handleSave(true)}
+              disabled={saving || requiredMissing}
+              size="lg"
+              className="bg-gradient-to-r from-accent to-accent/80 text-accent-foreground font-semibold shadow-[0_0_20px_-4px_hsl(var(--accent)/0.6)] hover:scale-[1.03] transition-transform"
+              title={requiredMissing ? "Bitte mindestens Name, Alter und Stadt ausfüllen" : ""}
+            >
+              <Check className="h-4 w-4 mr-2" />
+              {saving ? "Sende…" : "Steckbrief absenden"}
+            </Button>
+          </>
+        ) : (
+          <Button
+            onClick={() => handleSave(false)}
+            disabled={saving}
+            size="lg"
+            className="bg-gradient-to-r from-accent to-accent/80 text-accent-foreground font-semibold shadow-[0_0_20px_-4px_hsl(var(--accent)/0.6)] hover:scale-[1.03] transition-transform"
+          >
+            {savedAt ? <Check className="h-4 w-4 mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+            {saving ? "Speichere…" : savedAt ? "Gespeichert" : "Speichern"}
+          </Button>
+        )}
       </div>
     </motion.div>
   );

@@ -149,6 +149,7 @@ const App = () => (
             <Route path="/admin" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
             <Route path="/rechnung" element={<ProtectedRoute><Invoice /></ProtectedRoute>} />
             <Route path="/model/login" element={<ModelLogin />} />
+            <Route path="/m/:username" element={<ModelLogin />} />
             <Route path="/model" element={<ModelProtectedRoute><ModelDashboard /></ModelProtectedRoute>} />
             <Route path="/fanvue/login" element={<FanvueLogin />} />
             <Route path="/fanvue" element={<FanvueProtectedRoute><FanvueDashboard /></FanvueProtectedRoute>} />

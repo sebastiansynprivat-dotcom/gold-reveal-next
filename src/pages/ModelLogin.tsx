@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { Navigate } from "react-router-dom";
+import { Navigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import logo from "@/assets/logo.png";
@@ -18,6 +18,7 @@ const inputClass =
 
 export default function ModelLogin() {
   const { user, loading, signIn } = useAuth();
+  const { username } = useParams<{ username?: string }>();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -121,10 +122,10 @@ export default function ModelLogin() {
         transition={{ duration: 0.35, delay: 0.08 }}
       >
         <h1 className="text-gold-gradient-shimmer text-2xl font-bold text-center tracking-tight leading-tight mb-2">
-          Model Portal
+          {username ? `Hi ${username}` : "Model Portal"}
         </h1>
         <p className="text-muted-foreground text-sm text-center mb-7">
-          Melde dich mit deinen Zugangsdaten an
+          {username ? "Dein persönliches Portal — bitte einloggen" : "Melde dich mit deinen Zugangsdaten an"}
         </p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="input-gold-shimmer rounded-xl">
