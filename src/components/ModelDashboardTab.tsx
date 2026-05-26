@@ -1259,6 +1259,15 @@ export default function ModelDashboardTab() {
 
                     {/* Actions */}
                     <div className="flex flex-wrap gap-2 pt-1">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => window.open(`/admin/model/${selectedModelId}/view`, "_blank", "noopener,noreferrer")}
+                        className="text-xs gap-1.5 border-accent/40 text-accent hover:bg-accent/10"
+                      >
+                        <Eye className="h-3 w-3" />
+                        Als Model ansehen
+                      </Button>
                       {status === "pending" && (
                         <Button
                           size="sm"
