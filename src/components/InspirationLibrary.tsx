@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { BookOpen, FileText, TrendingUp, Sparkles, ArrowRight, Check } from "lucide-react";
+import { BookOpen, FileText, TrendingUp, Sparkles, ArrowRight, Check, Flame } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useLibraryReads } from "@/hooks/useLibraryReads";
