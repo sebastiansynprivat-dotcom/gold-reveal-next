@@ -1616,7 +1616,17 @@ export default function ModelDashboardTab() {
                       className="h-9 px-3 bg-gradient-to-r from-accent/90 to-accent text-accent-foreground hover:from-accent hover:to-accent/90 shadow-sm"
                       onClick={() => {
                         setShareCalculated(true);
-                        const [y, m] = billingMonth.split("-");
+                        setCalcTrigger((t) => t + 1);
+                        const [y, m] = billingMonth.split("-").map(Number);
+                        const lastDay = new Date(y, m, 0).getDate();
+                        setModelForm((prev) => ({
+                          ...prev,
+                          invoice_net_amount: verdienst,
+                          invoice_description: "Creator revenue share for digital content",
+                          invoice_currency: prev.currency || "EUR",
+                          invoice_service_period_start: `${billingMonth}-01`,
+                          invoice_service_period_end: `${billingMonth}-${String(lastDay).padStart(2, "0")}`,
+                        }));
                         toast.success(
                           `Anteil berechnet für ${m}/${y} · Verdienst: ${verdienst.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${modelForm.currency || "EUR"}`,
                         );
