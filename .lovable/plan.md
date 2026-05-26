@@ -1,31 +1,64 @@
 ## Ziel
-Auf der Registrierungs-Seite (`/auth`) direkt unter dem Gruppennamen-Feld ein neues Eingabefeld für die **Telegram-ID** hinzufügen – inklusive ausklappbarem Hilfe-Link „Wo finde ich meine Telegram-ID?".
+Eine neue Sektion **"Inspirations-PDFs"** im Chatter-Dashboard, die zum Klicken verleitet und einen sozialen Beweis enthält ("Chatter, die diese PDFs lesen, machen im Schnitt 2× so viel Umsatz"). Erstmal **als Platzhalter** ohne echte PDFs – Inhalte/Feinschliff folgen, sobald du den Look abgesegnet hast.
 
-## Änderungen in `src/pages/Auth.tsx`
+## Platzierung
+Im Hauptbereich des Chatter-Dashboards (`src/pages/Dashboard.tsx`), direkt **unter dem Revenue-Chart und MonthSummaryWidget**, oberhalb der LootBox. So liegt es im natürlichen Lesefluss nach den Performance-Kennzahlen – genau da, wo der Chatter denkt "Wie verbessere ich mich?".
 
-1. **Neuer State**
-   - `telegramId` (string)
-   - `showTelegramHelp` (boolean)
+Zusätzlich:
+- **Quick-Action-Button** in der `QuickActionBar` (Desktop) und im Mobile Quick-Action-Grid, der per `scrollIntoView` zur Sektion springt → schnelle Erreichbarkeit von oben.
 
-2. **Neues Eingabefeld** direkt unter dem Gruppennamen-Block (nur bei `isSignUp`)
-   - Gleicher Glass-Stil wie Gruppenname (`input-gold-shimmer rounded-xl` + `inputClass`)
-   - Placeholder: `Telegram-ID (z. B. 123456789)`
-   - `inputMode="numeric"`, Pflichtfeld
-   - Darunter Toggle-Button „Wo finde ich meine Telegram-ID?" (gleicher Stil wie Gruppennamen-Hilfe)
-   - Aufgeklapptes Hilfepanel mit Kurzanleitung:
-     - Telegram öffnen → Bot **@userinfobot** starten → sendet automatisch die numerische ID zurück
-     - Externer Link `https://t.me/userinfobot` (öffnet in neuem Tab)
-     - Hinweis: nur Zahlen, kein @username
+## Optik (Platzhalter, dem bestehenden Design-System folgend)
 
-3. **Validierung in `handleSubmit`** (nur bei Signup)
-   - Pflichtfeld, muss aus Ziffern bestehen (min. 5 Stellen)
-   - Bei Fehler: passende Fehlermeldung
+Premium Black & Gold Glass-Card mit klarem Klick-Anreiz:
 
-4. **Speicherung**
-   - Vor `signUp`: `localStorage.setItem("pending_telegram_id", telegramId)`
-   - Der bestehende Post-Auth-Sync (Zeile 104–115) übernimmt die ID dann automatisch ins Profil – keine weitere Logik nötig.
+```text
+┌──────────────────────────────────────────────────────────┐
+│  📚  INSPIRATIONS-BIBLIOTHEK            [NEU pulsierend] │
+│                                                          │
+│  Chatter, die diese PDFs lesen, machen im Schnitt        │
+│  2× so viel Umsatz wie der Durchschnitt.                 │
+│                                                          │
+│  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐    │
+│  │  PDF 1  │  │  PDF 2  │  │  PDF 3  │  │  +mehr  │    │
+│  │ Coaching│  │ Skripte │  │ Verkauf │  │         │    │
+│  └─────────┘  └─────────┘  └─────────┘  └─────────┘    │
+│                                                          │
+│         [  Jetzt durchlesen  →  ]                        │
+└──────────────────────────────────────────────────────────┘
+```
 
-## Nicht geändert
-- Kein DB-Schema-Change (Spalte `telegram_id` existiert bereits im Profil)
-- Keine anderen Seiten/Flows
-- Login-Modus unverändert
+Design-Details:
+- `gold-gradient-border-animated` Glass-Card mit `pulse-glow` (gleicher Stil wie Status-Karte)
+- Kopfzeile mit `BookOpen`-Icon in Gold, Titel "Inspirations-Bibliothek"
+- Animiertes "NEU"-Badge (Framer Motion, golden pulsierend)
+- Hook-Text in Gold-Gradient: *"Chatter, die diese PDFs lesen, machen im Schnitt 2× so viel Umsatz."*
+- 3–4 Platzhalter-PDF-Karten als horizontale Reihe (auf Mobile scrollbar):
+  - Mini-Karte: kleines PDF-Icon, Platzhalter-Titel ("Coaching #1", "Verkaufs-Skripte", "Top-Chats"), kurze Subline
+  - Hover: leicht skalieren + Gold-Glow
+  - Klick: aktuell nur `toast.info("Bald verfügbar")` – echte Verlinkung später
+- Großer goldener CTA-Button "Jetzt durchlesen →"
+- Sound-Effekt beim Klick (gleiche Casino-Sounds wie Rest der App)
+- `data-section="inspiration"` und `data-tour="inspiration"` für Tour & QuickAction
+
+## Technische Umsetzung
+
+**Neue Datei:** `src/components/InspirationLibrary.tsx`
+- Self-contained Komponente mit Platzhalter-Daten (Array `placeholderPdfs`)
+- Framer Motion für Card-Animation und Hover-Effekte
+- `playSound("click")` aus dem bestehenden Sound-System
+
+**Edit:** `src/pages/Dashboard.tsx`
+- Import + Einbau nach `MonthSummaryWidget` (Zeile ~1000)
+- `data-section="inspiration"`-Wrapper
+
+**Edit:** `src/components/QuickActionBar.tsx`
+- Neuer Button "Inspirationen" mit `BookOpen`-Icon
+- `onScrollToInspiration`-Prop nach demselben Schema wie `onScrollToBonus`
+
+**Keine** Backend-/DB-Änderungen, **keine** echten PDFs in diesem Schritt – alles Platzhalter.
+
+## Was du danach noch beurteilen kannst
+- Position im Dashboard richtig?
+- Statistik-Text ("2× so viel Umsatz") so okay oder andere Zahl?
+- Anzahl Platzhalter-Karten (3, 4, 6)?
+- Sobald optisch passt: echte PDFs hochladen + verlinken.
