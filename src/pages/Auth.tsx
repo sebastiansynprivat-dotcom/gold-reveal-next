@@ -408,6 +408,7 @@ const Auth = () => {
                 )}
               </div>
             )}
+            <div className="input-gold-shimmer rounded-xl">
               <input
                 type="email"
                 name="email"
