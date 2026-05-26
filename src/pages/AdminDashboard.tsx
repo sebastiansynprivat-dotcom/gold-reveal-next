@@ -934,11 +934,12 @@ export default function AdminDashboard() {
         supabase.from("models").select("id, name, username, model_agency").range(0, 9999),
         supabase
           .from("accounts")
-          .select("id, account_email, account_domain, folder_name, subfolder_name, model_id, model_agency, models(model_agency)")
+          .select("id, account_email, account_domain, folder_name, subfolder_name, model_id, model_agency")
           .range(0, 9999),
       ]);
 
       const aliasMap = new Map<string, { modelKey: string; agency: "shex" | "syn" }>();
+      const modelAgencyById = new Map<string, "shex" | "syn">();
       const addAlias = (alias: unknown, modelKey: string, agency: "shex" | "syn") => {
         const key = normalizeKey(alias);
         if (!key || aliasMap.has(key)) return;
@@ -950,12 +951,13 @@ export default function AdminDashboard() {
       (modelRows as any[] | null)?.forEach((m) => {
         const agency = normalizeAgencyKey(m.model_agency);
         if (!agency) return;
+        modelAgencyById.set(String(m.id), agency);
         addAlias(m.username, m.id, agency);
         addAlias(m.name, m.id, agency);
       });
 
       (accountRows as any[] | null)?.forEach((a) => {
-        const agency = normalizeAgencyKey(a?.models?.model_agency) || normalizeAgencyKey(a.model_agency);
+        const agency = (a.model_id ? modelAgencyById.get(String(a.model_id)) : null) || normalizeAgencyKey(a.model_agency);
         if (!agency) return;
         const modelKey = a.model_id || `account:${a.id}`;
         addAlias(String(a.account_email || "").split("@")[0], modelKey, agency);
@@ -964,11 +966,10 @@ export default function AdminDashboard() {
         addAlias(a.subfolder_name, modelKey, agency);
       });
 
-      let shex = 0, syn = 0, all = 0;
+      let shex = 0, syn = 0;
       (revRows as any[] | null)?.forEach((row) => {
         const platform = String(row.platform || "").toLowerCase();
         const rowTotal = Number(row.revenue_today || 0);
-        all += rowTotal;
 
         if (platform === "4based" || platform === "fourbased") {
           syn += rowTotal;
@@ -988,7 +989,7 @@ export default function AdminDashboard() {
           if (mapped.agency === "syn") syn += amount;
         });
       });
-      setEarningsByAgency30({ shex: Math.round(shex), syn: Math.round(syn), all: Math.round(all) });
+      setEarningsByAgency30({ shex: Math.round(shex), syn: Math.round(syn), all: Math.round(shex + syn) });
     })();
   }, []);
 
