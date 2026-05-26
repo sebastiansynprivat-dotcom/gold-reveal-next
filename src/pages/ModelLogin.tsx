@@ -18,6 +18,7 @@ const inputClass =
 
 export default function ModelLogin() {
   const { user, loading, signIn } = useAuth();
+  const { username } = useParams<{ username?: string }>();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
