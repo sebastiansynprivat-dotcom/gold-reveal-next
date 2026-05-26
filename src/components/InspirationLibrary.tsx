@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
-import { BookOpen, FileText, TrendingUp, Sparkles, ArrowRight } from "lucide-react";
+import { BookOpen, FileText, TrendingUp, Sparkles, ArrowRight, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useLibraryReads } from "@/hooks/useLibraryReads";
 
 const placeholderPdfs = [
   {
@@ -10,6 +11,7 @@ const placeholderPdfs = [
     subtitle: "Echter Chat, Nachricht für Nachricht erklärt",
     accent: "from-amber-400/30 to-amber-600/5",
     route: "/bibliothek/chat-breakdown-01",
+    contentKey: "chat-breakdown-01",
     badge: "NEU",
   },
   {
@@ -18,6 +20,7 @@ const placeholderPdfs = [
     subtitle: "Wort-für-Wort Vorlagen, die wirklich kaufen lassen",
     accent: "from-yellow-400/20 to-yellow-600/5",
     route: null,
+    contentKey: null,
     badge: null,
   },
   {
@@ -26,12 +29,15 @@ const placeholderPdfs = [
     subtitle: "Die Basics, die jeder Top-Chatter beherrscht",
     accent: "from-amber-300/20 to-amber-500/5",
     route: null,
+    contentKey: null,
     badge: null,
   },
 ];
 
 export default function InspirationLibrary() {
   const navigate = useNavigate();
+  const { reads } = useLibraryReads();
+
   const handleClick = (item: typeof placeholderPdfs[number]) => {
     if (item.route) {
       navigate(item.route);
@@ -41,6 +47,19 @@ export default function InspirationLibrary() {
       description: "Wir laden grade die PDFs hoch.",
     });
   };
+
+  const trackable = placeholderPdfs.filter((p) => p.contentKey);
+  const doneCount = trackable.filter((p) => reads[p.contentKey!]?.completed_at).length;
+  const totalCount = placeholderPdfs.length;
+  const overallPct = Math.round((doneCount / totalCount) * 100);
+
+  const ctaItem = placeholderPdfs[0];
+  const ctaRead = ctaItem.contentKey ? reads[ctaItem.contentKey] : undefined;
+  const ctaLabel = ctaRead?.completed_at
+    ? "Nochmal lesen"
+    : (ctaRead?.progress_pct ?? 0) > 0
+    ? "Weiterlesen"
+    : "Jetzt durchlesen";
 
   return (
     <motion.section
@@ -72,16 +91,36 @@ export default function InspirationLibrary() {
       </div>
 
       {/* Hook */}
-      <p className="text-sm lg:text-base mb-4 leading-snug">
+      <p className="text-sm lg:text-base mb-3 leading-snug">
         <span className="text-muted-foreground">Chatter, die diese PDFs lesen, machen im Schnitt </span>
         <span className="text-gold-gradient font-bold">2× so viel Umsatz</span>
         <span className="text-muted-foreground"> wie der Durchschnitt.</span>
       </p>
 
+      {/* Progress overview */}
+      <div className="mb-4 flex items-center gap-3">
+        <div className="flex-1 h-1.5 rounded-full bg-secondary/60 overflow-hidden">
+          <motion.div
+            className="h-full bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500"
+            initial={{ width: 0 }}
+            animate={{ width: `${overallPct}%` }}
+            transition={{ duration: 0.6 }}
+          />
+        </div>
+        <span className="text-[11px] font-bold text-muted-foreground whitespace-nowrap">
+          {doneCount} / {totalCount} gelesen
+        </span>
+      </div>
+
       {/* PDF Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-4">
         {placeholderPdfs.map((item, i) => {
-          const { icon: Icon, title, subtitle, accent, badge } = item;
+          const { icon: Icon, title, subtitle, accent, badge, contentKey } = item;
+          const r = contentKey ? reads[contentKey] : undefined;
+          const isDone = !!r?.completed_at;
+          const pct = r?.progress_pct ?? 0;
+          const inProgress = !isDone && pct > 0;
+
           return (
             <motion.button
               key={title}
@@ -91,14 +130,29 @@ export default function InspirationLibrary() {
               transition={{ delay: 0.15 + i * 0.08 }}
               whileHover={{ scale: 1.03, y: -2 }}
               whileTap={{ scale: 0.97 }}
-              className={`group relative text-left rounded-xl border border-border/60 bg-gradient-to-br ${accent} bg-secondary/30 p-3 hover:border-accent/60 hover:shadow-[0_0_20px_rgba(212,175,55,0.25)] transition-all`}
+              className={`group relative text-left rounded-xl border bg-gradient-to-br ${accent} bg-secondary/30 p-3 transition-all ${
+                isDone
+                  ? "border-emerald-500/50 opacity-80"
+                  : "border-border/60 hover:border-accent/60 hover:shadow-[0_0_20px_rgba(212,175,55,0.25)]"
+              }`}
             >
-              {badge && (
+              {/* Top-right status */}
+              {isDone ? (
+                <span className="absolute top-2 right-2 inline-flex items-center gap-1 rounded-full bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 text-[9px] font-bold px-1.5 py-0.5">
+                  <Check className="h-2.5 w-2.5" />
+                  GELESEN
+                </span>
+              ) : inProgress ? (
+                <span className="absolute top-2 right-2 rounded-full bg-accent/20 border border-accent/50 text-accent text-[9px] font-bold px-1.5 py-0.5">
+                  {pct}%
+                </span>
+              ) : badge ? (
                 <span className="absolute top-2 right-2 rounded-full bg-accent text-black text-[9px] font-bold px-1.5 py-0.5 tracking-wider">
                   {badge}
                 </span>
-              )}
-              <Icon className="h-5 w-5 text-accent mb-2 group-hover:scale-110 transition-transform" />
+              ) : null}
+
+              <Icon className={`h-5 w-5 mb-2 group-hover:scale-110 transition-transform ${isDone ? "text-emerald-400" : "text-accent"}`} />
               <p className="text-sm font-bold text-foreground leading-tight mb-1">{title}</p>
               <p className="text-[11px] text-muted-foreground leading-snug">{subtitle}</p>
             </motion.button>
@@ -108,12 +162,12 @@ export default function InspirationLibrary() {
 
       {/* CTA */}
       <motion.button
-        onClick={() => handleClick(placeholderPdfs[0])}
+        onClick={() => handleClick(ctaItem)}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 bg-[length:200%_100%] hover:bg-[position:100%_0] text-black font-bold py-3 text-sm transition-[background-position] duration-500 shadow-[0_4px_20px_rgba(212,175,55,0.35)]"
       >
-        Jetzt durchlesen
+        {ctaLabel}
         <ArrowRight className="h-4 w-4" />
       </motion.button>
     </motion.section>
