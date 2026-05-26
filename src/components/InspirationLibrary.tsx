@@ -78,27 +78,35 @@ export default function InspirationLibrary() {
 
       {/* PDF Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mb-4">
-        {placeholderPdfs.map(({ icon: Icon, title, subtitle, accent }, i) => (
-          <motion.button
-            key={title}
-            onClick={() => handleClick(title)}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 + i * 0.08 }}
-            whileHover={{ scale: 1.03, y: -2 }}
-            whileTap={{ scale: 0.97 }}
-            className={`group relative text-left rounded-xl border border-border/60 bg-gradient-to-br ${accent} bg-secondary/30 p-3 hover:border-accent/60 hover:shadow-[0_0_20px_rgba(212,175,55,0.25)] transition-all`}
-          >
-            <Icon className="h-5 w-5 text-accent mb-2 group-hover:scale-110 transition-transform" />
-            <p className="text-sm font-bold text-foreground leading-tight mb-1">{title}</p>
-            <p className="text-[11px] text-muted-foreground leading-snug">{subtitle}</p>
-          </motion.button>
-        ))}
+        {placeholderPdfs.map((item, i) => {
+          const { icon: Icon, title, subtitle, accent, badge } = item;
+          return (
+            <motion.button
+              key={title}
+              onClick={() => handleClick(item)}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 + i * 0.08 }}
+              whileHover={{ scale: 1.03, y: -2 }}
+              whileTap={{ scale: 0.97 }}
+              className={`group relative text-left rounded-xl border border-border/60 bg-gradient-to-br ${accent} bg-secondary/30 p-3 hover:border-accent/60 hover:shadow-[0_0_20px_rgba(212,175,55,0.25)] transition-all`}
+            >
+              {badge && (
+                <span className="absolute top-2 right-2 rounded-full bg-accent text-black text-[9px] font-bold px-1.5 py-0.5 tracking-wider">
+                  {badge}
+                </span>
+              )}
+              <Icon className="h-5 w-5 text-accent mb-2 group-hover:scale-110 transition-transform" />
+              <p className="text-sm font-bold text-foreground leading-tight mb-1">{title}</p>
+              <p className="text-[11px] text-muted-foreground leading-snug">{subtitle}</p>
+            </motion.button>
+          );
+        })}
       </div>
 
       {/* CTA */}
       <motion.button
-        onClick={() => handleClick("Bibliothek")}
+        onClick={() => handleClick(placeholderPdfs[0])}
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 bg-[length:200%_100%] hover:bg-[position:100%_0] text-black font-bold py-3 text-sm transition-[background-position] duration-500 shadow-[0_4px_20px_rgba(212,175,55,0.35)]"
