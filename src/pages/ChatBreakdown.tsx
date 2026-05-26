@@ -3,7 +3,7 @@ import { ArrowLeft, Download } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const PDF_URL = "/content/chat-breakdown-01.pdf";
-const PAGES = Array.from({ length: 8 }, (_, i) => `/content/breakdown-01/page-${i + 1}.jpg`);
+const PAGES = Array.from({ length: 10 }, (_, i) => `/content/breakdown-01/page-${String(i + 1).padStart(2, "0")}.jpg`);
 
 export default function ChatBreakdown() {
   return (
@@ -18,7 +18,7 @@ export default function ChatBreakdown() {
             Zurück
           </Link>
           <h1 className="text-sm sm:text-base font-bold tracking-wide uppercase text-gold-gradient truncate">
-            Vom Hi zum $135 Close
+            Vom Hi zum 115 € Abschluss
           </h1>
           <a
             href={PDF_URL}

@@ -6,7 +6,7 @@ import { toast } from "sonner";
 const placeholderPdfs = [
   {
     icon: TrendingUp,
-    title: "Vom Hi zum $135 Close",
+    title: "Vom Hi zum 115 € Abschluss",
     subtitle: "Echter Chat, Nachricht für Nachricht erklärt",
     accent: "from-amber-400/30 to-amber-600/5",
     route: "/bibliothek/chat-breakdown-01",
