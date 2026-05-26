@@ -24,6 +24,8 @@ import Leaderboard from "./pages/Leaderboard";
 import FanvueLogin from "./pages/FanvueLogin";
 import FanvueDashboard from "./pages/FanvueDashboard";
 import ChatBreakdown from "./pages/ChatBreakdown";
+import CoachingBasics from "./pages/CoachingBasics";
+
 
 const queryClient = new QueryClient();
 
