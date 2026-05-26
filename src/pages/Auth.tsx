@@ -185,6 +185,12 @@ const Auth = () => {
         setError("Bitte gib deinen Gruppennamen ein.");
         return;
       }
+      const cleanedTgId = telegramId.replace(/\s+/g, "");
+      if (!/^\d{5,}$/.test(cleanedTgId)) {
+        setError("Bitte gib eine gültige Telegram-ID ein (nur Zahlen, mindestens 5 Stellen).");
+        return;
+      }
+      localStorage.setItem("pending_telegram_id", cleanedTgId);
       // Show confirmation popup first
       pendingSubmitRef.current = e;
       setShowGroupConfirm(true);
