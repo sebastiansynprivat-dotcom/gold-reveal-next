@@ -1085,20 +1085,26 @@ export default function CreditNoteForm({
 
         {/* Platform Breakdown */}
         {(() => {
-          if (compensationType === "hourly" || !platformRevenue) return null;
+          if (compensationType === "hourly") return null;
           const fxRate = currency === invoiceCurrency ? 1 : (liveExchangeRate || 1);
-          const pctFor = (k: "fourbased" | "maloum" | "brezzels") => {
-            const c = platformPercentages?.[k] || 0;
-            return c > 0 ? c : revenuePercentage;
-          };
-          const rows = [
-            { key: "fourbased" as const, label: "4Based", rev: platformRevenue.fourbased, pct: pctFor("fourbased") },
-            { key: "maloum" as const, label: "Maloum", rev: platformRevenue.maloum, pct: pctFor("maloum") },
-            { key: "brezzels" as const, label: "Brezzels", rev: platformRevenue.brezzels, pct: pctFor("brezzels") },
-            ...(platformRevenue.custom && platformRevenue.custom.rev > 0 && platformRevenue.custom.name && revenuePercentage > 0
-              ? [{ key: "custom" as const, label: platformRevenue.custom.name, rev: platformRevenue.custom.rev, pct: revenuePercentage }]
-              : []),
-          ].filter(r => r.rev > 0 && r.pct > 0);
+          // Prefer explicit platformBreakdown from parent when available
+          const rows = platformBreakdown && platformBreakdown.length > 0
+            ? platformBreakdown.filter(p => p.rev > 0 && p.pct > 0).map((p, i) => ({
+                key: String(i),
+                label: p.name,
+                rev: p.rev,
+                pct: p.pct,
+              }))
+            : platformRevenue
+              ? [
+                  { key: "fourbased", label: "4Based", rev: platformRevenue.fourbased, pct: platformPercentages?.fourbased || revenuePercentage },
+                  { key: "maloum", label: "Maloum", rev: platformRevenue.maloum, pct: platformPercentages?.maloum || revenuePercentage },
+                  { key: "brezzels", label: "Brezzels", rev: platformRevenue.brezzels, pct: platformPercentages?.brezzels || revenuePercentage },
+                  ...(platformRevenue.custom && platformRevenue.custom.rev > 0 && platformRevenue.custom.name && revenuePercentage > 0
+                    ? [{ key: "custom", label: platformRevenue.custom.name, rev: platformRevenue.custom.rev, pct: revenuePercentage }]
+                    : []),
+                ].filter(r => r.rev > 0 && r.pct > 0)
+              : [];
           if (rows.length === 0) return null;
           return (
             <div className="rounded-lg bg-secondary/20 border border-border/40 p-3 space-y-1.5">
