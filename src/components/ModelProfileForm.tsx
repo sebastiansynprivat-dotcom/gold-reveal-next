@@ -15,6 +15,7 @@ interface Props {
   isInitialSubmission?: boolean;
   /** Called after a successful initial submission. */
   onSubmitted?: () => void;
+  language?: "de" | "en";
 }
 
 type ProfileRow = {
@@ -46,30 +47,103 @@ type ProfileRow = {
   additional_info: string | null;
 };
 
-const PERSONAL_FIELDS: { key: keyof ProfileRow; label: string; hint?: string }[] = [
-  { key: "name", label: "Name", hint: "not your username — the one communicated to users" },
-  { key: "age", label: "Age & Birthday", hint: "real or chosen" },
-  { key: "city", label: "City", hint: "Berlin, Munich, Hamburg, …" },
-  { key: "place_of_birth", label: "Place of birth", hint: "city + country" },
-  { key: "favorite_color", label: "Favorite color" },
-  { key: "favorite_movie", label: "Favorite movie" },
-  { key: "favorite_food", label: "Favorite food" },
-  { key: "favorite_music", label: "Favorite music" },
-  { key: "occupation", label: "Occupation" },
-  { key: "hobbies", label: "Hobbies" },
-  { key: "dream", label: "Dream" },
-  { key: "work", label: "Work" },
-  { key: "education", label: "Education" },
-  { key: "languages", label: "Languages" },
-  { key: "special_marks", label: "Special marks" },
-  { key: "natural_hair", label: "Natural hair" },
-  { key: "shoe_size", label: "Shoe size" },
-  { key: "bra_size", label: "Bra size" },
-  { key: "height", label: "Height" },
-  { key: "weight", label: "Weight" },
-];
+const PERSONAL_FIELDS: Record<"de" | "en", { key: keyof ProfileRow; label: string; hint?: string }[]> = {
+  de: [
+    { key: "name", label: "Name", hint: "nicht dein Username — der Name, der Fans kommuniziert wird" },
+    { key: "age", label: "Alter & Geburtstag", hint: "echt, erfunden oder gemischt" },
+    { key: "city", label: "Stadt", hint: "Berlin, München, Hamburg, …" },
+    { key: "place_of_birth", label: "Geburtsort", hint: "Stadt + Land" },
+    { key: "favorite_color", label: "Lieblingsfarbe" },
+    { key: "favorite_movie", label: "Lieblingsfilm" },
+    { key: "favorite_food", label: "Lieblingsessen" },
+    { key: "favorite_music", label: "Lieblingsmusik" },
+    { key: "occupation", label: "Beruf" },
+    { key: "hobbies", label: "Hobbys" },
+    { key: "dream", label: "Traum" },
+    { key: "work", label: "Arbeit" },
+    { key: "education", label: "Ausbildung" },
+    { key: "languages", label: "Sprachen" },
+    { key: "special_marks", label: "Besondere Merkmale" },
+    { key: "natural_hair", label: "Natürliche Haarfarbe" },
+    { key: "shoe_size", label: "Schuhgröße" },
+    { key: "bra_size", label: "BH-Größe" },
+    { key: "height", label: "Größe" },
+    { key: "weight", label: "Gewicht" },
+  ],
+  en: [
+    { key: "name", label: "Name", hint: "not your username — the name shown to fans" },
+    { key: "age", label: "Age & birthday", hint: "real, fictional, or mixed" },
+    { key: "city", label: "City", hint: "Berlin, Munich, Hamburg, …" },
+    { key: "place_of_birth", label: "Place of birth", hint: "city + country" },
+    { key: "favorite_color", label: "Favorite color" },
+    { key: "favorite_movie", label: "Favorite movie" },
+    { key: "favorite_food", label: "Favorite food" },
+    { key: "favorite_music", label: "Favorite music" },
+    { key: "occupation", label: "Occupation" },
+    { key: "hobbies", label: "Hobbies" },
+    { key: "dream", label: "Dream" },
+    { key: "work", label: "Work" },
+    { key: "education", label: "Education" },
+    { key: "languages", label: "Languages" },
+    { key: "special_marks", label: "Special marks" },
+    { key: "natural_hair", label: "Natural hair" },
+    { key: "shoe_size", label: "Shoe size" },
+    { key: "bra_size", label: "Bra size" },
+    { key: "height", label: "Height" },
+    { key: "weight", label: "Weight" },
+  ],
+};
 
-export default function ModelProfileForm({ modelId, defaultAccountName, isInitialSubmission = false, onSubmitted }: Props) {
+const COPY = {
+  de: {
+    title: "Steckbrief",
+    intro: "Fülle deinen Steckbrief aus — diese Infos helfen den Chattern, dich authentisch zu vertreten. Du kannst echte Infos, erfundene Infos oder eine Mischung nutzen.",
+    personal: "Persönliche Informationen",
+    content: "Content-Informationen",
+    contentLabel: "Welchen Content machst du am liebsten?",
+    contentPlaceholder: "z. B. Solo, Toys, Lingerie, …",
+    noGosLabel: "Dinge, die du nicht vor der Kamera machen möchtest und die der Chatter nicht anteasern soll.",
+    noGosPlaceholder: "Trage deine No-Gos hier ein…",
+    additional: "Zusätzliche Informationen",
+    additionalLabel: "Was ist dir wichtig und worauf sollen wir achten?",
+    saveDraft: "Zwischenspeichern",
+    submit: "Steckbrief absenden",
+    submitting: "Sende…",
+    save: "Speichern",
+    saving: "Speichere…",
+    saved: "Gespeichert",
+    missingTitle: "Bitte mindestens Name, Alter und Stadt ausfüllen",
+    saveError: "Speichern fehlgeschlagen",
+    submittedToast: "Steckbrief abgesendet ✅",
+    savedToast: "Gespeichert",
+  },
+  en: {
+    title: "Profile",
+    intro: "Fill out your profile — this info helps the chatters represent you authentically. You can use real details, fictional details, or a mix of both.",
+    personal: "Personal information",
+    content: "Content information",
+    contentLabel: "What content do you prefer doing?",
+    contentPlaceholder: "e.g. Solo, Toys, Lingerie, …",
+    noGosLabel: "Things you don't want to do on camera and that chatters should not tease.",
+    noGosPlaceholder: "List your no-gos here…",
+    additional: "Additional information",
+    additionalLabel: "What is important to you, and what should we take care of?",
+    saveDraft: "Save draft",
+    submit: "Submit profile",
+    submitting: "Submitting…",
+    save: "Save",
+    saving: "Saving…",
+    saved: "Saved",
+    missingTitle: "Please fill out at least name, age, and city",
+    saveError: "Saving failed",
+    submittedToast: "Profile submitted ✅",
+    savedToast: "Saved",
+  },
+};
+
+export default function ModelProfileForm({ modelId, defaultAccountName, isInitialSubmission = false, onSubmitted, language = "de" }: Props) {
+  const lang = language === "en" ? "en" : "de";
+  const copy = COPY[lang];
   const empty: ProfileRow = {
     model_id: modelId,
     account_name: defaultAccountName ?? "",
@@ -117,15 +191,15 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
       .upsert(payload, { onConflict: "model_id" });
     setSaving(false);
     if (error) {
-      toast.error("Speichern fehlgeschlagen");
+      toast.error(copy.saveError);
       return;
     }
     setSavedAt(Date.now());
     if (submit) {
-      toast.success("Steckbrief abgesendet ✅");
+      toast.success(copy.submittedToast);
       onSubmitted?.();
     } else {
-      toast.success("Gespeichert");
+      toast.success(copy.savedToast);
     }
     setTimeout(() => setSavedAt(null), 2500);
   };
@@ -151,10 +225,9 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
           <User className="h-5 w-5 text-accent" />
         </div>
         <div className="flex-1 min-w-0">
-          <h2 className="text-lg font-bold text-foreground">Profile</h2>
+          <h2 className="text-lg font-bold text-foreground">{copy.title}</h2>
           <p className="text-sm text-muted-foreground">
-            Fill out your profile — this info helps the chatters represent you authentically.
-            You can use real info, fake or a mix of both.
+            {copy.intro}
           </p>
         </div>
       </div>
@@ -163,10 +236,10 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
       <section className="glass-card rounded-xl p-5 space-y-4">
         <div className="flex items-center gap-2">
           <User className="h-4 w-4 text-accent" />
-          <h3 className="text-base font-bold text-foreground">Personal Information</h3>
+          <h3 className="text-base font-bold text-foreground">{copy.personal}</h3>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {PERSONAL_FIELDS.map((f) => (
+          {PERSONAL_FIELDS[lang].map((f) => (
             <div key={f.key as string} className="space-y-1.5">
               <Label className="text-xs font-medium text-foreground">{f.label}</Label>
               <Input
@@ -184,14 +257,14 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
       <section className="glass-card rounded-xl p-5 space-y-3">
         <div className="flex items-center gap-2">
           <Camera className="h-4 w-4 text-accent" />
-          <h3 className="text-base font-bold text-foreground">Content Information</h3>
+          <h3 className="text-base font-bold text-foreground">{copy.content}</h3>
         </div>
-        <Label className="text-xs text-muted-foreground">What content do you prefer doing?</Label>
+        <Label className="text-xs text-muted-foreground">{copy.contentLabel}</Label>
         <Textarea
           value={profile.content_preferences ?? ""}
           onChange={(e) => set("content_preferences", e.target.value)}
           className="bg-background/50 min-h-[100px]"
-          placeholder="e.g. Solo, Toys, Lingerie, …"
+          placeholder={copy.contentPlaceholder}
         />
       </section>
 
@@ -202,14 +275,13 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
           <h3 className="text-base font-bold text-foreground">No Gos</h3>
         </div>
         <Label className="text-xs text-muted-foreground">
-          Things you don't want to do on camera (so the chatter won't tease them).
-          Examples: Anal fingering, Anal plug, Anal penetration, Squirt, Orgasm/moaning a special name, Roleplay in costumes, Extras
+          {copy.noGosLabel}
         </Label>
         <Textarea
           value={profile.no_gos ?? ""}
           onChange={(e) => set("no_gos", e.target.value)}
           className="bg-background/50 min-h-[120px]"
-          placeholder="List your no-gos here…"
+          placeholder={copy.noGosPlaceholder}
         />
       </section>
 
@@ -217,10 +289,10 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
       <section className="glass-card rounded-xl p-5 space-y-3">
         <div className="flex items-center gap-2">
           <Info className="h-4 w-4 text-accent" />
-          <h3 className="text-base font-bold text-foreground">Additional Information</h3>
+          <h3 className="text-base font-bold text-foreground">{copy.additional}</h3>
         </div>
         <Label className="text-xs text-muted-foreground">
-          What is important for you, and what should we take care of?
+          {copy.additionalLabel}
         </Label>
         <Textarea
           value={profile.additional_info ?? ""}
@@ -241,17 +313,17 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
               className="border-accent/30 text-accent hover:bg-accent/10"
             >
               <Save className="h-4 w-4 mr-2" />
-              Zwischenspeichern
+              {copy.saveDraft}
             </Button>
             <Button
               onClick={() => handleSave(true)}
               disabled={saving || requiredMissing}
               size="lg"
               className="bg-gradient-to-r from-accent to-accent/80 text-accent-foreground font-semibold shadow-[0_0_20px_-4px_hsl(var(--accent)/0.6)] hover:scale-[1.03] transition-transform"
-              title={requiredMissing ? "Bitte mindestens Name, Alter und Stadt ausfüllen" : ""}
+              title={requiredMissing ? copy.missingTitle : ""}
             >
               <Check className="h-4 w-4 mr-2" />
-              {saving ? "Sende…" : "Steckbrief absenden"}
+              {saving ? copy.submitting : copy.submit}
             </Button>
           </>
         ) : (
@@ -262,7 +334,7 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
             className="bg-gradient-to-r from-accent to-accent/80 text-accent-foreground font-semibold shadow-[0_0_20px_-4px_hsl(var(--accent)/0.6)] hover:scale-[1.03] transition-transform"
           >
             {savedAt ? <Check className="h-4 w-4 mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-            {saving ? "Speichere…" : savedAt ? "Gespeichert" : "Speichern"}
+            {saving ? copy.saving : savedAt ? copy.saved : copy.save}
           </Button>
         )}
       </div>

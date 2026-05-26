@@ -18,6 +18,7 @@ export default function AdminModelView() {
   const [loading, setLoading] = useState(true);
   const [modelName, setModelName] = useState("");
   const [modelUsername, setModelUsername] = useState<string | null>(null);
+  const [modelLanguage, setModelLanguage] = useState<"de" | "en">("de");
   const [submittedAt, setSubmittedAt] = useState<string | null>(null);
   const [confirmedAt, setConfirmedAt] = useState<string | null>(null);
   const [mode, setMode] = useState<"dashboard" | "edit">("dashboard");
@@ -27,7 +28,7 @@ export default function AdminModelView() {
     if (!modelId) return;
     setLoading(true);
     const [{ data: model }, { data: profile }] = await Promise.all([
-      (supabase.from("models") as any).select("name, username").eq("id", modelId).maybeSingle(),
+      (supabase.from("models") as any).select("name, username, model_language").eq("id", modelId).maybeSingle(),
       (supabase.from("model_profiles") as any)
         .select("submitted_at, confirmed_at")
         .eq("model_id", modelId)
@@ -35,6 +36,7 @@ export default function AdminModelView() {
     ]);
     setModelName(model?.name || "");
     setModelUsername(model?.username || null);
+    setModelLanguage(model?.model_language === "en" ? "en" : "de");
     setSubmittedAt(profile?.submitted_at || null);
     setConfirmedAt(profile?.confirmed_at || null);
     setLoading(false);
@@ -96,6 +98,16 @@ export default function AdminModelView() {
     );
   }
 
+  const modelCopy = modelLanguage === "en" ? {
+    titleEdit: "Edit profile",
+    titleDashboard: "Model Dashboard",
+    back: "Back",
+  } : {
+    titleEdit: "Steckbrief bearbeiten",
+    titleDashboard: "Model Dashboard",
+    back: "Zurück",
+  };
+
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Admin-Preview-Banner */}
@@ -129,7 +141,7 @@ export default function AdminModelView() {
             <img src={logo} alt="Logo" className="h-9 w-9 rounded-full shrink-0" />
             <div className="flex-1 min-w-0">
               <h1 className="text-base font-bold text-foreground leading-tight">
-                {mode === "edit" ? "Steckbrief bearbeiten" : "Model Dashboard"}
+                {mode === "edit" ? modelCopy.titleEdit : modelCopy.titleDashboard}
               </h1>
               <p className="text-xs text-muted-foreground truncate">{modelName}</p>
             </div>
@@ -141,7 +153,7 @@ export default function AdminModelView() {
                 className="text-muted-foreground hover:text-foreground gap-1.5"
               >
                 <ArrowLeft className="h-4 w-4" />
-                Zurück
+                {modelCopy.back}
               </Button>
             )}
           </div>
@@ -219,6 +231,7 @@ export default function AdminModelView() {
             modelId={modelId}
             defaultAccountName={modelName}
             isInitialSubmission={false}
+            language={modelLanguage}
             onSubmitted={async () => {
               await loadAll();
               toast.success("Änderungen gespeichert");
@@ -230,6 +243,7 @@ export default function AdminModelView() {
             modelName={modelName}
             modelUsername={modelUsername}
             profileConfirmed={!!confirmedAt}
+            language={modelLanguage}
             onEditProfile={() => setMode("edit")}
           />
         )}

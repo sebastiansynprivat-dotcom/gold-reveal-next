@@ -13,6 +13,7 @@ export default function ModelDashboard() {
   const [modelId, setModelId] = useState<string | null>(null);
   const [modelName, setModelName] = useState("");
   const [modelUsername, setModelUsername] = useState<string | null>(null);
+  const [modelLanguage, setModelLanguage] = useState<"de" | "en">("de");
   const [submittedAt, setSubmittedAt] = useState<string | null>(null);
   const [confirmedAt, setConfirmedAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -55,12 +56,13 @@ export default function ModelDashboard() {
 
       if (resolvedModelId) {
         const { data: model } = await (supabase.from("models") as any)
-          .select("name, username")
+          .select("name, username, model_language")
           .eq("id", resolvedModelId)
           .maybeSingle();
         if (model) {
           setModelName(model.name || "");
           setModelUsername(model.username || null);
+          setModelLanguage(model.model_language === "en" ? "en" : "de");
         }
         await loadProfileMeta(resolvedModelId);
       }
@@ -82,6 +84,21 @@ export default function ModelDashboard() {
   // Determine view: form (initial submission) | dashboard | edit-form
   const needsInitialSubmission = !!modelId && !submittedAt;
   const showForm = needsInitialSubmission || editingProfile;
+  const copy = modelLanguage === "en" ? {
+    profile: "Profile",
+    dashboard: "Model Dashboard",
+    back: "Back",
+    notLinked: "Your model profile is not linked yet. Please contact the team.",
+    fillTitle: "Please fill out your profile",
+    fillBody: "Once you submit your profile, you will get access to your dashboard with earnings, platforms, and requests.",
+  } : {
+    profile: "Steckbrief",
+    dashboard: "Model Dashboard",
+    back: "Zurück",
+    notLinked: "Dein Model-Profil ist noch nicht verknüpft. Bitte melde dich beim Team.",
+    fillTitle: "Bitte fülle deinen Steckbrief aus",
+    fillBody: "Sobald du den Steckbrief abgesendet hast, bekommst du Zugang zu deinem Dashboard mit Umsätzen, Plattformen und Anfragen.",
+  };
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -91,7 +108,7 @@ export default function ModelDashboard() {
             <img src={logo} alt="Logo" className="h-9 w-9 rounded-full shrink-0" />
             <div className="flex-1 min-w-0">
               <h1 className="text-base font-bold text-foreground leading-tight">
-                {showForm ? "Steckbrief" : "Model Dashboard"}
+                {showForm ? copy.profile : copy.dashboard}
               </h1>
               <p className="text-xs text-muted-foreground truncate">
                 {modelName || accountName}
@@ -105,7 +122,7 @@ export default function ModelDashboard() {
                 className="text-muted-foreground hover:text-foreground gap-1.5"
               >
                 <ArrowLeft className="h-4 w-4" />
-                Zurück
+                {copy.back}
               </Button>
             )}
             <Button
@@ -123,17 +140,17 @@ export default function ModelDashboard() {
       <div className="container max-w-3xl mx-auto px-4 pt-6">
         {!modelId ? (
           <div className="glass-card rounded-xl p-6 text-center text-sm text-muted-foreground">
-            Dein Model-Profil ist noch nicht verknüpft. Bitte melde dich beim Team.
+            {copy.notLinked}
           </div>
         ) : showForm ? (
           <>
             {needsInitialSubmission && (
               <div className="glass-card rounded-xl p-4 mb-4 border-l-2 border-accent/60">
                 <p className="text-sm text-foreground font-semibold">
-                  Bitte fülle deinen Steckbrief aus
+                  {copy.fillTitle}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Sobald du den Steckbrief abgesendet hast, bekommst du Zugang zu deinem Dashboard mit Umsätzen, Plattformen und Anfragen.
+                  {copy.fillBody}
                 </p>
               </div>
             )}
@@ -141,6 +158,7 @@ export default function ModelDashboard() {
               modelId={modelId}
               defaultAccountName={accountName}
               isInitialSubmission={needsInitialSubmission}
+              language={modelLanguage}
               onSubmitted={async () => {
                 await loadProfileMeta(modelId);
                 setEditingProfile(false);
@@ -153,6 +171,7 @@ export default function ModelDashboard() {
             modelName={modelName || accountName}
             modelUsername={modelUsername}
             profileConfirmed={!!confirmedAt}
+            language={modelLanguage}
             onEditProfile={() => setEditingProfile(true)}
           />
         )}

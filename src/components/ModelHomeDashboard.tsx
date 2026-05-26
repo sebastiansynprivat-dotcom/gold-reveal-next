@@ -24,6 +24,50 @@ const PERIOD_LABELS: Record<Period, string> = {
   lifetime: "Gesamt",
 };
 
+const PERIOD_LABELS_EN: Record<Period, string> = {
+  today: "Today",
+  yesterday: "Yesterday",
+  last7: "Last 7 days",
+  last30: "Last 30 days",
+  month: "This month",
+  lifetime: "Lifetime",
+};
+
+const COPY = {
+  de: {
+    welcome: "Willkommen zurück",
+    confirmed: "Bestätigt",
+    pending: "Prüfung läuft",
+    revenue: "Einnahmen",
+    platforms: "Plattformen",
+    active: "aktiv",
+    noPlatforms: "Noch keine Plattformen verknüpft.",
+    requests: "Custom-Anfragen",
+    open: "offen",
+    noRequests: "Aktuell keine Anfragen.",
+    statusPending: "Offen",
+    statusCompleted: "Erledigt",
+    statusRejected: "Abgelehnt",
+    editProfile: "Steckbrief bearbeiten",
+  },
+  en: {
+    welcome: "Welcome back",
+    confirmed: "Confirmed",
+    pending: "Under review",
+    revenue: "Earnings",
+    platforms: "Platforms",
+    active: "active",
+    noPlatforms: "No platforms connected yet.",
+    requests: "Custom requests",
+    open: "open",
+    noRequests: "No requests right now.",
+    statusPending: "Open",
+    statusCompleted: "Completed",
+    statusRejected: "Rejected",
+    editProfile: "Edit profile",
+  },
+};
+
 const PLATFORM_LABELS: Record<string, string> = {
   fourbased: "4Based",
   maloum: "Maloum",
@@ -62,6 +106,7 @@ interface Props {
   modelUsername?: string | null;
   profileConfirmed: boolean;
   onEditProfile: () => void;
+  language?: "de" | "en";
 }
 
 export default function ModelHomeDashboard({
@@ -70,7 +115,11 @@ export default function ModelHomeDashboard({
   modelUsername,
   profileConfirmed,
   onEditProfile,
+  language = "de",
 }: Props) {
+  const lang = language === "en" ? "en" : "de";
+  const copy = COPY[lang];
+  const periodLabels = lang === "en" ? PERIOD_LABELS_EN : PERIOD_LABELS;
   const [period, setPeriod] = useState<Period>("month");
   const [accounts, setAccounts] = useState<any[]>([]);
   const [revenueByAccount, setRevenueByAccount] = useState<Record<string, number>>({});
@@ -153,7 +202,7 @@ export default function ModelHomeDashboard({
     [revenueByAccount],
   );
   const fmtMoney = (v: number) =>
-    new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(v);
+    new Intl.NumberFormat(lang === "en" ? "en-US" : "de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(v);
 
   const openRequests = requests.filter((r) => r.status === "pending").length;
 
@@ -168,7 +217,7 @@ export default function ModelHomeDashboard({
       <div className="glass-card rounded-2xl p-5 relative overflow-hidden card-inner-glow card-top-line">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-xs uppercase tracking-wider text-muted-foreground">Willkommen zurück</p>
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">{copy.welcome}</p>
             <h1 className="text-2xl font-bold text-gold-gradient-shimmer leading-tight">{modelName}</h1>
             {modelUsername && (
               <p className="text-[11px] text-muted-foreground mt-1 font-mono">
@@ -185,7 +234,7 @@ export default function ModelHomeDashboard({
             )}
           >
             {profileConfirmed ? <CheckCircle2 className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
-            {profileConfirmed ? "Bestätigt" : "Prüfung läuft"}
+            {profileConfirmed ? copy.confirmed : copy.pending}
           </div>
         </div>
       </div>
@@ -194,11 +243,11 @@ export default function ModelHomeDashboard({
       <section className="glass-card rounded-2xl p-5 space-y-4 card-inner-glow">
         <div className="flex items-center gap-2">
           <TrendingUp className="h-4 w-4 text-accent" />
-          <h2 className="text-base font-bold text-foreground">Einnahmen</h2>
+          <h2 className="text-base font-bold text-foreground">{copy.revenue}</h2>
         </div>
 
         <div className="flex flex-wrap gap-1.5">
-          {(Object.keys(PERIOD_LABELS) as Period[]).map((p) => {
+          {(Object.keys(periodLabels) as Period[]).map((p) => {
             const active = period === p;
             return (
               <button
@@ -211,14 +260,14 @@ export default function ModelHomeDashboard({
                     : "bg-secondary/30 text-muted-foreground border-border/30 hover:text-foreground hover:border-accent/20",
                 )}
               >
-                {PERIOD_LABELS[p]}
+                {periodLabels[p]}
               </button>
             );
           })}
         </div>
 
         <div className="glass-card-subtle rounded-xl p-5 text-center">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{PERIOD_LABELS[period]}</p>
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{periodLabels[period]}</p>
           <p className="text-4xl font-bold text-gold-gradient-shimmer mt-1 tabular-nums">
             {loading ? "…" : fmtMoney(total)}
           </p>
@@ -229,13 +278,13 @@ export default function ModelHomeDashboard({
       <section className="glass-card rounded-2xl p-5 space-y-4 card-inner-glow">
         <div className="flex items-center gap-2">
           <Layers className="h-4 w-4 text-accent" />
-          <h2 className="text-base font-bold text-foreground">Plattformen</h2>
-          <span className="ml-auto text-[10px] text-muted-foreground">{accounts.length} aktiv</span>
+          <h2 className="text-base font-bold text-foreground">{copy.platforms}</h2>
+          <span className="ml-auto text-[10px] text-muted-foreground">{accounts.length} {copy.active}</span>
         </div>
 
         {accounts.length === 0 ? (
           <p className="text-xs text-muted-foreground text-center py-6">
-            Noch keine Plattformen verknüpft.
+            {copy.noPlatforms}
           </p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -271,17 +320,17 @@ export default function ModelHomeDashboard({
       <section className="glass-card rounded-2xl p-5 space-y-3 card-inner-glow">
         <div className="flex items-center gap-2">
           <MessageSquare className="h-4 w-4 text-accent" />
-          <h2 className="text-base font-bold text-foreground">Custom-Anfragen</h2>
+          <h2 className="text-base font-bold text-foreground">{copy.requests}</h2>
           {openRequests > 0 && (
             <span className="ml-auto inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">
-              {openRequests} offen
+              {openRequests} {copy.open}
             </span>
           )}
         </div>
 
         {requests.length === 0 ? (
           <p className="text-xs text-muted-foreground text-center py-6">
-            Aktuell keine Anfragen.
+            {copy.noRequests}
           </p>
         ) : (
           <div className="space-y-2">
@@ -293,7 +342,7 @@ export default function ModelHomeDashboard({
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-foreground line-clamp-2">{r.description}</p>
                   <p className="text-[10px] text-muted-foreground mt-1">
-                    {new Date(r.created_at).toLocaleDateString("de-DE")} ·{" "}
+                    {new Date(r.created_at).toLocaleDateString(lang === "en" ? "en-US" : "de-DE")} ·{" "}
                     <span
                       className={cn(
                         r.status === "pending" && "text-amber-400",
@@ -302,10 +351,10 @@ export default function ModelHomeDashboard({
                       )}
                     >
                       {r.status === "pending"
-                        ? "Offen"
+                        ? copy.statusPending
                         : r.status === "completed"
-                          ? "Erledigt"
-                          : "Abgelehnt"}
+                          ? copy.statusCompleted
+                          : copy.statusRejected}
                     </span>
                   </p>
                 </div>
@@ -330,7 +379,7 @@ export default function ModelHomeDashboard({
           className="text-xs text-muted-foreground hover:text-accent gap-1.5"
         >
           <Pencil className="h-3 w-3" />
-          Steckbrief bearbeiten
+          {copy.editProfile}
         </Button>
       </div>
     </motion.div>
