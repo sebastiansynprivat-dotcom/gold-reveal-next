@@ -78,8 +78,7 @@ export default function ModelProfileViewDialog({ open, onOpenChange, modelId }: 
   }, [open, modelId]);
 
   const isEmpty = profile && SECTIONS.every((s) => s.fields.every((f) => !profile[f.key]));
-  const isConfirmed = !!profile?.confirmed_at;
-  const isPending = !!profile && !isEmpty && !isConfirmed;
+  const isPending = !!profile && !isEmpty && !profile?.confirmed_at;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
