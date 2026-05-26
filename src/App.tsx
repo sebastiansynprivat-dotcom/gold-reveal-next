@@ -20,6 +20,7 @@ import NotFound from "./pages/NotFound";
 import Invoice from "./pages/Invoice";
 import ModelLogin from "./pages/ModelLogin";
 import ModelDashboard from "./pages/ModelDashboard";
+import AdminModelView from "./pages/AdminModelView";
 import Leaderboard from "./pages/Leaderboard";
 import FanvueLogin from "./pages/FanvueLogin";
 import FanvueDashboard from "./pages/FanvueDashboard";
@@ -147,6 +148,7 @@ const App = () => (
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/notifications" element={<AdminProtectedRoute><AdminNotifications /></AdminProtectedRoute>} />
             <Route path="/admin" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
+            <Route path="/admin/model/:modelId/view" element={<AdminProtectedRoute><AdminModelView /></AdminProtectedRoute>} />
             <Route path="/rechnung" element={<ProtectedRoute><Invoice /></ProtectedRoute>} />
             <Route path="/model/login" element={<ModelLogin />} />
             <Route path="/m/:username" element={<ModelLogin />} />

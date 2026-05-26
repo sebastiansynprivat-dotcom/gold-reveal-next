@@ -99,9 +99,23 @@ Deno.serve(async (req) => {
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "")
-      .slice(0, 32);
+      .slice(0, 32) || "model";
 
-    const modelEmail = email || `model+${slug}-${model_id.slice(0, 6)}@shex.app`;
+    // Build clean email: <slug>@shex.app, append -2, -3, ... on conflict
+    let modelEmail = email;
+    if (!modelEmail) {
+      modelEmail = `${slug}@shex.app`;
+      for (let i = 2; i < 100; i++) {
+        const { data: clash } = await adminClient
+          .from("model_users")
+          .select("id")
+          .eq("email", modelEmail)
+          .maybeSingle();
+        if (!clash) break;
+        modelEmail = `${slug}-${i}@shex.app`;
+      }
+    }
+
     const password = generatePassword(12);
 
     const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
