@@ -25,10 +25,12 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [groupName, setGroupName] = useState("");
+  const [telegramId, setTelegramId] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [signUpSuccess, setSignUpSuccess] = useState(false);
   const [showGroupHelp, setShowGroupHelp] = useState(false);
+  const [showTelegramHelp, setShowTelegramHelp] = useState(false);
   const [showGroupConfirm, setShowGroupConfirm] = useState(false);
   const pendingSubmitRef = useRef<React.FormEvent | null>(null);
 
