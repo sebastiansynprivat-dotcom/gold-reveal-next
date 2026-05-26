@@ -41,6 +41,9 @@ import {
   Pencil,
   Tag,
   ChevronDown,
+  Link2,
+  ShieldCheck,
+  Clock,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import CreditNoteForm from "@/components/CreditNoteForm";
