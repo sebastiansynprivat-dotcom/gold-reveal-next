@@ -966,12 +966,16 @@ export default function AdminDashboard() {
         addAlias(a.subfolder_name, modelKey, agency);
       });
 
-      let shex = 0, syn = 0;
+      let shex = 0, syn = 0, allTotal = 0;
       (revRows as any[] | null)?.forEach((row) => {
         const platform = String(row.platform || "").toLowerCase();
         const rowTotal = Number(row.revenue_today || 0);
 
+        // "All" = echter Plattform-Gesamtumsatz, unabhängig vom Agency-Mapping.
+        allTotal += rowTotal;
+
         if (platform === "4based" || platform === "fourbased") {
+          // 4based ist ausschließlich eine SYN-Plattform.
           syn += rowTotal;
           return;
         }
@@ -989,7 +993,7 @@ export default function AdminDashboard() {
           if (mapped.agency === "syn") syn += amount;
         });
       });
-      setEarningsByAgency30({ shex: Math.round(shex), syn: Math.round(syn), all: Math.round(shex + syn) });
+      setEarningsByAgency30({ shex: Math.round(shex), syn: Math.round(syn), all: Math.round(allTotal) });
     })();
   }, []);
 
