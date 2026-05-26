@@ -15,6 +15,7 @@ interface Props {
   isInitialSubmission?: boolean;
   /** Called after a successful initial submission. */
   onSubmitted?: () => void;
+  language?: "de" | "en";
 }
 
 type ProfileRow = {
@@ -46,30 +47,103 @@ type ProfileRow = {
   additional_info: string | null;
 };
 
-const PERSONAL_FIELDS: { key: keyof ProfileRow; label: string; hint?: string }[] = [
-  { key: "name", label: "Name", hint: "not your username — the one communicated to users" },
-  { key: "age", label: "Age & Birthday", hint: "real or chosen" },
-  { key: "city", label: "City", hint: "Berlin, Munich, Hamburg, …" },
-  { key: "place_of_birth", label: "Place of birth", hint: "city + country" },
-  { key: "favorite_color", label: "Favorite color" },
-  { key: "favorite_movie", label: "Favorite movie" },
-  { key: "favorite_food", label: "Favorite food" },
-  { key: "favorite_music", label: "Favorite music" },
-  { key: "occupation", label: "Occupation" },
-  { key: "hobbies", label: "Hobbies" },
-  { key: "dream", label: "Dream" },
-  { key: "work", label: "Work" },
-  { key: "education", label: "Education" },
-  { key: "languages", label: "Languages" },
-  { key: "special_marks", label: "Special marks" },
-  { key: "natural_hair", label: "Natural hair" },
-  { key: "shoe_size", label: "Shoe size" },
-  { key: "bra_size", label: "Bra size" },
-  { key: "height", label: "Height" },
-  { key: "weight", label: "Weight" },
-];
+const PERSONAL_FIELDS: Record<"de" | "en", { key: keyof ProfileRow; label: string; hint?: string }[]> = {
+  de: [
+    { key: "name", label: "Name", hint: "nicht dein Username — der Name, der Fans kommuniziert wird" },
+    { key: "age", label: "Alter & Geburtstag", hint: "echt, erfunden oder gemischt" },
+    { key: "city", label: "Stadt", hint: "Berlin, München, Hamburg, …" },
+    { key: "place_of_birth", label: "Geburtsort", hint: "Stadt + Land" },
+    { key: "favorite_color", label: "Lieblingsfarbe" },
+    { key: "favorite_movie", label: "Lieblingsfilm" },
+    { key: "favorite_food", label: "Lieblingsessen" },
+    { key: "favorite_music", label: "Lieblingsmusik" },
+    { key: "occupation", label: "Beruf" },
+    { key: "hobbies", label: "Hobbys" },
+    { key: "dream", label: "Traum" },
+    { key: "work", label: "Arbeit" },
+    { key: "education", label: "Ausbildung" },
+    { key: "languages", label: "Sprachen" },
+    { key: "special_marks", label: "Besondere Merkmale" },
+    { key: "natural_hair", label: "Natürliche Haarfarbe" },
+    { key: "shoe_size", label: "Schuhgröße" },
+    { key: "bra_size", label: "BH-Größe" },
+    { key: "height", label: "Größe" },
+    { key: "weight", label: "Gewicht" },
+  ],
+  en: [
+    { key: "name", label: "Name", hint: "not your username — the name shown to fans" },
+    { key: "age", label: "Age & birthday", hint: "real, fictional, or mixed" },
+    { key: "city", label: "City", hint: "Berlin, Munich, Hamburg, …" },
+    { key: "place_of_birth", label: "Place of birth", hint: "city + country" },
+    { key: "favorite_color", label: "Favorite color" },
+    { key: "favorite_movie", label: "Favorite movie" },
+    { key: "favorite_food", label: "Favorite food" },
+    { key: "favorite_music", label: "Favorite music" },
+    { key: "occupation", label: "Occupation" },
+    { key: "hobbies", label: "Hobbies" },
+    { key: "dream", label: "Dream" },
+    { key: "work", label: "Work" },
+    { key: "education", label: "Education" },
+    { key: "languages", label: "Languages" },
+    { key: "special_marks", label: "Special marks" },
+    { key: "natural_hair", label: "Natural hair" },
+    { key: "shoe_size", label: "Shoe size" },
+    { key: "bra_size", label: "Bra size" },
+    { key: "height", label: "Height" },
+    { key: "weight", label: "Weight" },
+  ],
+};
 
-export default function ModelProfileForm({ modelId, defaultAccountName, isInitialSubmission = false, onSubmitted }: Props) {
+const COPY = {
+  de: {
+    title: "Steckbrief",
+    intro: "Fülle deinen Steckbrief aus — diese Infos helfen den Chattern, dich authentisch zu vertreten. Du kannst echte Infos, erfundene Infos oder eine Mischung nutzen.",
+    personal: "Persönliche Informationen",
+    content: "Content-Informationen",
+    contentLabel: "Welchen Content machst du am liebsten?",
+    contentPlaceholder: "z. B. Solo, Toys, Lingerie, …",
+    noGosLabel: "Dinge, die du nicht vor der Kamera machen möchtest und die der Chatter nicht anteasern soll.",
+    noGosPlaceholder: "Trage deine No-Gos hier ein…",
+    additional: "Zusätzliche Informationen",
+    additionalLabel: "Was ist dir wichtig und worauf sollen wir achten?",
+    saveDraft: "Zwischenspeichern",
+    submit: "Steckbrief absenden",
+    submitting: "Sende…",
+    save: "Speichern",
+    saving: "Speichere…",
+    saved: "Gespeichert",
+    missingTitle: "Bitte mindestens Name, Alter und Stadt ausfüllen",
+    saveError: "Speichern fehlgeschlagen",
+    submittedToast: "Steckbrief abgesendet ✅",
+    savedToast: "Gespeichert",
+  },
+  en: {
+    title: "Profile",
+    intro: "Fill out your profile — this info helps the chatters represent you authentically. You can use real details, fictional details, or a mix of both.",
+    personal: "Personal information",
+    content: "Content information",
+    contentLabel: "What content do you prefer doing?",
+    contentPlaceholder: "e.g. Solo, Toys, Lingerie, …",
+    noGosLabel: "Things you don't want to do on camera and that chatters should not tease.",
+    noGosPlaceholder: "List your no-gos here…",
+    additional: "Additional information",
+    additionalLabel: "What is important to you, and what should we take care of?",
+    saveDraft: "Save draft",
+    submit: "Submit profile",
+    submitting: "Submitting…",
+    save: "Save",
+    saving: "Saving…",
+    saved: "Saved",
+    missingTitle: "Please fill out at least name, age, and city",
+    saveError: "Saving failed",
+    submittedToast: "Profile submitted ✅",
+    savedToast: "Saved",
+  },
+};
+
+export default function ModelProfileForm({ modelId, defaultAccountName, isInitialSubmission = false, onSubmitted, language = "de" }: Props) {
+  const lang = language === "en" ? "en" : "de";
+  const copy = COPY[lang];
   const empty: ProfileRow = {
     model_id: modelId,
     account_name: defaultAccountName ?? "",
