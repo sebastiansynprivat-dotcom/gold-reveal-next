@@ -24,59 +24,34 @@
   
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="SheX" id="apple-app-title">
   <link rel="apple-touch-icon" href="/pwa-192.png">
-  <link rel="manifest" href="/manifest.webmanifest" id="app-manifest">
   <script>
     (function () {
       try {
         var path = location.pathname || '/';
         var lower = path.toLowerCase();
-        var role = 'chatter';
-        var name = 'SheX Dashboard';
+        var manifestHref = '/manifest.webmanifest';
         var shortName = 'SheX';
-        var scope = '/';
-        var id = '/dashboard';
+        var title = 'SheX Dashboard';
         if (lower.startsWith('/admin')) {
-          role = 'admin';
-          name = 'SheX Admin';
+          manifestHref = '/manifest-admin.webmanifest';
+          title = 'SheX Admin';
           shortName = 'SheX Admin';
-          scope = '/admin';
-          id = '/admin';
-        } else if (lower.startsWith('/model')) {
-          role = 'model';
-          name = 'SheX Model';
+        } else if (lower.startsWith('/model') || lower.startsWith('/m/')) {
+          manifestHref = '/manifest-model.webmanifest';
+          title = 'SheX Model';
           shortName = 'SheX Model';
-          scope = '/model';
-          id = '/model';
         }
-        // start_url = current URL so iOS shows + opens exactly this page
-        var startUrl = path + (location.search || '');
-        var manifest = {
-          name: name,
-          short_name: shortName,
-          description: name,
-          id: id,
-          start_url: startUrl,
-          scope: scope,
-          display: 'standalone',
-          theme_color: '#0a0a0a',
-          background_color: '#0a0a0a',
-          icons: [
-            { src: '/pwa-192.png', sizes: '192x192', type: 'image/png' },
-            { src: '/pwa-512.png', sizes: '512x512', type: 'image/png' },
-            { src: '/pwa-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
-          ]
-        };
-        var json = JSON.stringify(manifest);
-        // Use unicode-safe base64 so emojis/umlauts don't break
-        var b64 = btoa(unescape(encodeURIComponent(json)));
-        var dataUri = 'data:application/manifest+json;base64,' + b64;
-        var m = document.getElementById('app-manifest');
-        if (m) m.setAttribute('href', dataUri);
+        var m = document.createElement('link');
+        m.rel = 'manifest';
+        m.href = manifestHref;
+        m.id = 'app-manifest';
+        document.head.appendChild(m);
         var t = document.getElementById('apple-app-title');
         if (t) t.setAttribute('content', shortName);
-        if (role !== 'chatter') document.title = name;
+        document.title = title;
       } catch (e) {}
     })();
   </script>
