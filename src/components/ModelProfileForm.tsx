@@ -102,18 +102,31 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
   const set = (key: keyof ProfileRow, value: string) =>
     setProfile((p) => ({ ...p, [key]: value }));
 
-  const handleSave = async () => {
+  const requiredMissing = isInitialSubmission && (
+    !(profile.name || "").trim() ||
+    !(profile.age || "").trim() ||
+    !(profile.city || "").trim()
+  );
+
+  const handleSave = async (submit = false) => {
     setSaving(true);
+    const payload: any = { ...profile };
+    if (submit) payload.submitted_at = new Date().toISOString();
     const { error } = await supabase
       .from("model_profiles")
-      .upsert(profile, { onConflict: "model_id" });
+      .upsert(payload, { onConflict: "model_id" });
     setSaving(false);
     if (error) {
-      toast.error("Failed to save");
+      toast.error("Speichern fehlgeschlagen");
       return;
     }
     setSavedAt(Date.now());
-    toast.success("Profile saved");
+    if (submit) {
+      toast.success("Steckbrief abgesendet ✅");
+      onSubmitted?.();
+    } else {
+      toast.success("Gespeichert");
+    }
     setTimeout(() => setSavedAt(null), 2500);
   };
 
