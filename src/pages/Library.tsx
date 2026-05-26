@@ -127,7 +127,21 @@ export default function Library() {
 
                 <Icon className={`h-7 w-7 mb-3 group-hover:scale-110 transition-transform ${isDone ? "text-emerald-400" : "text-accent"}`} />
                 <p className="text-base font-bold mb-1 leading-tight">{title}</p>
-                <p className="text-xs text-muted-foreground leading-snug">{subtitle}</p>
+                <p className="text-xs text-muted-foreground leading-snug mb-3">{subtitle}</p>
+
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-1.5 rounded-full bg-secondary/60 overflow-hidden">
+                    <motion.div
+                      className={`h-full ${isDone ? "bg-emerald-400" : "bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500"}`}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${isDone ? 100 : pct}%` }}
+                      transition={{ duration: 0.5 }}
+                    />
+                  </div>
+                  <span className="text-[10px] font-bold tabular-nums text-muted-foreground whitespace-nowrap">
+                    {isDone ? 100 : pct}%
+                  </span>
+                </div>
               </motion.button>
             );
           })}
