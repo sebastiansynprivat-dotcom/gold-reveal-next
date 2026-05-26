@@ -394,6 +394,8 @@ export default function ModelDashboardTab() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
   });
   const [shareCalculated, setShareCalculated] = useState(false);
+  const [calcTrigger, setCalcTrigger] = useState(0);
+
 
 
   const detailRef = useRef<HTMLDivElement>(null);
