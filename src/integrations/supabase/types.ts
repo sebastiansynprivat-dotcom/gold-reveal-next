@@ -898,6 +898,8 @@ export type Database = {
           age: string | null
           bra_size: string | null
           city: string | null
+          confirmed_at: string | null
+          confirmed_by: string | null
           content_preferences: string | null
           created_at: string
           dream: string | null
@@ -918,6 +920,7 @@ export type Database = {
           place_of_birth: string | null
           shoe_size: string | null
           special_marks: string | null
+          submitted_at: string | null
           updated_at: string
           weight: string | null
           work: string | null
@@ -928,6 +931,8 @@ export type Database = {
           age?: string | null
           bra_size?: string | null
           city?: string | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
           content_preferences?: string | null
           created_at?: string
           dream?: string | null
@@ -948,6 +953,7 @@ export type Database = {
           place_of_birth?: string | null
           shoe_size?: string | null
           special_marks?: string | null
+          submitted_at?: string | null
           updated_at?: string
           weight?: string | null
           work?: string | null
@@ -958,6 +964,8 @@ export type Database = {
           age?: string | null
           bra_size?: string | null
           city?: string | null
+          confirmed_at?: string | null
+          confirmed_by?: string | null
           content_preferences?: string | null
           created_at?: string
           dream?: string | null
@@ -978,6 +986,7 @@ export type Database = {
           place_of_birth?: string | null
           shoe_size?: string | null
           special_marks?: string | null
+          submitted_at?: string | null
           updated_at?: string
           weight?: string | null
           work?: string | null
