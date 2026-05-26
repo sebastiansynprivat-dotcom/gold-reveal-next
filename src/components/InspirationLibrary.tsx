@@ -4,28 +4,38 @@ import { toast } from "sonner";
 
 const placeholderPdfs = [
   {
-    icon: FileText,
-    title: "Coaching #1",
-    subtitle: "Die Basics, die jeder Top-Chatter beherrscht",
-    accent: "from-amber-400/20 to-amber-600/5",
+    icon: TrendingUp,
+    title: "Vom Hi zum $135 Close",
+    subtitle: "Echter Chat, Nachricht für Nachricht erklärt",
+    accent: "from-amber-400/30 to-amber-600/5",
+    pdf: "/pdfs/shex-chat-breakdown-01.pdf",
+    badge: "NEU",
   },
   {
     icon: Sparkles,
     title: "Verkaufs-Skripte",
     subtitle: "Wort-für-Wort Vorlagen, die wirklich kaufen lassen",
     accent: "from-yellow-400/20 to-yellow-600/5",
+    pdf: null,
+    badge: null,
   },
   {
-    icon: TrendingUp,
-    title: "Top-Chats",
-    subtitle: "Echte Chatverläufe mit 400€+ Umsatz",
+    icon: FileText,
+    title: "Coaching Basics",
+    subtitle: "Die Basics, die jeder Top-Chatter beherrscht",
     accent: "from-amber-300/20 to-amber-500/5",
+    pdf: null,
+    badge: null,
   },
 ];
 
 export default function InspirationLibrary() {
-  const handleClick = (title: string) => {
-    toast.info(`"${title}" – bald verfügbar`, {
+  const handleClick = (item: typeof placeholderPdfs[number]) => {
+    if (item.pdf) {
+      window.open(item.pdf, "_blank", "noopener,noreferrer");
+      return;
+    }
+    toast.info(`"${item.title}" – bald verfügbar`, {
       description: "Wir laden grade die PDFs hoch.",
     });
   };
