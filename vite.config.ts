@@ -27,22 +27,7 @@ export default defineConfig(({ mode }) => ({
       workbox: {
         navigateFallbackDenylist: [/^\/~oauth/],
       },
-      manifest: {
-        name: "SheX Dashboard",
-        short_name: "SheX",
-        description: "Dein Chatter Dashboard",
-        id: "/dashboard",
-        theme_color: "#0a0a0a",
-        background_color: "#0a0a0a",
-        display: "standalone",
-        start_url: "/dashboard",
-        scope: "/",
-        icons: [
-          { src: "/pwa-192.png", sizes: "192x192", type: "image/png" },
-          { src: "/pwa-512.png", sizes: "512x512", type: "image/png" },
-          { src: "/pwa-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
-        ],
-      },
+      manifest: false,
       devOptions: {
         enabled: false,
       },
