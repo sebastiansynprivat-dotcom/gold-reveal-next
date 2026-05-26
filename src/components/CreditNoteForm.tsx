@@ -91,6 +91,9 @@ interface CreditNoteFormProps {
   providerIsBusiness?: boolean;
   providerVatId?: string;
   providerNameOverride?: string;
+  platformFxRates?: Array<{ platform: string; from: string; to: string; rate: number }>;
+  platformBreakdown?: Array<{ name: string; rev: number; pct: number }>;
+  autoApplyTrigger?: number;
 }
 
 export default function CreditNoteForm({
