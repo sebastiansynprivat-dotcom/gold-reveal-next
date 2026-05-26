@@ -69,7 +69,7 @@ const PERSONAL_FIELDS: { key: keyof ProfileRow; label: string; hint?: string }[]
   { key: "weight", label: "Weight" },
 ];
 
-export default function ModelProfileForm({ modelId, defaultAccountName }: Props) {
+export default function ModelProfileForm({ modelId, defaultAccountName, isInitialSubmission = false, onSubmitted }: Props) {
   const empty: ProfileRow = {
     model_id: modelId,
     account_name: defaultAccountName ?? "",
