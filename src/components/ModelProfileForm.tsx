@@ -229,17 +229,42 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
         />
       </section>
 
-      {/* Save Button */}
-      <div className="sticky bottom-4 flex justify-end">
-        <Button
-          onClick={handleSave}
-          disabled={saving}
-          size="lg"
-          className="bg-gradient-to-r from-accent to-accent/80 text-accent-foreground font-semibold shadow-[0_0_20px_-4px_hsl(var(--accent)/0.6)] hover:scale-[1.03] transition-transform"
-        >
-          {savedAt ? <Check className="h-4 w-4 mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-          {saving ? "Saving…" : savedAt ? "Saved" : "Save profile"}
-        </Button>
+      {/* Save / Submit */}
+      <div className="sticky bottom-4 flex flex-col sm:flex-row gap-2 sm:justify-end">
+        {isInitialSubmission ? (
+          <>
+            <Button
+              variant="outline"
+              onClick={() => handleSave(false)}
+              disabled={saving}
+              size="lg"
+              className="border-accent/30 text-accent hover:bg-accent/10"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              Zwischenspeichern
+            </Button>
+            <Button
+              onClick={() => handleSave(true)}
+              disabled={saving || requiredMissing}
+              size="lg"
+              className="bg-gradient-to-r from-accent to-accent/80 text-accent-foreground font-semibold shadow-[0_0_20px_-4px_hsl(var(--accent)/0.6)] hover:scale-[1.03] transition-transform"
+              title={requiredMissing ? "Bitte mindestens Name, Alter und Stadt ausfüllen" : ""}
+            >
+              <Check className="h-4 w-4 mr-2" />
+              {saving ? "Sende…" : "Steckbrief absenden"}
+            </Button>
+          </>
+        ) : (
+          <Button
+            onClick={() => handleSave(false)}
+            disabled={saving}
+            size="lg"
+            className="bg-gradient-to-r from-accent to-accent/80 text-accent-foreground font-semibold shadow-[0_0_20px_-4px_hsl(var(--accent)/0.6)] hover:scale-[1.03] transition-transform"
+          >
+            {savedAt ? <Check className="h-4 w-4 mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+            {saving ? "Speichere…" : savedAt ? "Gespeichert" : "Speichern"}
+          </Button>
+        )}
       </div>
     </motion.div>
   );
