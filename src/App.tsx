@@ -24,6 +24,8 @@ import Leaderboard from "./pages/Leaderboard";
 import FanvueLogin from "./pages/FanvueLogin";
 import FanvueDashboard from "./pages/FanvueDashboard";
 import ChatBreakdown from "./pages/ChatBreakdown";
+import CoachingBasics from "./pages/CoachingBasics";
+
 
 const queryClient = new QueryClient();
 
@@ -149,6 +151,8 @@ const App = () => (
             <Route path="/fanvue/login" element={<FanvueLogin />} />
             <Route path="/fanvue" element={<FanvueProtectedRoute><FanvueDashboard /></FanvueProtectedRoute>} />
             <Route path="/bibliothek/chat-breakdown-01" element={<ProtectedRoute><ChatBreakdown /></ProtectedRoute>} />
+            <Route path="/bibliothek/coaching-basics" element={<ProtectedRoute><CoachingBasics /></ProtectedRoute>} />
+
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

@@ -28,10 +28,11 @@ const placeholderPdfs = [
     title: "Coaching Basics",
     subtitle: "Die Basics, die jeder Top-Chatter beherrscht",
     accent: "from-amber-300/20 to-amber-500/5",
-    route: null,
-    contentKey: null,
-    badge: null,
+    route: "/bibliothek/coaching-basics",
+    contentKey: "coaching-basics",
+    badge: "NEU",
   },
+
 ];
 
 export default function InspirationLibrary() {
