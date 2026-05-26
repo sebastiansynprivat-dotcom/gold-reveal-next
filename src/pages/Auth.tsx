@@ -390,7 +390,7 @@ const Auth = () => {
                     className="mt-2 p-3 rounded-xl bg-card border border-border text-xs text-muted-foreground leading-relaxed space-y-2"
                   >
                     <p>
-                      Öffne Telegram und starte den Bot{" "}
+                      1. Öffne Telegram und starte den Bot{" "}
                       <a
                         href="https://t.me/userinfobot"
                         target="_blank"
@@ -399,7 +399,15 @@ const Auth = () => {
                       >
                         @userinfobot
                       </a>
-                      . Er schickt dir sofort deine numerische ID zurück – kopiere diese 1:1 hier rein.
+                    </p>
+                    <p>
+                      2. Tippe <span className="text-foreground font-medium">/start</span> und schicke es ab.
+                    </p>
+                    <p>
+                      3. Du bekommst eine Antwort mit <span className="text-foreground font-medium">ID: 123456789</span> — klicke einmal auf die Zahl neben „ID:“. Damit ist sie automatisch kopiert.
+                    </p>
+                    <p>
+                      4. Füge sie einfach hier in das Feld ein.
                     </p>
                     <p className="text-primary font-semibold">
                       ⚠️ Nur Zahlen, kein @username – die ID brauchen wir für deine Benachrichtigungen.
