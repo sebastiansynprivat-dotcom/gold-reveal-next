@@ -7,7 +7,7 @@ import { useLibraryReads } from "@/hooks/useLibraryReads";
 
 const PDF_URL = "/content/sales-scripts.pdf";
 const CONTENT_KEY = "sales-scripts";
-const PAGES = Array.from({ length: 6 }, (_, i) => `/content/sales-scripts/page-${i + 1}.jpg`);
+const PAGES = Array.from({ length: 7 }, (_, i) => `/content/sales-scripts/page-${i + 1}.jpg`);
 
 export default function SalesScripts() {
   const { reads, markProgress, markCompleted, unmarkCompleted } = useLibraryReads();
