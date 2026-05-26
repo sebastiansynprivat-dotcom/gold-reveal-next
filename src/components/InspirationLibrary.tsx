@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { BookOpen, FileText, TrendingUp, Sparkles, ArrowRight, Check } from "lucide-react";
+import { BookOpen, FileText, TrendingUp, Sparkles, ArrowRight, Check, Flame } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useLibraryReads } from "@/hooks/useLibraryReads";
@@ -157,16 +157,54 @@ export default function InspirationLibrary() {
         })}
       </div>
 
-      {/* CTA */}
-      <motion.button
-        onClick={() => navigate("/bibliothek")}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 bg-[length:200%_100%] hover:bg-[position:100%_0] text-black font-bold py-3 text-sm transition-[background-position] duration-500 shadow-[0_4px_20px_rgba(212,175,55,0.35)]"
-      >
-        {ctaLabel}
-        <ArrowRight className="h-4 w-4" />
-      </motion.button>
+      {/* CTA - High Conversion */}
+      <div className="relative">
+        {/* Outer pulsing glow rings */}
+        <motion.div
+          aria-hidden
+          className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-300 to-amber-500 blur-xl opacity-60"
+          animate={{ opacity: [0.4, 0.85, 0.4], scale: [1, 1.02, 1] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        />
+        <motion.button
+          onClick={() => navigate("/bibliothek")}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.97 }}
+          animate={{ boxShadow: [
+            "0 4px 20px rgba(212,175,55,0.35)",
+            "0 6px 36px rgba(212,175,55,0.75)",
+            "0 4px 20px rgba(212,175,55,0.35)",
+          ] }}
+          transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+          className="relative w-full overflow-hidden flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-300 to-amber-500 bg-[length:200%_100%] text-black font-extrabold py-3.5 text-sm tracking-wide"
+        >
+          {/* Shimmer sweep */}
+          <motion.span
+            aria-hidden
+            className="absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/70 to-transparent skew-x-12"
+            animate={{ x: ["0%", "450%"] }}
+            transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut", repeatDelay: 0.4 }}
+          />
+          <Flame className="h-4 w-4 relative" />
+          <span className="relative">{ctaLabel} – jetzt freischalten</span>
+          <motion.span
+            className="relative"
+            animate={{ x: [0, 4, 0] }}
+            transition={{ duration: 1.1, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <ArrowRight className="h-4 w-4" />
+          </motion.span>
+        </motion.button>
+        {/* Urgency micro-copy */}
+        <div className="mt-2 flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+            <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
+          </span>
+          <span>Wird gerade von <span className="text-foreground font-semibold">12 Chattern</span> gelesen</span>
+        </div>
+      </div>
+
     </motion.section>
   );
 }
