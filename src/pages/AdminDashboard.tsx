@@ -912,38 +912,81 @@ export default function AdminDashboard() {
     })();
   }, []);
 
-  // Earnings per agency, last 30 days. Sums daily_revenue across all platforms/accounts
-  // of chatters assigned to that agency's models. A chatter serving multiple agencies
-  // has their revenue split evenly to avoid double-counting.
+  // Earnings per agency, last 30 days. Uses the platform revenue feed and maps
+  // every profile alias back to one unique model, so multiple profiles are
+  // summed as one model and agency filters stay consistent.
   useEffect(() => {
     (async () => {
       const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
         .toISOString()
         .slice(0, 10);
-      const [{ data: revRows }, { data: assignRows }] = await Promise.all([
-        supabase.from("daily_revenue").select("user_id, amount, date").gte("date", since).range(0, 49999),
+      const normalizeKey = (value: unknown) =>
+        String(value || "").trim().toLowerCase().replace(/[._\-\s]+/g, "");
+      const normalizeAgencyKey = (value: unknown): "shex" | "syn" | null => {
+        const normalized = String(value || "").trim().toLowerCase();
+        if (normalized === "shex") return "shex";
+        if (normalized === "syn" || normalized === "simp") return "syn";
+        return null;
+      };
+
+      const [{ data: revRows }, { data: modelRows }, { data: accountRows }] = await Promise.all([
+        supabase.from("revenue_report").select("date, platform, revenue_today, data").gte("date", since).range(0, 49999),
+        supabase.from("models").select("id, name, username, model_agency").range(0, 9999),
         supabase
-          .from("account_assignments")
-          .select("user_id, accounts(model_agency)")
-          .is("unassigned_at", null)
-          .range(0, 49999),
+          .from("accounts")
+          .select("id, account_email, account_domain, folder_name, subfolder_name, model_id, model_agency, models(model_agency)")
+          .range(0, 9999),
       ]);
-      const userAgencies: Record<string, Set<string>> = {};
-      (assignRows as any[] | null)?.forEach((a) => {
-        const ag = (a.accounts?.model_agency || "").toLowerCase();
-        if (!ag) return;
-        if (!userAgencies[a.user_id]) userAgencies[a.user_id] = new Set();
-        userAgencies[a.user_id].add(ag);
+
+      const aliasMap = new Map<string, { modelKey: string; agency: "shex" | "syn" }>();
+      const addAlias = (alias: unknown, modelKey: string, agency: "shex" | "syn") => {
+        const key = normalizeKey(alias);
+        if (!key || aliasMap.has(key)) return;
+        aliasMap.set(key, { modelKey, agency });
+        const stripped = key.replace(/\d+$/, "");
+        if (stripped && stripped !== key && !aliasMap.has(stripped)) aliasMap.set(stripped, { modelKey, agency });
+      };
+
+      (modelRows as any[] | null)?.forEach((m) => {
+        const agency = normalizeAgencyKey(m.model_agency);
+        if (!agency) return;
+        addAlias(m.username, m.id, agency);
+        addAlias(m.name, m.id, agency);
       });
+
+      (accountRows as any[] | null)?.forEach((a) => {
+        const agency = normalizeAgencyKey(a?.models?.model_agency) || normalizeAgencyKey(a.model_agency);
+        if (!agency) return;
+        const modelKey = a.model_id || `account:${a.id}`;
+        addAlias(String(a.account_email || "").split("@")[0], modelKey, agency);
+        addAlias(a.account_domain, modelKey, agency);
+        addAlias(a.folder_name, modelKey, agency);
+        addAlias(a.subfolder_name, modelKey, agency);
+      });
+
       let shex = 0, syn = 0, all = 0;
-      (revRows as { user_id: string; amount: number }[] | null)?.forEach((r) => {
-        const amt = Number(r.amount) || 0;
-        all += amt;
-        const ags = userAgencies[r.user_id];
-        if (!ags || ags.size === 0) return;
-        const share = amt / ags.size;
-        if (ags.has("shex")) shex += share;
-        if (ags.has("syn") || ags.has("simp")) syn += share;
+      (revRows as any[] | null)?.forEach((row) => {
+        const platform = String(row.platform || "").toLowerCase();
+        const rowTotal = Number(row.revenue_today || 0);
+        all += rowTotal;
+
+        if (platform === "4based" || platform === "fourbased") {
+          syn += rowTotal;
+          return;
+        }
+
+        const data = row.data;
+        if (!data || typeof data !== "object") return;
+        Object.entries(data as Record<string, unknown>).forEach(([alias, vals]) => {
+          const key = normalizeKey(alias);
+          const mapped = aliasMap.get(key) || aliasMap.get(key.replace(/\d+$/, ""));
+          if (!mapped) return;
+          let amount = 0;
+          if (Array.isArray(vals)) vals.forEach((v) => { amount += Number(v) || 0; });
+          else if (typeof vals === "number") amount += vals;
+          if (mapped.agency === "shex") shex += amount;
+          if (mapped.agency === "syn") syn += amount;
+        });
       });
       setEarningsByAgency30({ shex: Math.round(shex), syn: Math.round(syn), all: Math.round(all) });
     })();
