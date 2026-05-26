@@ -709,6 +709,36 @@ export type Database = {
         }
         Relationships: []
       }
+      library_reads: {
+        Row: {
+          completed_at: string | null
+          content_key: string
+          created_at: string
+          id: string
+          progress_pct: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          content_key: string
+          created_at?: string
+          id?: string
+          progress_pct?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          content_key?: string
+          created_at?: string
+          id?: string
+          progress_pct?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       login_events: {
         Row: {
           id: string

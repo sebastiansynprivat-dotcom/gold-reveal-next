@@ -1,40 +1,51 @@
-# Plan: Premium "Beispielchat"-PDFs für Inspirations-Bibliothek
-
 ## Ziel
-Echte, lehrreiche Chatverläufe (Model rechts / Kunde links) als Premium-PDFs erstellen, in denen nach jedem wichtigen Move erklärt wird **warum** dieser Move funktioniert hat – direkt aus Sebastians Coaching-Wissen abgeleitet. Diese PDFs ersetzen dann die Platzhalter in der `InspirationLibrary` auf dem Dashboard.
+Jeder Chatter sieht in der Inspirations-Bibliothek auf einen Blick, welche PDFs er schon gelesen hat. Markierung passiert automatisch beim Durchscrollen – mit manuellem Fallback-Button.
 
-## Vorgehen (3 Schritte, iterativ)
+## So funktioniert es für den Chatter
 
-### 1. Inhalt schreiben (Quelle: Coaching-Transkript + Web-Research)
-Wir nutzen primär das, was bereits in `docs/coaching/chatter-training-transcript.md` steht – v.a. den **Julian-Chat (~400 $)** als Master-Vorlage. Zusätzlich recherchiere ich öffentlich verfügbare OnlyFans-Chatter-Skripte / Sexting-Sales-Beispiele (englischsprachige Chatter-Communities, Reddit r/onlyfansadvice, Agency-Blogs) als Inspiration für Mechaniken – nicht zum Kopieren, sondern um realistische Dialogbeispiele zu bauen, die exakt auf SheX-Methodik (A/B, Preisleiter 5→10→20→30→50→100, Emotion statt Content, sauberer Abschluss) gemappt sind.
+1. In der Bibliothek bekommt jede PDF-Kachel einen Status-Indikator:
+   - **Ungelesen** – goldener „NEU"-Punkt
+   - **Begonnen** – Fortschrittsring (z. B. 40 %)
+   - **Erledigt** – grüner Haken + leicht gedimmte Kachel
+2. Über den Kacheln steht eine kleine Übersicht: „2 von 3 gelesen · 67 %" mit goldenem Fortschrittsbalken.
+3. Öffnet er die PDF-Seite (`/bibliothek/chat-breakdown-01`):
+   - **Automatisch**: Beim Scrollen wird gemessen, wie weit er gekommen ist. Bei ≥ 90 % aller Seiten sichtbar gewesen → automatisch als „erledigt" markiert (mit kleinem Toast „Als gelesen markiert ✓").
+   - **Manuell**: Oben rechts und am Ende der Seite ein Button „Als gelesen markieren" / „✓ Gelesen" (Toggle), für den Fall, dass er nur drüberfliegen will.
+4. Status wird pro User in der Datenbank gespeichert, also auch nach Logout/Gerätewechsel erhalten.
 
-**3 PDFs als Start:**
-1. **"Der erste Verkauf – A oder B in 20 Nachrichten"** (kalter Chat → erstes 5€-Bild)
-2. **"Die Preisleiter – Von 5€ auf 100€ in einem Chat"** (kompletter Julian-Style Sales-Run)
-3. **"Der Wiederkäufer – So machst du aus 1× 400€ einen 10× 400€ Kunden"** (Tag 2 Follow-up)
+## Was technisch gebaut wird
 
-Jede PDF: 8–12 Seiten, ~15–25 Chat-Bubbles + Coach-Kommentar-Boxen ("Warum funktioniert das?") nach jedem Schlüssel-Move.
+### Datenbank
+Neue Tabelle `library_reads`:
 
-### 2. PDF technisch generieren
-Lokales Python-Skript mit **ReportLab** (bereits im Skill-Set, kein User-API-Key nötig). Generiert in `/mnt/documents/inspiration/`:
-- iMessage-ähnliche Bubbles (Kunde: graue Bubble links / Model: gold-gradient Bubble rechts mit dunklem Text)
-- SheX-Branding: Schwarzer Hintergrund, Gold-Akzente (#D4AF37), Inter/Sans-Serif
-- Coach-Kommentar-Boxen: gold-umrandete Kästen mit "💡 Warum das funktioniert" + Erklärung
-- Cover-Seite mit Titel, "by Sebastian / SheX", Zähler ("PDF 1 von 3")
-- Footer mit Seitenzahl
-- Visuelle QA nach Generierung (pdftoppm → Bilder prüfen)
+```text
+id              uuid pk
+user_id         uuid  (auth.uid)
+content_key     text  ('chat-breakdown-01', später weitere)
+progress_pct    int   (0–100)
+completed_at    timestamptz nullable
+updated_at      timestamptz
+unique (user_id, content_key)
+```
 
-### 3. Im Dashboard einbinden
-- PDFs nach `public/inspiration/` kopieren (statisch ausgeliefert)
-- `InspirationLibrary.tsx`: Platzhalter-Karten ersetzen durch echte PDFs mit Download/Open-in-new-Tab (statt Toast). Titel, Untertitel, geschätzte Lesezeit, "PDF" Badge.
-- Klick öffnet PDF in neuem Tab; `playSound("click")` bleibt.
-- Kein Backend nötig (statische Files).
+RLS: User darf nur eigene Zeilen lesen/schreiben. Admins (`is_admin()`) dürfen alle Zeilen lesen → später für Admin-Auswertung nutzbar.
+GRANT: `SELECT, INSERT, UPDATE ON library_reads TO authenticated`.
 
-## Offene Fragen vor dem Bauen
+### Frontend
+- **Neuer Hook** `useLibraryReads()` – holt einmal alle Reads des aktuellen Users, stellt `markProgress(key, pct)` und `markCompleted(key)` bereit (mit Upsert via Supabase).
+- **`InspirationLibrary.tsx`** erweitern:
+  - Status-Badge pro Kachel (Punkt / Ring / Haken)
+  - Mini-Übersichtszeile „X von Y gelesen"
+  - CTA-Text passt sich an („Jetzt durchlesen" → „Weiterlesen" → „Nochmal lesen")
+- **`ChatBreakdown.tsx`** erweitern:
+  - `IntersectionObserver` über die 10 Seiten-Bilder → höchste erreichte Seite berechnet Fortschritt
+  - Ab 90 % automatisch `markCompleted('chat-breakdown-01')` + Toast
+  - Header-Button „Als gelesen markieren" (Toggle, zeigt ✓ wenn fertig)
+  - Am Ende der Seite zusätzlich eine kleine „Erledigt"-Bestätigung mit Haken
 
-1. **Sprache:** Deutsch (passend zu SheX/DACH) – richtig?
-2. **Realismus-Level:** Wie explizit dürfen die Beispielchats sein? Coaching-mäßig erotisch-suggestiv (wie im Julian-Beispiel mit Dusche/Banane/Kommen) oder soft (nur Mechanik, ohne harte Sex-Begriffe)?
-3. **Anzahl & Themen:** Reichen die 3 oben vorgeschlagenen PDFs für Start, oder willst du andere/mehr Themen (z.B. "Umgang mit Korb", "Custom Content Verkauf", "Mass-DM-Follow-up")?
-4. **Format:** PDF (klassisch, druckbar) oder lieber direkt eine **interaktive Web-Page** im Dashboard mit aufklappbaren Bubbles + Erklärungen? PDF ist offline lesbar, Web fühlt sich premiumer + nativer an.
+### Skalierbar
+Die `content_key`-Struktur ist offen – sobald die nächsten PDFs (Verkaufs-Skripte, Coaching Basics) live gehen, funktioniert das Tracking ohne weitere DB-Änderungen.
 
-Sobald du auf 1–4 antwortest, baue ich PDF #1 als Proof-of-Concept, du gibst Feedback zum Look, dann ziehe ich #2 und #3 nach.
+## Was nicht Teil dieses Schritts ist
+- Admin-Ansicht „Wer hat welche PDF gelesen" (Daten werden aber bereits sauber gespeichert, kann später ohne Migration ergänzt werden).
+- Gamification (Punkte / Streak für gelesene PDFs).
