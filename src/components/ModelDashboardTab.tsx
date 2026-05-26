@@ -376,6 +376,26 @@ export default function ModelDashboardTab() {
     Record<string, { fourbased: number; maloum: number; brezzels: number }>
   >({});
 
+  // ─── Revenue period filter (UI only, not yet wired to historical data) ───
+  type RevenuePeriod = "today" | "yesterday" | "7d" | "30d" | "last_month" | "this_month";
+  const [revenuePeriod, setRevenuePeriod] = useState<RevenuePeriod>("this_month");
+  const revenuePeriodLabels: Record<RevenuePeriod, string> = {
+    today: "Heute",
+    yesterday: "Gestern",
+    "7d": "Letzte 7 Tage",
+    "30d": "Letzte 30 Tage",
+    last_month: "Letzter Monat",
+    this_month: "Dieser Monat",
+  };
+
+  // ─── Billing month for "Anteil berechnen" (provider invoice basis) ───
+  const [billingMonth, setBillingMonth] = useState<string>(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+  });
+  const [shareCalculated, setShareCalculated] = useState(false);
+
+
   const detailRef = useRef<HTMLDivElement>(null);
 
   // ─── Load models ───
