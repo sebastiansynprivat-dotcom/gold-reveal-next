@@ -3785,13 +3785,14 @@ export default function AdminDashboard() {
                       : (newInRange > 0 ? 100 : 0);
                     const growthUp = growthPct >= 0;
 
-                    // Avg per model: earnings over last 30 days
-                    const earnings30 = revenueRowsRef.current
-                      .filter((r) => {
-                        const d = new Date(r.date).getTime();
-                        return d >= win30Start.getTime() && d <= now.getTime();
-                      })
-                      .reduce((sum, r) => sum + (r.revenue_today || 0), 0);
+                    // Avg per model: agency-filtered earnings of last 30 days
+                    // divided by number of UNIQUE models in that agency.
+                    const earnings30 =
+                      agencyFilter === "all"
+                        ? earningsByAgency30.all
+                        : agencyFilter === "shex"
+                        ? earningsByAgency30.shex
+                        : earningsByAgency30.syn;
                     const avgPerModel = totalModels > 0 ? Math.round(earnings30 / totalModels) : 0;
 
                     return (
