@@ -78,6 +78,7 @@ export default function ModelProfileViewDialog({ open, onOpenChange, modelId }: 
   }, [open, modelId]);
 
   const isEmpty = profile && SECTIONS.every((s) => s.fields.every((f) => !profile[f.key]));
+  const isPending = !!profile && !isEmpty && !profile?.confirmed_at;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -94,6 +95,10 @@ export default function ModelProfileViewDialog({ open, onOpenChange, modelId }: 
         ) : !profile || isEmpty ? (
           <div className="rounded-lg border border-border/40 bg-secondary/20 p-6 text-center text-sm text-muted-foreground">
             Dein Model hat den Steckbrief noch nicht ausgefüllt.
+          </div>
+        ) : isPending ? (
+          <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-6 text-center text-sm text-amber-400/90">
+            Der Steckbrief deines Models wird gerade geprüft. Sobald er freigegeben ist, siehst du hier alle Details.
           </div>
         ) : (
           <div className="space-y-5">

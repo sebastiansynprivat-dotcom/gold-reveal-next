@@ -41,6 +41,9 @@ import {
   Pencil,
   Tag,
   ChevronDown,
+  Link2,
+  ShieldCheck,
+  Clock,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import CreditNoteForm from "@/components/CreditNoteForm";
@@ -1125,26 +1128,112 @@ export default function ModelDashboardTab() {
                   : 0;
                 const totalFields = 23;
                 const isFilled = filledFields > 0;
+                const submittedAt = (profile as any)?.submitted_at as string | null | undefined;
+                const confirmedAt = (profile as any)?.confirmed_at as string | null | undefined;
+                const status: "confirmed" | "pending" | "draft" | "empty" = confirmedAt
+                  ? "confirmed"
+                  : submittedAt
+                    ? "pending"
+                    : isFilled
+                      ? "draft"
+                      : "empty";
+                const username = selectedModel?.username?.trim() || "";
+                const personalizedUrl = username
+                  ? `${window.location.origin}/m/${username}`
+                  : "";
+
+                const confirmProfile = async () => {
+                  if (!profile || !selectedModelId) return;
+                  const { data: u } = await supabase.auth.getUser();
+                  const { error } = await (supabase.from("model_profiles" as any) as any)
+                    .update({ confirmed_at: new Date().toISOString(), confirmed_by: u?.user?.id })
+                    .eq("model_id", selectedModelId);
+                  if (error) {
+                    toast.error("Bestätigung fehlgeschlagen");
+                    return;
+                  }
+                  setModelProfile({ ...(profile as any), confirmed_at: new Date().toISOString(), confirmed_by: u?.user?.id } as any);
+                  toast.success("Steckbrief bestätigt — jetzt im Chatter-Dashboard sichtbar");
+                };
+
+                const revokeConfirmation = async () => {
+                  if (!profile || !selectedModelId) return;
+                  const { error } = await (supabase.from("model_profiles" as any) as any)
+                    .update({ confirmed_at: null, confirmed_by: null })
+                    .eq("model_id", selectedModelId);
+                  if (error) {
+                    toast.error("Reset fehlgeschlagen");
+                    return;
+                  }
+                  setModelProfile({ ...(profile as any), confirmed_at: null, confirmed_by: null } as any);
+                  toast.success("Bestätigung zurückgezogen");
+                };
+
                 return (
                   <div className="space-y-3">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <div className="flex items-center gap-2">
-                        <span
-                          className={cn(
-                            "h-2.5 w-2.5 rounded-full",
-                            isFilled
-                              ? "bg-emerald-400 shadow-[0_0_8px_hsl(142_76%_60%)]"
-                              : "bg-red-400/70 shadow-[0_0_8px_hsl(0_76%_60%)]",
-                          )}
-                        />
-                        <p className="text-sm font-semibold text-foreground">
-                          {isFilled ? "Ausgefüllt" : "Noch nicht ausgefüllt"}
-                        </p>
-                        <Badge variant="outline" className="text-[10px] border-accent/30 text-accent">
-                          {filledFields}/{totalFields} Felder
-                        </Badge>
-                      </div>
+                    {/* Status + counter */}
+                    <div className="flex flex-wrap items-center gap-2">
+                      {status === "confirmed" && (
+                        <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider px-2 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                          <ShieldCheck className="h-3 w-3" /> Bestätigt
+                        </span>
+                      )}
+                      {status === "pending" && (
+                        <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider px-2 py-1 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                          <Clock className="h-3 w-3" /> Prüfung läuft
+                        </span>
+                      )}
+                      {status === "draft" && (
+                        <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider px-2 py-1 rounded-full bg-sky-500/15 text-sky-400 border border-sky-500/30">
+                          <Pencil className="h-3 w-3" /> Entwurf
+                        </span>
+                      )}
+                      {status === "empty" && (
+                        <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider px-2 py-1 rounded-full bg-red-500/15 text-red-400 border border-red-500/30">
+                          Noch nicht ausgefüllt
+                        </span>
+                      )}
+                      <Badge variant="outline" className="text-[10px] border-accent/30 text-accent">
+                        {filledFields}/{totalFields} Felder
+                      </Badge>
                     </div>
+
+                    {/* Personalized URL */}
+                    {personalizedUrl ? (
+                      <div className="flex items-center gap-1.5 px-2.5 py-2 rounded-md bg-background/40 border border-border/30">
+                        <Link2 className="h-3.5 w-3.5 text-accent shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[9px] uppercase tracking-wider text-muted-foreground">Persönliche Login-URL</p>
+                          <p className="text-xs font-mono text-foreground truncate">{personalizedUrl}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(personalizedUrl);
+                            toast.success("Link kopiert");
+                          }}
+                          className="shrink-0 text-muted-foreground hover:text-accent"
+                          title="Link kopieren"
+                        >
+                          <Copy className="h-3.5 w-3.5" />
+                        </button>
+                        <a
+                          href={personalizedUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="shrink-0 text-muted-foreground hover:text-accent"
+                          title="Link öffnen"
+                        >
+                          <Globe className="h-3.5 w-3.5" />
+                        </a>
+                      </div>
+                    ) : (
+                      <p className="text-[11px] text-amber-400/80 italic">
+                        Kein Username gesetzt — bitte oben in den Stammdaten ergänzen, damit die persönliche URL generiert werden kann.
+                      </p>
+                    )}
+
+                    {/* Filled preview */}
                     {isFilled && (profile?.name || profile?.age || profile?.city) && (
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-[11px]">
                         {profile?.name && (
@@ -1167,7 +1256,29 @@ export default function ModelDashboardTab() {
                         )}
                       </div>
                     )}
+
+                    {/* Actions */}
                     <div className="flex flex-wrap gap-2 pt-1">
+                      {status === "pending" && (
+                        <Button
+                          size="sm"
+                          onClick={confirmProfile}
+                          className="text-xs gap-1.5 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-[0_0_12px_-2px_hsl(142_76%_45%/0.6)] hover:scale-[1.02] transition-all"
+                        >
+                          <ShieldCheck className="h-3 w-3" />
+                          Steckbrief bestätigen
+                        </Button>
+                      )}
+                      {status === "confirmed" && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={revokeConfirmation}
+                          className="text-xs gap-1.5 border-border/50 text-muted-foreground hover:text-foreground"
+                        >
+                          Bestätigung zurückziehen
+                        </Button>
+                      )}
                       <Button
                         size="sm"
                         disabled={!isFilled}
@@ -1196,7 +1307,7 @@ export default function ModelDashboardTab() {
                         PDF · English
                       </Button>
                     </div>
-                    {!isFilled && (
+                    {status === "empty" && (
                       <p className="text-[11px] text-muted-foreground italic">
                         Das Model hat den Steckbrief noch nicht im Model-Dashboard ausgefüllt.
                       </p>
@@ -1205,6 +1316,7 @@ export default function ModelDashboardTab() {
                 );
               })()}
             </Section>
+
 
             {/* ── Revenue per Platform ── */}
             {modelAccounts.length > 0 && (
