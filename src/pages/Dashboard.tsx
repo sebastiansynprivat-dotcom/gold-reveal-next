@@ -1354,6 +1354,7 @@ export default function Dashboard() {
                   open={profileViewOpen}
                   onOpenChange={setProfileViewOpen}
                   modelId={modelId}
+                  language={assignedAccounts.find((a) => a.model_id === modelId)?.model_language === "en" ? "en" : "de"}
                 />
               </div>
             );
