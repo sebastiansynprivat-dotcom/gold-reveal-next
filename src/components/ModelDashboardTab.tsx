@@ -1588,7 +1588,53 @@ export default function ModelDashboardTab() {
             {/* ── Revenue & Payout ── */}
             <Section icon={TrendingUp} title="Einnahmen & Anteil" delay={0.05}>
               <div className="space-y-4">
-                {/* Currency selector – top of section, supports custom code */}
+                {/* Billing month + "Anteil berechnen" — basis for Provider Invoice */}
+                <div className="rounded-xl border border-accent/20 bg-accent/[0.03] p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                      Abrechnungsmonat
+                    </p>
+                    <span className="text-[9px] text-muted-foreground/70">
+                      Basis für Provider Invoice
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="month"
+                      value={billingMonth}
+                      onChange={(e) => {
+                        setBillingMonth(e.target.value);
+                        setShareCalculated(false);
+                      }}
+                      className="flex-1 h-9 text-sm bg-secondary/40 border-border/40"
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="h-9 px-3 bg-gradient-to-r from-accent/90 to-accent text-accent-foreground hover:from-accent hover:to-accent/90 shadow-sm"
+                      onClick={() => {
+                        setShareCalculated(true);
+                        const [y, m] = billingMonth.split("-");
+                        toast.success(
+                          `Anteil berechnet für ${m}/${y} · Verdienst: ${verdienst.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${modelForm.currency || "EUR"}`,
+                        );
+                      }}
+                    >
+                      Anteil berechnen
+                    </Button>
+                  </div>
+                  {shareCalculated && (
+                    <div className="flex items-center justify-between pt-1 border-t border-accent/10">
+                      <span className="text-[10px] text-muted-foreground">Berechneter Anteil</span>
+                      <span className="text-sm font-bold text-gold-gradient tabular-nums">
+                        {verdienst.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{" "}
+                        {modelForm.currency || "EUR"}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+
                 <div className="flex items-center justify-between gap-2 rounded-lg border border-accent/15 bg-accent/[0.02] px-3 py-2">
                   <span className="text-xs uppercase tracking-wider text-muted-foreground">Währung</span>
                   <div className="flex items-center gap-2">
