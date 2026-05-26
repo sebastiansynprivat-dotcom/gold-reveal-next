@@ -1,16 +1,31 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { LogOut } from "lucide-react";
+import { LogOut, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import logo from "@/assets/logo.png";
 import ModelProfileForm from "@/components/ModelProfileForm";
+import ModelHomeDashboard from "@/components/ModelHomeDashboard";
 
 export default function ModelDashboard() {
   const { user, signOut } = useAuth();
   const [accountName, setAccountName] = useState("");
   const [modelId, setModelId] = useState<string | null>(null);
+  const [modelName, setModelName] = useState("");
+  const [modelUsername, setModelUsername] = useState<string | null>(null);
+  const [submittedAt, setSubmittedAt] = useState<string | null>(null);
+  const [confirmedAt, setConfirmedAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [editingProfile, setEditingProfile] = useState(false);
+
+  const loadProfileMeta = useCallback(async (mid: string) => {
+    const { data } = await (supabase.from("model_profiles") as any)
+      .select("submitted_at, confirmed_at")
+      .eq("model_id", mid)
+      .maybeSingle();
+    setSubmittedAt(data?.submitted_at || null);
+    setConfirmedAt(data?.confirmed_at || null);
+  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -38,11 +53,23 @@ export default function ModelDashboard() {
         }
       }
 
+      if (resolvedModelId) {
+        const { data: model } = await (supabase.from("models") as any)
+          .select("name, username")
+          .eq("id", resolvedModelId)
+          .maybeSingle();
+        if (model) {
+          setModelName(model.name || "");
+          setModelUsername(model.username || null);
+        }
+        await loadProfileMeta(resolvedModelId);
+      }
+
       setModelId(resolvedModelId);
       setLoading(false);
     };
     load();
-  }, [user]);
+  }, [user, loadProfileMeta]);
 
   if (loading) {
     return (
@@ -52,6 +79,10 @@ export default function ModelDashboard() {
     );
   }
 
+  // Determine view: form (initial submission) | dashboard | edit-form
+  const needsInitialSubmission = !!modelId && !submittedAt;
+  const showForm = needsInitialSubmission || editingProfile;
+
   return (
     <div className="min-h-screen bg-background pb-24">
       <header className="header-gradient-border">
@@ -59,10 +90,30 @@ export default function ModelDashboard() {
           <div className="flex items-center gap-3">
             <img src={logo} alt="Logo" className="h-9 w-9 rounded-full shrink-0" />
             <div className="flex-1 min-w-0">
-              <h1 className="text-base font-bold text-foreground leading-tight">Model Dashboard</h1>
-              <p className="text-xs text-muted-foreground truncate">{accountName}</p>
+              <h1 className="text-base font-bold text-foreground leading-tight">
+                {showForm ? "Steckbrief" : "Model Dashboard"}
+              </h1>
+              <p className="text-xs text-muted-foreground truncate">
+                {modelName || accountName}
+              </p>
             </div>
-            <Button variant="ghost" size="icon" onClick={signOut} className="text-muted-foreground hover:text-foreground">
+            {editingProfile && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setEditingProfile(false)}
+                className="text-muted-foreground hover:text-foreground gap-1.5"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Zurück
+              </Button>
+            )}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={signOut}
+              className="text-muted-foreground hover:text-foreground"
+            >
               <LogOut className="h-4 w-4" />
             </Button>
           </div>
@@ -70,12 +121,40 @@ export default function ModelDashboard() {
       </header>
 
       <div className="container max-w-3xl mx-auto px-4 pt-6">
-        {modelId ? (
-          <ModelProfileForm modelId={modelId} defaultAccountName={accountName} />
-        ) : (
+        {!modelId ? (
           <div className="glass-card rounded-xl p-6 text-center text-sm text-muted-foreground">
-            Your model profile is not linked yet. Please contact the team.
+            Dein Model-Profil ist noch nicht verknüpft. Bitte melde dich beim Team.
           </div>
+        ) : showForm ? (
+          <>
+            {needsInitialSubmission && (
+              <div className="glass-card rounded-xl p-4 mb-4 border-l-2 border-accent/60">
+                <p className="text-sm text-foreground font-semibold">
+                  Bitte fülle deinen Steckbrief aus
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Sobald du den Steckbrief abgesendet hast, bekommst du Zugang zu deinem Dashboard mit Umsätzen, Plattformen und Anfragen.
+                </p>
+              </div>
+            )}
+            <ModelProfileForm
+              modelId={modelId}
+              defaultAccountName={accountName}
+              isInitialSubmission={needsInitialSubmission}
+              onSubmitted={async () => {
+                await loadProfileMeta(modelId);
+                setEditingProfile(false);
+              }}
+            />
+          </>
+        ) : (
+          <ModelHomeDashboard
+            modelId={modelId}
+            modelName={modelName || accountName}
+            modelUsername={modelUsername}
+            profileConfirmed={!!confirmedAt}
+            onEditProfile={() => setEditingProfile(true)}
+          />
         )}
       </div>
     </div>
