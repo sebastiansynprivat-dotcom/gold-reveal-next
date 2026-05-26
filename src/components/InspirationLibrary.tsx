@@ -54,12 +54,8 @@ export default function InspirationLibrary() {
   const overallPct = Math.round((doneCount / totalCount) * 100);
 
   const ctaItem = placeholderPdfs[0];
-  const ctaRead = ctaItem.contentKey ? reads[ctaItem.contentKey] : undefined;
-  const ctaLabel = ctaRead?.completed_at
-    ? "Nochmal lesen"
-    : (ctaRead?.progress_pct ?? 0) > 0
-    ? "Weiterlesen"
-    : "Jetzt durchlesen";
+  const ctaLabel = "Zur ganzen Bibliothek";
+
 
   return (
     <motion.section
