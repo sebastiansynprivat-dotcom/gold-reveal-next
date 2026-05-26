@@ -1208,11 +1208,36 @@ export default function ModelDashboardTab() {
             {modelAccounts.length > 0 && (
               <Section icon={TrendingUp} title="Einnahmen" delay={0.05}>
                 <div className="space-y-3">
+                  {/* Period filter pills (UI scaffold — not yet wired to historical data) */}
+                  <div className="flex flex-wrap gap-1.5">
+                    {(Object.keys(revenuePeriodLabels) as RevenuePeriod[]).map((p) => {
+                      const active = revenuePeriod === p;
+                      return (
+                        <button
+                          key={p}
+                          type="button"
+                          onClick={() => setRevenuePeriod(p)}
+                          className={cn(
+                            "text-[10px] px-2.5 py-1 rounded-full border transition-all tabular-nums",
+                            active
+                              ? "bg-accent/15 text-accent border-accent/40 shadow-sm"
+                              : "bg-secondary/30 text-muted-foreground border-border/30 hover:text-foreground hover:border-accent/20",
+                          )}
+                        >
+                          {revenuePeriodLabels[p]}
+                        </button>
+                      );
+                    })}
+                  </div>
+
                   {/* Hero total */}
                   <div className="relative gold-gradient-border-animated pulse-glow rounded-xl p-5 text-center">
                     <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-accent/8 via-transparent to-accent/5 pointer-events-none" />
                     <div className="relative">
-                      <p className="text-[10px] text-muted-foreground mb-1 tracking-widest uppercase">Gesamtumsatz</p>
+                      <p className="text-[10px] text-muted-foreground mb-1 tracking-widest uppercase">
+                        Gesamtumsatz · {revenuePeriodLabels[revenuePeriod]}
+                      </p>
+
                       <p className="text-3xl font-extrabold text-gold-gradient-shimmer tracking-tight tabular-nums">
                         <AnimatedGoldValue value={totalRevenue} suffix={` ${modelForm.currency || "EUR"}`} />
                       </p>
