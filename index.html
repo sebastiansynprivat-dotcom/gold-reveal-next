@@ -44,11 +44,7 @@
           title = 'SheX Model';
           shortName = 'SheX Model';
         }
-        var m = document.createElement('link');
-        m.rel = 'manifest';
-        m.href = manifestHref;
-        m.id = 'app-manifest';
-        document.head.appendChild(m);
+        document.write('<link rel="manifest" href="' + manifestHref + '" id="app-manifest">');
         var t = document.getElementById('apple-app-title');
         if (t) t.setAttribute('content', shortName);
         document.title = title;
