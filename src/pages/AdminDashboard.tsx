@@ -900,6 +900,7 @@ export default function AdminDashboard() {
   const [pwaUsers, setPwaUsers] = useState<Set<string>>(new Set());
   const [revenueBoost, setRevenueBoost] = useState(0);
   const [modelsAll, setModelsAll] = useState<{ created_at: string; model_agency: string | null; model_active: boolean }[]>([]);
+  const [earningsByAgency30, setEarningsByAgency30] = useState<{ shex: number; syn: number; all: number }>({ shex: 0, syn: 0, all: 0 });
 
   useEffect(() => {
     (async () => {
@@ -908,6 +909,43 @@ export default function AdminDashboard() {
         .select("created_at, model_agency, model_active")
         .range(0, 9999);
       if (data) setModelsAll(data as any);
+    })();
+  }, []);
+
+  // Earnings per agency, last 30 days. Sums daily_revenue across all platforms/accounts
+  // of chatters assigned to that agency's models. A chatter serving multiple agencies
+  // has their revenue split evenly to avoid double-counting.
+  useEffect(() => {
+    (async () => {
+      const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .slice(0, 10);
+      const [{ data: revRows }, { data: assignRows }] = await Promise.all([
+        supabase.from("daily_revenue").select("user_id, amount, date").gte("date", since).range(0, 49999),
+        supabase
+          .from("account_assignments")
+          .select("user_id, accounts(model_agency)")
+          .is("unassigned_at", null)
+          .range(0, 49999),
+      ]);
+      const userAgencies: Record<string, Set<string>> = {};
+      (assignRows as any[] | null)?.forEach((a) => {
+        const ag = (a.accounts?.model_agency || "").toLowerCase();
+        if (!ag) return;
+        if (!userAgencies[a.user_id]) userAgencies[a.user_id] = new Set();
+        userAgencies[a.user_id].add(ag);
+      });
+      let shex = 0, syn = 0, all = 0;
+      (revRows as { user_id: string; amount: number }[] | null)?.forEach((r) => {
+        const amt = Number(r.amount) || 0;
+        all += amt;
+        const ags = userAgencies[r.user_id];
+        if (!ags || ags.size === 0) return;
+        const share = amt / ags.size;
+        if (ags.has("shex")) shex += share;
+        if (ags.has("syn") || ags.has("simp")) syn += share;
+      });
+      setEarningsByAgency30({ shex: Math.round(shex), syn: Math.round(syn), all: Math.round(all) });
     })();
   }, []);
 
