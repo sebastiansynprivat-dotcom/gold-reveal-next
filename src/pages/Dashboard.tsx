@@ -72,6 +72,7 @@ import ModelProfileViewDialog from "@/components/ModelProfileViewDialog";
 import RevenueChart from "@/components/RevenueChart";
 import MonthSummaryWidget from "@/components/MonthSummaryWidget";
 import QuickActionBar from "@/components/QuickActionBar";
+import InspirationLibrary from "@/components/InspirationLibrary";
 import DashboardOnboarding from "@/components/DashboardOnboarding";
 
 // Streak helper (mirrors StreakTracker logic)
@@ -970,6 +971,10 @@ export default function Dashboard() {
             const el = document.querySelector('[data-section="bonus"]');
             if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
           }}
+          onScrollToInspiration={() => {
+            const el = document.querySelector('[data-section="inspiration"]');
+            if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+          }}
         />
 
         {/* PWA Install To-Do */}
@@ -998,6 +1003,9 @@ export default function Dashboard() {
           tierName={currentTier.name}
           tierEmoji={currentTier.emoji}
         />
+
+        {/* Inspirations-Bibliothek (Placeholder) */}
+        <InspirationLibrary />
 
         {/* LootBox Milestone Rewards */}
         <LootBoxReward monthlyRevenue={monthlyRevenue} />

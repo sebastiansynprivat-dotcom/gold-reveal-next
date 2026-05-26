@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Zap, FileText, HelpCircle, Trophy, User, Crown } from "lucide-react";
+import { Zap, FileText, HelpCircle, Trophy, User, Crown, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface QuickActionBarProps {
@@ -7,11 +7,13 @@ interface QuickActionBarProps {
   onFocusRevenue: () => void;
   onScrollToAccount: () => void;
   onScrollToBonus: () => void;
+  onScrollToInspiration: () => void;
 }
 
 const topActions = [
   { icon: User, label: "Account", action: "account" },
   { icon: Crown, label: "Bonus", action: "bonus" },
+  { icon: BookOpen, label: "Inspiration", action: "inspiration" },
   { icon: FileText, label: "Auszahlung", action: "invoice" },
 ] as const;
 
@@ -22,7 +24,7 @@ const bottomActions = [
 
 const allActions = [...topActions, ...bottomActions];
 
-export default function QuickActionBar({ onAskQuestion, onFocusRevenue, onScrollToAccount, onScrollToBonus }: QuickActionBarProps) {
+export default function QuickActionBar({ onAskQuestion, onFocusRevenue, onScrollToAccount, onScrollToBonus, onScrollToInspiration }: QuickActionBarProps) {
   const navigate = useNavigate();
 
   const handleAction = (action: string) => {
@@ -35,6 +37,9 @@ export default function QuickActionBar({ onAskQuestion, onFocusRevenue, onScroll
         break;
       case "bonus":
         onScrollToBonus();
+        break;
+      case "inspiration":
+        onScrollToInspiration();
         break;
       case "invoice":
         navigate("/rechnung");
