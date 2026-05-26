@@ -11,6 +11,10 @@ import { toast } from "sonner";
 interface Props {
   modelId: string;
   defaultAccountName?: string;
+  /** When true, this is the mandatory first submission flow (shows "Absenden"). */
+  isInitialSubmission?: boolean;
+  /** Called after a successful initial submission. */
+  onSubmitted?: () => void;
 }
 
 type ProfileRow = {
