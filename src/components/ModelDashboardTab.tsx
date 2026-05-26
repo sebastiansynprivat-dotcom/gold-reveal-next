@@ -2199,6 +2199,7 @@ export default function ModelDashboardTab() {
             <Section icon={FileDown} title="Provider Invoice erstellen" delay={0.35}>
               <CreditNoteForm
                 key={selectedModelId}
+                autoApplyTrigger={calcTrigger}
                 suggestedAmount={verdienst}
                 providerName={selectedModel.name}
                 accountId={modelAccounts[0]?.id || ""}
