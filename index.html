@@ -30,12 +30,17 @@
   <script>
     (function () {
       try {
-        if (location.pathname.toLowerCase().startsWith('/admin')) {
-          var m = document.getElementById('app-manifest');
+        var path = location.pathname.toLowerCase();
+        var m = document.getElementById('app-manifest');
+        var t = document.getElementById('apple-app-title');
+        if (path.startsWith('/admin')) {
           if (m) m.setAttribute('href', '/manifest-admin.webmanifest');
-          var t = document.getElementById('apple-app-title');
           if (t) t.setAttribute('content', 'SheX Admin');
           document.title = 'SheX Admin';
+        } else if (path.startsWith('/model')) {
+          if (m) m.setAttribute('href', '/manifest-model.webmanifest');
+          if (t) t.setAttribute('content', 'SheX Model');
+          document.title = 'SheX Model';
         }
       } catch (e) {}
     })();
