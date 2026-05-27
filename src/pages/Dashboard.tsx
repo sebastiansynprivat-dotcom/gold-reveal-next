@@ -75,6 +75,7 @@ import QuickActionBar from "@/components/QuickActionBar";
 import InspirationLibrary from "@/components/InspirationLibrary";
 import ThirtyDayChallenge from "@/components/ThirtyDayChallenge";
 import DashboardOnboarding from "@/components/DashboardOnboarding";
+import { highlightSection } from "@/lib/sectionHighlight";
 
 // Streak helper (mirrors StreakTracker logic)
 function getStreakDays(): number {
