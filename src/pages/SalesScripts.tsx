@@ -478,7 +478,7 @@ export default function SalesScripts() {
               <motion.article
                 key={lesson.num}
                 ref={(el) => {
-                  lessonRefs.current[i] = el;
+                  lessonRefs.current[i] = el as HTMLDivElement;
                 }}
                 data-idx={i}
                 initial={{ opacity: 0, y: 20 }}
