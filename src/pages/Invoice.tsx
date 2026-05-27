@@ -515,7 +515,7 @@ Mein Gruppenname ist: ${groupName || "[Bitte Gruppenname im Dashboard eintragen]
   );
 };
 
-function BillingCountdown({ onUnlock, demoMode }: { onUnlock: (v: boolean) => void; demoMode: boolean }) {
+function BillingCountdown({ onUnlock }: { onUnlock: (v: boolean) => void }) {
   const now = new Date();
   const deadline = endOfMonth(addMonths(now, 1));
   const totalDays = differenceInDays(deadline, new Date(now.getFullYear(), now.getMonth(), 1));
@@ -523,7 +523,7 @@ function BillingCountdown({ onUnlock, demoMode }: { onUnlock: (v: boolean) => vo
   const progressPct = Math.round(((totalDays - daysLeft) / totalDays) * 100);
   const isUnlocked = daysLeft <= 0;
 
-  const unlocked = demoMode || isUnlocked;
+  const unlocked = isUnlocked;
 
   useEffect(() => { onUnlock(unlocked); }, [unlocked, onUnlock]);
 
