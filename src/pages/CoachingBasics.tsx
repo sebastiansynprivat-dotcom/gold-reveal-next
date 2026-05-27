@@ -7,7 +7,7 @@ import { useLibraryReads } from "@/hooks/useLibraryReads";
 
 const PDF_URL = "/content/coaching-basics.pdf";
 const CONTENT_KEY = "coaching-basics";
-const PAGES = Array.from({ length: 6 }, (_, i) => `/content/coaching-basics/page-${String(i + 1).padStart(2, "0")}.jpg`);
+const PAGES = Array.from({ length: 17 }, (_, i) => `/content/coaching-basics/page-${String(i + 1).padStart(2, "0")}.jpg`);
 
 export default function CoachingBasics() {
   const { reads, markProgress, markCompleted, unmarkCompleted } = useLibraryReads();
