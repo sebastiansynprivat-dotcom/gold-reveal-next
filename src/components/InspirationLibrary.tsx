@@ -90,7 +90,7 @@ export default function InspirationLibrary() {
       {/* Hook */}
       <p className="text-sm lg:text-base mb-3 leading-snug">
         <span className="text-muted-foreground">Chatter, die diese PDFs lesen, machen im Schnitt </span>
-        <span className="text-gold-gradient font-bold">5× so viel Umsatz</span>
+        <span className="text-gold-gradient font-bold">4× so viel Umsatz</span>
         <span className="text-muted-foreground"> wie der Durchschnitt.</span>
       </p>
 
