@@ -67,7 +67,7 @@ export default function Library() {
           </div>
           <p className="text-sm lg:text-base text-muted-foreground leading-snug">
             Alle PDFs, Skripte und Breakdowns an einem Ort. Chatter, die diese Inhalte durcharbeiten, machen im Schnitt{" "}
-            <span className="text-gold-gradient font-bold">2× so viel Umsatz</span>.
+            <span className="text-gold-gradient font-bold">4× so viel Umsatz</span>.
           </p>
         </motion.div>
 
