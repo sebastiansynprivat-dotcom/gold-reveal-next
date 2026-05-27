@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Activity } from "lucide-react";
 
@@ -18,11 +18,23 @@ function randomEvent(): TickerEvent {
 export default function LandingActivityTicker() {
   const [current, setCurrent] = useState<TickerEvent>(randomEvent);
 
+  const rotateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrent(randomEvent());
-    }, 4000 + Math.random() * 2000);
-    return () => clearInterval(interval);
+    const scheduleNext = () => {
+      const delay = 3000 + Math.random() * 8000;
+      rotateTimeoutRef.current = setTimeout(() => {
+        setCurrent(randomEvent());
+        // 10% chance: burst — second event 1-3s later
+        if (Math.random() < 0.1) {
+          setTimeout(() => setCurrent(randomEvent()), 1000 + Math.random() * 2000);
+        }
+        scheduleNext();
+      }, delay);
+    };
+    scheduleNext();
+    return () => {
+      if (rotateTimeoutRef.current) clearTimeout(rotateTimeoutRef.current);
+    };
   }, []);
 
   return (
