@@ -90,7 +90,7 @@ export default function ThirtyDayChallenge() {
               <Sparkles className="h-3.5 w-3.5 text-accent ml-auto" />
             </div>
             <h4 className="text-base font-bold text-foreground mb-2 leading-tight">
-              Account-Upgrade auf <span className="text-accent">Performance-Plus</span>
+              Account-Upgrade auf <span className="text-accent">einen Premium Account</span>
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <div className="flex items-center gap-2 text-xs text-foreground/90">
