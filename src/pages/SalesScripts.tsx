@@ -15,6 +15,8 @@ export default function SalesScripts() {
   const completed = !!read?.completed_at;
 
   const refs = useRef<(HTMLDivElement | null)[]>([]);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const loadedRef = useRef<Set<number>>(new Set());
   const seen = useRef<Set<number>>(new Set());
   const [maxSeen, setMaxSeen] = useState(0);
   const autoCompletedRef = useRef(false);
@@ -23,18 +25,26 @@ export default function SalesScripts() {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((e) => {
-          if (e.isIntersecting) {
-            const idx = Number((e.target as HTMLElement).dataset.idx);
-            seen.current.add(idx);
-            setMaxSeen((m) => Math.max(m, seen.current.size));
-          }
+          if (!e.isIntersecting) return;
+          const idx = Number((e.target as HTMLElement).dataset.idx);
+          // Require image loaded AND sequential progression (prev page already seen)
+          if (!loadedRef.current.has(idx)) return;
+          if (idx > 0 && !seen.current.has(idx - 1)) return;
+          seen.current.add(idx);
+          setMaxSeen((m) => Math.max(m, seen.current.size));
         });
       },
-      { threshold: 0.5 }
+      { threshold: 0.6 }
     );
-    refs.current.forEach((r) => r && observer.observe(r));
+    observerRef.current = observer;
     return () => observer.disconnect();
   }, []);
+
+  const handleImgLoad = (i: number) => {
+    loadedRef.current.add(i);
+    const el = refs.current[i];
+    if (el && observerRef.current) observerRef.current.observe(el);
+  };
 
   useEffect(() => {
     if (maxSeen === 0) return;
@@ -48,6 +58,7 @@ export default function SalesScripts() {
       });
     }
   }, [maxSeen, completed, markProgress, markCompleted]);
+
 
   const handleToggle = () => {
     if (completed) {
