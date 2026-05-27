@@ -961,6 +961,7 @@ export default function Dashboard() {
 
         {/* Quick Action Bar */}
         <QuickActionBar
+          onStartTour={() => setShowOnboarding(true)}
           onAskQuestion={() => setShowFrageMemo(true)}
           onFocusRevenue={() => {
             const input = document.querySelector(
