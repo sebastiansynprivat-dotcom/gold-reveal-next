@@ -68,7 +68,7 @@ export default function AdminNotifications() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       <header className="border-b border-border">
         <div className="container max-w-2xl mx-auto px-4 py-3 flex items-center gap-3">
           <img src={logo} alt="Logo" className="h-9 w-9 rounded-full" />

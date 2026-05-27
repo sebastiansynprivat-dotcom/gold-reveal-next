@@ -34,7 +34,7 @@ const Quiz = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       <AnimatePresence mode="wait">
         {state === "start" && <QuizStart key="start" onStart={handleStart} />}
         {state === "playing" && (
