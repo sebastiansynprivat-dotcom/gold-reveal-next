@@ -124,7 +124,15 @@ export default function AdminModelView() {
             <Button
               size="sm"
               variant="ghost"
-              onClick={() => navigate("/admin")}
+              onClick={() => {
+                const returnModel = new URLSearchParams(window.location.search).get("return_model");
+                const target = returnModel ? `/admin?tab=platzhalter&model=${returnModel}` : "/admin";
+                // Try to close popup tab first (window opened via window.open). If blocked, navigate.
+                try { window.close(); } catch {}
+                setTimeout(() => {
+                  if (!window.closed) window.location.replace(target);
+                }, 80);
+              }}
               className="h-7 text-xs gap-1.5"
             >
               <ArrowLeft className="h-3.5 w-3.5" />
@@ -232,6 +240,8 @@ export default function AdminModelView() {
             defaultAccountName={modelName}
             isInitialSubmission={false}
             language={modelLanguage}
+            autoSubmitOnSave
+            modelName={modelName}
             onSubmitted={async () => {
               await loadAll();
               toast.success("Änderungen gespeichert");

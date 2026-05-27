@@ -805,7 +805,11 @@ export default function AdminDashboard() {
   const [goalAmount, setGoalAmount] = useState("");
   const [goalSaving, setGoalSaving] = useState(false);
   const [expandedChatter, setExpandedChatter] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<string>("einnahmen");
+  const [activeTab, setActiveTab] = useState<string>(() => {
+    if (typeof window === "undefined") return "einnahmen";
+    const t = new URLSearchParams(window.location.search).get("tab");
+    return t || "einnahmen";
+  });
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(() => {
     if (typeof window === "undefined") return false;
     return localStorage.getItem("admin_sidebar_collapsed") === "1";
