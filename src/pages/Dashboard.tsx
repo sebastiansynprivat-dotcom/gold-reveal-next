@@ -933,10 +933,10 @@ export default function Dashboard() {
             </motion.div>
             <motion.div
               variants={staggerItem}
-              className="glass-card-subtle rounded-xl p-5 text-center card-hover-glow card-inner-glow group"
+              className="col-span-2 glass-card-subtle rounded-xl p-5 text-center card-hover-glow card-inner-glow group"
             >
               <p className="text-xs text-muted-foreground mb-0.5">Deine Rate</p>
-              <p className="text-2xl font-bold text-gold-gradient transition-transform duration-200 group-hover:scale-105">
+              <p className="text-3xl font-bold text-gold-gradient transition-transform duration-200 group-hover:scale-105">
                 {Math.round(rate * 100)}%
               </p>
             </motion.div>
