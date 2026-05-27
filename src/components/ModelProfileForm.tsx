@@ -170,9 +170,10 @@ const COPY = {
   },
 };
 
-export default function ModelProfileForm({ modelId, defaultAccountName, isInitialSubmission = false, onSubmitted, language = "de" }: Props) {
+export default function ModelProfileForm({ modelId, defaultAccountName, isInitialSubmission = false, onSubmitted, language = "de", autoSubmitOnSave = false, lockedReason, modelName }: Props) {
   const lang = language === "en" ? "en" : "de";
   const copy = COPY[lang];
+  const locked = !!lockedReason;
   const empty: ProfileRow = {
     model_id: modelId,
     account_name: defaultAccountName ?? "",
@@ -186,6 +187,9 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<number | null>(null);
+  const [reqOpen, setReqOpen] = useState(false);
+  const [reqText, setReqText] = useState("");
+  const [reqSending, setReqSending] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -214,7 +218,10 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
   const handleSave = async (submit = false) => {
     setSaving(true);
     const payload: any = { ...profile };
-    if (submit) payload.submitted_at = new Date().toISOString();
+    // submitted_at is set when the model explicitly submits OR when an admin saves on their behalf
+    if (submit || autoSubmitOnSave) {
+      payload.submitted_at = (profile as any).submitted_at || new Date().toISOString();
+    }
     const { error } = await supabase
       .from("model_profiles")
       .upsert(payload, { onConflict: "model_id" });
@@ -229,8 +236,31 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
       onSubmitted?.();
     } else {
       toast.success(copy.savedToast);
+      if (autoSubmitOnSave) onSubmitted?.();
     }
     setTimeout(() => setSavedAt(null), 2500);
+  };
+
+  const submitChangeRequest = async () => {
+    if (!reqText.trim()) return;
+    setReqSending(true);
+    const { data: u } = await supabase.auth.getUser();
+    const { error } = await (supabase.from("model_requests") as any).insert({
+      user_id: u?.user?.id,
+      model_name: modelName || "—",
+      model_language: lang,
+      request_type: "profile_change",
+      description: reqText.trim(),
+      status: "pending",
+    });
+    setReqSending(false);
+    if (error) {
+      toast.error(copy.requestError);
+      return;
+    }
+    toast.success(copy.requestSent);
+    setReqOpen(false);
+    setReqText("");
   };
 
   if (loading) {
