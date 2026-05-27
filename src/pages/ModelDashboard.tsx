@@ -159,6 +159,8 @@ export default function ModelDashboard() {
               defaultAccountName={accountName}
               isInitialSubmission={needsInitialSubmission}
               language={modelLanguage}
+              modelName={modelName || accountName}
+              lockedReason={confirmedAt ? "confirmed" : null}
               onSubmitted={async () => {
                 await loadProfileMeta(modelId);
                 setEditingProfile(false);

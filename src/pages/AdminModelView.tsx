@@ -240,6 +240,8 @@ export default function AdminModelView() {
             defaultAccountName={modelName}
             isInitialSubmission={false}
             language={modelLanguage}
+            autoSubmitOnSave
+            modelName={modelName}
             onSubmitted={async () => {
               await loadAll();
               toast.success("Änderungen gespeichert");
