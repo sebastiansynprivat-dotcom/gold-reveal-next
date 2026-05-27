@@ -55,12 +55,6 @@ const TOUR_STEPS: TourStep[] = [
     description: "Deine tägliche Checkliste – hake ab, was du erledigt hast, um den Überblick zu behalten.",
     icon: ListChecks,
   },
-  {
-    selector: '[data-tour="bonus-tiers"]',
-    title: "Bonusmodell",
-    description: "Je mehr Umsatz du machst, desto höher steigt deine Rate. Hier siehst du alle Stufen und deinen Fortschritt.",
-    icon: Trophy,
-  },
 ];
 
 interface DashboardOnboardingProps {
