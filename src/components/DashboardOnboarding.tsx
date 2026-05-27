@@ -55,6 +55,12 @@ const TOUR_STEPS: TourStep[] = [
     description: "Deine tägliche Checkliste – hake ab, was du erledigt hast, um den Überblick zu behalten.",
     icon: ListChecks,
   },
+  {
+    selector: '[data-section="accounts"]',
+    title: "Dein nächster Schritt: Log dich ein!",
+    description: "Das hier ist DEIN Account – nur für dich. Nimm dir jetzt die Zugangsdaten, logg dich ein und leg direkt los. Du kannst sofort starten.",
+    icon: Users,
+  },
 ];
 
 interface DashboardOnboardingProps {
