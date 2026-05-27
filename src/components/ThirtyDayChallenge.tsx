@@ -116,8 +116,8 @@ export default function ThirtyDayChallenge() {
         </div>
 
         <p className="text-sm text-muted-foreground leading-relaxed mb-4 whitespace-pre-line">
-          Bleib <span className="text-foreground font-semibold">30 Tage am Ball</span>, baue echte Kundenbindung auf – und qualifiziere dich für deutlich mehr Verdienst pro Stunde.{"\n"}
-          Wir prüfen nach diesen 30 Tagen ob du Gespräche mit Kunden so geführt hast, dass sie über mehrere Tage gingen. Also gib dir Mühe und melde dich jederzeit bei Fragen und verdien dir dein Upgrade 🚀
+          Bleib <span className="text-foreground font-semibold">30 Tage am Ball</span>, baue echte Kundenbindung auf – und qualifiziere dich für einen deutlich besseren Account.{"\n"}.{"\n"}
+          Wir prüfen nach diesen 30 Tagen ob du Gespräche mit Kunden so geführt hast, das sie über mehrere Tage gingen. Also gib dir Mühe und melde dich jederzeit bei Fragen und verdien dir dein Upgrade 🚀
         </p>
 
         {startDate ? (
