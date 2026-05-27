@@ -102,36 +102,36 @@ const LESSONS: Lesson[] = [
           {[
             {
               tag: "Küche",
-              line: "„Bin gerade am Kochen … aber nur in Unterwäsche. Soll ich dir ein Bild schicken?"",
+              line: "„Bin gerade am Kochen … aber nur in Unterwäsche. Soll ich dir ein Bild schicken?“",
             },
             {
               tag: "Bad / Dusche",
-              line: "„Ich spring jetzt unter die Dusche. Magst du sehen, wie ich aussehe, bevor ich rein gehe?"",
+              line: "„Ich spring jetzt unter die Dusche. Magst du sehen, wie ich aussehe, bevor ich rein gehe?“",
             },
             {
               tag: "Badewanne",
-              line: "„Lass mich kurz die Wanne einlaufen. Ich entspann mich heute mal richtig – Lust mitzukommen?"",
+              line: "„Lass mich kurz die Wanne einlaufen. Ich entspann mich heute mal richtig – Lust mitzukommen?“",
             },
             {
               tag: "Bett",
-              line: "„Lieg gerade nur in Unterwäsche im Bett und langweile mich ein bisschen … hast du Zeit?"",
+              line: "„Lieg gerade nur in Unterwäsche im Bett und langweile mich ein bisschen … hast du Zeit?“",
             },
             {
               tag: "Couch",
-              line: "„Mach's mir grad auf der Couch gemütlich – willst sehen, wie ich angezogen bin?"",
+              line: "„Mach's mir grad auf der Couch gemütlich – willst sehen, wie ich angezogen bin?“",
             },
             {
               tag: "Spiegel",
-              line: "„Steh grad vorm Spiegel und feier mein neues Set richtig. Magst du ein Bild?"",
+              line: "„Steh grad vorm Spiegel und feier mein neues Set richtig. Magst du ein Bild?“",
             },
             {
               tag: "Auto",
-              line: "„Bin grade im Auto – und es macht mich gerade voll an. Ich muss gleich ranfahren …"",
+              line: "„Bin grade im Auto – und es macht mich gerade voll an. Ich muss gleich ranfahren …“",
               icon: Car,
             },
             {
               tag: "Outdoor",
-              line: "„Bin spazieren und such mir grad einen ruhigen Spot. Die Fantasie, draußen erwischt zu werden, macht mich wahnsinnig an …"",
+              line: "„Bin spazieren und such mir grad einen ruhigen Spot. Die Fantasie, draußen erwischt zu werden, macht mich wahnsinnig an …“",
               icon: Trees,
             },
           ].map((s) => (
