@@ -41,3 +41,6 @@ verify_jwt = false
 
 [functions.update-account]
 verify_jwt = false
+
+[functions.assign-chatter-accounts]
+verify_jwt = false
