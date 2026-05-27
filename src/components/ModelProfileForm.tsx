@@ -285,11 +285,32 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
         </div>
         <div className="flex-1 min-w-0">
           <h2 className="text-lg font-bold text-foreground">{copy.title}</h2>
-          <p className="text-sm text-muted-foreground">
-            {copy.intro}
-          </p>
+          <p className="text-sm text-muted-foreground">{copy.intro}</p>
         </div>
       </div>
+
+      {/* Locked banner */}
+      {locked && (
+        <div className="glass-card rounded-xl p-4 border-l-2 border-emerald-500/60 flex items-start gap-3">
+          <div className="h-9 w-9 rounded-lg bg-emerald-500/15 flex items-center justify-center shrink-0">
+            <ShieldCheck className="h-4 w-4 text-emerald-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+              <Lock className="h-3.5 w-3.5" /> {copy.lockedTitle}
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">{copy.lockedBody}</p>
+          </div>
+          <Button
+            size="sm"
+            onClick={() => setReqOpen(true)}
+            className="shrink-0 h-8 text-xs gap-1.5 bg-accent/90 hover:bg-accent text-accent-foreground"
+          >
+            <Send className="h-3 w-3" />
+            {copy.requestChange}
+          </Button>
+        </div>
+      )}
 
       {/* Personal Info */}
       <section className="glass-card rounded-xl p-5 space-y-4">
@@ -304,7 +325,9 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
               <Input
                 value={(profile[f.key] as string) ?? ""}
                 onChange={(e) => set(f.key, e.target.value)}
-                className="bg-background/50"
+                readOnly={locked}
+                disabled={locked}
+                className="bg-background/50 disabled:opacity-80 disabled:cursor-default"
               />
               {f.hint && <p className="text-[10px] text-muted-foreground">{f.hint}</p>}
             </div>
@@ -322,7 +345,9 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
         <Textarea
           value={profile.content_preferences ?? ""}
           onChange={(e) => set("content_preferences", e.target.value)}
-          className="bg-background/50 min-h-[100px]"
+          readOnly={locked}
+          disabled={locked}
+          className="bg-background/50 min-h-[100px] disabled:opacity-80"
           placeholder={copy.contentPlaceholder}
         />
       </section>
@@ -333,13 +358,13 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
           <AlertTriangle className="h-4 w-4 text-accent" />
           <h3 className="text-base font-bold text-foreground">No Gos</h3>
         </div>
-        <Label className="text-xs text-muted-foreground">
-          {copy.noGosLabel}
-        </Label>
+        <Label className="text-xs text-muted-foreground">{copy.noGosLabel}</Label>
         <Textarea
           value={profile.no_gos ?? ""}
           onChange={(e) => set("no_gos", e.target.value)}
-          className="bg-background/50 min-h-[120px]"
+          readOnly={locked}
+          disabled={locked}
+          className="bg-background/50 min-h-[120px] disabled:opacity-80"
           placeholder={copy.noGosPlaceholder}
         />
       </section>
@@ -350,53 +375,81 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
           <Info className="h-4 w-4 text-accent" />
           <h3 className="text-base font-bold text-foreground">{copy.additional}</h3>
         </div>
-        <Label className="text-xs text-muted-foreground">
-          {copy.additionalLabel}
-        </Label>
+        <Label className="text-xs text-muted-foreground">{copy.additionalLabel}</Label>
         <Textarea
           value={profile.additional_info ?? ""}
           onChange={(e) => set("additional_info", e.target.value)}
-          className="bg-background/50 min-h-[100px]"
+          readOnly={locked}
+          disabled={locked}
+          className="bg-background/50 min-h-[100px] disabled:opacity-80"
         />
       </section>
 
-      {/* Save / Submit */}
-      <div className="sticky bottom-4 flex flex-col sm:flex-row gap-2 sm:justify-end">
-        {isInitialSubmission ? (
-          <>
+      {/* Save / Submit — hidden in locked mode */}
+      {!locked && (
+        <div className="sticky bottom-4 flex flex-col sm:flex-row gap-2 sm:justify-end">
+          {isInitialSubmission ? (
+            <>
+              <Button
+                variant="outline"
+                onClick={() => handleSave(false)}
+                disabled={saving}
+                size="lg"
+                className="border-accent/30 text-accent hover:bg-accent/10"
+              >
+                <Save className="h-4 w-4 mr-2" />
+                {copy.saveDraft}
+              </Button>
+              <Button
+                onClick={() => handleSave(true)}
+                disabled={saving || requiredMissing}
+                size="lg"
+                className="bg-gradient-to-r from-accent to-accent/80 text-accent-foreground font-semibold shadow-[0_0_20px_-4px_hsl(var(--accent)/0.6)] hover:scale-[1.03] transition-transform"
+                title={requiredMissing ? copy.missingTitle : ""}
+              >
+                <Check className="h-4 w-4 mr-2" />
+                {saving ? copy.submitting : copy.submit}
+              </Button>
+            </>
+          ) : (
             <Button
-              variant="outline"
               onClick={() => handleSave(false)}
               disabled={saving}
               size="lg"
-              className="border-accent/30 text-accent hover:bg-accent/10"
-            >
-              <Save className="h-4 w-4 mr-2" />
-              {copy.saveDraft}
-            </Button>
-            <Button
-              onClick={() => handleSave(true)}
-              disabled={saving || requiredMissing}
-              size="lg"
               className="bg-gradient-to-r from-accent to-accent/80 text-accent-foreground font-semibold shadow-[0_0_20px_-4px_hsl(var(--accent)/0.6)] hover:scale-[1.03] transition-transform"
-              title={requiredMissing ? copy.missingTitle : ""}
             >
-              <Check className="h-4 w-4 mr-2" />
-              {saving ? copy.submitting : copy.submit}
+              {savedAt ? <Check className="h-4 w-4 mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+              {saving ? copy.saving : savedAt ? copy.saved : copy.save}
             </Button>
-          </>
-        ) : (
-          <Button
-            onClick={() => handleSave(false)}
-            disabled={saving}
-            size="lg"
-            className="bg-gradient-to-r from-accent to-accent/80 text-accent-foreground font-semibold shadow-[0_0_20px_-4px_hsl(var(--accent)/0.6)] hover:scale-[1.03] transition-transform"
-          >
-            {savedAt ? <Check className="h-4 w-4 mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-            {saving ? copy.saving : savedAt ? copy.saved : copy.save}
-          </Button>
-        )}
-      </div>
+          )}
+        </div>
+      )}
+
+      {/* Request change dialog */}
+      <Dialog open={reqOpen} onOpenChange={setReqOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{copy.requestDialogTitle}</DialogTitle>
+            <DialogDescription>{copy.requestDialogDesc}</DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={reqText}
+            onChange={(e) => setReqText(e.target.value)}
+            placeholder={copy.requestPlaceholder}
+            className="min-h-[120px]"
+          />
+          <DialogFooter>
+            <Button
+              onClick={submitChangeRequest}
+              disabled={reqSending || !reqText.trim()}
+              className="bg-accent text-accent-foreground"
+            >
+              <Send className="h-4 w-4 mr-2" />
+              {reqSending ? copy.requestSending : copy.requestSubmit}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 }
