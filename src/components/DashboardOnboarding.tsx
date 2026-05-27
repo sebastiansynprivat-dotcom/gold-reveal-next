@@ -221,6 +221,11 @@ export default function DashboardOnboarding({ isFirstLogin, manualOpen, onManual
     localStorage.setItem(ONBOARDING_KEY, "true");
     setActive(false);
     onManualClose?.();
+    // Don't re-scroll if last step already focused accounts
+    const lastStep = TOUR_STEPS[TOUR_STEPS.length - 1];
+    if (lastStep.selector === '[data-section="accounts"]' && step === TOUR_STEPS.length - 1) {
+      return;
+    }
     setTimeout(() => {
       const el = document.querySelector('[data-section="accounts"]');
       if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
