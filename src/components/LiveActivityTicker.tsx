@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Activity } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -84,21 +84,44 @@ export default function LiveActivityTicker() {
     };
   }, []);
 
-  // Inject a new generated event every 15-30s to keep it alive
+  // Inject new events at irregular intervals (8-35s), with occasional bursts
+  const injectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    const interval = setInterval(() => {
-      const evt = generateFallbackEvent();
-      setEvents((prev) => [evt, ...prev].slice(0, 8));
-    }, 15000 + Math.random() * 15000);
-    return () => clearInterval(interval);
+    const scheduleNext = () => {
+      const delay = 8000 + Math.random() * 27000;
+      injectTimeoutRef.current = setTimeout(() => {
+        const evt = generateFallbackEvent();
+        setEvents((prev) => [evt, ...prev].slice(0, 8));
+        // 10% chance: burst — second event 1-3s later
+        if (Math.random() < 0.1) {
+          setTimeout(() => {
+            const evt2 = generateFallbackEvent();
+            setEvents((prev) => [evt2, ...prev].slice(0, 8));
+          }, 1000 + Math.random() * 2000);
+        }
+        scheduleNext();
+      }, delay);
+    };
+    scheduleNext();
+    return () => {
+      if (injectTimeoutRef.current) clearTimeout(injectTimeoutRef.current);
+    };
   }, []);
 
-  // Auto-rotate every 4 seconds
+  // Auto-rotate with irregular 3-11s delay per event
+  const rotateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % events.length);
-    }, 4000);
-    return () => clearInterval(interval);
+    const scheduleRotate = () => {
+      const delay = 3000 + Math.random() * 8000;
+      rotateTimeoutRef.current = setTimeout(() => {
+        setCurrentIndex((prev) => (prev + 1) % events.length);
+        scheduleRotate();
+      }, delay);
+    };
+    scheduleRotate();
+    return () => {
+      if (rotateTimeoutRef.current) clearTimeout(rotateTimeoutRef.current);
+    };
   }, [events.length]);
 
   const current = events[currentIndex];
