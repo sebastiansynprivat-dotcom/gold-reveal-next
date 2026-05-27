@@ -5,8 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Save, Check, User, Heart, Camera, AlertTriangle, Info } from "lucide-react";
+import { Save, Check, User, Camera, AlertTriangle, Info, Lock, Send, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 interface Props {
   modelId: string;
@@ -16,6 +17,12 @@ interface Props {
   /** Called after a successful initial submission. */
   onSubmitted?: () => void;
   language?: "de" | "en";
+  /** When true, every save also writes `submitted_at` (used by Admin who edits on the model's behalf). */
+  autoSubmitOnSave?: boolean;
+  /** If set, the form is read-only and a "Request change" CTA is shown instead of save buttons. */
+  lockedReason?: string | null;
+  /** Required for "Änderung anfragen" — inserts a row in model_requests. */
+  modelName?: string;
 }
 
 type ProfileRow = {
