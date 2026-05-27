@@ -995,45 +995,6 @@ export default function Dashboard() {
 
         {/* 7-Day Revenue Chart */}
         <div data-tour="revenue-chart">{user && <RevenueChart userId={user.id} />}</div>
-
-        {/* Month Summary Widget */}
-        <MonthSummaryWidget
-          monthlyRevenue={monthlyRevenue}
-          rate={rate}
-          tierName={currentTier.name}
-          tierEmoji={currentTier.emoji}
-        />
-
-        {/* Inspirations-Bibliothek (Placeholder) */}
-        <InspirationLibrary />
-
-        {/* LootBox Milestone Rewards */}
-        <LootBoxReward monthlyRevenue={monthlyRevenue} />
-
-        {/* Frage stellen */}
-        <button
-          onClick={() => setShowFrageMemo(true)}
-          className="w-full flex items-center gap-3 glass-card-subtle rounded-xl p-3 lg:p-4 border border-accent/30 bg-accent/5 text-left cursor-pointer hover:bg-accent/10 hover:border-accent/50 transition-all"
-        >
-          <HelpCircle className="h-5 w-5 text-accent shrink-0 animate-pulse" />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-foreground">Ich habe eine Frage</p>
-            <p className="text-xs text-accent mt-0.5">Wo kann ich diese Frage stellen?</p>
-          </div>
-        </button>
-
-        {/* Dashboard Tour Button */}
-        <button
-          onClick={() => setShowOnboarding(true)}
-          className="w-full flex items-center gap-3 glass-card-subtle rounded-xl p-3 lg:p-4 border border-border/30 text-left cursor-pointer hover:bg-secondary/30 hover:border-border/50 transition-all"
-        >
-          <Eye className="h-5 w-5 text-muted-foreground shrink-0" />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-foreground">Dashboard-Tour starten</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Alle Bereiche kurz erklärt</p>
-          </div>
-        </button>
-
         {/* Account-Daten */}
         <motion.section
           variants={sectionVariants}
@@ -1600,6 +1561,45 @@ export default function Dashboard() {
               );
             })()}
         </motion.section>
+
+        {/* Month Summary Widget */}
+        <MonthSummaryWidget
+          monthlyRevenue={monthlyRevenue}
+          rate={rate}
+          tierName={currentTier.name}
+          tierEmoji={currentTier.emoji}
+        />
+
+        {/* Inspirations-Bibliothek (Placeholder) */}
+        <InspirationLibrary />
+
+        {/* LootBox Milestone Rewards */}
+        <LootBoxReward monthlyRevenue={monthlyRevenue} />
+
+        {/* Frage stellen */}
+        <button
+          onClick={() => setShowFrageMemo(true)}
+          className="w-full flex items-center gap-3 glass-card-subtle rounded-xl p-3 lg:p-4 border border-accent/30 bg-accent/5 text-left cursor-pointer hover:bg-accent/10 hover:border-accent/50 transition-all"
+        >
+          <HelpCircle className="h-5 w-5 text-accent shrink-0 animate-pulse" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-foreground">Ich habe eine Frage</p>
+            <p className="text-xs text-accent mt-0.5">Wo kann ich diese Frage stellen?</p>
+          </div>
+        </button>
+
+        {/* Dashboard Tour Button */}
+        <button
+          onClick={() => setShowOnboarding(true)}
+          className="w-full flex items-center gap-3 glass-card-subtle rounded-xl p-3 lg:p-4 border border-border/30 text-left cursor-pointer hover:bg-secondary/30 hover:border-border/50 transition-all"
+        >
+          <Eye className="h-5 w-5 text-muted-foreground shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-foreground">Dashboard-Tour starten</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Alle Bereiche kurz erklärt</p>
+          </div>
+        </button>
+
 
         {/* MassDM Generator */}
         <div data-tour="massdm">
