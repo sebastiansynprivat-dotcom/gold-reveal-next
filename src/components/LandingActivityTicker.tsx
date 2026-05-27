@@ -10,9 +10,16 @@ interface TickerEvent {
 
 const AMOUNTS = [5, 10, 20, 30, 50, 100];
 
-function randomEvent(): TickerEvent {
-  const amt = AMOUNTS[Math.floor(Math.random() * AMOUNTS.length)];
-  return { id: `${Date.now()}-${Math.random()}`, text: `Ein Chatter hat gerade ${amt}€ Umsatz gemacht`, emoji: "🔥" };
+function randomEvent(prevText?: string): TickerEvent {
+  let amt = AMOUNTS[Math.floor(Math.random() * AMOUNTS.length)];
+  let text = `Ein Chatter hat gerade ${amt}€ Umsatz gemacht`;
+  let tries = 0;
+  while (text === prevText && tries < 5) {
+    amt = AMOUNTS[Math.floor(Math.random() * AMOUNTS.length)];
+    text = `Ein Chatter hat gerade ${amt}€ Umsatz gemacht`;
+    tries++;
+  }
+  return { id: `${Date.now()}-${Math.random()}`, text, emoji: "🔥" };
 }
 
 export default function LandingActivityTicker() {
@@ -23,10 +30,10 @@ export default function LandingActivityTicker() {
     const scheduleNext = () => {
       const delay = 3000 + Math.random() * 8000;
       rotateTimeoutRef.current = setTimeout(() => {
-        setCurrent(randomEvent());
+        setCurrent((prev) => randomEvent(prev?.text));
         // 10% chance: burst — second event 1-3s later
         if (Math.random() < 0.1) {
-          setTimeout(() => setCurrent(randomEvent()), 1000 + Math.random() * 2000);
+          setTimeout(() => setCurrent((prev) => randomEvent(prev?.text)), 1000 + Math.random() * 2000);
         }
         scheduleNext();
       }, delay);

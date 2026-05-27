@@ -114,7 +114,15 @@ export default function LiveActivityTicker() {
     const scheduleRotate = () => {
       const delay = 3000 + Math.random() * 8000;
       rotateTimeoutRef.current = setTimeout(() => {
-        setCurrentIndex((prev) => (prev + 1) % events.length);
+        setCurrentIndex((prev) => {
+          if (events.length <= 1) return prev;
+          let next = (prev + 1) % events.length;
+          // Skip if next event has same text as current (avoid back-to-back duplicates)
+          if (events[next]?.text === events[prev]?.text) {
+            next = (next + 1) % events.length;
+          }
+          return next;
+        });
         scheduleRotate();
       }, delay);
     };
