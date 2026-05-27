@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { BookOpen, FileText, TrendingUp, Sparkles, ArrowRight, Check, Flame } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useEffect, useState } from "react";
 import { useLibraryReads } from "@/hooks/useLibraryReads";
 
 const placeholderPdfs = [
@@ -38,6 +39,26 @@ const placeholderPdfs = [
 export default function InspirationLibrary() {
   const navigate = useNavigate();
   const { reads } = useLibraryReads();
+
+  // Live-Reader Counter — variabel & authentisch (random walk zwischen 6 und 23)
+  const [liveReaders, setLiveReaders] = useState(() => 9 + Math.floor(Math.random() * 8));
+  useEffect(() => {
+    let timeoutId: number;
+    const tick = () => {
+      setLiveReaders((prev) => {
+        // Random walk: -2..+2, gewichtet Richtung Mitte (~13)
+        const drift = Math.round((13 - prev) * 0.15);
+        const noise = Math.floor(Math.random() * 5) - 2; // -2..+2
+        const next = prev + drift + noise;
+        return Math.max(6, Math.min(23, next));
+      });
+      // Zufälliges Intervall 4–11s damit es nicht mechanisch wirkt
+      timeoutId = window.setTimeout(tick, 4000 + Math.random() * 7000);
+    };
+    timeoutId = window.setTimeout(tick, 3000 + Math.random() * 4000);
+    return () => window.clearTimeout(timeoutId);
+  }, []);
+
 
   const handleClick = (item: typeof placeholderPdfs[number]) => {
     if (item.route) {
@@ -173,7 +194,7 @@ export default function InspirationLibrary() {
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
             <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
           </span>
-          <span>Wird gerade von <span className="text-foreground font-semibold">12 Chattern</span> gelesen</span>
+          <span>Wird gerade von <span className="text-foreground font-semibold tabular-nums">{liveReaders} Chattern</span> gelesen</span>
         </div>
       </div>
 
