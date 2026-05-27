@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { BarChart3, Users, FileText, ListChecks, Trophy, ArrowRight, Sparkles, Crown } from "lucide-react";
+import { BarChart3, Users, FileText, ListChecks, Trophy, ArrowRight, Sparkles, Crown, BookOpen } from "lucide-react";
 
 const ONBOARDING_KEY = "dashboard_onboarding_seen";
 
@@ -30,6 +30,12 @@ const TOUR_STEPS: TourStep[] = [
     title: "Dein Account",
     description: "Hier findest du deine Zugangsdaten (E-Mail, Passwort, Domain) und den Google Drive Zugang.",
     icon: Users,
+  },
+  {
+    selector: '[data-tour="inspiration"]',
+    title: "Inspirations-Bibliothek",
+    description: "Hier findest du Chat-Breakdowns, Verkaufs-Skripte und Coaching-Basics. Chatter, die diese PDFs lesen, machen im Schnitt 4× so viel Umsatz.",
+    icon: BookOpen,
   },
   {
     selector: '[data-tour="thirty-day-challenge"]',
