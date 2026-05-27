@@ -1,30 +1,28 @@
 import { motion } from "framer-motion";
-import { Zap, FileText, HelpCircle, Trophy, User, Crown, BookOpen } from "lucide-react";
+import { Zap, FileText, HelpCircle, User, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface QuickActionBarProps {
   onAskQuestion: () => void;
   onFocusRevenue: () => void;
   onScrollToAccount: () => void;
-  onScrollToBonus: () => void;
   onScrollToInspiration: () => void;
 }
 
 const topActions = [
   { icon: User, label: "Account", action: "account" },
-  { icon: Crown, label: "Bonus", action: "bonus" },
   { icon: BookOpen, label: "Inspiration", action: "inspiration" },
   { icon: FileText, label: "Auszahlung", action: "invoice" },
 ] as const;
 
 const bottomActions = [
-  { icon: Trophy, label: "Bestenliste", action: "leaderboard" },
+  { icon: Zap, label: "Bestenliste", action: "leaderboard" },
   { icon: HelpCircle, label: "Ich habe eine Frage", action: "question" },
 ] as const;
 
 const allActions = [...topActions, ...bottomActions];
 
-export default function QuickActionBar({ onAskQuestion, onFocusRevenue, onScrollToAccount, onScrollToBonus, onScrollToInspiration }: QuickActionBarProps) {
+export default function QuickActionBar({ onAskQuestion, onFocusRevenue, onScrollToAccount, onScrollToInspiration }: QuickActionBarProps) {
   const navigate = useNavigate();
 
   const handleAction = (action: string) => {
@@ -34,9 +32,6 @@ export default function QuickActionBar({ onAskQuestion, onFocusRevenue, onScroll
         break;
       case "revenue":
         onFocusRevenue();
-        break;
-      case "bonus":
-        onScrollToBonus();
         break;
       case "inspiration":
         onScrollToInspiration();
