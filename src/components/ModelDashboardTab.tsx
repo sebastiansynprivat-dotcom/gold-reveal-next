@@ -44,6 +44,7 @@ import {
   Link2,
   ShieldCheck,
   Clock,
+  Mail,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import CreditNoteForm from "@/components/CreditNoteForm";
@@ -289,6 +290,31 @@ export default function ModelDashboardTab() {
   const [selectedModelId, setSelectedModelId] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [migratingLogins, setMigratingLogins] = useState(false);
+
+  // Read ?model=<id> from URL once on mount to pre-select model card (used when returning from /admin/model/:id/view)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const m = params.get("model");
+    if (m) setSelectedModelId(m);
+  }, []);
+
+  const runMigrateLogins = useCallback(async () => {
+    if (migratingLogins) return;
+    if (!confirm("Wirklich für alle Model-Logins neue clean Emails (<slug>@shex.app) + neue Passwörter generieren? Die Models müssen die neuen Zugangsdaten erhalten.")) return;
+    setMigratingLogins(true);
+    const t = toast.loading("Migriere Model-Logins…");
+    try {
+      const { data, error } = await supabase.functions.invoke("migrate-model-logins", { body: {} });
+      if (error) throw error;
+      const sum = (data as any)?.summary || {};
+      toast.success(`Fertig: ${sum.migrated || 0} migriert, ${sum.skipped_already_clean || 0} bereits clean, ${sum.auth_error || 0} Fehler`, { id: t });
+    } catch (e: any) {
+      toast.error(e?.message || "Migration fehlgeschlagen", { id: t });
+    } finally {
+      setMigratingLogins(false);
+    }
+  }, [migratingLogins]);
 
   // Distinct referrer tags from existing models for autocomplete
   const referrerSuggestions = useMemo(
@@ -940,6 +966,17 @@ export default function ModelDashboardTab() {
           <p className="text-xs text-muted-foreground">{models.length} Models registriert</p>
         </div>
         <Button
+          onClick={runMigrateLogins}
+          size="sm"
+          variant="outline"
+          disabled={migratingLogins}
+          title="Erzeugt für alle bestehenden Model-Logins clean <slug>@shex.app Emails + neue Passwörter"
+          className="gap-1.5 border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
+        >
+          {migratingLogins ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Mail className="h-3.5 w-3.5" />}
+          Emails bereinigen
+        </Button>
+        <Button
           onClick={() => setGroupsPanelOpen(true)}
           size="sm"
           variant="outline"
@@ -1262,7 +1299,7 @@ export default function ModelDashboardTab() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => window.open(`/admin/model/${selectedModelId}/view`, "_blank", "noopener,noreferrer")}
+                        onClick={() => window.open(`/admin/model/${selectedModelId}/view?return_model=${selectedModelId}`, "_blank")}
                         className="text-xs gap-1.5 border-accent/40 text-accent hover:bg-accent/10"
                       >
                         <Eye className="h-3 w-3" />
