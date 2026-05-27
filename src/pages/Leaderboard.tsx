@@ -159,7 +159,7 @@ export default function Leaderboard() {
   );
 
   return (
-    <div className="min-h-screen bg-background pb-24 relative">
+    <div className="min-h-screen pb-24 relative">
       <GoldParticles spawnRate={0.2} maxParticles={15} baseOpacity={0.15} />
 
       {/* Header */}

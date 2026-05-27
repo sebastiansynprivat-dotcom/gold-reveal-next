@@ -197,7 +197,7 @@ export default function FanvueDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background relative">
+    <div className="min-h-screen relative">
       <GoldParticles spawnRate={0.2} maxParticles={20} baseOpacity={0.15} />
 
       {/* Header */}

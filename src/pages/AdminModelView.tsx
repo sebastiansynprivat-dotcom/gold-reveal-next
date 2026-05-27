@@ -109,7 +109,7 @@ export default function AdminModelView() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen pb-24">
       {/* Admin-Preview-Banner */}
       <div className="border-b border-accent/30 bg-gradient-to-r from-accent/15 via-accent/5 to-transparent">
         <div className="container max-w-5xl mx-auto px-4 py-2 flex flex-wrap items-center gap-3">

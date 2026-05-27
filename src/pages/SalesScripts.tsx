@@ -71,7 +71,7 @@ export default function SalesScripts() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
+    <div className="min-h-screen text-foreground flex flex-col">
       <header className="sticky top-0 z-20 backdrop-blur-lg bg-background/80 border-b border-border/60">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
           <Link

@@ -101,7 +101,7 @@ export default function ModelDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-screen pb-24">
       <header className="header-gradient-border">
         <div className="container max-w-5xl mx-auto px-4 py-3">
           <div className="flex items-center gap-3">
