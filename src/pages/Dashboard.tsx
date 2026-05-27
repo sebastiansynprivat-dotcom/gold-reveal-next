@@ -668,7 +668,15 @@ export default function Dashboard() {
                 </div>
               )}
             </div>
-            <div className="ml-auto flex items-center gap-3">
+            <div className="ml-auto flex items-center gap-2">
+              <button
+                onClick={() => setShowOnboarding(true)}
+                className="flex items-center gap-1.5 rounded-full border border-border bg-secondary/60 px-3 py-1.5 text-xs font-medium text-foreground hover:border-accent/50 hover:bg-accent/10 hover:text-accent active:scale-95 transition-all"
+                title="Dashboard-Tour starten"
+              >
+                <Eye className="h-3 w-3" />
+                Tour
+              </button>
               <div className="flex items-center gap-1.5">
                 <Zap className="h-3.5 w-3.5 text-accent shrink-0" />
                 <div className="input-gold-shimmer rounded-lg">
@@ -689,11 +697,19 @@ export default function Dashboard() {
           {/* Mobile: stacked layout */}
           <div className="flex sm:hidden flex-col gap-3">
             {/* Row 1: Logo + Title + Badge */}
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2">
               <img src={logo} alt="Logo" className="h-8 w-8 rounded-full shrink-0" />
               <div className="flex-1 min-w-0">
                 <h1 className="text-sm font-bold text-foreground leading-tight">Chatter Dashboard</h1>
               </div>
+              <button
+                onClick={() => setShowOnboarding(true)}
+                className="flex items-center gap-1 rounded-full border border-border bg-secondary/60 px-2 py-1 text-[10px] font-medium text-foreground hover:border-accent/50 hover:bg-accent/10 hover:text-accent active:scale-95 transition-all"
+                title="Dashboard-Tour starten"
+              >
+                <Eye className="h-3 w-3" />
+                Tour
+              </button>
               <Badge
                 className={`shrink-0 text-[10px] ${isTopTier ? "bg-accent text-accent-foreground gold-glow" : "bg-secondary text-secondary-foreground"}`}
               >
@@ -1593,17 +1609,7 @@ export default function Dashboard() {
           </div>
         </button>
 
-        {/* Dashboard Tour Button */}
-        <button
-          onClick={() => setShowOnboarding(true)}
-          className="w-full flex items-center gap-3 glass-card-subtle rounded-xl p-3 lg:p-4 border border-border/30 text-left cursor-pointer hover:bg-secondary/30 hover:border-border/50 transition-all"
-        >
-          <Eye className="h-5 w-5 text-muted-foreground shrink-0" />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-foreground">Dashboard-Tour starten</p>
-            <p className="text-xs text-muted-foreground mt-0.5">Alle Bereiche kurz erklärt</p>
-          </div>
-        </button>
+        {/* Dashboard Tour Button - moved to header */}
 
 
         {/* MassDM Generator */}
