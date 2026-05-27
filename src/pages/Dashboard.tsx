@@ -962,15 +962,19 @@ export default function Dashboard() {
             if (input) {
               input.focus();
               input.scrollIntoView({ behavior: "smooth", block: "center" });
+              const card = input.closest('[data-section], .glass-card, .glass-card-subtle') ?? input;
+              highlightSection(card, "Tagesumsatz eintragen");
             }
           }}
           onScrollToAccount={() => {
             const el = document.querySelector('[data-section="accounts"]');
             if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+            highlightSection(el, "Deine Accounts");
           }}
           onScrollToInspiration={() => {
             const el = document.querySelector('[data-section="inspiration"]');
             if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+            highlightSection(el, "Inspirations-Bibliothek");
           }}
         />
 
