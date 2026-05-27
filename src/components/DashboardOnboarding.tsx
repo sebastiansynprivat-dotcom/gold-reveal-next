@@ -32,6 +32,12 @@ const TOUR_STEPS: TourStep[] = [
     icon: Users,
   },
   {
+    selector: '[data-tour="inspiration"]',
+    title: "Inspirations-Bibliothek",
+    description: "Hier findest du Chat-Breakdowns, Verkaufs-Skripte und Coaching-Basics. Chatter, die diese PDFs lesen, machen im Schnitt 4× so viel Umsatz.",
+    icon: BookOpen,
+  },
+  {
     selector: '[data-tour="thirty-day-challenge"]',
     title: "30-Tage Starter-Challenge",
     description: "Bleib 30 Tage am Ball und qualifiziere dich für ein Account-Upgrade auf einen Premium Account – deutlich mehr Traffic und mehr Verdienst für dich.",
