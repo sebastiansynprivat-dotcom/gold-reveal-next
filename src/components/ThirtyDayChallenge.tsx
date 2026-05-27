@@ -103,7 +103,7 @@ export default function ThirtyDayChallenge() {
               </div>
               <div className="flex items-center gap-2 text-xs text-foreground/90">
                 <Star className="h-3.5 w-3.5 text-accent shrink-0" />
-                <span><span className="font-bold text-accent">Priorisierter</span> Support & Schulungen</span>
+                <span><span className="font-bold text-accent">Deutlich mehr</span> Verdienst für dich</span>
               </div>
             </div>
             {!completed && (
