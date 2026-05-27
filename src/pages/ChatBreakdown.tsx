@@ -136,8 +136,10 @@ export default function ChatBreakdown() {
               src={src}
               alt={`Seite ${i + 1}`}
               loading={i < 2 ? "eager" : "lazy"}
+              onLoad={() => handleImgLoad(i)}
               className="w-full h-auto block"
             />
+
           </motion.div>
         ))}
 
