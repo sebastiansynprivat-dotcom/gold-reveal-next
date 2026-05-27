@@ -669,14 +669,6 @@ export default function Dashboard() {
               )}
             </div>
             <div className="ml-auto flex items-center gap-2">
-              <button
-                onClick={() => setShowOnboarding(true)}
-                className="flex items-center gap-1.5 rounded-full border border-border bg-secondary/60 px-3 py-1.5 text-xs font-medium text-foreground hover:border-accent/50 hover:bg-accent/10 hover:text-accent active:scale-95 transition-all"
-                title="Dashboard-Tour starten"
-              >
-                <Eye className="h-3 w-3" />
-                Tour
-              </button>
               <div className="flex items-center gap-1.5">
                 <Zap className="h-3.5 w-3.5 text-accent shrink-0" />
                 <div className="input-gold-shimmer rounded-lg">
