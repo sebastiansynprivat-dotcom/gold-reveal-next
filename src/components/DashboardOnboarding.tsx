@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { BarChart3, Users, FileText, ListChecks, Trophy, ArrowRight, Sparkles } from "lucide-react";
+import { BarChart3, Users, FileText, ListChecks, Trophy, ArrowRight, Sparkles, Crown } from "lucide-react";
 
 const ONBOARDING_KEY = "dashboard_onboarding_seen";
 
@@ -30,6 +30,12 @@ const TOUR_STEPS: TourStep[] = [
     title: "Dein Account",
     description: "Hier findest du deine Zugangsdaten (E-Mail, Passwort, Domain) und den Google Drive Zugang.",
     icon: Users,
+  },
+  {
+    selector: '[data-tour="thirty-day-challenge"]',
+    title: "30-Tage Starter-Challenge",
+    description: "Bleib 30 Tage am Ball und qualifiziere dich für ein Account-Upgrade auf einen Premium Account – deutlich mehr Traffic und mehr Verdienst für dich.",
+    icon: Crown,
   },
   {
     selector: '[data-tour="massdm"]',

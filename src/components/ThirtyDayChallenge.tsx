@@ -45,7 +45,7 @@ export default function ThirtyDayChallenge() {
   const completed = dayNumber >= 30;
 
   return (
-    <div className="relative glass-card rounded-2xl p-5 lg:p-6 border border-accent/30 overflow-hidden">
+    <div data-tour="thirty-day-challenge" className="relative glass-card rounded-2xl p-5 lg:p-6 border border-accent/30 overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-accent/10 via-transparent to-accent/5 pointer-events-none" />
       <div className="absolute -top-12 -right-12 w-40 h-40 bg-accent/20 rounded-full blur-3xl pointer-events-none" />
 
