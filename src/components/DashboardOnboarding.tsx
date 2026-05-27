@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { BarChart3, Users, FileText, ListChecks, Trophy, ArrowRight, Sparkles, Crown } from "lucide-react";
+import { BarChart3, Users, FileText, ListChecks, Trophy, ArrowRight, Sparkles, Crown, BookOpen } from "lucide-react";
 
 const ONBOARDING_KEY = "dashboard_onboarding_seen";
 
