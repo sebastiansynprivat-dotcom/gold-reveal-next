@@ -40,6 +40,26 @@ export default function InspirationLibrary() {
   const navigate = useNavigate();
   const { reads } = useLibraryReads();
 
+  // Live-Reader Counter — variabel & authentisch (random walk zwischen 6 und 23)
+  const [liveReaders, setLiveReaders] = useState(() => 9 + Math.floor(Math.random() * 8));
+  useEffect(() => {
+    let timeoutId: number;
+    const tick = () => {
+      setLiveReaders((prev) => {
+        // Random walk: -2..+2, gewichtet Richtung Mitte (~13)
+        const drift = Math.round((13 - prev) * 0.15);
+        const noise = Math.floor(Math.random() * 5) - 2; // -2..+2
+        const next = prev + drift + noise;
+        return Math.max(6, Math.min(23, next));
+      });
+      // Zufälliges Intervall 4–11s damit es nicht mechanisch wirkt
+      timeoutId = window.setTimeout(tick, 4000 + Math.random() * 7000);
+    };
+    timeoutId = window.setTimeout(tick, 3000 + Math.random() * 4000);
+    return () => window.clearTimeout(timeoutId);
+  }, []);
+
+
   const handleClick = (item: typeof placeholderPdfs[number]) => {
     if (item.route) {
       navigate(item.route);
