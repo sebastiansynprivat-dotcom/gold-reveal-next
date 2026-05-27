@@ -968,10 +968,6 @@ export default function Dashboard() {
             const el = document.querySelector('[data-section="accounts"]');
             if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
           }}
-          onScrollToBonus={() => {
-            const el = document.querySelector('[data-section="bonus"]');
-            if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-          }}
           onScrollToInspiration={() => {
             const el = document.querySelector('[data-section="inspiration"]');
             if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
