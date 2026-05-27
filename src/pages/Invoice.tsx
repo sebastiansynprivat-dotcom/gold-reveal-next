@@ -60,7 +60,6 @@ const Invoice = () => {
 
   const [senderName, setSenderName] = useState(savedData?.senderName || "");
   const [billingUnlocked, setBillingUnlocked] = useState(false);
-  const [demoMode, setDemoMode] = useState(true);
   const [senderAddress, setSenderAddress] = useState(savedData?.senderAddress || "");
   const [senderCity, setSenderCity] = useState(savedData?.senderCity || "");
   const [taxId, setTaxId] = useState(savedData?.taxId || "");
@@ -240,14 +239,10 @@ const Invoice = () => {
           <h1 className="text-xl sm:text-2xl font-bold gold-gradient-text">
             Rechnung erstellen
           </h1>
-          <div className="ml-auto flex items-center gap-2">
-            <span className="text-[10px] text-muted-foreground">Demo</span>
-            <Switch checked={demoMode} onCheckedChange={setDemoMode} className="scale-75" />
-          </div>
         </div>
 
         {/* Countdown section */}
-        <BillingCountdown onUnlock={setBillingUnlocked} demoMode={demoMode} />
+        <BillingCountdown onUnlock={setBillingUnlocked} />
 
         {/* Gewerbe To-Do */}
         {(() => {
@@ -520,7 +515,7 @@ Mein Gruppenname ist: ${groupName || "[Bitte Gruppenname im Dashboard eintragen]
   );
 };
 
-function BillingCountdown({ onUnlock, demoMode }: { onUnlock: (v: boolean) => void; demoMode: boolean }) {
+function BillingCountdown({ onUnlock }: { onUnlock: (v: boolean) => void }) {
   const now = new Date();
   const deadline = endOfMonth(addMonths(now, 1));
   const totalDays = differenceInDays(deadline, new Date(now.getFullYear(), now.getMonth(), 1));
@@ -528,7 +523,7 @@ function BillingCountdown({ onUnlock, demoMode }: { onUnlock: (v: boolean) => vo
   const progressPct = Math.round(((totalDays - daysLeft) / totalDays) * 100);
   const isUnlocked = daysLeft <= 0;
 
-  const unlocked = demoMode || isUnlocked;
+  const unlocked = isUnlocked;
 
   useEffect(() => { onUnlock(unlocked); }, [unlocked, onUnlock]);
 
