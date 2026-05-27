@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Zap, FileText, HelpCircle, User, BookOpen } from "lucide-react";
+import { Zap, FileText, HelpCircle, User, BookOpen, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface QuickActionBarProps {
@@ -7,22 +7,19 @@ interface QuickActionBarProps {
   onFocusRevenue: () => void;
   onScrollToAccount: () => void;
   onScrollToInspiration: () => void;
+  onStartTour: () => void;
 }
 
-const topActions = [
+const allActions = [
   { icon: User, label: "Account", action: "account" },
   { icon: BookOpen, label: "Inspiration", action: "inspiration" },
   { icon: FileText, label: "Auszahlung", action: "invoice" },
-] as const;
-
-const bottomActions = [
   { icon: Zap, label: "Bestenliste", action: "leaderboard" },
   { icon: HelpCircle, label: "Ich habe eine Frage", action: "question" },
+  { icon: Eye, label: "Tour", action: "tour" },
 ] as const;
 
-const allActions = [...topActions, ...bottomActions];
-
-export default function QuickActionBar({ onAskQuestion, onFocusRevenue, onScrollToAccount, onScrollToInspiration }: QuickActionBarProps) {
+export default function QuickActionBar({ onAskQuestion, onFocusRevenue, onScrollToAccount, onScrollToInspiration, onStartTour }: QuickActionBarProps) {
   const navigate = useNavigate();
 
   const handleAction = (action: string) => {
@@ -44,6 +41,9 @@ export default function QuickActionBar({ onAskQuestion, onFocusRevenue, onScroll
         break;
       case "question":
         onAskQuestion();
+        break;
+      case "tour":
+        onStartTour();
         break;
     }
   };
