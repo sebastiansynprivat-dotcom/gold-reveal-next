@@ -186,7 +186,7 @@ export default function InspirationLibrary() {
             transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut", repeatDelay: 0.4 }}
           />
           <Flame className="h-4 w-4 relative" />
-          <span className="relative">{ctaLabel} – jetzt freischalten</span>
+          <span className="relative">{ctaLabel}</span>
           <motion.span
             className="relative"
             animate={{ x: [0, 4, 0] }}
