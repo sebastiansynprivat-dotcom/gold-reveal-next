@@ -877,7 +877,7 @@ export default function Dashboard() {
                 {Math.round(rate * 100)}%
               </p>
             </motion.div>
-            <DailyGoal />
+            <div className="hidden"><DailyGoal /></div>
             <motion.div
               variants={staggerItem}
               className="gold-gradient-border-animated rounded-xl p-3 text-center col-span-2 pulse-glow"
@@ -940,7 +940,7 @@ export default function Dashboard() {
                 {Math.round(rate * 100)}%
               </p>
             </motion.div>
-            <DailyGoal />
+            <div className="hidden"><DailyGoal /></div>
             <motion.div
               variants={staggerItem}
               className="gold-gradient-border-animated rounded-xl p-5 text-center col-span-4 pulse-glow"
