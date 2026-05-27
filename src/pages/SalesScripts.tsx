@@ -47,7 +47,8 @@ const LESSONS: Lesson[] = [
           aufbauend.
         </p>
         <p>
-          Beispiele: <em>Black Lingerie</em>, <em>Mirror</em>, <em>Küche</em>,{" "}
+          Beispiele: <em>Schwarze Unterwäsche</em>, <em>Spiegel Set</em>, <em>Küche</em>,{" "}
+
           <em>Dusche</em>, <em>Auto</em>, <em>Outdoor</em>. So musst du im Chat nicht suchen
           – du klickst.
         </p>
@@ -477,7 +478,7 @@ export default function SalesScripts() {
               <motion.article
                 key={lesson.num}
                 ref={(el) => {
-                  lessonRefs.current[i] = el;
+                  lessonRefs.current[i] = el as HTMLDivElement;
                 }}
                 data-idx={i}
                 initial={{ opacity: 0, y: 20 }}
