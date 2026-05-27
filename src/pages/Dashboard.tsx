@@ -981,7 +981,7 @@ export default function Dashboard() {
         {!isPwaInstalled && (
           <button
             onClick={() => setShowTutorial(true)}
-            className="w-full flex items-center gap-3 glass-card-subtle rounded-xl p-3 lg:p-4 border border-accent/30 bg-accent/5 text-left cursor-pointer hover:bg-accent/10 hover:border-accent/50 transition-all"
+            className="lg:hidden w-full flex items-center gap-3 glass-card-subtle rounded-xl p-3 border border-accent/30 bg-accent/5 text-left cursor-pointer hover:bg-accent/10 hover:border-accent/50 transition-all"
           >
             <Smartphone className="h-5 w-5 text-accent shrink-0 animate-pulse" />
             <div className="flex-1 min-w-0">
