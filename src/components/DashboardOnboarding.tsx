@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { BarChart3, Users, FileText, ListChecks, Trophy, ArrowRight, Sparkles, Crown, BookOpen } from "lucide-react";
+import { BarChart3, Users, FileText, ListChecks, ArrowRight, Sparkles, Crown, BookOpen } from "lucide-react";
 
 const ONBOARDING_KEY = "dashboard_onboarding_seen";
 
@@ -54,12 +54,6 @@ const TOUR_STEPS: TourStep[] = [
     title: "Tägliche Aufgaben",
     description: "Deine tägliche Checkliste – hake ab, was du erledigt hast, um den Überblick zu behalten.",
     icon: ListChecks,
-  },
-  {
-    selector: '[data-tour="bonus-tiers"]',
-    title: "Bonusmodell",
-    description: "Je mehr Umsatz du machst, desto höher steigt deine Rate. Hier siehst du alle Stufen und deinen Fortschritt.",
-    icon: Trophy,
   },
 ];
 
