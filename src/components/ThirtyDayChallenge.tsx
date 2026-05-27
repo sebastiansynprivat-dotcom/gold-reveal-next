@@ -95,7 +95,7 @@ export default function ThirtyDayChallenge() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
               <div className="flex items-center gap-2 text-xs text-foreground/90">
                 <TrendingUp className="h-3.5 w-3.5 text-accent shrink-0" />
-                <span><span className="font-bold text-accent">Deutlich höherer</span> Stundensatz</span>
+                <span><span className="font-bold text-accent">Deutlich höherer</span> Traffic</span>
               </div>
               <div className="flex items-center gap-2 text-xs text-foreground/90">
                 <Zap className="h-3.5 w-3.5 text-accent shrink-0" />
@@ -115,9 +115,9 @@ export default function ThirtyDayChallenge() {
           </div>
         </div>
 
-        <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-          Bleib <span className="text-foreground font-semibold">30 Tage am Ball</span>,
-          baue echte Kundenbindung auf – und qualifiziere dich für deutlich mehr Verdienst pro Stunde.
+        <p className="text-sm text-muted-foreground leading-relaxed mb-4 whitespace-pre-line">
+          Bleib <span className="text-foreground font-semibold">30 Tage am Ball</span>, baue echte Kundenbindung auf – und qualifiziere dich für deutlich mehr Verdienst pro Stunde.{"\n"}
+          Wir prüfen nach diesen 30 Tagen ob du Gespräche mit Kunden so geführt hast, dass sie über mehrere Tage gingen. Also gib dir Mühe und melde dich jederzeit bei Fragen und verdien dir dein Upgrade 🚀
         </p>
 
         {startDate ? (
