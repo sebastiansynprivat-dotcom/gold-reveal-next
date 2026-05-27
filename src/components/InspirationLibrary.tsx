@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { BookOpen, FileText, TrendingUp, Sparkles, ArrowRight, Check, Flame } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { useEffect, useState } from "react";
 import { useLibraryReads } from "@/hooks/useLibraryReads";
 
 const placeholderPdfs = [
