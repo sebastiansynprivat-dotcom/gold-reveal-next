@@ -73,6 +73,7 @@ import RevenueChart from "@/components/RevenueChart";
 import MonthSummaryWidget from "@/components/MonthSummaryWidget";
 import QuickActionBar from "@/components/QuickActionBar";
 import InspirationLibrary from "@/components/InspirationLibrary";
+import ThirtyDayChallenge from "@/components/ThirtyDayChallenge";
 import DashboardOnboarding from "@/components/DashboardOnboarding";
 
 // Streak helper (mirrors StreakTracker logic)
@@ -1572,6 +1573,9 @@ export default function Dashboard() {
 
         {/* Inspirations-Bibliothek (Placeholder) */}
         <InspirationLibrary />
+
+        {/* 30-Tage Bonus-Challenge für neue Chatter */}
+        <ThirtyDayChallenge />
 
         {/* LootBox Milestone Rewards */}
         <LootBoxReward monthlyRevenue={monthlyRevenue} />
