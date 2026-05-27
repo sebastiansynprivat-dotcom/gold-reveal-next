@@ -157,44 +157,16 @@ export default function InspirationLibrary() {
         })}
       </div>
 
-      {/* CTA - High Conversion */}
-      <div className="relative">
-        {/* Outer pulsing glow rings */}
-        <motion.div
-          aria-hidden
-          className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-amber-500 via-yellow-300 to-amber-500 blur-xl opacity-60"
-          animate={{ opacity: [0.4, 0.85, 0.4], scale: [1, 1.02, 1] }}
-          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.button
+      {/* CTA - Clean */}
+      <div>
+        <button
           onClick={() => navigate("/bibliothek")}
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.97 }}
-          animate={{ boxShadow: [
-            "0 4px 20px rgba(212,175,55,0.35)",
-            "0 6px 36px rgba(212,175,55,0.75)",
-            "0 4px 20px rgba(212,175,55,0.35)",
-          ] }}
-          transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
-          className="relative w-full overflow-hidden flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-300 to-amber-500 bg-[length:200%_100%] text-black font-extrabold py-3.5 text-sm tracking-wide"
+          className="relative w-full overflow-hidden flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-300 to-amber-500 text-black font-bold py-3.5 text-sm tracking-wide transition-all hover:brightness-110 hover:shadow-[0_4px_20px_rgba(212,175,55,0.35)]"
         >
-          {/* Shimmer sweep */}
-          <motion.span
-            aria-hidden
-            className="absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/70 to-transparent skew-x-12"
-            animate={{ x: ["0%", "450%"] }}
-            transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut", repeatDelay: 0.4 }}
-          />
-          <Flame className="h-4 w-4 relative" />
+          <BookOpen className="h-4 w-4 relative" />
           <span className="relative">{ctaLabel}</span>
-          <motion.span
-            className="relative"
-            animate={{ x: [0, 4, 0] }}
-            transition={{ duration: 1.1, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <ArrowRight className="h-4 w-4" />
-          </motion.span>
-        </motion.button>
+          <ArrowRight className="h-4 w-4" />
+        </button>
         {/* Urgency micro-copy */}
         <div className="mt-2 flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
           <span className="relative flex h-1.5 w-1.5">
