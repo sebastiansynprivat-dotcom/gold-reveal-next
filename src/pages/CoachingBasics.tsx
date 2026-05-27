@@ -155,7 +155,7 @@ const LESSONS: Lesson[] = [
     num: "05",
     icon: MessageCircle,
     title: "Die Verkaufsüberleitung",
-    kicker: "Von „Mein Hund heißt Günter" zum Verkauf – in drei Nachrichten.",
+    kicker: "Von „Mein Hund heißt Günter“ zum Verkauf – in drei Nachrichten.",
     body: (
       <>
         <p>
@@ -261,7 +261,7 @@ const LESSONS: Lesson[] = [
     num: "07",
     icon: TrendingUp,
     title: "Der Beispielchat – live durchgespielt",
-    kicker: "So fließt ein realer Top-Chat von „Hey" bis 400 €.",
+    kicker: "So fließt ein realer Top-Chat von „Hey“ bis 400 €.",
     body: (
       <>
         <p>Sebastians Chat mit Julian – stark verkürzt, aber das Muster ist klar:</p>
@@ -270,12 +270,12 @@ const LESSONS: Lesson[] = [
             {
               step: "Smalltalk + Kompliment",
               detail:
-                "„Hey, sag mir mal deinen Namen." – „Julian gefällt mir. Wie war dein Tag?" Sofort Führung übernehmen, Fragen stellen, niemals offen lassen.",
+                "„Hey, sag mir mal deinen Namen.“ – „Julian gefällt mir. Wie war dein Tag?“ Sofort Führung übernehmen, Fragen stellen, niemals offen lassen.",
             },
             {
               step: "Sympathie + Brücke",
               detail:
-                "„Bei mir auch anstrengend. Ich nehm jetzt ne heiße Dusche und entspann mich." → Überleitung läuft.",
+                "„Bei mir auch anstrengend. Ich nehm jetzt ne heiße Dusche und entspann mich.“ → Überleitung läuft.",
             },
             {
               step: "Erstes Bild (5 €)",
@@ -285,22 +285,22 @@ const LESSONS: Lesson[] = [
             {
               step: "Fantasie aufbauen",
               detail:
-                "„Stell dir vor, du wärst mit mir in der Dusche – was würdest du als Erstes machen?" Du erfährst, was er mag und gibst es ihm zurück.",
+                "„Stell dir vor, du wärst mit mir in der Dusche – was würdest du als Erstes machen?“ Du erfährst, was er mag und gibst es ihm zurück.",
             },
             {
               step: "Stufen 10 → 20 → 30 → 50 €",
               detail:
-                "Bei jeder Stufe Story drumherum: „Mein Schwanz ist hart", „Bewerte mich von 1–10". Nie nur Content kommentarlos schicken.",
+                "Bei jeder Stufe Story drumherum: „Mein Schwanz ist hart“, „Bewerte mich von 1–10“. Nie nur Content kommentarlos schicken.",
             },
             {
               step: "Heißeste Phase",
               detail:
-                "Er sagt „Ich komm gleich" → NIEMALS sofort kommen lassen. „Warte, ich will mit dir gemeinsam." Hier wird am meisten gekauft: 2–4 Videos à 100 €.",
+                "Er sagt „Ich komm gleich“ → NIEMALS sofort kommen lassen. „Warte, ich will mit dir gemeinsam.“ Hier wird am meisten gekauft: 2–4 Videos à 100 €.",
             },
             {
               step: "Sauberer Abschluss",
               detail:
-                "Nach dem Orgasmus wird er logisch und denkt über sein Konto nach. Jetzt KEIN Verkauf mehr – stattdessen Nähe: „Würd jetzt deinen Kopf massieren..." Süßes Selfie kostenlos. „Bis morgen, Süßer."",
+                "Nach dem Orgasmus wird er logisch und denkt über sein Konto nach. Jetzt KEIN Verkauf mehr – stattdessen Nähe: „Würd jetzt deinen Kopf massieren...“ Süßes Selfie kostenlos. „Bis morgen, Süßer.“",
             },
           ].map((s, i) => (
             <li key={i} className="flex gap-3">
