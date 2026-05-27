@@ -188,7 +188,7 @@ const LESSONS: Lesson[] = [
               key={i}
               className="flex items-center gap-3 rounded-lg bg-secondary/30 border border-border/50 p-3"
             >
-              <div className="shrink-0 w-16 text-center rounded-md bg-gradient-to-br from-amber-400/30 to-amber-700/5 border border-amber-400/40 py-1.5 text-amber-300 text-sm font-black">
+              <div className="shrink-0 w-24 text-center rounded-md bg-gradient-to-br from-amber-400/30 to-amber-700/5 border border-amber-400/40 py-1.5 text-amber-300 text-xs sm:text-sm font-black uppercase tracking-wide">
                 {s.p}
               </div>
               <div className="text-sm text-muted-foreground">{s.t}</div>
