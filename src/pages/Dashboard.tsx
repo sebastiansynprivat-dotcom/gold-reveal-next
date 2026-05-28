@@ -1332,6 +1332,37 @@ export default function Dashboard() {
             );
           })()}
 
+          {/* Biographie aus dem Google Drive */}
+          {(() => {
+            const modelId = assignedAccounts.find((a) => a.model_id)?.model_id || null;
+            if (!modelId) return null;
+            const modelName = assignedAccounts.find((a) => a.model_id === modelId)?.account_email || "";
+            return (
+              <div className="border-t border-border/30">
+                <button
+                  onClick={() => setBiographyOpen(true)}
+                  className="w-full flex items-center gap-3 px-4 py-4 lg:px-6 lg:py-5 hover:bg-accent/5 transition-colors text-left"
+                >
+                  <div className="h-10 w-10 rounded-full bg-accent/15 flex items-center justify-center shrink-0">
+                    <FileText className="h-5 w-5 text-accent" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-foreground">Biographie des Models</p>
+                    <p className="text-[11px] text-muted-foreground">Direkt aus dem Drive geladen</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                </button>
+                <ModelBiographyDialog
+                  open={biographyOpen}
+                  onOpenChange={setBiographyOpen}
+                  modelId={modelId}
+                  modelName={modelName}
+                />
+              </div>
+            );
+          })()}
+
+
           {/* Anfrage an das Model – oder Inaktiv-Hinweis */}
           <div className="border-t border-border/30">
             {demoModelInactive || assignedAccounts.some((acc) => acc.model_active === false) ? (
