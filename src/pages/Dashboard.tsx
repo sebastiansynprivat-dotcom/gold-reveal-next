@@ -1336,7 +1336,7 @@ export default function Dashboard() {
           {(() => {
             const modelId = assignedAccounts.find((a) => a.model_id)?.model_id || null;
             if (!modelId) return null;
-            const modelName = assignedAccounts.find((a) => a.model_id === modelId)?.account_email || "";
+            const modelName = "";
             return (
               <div className="border-t border-border/30">
                 <button
