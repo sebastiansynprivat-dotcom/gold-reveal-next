@@ -1,43 +1,78 @@
-## Ziel
+# Model-Biographie im Chatter-Dashboard anzeigen
 
-Die Seite wirkt aktuell sehr flach: reiner schwarzer Hintergrund (`hsl(0 0% 4%)`) und Glass Cards mit nur 12px Blur und niedriger Sättigung. Wir heben das auf ein Premium-Niveau, ohne Funktionen oder Layout zu ändern – nur Background + Glass werden aufgewertet.
+Ziel: Beim Chatter wird automatisch die `Biographie.docx` aus dem Drive-Ordner des zugewiesenen Models geladen, in HTML umgewandelt und im Dashboard angezeigt.
 
-## Was sich ändert
+## Architektur
 
-### 1. Premium-Hintergrund (statt reinem Schwarz)
+```text
+Chatter Dashboard
+   │  account_id → model_id → models.drive_folder_id
+   ▼
+Edge Function: get-model-biography
+   ├─ Cache-Check (model_biographies Tabelle)
+   ├─ Google Drive API (Service Account, reuse share-drive auth)
+   │     1. Datei in Folder suchen: name contains 'iograph' AND mimeType=docx
+   │     2. Datei downloaden (alt=media)
+   ├─ docx → HTML (mammoth via esm.sh)
+   └─ Cache speichern + HTML zurückgeben
+```
 
-In `src/index.css` einen geschichteten Background hinter `body` legen, der über die gesamte App liegt:
+## Datenbank
 
-- **Basis:** sehr dunkles Anthrazit (`hsl(0 0% 3%)`) statt reinem Schwarz – wärmerer, edlerer Look.
-- **Gold-Auren:** zwei große, weiche radial-gradients in Gold-Tönen (oben links + unten rechts), sehr niedrige Opacity (~6–10%), `fixed`, damit sie beim Scrollen ruhig liegen.
-- **Subtiles Mesh:** ein dritter, mittiger radial-gradient in einem leicht wärmeren Bronze-Ton, ebenfalls sehr dezent.
-- **Vignette:** dunkler Rand über alles, damit der Content im Zentrum „leuchtet".
-- **Noise/Grain-Layer (optional, sehr leicht):** SVG-Noise als data-URI mit `opacity: 0.025` – nimmt dem Verlauf das Banding und gibt Tiefe.
+Neue Tabelle `public.model_biographies` (Cache):
+- `model_id uuid PK` (FK → models.id, on delete cascade)
+- `drive_file_id text`
+- `file_name text`
+- `html text` (gerendertes HTML)
+- `fetched_at timestamptz`
+- `modified_time timestamptz` (Drive `modifiedTime` – für Invalidierung)
 
-Umsetzung als `body::before` und `body::after` (fixed, `pointer-events: none`, `z-index: -1`), damit kein bestehendes Markup angefasst werden muss. Die goldenen Particles (bereits aktiv) bleiben unverändert und liegen darüber.
+GRANTs + RLS:
+- `SELECT` für `authenticated` (alle eingeloggten User dürfen Biografien des Models lesen, dem sie zugewiesen sind – Policy: User hat einen `accounts`-Eintrag mit `model_id = model_biographies.model_id`, oder ist Admin via `has_role`)
+- `ALL` für `service_role` (Edge Function schreibt Cache)
 
-### 2. Stärkeres Glassmorphism
+## Edge Function `get-model-biography`
 
-`.glass-card` und `.glass-card-subtle` in `src/index.css` aufwerten:
+Input: `{ model_id: string, force_refresh?: boolean }`
+Logik:
+1. Auth-Check via JWT (chatter muss diesem Model zugewiesen sein, oder Admin).
+2. Cache lesen. Wenn `fetched_at` < 6 h und nicht `force_refresh` → cached HTML zurückgeben.
+3. `drive_folder_id` aus `models` holen. Wenn leer → 404.
+4. Service Account Token holen (gleicher Code wie `share-drive` – in `_shared/google.ts` extrahieren).
+5. `GET drive/v3/files?q='{folderId}' in parents and name contains 'iograph' and trashed=false&fields=files(id,name,mimeType,modifiedTime)` → erste passende Datei.
+6. Wenn `modifiedTime` == Cache-Wert → Cache zurückgeben (kein Re-Download).
+7. Download `GET drive/v3/files/{id}?alt=media` → ArrayBuffer.
+8. Mammoth (`https://esm.sh/mammoth@1.6.0`) → HTML.
+9. In `model_biographies` upserten.
+10. Response: `{ html, file_name, modified_time, fetched_at, source: 'cache' | 'drive' }`.
 
-- **Blur** von 12px → 20px, **Saturate** 140% → 180%.
-- **Hintergrund:** statt flachem `hsl(0 0% 8% / 0.72)` ein leichter linearer Gradient von `hsl(0 0% 10% / 0.55)` nach `hsl(0 0% 6% / 0.75)` – das gibt der Glasfläche eine Lichtkante.
-- **Border:** zarter Gold-Tint mit höherer Transparenz (`hsl(43 40% 55% / 0.18)`).
-- **Inner Highlight:** zusätzlicher `inset 0 1px 0 hsl(43 56% 72% / 0.08)` für die typische „Glaskante oben".
-- **Outer Shadow:** weicher, tiefer Schatten (`0 20px 50px -20px hsl(0 0% 0% / 0.6)`) damit Cards vom Hintergrund abheben.
+Fehlerfälle: keine Datei gefunden → `{ html: null, reason: 'not_found' }` (UI zeigt Hinweis).
 
-Mobile-Fallback (bereits vorhanden) bleibt erhalten – dort wird Blur weiterhin deaktiviert, aber die neue Gradient-Fläche und der Inner-Highlight bleiben, sodass der Premium-Look auch ohne Backdrop-Filter funktioniert.
+`verify_jwt = true` (Standard) – nutzt User-JWT für RLS-Check, plus Service Role Client für DB-Write (Dual-Client-Pattern wie in `edge-function-auth-pattern`).
 
-### 3. Keine Layout- oder Komponentenänderungen
+## Frontend – Chatter Dashboard
 
-Es werden **keine** Komponenten umgebaut. Alle Cards, die bereits `glass-card` / `glass-card-subtle` nutzen, profitieren automatisch. Der neue Background ersetzt das einfache Schwarz global.
+Neue Komponente `src/components/ModelBiographyCard.tsx`:
+- Props: `modelId`
+- Lädt via `supabase.functions.invoke('get-model-biography', { body: { model_id } })`.
+- Glass-card im Stil von ModelHomeDashboard (Black & Gold, dezent gold-bordered).
+- Header: „Steckbrief · {model_name}" + Refresh-Icon-Button (force_refresh).
+- Body: HTML in scrollbarem Container (`max-h-[60vh]`, `prose prose-invert` Styling, Tabellen-Styles für die Personal-Info-Tabelle).
+- States: loading skeleton, leer („Noch keine Biographie hochgeladen"), error.
 
-## Betroffene Dateien
+Einbindung in `src/components/ChatterDashboardTab.tsx` (oder dem Dashboard, wo das aktuell zugewiesene Model sichtbar ist):
+- Für jeden zugewiesenen Account mit `model_id` einmal die Karte rendern (collapsible, default zu für Übersicht; öffnet sich on click und lädt dann lazy).
+- Platzierung: unter den Account-Credentials, vor der Revenue-Sektion.
 
-- `src/index.css` – Background-Layer (`body::before`, `body::after`), Glass-Tokens aufgewertet.
+Lazy loading: Fetch erst beim ersten Aufklappen, damit Dashboard schnell bleibt.
 
-## Optional (nur falls gewünscht)
+## Sicherheit
 
-- Hintergrund leicht **animiert** (sehr langsamer Drift der Gold-Auren, ~40s Loop) für einen lebendigen, aber dezenten „Atem"-Effekt.
+- RLS verhindert, dass Chatter Biografien fremder Models sehen.
+- Edge Function prüft zusätzlich serverseitig die Zuweisung (Chatter ↔ Account ↔ Model) bevor sie das HTML zurückgibt.
+- Drive-Token bleibt serverseitig; Client bekommt nur sanitisiertes HTML.
 
-Sag Bescheid, wenn ich den Drift mit reinnehmen soll – sonst baue ich es statisch.
+## Out of Scope (nicht in diesem Schritt)
+- Preisliste / Content-Ordner anzeigen (Bild zeigt zusätzlich „Preisliste!" und „Content"-Ordner – nur auf Anfrage nachziehen).
+- Editieren der Biographie durch den Chatter.
+- Auto-Sync per Drive-Webhook (statt 6-h-TTL).

@@ -757,6 +757,33 @@ export type Database = {
         }
         Relationships: []
       }
+      model_biographies: {
+        Row: {
+          drive_file_id: string | null
+          fetched_at: string
+          file_name: string | null
+          html: string | null
+          model_id: string
+          modified_time: string | null
+        }
+        Insert: {
+          drive_file_id?: string | null
+          fetched_at?: string
+          file_name?: string | null
+          html?: string | null
+          model_id: string
+          modified_time?: string | null
+        }
+        Update: {
+          drive_file_id?: string | null
+          fetched_at?: string
+          file_name?: string | null
+          html?: string | null
+          model_id?: string
+          modified_time?: string | null
+        }
+        Relationships: []
+      }
       model_dashboard: {
         Row: {
           account_id: string
