@@ -2373,9 +2373,16 @@ export default function AdminDashboard() {
       supabase.from("model_requests").select("*").order("created_at", { ascending: false }),
       supabase.from("models").select("id, name, model_agency, model_language, model_active").range(0, 9999),
     ]);
+    const normalizeModelKey = (s: any) =>
+      String(s || "")
+        .toLowerCase()
+        .replace(/\p{Extended_Pictographic}/gu, "")
+        .replace(/[^a-z0-9]/g, "")
+        .trim();
     const modelByName = new Map<string, any>();
     (modelsData || []).forEach((m: any) => {
-      if (m.name) modelByName.set(String(m.name).toLowerCase().trim(), m);
+      const key = normalizeModelKey(m.name);
+      if (key) modelByName.set(key, m);
     });
     if (data) {
       const ids = data.map((r: any) => r.id);
@@ -2394,7 +2401,7 @@ export default function AdminDashboard() {
         data.map((r: any) => ({
           ...r,
           _messages: msgsByReq[r.id] || [],
-          _model: modelByName.get(String(r.model_name || "").toLowerCase().trim()) || null,
+          _model: modelByName.get(normalizeModelKey(r.model_name)) || null,
         })),
       );
     }
