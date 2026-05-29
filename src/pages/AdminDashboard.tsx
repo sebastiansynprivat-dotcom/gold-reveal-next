@@ -2375,13 +2375,22 @@ export default function AdminDashboard() {
   };
 
   const updateRequestStatus = async (id: string, status: string) => {
+    // Optimistic update so the new status is visible immediately
+    setModelRequests((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
     const { error } = await supabase.from("model_requests").update({ status }).eq("id", id);
     if (error) {
       toast.error("Fehler beim Aktualisieren");
+      loadModelRequests();
       return;
     }
-    toast.success(`Status auf "${status}" gesetzt`);
-    loadModelRequests();
+    const labelMap: Record<string, string> = {
+      accepted: "Ans Model weitergeleitet",
+      in_progress: "In Arbeit",
+      waiting_feedback: "Warten auf Rückmeldung",
+      rejected: "Abgelehnt",
+      pending: "Offen",
+    };
+    toast.success(`Status: ${labelMap[status] || status}`);
     // Send push notification for status changes (except reset to pending)
     if (status !== "pending") {
       try {
@@ -5072,7 +5081,7 @@ export default function AdminDashboard() {
                     {(
                       [
                         { key: "pending", label: "Offen", icon: Clock, colorClass: "text-yellow-400" },
-                        { key: "accepted", label: "Angenommen", icon: CheckCircle2, colorClass: "text-emerald-400" },
+                        { key: "accepted", label: "Ans Model weitergeleitet", icon: CheckCircle2, colorClass: "text-emerald-400" },
                         { key: "in_progress", label: "In Arbeit", icon: Loader2, colorClass: "text-blue-400" },
                         { key: "waiting_feedback", label: "Warten auf Rückmeldung", icon: MessageSquare, colorClass: "text-purple-400" },
                         { key: "rejected", label: "Abgelehnt", icon: XCircle, colorClass: "text-destructive" },
@@ -5194,7 +5203,7 @@ export default function AdminDashboard() {
                                 dot: "bg-emerald-400",
                                 bg: "bg-emerald-500/10",
                                 text: "text-emerald-400",
-                                label: "Angenommen",
+                                label: "Ans Model weitergeleitet",
                                 border: "border-l-emerald-500/50",
                               },
                               in_progress: {
@@ -5778,7 +5787,7 @@ export default function AdminDashboard() {
                                               className="h-7 text-xs border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/50"
                                               onClick={() => updateRequestStatus(req.id, "accepted")}
                                             >
-                                              <Check className="h-3 w-3 mr-1" /> Annehmen
+                                              <Check className="h-3 w-3 mr-1" /> Ans Model weitergeleitet
                                             </Button>
                                             <Button
                                               size="sm"

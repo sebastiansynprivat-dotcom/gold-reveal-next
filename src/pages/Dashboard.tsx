@@ -1182,10 +1182,12 @@ export default function Dashboard() {
                                 {req.status === "pending"
                                   ? "⏳ Ausstehend"
                                   : req.status === "accepted"
-                                    ? "✅ Angenommen"
+                                    ? "✅ Ans Model weitergeleitet"
                                     : req.status === "in_progress"
                                       ? "⏳ Wird bearbeitet"
-                                      : "❌ Abgelehnt"}
+                                      : req.status === "waiting_feedback"
+                                        ? "💬 Warten auf Rückmeldung"
+                                        : "❌ Abgelehnt"}
                               </Badge>
                             </div>
                             <p className="text-[10px] text-muted-foreground line-clamp-2">{req.description}</p>
