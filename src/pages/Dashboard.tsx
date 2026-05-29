@@ -104,7 +104,7 @@ const BONUS_TIERS = [
   { name: "Silber", emoji: "🥈", min: 1000, max: 1499, rate: 22 },
   { name: "Gold", emoji: "🏆", min: 1500, max: 1999, rate: 23 },
   { name: "Platin", emoji: "💠", min: 2000, max: 2999, rate: 24 },
-  { name: "Diamond", emoji: "💎", min: 3000, max: 49999, rate: 25 },
+  { name: "Elite", emoji: "💎", min: 3000, max: 49999, rate: 25 },
   { name: "Titan", emoji: "🔱", min: 50000, max: Infinity, rate: 35 },
 ] as const;
 
@@ -1449,7 +1449,7 @@ function BonusModelSection({
                     "relative rounded-xl overflow-hidden transition-all duration-300",
                     isTitan && "col-span-3 lg:col-span-1",
                     isActive
-                      ? tier.name === "Diamond" || tier.name === "Titan"
+                      ? tier.name === "Elite" || tier.name === "Titan"
                         ? "gold-gradient-border-animated bg-[hsl(0_0%_8%/0.8)]"
                         : "border border-accent/50 bg-[hsl(0_0%_8%/0.8)] shadow-[0_0_24px_hsl(43_56%_52%/0.15)]"
                       : isPassed
@@ -1615,7 +1615,7 @@ function BonusModelSection({
       </p>
       <p className="text-[10px] lg:text-xs text-muted-foreground">
         7 Tage × 30€ = <strong className="text-foreground">Account Upgrade</strong> · 30 Tage × 100€ ={" "}
-        <strong className="text-foreground">Diamond Stufe 💎</strong>
+        <strong className="text-foreground">Elite Stufe 💎</strong>
       </p>
     </motion.section>
   );
