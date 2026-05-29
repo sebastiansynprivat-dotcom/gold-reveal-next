@@ -155,26 +155,35 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
           <motion.button
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
-            className="flex items-center gap-4 w-full px-5 py-5 rounded-xl bg-gradient-to-r from-accent/10 via-accent/5 to-transparent border border-accent/30 hover:border-accent/60 hover:shadow-[0_0_24px_hsl(43_56%_52%/0.15)] transition-all cursor-pointer group"
+            className="relative overflow-hidden flex items-center gap-4 w-full p-6 rounded-2xl cursor-pointer group transition-all border-2 border-accent/40 hover:border-accent/70 bg-gradient-to-br from-accent/15 via-accent/5 to-transparent hover:shadow-[0_0_40px_-5px_hsl(var(--accent)/0.5)]"
           >
+            {/* Shimmer sweep */}
+            <div className="pointer-events-none absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-accent/20 to-transparent" />
+            {/* Glow blob */}
+            <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-accent/30 blur-3xl" />
+
             <motion.div
-              animate={{ scale: [1, 1.12, 1] }}
-              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-              className="h-12 w-12 rounded-full bg-accent/20 flex items-center justify-center shrink-0 ring-2 ring-accent/30 group-hover:ring-accent/50 transition-all"
+              animate={{ rotate: [0, -8, 8, -8, 0] }}
+              transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+              className="relative h-14 w-14 rounded-2xl bg-gradient-to-br from-accent to-accent/60 flex items-center justify-center shrink-0 shadow-lg shadow-accent/30"
             >
-              <Send className="h-5 w-5 text-accent" />
+              <Send className="h-7 w-7 text-accent-foreground" />
             </motion.div>
-            <div className="text-left flex-1 min-w-0">
-              <p className="text-sm font-bold text-foreground">Neue Anfrage erstellen</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                Klicke hier, um eine Anfrage zu stellen
+            <div className="relative text-left flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1 flex-wrap">
+                <p className="text-lg font-bold text-foreground">Neue Anfrage erstellen</p>
+                <span className="text-[10px] font-bold uppercase tracking-wider bg-accent text-accent-foreground rounded-full px-2 py-0.5 animate-pulse">
+                  Direkt
+                </span>
+              </div>
+              <p className="text-sm text-muted-foreground leading-snug">
+                Klicke hier, um eine Anfrage an dein <span className="text-accent font-bold">Model</span> zu stellen
               </p>
             </div>
-            <div className="h-8 w-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0 group-hover:bg-accent/20 transition-colors">
-              <ChevronRight className="h-4 w-4 text-accent group-hover:translate-x-0.5 transition-transform" />
-            </div>
+            <ChevronRight className="relative h-5 w-5 text-accent shrink-0 group-hover:translate-x-0.5 transition-transform" />
           </motion.button>
         </DialogTrigger>
+
       )}
       <DialogContent className="max-w-md bg-background border-border">
         <DialogHeader>
