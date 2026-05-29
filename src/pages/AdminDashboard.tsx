@@ -5463,12 +5463,6 @@ export default function AdminDashboard() {
                                           </div>
                                         ) : null,
                                       )}
-                                    {/* spacer to keep JSX structure (placeholder for original closing button tag, removed below) */}
-                                    {false && (
-                                      <button>
-                                        <Copy className="h-3 w-3" />
-                                      </button>
-                                    )}
 
                                     {/* Kommentarverlauf */}
                                     {(() => {
