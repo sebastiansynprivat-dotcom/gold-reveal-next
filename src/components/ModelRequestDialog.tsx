@@ -152,7 +152,7 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
             <div className="text-left flex-1 min-w-0">
               <p className="text-sm font-bold text-foreground">Neue Anfrage erstellen</p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Klicke hier, um eine Anfrage zu starten
+                Klicke hier, um eine Anfrage zu stellen
               </p>
             </div>
             <div className="h-8 w-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0 group-hover:bg-accent/20 transition-colors">
