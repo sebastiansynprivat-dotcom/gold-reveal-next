@@ -2369,7 +2369,14 @@ export default function AdminDashboard() {
     toast.success("Geplante Benachrichtigung gelöscht");
   };
   const loadModelRequests = async () => {
-    const { data } = await supabase.from("model_requests").select("*").order("created_at", { ascending: false });
+    const [{ data }, { data: modelsData }] = await Promise.all([
+      supabase.from("model_requests").select("*").order("created_at", { ascending: false }),
+      supabase.from("models").select("id, name, model_agency, model_language, model_active").range(0, 9999),
+    ]);
+    const modelByName = new Map<string, any>();
+    (modelsData || []).forEach((m: any) => {
+      if (m.name) modelByName.set(String(m.name).toLowerCase().trim(), m);
+    });
     if (data) {
       const ids = data.map((r: any) => r.id);
       let msgsByReq: Record<string, any[]> = {};
@@ -2383,10 +2390,37 @@ export default function AdminDashboard() {
           (msgsByReq[m.request_id] ||= []).push(m);
         });
       }
-      setModelRequests(data.map((r: any) => ({ ...r, _messages: msgsByReq[r.id] || [] })));
+      setModelRequests(
+        data.map((r: any) => ({
+          ...r,
+          _messages: msgsByReq[r.id] || [],
+          _model: modelByName.get(String(r.model_name || "").toLowerCase().trim()) || null,
+        })),
+      );
     }
     setModelRequestsLoaded(true);
   };
+
+  const toggleModelActive = async (modelId: string, requestId: string, nextActive: boolean) => {
+    // Optimistic flip everywhere this model appears
+    setModelRequests((prev) =>
+      prev.map((r) =>
+        r._model && r._model.id === modelId ? { ...r, _model: { ...r._model, model_active: nextActive } } : r,
+      ),
+    );
+    const { error } = await supabase.from("models").update({ model_active: nextActive }).eq("id", modelId);
+    if (error) {
+      toast.error("Status konnte nicht geändert werden");
+      setModelRequests((prev) =>
+        prev.map((r) =>
+          r._model && r._model.id === modelId ? { ...r, _model: { ...r._model, model_active: !nextActive } } : r,
+        ),
+      );
+      return;
+    }
+    toast.success(nextActive ? "Model auf Aktiv gesetzt" : "Model auf Inaktiv gesetzt");
+  };
+
 
   const updateRequestStatus = async (id: string, status: string) => {
     // Optimistic update so the new status is visible immediately
@@ -5332,6 +5366,53 @@ export default function AdminDashboard() {
                                         {req.request_type === "individual" && req.price != null && (
                                           <span className="text-[10px] text-accent font-bold">{req.price}€</span>
                                         )}
+                                        {(() => {
+                                          const agencyRaw = String(req._model?.model_agency || "").toLowerCase();
+                                          const isSyn = agencyRaw === "syn" || agencyRaw === "simp";
+                                          const isShex = agencyRaw === "shex";
+                                          if (!isSyn && !isShex) return null;
+                                          return (
+                                            <span
+                                              className={cn(
+                                                "text-[10px] font-bold uppercase tracking-wide px-1.5 h-4 rounded border flex items-center",
+                                                isSyn
+                                                  ? "bg-fuchsia-500/15 text-fuchsia-300 border-fuchsia-500/40"
+                                                  : "bg-accent/15 text-accent border-accent/40",
+                                              )}
+                                            >
+                                              {isSyn ? "SYN" : "SheX"}
+                                            </span>
+                                          );
+                                        })()}
+                                        {(req._model?.model_language || req.model_language) && (
+                                          <span className="text-[10px] font-semibold uppercase tracking-wide px-1.5 h-4 rounded border border-border/50 bg-secondary/40 text-foreground/80 flex items-center">
+                                            {req._model?.model_language || req.model_language}
+                                          </span>
+                                        )}
+                                        {req._model?.id && (
+                                          <button
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              toggleModelActive(req._model.id, req.id, !req._model.model_active);
+                                            }}
+                                            className={cn(
+                                              "text-[10px] font-bold uppercase tracking-wide px-1.5 h-4 rounded border flex items-center gap-1 transition-colors",
+                                              req._model.model_active
+                                                ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/25"
+                                                : "bg-red-500/15 text-red-300 border-red-500/40 hover:bg-red-500/25",
+                                            )}
+                                            title="Klicken um Status zu wechseln"
+                                          >
+                                            <span
+                                              className={cn(
+                                                "h-1.5 w-1.5 rounded-full",
+                                                req._model.model_active ? "bg-emerald-400" : "bg-red-400",
+                                              )}
+                                            />
+                                            {req._model.model_active ? "Aktiv" : "Inaktiv"}
+                                          </button>
+                                        )}
                                         <span className="text-[10px] text-muted-foreground ml-auto">
                                           {new Date(req.created_at).toLocaleDateString("de-DE", {
                                             day: "2-digit",
@@ -5387,7 +5468,19 @@ export default function AdminDashboard() {
                                         navigator.clipboard.writeText(fullText);
                                         const encoded = encodeURIComponent(fullText);
                                         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                                        if (isMobile) {
+                                        const agencyRaw = String(req._model?.model_agency || "").toLowerCase();
+                                        const isSyn = agencyRaw === "syn" || agencyRaw === "simp";
+                                        if (isSyn) {
+                                          toast.success("Nachricht kopiert – Kontakt in Telegram wählen.");
+                                          if (isMobile) {
+                                            window.location.href = `tg://msg?text=${encoded}`;
+                                            setTimeout(() => {
+                                              window.open(`https://t.me/share/url?url=&text=${encoded}`, "_blank");
+                                            }, 400);
+                                          } else {
+                                            window.open(`https://t.me/share/url?url=&text=${encoded}`, "_blank");
+                                          }
+                                        } else if (isMobile) {
                                           toast.success("Nachricht kopiert – Empfänger in WhatsApp wählen.");
                                           window.location.href = `whatsapp://send?text=${encoded}`;
                                         } else {
@@ -5508,7 +5601,25 @@ export default function AdminDashboard() {
                                               const isMobile = /iPhone|iPad|iPod|Android/i.test(
                                                 navigator.userAgent,
                                               );
-                                              if (isMobile) {
+                                              const agencyRaw = String(req._model?.model_agency || "").toLowerCase();
+                                              const isSyn = agencyRaw === "syn" || agencyRaw === "simp";
+                                              if (isSyn) {
+                                                toast.success("Nachricht kopiert – Kontakt in Telegram wählen.");
+                                                if (isMobile) {
+                                                  window.location.href = `tg://msg?text=${encoded}`;
+                                                  setTimeout(() => {
+                                                    window.open(
+                                                      `https://t.me/share/url?url=&text=${encoded}`,
+                                                      "_blank",
+                                                    );
+                                                  }, 400);
+                                                } else {
+                                                  window.open(
+                                                    `https://t.me/share/url?url=&text=${encoded}`,
+                                                    "_blank",
+                                                  );
+                                                }
+                                              } else if (isMobile) {
                                                 toast.success("Nachricht kopiert – Empfänger in WhatsApp wählen.");
                                                 window.location.href = `whatsapp://send?text=${encoded}`;
                                               } else {
