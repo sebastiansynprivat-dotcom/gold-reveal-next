@@ -5404,27 +5404,39 @@ export default function AdminDashboard() {
                                                 "translate-text",
                                                 { body: { text: cleanDescription, target } },
                                               );
-                                              if (error || !data?.translation) {
-                                                toast.error(data?.error || "Übersetzung fehlgeschlagen");
-                                                return;
-                                              }
-                                              await navigator.clipboard.writeText(data.translation);
-                                              toast.success(
-                                                `Übersetzung (${target === "en" ? "EN" : "DE"}) kopiert`,
-                                              );
-                                              setModelRequests((prev) =>
-                                                prev.map((r) =>
-                                                  r.id === req.id
-                                                    ? {
-                                                        ...r,
-                                                        _translations: {
-                                                          ...(r._translations || {}),
-                                                          [target]: data.translation,
-                                                        },
-                                                      }
-                                                    : r,
-                                                ),
-                                              );
+                                               if (error || !data?.translation) {
+                                                 toast.error(data?.error || "Übersetzung fehlgeschlagen");
+                                                 return;
+                                               }
+                                               // Save translation to state FIRST so it's always shown,
+                                               // even if clipboard access fails (e.g. iOS PWA).
+                                               setModelRequests((prev) =>
+                                                 prev.map((r) =>
+                                                   r.id === req.id
+                                                     ? {
+                                                         ...r,
+                                                         _translations: {
+                                                           ...(r._translations || {}),
+                                                           [target]: data.translation,
+                                                         },
+                                                       }
+                                                     : r,
+                                                 ),
+                                               );
+                                               let copied = false;
+                                               try {
+                                                 if (navigator.clipboard?.writeText) {
+                                                   await navigator.clipboard.writeText(data.translation);
+                                                   copied = true;
+                                                 }
+                                               } catch {
+                                                 // Clipboard blocked (iOS PWA / insecure context) – ignore
+                                               }
+                                               toast.success(
+                                                 copied
+                                                   ? `Übersetzung (${target === "en" ? "EN" : "DE"}) kopiert`
+                                                   : `Übersetzung (${target === "en" ? "EN" : "DE"}) fertig`,
+                                               );
                                             } catch (err: any) {
                                               toast.error(err?.message || "Fehler");
                                             } finally {
