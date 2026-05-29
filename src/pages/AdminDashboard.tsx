@@ -2375,13 +2375,22 @@ export default function AdminDashboard() {
   };
 
   const updateRequestStatus = async (id: string, status: string) => {
+    // Optimistic update so the new status is visible immediately
+    setModelRequests((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
     const { error } = await supabase.from("model_requests").update({ status }).eq("id", id);
     if (error) {
       toast.error("Fehler beim Aktualisieren");
+      loadModelRequests();
       return;
     }
-    toast.success(`Status auf "${status}" gesetzt`);
-    loadModelRequests();
+    const labelMap: Record<string, string> = {
+      accepted: "Ans Model weitergeleitet",
+      in_progress: "In Arbeit",
+      waiting_feedback: "Warten auf Rückmeldung",
+      rejected: "Abgelehnt",
+      pending: "Offen",
+    };
+    toast.success(`Status: ${labelMap[status] || status}`);
     // Send push notification for status changes (except reset to pending)
     if (status !== "pending") {
       try {
