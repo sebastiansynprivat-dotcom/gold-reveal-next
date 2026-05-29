@@ -248,27 +248,6 @@ export default function Dashboard() {
     if (user) loadMyRequests();
   }, [user, loadMyRequests]);
 
-  // Per-account drive done/hidden state stored in localStorage, keyed by account id + assigned_at
-  const getDriveState = (accountId: string) => {
-    try {
-      const stored = JSON.parse(localStorage.getItem("drive_states") || "{}");
-      return stored[accountId] || { done: false, hidden: false, memoSeen: false, assignedAt: null };
-    } catch {
-      return { done: false, hidden: false, memoSeen: false, assignedAt: null };
-    }
-  };
-  const setDriveState = (
-    accountId: string,
-    update: { done?: boolean; hidden?: boolean; memoSeen?: boolean; assignedAt?: string | null },
-  ) => {
-    try {
-      const stored = JSON.parse(localStorage.getItem("drive_states") || "{}");
-      stored[accountId] = { ...getDriveState(accountId), ...update };
-      localStorage.setItem("drive_states", JSON.stringify(stored));
-    } catch {}
-  };
-  // Force re-render when drive state changes
-  const [driveVersion, setDriveVersion] = useState(0);
   const [isFirstLogin, setIsFirstLogin] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
