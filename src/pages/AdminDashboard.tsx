@@ -762,6 +762,10 @@ export default function AdminDashboard() {
   const [reassignPoolSectionOpen, setReassignPoolSectionOpen] = useState(false);
   const [reassignOpenPoolPlatform, setReassignOpenPoolPlatform] = useState<string | null>(null);
   const [reassignManualSectionOpen, setReassignManualSectionOpen] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editTelegram, setEditTelegram] = useState("");
+  const [editLanguage, setEditLanguage] = useState<"de" | "en">("de");
+  const [savingChatter, setSavingChatter] = useState(false);
   const [deletingPool, setDeletingPool] = useState(false);
   const [deletePoolConfirm, setDeletePoolConfirm] = useState(false);
   const [moveConfirm, setMoveConfirm] = useState<{ id: string; toPool: boolean } | null>(null);
