@@ -6358,6 +6358,30 @@ export default function AdminDashboard() {
                                         </Button>
                                       </>
                                     )}
+                                    {user?.email?.toLowerCase() === "maxsandig@hotmail.de" && (
+                                      <div className="pt-2 mt-2 border-t border-destructive/20">
+                                        <Button
+                                          variant="destructive"
+                                          size="sm"
+                                          className="w-full"
+                                          onClick={async () => {
+                                            if (!confirm(`Model "${acc.account_email}" wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.`)) return;
+                                            const { error } = await supabase.from("accounts").delete().eq("id", acc.id);
+                                            if (error) {
+                                              toast.error("Fehler beim Löschen: " + error.message);
+                                              return;
+                                            }
+                                            toast.success("Model gelöscht");
+                                            setExpandedBot(null);
+                                            await loadSetupDashboards();
+                                            await loadAccounts();
+                                          }}
+                                        >
+                                          <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                                          Model löschen
+                                        </Button>
+                                      </div>
+                                    )}
                                   </div>
                                 )}
                               </div>
