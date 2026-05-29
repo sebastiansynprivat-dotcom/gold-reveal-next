@@ -146,34 +146,36 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<ProtectedRoute><Navigate to="/dashboard" replace /></ProtectedRoute>} />
-            <Route path="/onboarding" element={<Onboarding />} />
-            <Route path="/quiz" element={<Quiz />} />
-            <Route path="/offer-a" element={<OfferA />} />
-            <Route path="/offer-b" element={<OfferB />} />
-            <Route path="/offer-c" element={<OfferC />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin/notifications" element={<AdminProtectedRoute><AdminNotifications /></AdminProtectedRoute>} />
-            <Route path="/admin" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
-            <Route path="/admin/model/:modelId/view" element={<AdminProtectedRoute><AdminModelView /></AdminProtectedRoute>} />
-            <Route path="/rechnung" element={<ProtectedRoute><Invoice /></ProtectedRoute>} />
-            <Route path="/model/login" element={<ModelLogin />} />
-            <Route path="/m/:username" element={<ModelLogin />} />
-            <Route path="/model" element={<ModelProtectedRoute><ModelDashboard /></ModelProtectedRoute>} />
-            <Route path="/fanvue/login" element={<FanvueLogin />} />
-            <Route path="/fanvue" element={<FanvueProtectedRoute><FanvueDashboard /></FanvueProtectedRoute>} />
-            <Route path="/bibliothek" element={<ProtectedRoute><Library /></ProtectedRoute>} />
-            <Route path="/bibliothek/chat-breakdown-01" element={<ProtectedRoute><ChatBreakdown /></ProtectedRoute>} />
-            <Route path="/bibliothek/coaching-basics" element={<ProtectedRoute><CoachingBasics /></ProtectedRoute>} />
-            <Route path="/bibliothek/verkaufs-skripte" element={<ProtectedRoute><SalesScripts /></ProtectedRoute>} />
+          <Suspense fallback={<RouteFallback />}>
+            <Routes>
+              <Route path="/" element={<ProtectedRoute><Navigate to="/dashboard" replace /></ProtectedRoute>} />
+              <Route path="/onboarding" element={<Onboarding />} />
+              <Route path="/quiz" element={<Quiz />} />
+              <Route path="/offer-a" element={<OfferA />} />
+              <Route path="/offer-b" element={<OfferB />} />
+              <Route path="/offer-c" element={<OfferC />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
+              <Route path="/admin/login" element={<AdminLogin />} />
+              <Route path="/admin/notifications" element={<AdminProtectedRoute><AdminNotifications /></AdminProtectedRoute>} />
+              <Route path="/admin" element={<AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>} />
+              <Route path="/admin/model/:modelId/view" element={<AdminProtectedRoute><AdminModelView /></AdminProtectedRoute>} />
+              <Route path="/rechnung" element={<ProtectedRoute><Invoice /></ProtectedRoute>} />
+              <Route path="/model/login" element={<ModelLogin />} />
+              <Route path="/m/:username" element={<ModelLogin />} />
+              <Route path="/model" element={<ModelProtectedRoute><ModelDashboard /></ModelProtectedRoute>} />
+              <Route path="/fanvue/login" element={<FanvueLogin />} />
+              <Route path="/fanvue" element={<FanvueProtectedRoute><FanvueDashboard /></FanvueProtectedRoute>} />
+              <Route path="/bibliothek" element={<ProtectedRoute><Library /></ProtectedRoute>} />
+              <Route path="/bibliothek/chat-breakdown-01" element={<ProtectedRoute><ChatBreakdown /></ProtectedRoute>} />
+              <Route path="/bibliothek/coaching-basics" element={<ProtectedRoute><CoachingBasics /></ProtectedRoute>} />
+              <Route path="/bibliothek/verkaufs-skripte" element={<ProtectedRoute><SalesScripts /></ProtectedRoute>} />
 
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
