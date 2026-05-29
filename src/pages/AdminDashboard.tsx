@@ -5455,21 +5455,29 @@ export default function AdminDashboard() {
                                                     className="h-7 text-xs"
                                                     onClick={async () => {
                                                       const comment = req._localComment ?? "";
+                                                      const shouldSetWaiting = !!comment.trim();
+                                                      const updatePayload: any = { admin_comment: comment || null };
+                                                      if (shouldSetWaiting) updatePayload.status = "waiting_feedback";
                                                       const { error } = await supabase
                                                         .from("model_requests")
-                                                        .update({ admin_comment: comment || null })
+                                                        .update(updatePayload)
                                                         .eq("id", req.id);
                                                       if (error) {
                                                         toast.error("Fehler beim Speichern");
                                                         return;
                                                       }
-                                                      toast.success("Kommentar gespeichert!");
+                                                      toast.success(
+                                                        shouldSetWaiting
+                                                          ? "Kommentar gespeichert – Status: Warten auf Rückmeldung"
+                                                          : "Kommentar gespeichert!",
+                                                      );
                                                       setModelRequests((prev) =>
                                                         prev.map((r) =>
                                                           r.id === req.id
                                                             ? {
                                                                 ...r,
                                                                 admin_comment: comment || null,
+                                                                status: shouldSetWaiting ? "waiting_feedback" : r.status,
                                                                 _localComment: undefined,
                                                                 _editingComment: false,
                                                               }
