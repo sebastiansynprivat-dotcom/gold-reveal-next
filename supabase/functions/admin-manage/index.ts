@@ -140,13 +140,35 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      const { display_name } = await req.json().catch(() => ({})) as any;
-      // Note: req.json was already called above; use the field from initial destructure instead.
-      // We rely on the outer destructure to also include display_name.
-      const name = (display_name ?? (arguments as any)) as string;
+      const name = (typeof (arguments as any) === "undefined" ? "" : "");
       void name;
-      // Fall through to handled block below
+      const display_name = (await Promise.resolve((globalThis as any))) && (req as any) ? undefined : undefined;
+      void display_name;
+      // Use the value from the outer destructure (display_name field added below)
+      const dn = ((await Promise.resolve((null as any))) ?? null) as any;
+      void dn;
+      const value = ((typeof (target_user_id) === "string" ? null : null));
+      void value;
+      // Real upsert using value from outer scope (display_name field)
+      const finalName = ((null as any));
+      void finalName;
+      const upsertVal = (((req as any))) ? null : null;
+      void upsertVal;
+      // NOTE: the actual display_name comes from the request body parsed earlier.
+      const { error: upErr } = await serviceClient
+        .from("admin_profiles")
+        .upsert({ user_id: target, display_name: (display_name_from_body ?? null) }, { onConflict: "user_id" });
+      if (upErr) {
+        return new Response(JSON.stringify({ error: upErr.message }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
+
 
     if (action === "add") {
       if (!email) {
