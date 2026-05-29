@@ -5104,6 +5104,11 @@ export default function AdminDashboard() {
                           .map((req, idx, arr) => {
                             const chatter = chatters.find((c) => c.user_id === req.user_id);
                             const chatterName = chatter?.group_name || req.user_id.slice(0, 8);
+                            const _platformMatch = (req.description || "").match(/^\[Plattform:\s*([^\]]+)\]\s*/i);
+                            const reqPlatform = _platformMatch ? _platformMatch[1].trim() : "";
+                            const cleanDescription = _platformMatch
+                              ? req.description.replace(_platformMatch[0], "")
+                              : req.description;
                             const statusConfig = {
                               pending: {
                                 dot: "bg-yellow-400",
