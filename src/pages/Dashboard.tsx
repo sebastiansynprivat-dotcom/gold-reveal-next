@@ -302,20 +302,7 @@ export default function Dashboard() {
       .eq("assigned_to", user.id)
       .order("created_at", { ascending: true })
       .then(({ data }) => {
-        if (data && data.length > 0) {
-          // Reset drive state for re-assigned accounts (assigned_at changed)
-          data.forEach((acc) => {
-            const ds = getDriveState(acc.id);
-            if (ds.assignedAt && ds.assignedAt !== acc.assigned_at) {
-              // Account was re-assigned – reset to unchecked
-              setDriveState(acc.id, { done: false, hidden: false, assignedAt: acc.assigned_at });
-            } else if (!ds.assignedAt) {
-              // First time seeing this account – store assigned_at
-              setDriveState(acc.id, { assignedAt: acc.assigned_at });
-            }
-          });
-          setAssignedAccounts(data);
-        }
+        setAssignedAccounts(data || []);
       });
 
     // Check if first login
