@@ -34,6 +34,7 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
   const [customerName, setCustomerName] = useState("");
   
   const [requestType, setRequestType] = useState<"individual" | "general">("general");
+  const [platform, setPlatform] = useState<"Maloum" | "Brezzels" | null>(null);
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
@@ -47,7 +48,14 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
       // modelLanguage comes from prop now
       setRequestType(editData.request_type);
       setPrice(editData.price != null ? String(editData.price) : "");
-      setDescription(editData.description);
+      const platformMatch = editData.description.match(/^\[Plattform: (Maloum|Brezzels)\]\s*/);
+      if (platformMatch) {
+        setPlatform(platformMatch[1] as "Maloum" | "Brezzels");
+        setDescription(editData.description.replace(platformMatch[0], ""));
+      } else {
+        setPlatform(null);
+        setDescription(editData.description);
+      }
       setOpen(true);
       // Focus description and place cursor at end after dialog opens
       setTimeout(() => {
@@ -65,6 +73,7 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
     setCustomerName("");
     
     setRequestType("general");
+    setPlatform(null);
     setPrice("");
     setDescription("");
   };
@@ -83,10 +92,16 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
       toast.error("Bitte fülle alle Pflichtfelder aus.");
       return;
     }
+    if (!platform) {
+      toast.error("Bitte wähle eine Plattform aus.");
+      return;
+    }
     if (requestType === "individual" && !price.trim()) {
       toast.error("Bitte gib einen Preis an.");
       return;
     }
+
+    const finalDescription = `[Plattform: ${platform}] ${description.trim()}`;
 
     setLoading(true);
 
@@ -97,7 +112,7 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
         request_type: requestType,
         model_language: modelLanguage,
         price: requestType === "individual" ? parseFloat(price) : null,
-        description: description.trim(),
+        description: finalDescription,
         customer_name: requestType === "individual" ? customerName.trim() || null : null,
         status: "pending",
         admin_comment: null,
@@ -116,7 +131,7 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
         request_type: requestType,
         model_language: modelLanguage,
         price: requestType === "individual" ? parseFloat(price) : null,
-        description: description.trim(),
+        description: finalDescription,
         customer_name: requestType === "individual" ? customerName.trim() || null : null,
       } as any);
       setLoading(false);
@@ -212,6 +227,28 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
               </div>
             </RadioGroup>
           </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs text-foreground">Plattform *</Label>
+            <div className="grid grid-cols-2 gap-2">
+              {(["Maloum", "Brezzels"] as const).map((p) => (
+                <button
+                  key={p}
+                  type="button"
+                  onClick={() => setPlatform(p)}
+                  className={`px-4 py-2.5 rounded-lg border text-xs font-semibold transition-all ${
+                    platform === p
+                      ? "border-accent bg-accent/15 text-accent shadow-[0_0_16px_hsl(43_56%_52%/0.25)]"
+                      : "border-border/50 bg-secondary/20 text-muted-foreground hover:border-accent/40 hover:text-foreground"
+                  }`}
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
+          </div>
+
+
 
           {requestType === "individual" && (
             <div className="space-y-3 animate-in fade-in slide-in-from-top-2 duration-200">
