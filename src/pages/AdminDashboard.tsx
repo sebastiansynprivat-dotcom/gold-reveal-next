@@ -5736,6 +5736,7 @@ export default function AdminDashboard() {
                                         sender_role: string;
                                         body: string;
                                         created_at: string;
+                                        user_id?: string;
                                       }>;
                                       const hasLegacy =
                                         !!req.admin_comment &&
@@ -5761,7 +5762,9 @@ export default function AdminDashboard() {
                                                 Verlauf
                                               </p>
                                               <div className="space-y-1.5">
-                                                {allMsgs.map((m) => (
+                                                {allMsgs.map((m) => {
+                                                  const adminName = m.sender_role === "admin" && m.user_id ? adminNames[m.user_id] : undefined;
+                                                  return (
                                                   <div
                                                     key={m.id}
                                                     className={`flex ${m.sender_role === "admin" ? "justify-start" : "justify-end"}`}
@@ -5774,7 +5777,7 @@ export default function AdminDashboard() {
                                                       }`}
                                                     >
                                                       <p className="text-[10px] text-muted-foreground mb-0.5">
-                                                        {m.sender_role === "admin" ? "Admin" : "Chatter"} ·{" "}
+                                                        {m.sender_role === "admin" ? (adminName ? `Admin · ${adminName}` : "Admin") : "Chatter"} ·{" "}
                                                         {new Date(m.created_at).toLocaleString("de-DE", {
                                                           day: "2-digit",
                                                           month: "2-digit",
