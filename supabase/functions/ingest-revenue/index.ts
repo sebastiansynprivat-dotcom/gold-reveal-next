@@ -179,7 +179,7 @@ Deno.serve(async (req) => {
         const chatter = chatterMap.get(`${s.platform}|${s.model.toLowerCase()}`);
         const amountStr = s.amount.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "€";
         const parts = [platformLabel(s.platform), s.model];
-        if (chatter) parts.push(`von ${chatter}`);
+        if (chatter) parts.push(chatter);
         const bodyText = parts.join(" · ");
         fetch(url, {
           method: "POST",
