@@ -8,7 +8,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-type Event = "new_request" | "new_revenue" | "test";
+type Event = "new_request" | "new_revenue" | "new_request_comment" | "test";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -45,16 +45,36 @@ serve(async (req) => {
       .from("user_roles")
       .select("user_id")
       .in("role", ["admin", "super_admin", "sub_admin"]);
-    const adminIds = Array.from(new Set((roles ?? []).map((r: any) => r.user_id)));
+    let adminIds = Array.from(new Set((roles ?? []).map((r: any) => r.user_id)));
     if (adminIds.length === 0) {
       return new Response(JSON.stringify({ sent: 0, total: 0 }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Filter by preferences (default: opted-in if no row, except for "test")
+    // For request-comment events, restrict to admins named Vanessa or Max
+    if (event === "new_request_comment") {
+      const { data: profs } = await admin
+        .from("admin_profiles")
+        .select("user_id, display_name")
+        .in("user_id", adminIds);
+      const matchIds = (profs ?? [])
+        .filter((p: any) => {
+          const n = String(p.display_name || "").toLowerCase();
+          return n.includes("vanessa") || n.includes("max");
+        })
+        .map((p: any) => p.user_id);
+      adminIds = matchIds;
+      if (adminIds.length === 0) {
+        return new Response(JSON.stringify({ sent: 0, total: 0, reason: "no matching admins" }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    // Filter by preferences (default: opted-in if no row, except for "test" and "new_request_comment")
     let targetIds = adminIds;
-    if (event !== "test") {
+    if (event !== "test" && event !== "new_request_comment") {
       const col = event === "new_request" ? "new_request" : "new_revenue";
       const { data: prefs } = await admin
         .from("admin_notification_preferences")
