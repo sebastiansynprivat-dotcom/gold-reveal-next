@@ -4029,6 +4029,8 @@ export default function AdminDashboard() {
                     const pwaYes = pwaUsers.size;
                     const pwaNo = chatters.length - pwaYes;
 
+                    const freeAccounts = accounts.filter((a) => !a.assigned_to).length;
+
                     const DualCard = ({
                       labelA,
                       valueA,
@@ -4095,13 +4097,21 @@ export default function AdminDashboard() {
                       current === target ? null : target;
 
                     return (
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                         {/* Chatter gesamt – simple card, vertically centered to match dual cards */}
                         <div className="glass-card-subtle rounded-xl p-4 flex flex-col items-center justify-center">
                           <p className="text-[9px] text-muted-foreground mb-1 tracking-wide uppercase">
                             Chatter gesamt
                           </p>
                           <p className="text-3xl font-bold text-gold-gradient">{chatters.length}</p>
+                        </div>
+
+                        {/* Freie Accounts – simple card */}
+                        <div className="glass-card-subtle rounded-xl p-4 flex flex-col items-center justify-center">
+                          <p className="text-[9px] text-muted-foreground mb-1 tracking-wide uppercase">
+                            Freie Accounts
+                          </p>
+                          <p className="text-3xl font-bold text-gold-gradient">{freeAccounts}</p>
                         </div>
 
                         <DualCard
