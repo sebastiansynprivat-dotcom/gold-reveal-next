@@ -168,7 +168,7 @@ Deno.serve(async (req) => {
           },
           body: JSON.stringify({
             event: "new_revenue",
-            title: `Neuer Verkauf: ${amountStr} 💰`,
+            title: `💰NEUER VERKAUF: ${amountStr}`,
             body: parts.join(" · "),
             url: "/admin",
           }),
