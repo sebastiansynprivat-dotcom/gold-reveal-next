@@ -5203,7 +5203,7 @@ export default function AdminDashboard() {
                                 dot: "bg-emerald-400",
                                 bg: "bg-emerald-500/10",
                                 text: "text-emerald-400",
-                                label: "Angenommen",
+                                label: "Ans Model weitergeleitet",
                                 border: "border-l-emerald-500/50",
                               },
                               in_progress: {
