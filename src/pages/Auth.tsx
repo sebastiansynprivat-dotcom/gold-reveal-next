@@ -368,7 +368,7 @@ const Auth = () => {
                     id="signup-telegram-id"
                     inputMode="numeric"
                     autoComplete="off"
-                    placeholder="Telegram-ID (z. B. 123456789)"
+                    placeholder="Telegram-ID"
                     value={telegramId}
                     onChange={(e) => setTelegramId(e.target.value)}
                     required
