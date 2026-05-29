@@ -4727,20 +4727,32 @@ export default function AdminDashboard() {
                                       Telegram: {chatter.telegram_id || "—"} · Seit{" "}
                                       {new Date(chatter.created_at).toLocaleDateString("de-DE")}
                                     </p>
+                                    {(() => {
+                                      const models = Array.from(
+                                        new Set(
+                                          (chatter.assigned_accounts || [])
+                                            .map((a) => (a.model_id ? modelNames[a.model_id] : null))
+                                            .filter(Boolean) as string[],
+                                        ),
+                                      );
+                                      if (models.length === 0) return null;
+                                      return (
+                                        <p className="text-[11px] text-accent font-semibold truncate mt-0.5 flex items-center gap-1">
+                                          <Sparkles className="h-3 w-3 shrink-0" />
+                                          {models.join(" · ")}
+                                        </p>
+                                      );
+                                    })()}
                                     {(chatter.assigned_accounts?.length || 0) > 0 && (
                                       <div className="flex items-center gap-1 flex-wrap mt-0.5">
-                                        {chatter.assigned_accounts!.map((acc) => {
-                                          const modelLabel = acc.model_id ? modelNames[acc.model_id] : null;
-                                          return (
-                                            <span
-                                              key={acc.id}
-                                              className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-md bg-accent/10 text-accent border border-accent/20"
-                                            >
-                                              <span className="font-semibold">{acc.platform}</span>
-                                              {modelLabel && <span className="text-foreground/80">· {modelLabel}</span>}
-                                            </span>
-                                          );
-                                        })}
+                                        {chatter.assigned_accounts!.map((acc) => (
+                                          <span
+                                            key={acc.id}
+                                            className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-md bg-accent/10 text-accent border border-accent/20"
+                                          >
+                                            <span className="font-semibold">{acc.platform}</span>
+                                          </span>
+                                        ))}
                                       </div>
                                     )}
                                   </div>
