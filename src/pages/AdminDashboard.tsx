@@ -36,6 +36,7 @@ import {
   XCircle,
   Sparkles,
   Loader2,
+  Languages,
   ExternalLink,
   Brain,
   CheckCircle2,
