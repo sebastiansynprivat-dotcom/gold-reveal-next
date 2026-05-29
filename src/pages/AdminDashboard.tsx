@@ -2355,7 +2355,21 @@ export default function AdminDashboard() {
   };
   const loadModelRequests = async () => {
     const { data } = await supabase.from("model_requests").select("*").order("created_at", { ascending: false });
-    if (data) setModelRequests(data);
+    if (data) {
+      const ids = data.map((r: any) => r.id);
+      let msgsByReq: Record<string, any[]> = {};
+      if (ids.length > 0) {
+        const { data: msgs } = await supabase
+          .from("model_request_messages")
+          .select("*")
+          .in("request_id", ids)
+          .order("created_at", { ascending: true });
+        (msgs || []).forEach((m: any) => {
+          (msgsByReq[m.request_id] ||= []).push(m);
+        });
+      }
+      setModelRequests(data.map((r: any) => ({ ...r, _messages: msgsByReq[r.id] || [] })));
+    }
     setModelRequestsLoaded(true);
   };
 
@@ -5332,7 +5346,7 @@ export default function AdminDashboard() {
                                           req.request_type === "individual" && req.price != null
                                             ? `\n\nDer Preis, den der Kunde bereit wäre zu bezahlen: ${req.price}€`
                                             : "";
-                                        const fullText = `Hey, eine neue Anfrage des Chatters an dich – ich leite sie dir einmal eins zu eins weiter 🙋🏼‍♂️:\n\n${cleanDescription}${priceLine}\n\nGib mir bitte Feedback, ob du das umsetzen möchtest oder nicht. Danke dir ☺️`;
+                                        const fullText = `Hey, eine neue Anfrage des Chatters an dich – ich leite sie dir einmal eins zu eins weiter 🙋🏼‍♂️:\n\n${cleanDescription}${priceLine}`;
                                         navigator.clipboard.writeText(fullText);
                                         const encoded = encodeURIComponent(fullText);
                                         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -5357,64 +5371,94 @@ export default function AdminDashboard() {
                                           <span className="text-foreground font-medium">{req.price}€</span>
                                         </p>
                                       )}
-                                      <p className="text-xs text-muted-foreground italic mt-1.5">
-                                        Gib mir bitte Feedback, ob du das umsetzen möchtest oder nicht. Danke dir ☺️
-                                      </p>
                                       <Copy className="h-3 w-3 inline-block ml-1.5 opacity-0 group-hover:opacity-40 transition-opacity" />
                                     </button>
 
-                                    {/* Admin Kommentar */}
-                                    {req.admin_comment && !req._editingComment ? (
-                                      <div className="glass-card-subtle rounded-lg px-3 py-2.5 space-y-1.5">
-                                        <div className="flex items-center justify-between">
-                                          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                                            Kommentar
-                                          </p>
-                                          <button
-                                            onClick={() =>
-                                              setModelRequests((prev) =>
-                                                prev.map((r) =>
-                                                  r.id === req.id
-                                                    ? {
-                                                        ...r,
-                                                        _editingComment: true,
-                                                        _localComment: r.admin_comment ?? "",
-                                                      }
-                                                    : r,
-                                                ),
-                                              )
-                                            }
-                                            className="text-[10px] text-accent hover:text-accent/80 transition-colors font-medium"
-                                          >
-                                            Bearbeiten
-                                          </button>
-                                        </div>
-                                        <p className="text-xs text-foreground leading-relaxed">{req.admin_comment}</p>
-                                      </div>
-                                    ) : (
-                                      <div className="space-y-1.5">
-                                        {!req.admin_comment && !req._editingComment ? (
-                                          <button
-                                            onClick={() =>
-                                              setModelRequests((prev) =>
-                                                prev.map((r) =>
-                                                  r.id === req.id
-                                                    ? { ...r, _editingComment: true, _localComment: "" }
-                                                    : r,
-                                                ),
-                                              )
-                                            }
-                                            className="group flex items-center gap-2 px-3.5 py-2 rounded-lg bg-gradient-to-r from-accent/10 via-accent/5 to-transparent border border-accent/20 hover:border-accent/50 hover:from-accent/20 hover:via-accent/10 text-sm font-medium text-accent hover:text-accent transition-all duration-300 shadow-sm hover:shadow-[0_0_20px_-5px_hsl(var(--accent)/0.4)]"
-                                          >
-                                            <MessageSquare className="h-4 w-4 transition-transform group-hover:scale-110" />
-                                            <span className="tracking-wide">Kommentar hinzufügen</span>
-                                          </button>
-                                        ) : (
-                                          req._editingComment && (
+                                    {/* Kommentarverlauf */}
+                                    {(() => {
+                                      const msgs = (req._messages || []) as Array<{
+                                        id: string;
+                                        sender_role: string;
+                                        body: string;
+                                        created_at: string;
+                                      }>;
+                                      const hasLegacy =
+                                        !!req.admin_comment &&
+                                        !msgs.some((m) => m.body === req.admin_comment);
+                                      const allMsgs = [
+                                        ...(hasLegacy
+                                          ? [
+                                              {
+                                                id: "legacy",
+                                                sender_role: "admin",
+                                                body: req.admin_comment as string,
+                                                created_at: req.created_at,
+                                              },
+                                            ]
+                                          : []),
+                                        ...msgs,
+                                      ];
+                                      return (
+                                        <div className="space-y-2">
+                                          {allMsgs.length > 0 && (
+                                            <div className="space-y-1.5">
+                                              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                                                Verlauf
+                                              </p>
+                                              <div className="space-y-1.5">
+                                                {allMsgs.map((m) => (
+                                                  <div
+                                                    key={m.id}
+                                                    className={`flex ${m.sender_role === "admin" ? "justify-start" : "justify-end"}`}
+                                                  >
+                                                    <div
+                                                      className={`max-w-[85%] rounded-lg px-3 py-2 ${
+                                                        m.sender_role === "admin"
+                                                          ? "bg-accent/10 border border-accent/20"
+                                                          : "bg-secondary/40 border border-border/40"
+                                                      }`}
+                                                    >
+                                                      <p className="text-[10px] text-muted-foreground mb-0.5">
+                                                        {m.sender_role === "admin" ? "Admin" : "Chatter"} ·{" "}
+                                                        {new Date(m.created_at).toLocaleString("de-DE", {
+                                                          day: "2-digit",
+                                                          month: "2-digit",
+                                                          hour: "2-digit",
+                                                          minute: "2-digit",
+                                                        })}
+                                                      </p>
+                                                      <p className="text-xs text-foreground leading-relaxed whitespace-pre-wrap">
+                                                        {m.body}
+                                                      </p>
+                                                    </div>
+                                                  </div>
+                                                ))}
+                                              </div>
+                                            </div>
+                                          )}
+                                          {!req._editingComment ? (
+                                            <button
+                                              onClick={() =>
+                                                setModelRequests((prev) =>
+                                                  prev.map((r) =>
+                                                    r.id === req.id
+                                                      ? { ...r, _editingComment: true, _localComment: "" }
+                                                      : r,
+                                                  ),
+                                                )
+                                              }
+                                              className="group flex items-center gap-2 px-3.5 py-2 rounded-lg bg-gradient-to-r from-accent/10 via-accent/5 to-transparent border border-accent/20 hover:border-accent/50 hover:from-accent/20 hover:via-accent/10 text-sm font-medium text-accent hover:text-accent transition-all duration-300 shadow-sm hover:shadow-[0_0_20px_-5px_hsl(var(--accent)/0.4)]"
+                                            >
+                                              <MessageSquare className="h-4 w-4 transition-transform group-hover:scale-110" />
+                                              <span className="tracking-wide">
+                                                {allMsgs.length > 0 ? "Antwort schreiben" : "Kommentar hinzufügen"}
+                                              </span>
+                                            </button>
+                                          ) : (
                                             <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200">
                                               <div className="flex items-center justify-between">
                                                 <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                                                  {req.admin_comment ? "Kommentar bearbeiten" : "Kommentar"}
+                                                  Neue Nachricht
                                                 </p>
                                                 <button
                                                   onClick={() =>
@@ -5433,12 +5477,14 @@ export default function AdminDashboard() {
                                               </div>
                                               <div className="input-gold-shimmer rounded-lg">
                                                 <Textarea
-                                                  placeholder="Kommentar für den Chatter..."
-                                                  value={req._localComment ?? req.admin_comment ?? ""}
+                                                  placeholder="Nachricht für den Chatter..."
+                                                  value={req._localComment ?? ""}
                                                   onChange={(e) => {
                                                     setModelRequests((prev) =>
                                                       prev.map((r) =>
-                                                        r.id === req.id ? { ...r, _localComment: e.target.value } : r,
+                                                        r.id === req.id
+                                                          ? { ...r, _localComment: e.target.value }
+                                                          : r,
                                                       ),
                                                     );
                                                   }}
@@ -5447,86 +5493,88 @@ export default function AdminDashboard() {
                                                   autoFocus
                                                 />
                                               </div>
-                                              {req._localComment != null &&
-                                                req._localComment !== (req.admin_comment ?? "") && (
-                                                  <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    className="h-7 text-xs"
-                                                    onClick={async () => {
-                                                      const comment = req._localComment ?? "";
-                                                      const shouldSetWaiting = !!comment.trim();
-                                                      const updatePayload: any = { admin_comment: comment || null };
-                                                      if (shouldSetWaiting) updatePayload.status = "waiting_feedback";
-                                                      const { error } = await supabase
-                                                        .from("model_requests")
-                                                        .update(updatePayload)
-                                                        .eq("id", req.id);
-                                                      if (error) {
-                                                        toast.error("Fehler beim Speichern");
-                                                        return;
+                                              {req._localComment?.trim() && (
+                                                <Button
+                                                  size="sm"
+                                                  variant="outline"
+                                                  className="h-7 text-xs"
+                                                  onClick={async () => {
+                                                    const body = (req._localComment ?? "").trim();
+                                                    if (!body || !user) return;
+                                                    const { data: ins, error } = await supabase
+                                                      .from("model_request_messages")
+                                                      .insert({
+                                                        request_id: req.id,
+                                                        user_id: user.id,
+                                                        sender_role: "admin",
+                                                        body,
+                                                      })
+                                                      .select()
+                                                      .single();
+                                                    if (error) {
+                                                      toast.error("Fehler beim Speichern");
+                                                      return;
+                                                    }
+                                                    await supabase
+                                                      .from("model_requests")
+                                                      .update({ status: "waiting_feedback" })
+                                                      .eq("id", req.id);
+                                                    toast.success("Nachricht gesendet – Status: Warten auf Rückmeldung");
+                                                    setModelRequests((prev) =>
+                                                      prev.map((r) =>
+                                                        r.id === req.id
+                                                          ? {
+                                                              ...r,
+                                                              status: "waiting_feedback",
+                                                              _messages: [...(r._messages || []), ins],
+                                                              _editingComment: false,
+                                                              _localComment: undefined,
+                                                            }
+                                                          : r,
+                                                      ),
+                                                    );
+                                                    try {
+                                                      let tplTitle = "Update zu deiner Anfrage 📋";
+                                                      let tplBody =
+                                                        "Es gibt Neuigkeiten zu deiner Content-Anfrage! Schau jetzt nach.";
+                                                      const { data: tpl } = await supabase
+                                                        .from("notification_templates")
+                                                        .select("title, body")
+                                                        .eq("template_key", "request_update")
+                                                        .maybeSingle();
+                                                      if (tpl && tpl.title.trim() && tpl.body.trim()) {
+                                                        tplTitle = tpl.title;
+                                                        tplBody = tpl.body;
                                                       }
-                                                      toast.success(
-                                                        shouldSetWaiting
-                                                          ? "Kommentar gespeichert – Status: Warten auf Rückmeldung"
-                                                          : "Kommentar gespeichert!",
-                                                      );
-                                                      setModelRequests((prev) =>
-                                                        prev.map((r) =>
-                                                          r.id === req.id
-                                                            ? {
-                                                                ...r,
-                                                                admin_comment: comment || null,
-                                                                status: shouldSetWaiting ? "waiting_feedback" : r.status,
-                                                                _localComment: undefined,
-                                                                _editingComment: false,
-                                                              }
-                                                            : r,
-                                                        ),
-                                                      );
-                                                      // Send push notification for request update
-                                                      try {
-                                                        let tplTitle = "Update zu deiner Anfrage 📋";
-                                                        let tplBody =
-                                                          "Es gibt Neuigkeiten zu deiner Content-Anfrage! Schau jetzt nach.";
-                                                        const { data: tpl } = await supabase
-                                                          .from("notification_templates")
-                                                          .select("title, body")
-                                                          .eq("template_key", "request_update")
-                                                          .maybeSingle();
-                                                        if (tpl && tpl.title.trim() && tpl.body.trim()) {
-                                                          tplTitle = tpl.title;
-                                                          tplBody = tpl.body;
-                                                        }
-                                                        const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-                                                        const session = await supabase.auth.getSession();
-                                                        await fetch(
-                                                          `https://${projectId}.supabase.co/functions/v1/send-notification`,
-                                                          {
-                                                            method: "POST",
-                                                            headers: {
-                                                              "Content-Type": "application/json",
-                                                              apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-                                                              Authorization: `Bearer ${session.data.session?.access_token}`,
-                                                            },
-                                                            body: JSON.stringify({
-                                                              title: tplTitle,
-                                                              body: tplBody,
-                                                              target_user_id: req.user_id,
-                                                            }),
+                                                      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+                                                      const session = await supabase.auth.getSession();
+                                                      await fetch(
+                                                        `https://${projectId}.supabase.co/functions/v1/send-notification`,
+                                                        {
+                                                          method: "POST",
+                                                          headers: {
+                                                            "Content-Type": "application/json",
+                                                            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+                                                            Authorization: `Bearer ${session.data.session?.access_token}`,
                                                           },
-                                                        );
-                                                      } catch {}
-                                                    }}
-                                                  >
-                                                    <Save className="h-3 w-3 mr-1" /> Speichern
-                                                  </Button>
-                                                )}
+                                                          body: JSON.stringify({
+                                                            title: tplTitle,
+                                                            body: tplBody,
+                                                            target_user_id: req.user_id,
+                                                          }),
+                                                        },
+                                                      );
+                                                    } catch {}
+                                                  }}
+                                                >
+                                                  <Save className="h-3 w-3 mr-1" /> Senden
+                                                </Button>
+                                              )}
                                             </div>
-                                          )
-                                        )}
-                                      </div>
-                                    )}
+                                          )}
+                                        </div>
+                                      );
+                                    })()}
 
                                     {/* Content Link – only for accepted requests */}
                                     {(req.status === "accepted" || req.status === "in_progress") && (

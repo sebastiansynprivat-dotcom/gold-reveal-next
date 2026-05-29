@@ -1041,6 +1041,41 @@ export type Database = {
         }
         Relationships: []
       }
+      model_request_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          request_id: string
+          sender_role: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          request_id: string
+          sender_role: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          request_id?: string
+          sender_role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "model_request_messages_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "model_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       model_requests: {
         Row: {
           admin_comment: string | null

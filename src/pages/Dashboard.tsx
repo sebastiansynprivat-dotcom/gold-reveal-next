@@ -36,6 +36,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -221,6 +222,7 @@ export default function Dashboard() {
   const [modelInactiveInfoOpen, setModelInactiveInfoOpen] = useState(false);
   const [demoModelInactive, setDemoModelInactive] = useState(false);
   const [myRequests, setMyRequests] = useState<any[]>([]);
+  const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
   const [requestsOpen, setRequestsOpen] = useState(false);
   const [editRequest, setEditRequest] = useState<any>(null);
   const [seenRequestIds, setSeenRequestIds] = useState<Set<string>>(() => {
@@ -240,7 +242,21 @@ export default function Dashboard() {
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(20);
-    if (data) setMyRequests(data);
+    if (data) {
+      const ids = data.map((r: any) => r.id);
+      let msgsByReq: Record<string, any[]> = {};
+      if (ids.length > 0) {
+        const { data: msgs } = await supabase
+          .from("model_request_messages")
+          .select("*")
+          .in("request_id", ids)
+          .order("created_at", { ascending: true });
+        (msgs || []).forEach((m: any) => {
+          (msgsByReq[m.request_id] ||= []).push(m);
+        });
+      }
+      setMyRequests(data.map((r: any) => ({ ...r, _messages: msgsByReq[r.id] || [] })));
+    }
   }, [user]);
 
   useEffect(() => {
@@ -1060,17 +1076,23 @@ export default function Dashboard() {
           {/* Bisherige Anfragen – einklappbar */}
           {myRequests.length > 0 &&
             (() => {
-              // Unseen = requests with status !== pending OR with admin_comment, that user hasn't seen yet
+              // Unseen = requests with status !== pending OR with admin messages, that user hasn't seen yet
+              const latestAdminMsgTs = (r: any) => {
+                const msgs = (r._messages || []).filter((m: any) => m.sender_role === "admin");
+                return msgs.length ? msgs[msgs.length - 1].created_at : "";
+              };
+              const seenKey = (r: any) =>
+                r.id + "_" + r.status + "_" + (r.admin_comment || "") + "_" + latestAdminMsgTs(r);
               const unseenCount = myRequests.filter(
                 (r) =>
-                  (r.status !== "pending" || r.admin_comment) &&
-                  !seenRequestIds.has(r.id + "_" + r.status + "_" + (r.admin_comment || "")),
+                  (r.status !== "pending" || r.admin_comment || latestAdminMsgTs(r)) &&
+                  !seenRequestIds.has(seenKey(r)),
               ).length;
 
               const markAllSeen = () => {
                 const newSeen = new Set(seenRequestIds);
                 myRequests.forEach((r) => {
-                  newSeen.add(r.id + "_" + r.status + "_" + (r.admin_comment || ""));
+                  newSeen.add(seenKey(r));
                 });
                 setSeenRequestIds(newSeen);
                 localStorage.setItem("seen_request_updates", JSON.stringify([...newSeen]));
@@ -1167,12 +1189,112 @@ export default function Dashboard() {
                               </Badge>
                             </div>
                             <p className="text-[10px] text-muted-foreground line-clamp-2">{req.description}</p>
-                            {req.admin_comment && (
-                              <div className="flex items-start gap-1.5 rounded-md bg-accent/10 border border-accent/20 px-2.5 py-2 mt-1">
-                                <MessageSquare className="h-3 w-3 text-accent shrink-0 mt-0.5" />
-                                <p className="text-[11px] text-foreground leading-relaxed">{req.admin_comment}</p>
-                              </div>
-                            )}
+                            {/* Kommentarverlauf */}
+                            {(() => {
+                              const msgs = ((req as any)._messages || []) as Array<{
+                                id: string;
+                                sender_role: string;
+                                body: string;
+                                created_at: string;
+                              }>;
+                              const hasLegacy =
+                                !!req.admin_comment && !msgs.some((m) => m.body === req.admin_comment);
+                              const allMsgs = [
+                                ...(hasLegacy
+                                  ? [
+                                      {
+                                        id: "legacy",
+                                        sender_role: "admin",
+                                        body: req.admin_comment as string,
+                                        created_at: req.created_at,
+                                      },
+                                    ]
+                                  : []),
+                                ...msgs,
+                              ];
+                              const draft = replyDrafts[req.id] ?? "";
+                              const sendReply = async () => {
+                                const body = draft.trim();
+                                if (!body || !user) return;
+                                const { data: ins, error } = await supabase
+                                  .from("model_request_messages")
+                                  .insert({
+                                    request_id: req.id,
+                                    user_id: user.id,
+                                    sender_role: "chatter",
+                                    body,
+                                  })
+                                  .select()
+                                  .single();
+                                if (error) {
+                                  toast.error("Fehler beim Senden");
+                                  return;
+                                }
+                                setMyRequests((prev) =>
+                                  prev.map((r) =>
+                                    r.id === req.id
+                                      ? { ...r, _messages: [...((r as any)._messages || []), ins] }
+                                      : r,
+                                  ),
+                                );
+                                setReplyDrafts((prev) => ({ ...prev, [req.id]: "" }));
+                                toast.success("Antwort gesendet");
+                              };
+                              return (
+                                <div className="space-y-1.5 mt-1">
+                                  {allMsgs.map((m) => (
+                                    <div
+                                      key={m.id}
+                                      className={`flex ${m.sender_role === "admin" ? "justify-start" : "justify-end"}`}
+                                    >
+                                      <div
+                                        className={`max-w-[85%] rounded-md px-2.5 py-1.5 ${
+                                          m.sender_role === "admin"
+                                            ? "bg-accent/10 border border-accent/20"
+                                            : "bg-secondary/40 border border-border/40"
+                                        }`}
+                                      >
+                                        <p className="text-[9px] text-muted-foreground mb-0.5">
+                                          {m.sender_role === "admin" ? "Admin" : "Du"} ·{" "}
+                                          {new Date(m.created_at).toLocaleString("de-DE", {
+                                            day: "2-digit",
+                                            month: "2-digit",
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                          })}
+                                        </p>
+                                        <p className="text-[11px] text-foreground leading-relaxed whitespace-pre-wrap">
+                                          {m.body}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  ))}
+                                  {allMsgs.length > 0 && req.status !== "rejected" && (
+                                    <div className="flex gap-1.5 pt-1">
+                                      <Textarea
+                                        placeholder="Antwort an Admin..."
+                                        value={draft}
+                                        onChange={(e) =>
+                                          setReplyDrafts((prev) => ({ ...prev, [req.id]: e.target.value }))
+                                        }
+                                        rows={1}
+                                        className="text-[11px] bg-secondary/30 border-border/40 resize-none min-h-[32px] py-1.5"
+                                      />
+                                      {draft.trim() && (
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          className="h-8 px-2 text-[10px] shrink-0"
+                                          onClick={sendReply}
+                                        >
+                                          Senden
+                                        </Button>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })()}
                             {/* Content Link with Tutorial Dialog */}
                             {(req as any).content_link &&
                               (req.status === "accepted" || req.status === "in_progress") && (
