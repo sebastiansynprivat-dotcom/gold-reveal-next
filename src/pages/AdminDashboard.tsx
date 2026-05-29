@@ -7799,6 +7799,7 @@ export default function AdminDashboard() {
                             className="text-[9px] bg-accent/10 text-accent border border-accent/20 font-semibold"
                           >
                             {modelNames[acc.model_id]}
+                            <span className="text-accent/50 font-normal ml-1">· {acc.platform}</span>
                           </Badge>
                         </div>
                       )}
