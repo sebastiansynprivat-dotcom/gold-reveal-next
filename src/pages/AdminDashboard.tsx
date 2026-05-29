@@ -5190,10 +5190,10 @@ export default function AdminDashboard() {
                                         <Badge variant="outline" className="text-[10px] h-4 px-1.5 border-border/50">
                                           {req.request_type === "individual" ? "Individuell" : "Allgemein"}
                                         </Badge>
-                                        {(req as any).platform && (() => {
-                                          const pKey = String((req as any).platform).toLowerCase();
+                                        {reqPlatform && (() => {
+                                          const pKey = reqPlatform.toLowerCase();
                                           const pStyle = PLATFORM_STYLES_GLOBAL[pKey];
-                                          const pLabel = PLATFORM_LABELS.find((l) => l.toLowerCase() === pKey) || (req as any).platform;
+                                          const pLabel = PLATFORM_LABELS.find((l) => l.toLowerCase() === pKey) || reqPlatform;
                                           return (
                                             <span
                                               className={cn(
