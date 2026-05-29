@@ -123,15 +123,16 @@ Deno.serve(async (req) => {
       }
 
       // Build chatter lookup: platform+model -> chatter group_name
+      // Match accounts via linked model.name OR folder_name/subfolder_name (case-insensitive platform)
       const chatterMap = new Map<string, string>();
       if (pendingSales.length > 0) {
         const uniquePairs = new Set(pendingSales.map((s) => `${s.platform}|${s.model.toLowerCase()}`));
-        const platforms = Array.from(new Set(pendingSales.map((s) => s.platform)));
+
         const { data: accs } = await supabase
           .from("accounts")
-          .select("platform, folder_name, subfolder_name, assigned_to")
-          .in("platform", platforms)
+          .select("platform, folder_name, subfolder_name, assigned_to, model_id, models:model_id(name)")
           .not("assigned_to", "is", null);
+
         const userIds = Array.from(new Set((accs ?? []).map((a: any) => a.assigned_to).filter(Boolean)));
         const profileMap = new Map<string, string>();
         if (userIds.length > 0) {
@@ -141,13 +142,23 @@ Deno.serve(async (req) => {
             .in("user_id", userIds);
           for (const p of profs ?? []) profileMap.set(p.user_id, p.group_name);
         }
+
         for (const a of accs ?? []) {
-          const name = (a.subfolder_name || a.folder_name || "").toLowerCase().trim();
-          if (!name) continue;
-          const key = `${a.platform}|${name}`;
-          if (uniquePairs.has(key) && a.assigned_to) {
-            const ch = profileMap.get(a.assigned_to);
-            if (ch) chatterMap.set(key, ch);
+          const accPlatform = (a.platform || "").toLowerCase().trim();
+          const candidates = [
+            (a.models as any)?.name,
+            a.subfolder_name,
+            a.folder_name,
+          ]
+            .filter(Boolean)
+            .map((n: string) => String(n).toLowerCase().trim());
+
+          for (const name of candidates) {
+            const key = `${accPlatform}|${name}`;
+            if (uniquePairs.has(key) && a.assigned_to) {
+              const ch = profileMap.get(a.assigned_to);
+              if (ch && !chatterMap.has(key)) chatterMap.set(key, ch);
+            }
           }
         }
       }
