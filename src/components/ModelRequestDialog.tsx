@@ -73,6 +73,7 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
     setCustomerName("");
     
     setRequestType("general");
+    setPlatform(null);
     setPrice("");
     setDescription("");
   };
