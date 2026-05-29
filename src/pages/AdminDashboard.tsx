@@ -5371,9 +5371,6 @@ export default function AdminDashboard() {
                                           <span className="text-foreground font-medium">{req.price}€</span>
                                         </p>
                                       )}
-                                      <p className="text-xs text-muted-foreground italic mt-1.5">
-                                        Gib mir bitte Feedback, ob du das umsetzen möchtest oder nicht. Danke dir ☺️
-                                      </p>
                                       <Copy className="h-3 w-3 inline-block ml-1.5 opacity-0 group-hover:opacity-40 transition-opacity" />
                                     </button>
 
