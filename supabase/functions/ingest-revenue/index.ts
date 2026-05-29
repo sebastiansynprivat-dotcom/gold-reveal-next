@@ -97,6 +97,9 @@ Deno.serve(async (req) => {
     try {
       const url = `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-admin-push`;
       const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+      // First pass: collect new sales
+      const pendingSales: Array<{ platform: string; model: string; amount: number }> = [];
       for (const r of validated) {
         const newData = (r.data ?? {}) as Record<string, number[]>;
         const oldData = (existingMap.get(`${r.date}|${r.platform}`) ?? {}) as Record<string, number[]>;
@@ -106,33 +109,70 @@ Deno.serve(async (req) => {
           const sales = Array.isArray(salesRaw) ? salesRaw.map(Number).filter((n) => Number.isFinite(n)) : [];
           const oldSales = Array.isArray(oldData[model]) ? oldData[model].map(Number).filter((n) => Number.isFinite(n)) : [];
 
-          // Multiset diff: count occurrences in old, subtract from new
           const counts = new Map<number, number>();
           for (const v of oldSales) counts.set(v, (counts.get(v) ?? 0) + 1);
-          const newSales: number[] = [];
           for (const v of sales) {
             const c = counts.get(v) ?? 0;
             if (c > 0) counts.set(v, c - 1);
-            else newSales.push(v);
-          }
-
-          for (const amount of newSales) {
-            newSalesAll.push({ platform: r.platform, model, amount });
-            fetch(url, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${serviceKey}`,
-              },
-              body: JSON.stringify({
-                event: "new_revenue",
-                title: "Neuer Verkauf 💰",
-                body: `${r.platform === "maloum" ? "🟠" : r.platform === "brezzels" ? "🔵" : r.platform === "4based" ? "🔴" : "⚪"} ${r.platform.toUpperCase()} · ${model} · ${amount.toLocaleString("de-DE", { style: "currency", currency: "EUR" })}`,
-                url: "/admin",
-              }),
-            }).catch(() => {});
+            else {
+              pendingSales.push({ platform: r.platform, model, amount: v });
+              newSalesAll.push({ platform: r.platform, model, amount: v });
+            }
           }
         }
+      }
+
+      // Build chatter lookup: platform+model -> chatter group_name
+      const chatterMap = new Map<string, string>();
+      if (pendingSales.length > 0) {
+        const uniquePairs = new Set(pendingSales.map((s) => `${s.platform}|${s.model.toLowerCase()}`));
+        const platforms = Array.from(new Set(pendingSales.map((s) => s.platform)));
+        const { data: accs } = await supabase
+          .from("accounts")
+          .select("platform, folder_name, subfolder_name, assigned_to")
+          .in("platform", platforms)
+          .not("assigned_to", "is", null);
+        const userIds = Array.from(new Set((accs ?? []).map((a: any) => a.assigned_to).filter(Boolean)));
+        const profileMap = new Map<string, string>();
+        if (userIds.length > 0) {
+          const { data: profs } = await supabase
+            .from("profiles")
+            .select("user_id, group_name")
+            .in("user_id", userIds);
+          for (const p of profs ?? []) profileMap.set(p.user_id, p.group_name);
+        }
+        for (const a of accs ?? []) {
+          const name = (a.subfolder_name || a.folder_name || "").toLowerCase().trim();
+          if (!name) continue;
+          const key = `${a.platform}|${name}`;
+          if (uniquePairs.has(key) && a.assigned_to) {
+            const ch = profileMap.get(a.assigned_to);
+            if (ch) chatterMap.set(key, ch);
+          }
+        }
+      }
+
+      const platformLabel = (p: string) =>
+        p === "maloum" ? "🟠 Maloum" : p === "brezzels" ? "🔵 Brezzels" : p === "4based" ? "🔴 4based" : "⚪ New";
+
+      for (const s of pendingSales) {
+        const chatter = chatterMap.get(`${s.platform}|${s.model.toLowerCase()}`);
+        const amountStr = s.amount.toLocaleString("de-DE", { style: "currency", currency: "EUR" });
+        const parts = [platformLabel(s.platform), s.model];
+        if (chatter) parts.push(chatter);
+        fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${serviceKey}`,
+          },
+          body: JSON.stringify({
+            event: "new_revenue",
+            title: `Neuer Verkauf: ${amountStr} 💰`,
+            body: parts.join(" · "),
+            url: "/admin",
+          }),
+        }).catch(() => {});
       }
     } catch (_) { /* ignore */ }
 
