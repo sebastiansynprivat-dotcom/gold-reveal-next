@@ -852,13 +852,7 @@ export default function AdminDashboard() {
   const [contentLinkFilter, setContentLinkFilter] = useState<"all" | "with_link" | "without_link">("all");
   const [requestSearchQuery, setRequestSearchQuery] = useState("");
   const [unreadOnly, setUnreadOnly] = useState(false);
-  const [seenRequestMsgs, setSeenRequestMsgs] = useState<Record<string, string>>(() => {
-    try {
-      const uid = (typeof window !== "undefined" && (window as any).__lov_uid) || "";
-      const raw = typeof window !== "undefined" ? localStorage.getItem(`admin_seen_request_msgs_${uid}`) : null;
-      return raw ? JSON.parse(raw) : {};
-    } catch { return {}; }
-  });
+  const [seenRequestMsgs, setSeenRequestMsgs] = useState<Record<string, string>>({});
   const [notifTitle, setNotifTitle] = useState("");
   const [notifBody, setNotifBody] = useState("");
   const [notifSending, setNotifSending] = useState(false);
