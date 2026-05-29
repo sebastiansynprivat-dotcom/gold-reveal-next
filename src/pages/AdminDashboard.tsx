@@ -4535,6 +4535,16 @@ export default function AdminDashboard() {
                         ))}
                     </div>
 
+                    <div className="flex justify-end">
+                      <button
+                        onClick={() => setPreChattersOpen(true)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium bg-accent/10 text-accent hover:bg-accent/20 transition-colors"
+                      >
+                        <UserPlus className="h-3.5 w-3.5" />
+                        Chatter vorab anlegen
+                      </button>
+                    </div>
+
 
                     {/* Chatter Filters */}
                     <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
