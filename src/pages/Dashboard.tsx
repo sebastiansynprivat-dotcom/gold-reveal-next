@@ -1240,6 +1240,16 @@ export default function Dashboard() {
                                   ),
                                 );
                                 setReplyDrafts((prev) => ({ ...prev, [req.id]: "" }));
+                                // If request was archived/rejected, reopen it so admins see it again
+                                if (req.status === "archived" || req.status === "rejected") {
+                                  await supabase
+                                    .from("model_requests")
+                                    .update({ status: "pending" })
+                                    .eq("id", req.id);
+                                  setMyRequests((prev) =>
+                                    prev.map((r) => (r.id === req.id ? { ...r, status: "pending" } : r)),
+                                  );
+                                }
                                 // Fire-and-forget admin push (Vanessa & Max)
                                 supabase.functions.invoke("send-admin-push", {
                                   body: {
