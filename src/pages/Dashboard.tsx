@@ -1718,22 +1718,22 @@ function DashboardBillingInfo({ onNavigate, groupName }: { onNavigate: () => voi
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="glass-card-subtle rounded-xl p-4 cursor-pointer group hover:gold-border-glow transition-all"
+            className="glass-card-subtle rounded-xl p-5 cursor-pointer group hover:gold-border-glow transition-all"
           >
-            <div className="flex items-center gap-3">
-              <div className="h-9 w-9 rounded-lg bg-accent/10 flex items-center justify-center shrink-0 group-hover:bg-accent/20 transition-colors">
-                <Gift className="h-4 w-4 text-accent" />
+            <div className="flex items-center gap-4">
+              <div className="h-11 w-11 rounded-xl bg-accent/10 flex items-center justify-center shrink-0 group-hover:bg-accent/20 transition-colors">
+                <Gift className="h-5 w-5 text-accent" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-foreground">Empfehle deine Freunde</p>
-                <p className="text-[10px] text-muted-foreground">
+                <p className="text-sm font-semibold text-foreground">Empfehle deine Freunde</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
                   Verdiene 1% von dem, was sie verdienen –{" "}
-                  <span className="inline-flex items-center bg-accent/20 text-accent border border-accent/40 rounded-md px-2 py-0.5 text-[11px] font-extrabold tracking-wider uppercase ml-0.5">
+                  <span className="inline-flex items-center bg-accent/20 text-accent border border-accent/40 rounded-md px-2 py-0.5 text-[12px] font-extrabold tracking-wider uppercase ml-0.5">
                     Lifetime
                   </span>
                 </p>
               </div>
-              <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+              <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
             </div>
           </motion.div>
         </DialogTrigger>
