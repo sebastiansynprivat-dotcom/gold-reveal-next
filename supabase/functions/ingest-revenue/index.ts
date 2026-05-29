@@ -258,10 +258,10 @@ Deno.serve(async (req) => {
 
           if (bigOne) {
             title = "💰 BIG ONE!";
-            body = `${platformIcon(platform)} ${platform.toUpperCase()} · ${model} · ${bigOne.toLocaleString("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 })} auf einen Schlag 🚀`;
+            body = `${platformIcon(platform)} ${platform.toUpperCase()} · ${model} · ${bigOne.toLocaleString("de-DE", { maximumFractionDigits: 0 })}€ auf einen Schlag 🚀`;
           } else if (recentCount >= BURST_THRESHOLD) {
             title = "🔥 HOT STREAK!";
-            body = `${platformIcon(platform)} ${platform.toUpperCase()} · ${model} · ${recentCount} Sales in ${oldestAgeMin} Min · +${recentSum.toLocaleString("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 })} ⚡`;
+            body = `${platformIcon(platform)} ${platform.toUpperCase()} · ${model} · ${recentCount} Sales in ${oldestAgeMin} Min · +${recentSum.toLocaleString("de-DE", { maximumFractionDigits: 0 })}€ ⚡`;
           } else {
             continue;
           }
