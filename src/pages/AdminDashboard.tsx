@@ -5194,16 +5194,21 @@ export default function AdminDashboard() {
                                           const pKey = reqPlatform.toLowerCase();
                                           const pStyle = PLATFORM_STYLES_GLOBAL[pKey];
                                           const pLabel = PLATFORM_LABELS.find((l) => l.toLowerCase() === pKey) || reqPlatform;
+                                          const isMaloum = pKey === "maloum";
                                           return (
                                             <span
                                               className={cn(
                                                 "flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide px-1.5 h-4 rounded border",
-                                                pStyle?.bg ?? "bg-muted/20",
-                                                pStyle?.text ?? "text-foreground",
-                                                pStyle?.border ?? "border-border/50",
+                                                isMaloum
+                                                  ? "bg-white/10 text-white border-white/30"
+                                                  : [
+                                                      pStyle?.bg ?? "bg-muted/20",
+                                                      pStyle?.text ?? "text-foreground",
+                                                      pStyle?.border ?? "border-border/50",
+                                                    ],
                                               )}
                                             >
-                                              <span className={cn("h-1.5 w-1.5 rounded-full", pStyle?.dot ?? "bg-foreground")} />
+                                              <span className={cn("h-1.5 w-1.5 rounded-full", isMaloum ? "bg-white" : (pStyle?.dot ?? "bg-foreground"))} />
                                               {pLabel}
                                             </span>
                                           );
