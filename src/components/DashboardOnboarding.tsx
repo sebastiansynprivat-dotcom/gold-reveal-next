@@ -27,8 +27,8 @@ const TOUR_STEPS: TourStep[] = [
   },
   {
     selector: '[data-section="accounts"]',
-    title: "Dein Account",
-    description: "Hier findest du deine Zugangsdaten (E-Mail, Passwort, Domain) und den Google Drive Zugang.",
+    title: "Anfragen ans Model stellen",
+    description: "Hier kannst du jederzeit Anfragen an das Model stellen – z. B. für neuen Content, individuelle Wünsche oder Rückfragen.",
     icon: Users,
   },
   {
@@ -58,7 +58,7 @@ const TOUR_STEPS: TourStep[] = [
   {
     selector: '[data-section="accounts"]',
     title: "Dein nächster Schritt: Log dich ein!",
-    description: "Das hier ist DEIN Account – nur für dich. Nimm dir jetzt die Zugangsdaten, logg dich ein und leg direkt los. Du kannst sofort starten.",
+    description: "Logg dich jetzt direkt mit den Zugangsdaten ein, die du in der Gruppe bekommen hast – damit kannst du sofort starten.",
     icon: Users,
   },
 ];
