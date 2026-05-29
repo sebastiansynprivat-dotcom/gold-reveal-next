@@ -5081,7 +5081,7 @@ export default function AdminDashboard() {
                     {(
                       [
                         { key: "pending", label: "Offen", icon: Clock, colorClass: "text-yellow-400" },
-                        { key: "accepted", label: "Angenommen", icon: CheckCircle2, colorClass: "text-emerald-400" },
+                        { key: "accepted", label: "Ans Model weitergeleitet", icon: CheckCircle2, colorClass: "text-emerald-400" },
                         { key: "in_progress", label: "In Arbeit", icon: Loader2, colorClass: "text-blue-400" },
                         { key: "waiting_feedback", label: "Warten auf Rückmeldung", icon: MessageSquare, colorClass: "text-purple-400" },
                         { key: "rejected", label: "Abgelehnt", icon: XCircle, colorClass: "text-destructive" },
