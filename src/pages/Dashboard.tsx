@@ -24,7 +24,6 @@ import {
   Eye,
   EyeOff,
   Check,
-  Trophy,
 } from "lucide-react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import {
