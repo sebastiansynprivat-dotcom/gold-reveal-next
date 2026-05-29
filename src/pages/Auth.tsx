@@ -32,6 +32,7 @@ const Auth = () => {
   const [showGroupHelp, setShowGroupHelp] = useState(false);
   const [showTelegramHelp, setShowTelegramHelp] = useState(false);
   const [showGroupConfirm, setShowGroupConfirm] = useState(false);
+  const [showTelegramConfirm, setShowTelegramConfirm] = useState(false);
   const pendingSubmitRef = useRef<React.FormEvent | null>(null);
 
   // Mouse-following particles
@@ -205,8 +206,13 @@ const Auth = () => {
     setSubmitting(false);
   };
 
-  const handleConfirmSignUp = async () => {
+  const handleConfirmGroup = () => {
     setShowGroupConfirm(false);
+    setShowTelegramConfirm(true);
+  };
+
+  const handleConfirmSignUp = async () => {
+    setShowTelegramConfirm(false);
     setSubmitting(true);
     const { error } = await signUp(email, password, { group_name: groupName.trim() });
     if (error) {
@@ -246,6 +252,47 @@ const Auth = () => {
               <button
                 type="button"
                 onClick={() => setShowGroupConfirm(false)}
+                className="flex-1 px-4 py-2.5 rounded-xl border border-border text-muted-foreground text-sm font-medium hover:bg-muted transition-colors"
+              >
+                Nein, ändern
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmGroup}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:scale-[1.02] transition-all"
+              >
+                Ja, stimmt!
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* Telegram-ID confirmation popup */}
+      {showTelegramConfirm && (
+        <motion.div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm px-4"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          onClick={() => setShowTelegramConfirm(false)}
+        >
+          <motion.div
+            className="w-full max-w-sm rounded-2xl border border-border bg-card p-6 space-y-4"
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-bold text-foreground text-center">Ist das deine Telegram-ID?</h3>
+            <div className="text-center py-3 px-4 rounded-xl bg-muted border border-border">
+              <span className="text-foreground font-semibold text-base font-mono">{telegramId.replace(/\s+/g, "")}</span>
+            </div>
+            <p className="text-muted-foreground text-xs text-center leading-relaxed">
+              Bitte <span className="text-foreground font-medium">double-checke</span> deine Telegram-ID. Du kannst nur abgerechnet werden, wenn die ID korrekt ist – sonst können wir dich nicht zuordnen.
+            </p>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowTelegramConfirm(false)}
                 className="flex-1 px-4 py-2.5 rounded-xl border border-border text-muted-foreground text-sm font-medium hover:bg-muted transition-colors"
               >
                 Nein, ändern
@@ -367,10 +414,25 @@ const Auth = () => {
                     name="telegram_id"
                     id="signup-telegram-id"
                     inputMode="numeric"
+                    pattern="[0-9]*"
                     autoComplete="off"
                     placeholder="Telegram-ID"
                     value={telegramId}
-                    onChange={(e) => setTelegramId(e.target.value)}
+                    onChange={(e) => setTelegramId(e.target.value.replace(/\D/g, ""))}
+                    onPaste={(e) => {
+                      e.preventDefault();
+                      const text = e.clipboardData.getData("text").replace(/\D/g, "");
+                      setTelegramId(text);
+                    }}
+                    onKeyDown={(e) => {
+                      if (
+                        e.key.length === 1 &&
+                        !/[0-9]/.test(e.key) &&
+                        !e.ctrlKey && !e.metaKey
+                      ) {
+                        e.preventDefault();
+                      }
+                    }}
                     required
                     className={inputClass}
                   />
