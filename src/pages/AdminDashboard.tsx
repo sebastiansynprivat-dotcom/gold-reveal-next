@@ -5297,6 +5297,24 @@ export default function AdminDashboard() {
                         </p>
                        </div>
                       <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setUnreadOnly((v) => !v)}
+                          className={cn(
+                            "relative h-8 px-2.5 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-all border flex items-center gap-1.5 whitespace-nowrap",
+                            unreadOnly
+                              ? "bg-red-500/20 text-red-300 border-red-500/40 shadow-[0_0_12px_-3px_hsl(0_84%_60%/0.4)]"
+                              : "bg-secondary/50 text-muted-foreground border-border/50 hover:text-foreground",
+                          )}
+                          title="Anfragen mit neuen Chatter-Kommentaren anzeigen"
+                        >
+                          <span className={cn("h-1.5 w-1.5 rounded-full", unreadCount > 0 ? "bg-red-400 animate-pulse" : "bg-muted-foreground/40")} />
+                          Neue Kommentare
+                          {unreadCount > 0 && (
+                            <span className="ml-0.5 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-bold">
+                              {unreadCount}
+                            </span>
+                          )}
+                        </button>
                         <div className="relative">
                           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                           <Input
