@@ -143,8 +143,8 @@ export default function AdminPushSettings() {
             <p className="text-muted-foreground leading-relaxed">
               Damit Pushes auch ankommen wenn die App geschlossen ist, installiere sie
               {isIOS
-                ? " auf iPhone: Safari → Teilen-Symbol → „Zum Home-Bildschirm". Danach App öffnen und oben aktivieren."
-                : " (Android: Browser-Menü → „App installieren" oder „Zum Startbildschirm hinzufügen"). Auf Desktop kannst du sie aus dem Chrome-Menü installieren."}
+                ? ' auf iPhone: Safari → Teilen-Symbol → „Zum Home-Bildschirm". Danach App öffnen und oben aktivieren.'
+                : ' (Android: Browser-Menü → „App installieren" oder „Zum Startbildschirm hinzufügen"). Auf Desktop kannst du sie aus dem Chrome-Menü installieren.'}
             </p>
           </div>
         </div>
