@@ -55,8 +55,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       password,
       options: metadata ? { data: metadata } : undefined,
     });
+    if (!error) {
+      // Force the homescreen tutorial to (re)appear on the first dashboard visit
+      try {
+        localStorage.removeItem("homescreen_tutorial_seen");
+        localStorage.setItem("force_homescreen_tutorial", "1");
+      } catch {}
+    }
     return { error };
   };
+
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
