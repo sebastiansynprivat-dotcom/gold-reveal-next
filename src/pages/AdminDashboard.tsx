@@ -2128,7 +2128,7 @@ export default function AdminDashboard() {
     const { data, error } = await supabase
       .from("profiles")
       .select(
-        "user_id, group_name, telegram_id, created_at, account_email, account_password, account_domain, pwa_installed",
+        "user_id, group_name, telegram_id, created_at, account_email, account_password, account_domain, pwa_installed, language",
       )
       .order("created_at", { ascending: false });
     if (error) {
