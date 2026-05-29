@@ -175,7 +175,8 @@ Deno.serve(async (req) => {
       for (const s of pendingSales) {
         const chatter = chatterMap.get(`${s.platform}|${s.model.toLowerCase()}`);
         const amountStr = s.amount.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "€";
-        const titlePrefix = chatter ? `💰 ${chatter}` : "💰 SheX";
+        const parts = [platformLabel(s.platform), s.model];
+        if (chatter) parts.push(chatter);
         fetch(url, {
           method: "POST",
           headers: {
@@ -184,8 +185,8 @@ Deno.serve(async (req) => {
           },
           body: JSON.stringify({
             event: "new_revenue",
-            title: `${titlePrefix} · NEUER ${amountStr} VERKAUF!`,
-            body: `${platformLabel(s.platform)} · ${s.model}`,
+            title: `💰NEUER ${amountStr} VERKAUF!`,
+            body: parts.join(" · "),
             url: "/admin",
           }),
         }).catch(() => {});
