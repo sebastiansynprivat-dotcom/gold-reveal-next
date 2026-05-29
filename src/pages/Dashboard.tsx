@@ -257,8 +257,11 @@ export default function Dashboard() {
     const isStandalone =
       window.matchMedia("(display-mode: standalone)").matches || (window.navigator as any).standalone === true;
     const seen = localStorage.getItem("homescreen_tutorial_seen");
+    const forced = localStorage.getItem("force_homescreen_tutorial") === "1";
+    if (forced) return isStandalone;
     return isStandalone || !!seen;
   });
+
   const [isPwaInstalled, setIsPwaInstalled] = useState(() => {
     return window.matchMedia("(display-mode: standalone)").matches || (window.navigator as any).standalone === true;
   });
