@@ -136,15 +136,28 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
     <Dialog open={open} onOpenChange={handleClose}>
       {!editData && (
         <DialogTrigger asChild>
-          <button className="flex items-center gap-3 w-full px-4 py-4 lg:px-6 lg:py-5 hover:bg-secondary/30 active:scale-[0.99] transition-all cursor-pointer group">
-            <div className="h-10 w-10 rounded-full bg-accent/20 flex items-center justify-center shrink-0">
+          <motion.button
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
+            className="flex items-center gap-4 w-full px-5 py-5 rounded-xl bg-gradient-to-r from-accent/10 via-accent/5 to-transparent border border-accent/30 hover:border-accent/60 hover:shadow-[0_0_24px_hsl(43_56%_52%/0.15)] transition-all cursor-pointer group"
+          >
+            <motion.div
+              animate={{ scale: [1, 1.12, 1] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              className="h-12 w-12 rounded-full bg-accent/20 flex items-center justify-center shrink-0 ring-2 ring-accent/30 group-hover:ring-accent/50 transition-all"
+            >
               <Send className="h-5 w-5 text-accent" />
+            </motion.div>
+            <div className="text-left flex-1 min-w-0">
+              <p className="text-sm font-bold text-foreground">Anfrage an das Model stellen</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Individuelle oder allgemeine Anfrage an dein Model senden
+              </p>
             </div>
-            <div className="text-left">
-              <p className="text-sm font-semibold text-foreground">Anfrage an das Model stellen</p>
-              <p className="text-xs text-muted-foreground">Individuelle oder allgemeine Anfrage senden</p>
+            <div className="h-8 w-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0 group-hover:bg-accent/20 transition-colors">
+              <ChevronRight className="h-4 w-4 text-accent group-hover:translate-x-0.5 transition-transform" />
             </div>
-          </button>
+          </motion.button>
         </DialogTrigger>
       )}
       <DialogContent className="max-w-md bg-background border-border">
