@@ -2417,7 +2417,7 @@ export default function AdminDashboard() {
         data.map((r: any) => ({
           ...r,
           _messages: msgsByReq[r.id] || [],
-          _model: modelByName.get(normalizeModelKey(r.model_name)) || null,
+          _model: findModel(r.model_name),
         })),
       );
     }
