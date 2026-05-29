@@ -3052,7 +3052,7 @@ export default function AdminDashboard() {
     { key: "chatter" as const, label: "Chatter", icon: Users, onClick: () => setActiveTab("chatter") },
     {
       key: "anfragen" as const,
-      label: "📨 MODEL ANFRAGEN",
+      label: "Anfragen",
       icon: Send,
       onClick: () => {
         setActiveTab("anfragen");
