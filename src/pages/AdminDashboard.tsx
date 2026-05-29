@@ -4670,7 +4670,7 @@ export default function AdminDashboard() {
                                   </div>
                                   <div className="flex-1 min-w-0">
                                     <p
-                                      className="text-sm font-medium text-foreground truncate cursor-copy active:scale-95 transition-transform"
+                                      className="text-sm font-medium text-foreground truncate cursor-copy active:scale-95 transition-transform flex items-center gap-1.5"
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         navigator.clipboard.writeText(chatter.group_name || "");
@@ -4679,10 +4679,14 @@ export default function AdminDashboard() {
                                       title="Klicken zum Kopieren"
                                     >
                                       {chatter.group_name || "Kein Gruppenname"}
+                                      {chatter.language === "en" ? (
+                                        <span className="text-[13px] leading-none">🇬🇧</span>
+                                      ) : (
+                                        <span className="text-[13px] leading-none">🇩🇪</span>
+                                      )}
                                     </p>
                                     <p className="text-[10px] text-muted-foreground">
-                                      Telegram: {chatter.telegram_id || "—"} ·{" "}
-                                      {chatter.language === "en" ? "🇬🇧 EN" : "🇩🇪 DE"} · Seit{" "}
+                                      Telegram: {chatter.telegram_id || "—"} · Seit{" "}
                                       {new Date(chatter.created_at).toLocaleDateString("de-DE")}
                                     </p>
                                     {(chatter.assigned_accounts?.length || 0) > 0 && (
