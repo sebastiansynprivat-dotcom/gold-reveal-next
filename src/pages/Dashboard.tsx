@@ -1615,7 +1615,7 @@ function BonusModelSection({
       </p>
       <p className="text-[10px] lg:text-xs text-muted-foreground">
         7 Tage × 30€ = <strong className="text-foreground">Account Upgrade</strong> · 30 Tage × 100€ ={" "}
-        <strong className="text-foreground">Diamond Stufe 💎</strong>
+        <strong className="text-foreground">Elite Stufe 💎</strong>
       </p>
     </motion.section>
   );
