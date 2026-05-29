@@ -5185,6 +5185,24 @@ export default function AdminDashboard() {
                                         <Badge variant="outline" className="text-[10px] h-4 px-1.5 border-border/50">
                                           {req.request_type === "individual" ? "Individuell" : "Allgemein"}
                                         </Badge>
+                                        {(req as any).platform && (() => {
+                                          const pKey = String((req as any).platform).toLowerCase();
+                                          const pStyle = PLATFORM_STYLES_GLOBAL[pKey];
+                                          const pLabel = PLATFORM_LABELS.find((l) => l.toLowerCase() === pKey) || (req as any).platform;
+                                          return (
+                                            <span
+                                              className={cn(
+                                                "flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide px-1.5 h-4 rounded border",
+                                                pStyle?.bg ?? "bg-muted/20",
+                                                pStyle?.text ?? "text-foreground",
+                                                pStyle?.border ?? "border-border/50",
+                                              )}
+                                            >
+                                              <span className={cn("h-1.5 w-1.5 rounded-full", pStyle?.dot ?? "bg-foreground")} />
+                                              {pLabel}
+                                            </span>
+                                          );
+                                        })()}
                                         {req.request_type === "individual" && req.price != null && (
                                           <span className="text-[10px] text-accent font-bold">{req.price}€</span>
                                         )}
