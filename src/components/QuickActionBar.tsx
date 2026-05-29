@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Zap, FileText, HelpCircle, MessageSquare, BookOpen, Eye } from "lucide-react";
+import { FileText, HelpCircle, MessageSquare, BookOpen, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface QuickActionBarProps {
@@ -14,7 +14,6 @@ const allActions = [
   { icon: MessageSquare, label: "Anfragen", action: "account" },
   { icon: BookOpen, label: "Inspiration", action: "inspiration" },
   { icon: FileText, label: "Auszahlung", action: "invoice" },
-  { icon: Zap, label: "Bestenliste", action: "leaderboard" },
   { icon: HelpCircle, label: "Ich habe eine Frage", action: "question" },
   { icon: Eye, label: "Tour", action: "tour" },
 ] as const;
@@ -35,9 +34,6 @@ export default function QuickActionBar({ onAskQuestion, onFocusRevenue, onScroll
         break;
       case "invoice":
         navigate("/rechnung");
-        break;
-      case "leaderboard":
-        navigate("/leaderboard");
         break;
       case "question":
         onAskQuestion();
