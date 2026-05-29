@@ -240,7 +240,21 @@ export default function Dashboard() {
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
       .limit(20);
-    if (data) setMyRequests(data);
+    if (data) {
+      const ids = data.map((r: any) => r.id);
+      let msgsByReq: Record<string, any[]> = {};
+      if (ids.length > 0) {
+        const { data: msgs } = await supabase
+          .from("model_request_messages")
+          .select("*")
+          .in("request_id", ids)
+          .order("created_at", { ascending: true });
+        (msgs || []).forEach((m: any) => {
+          (msgsByReq[m.request_id] ||= []).push(m);
+        });
+      }
+      setMyRequests(data.map((r: any) => ({ ...r, _messages: msgsByReq[r.id] || [] })));
+    }
   }, [user]);
 
   useEffect(() => {
