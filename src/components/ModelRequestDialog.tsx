@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { Send, Pencil } from "lucide-react";
+import { Send, Pencil, ChevronRight } from "lucide-react";
+import { motion } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
