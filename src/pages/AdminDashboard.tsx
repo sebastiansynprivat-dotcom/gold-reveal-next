@@ -5339,10 +5339,10 @@ export default function AdminDashboard() {
                                                 ),
                                               )
                                             }
-                                            className="flex items-center gap-1.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                                            className="group flex items-center gap-2 px-3.5 py-2 rounded-lg bg-gradient-to-r from-accent/10 via-accent/5 to-transparent border border-accent/20 hover:border-accent/50 hover:from-accent/20 hover:via-accent/10 text-sm font-medium text-accent hover:text-accent transition-all duration-300 shadow-sm hover:shadow-[0_0_20px_-5px_hsl(var(--accent)/0.4)]"
                                           >
-                                            <MessageSquare className="h-3 w-3" />
-                                            Kommentar hinzufügen
+                                            <MessageSquare className="h-4 w-4 transition-transform group-hover:scale-110" />
+                                            <span className="tracking-wide">Kommentar hinzufügen</span>
                                           </button>
                                         ) : (
                                           req._editingComment && (
