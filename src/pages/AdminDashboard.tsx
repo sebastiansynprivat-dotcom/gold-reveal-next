@@ -2355,7 +2355,21 @@ export default function AdminDashboard() {
   };
   const loadModelRequests = async () => {
     const { data } = await supabase.from("model_requests").select("*").order("created_at", { ascending: false });
-    if (data) setModelRequests(data);
+    if (data) {
+      const ids = data.map((r: any) => r.id);
+      let msgsByReq: Record<string, any[]> = {};
+      if (ids.length > 0) {
+        const { data: msgs } = await supabase
+          .from("model_request_messages")
+          .select("*")
+          .in("request_id", ids)
+          .order("created_at", { ascending: true });
+        (msgs || []).forEach((m: any) => {
+          (msgsByReq[m.request_id] ||= []).push(m);
+        });
+      }
+      setModelRequests(data.map((r: any) => ({ ...r, _messages: msgsByReq[r.id] || [] })));
+    }
     setModelRequestsLoaded(true);
   };
 
