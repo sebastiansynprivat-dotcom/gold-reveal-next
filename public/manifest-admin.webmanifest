@@ -1,6 +1,6 @@
 {
-  "name": "SheX Admin",
-  "short_name": "SheX Admin",
+  "name": "SheX",
+  "short_name": "SheX",
   "description": "SheX Admin Dashboard",
   "id": "/admin",
   "start_url": "/admin",
