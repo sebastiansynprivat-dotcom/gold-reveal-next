@@ -5104,6 +5104,11 @@ export default function AdminDashboard() {
                           .map((req, idx, arr) => {
                             const chatter = chatters.find((c) => c.user_id === req.user_id);
                             const chatterName = chatter?.group_name || req.user_id.slice(0, 8);
+                            const _platformMatch = (req.description || "").match(/^\[Plattform:\s*([^\]]+)\]\s*/i);
+                            const reqPlatform = _platformMatch ? _platformMatch[1].trim() : "";
+                            const cleanDescription = _platformMatch
+                              ? req.description.replace(_platformMatch[0], "")
+                              : req.description;
                             const statusConfig = {
                               pending: {
                                 dot: "bg-yellow-400",
@@ -5185,10 +5190,10 @@ export default function AdminDashboard() {
                                         <Badge variant="outline" className="text-[10px] h-4 px-1.5 border-border/50">
                                           {req.request_type === "individual" ? "Individuell" : "Allgemein"}
                                         </Badge>
-                                        {(req as any).platform && (() => {
-                                          const pKey = String((req as any).platform).toLowerCase();
+                                        {reqPlatform && (() => {
+                                          const pKey = reqPlatform.toLowerCase();
                                           const pStyle = PLATFORM_STYLES_GLOBAL[pKey];
-                                          const pLabel = PLATFORM_LABELS.find((l) => l.toLowerCase() === pKey) || (req as any).platform;
+                                          const pLabel = PLATFORM_LABELS.find((l) => l.toLowerCase() === pKey) || reqPlatform;
                                           return (
                                             <span
                                               className={cn(
@@ -5258,7 +5263,7 @@ export default function AdminDashboard() {
                                           req.request_type === "individual" && req.price != null
                                             ? `\n\nDer Preis, den der Kunde bereit wäre zu bezahlen: ${req.price}€`
                                             : "";
-                                        const fullText = `Hey, eine neue Anfrage des Chatters an dich – ich leite sie dir einmal eins zu eins weiter 🙋🏼‍♂️:\n\n${req.description}${priceLine}\n\nGib mir bitte Feedback, ob du das umsetzen möchtest oder nicht. Danke dir ☺️`;
+                                        const fullText = `Hey, eine neue Anfrage des Chatters an dich – ich leite sie dir einmal eins zu eins weiter 🙋🏼‍♂️:\n\n${cleanDescription}${priceLine}\n\nGib mir bitte Feedback, ob du das umsetzen möchtest oder nicht. Danke dir ☺️`;
                                         navigator.clipboard.writeText(fullText);
                                         const encoded = encodeURIComponent(fullText);
                                         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -5276,7 +5281,7 @@ export default function AdminDashboard() {
                                         Hey, eine neue Anfrage des Chatters an dich – ich leite sie dir einmal eins zu
                                         eins weiter 🙋🏼‍♂️:
                                       </p>
-                                      {req.description}
+                                      {cleanDescription}
                                       {req.request_type === "individual" && req.price != null && (
                                         <p className="text-xs text-muted-foreground mt-1.5">
                                           Der Preis, den der Kunde bereit wäre zu bezahlen:{" "}
