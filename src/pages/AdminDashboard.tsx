@@ -6177,6 +6177,8 @@ export default function AdminDashboard() {
                                               <Clock className="h-3.5 w-3.5" />
                                             ) : req.status === "waiting_feedback" ? (
                                               <MessageSquare className="h-3.5 w-3.5" />
+                                            ) : req.status === "archived" ? (
+                                              <CheckCircle2 className="h-3.5 w-3.5" />
                                             ) : (
                                               <XCircle className="h-3.5 w-3.5" />
                                             )}
