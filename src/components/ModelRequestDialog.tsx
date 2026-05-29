@@ -150,9 +150,9 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
               <Send className="h-5 w-5 text-accent" />
             </motion.div>
             <div className="text-left flex-1 min-w-0">
-              <p className="text-sm font-bold text-foreground">Anfrage an das Model stellen</p>
+              <p className="text-sm font-bold text-foreground">Neue Anfrage erstellen</p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Individuelle oder allgemeine Anfrage an dein Model senden
+                Klicke hier, um eine Anfrage zu starten
               </p>
             </div>
             <div className="h-8 w-8 rounded-full bg-accent/10 flex items-center justify-center shrink-0 group-hover:bg-accent/20 transition-colors">
