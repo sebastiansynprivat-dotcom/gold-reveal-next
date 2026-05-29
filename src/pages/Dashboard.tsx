@@ -968,11 +968,44 @@ export default function Dashboard() {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-50px" }}
-          className="glass-card-subtle rounded-xl overflow-hidden card-inner-glow card-top-line"
+          className="glass-card rounded-xl overflow-hidden card-inner-glow relative"
           data-section="requests"
         >
+          {/* Gold shimmer sweep for extra presence */}
+          <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-xl">
+            <div
+              className="absolute inset-0 opacity-[0.06]"
+              style={{
+                background: "linear-gradient(105deg, transparent 40%, hsl(43 56% 52%) 50%, transparent 60%)",
+                backgroundSize: "200% 100%",
+                animation: "bonus-sweep 10s ease-in-out infinite",
+              }}
+            />
+          </div>
+
+          {/* Prominent Header */}
+          <div className="relative flex items-center gap-3 px-4 py-4 lg:px-6 lg:py-5 border-b border-accent/20 bg-accent/5">
+            <motion.div
+              animate={{ scale: [1, 1.15, 1], opacity: [0.85, 1, 0.85] }}
+              transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+              className="h-11 w-11 rounded-full bg-accent/20 flex items-center justify-center shrink-0 ring-2 ring-accent/30"
+            >
+              <MessageSquare className="h-5 w-5 text-accent" />
+            </motion.div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm lg:text-base font-bold text-gold-gradient">Anfrage an das Model stellen</p>
+              <p className="text-[11px] lg:text-xs text-muted-foreground mt-0.5">
+                Individuelle oder allgemeine Anfragen direkt an dein Model senden
+              </p>
+            </div>
+            <div className="hidden lg:flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-[10px] text-emerald-400 font-medium">Verfügbar</span>
+            </div>
+          </div>
+
           {/* Anfrage an das Model – oder Inaktiv-Hinweis */}
-          <div>
+          <div className="relative">
             {demoModelInactive || assignedAccounts.some((acc) => acc.model_active === false) ? (
               <>
                 <div className="flex items-center gap-3 px-4 py-4 lg:px-6 lg:py-5">
@@ -1002,7 +1035,7 @@ export default function Dashboard() {
                     </DialogHeader>
                     <div className="rounded-lg border border-accent/20 bg-accent/5 p-4">
                       <p className="text-sm text-foreground">
-                        💰 <strong>Trotzdem kann gutes Geld verdient werden!</strong> Es ist bereits genug Content auf
+                        <strong>Trotzdem kann gutes Geld verdient werden!</strong> Es ist bereits genug Content auf
                         dem Account vorhanden, mit dem du weiterarbeiten kannst. Nutze den vorhandenen Content, um
                         Umsatz zu machen.
                       </p>
@@ -1011,12 +1044,14 @@ export default function Dashboard() {
                 </Dialog>
               </>
             ) : (
-              <ModelRequestDialog
-                onSubmitted={loadMyRequests}
-                editData={editRequest}
-                onEditClear={() => setEditRequest(null)}
-                modelLanguage={assignedAccounts.length > 0 ? (assignedAccounts[0] as any).model_language || "de" : "de"}
-              />
+              <div className="px-4 py-4 lg:px-6 lg:py-5">
+                <ModelRequestDialog
+                  onSubmitted={loadMyRequests}
+                  editData={editRequest}
+                  onEditClear={() => setEditRequest(null)}
+                  modelLanguage={assignedAccounts.length > 0 ? (assignedAccounts[0] as any).model_language || "de" : "de"}
+                />
+              </div>
             )}
           </div>
 
