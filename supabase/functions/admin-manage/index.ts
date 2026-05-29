@@ -101,24 +101,36 @@ Deno.serve(async (req) => {
             email: adminUser.email,
             role: r.role,
             has_totp: false,
+            display_name: null as string | null,
           });
         }
       }
 
+      const userIds = admins.map(a => a.user_id);
+
       const { data: totpData } = await serviceClient
         .from("admin_totp_secrets")
         .select("user_id, is_verified")
-        .in("user_id", admins.map(a => a.user_id));
+        .in("user_id", userIds);
+
+      const { data: nameData } = await serviceClient
+        .from("admin_profiles")
+        .select("user_id, display_name")
+        .in("user_id", userIds);
 
       for (const admin of admins) {
         const totp = totpData?.find(t => t.user_id === admin.user_id);
         admin.has_totp = totp?.is_verified ?? false;
+        const np = nameData?.find(n => n.user_id === admin.user_id);
+        admin.display_name = np?.display_name ?? null;
       }
 
       return new Response(JSON.stringify({ admins }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+
 
     if (action === "add") {
       if (!email) {
