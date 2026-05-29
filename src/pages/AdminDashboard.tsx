@@ -5365,6 +5365,7 @@ export default function AdminDashboard() {
 
                     {modelRequests.filter((r) => {
                       if (unreadOnly && !isReqUnread(r)) return false;
+                      if (requestFilter === "all" && (r.status === "rejected" || r.status === "archived")) return false;
                       if (requestFilter !== "all" && r.status !== requestFilter) return false;
                       if (requestFilter === "accepted" && contentLinkFilter === "with_link" && !r.content_link)
                         return false;
