@@ -932,6 +932,45 @@ export default function AdminDashboard() {
     })();
   }, []);
 
+  // Load/persist seen-state for request comments per admin
+  useEffect(() => {
+    if (!user?.id) return;
+    try {
+      const raw = localStorage.getItem(`admin_seen_request_msgs_${user.id}`);
+      if (raw) setSeenRequestMsgs(JSON.parse(raw));
+    } catch {}
+  }, [user?.id]);
+  useEffect(() => {
+    if (!user?.id) return;
+    try {
+      localStorage.setItem(`admin_seen_request_msgs_${user.id}`, JSON.stringify(seenRequestMsgs));
+    } catch {}
+  }, [seenRequestMsgs, user?.id]);
+
+  const getLatestChatterMsgAt = useCallback((req: any): string | null => {
+    const msgs = (req?._messages || []) as Array<{ sender_role: string; created_at: string }>;
+    let latest: string | null = null;
+    for (const m of msgs) {
+      if (m.sender_role === "chatter" && (!latest || m.created_at > latest)) latest = m.created_at;
+    }
+    return latest;
+  }, []);
+  const isReqUnread = useCallback((req: any): boolean => {
+    const latest = getLatestChatterMsgAt(req);
+    if (!latest) return false;
+    const seen = seenRequestMsgs[req.id];
+    return !seen || seen < latest;
+  }, [seenRequestMsgs, getLatestChatterMsgAt]);
+  const markReqSeen = useCallback((req: any) => {
+    const latest = getLatestChatterMsgAt(req);
+    if (!latest) return;
+    setSeenRequestMsgs((prev) => (prev[req.id] === latest ? prev : { ...prev, [req.id]: latest }));
+  }, [getLatestChatterMsgAt]);
+  const unreadCount = useMemo(
+    () => modelRequests.filter((r) => isReqUnread(r)).length,
+    [modelRequests, isReqUnread],
+  );
+
   // Earnings per agency, last 30 days. Uses the platform revenue feed and maps
   // every profile alias back to one unique model, so multiple profiles are
   // summed as one model and agency filters stay consistent.
