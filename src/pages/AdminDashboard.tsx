@@ -6183,6 +6183,34 @@ export default function AdminDashboard() {
                                             <Clock className="h-3 w-3 mr-1" /> In Arbeit
                                           </Button>
                                         )}
+                                        {req.status === "waiting_feedback" && (
+                                          <>
+                                            <Button
+                                              size="sm"
+                                              variant="outline"
+                                              className="h-7 text-xs border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/50"
+                                              onClick={() => updateRequestStatus(req.id, "accepted")}
+                                            >
+                                              <Check className="h-3 w-3 mr-1" /> Ans Model weitergeleitet
+                                            </Button>
+                                            <Button
+                                              size="sm"
+                                              variant="outline"
+                                              className="h-7 text-xs border-blue-500/30 text-blue-400 hover:bg-blue-500/10 hover:border-blue-500/50"
+                                              onClick={() => updateRequestStatus(req.id, "in_progress")}
+                                            >
+                                              <Clock className="h-3 w-3 mr-1" /> In Arbeit
+                                            </Button>
+                                            <Button
+                                              size="sm"
+                                              variant="outline"
+                                              className="h-7 text-xs border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-500/50"
+                                              onClick={() => updateRequestStatus(req.id, "rejected")}
+                                            >
+                                              <XCircle className="h-3 w-3 mr-1" /> Ablehnen
+                                            </Button>
+                                          </>
+                                        )}
                                         {req.status !== "pending" && (
                                           <Button
                                             size="sm"
