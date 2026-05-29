@@ -139,6 +139,15 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
         toast.error("Fehler beim Senden der Anfrage.");
         return;
       }
+      // Fire-and-forget admin push
+      supabase.functions.invoke("send-admin-push", {
+        body: {
+          event: "new_request",
+          title: "Neue Model-Anfrage 📨",
+          body: `${modelName.trim()} · ${requestType === "individual" ? `Individuell${price ? ` (${price}€)` : ""}` : "Allgemein"}`,
+          url: "/admin",
+        },
+      }).catch(() => {});
       toast.success("Anfrage erfolgreich gesendet! ✅");
     }
 
