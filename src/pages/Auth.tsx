@@ -206,8 +206,13 @@ const Auth = () => {
     setSubmitting(false);
   };
 
-  const handleConfirmSignUp = async () => {
+  const handleConfirmGroup = () => {
     setShowGroupConfirm(false);
+    setShowTelegramConfirm(true);
+  };
+
+  const handleConfirmSignUp = async () => {
+    setShowTelegramConfirm(false);
     setSubmitting(true);
     const { error } = await signUp(email, password, { group_name: groupName.trim() });
     if (error) {
