@@ -5239,8 +5239,8 @@ export default function AdminDashboard() {
                                       }}
                                       className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group w-full text-left"
                                     >
-                                      <span className="text-lg text-muted-foreground font-bold">Model:</span>
-                                      <span className="text-xl text-foreground font-bold">{req.model_name}</span>
+                                      <span className="text-xl text-foreground font-bold tracking-tight">Model:</span>
+                                      <span className="text-xl text-foreground font-bold tracking-tight">{req.model_name}</span>
                                       <Copy className="h-3 w-3 opacity-0 group-hover:opacity-50 transition-opacity ml-auto shrink-0" />
                                     </button>
 
