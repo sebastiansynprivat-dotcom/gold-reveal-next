@@ -112,7 +112,7 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
         request_type: requestType,
         model_language: modelLanguage,
         price: requestType === "individual" ? parseFloat(price) : null,
-        description: description.trim(),
+        description: finalDescription,
         customer_name: requestType === "individual" ? customerName.trim() || null : null,
         status: "pending",
         admin_comment: null,
@@ -131,7 +131,7 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
         request_type: requestType,
         model_language: modelLanguage,
         price: requestType === "individual" ? parseFloat(price) : null,
-        description: description.trim(),
+        description: finalDescription,
         customer_name: requestType === "individual" ? customerName.trim() || null : null,
       } as any);
       setLoading(false);
