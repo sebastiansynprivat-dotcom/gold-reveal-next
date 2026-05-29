@@ -1,78 +1,45 @@
-# Model-Biographie im Chatter-Dashboard anzeigen
+# Admin Push-Benachrichtigungen
 
-Ziel: Beim Chatter wird automatisch die `Biographie.docx` aus dem Drive-Ordner des zugewiesenen Models geladen, in HTML umgewandelt und im Dashboard angezeigt.
+Ziel: Im Admin-Dashboard eine eigene Sektion „Push-Benachrichtigungen" in der Sidebar, in der du Pushes auf deinem Gerät aktivierst (PWA-Install-Hinweis inklusive) und auswählst, wofür du benachrichtigt werden willst. Sobald aktiv, bekommst du automatisch eine Push, wenn eine neue Model-Anfrage reinkommt oder eine neue Einnahme verbucht wird.
 
-## Architektur
+## Was neu gebaut wird
 
-```text
-Chatter Dashboard
-   │  account_id → model_id → models.drive_folder_id
-   ▼
-Edge Function: get-model-biography
-   ├─ Cache-Check (model_biographies Tabelle)
-   ├─ Google Drive API (Service Account, reuse share-drive auth)
-   │     1. Datei in Folder suchen: name contains 'iograph' AND mimeType=docx
-   │     2. Datei downloaden (alt=media)
-   ├─ docx → HTML (mammoth via esm.sh)
-   └─ Cache speichern + HTML zurückgeben
-```
+**1. Sidebar-Sektion „Push-Benachrichtigungen" (Admin-Dashboard)**
+- Status-Karte: zeigt, ob Pushes auf diesem Gerät aktiv sind
+- Button „Auf diesem Gerät aktivieren" → triggert Permission + Subscription
+- Hinweis-Karte „Zum Home-Bildschirm hinzufügen" (iOS-/Android-Anleitung), damit Pushes auch wirklich ankommen wenn die App nicht offen ist
+- Toggle-Liste mit den Event-Typen:
+  - Neue Model-Anfrage
+  - Neue Einnahme (Revenue-Eingang)
+  - (vorbereitet, leicht erweiterbar: neue Registrierung, neue Auszahlung etc.)
+- Test-Push-Button, damit du direkt prüfen kannst dass es ankommt
 
-## Datenbank
+**2. Persistente Einstellungen pro Admin**
+Neue Tabelle `admin_notification_preferences` (user_id + Bool-Flags je Event). RLS: Admin liest/schreibt nur eigene Zeile, Service-Role voll.
 
-Neue Tabelle `public.model_biographies` (Cache):
-- `model_id uuid PK` (FK → models.id, on delete cascade)
-- `drive_file_id text`
-- `file_name text`
-- `html text` (gerendertes HTML)
-- `fetched_at timestamptz`
-- `modified_time timestamptz` (Drive `modifiedTime` – für Invalidierung)
+**3. Automatische Pushes**
+- Neuer interner Helper `send-admin-push` (Edge Function) der nur an Admins pusht, deren Preference für das jeweilige Event aktiviert ist.
+- Trigger-Punkte:
+  - **Neue Anfrage:** im Client direkt nach erfolgreichem Insert in `model_requests` (ModelRequestDialog) wird `send-admin-push` mit Event `new_request` aufgerufen.
+  - **Neue Einnahme:** in der Edge Function `ingest-revenue` nach erfolgreichem Upsert wird `send-admin-push` mit Event `new_revenue` (+ Betrag/Plattform im Body) aufgerufen.
 
-GRANTs + RLS:
-- `SELECT` für `authenticated` (alle eingeloggten User dürfen Biografien des Models lesen, dem sie zugewiesen sind – Policy: User hat einen `accounts`-Eintrag mit `model_id = model_biographies.model_id`, oder ist Admin via `has_role`)
-- `ALL` für `service_role` (Edge Function schreibt Cache)
+## Technische Details
 
-## Edge Function `get-model-biography`
+- DB-Migration:
+  - `admin_notification_preferences(user_id uuid PK refs auth.users, new_request bool default true, new_revenue bool default true, updated_at)`
+  - GRANTs + RLS (`auth.uid() = user_id` für Select/Insert/Update, `service_role` full)
+- Edge Function `send-admin-push`:
+  - Input: `{ event: 'new_request' | 'new_revenue', title, body, url? }`
+  - Liest Admin-User-IDs via `user_roles` (admin/super_admin/sub_admin) ∩ preferences mit Flag=true, holt deren `push_subscriptions`, sendet Webpush (wie bestehende `send-notification`).
+  - Wird via `supabase.functions.invoke` aufgerufen, kein Auth nötig (verify_jwt=false), aber durch interne Service-Role-Logik geschützt.
+- Client:
+  - Neue Komponente `src/components/admin/AdminPushSettings.tsx` (Status, Aktivieren, Preferences-Toggles, Test).
+  - Nutzt bestehendes `subscribeToPush()` aus `src/lib/pushNotifications.ts`.
+  - Einbau in `AdminDashboard.tsx` als neue Sektion in der linken Sidebar/Navigation.
+  - `ModelRequestDialog.tsx`: nach erfolgreichem Insert `supabase.functions.invoke('send-admin-push', { body: { event: 'new_request', ... }})`.
+- `ingest-revenue/index.ts`: nach Upsert für jede neue Zeile einmal `send-admin-push` mit Plattform + Betrag.
 
-Input: `{ model_id: string, force_refresh?: boolean }`
-Logik:
-1. Auth-Check via JWT (chatter muss diesem Model zugewiesen sein, oder Admin).
-2. Cache lesen. Wenn `fetched_at` < 6 h und nicht `force_refresh` → cached HTML zurückgeben.
-3. `drive_folder_id` aus `models` holen. Wenn leer → 404.
-4. Service Account Token holen (gleicher Code wie `share-drive` – in `_shared/google.ts` extrahieren).
-5. `GET drive/v3/files?q='{folderId}' in parents and name contains 'iograph' and trashed=false&fields=files(id,name,mimeType,modifiedTime)` → erste passende Datei.
-6. Wenn `modifiedTime` == Cache-Wert → Cache zurückgeben (kein Re-Download).
-7. Download `GET drive/v3/files/{id}?alt=media` → ArrayBuffer.
-8. Mammoth (`https://esm.sh/mammoth@1.6.0`) → HTML.
-9. In `model_biographies` upserten.
-10. Response: `{ html, file_name, modified_time, fetched_at, source: 'cache' | 'drive' }`.
+## Was nicht geändert wird
 
-Fehlerfälle: keine Datei gefunden → `{ html: null, reason: 'not_found' }` (UI zeigt Hinweis).
-
-`verify_jwt = true` (Standard) – nutzt User-JWT für RLS-Check, plus Service Role Client für DB-Write (Dual-Client-Pattern wie in `edge-function-auth-pattern`).
-
-## Frontend – Chatter Dashboard
-
-Neue Komponente `src/components/ModelBiographyCard.tsx`:
-- Props: `modelId`
-- Lädt via `supabase.functions.invoke('get-model-biography', { body: { model_id } })`.
-- Glass-card im Stil von ModelHomeDashboard (Black & Gold, dezent gold-bordered).
-- Header: „Steckbrief · {model_name}" + Refresh-Icon-Button (force_refresh).
-- Body: HTML in scrollbarem Container (`max-h-[60vh]`, `prose prose-invert` Styling, Tabellen-Styles für die Personal-Info-Tabelle).
-- States: loading skeleton, leer („Noch keine Biographie hochgeladen"), error.
-
-Einbindung in `src/components/ChatterDashboardTab.tsx` (oder dem Dashboard, wo das aktuell zugewiesene Model sichtbar ist):
-- Für jeden zugewiesenen Account mit `model_id` einmal die Karte rendern (collapsible, default zu für Übersicht; öffnet sich on click und lädt dann lazy).
-- Platzierung: unter den Account-Credentials, vor der Revenue-Sektion.
-
-Lazy loading: Fetch erst beim ersten Aufklappen, damit Dashboard schnell bleibt.
-
-## Sicherheit
-
-- RLS verhindert, dass Chatter Biografien fremder Models sehen.
-- Edge Function prüft zusätzlich serverseitig die Zuweisung (Chatter ↔ Account ↔ Model) bevor sie das HTML zurückgibt.
-- Drive-Token bleibt serverseitig; Client bekommt nur sanitisiertes HTML.
-
-## Out of Scope (nicht in diesem Schritt)
-- Preisliste / Content-Ordner anzeigen (Bild zeigt zusätzlich „Preisliste!" und „Content"-Ordner – nur auf Anfrage nachziehen).
-- Editieren der Biographie durch den Chatter.
-- Auto-Sync per Drive-Webhook (statt 6-h-TTL).
+- Bestehende Tabellen `push_subscriptions`, `notifications`, `model_requests`, `revenue_report` bleiben strukturell unverändert.
+- User-Dashboard-Push-Flow bleibt wie er ist.

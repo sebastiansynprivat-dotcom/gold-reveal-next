@@ -152,6 +152,27 @@ export type Database = {
           },
         ]
       }
+      admin_notification_preferences: {
+        Row: {
+          new_request: boolean
+          new_revenue: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          new_request?: boolean
+          new_revenue?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          new_request?: boolean
+          new_revenue?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       admin_totp_secrets: {
         Row: {
           created_at: string
