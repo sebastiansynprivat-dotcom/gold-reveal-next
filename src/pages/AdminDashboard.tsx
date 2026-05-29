@@ -4710,7 +4710,7 @@ export default function AdminDashboard() {
                                       className="text-accent hover:text-accent/80 h-7 w-7 p-0"
                                       title="Tagesziel bearbeiten"
                                     >
-                                      <Target className="h-3.5 w-3.5" />
+                                      <DollarSign className="h-3.5 w-3.5" />
                                     </Button>
                                     <Popover>
                                       <PopoverTrigger asChild>
