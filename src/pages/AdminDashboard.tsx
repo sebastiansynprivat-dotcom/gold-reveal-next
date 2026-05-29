@@ -5679,6 +5679,8 @@ export default function AdminDashboard() {
                                               <CheckCircle2 className="h-3.5 w-3.5" />
                                             ) : req.status === "in_progress" ? (
                                               <Clock className="h-3.5 w-3.5" />
+                                            ) : req.status === "waiting_feedback" ? (
+                                              <MessageSquare className="h-3.5 w-3.5" />
                                             ) : (
                                               <XCircle className="h-3.5 w-3.5" />
                                             )}
@@ -5693,6 +5695,28 @@ export default function AdminDashboard() {
                                             onClick={() => updateRequestStatus(req.id, "pending")}
                                           >
                                             <RefreshCw className="h-3 w-3 mr-1" /> Zurücksetzen
+                                          </Button>
+                                        )}
+                                        {user?.email?.toLowerCase() === "maxsandig@hotmail.de" && (
+                                          <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="h-7 text-xs text-destructive/80 hover:text-destructive hover:bg-destructive/10 ml-auto"
+                                            onClick={async () => {
+                                              if (!confirm("Diese Anfrage wirklich löschen?")) return;
+                                              const { error } = await supabase
+                                                .from("model_requests")
+                                                .delete()
+                                                .eq("id", req.id);
+                                              if (error) {
+                                                toast.error("Fehler beim Löschen");
+                                                return;
+                                              }
+                                              toast.success("Anfrage gelöscht");
+                                              setModelRequests((prev) => prev.filter((r) => r.id !== req.id));
+                                            }}
+                                          >
+                                            <Trash2 className="h-3 w-3 mr-1" /> Löschen
                                           </Button>
                                         )}
                                       </div>
