@@ -1449,7 +1449,7 @@ function BonusModelSection({
                     "relative rounded-xl overflow-hidden transition-all duration-300",
                     isTitan && "col-span-3 lg:col-span-1",
                     isActive
-                      ? tier.name === "Diamond" || tier.name === "Titan"
+                      ? tier.name === "Elite" || tier.name === "Titan"
                         ? "gold-gradient-border-animated bg-[hsl(0_0%_8%/0.8)]"
                         : "border border-accent/50 bg-[hsl(0_0%_8%/0.8)] shadow-[0_0_24px_hsl(43_56%_52%/0.15)]"
                       : isPassed
