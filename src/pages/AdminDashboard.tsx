@@ -5749,6 +5749,7 @@ export default function AdminDashboard() {
                                                 sender_role: "admin",
                                                 body: req.admin_comment as string,
                                                 created_at: req.created_at,
+                                                user_id: undefined as string | undefined,
                                               },
                                             ]
                                           : []),
