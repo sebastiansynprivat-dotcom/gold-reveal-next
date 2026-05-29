@@ -1021,8 +1021,12 @@ export default function AdminDashboard() {
 
   // Admin management state
   const [adminSectionOpen, setAdminSectionOpen] = useState(false);
-  const [adminList, setAdminList] = useState<{ user_id: string; email: string; has_totp: boolean; role: string }[]>([]);
+  const [adminList, setAdminList] = useState<{ user_id: string; email: string; has_totp: boolean; role: string; display_name?: string | null }[]>([]);
   const [adminListLoading, setAdminListLoading] = useState(false);
+  const [editingAdminName, setEditingAdminName] = useState<string | null>(null);
+  const [editingAdminNameValue, setEditingAdminNameValue] = useState("");
+  const [savingAdminName, setSavingAdminName] = useState(false);
+  const [adminNames, setAdminNames] = useState<Record<string, string>>({});
   const [newAdminEmail, setNewAdminEmail] = useState("");
   const [addingAdmin, setAddingAdmin] = useState(false);
   const [removeAdminConfirm, setRemoveAdminConfirm] = useState<string | null>(null);
