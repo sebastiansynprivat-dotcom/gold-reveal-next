@@ -5345,6 +5345,7 @@ export default function AdminDashboard() {
                     )}
 
                     {modelRequests.filter((r) => {
+                      if (unreadOnly && !isReqUnread(r)) return false;
                       if (requestFilter !== "all" && r.status !== requestFilter) return false;
                       if (requestFilter === "accepted" && contentLinkFilter === "with_link" && !r.content_link)
                         return false;
@@ -5364,6 +5365,7 @@ export default function AdminDashboard() {
                       <div className="p-3 space-y-4">
                         {modelRequests
                           .filter((r) => {
+                            if (unreadOnly && !isReqUnread(r)) return false;
                             if (requestFilter !== "all" && r.status !== requestFilter) return false;
                             if (requestFilter === "accepted" && contentLinkFilter === "with_link" && !r.content_link)
                               return false;
