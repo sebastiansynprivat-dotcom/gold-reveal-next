@@ -5374,6 +5374,101 @@ export default function AdminDashboard() {
                                       <Copy className="h-3 w-3 inline-block ml-1.5 opacity-0 group-hover:opacity-40 transition-opacity" />
                                     </button>
 
+                                    {/* Translation buttons */}
+                                    <div className="flex gap-2 flex-wrap">
+                                      {(["en", "de"] as const).map((target) => (
+                                        <Button
+                                          key={target}
+                                          size="sm"
+                                          variant="outline"
+                                          disabled={req._translating === target}
+                                          className="h-7 text-[11px] gap-1.5"
+                                          onClick={async () => {
+                                            setModelRequests((prev) =>
+                                              prev.map((r) =>
+                                                r.id === req.id ? { ...r, _translating: target } : r,
+                                              ),
+                                            );
+                                            try {
+                                              const { data, error } = await supabase.functions.invoke(
+                                                "translate-text",
+                                                { body: { text: cleanDescription, target } },
+                                              );
+                                              if (error || !data?.translation) {
+                                                toast.error(data?.error || "Übersetzung fehlgeschlagen");
+                                                return;
+                                              }
+                                              await navigator.clipboard.writeText(data.translation);
+                                              toast.success(
+                                                `Übersetzung (${target === "en" ? "EN" : "DE"}) kopiert`,
+                                              );
+                                              setModelRequests((prev) =>
+                                                prev.map((r) =>
+                                                  r.id === req.id
+                                                    ? {
+                                                        ...r,
+                                                        _translations: {
+                                                          ...(r._translations || {}),
+                                                          [target]: data.translation,
+                                                        },
+                                                      }
+                                                    : r,
+                                                ),
+                                              );
+                                            } catch (err: any) {
+                                              toast.error(err?.message || "Fehler");
+                                            } finally {
+                                              setModelRequests((prev) =>
+                                                prev.map((r) =>
+                                                  r.id === req.id ? { ...r, _translating: undefined } : r,
+                                                ),
+                                              );
+                                            }
+                                          }}
+                                        >
+                                          {req._translating === target ? (
+                                            <Loader2 className="h-3 w-3 animate-spin" />
+                                          ) : (
+                                            <Languages className="h-3 w-3" />
+                                          )}
+                                          {target === "en" ? "→ Englisch" : "→ Deutsch"}
+                                        </Button>
+                                      ))}
+                                    </div>
+                                    {req._translations &&
+                                      (["en", "de"] as const).map((lang) =>
+                                        req._translations?.[lang] ? (
+                                          <div
+                                            key={lang}
+                                            className="glass-card-subtle rounded-lg px-3 py-2 space-y-1"
+                                          >
+                                            <div className="flex items-center justify-between">
+                                              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
+                                                {lang === "en" ? "Englisch" : "Deutsch"}
+                                              </p>
+                                              <button
+                                                onClick={() => {
+                                                  navigator.clipboard.writeText(req._translations![lang]!);
+                                                  toast.success("Kopiert");
+                                                }}
+                                                className="text-[10px] text-accent hover:text-accent/80 transition-colors font-medium"
+                                              >
+                                                Kopieren
+                                              </button>
+                                            </div>
+                                            <p className="text-xs text-foreground leading-relaxed whitespace-pre-wrap">
+                                              {req._translations[lang]}
+                                            </p>
+                                          </div>
+                                        ) : null,
+                                      )}
+                                    {/* spacer to keep JSX structure (placeholder for original closing button tag, removed below) */}
+                                    {false && (
+                                      <button>
+                                        <Copy className="h-3 w-3" />
+                                      </button>
+                                    )}
+
                                     {/* Kommentarverlauf */}
                                     {(() => {
                                       const msgs = (req._messages || []) as Array<{
