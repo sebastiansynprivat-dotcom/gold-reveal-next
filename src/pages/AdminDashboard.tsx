@@ -4669,9 +4669,26 @@ export default function AdminDashboard() {
                                       {chatter.group_name || "Kein Gruppenname"}
                                     </p>
                                     <p className="text-[10px] text-muted-foreground">
-                                      Telegram: {chatter.telegram_id || "—"} · Seit{" "}
+                                      Telegram: {chatter.telegram_id || "—"} ·{" "}
+                                      {chatter.language === "en" ? "🇬🇧 EN" : "🇩🇪 DE"} · Seit{" "}
                                       {new Date(chatter.created_at).toLocaleDateString("de-DE")}
                                     </p>
+                                    {(chatter.assigned_accounts?.length || 0) > 0 && (
+                                      <div className="flex items-center gap-1 flex-wrap mt-0.5">
+                                        {chatter.assigned_accounts!.map((acc) => {
+                                          const modelLabel = acc.model_id ? modelNames[acc.model_id] : null;
+                                          return (
+                                            <span
+                                              key={acc.id}
+                                              className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-md bg-accent/10 text-accent border border-accent/20"
+                                            >
+                                              <span className="font-semibold">{acc.platform}</span>
+                                              {modelLabel && <span className="text-foreground/80">· {modelLabel}</span>}
+                                            </span>
+                                          );
+                                        })}
+                                      </div>
+                                    )}
                                   </div>
                                   {(chatter.assigned_accounts?.length || 0) > 0 && (
                                     <Badge variant="secondary" className="text-[10px] shrink-0">
