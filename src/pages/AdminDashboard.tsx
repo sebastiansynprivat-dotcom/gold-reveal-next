@@ -5196,6 +5196,13 @@ export default function AdminDashboard() {
                                 label: "Abgelehnt",
                                 border: "border-l-red-500/50",
                               },
+                              waiting_feedback: {
+                                dot: "bg-purple-400",
+                                bg: "bg-purple-500/10",
+                                text: "text-purple-400",
+                                label: "Warten auf Rückmeldung",
+                                border: "border-l-purple-500/50",
+                              },
                             }[req.status as string] || {
                               dot: "bg-muted-foreground",
                               bg: "bg-secondary",
