@@ -124,7 +124,7 @@ Deno.serve(async (req) => {
               body: JSON.stringify({
                 event: "new_revenue",
                 title: "Neuer Verkauf 💰",
-                body: `${r.platform.toUpperCase()} · ${model} · ${amount.toLocaleString("de-DE", { style: "currency", currency: "EUR" })}`,
+                body: `${r.platform === "maloum" ? "🟠" : r.platform === "brezzels" ? "🔵" : "⚪"} ${r.platform.toUpperCase()} · ${model} · ${amount.toLocaleString("de-DE", { style: "currency", currency: "EUR" })}`,
                 url: "/admin",
               }),
             }).catch(() => {});
