@@ -5440,6 +5440,13 @@ export default function AdminDashboard() {
                                 label: "Warten auf Rückmeldung",
                                 border: "border-l-purple-500/50",
                               },
+                              archived: {
+                                dot: "bg-muted-foreground",
+                                bg: "bg-secondary",
+                                text: "text-muted-foreground",
+                                label: "Erledigt",
+                                border: "border-l-border",
+                              },
                             }[req.status as string] || {
                               dot: "bg-muted-foreground",
                               bg: "bg-secondary",
