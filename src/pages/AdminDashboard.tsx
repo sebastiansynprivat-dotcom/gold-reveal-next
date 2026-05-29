@@ -5263,7 +5263,7 @@ export default function AdminDashboard() {
                                           req.request_type === "individual" && req.price != null
                                             ? `\n\nDer Preis, den der Kunde bereit wäre zu bezahlen: ${req.price}€`
                                             : "";
-                                        const fullText = `Hey, eine neue Anfrage des Chatters an dich – ich leite sie dir einmal eins zu eins weiter 🙋🏼‍♂️:\n\n${req.description}${priceLine}\n\nGib mir bitte Feedback, ob du das umsetzen möchtest oder nicht. Danke dir ☺️`;
+                                        const fullText = `Hey, eine neue Anfrage des Chatters an dich – ich leite sie dir einmal eins zu eins weiter 🙋🏼‍♂️:\n\n${cleanDescription}${priceLine}\n\nGib mir bitte Feedback, ob du das umsetzen möchtest oder nicht. Danke dir ☺️`;
                                         navigator.clipboard.writeText(fullText);
                                         const encoded = encodeURIComponent(fullText);
                                         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
