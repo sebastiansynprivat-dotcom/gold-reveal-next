@@ -92,10 +92,16 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
       toast.error("Bitte fülle alle Pflichtfelder aus.");
       return;
     }
+    if (!platform) {
+      toast.error("Bitte wähle eine Plattform aus.");
+      return;
+    }
     if (requestType === "individual" && !price.trim()) {
       toast.error("Bitte gib einen Preis an.");
       return;
     }
+
+    const finalDescription = `[Plattform: ${platform}] ${description.trim()}`;
 
     setLoading(true);
 
