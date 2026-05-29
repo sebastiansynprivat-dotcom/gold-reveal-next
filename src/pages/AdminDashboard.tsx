@@ -4029,6 +4029,8 @@ export default function AdminDashboard() {
                     const pwaYes = pwaUsers.size;
                     const pwaNo = chatters.length - pwaYes;
 
+                    const freeAccounts = accounts.filter((a) => !a.assigned_to).length;
+
                     const DualCard = ({
                       labelA,
                       valueA,
