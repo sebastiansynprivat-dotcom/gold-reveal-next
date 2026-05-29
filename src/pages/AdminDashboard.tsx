@@ -5846,6 +5846,16 @@ export default function AdminDashboard() {
                                             {statusConfig.label}
                                           </span>
                                         )}
+                                        {req.status === "accepted" && (
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="h-7 text-xs border-blue-500/30 text-blue-400 hover:bg-blue-500/10 hover:border-blue-500/50"
+                                            onClick={() => updateRequestStatus(req.id, "in_progress")}
+                                          >
+                                            <Clock className="h-3 w-3 mr-1" /> In Arbeit
+                                          </Button>
+                                        )}
                                         {req.status !== "pending" && (
                                           <Button
                                             size="sm"
