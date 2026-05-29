@@ -143,7 +143,7 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
       supabase.functions.invoke("send-admin-push", {
         body: {
           event: "new_request",
-          title: "Neue Model-Anfrage 📨",
+          title: "📨 NEUE MODEL ANFRAGE",
           body: `${modelName.trim()} · ${requestType === "individual" ? `Individuell${price ? ` (${price}€)` : ""}` : "Allgemein"}`,
           url: "/admin",
         },
