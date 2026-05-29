@@ -8215,6 +8215,14 @@ export default function AdminDashboard() {
         </AlertDialogContent>
       </AlertDialog>
 
+      <PreChattersDialog
+        open={preChattersOpen}
+        onOpenChange={setPreChattersOpen}
+        freeAccounts={accounts
+          .filter((a) => !a.assigned_to)
+          .map((a) => ({ id: a.id, platform: a.platform, account_email: a.account_email, assigned_to: a.assigned_to }))}
+      />
+
       {/* Chatter bearbeiten Dialog (Reassign + Daten) */}
       <Dialog
         open={!!reassignTarget}
