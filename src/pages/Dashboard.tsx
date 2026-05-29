@@ -252,7 +252,6 @@ export default function Dashboard() {
   const [chatOpen, setChatOpen] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
-  const [showMemo, setShowMemo] = useState(false);
   const [showFrageMemo, setShowFrageMemo] = useState(false);
   const [homescreenDismissed, setHomescreenDismissed] = useState(() => {
     // If PWA is already installed or tutorial was seen, no need to wait
