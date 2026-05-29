@@ -1,14 +1,33 @@
-### Ziel
-Im Admin Dashboard, Bereich "Custom Anfragen", die Typografie der Request-Cards anpassen:
+## Ziel
+Wenn ein Model im Admin Dashboard auf **inaktiv** gesetzt wird, soll dieser Status automatisch für **alle Plattform-Accounts** des Models gelten – sodass keine Chatter mehr Anfragen stellen oder das Model bearbeiten können.
 
-1. **Model-Name**: Größer und fett gedruckt (z.B. `text-sm font-bold` statt aktuell `text-xs font-medium`)
-2. **Chatter-Anfrage-Text** (`cleanDescription`): Fett gedruckt
-3. **Standard-Floskeln** oben/unten ("Hey, eine neue Anfrage..." / "Gib mir bitte Feedback..."): Beibehalten bei aktueller Größe (`text-xs`)
+## Aktuelle Situation
+- `models.model_active` (Model-Ebene) und `accounts.model_active` (Account-Ebene) sind getrennt.
+- Das Toggle im Admin ändert nur `models.model_active`.
+- Die Chatter-UI prüft `accounts.model_active` → daher hat das Admin-Toggle aktuell **keinen Effekt**.
 
-### Dateien
-- `src/pages/AdminDashboard.tsx` (Lines ~5235–5300)
+## Lösung
 
-### Umsetzung
-- Model-Name Button: `text-xs` → `text-sm`, `font-medium` → `font-bold`
-- `cleanDescription`: In `<span className="font-bold">` oder `<p className="font-bold">` wrappen
-- Intro/Outro-Texte unverändert lassen
+### 1. Datenbank-Trigger (Migration)
+Trigger auf `models` (AFTER UPDATE OF model_active):
+- Bei Änderung von `models.model_active` → alle `accounts` mit `model_id = NEW.id` auf denselben Wert setzen.
+- Damit werden Bestandsdaten und zukünftige Änderungen automatisch synchron gehalten.
+
+### 2. Einmalige Datensynchronisation
+Initiales Update, um bestehende Diskrepanzen zu beseitigen:
+```sql
+UPDATE accounts SET model_active = m.model_active
+FROM models m WHERE accounts.model_id = m.id AND accounts.model_active <> m.model_active;
+```
+
+### 3. Admin Dashboard UI
+- Beim Toggle des Model-Status: kurzer Hinweis-Toast „Status gilt jetzt für alle X Plattformen dieses Models".
+- Keine zusätzliche Logik nötig – der DB-Trigger erledigt die Kaskade.
+
+## Nicht im Scope
+- Manuelle Accounts ohne `model_id` bleiben unberührt (haben kein zugeordnetes Model).
+- Das einzelne Deaktivieren eines Accounts bleibt weiterhin möglich (wird beim nächsten Model-Update jedoch überschrieben).
+
+## Geänderte Dateien
+- Neue Migration (Trigger + initiales Sync-Update)
+- `src/pages/AdminDashboard.tsx` (Toast-Hinweis beim Toggle)
