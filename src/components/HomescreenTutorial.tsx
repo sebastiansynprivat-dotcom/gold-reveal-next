@@ -60,6 +60,8 @@ export default function HomescreenTutorial({ isFirstLogin, manualOpen, onManualC
 
   const handleClose = () => {
     localStorage.setItem(TUTORIAL_KEY, "true");
+    try { localStorage.removeItem("force_homescreen_tutorial"); } catch {}
+
     setOpen(false);
     onManualClose?.();
     onDismiss?.();
