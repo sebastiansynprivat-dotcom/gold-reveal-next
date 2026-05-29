@@ -851,6 +851,8 @@ export default function AdminDashboard() {
   );
   const [contentLinkFilter, setContentLinkFilter] = useState<"all" | "with_link" | "without_link">("all");
   const [requestSearchQuery, setRequestSearchQuery] = useState("");
+  const [unreadOnly, setUnreadOnly] = useState(false);
+  const [seenRequestMsgs, setSeenRequestMsgs] = useState<Record<string, string>>({});
   const [notifTitle, setNotifTitle] = useState("");
   const [notifBody, setNotifBody] = useState("");
   const [notifSending, setNotifSending] = useState(false);
@@ -929,6 +931,45 @@ export default function AdminDashboard() {
       if (data) setModelsAll(data as any);
     })();
   }, []);
+
+  // Load/persist seen-state for request comments per admin
+  useEffect(() => {
+    if (!user?.id) return;
+    try {
+      const raw = localStorage.getItem(`admin_seen_request_msgs_${user.id}`);
+      if (raw) setSeenRequestMsgs(JSON.parse(raw));
+    } catch {}
+  }, [user?.id]);
+  useEffect(() => {
+    if (!user?.id) return;
+    try {
+      localStorage.setItem(`admin_seen_request_msgs_${user.id}`, JSON.stringify(seenRequestMsgs));
+    } catch {}
+  }, [seenRequestMsgs, user?.id]);
+
+  const getLatestChatterMsgAt = useCallback((req: any): string | null => {
+    const msgs = (req?._messages || []) as Array<{ sender_role: string; created_at: string }>;
+    let latest: string | null = null;
+    for (const m of msgs) {
+      if (m.sender_role === "chatter" && (!latest || m.created_at > latest)) latest = m.created_at;
+    }
+    return latest;
+  }, []);
+  const isReqUnread = useCallback((req: any): boolean => {
+    const latest = getLatestChatterMsgAt(req);
+    if (!latest) return false;
+    const seen = seenRequestMsgs[req.id];
+    return !seen || seen < latest;
+  }, [seenRequestMsgs, getLatestChatterMsgAt]);
+  const markReqSeen = useCallback((req: any) => {
+    const latest = getLatestChatterMsgAt(req);
+    if (!latest) return;
+    setSeenRequestMsgs((prev) => (prev[req.id] === latest ? prev : { ...prev, [req.id]: latest }));
+  }, [getLatestChatterMsgAt]);
+  const unreadCount = useMemo(
+    () => modelRequests.filter((r) => isReqUnread(r)).length,
+    [modelRequests, isReqUnread],
+  );
 
   // Earnings per agency, last 30 days. Uses the platform revenue feed and maps
   // every profile alias back to one unique model, so multiple profiles are
@@ -5256,6 +5297,24 @@ export default function AdminDashboard() {
                         </p>
                        </div>
                       <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setUnreadOnly((v) => !v)}
+                          className={cn(
+                            "relative h-8 px-2.5 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-all border flex items-center gap-1.5 whitespace-nowrap",
+                            unreadOnly
+                              ? "bg-red-500/20 text-red-300 border-red-500/40 shadow-[0_0_12px_-3px_hsl(0_84%_60%/0.4)]"
+                              : "bg-secondary/50 text-muted-foreground border-border/50 hover:text-foreground",
+                          )}
+                          title="Anfragen mit neuen Chatter-Kommentaren anzeigen"
+                        >
+                          <span className={cn("h-1.5 w-1.5 rounded-full", unreadCount > 0 ? "bg-red-400 animate-pulse" : "bg-muted-foreground/40")} />
+                          Neue Kommentare
+                          {unreadCount > 0 && (
+                            <span className="ml-0.5 inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-white text-[9px] font-bold">
+                              {unreadCount}
+                            </span>
+                          )}
+                        </button>
                         <div className="relative">
                           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                           <Input
@@ -5304,6 +5363,7 @@ export default function AdminDashboard() {
                     )}
 
                     {modelRequests.filter((r) => {
+                      if (unreadOnly && !isReqUnread(r)) return false;
                       if (requestFilter !== "all" && r.status !== requestFilter) return false;
                       if (requestFilter === "accepted" && contentLinkFilter === "with_link" && !r.content_link)
                         return false;
@@ -5323,6 +5383,7 @@ export default function AdminDashboard() {
                       <div className="p-3 space-y-4">
                         {modelRequests
                           .filter((r) => {
+                            if (unreadOnly && !isReqUnread(r)) return false;
                             if (requestFilter !== "all" && r.status !== requestFilter) return false;
                             if (requestFilter === "accepted" && contentLinkFilter === "with_link" && !r.content_link)
                               return false;
@@ -5404,6 +5465,17 @@ export default function AdminDashboard() {
                                     </div>
                                     <div className="flex-1 min-w-0">
                                       <div className="flex items-center gap-2">
+                                        {isReqUnread(req) && (
+                                          <button
+                                            type="button"
+                                            onClick={() => markReqSeen(req)}
+                                            title="Neuer Chatter-Kommentar – klick zum als gelesen markieren"
+                                            className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide px-1.5 h-5 rounded-full bg-red-500/20 text-red-300 border border-red-500/40 hover:bg-red-500/30 transition-colors animate-pulse"
+                                          >
+                                            <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
+                                            Neu
+                                          </button>
+                                        )}
                                         <span className="text-sm font-semibold text-foreground truncate">
                                           {chatterName}
                                         </span>
@@ -5797,15 +5869,16 @@ export default function AdminDashboard() {
                                           )}
                                           {!req._editingComment ? (
                                             <button
-                                              onClick={() =>
+                                              onClick={() => {
+                                                markReqSeen(req);
                                                 setModelRequests((prev) =>
                                                   prev.map((r) =>
                                                     r.id === req.id
                                                       ? { ...r, _editingComment: true, _localComment: "" }
                                                       : r,
                                                   ),
-                                                )
-                                              }
+                                                );
+                                              }}
                                               className="group flex items-center gap-2 px-3.5 py-2 rounded-lg bg-gradient-to-r from-accent/10 via-accent/5 to-transparent border border-accent/20 hover:border-accent/50 hover:from-accent/20 hover:via-accent/10 text-sm font-medium text-accent hover:text-accent transition-all duration-300 shadow-sm hover:shadow-[0_0_20px_-5px_hsl(var(--accent)/0.4)]"
                                             >
                                               <MessageSquare className="h-4 w-4 transition-transform group-hover:scale-110" />
