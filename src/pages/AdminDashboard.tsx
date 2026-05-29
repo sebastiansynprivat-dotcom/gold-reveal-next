@@ -5286,7 +5286,7 @@ export default function AdminDashboard() {
                                         Hey, eine neue Anfrage des Chatters an dich – ich leite sie dir einmal eins zu
                                         eins weiter 🙋🏼‍♂️:
                                       </p>
-                                      {cleanDescription}
+                                      <p className="font-bold whitespace-pre-wrap">{cleanDescription}</p>
                                       {req.request_type === "individual" && req.price != null && (
                                         <p className="text-xs text-muted-foreground mt-1.5">
                                           Der Preis, den der Kunde bereit wäre zu bezahlen:{" "}
