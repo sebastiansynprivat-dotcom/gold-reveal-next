@@ -4770,9 +4770,9 @@ export default function AdminDashboard() {
                                       setReassignTarget(chatter);
                                     }}
                                     className="text-foreground hover:text-foreground/80 h-7 w-7 p-0"
-                                    title="Accounts verwalten"
+                                    title="Chatter bearbeiten"
                                   >
-                                    <RefreshCw className="h-3.5 w-3.5" />
+                                    <Pencil className="h-3.5 w-3.5" />
                                   </Button>
                                   <Button
                                     variant="ghost"
