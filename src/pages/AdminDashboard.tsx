@@ -69,6 +69,7 @@ import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import AssignAccountToChatterButton from "@/components/admin/AssignAccountToChatterButton";
+import PreChattersDialog from "@/components/admin/PreChattersDialog";
 
 import {
   AlertDialog,
