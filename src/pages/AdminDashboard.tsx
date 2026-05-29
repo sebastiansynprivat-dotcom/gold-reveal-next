@@ -8360,6 +8360,11 @@ export default function AdminDashboard() {
                             {acc.is_manual ? "Freier Account" : "Account-Pool"}
                           </span>
                         </div>
+                        {acc.model_id && modelNames[acc.model_id] && (
+                          <p className="text-[10px] text-accent font-medium truncate">
+                            Model: {modelNames[acc.model_id]}
+                          </p>
+                        )}
                         <p className="text-xs font-medium text-foreground truncate">{acc.account_email}</p>
                         {acc.account_domain && (
                           <p className="text-[10px] text-muted-foreground truncate">{acc.account_domain}</p>
