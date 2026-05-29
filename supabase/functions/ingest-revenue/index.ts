@@ -140,7 +140,13 @@ Deno.serve(async (req) => {
             .from("profiles")
             .select("user_id, group_name")
             .in("user_id", userIds);
-          for (const p of profs ?? []) profileMap.set(p.user_id, p.group_name);
+          const cleanName = (n: string) =>
+            (n || "")
+              .replace(/\s*\([^)]*\)\s*/g, " ")
+              .replace(/\p{Extended_Pictographic}/gu, "")
+              .replace(/\s+/g, " ")
+              .trim();
+          for (const p of profs ?? []) profileMap.set(p.user_id, cleanName(p.group_name || ""));
         }
 
         for (const a of accs ?? []) {
