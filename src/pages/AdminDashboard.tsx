@@ -70,6 +70,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Switch } from "@/components/ui/switch";
 import AssignAccountToChatterButton from "@/components/admin/AssignAccountToChatterButton";
 import PreChattersDialog from "@/components/admin/PreChattersDialog";
+import SetupNotificationsBell from "@/components/admin/SetupNotificationsBell";
 
 import {
   AlertDialog,
