@@ -44,3 +44,6 @@ verify_jwt = false
 
 [functions.assign-chatter-accounts]
 verify_jwt = false
+
+[functions.send-admin-push]
+verify_jwt = false
