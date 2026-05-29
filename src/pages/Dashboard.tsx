@@ -1076,17 +1076,23 @@ export default function Dashboard() {
           {/* Bisherige Anfragen – einklappbar */}
           {myRequests.length > 0 &&
             (() => {
-              // Unseen = requests with status !== pending OR with admin_comment, that user hasn't seen yet
+              // Unseen = requests with status !== pending OR with admin messages, that user hasn't seen yet
+              const latestAdminMsgTs = (r: any) => {
+                const msgs = (r._messages || []).filter((m: any) => m.sender_role === "admin");
+                return msgs.length ? msgs[msgs.length - 1].created_at : "";
+              };
+              const seenKey = (r: any) =>
+                r.id + "_" + r.status + "_" + (r.admin_comment || "") + "_" + latestAdminMsgTs(r);
               const unseenCount = myRequests.filter(
                 (r) =>
-                  (r.status !== "pending" || r.admin_comment) &&
-                  !seenRequestIds.has(r.id + "_" + r.status + "_" + (r.admin_comment || "")),
+                  (r.status !== "pending" || r.admin_comment || latestAdminMsgTs(r)) &&
+                  !seenRequestIds.has(seenKey(r)),
               ).length;
 
               const markAllSeen = () => {
                 const newSeen = new Set(seenRequestIds);
                 myRequests.forEach((r) => {
-                  newSeen.add(r.id + "_" + r.status + "_" + (r.admin_comment || ""));
+                  newSeen.add(seenKey(r));
                 });
                 setSeenRequestIds(newSeen);
                 localStorage.setItem("seen_request_updates", JSON.stringify([...newSeen]));
