@@ -55,6 +55,7 @@ import {
   Menu,
   ArrowLeftRight,
   Download,
+  Pencil,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -68,6 +69,7 @@ import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import AssignAccountToChatterButton from "@/components/admin/AssignAccountToChatterButton";
+import PreChattersDialog from "@/components/admin/PreChattersDialog";
 
 import {
   AlertDialog,
@@ -208,6 +210,7 @@ interface ChatterProfile {
   account_password?: string;
   account_domain?: string;
   assigned_accounts?: AccountEntry[];
+  language?: string;
 }
 
 interface AccountEntry {
@@ -761,6 +764,11 @@ export default function AdminDashboard() {
   const [reassignPoolSectionOpen, setReassignPoolSectionOpen] = useState(false);
   const [reassignOpenPoolPlatform, setReassignOpenPoolPlatform] = useState<string | null>(null);
   const [reassignManualSectionOpen, setReassignManualSectionOpen] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editTelegram, setEditTelegram] = useState("");
+  const [editLanguage, setEditLanguage] = useState<"de" | "en">("de");
+  const [savingChatter, setSavingChatter] = useState(false);
+  const [preChattersOpen, setPreChattersOpen] = useState(false);
   const [deletingPool, setDeletingPool] = useState(false);
   const [deletePoolConfirm, setDeletePoolConfirm] = useState(false);
   const [moveConfirm, setMoveConfirm] = useState<{ id: string; toPool: boolean } | null>(null);
@@ -2122,7 +2130,7 @@ export default function AdminDashboard() {
     const { data, error } = await supabase
       .from("profiles")
       .select(
-        "user_id, group_name, telegram_id, created_at, account_email, account_password, account_domain, pwa_installed",
+        "user_id, group_name, telegram_id, created_at, account_email, account_password, account_domain, pwa_installed, language",
       )
       .order("created_at", { ascending: false });
     if (error) {
@@ -4527,6 +4535,16 @@ export default function AdminDashboard() {
                         ))}
                     </div>
 
+                    <div className="flex justify-end">
+                      <button
+                        onClick={() => setPreChattersOpen(true)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium bg-accent/10 text-accent hover:bg-accent/20 transition-colors"
+                      >
+                        <UserPlus className="h-3.5 w-3.5" />
+                        Chatter vorab anlegen
+                      </button>
+                    </div>
+
 
                     {/* Chatter Filters */}
                     <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
@@ -4663,9 +4681,26 @@ export default function AdminDashboard() {
                                       {chatter.group_name || "Kein Gruppenname"}
                                     </p>
                                     <p className="text-[10px] text-muted-foreground">
-                                      Telegram: {chatter.telegram_id || "—"} · Seit{" "}
+                                      Telegram: {chatter.telegram_id || "—"} ·{" "}
+                                      {chatter.language === "en" ? "🇬🇧 EN" : "🇩🇪 DE"} · Seit{" "}
                                       {new Date(chatter.created_at).toLocaleDateString("de-DE")}
                                     </p>
+                                    {(chatter.assigned_accounts?.length || 0) > 0 && (
+                                      <div className="flex items-center gap-1 flex-wrap mt-0.5">
+                                        {chatter.assigned_accounts!.map((acc) => {
+                                          const modelLabel = acc.model_id ? modelNames[acc.model_id] : null;
+                                          return (
+                                            <span
+                                              key={acc.id}
+                                              className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-md bg-accent/10 text-accent border border-accent/20"
+                                            >
+                                              <span className="font-semibold">{acc.platform}</span>
+                                              {modelLabel && <span className="text-foreground/80">· {modelLabel}</span>}
+                                            </span>
+                                          );
+                                        })}
+                                      </div>
+                                    )}
                                   </div>
                                   {(chatter.assigned_accounts?.length || 0) > 0 && (
                                     <Badge variant="secondary" className="text-[10px] shrink-0">
@@ -4710,7 +4745,7 @@ export default function AdminDashboard() {
                                       className="text-accent hover:text-accent/80 h-7 w-7 p-0"
                                       title="Tagesziel bearbeiten"
                                     >
-                                      <Target className="h-3.5 w-3.5" />
+                                      <DollarSign className="h-3.5 w-3.5" />
                                     </Button>
                                     <Popover>
                                       <PopoverTrigger asChild>
@@ -4770,9 +4805,9 @@ export default function AdminDashboard() {
                                       setReassignTarget(chatter);
                                     }}
                                     className="text-foreground hover:text-foreground/80 h-7 w-7 p-0"
-                                    title="Accounts verwalten"
+                                    title="Chatter bearbeiten"
                                   >
-                                    <RefreshCw className="h-3.5 w-3.5" />
+                                    <Pencil className="h-3.5 w-3.5" />
                                   </Button>
                                   <Button
                                     variant="ghost"
@@ -8180,10 +8215,23 @@ export default function AdminDashboard() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Reassign Account Dialog */}
+      <PreChattersDialog
+        open={preChattersOpen}
+        onOpenChange={setPreChattersOpen}
+        freeAccounts={accounts
+          .filter((a) => !a.assigned_to)
+          .map((a) => ({ id: a.id, platform: a.platform, account_email: a.account_email, assigned_to: a.assigned_to }))}
+      />
+
+      {/* Chatter bearbeiten Dialog (Reassign + Daten) */}
       <Dialog
         open={!!reassignTarget}
         onOpenChange={(o) => {
+          if (o && reassignTarget) {
+            setEditName(reassignTarget.group_name || "");
+            setEditTelegram(reassignTarget.telegram_id || "");
+            setEditLanguage(((reassignTarget as any).language || "de") as "de" | "en");
+          }
           if (!o) {
             setReassignTarget(null);
             setReassignOpenFolder(null);
@@ -8198,10 +8246,10 @@ export default function AdminDashboard() {
           <DialogHeader className="pb-0">
             <div className="flex items-center gap-3 mb-1">
               <div className="h-10 w-10 rounded-xl bg-accent/10 flex items-center justify-center shrink-0 gold-glow">
-                <KeyRound className="h-5 w-5 text-accent" />
+                <Pencil className="h-5 w-5 text-accent" />
               </div>
               <div className="flex-1 min-w-0">
-                <DialogTitle className="text-foreground text-base font-bold">Accounts verwalten</DialogTitle>
+                <DialogTitle className="text-foreground text-base font-bold">Chatter bearbeiten</DialogTitle>
                 <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
                   {reassignTarget?.group_name || "Chatter"}
                 </p>
@@ -8210,6 +8258,87 @@ export default function AdminDashboard() {
           </DialogHeader>
 
           <div className="overflow-y-auto flex-1 space-y-4 pr-1 -mr-1 pt-3">
+            {/* Datensatz bearbeiten */}
+            <div className="glass-card-subtle rounded-xl p-3 space-y-2.5">
+              <div className="flex items-center gap-2 px-1">
+                <div className="h-1.5 w-1.5 rounded-full bg-accent" />
+                <p className="text-[11px] font-semibold text-foreground tracking-wide uppercase">Datensatz</p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <label className="text-[10px] text-muted-foreground uppercase tracking-wide">Name</label>
+                  <Input
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    placeholder="Gruppenname"
+                    className="h-8 text-xs bg-secondary/30 border-transparent"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] text-muted-foreground uppercase tracking-wide">Telegram-ID</label>
+                  <Input
+                    value={editTelegram}
+                    onChange={(e) => setEditTelegram(e.target.value)}
+                    placeholder="@username"
+                    className="h-8 text-xs bg-secondary/30 border-transparent"
+                  />
+                </div>
+                <div className="space-y-1 sm:col-span-2">
+                  <label className="text-[10px] text-muted-foreground uppercase tracking-wide">Sprache</label>
+                  <div className="flex gap-1.5">
+                    {(["de", "en"] as const).map((lang) => (
+                      <button
+                        key={lang}
+                        type="button"
+                        onClick={() => setEditLanguage(lang)}
+                        className={cn(
+                          "flex-1 h-8 rounded-md text-xs font-medium transition-all border",
+                          editLanguage === lang
+                            ? "bg-accent text-accent-foreground border-accent"
+                            : "bg-secondary/30 text-muted-foreground border-transparent hover:text-foreground",
+                        )}
+                      >
+                        {lang === "de" ? "🇩🇪 Deutsch" : "🇬🇧 Englisch"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <Button
+                onClick={async () => {
+                  if (!reassignTarget) return;
+                  setSavingChatter(true);
+                  const { error } = await supabase
+                    .from("profiles")
+                    .update({
+                      group_name: editName,
+                      telegram_id: editTelegram,
+                      language: editLanguage,
+                    } as any)
+                    .eq("user_id", reassignTarget.user_id);
+                  setSavingChatter(false);
+                  if (error) {
+                    toast.error("Speichern fehlgeschlagen: " + error.message);
+                  } else {
+                    toast.success("Datensatz gespeichert");
+                    setChatters((prev) =>
+                      prev.map((c) =>
+                        c.user_id === reassignTarget.user_id
+                          ? ({ ...c, group_name: editName, telegram_id: editTelegram, language: editLanguage } as any)
+                          : c,
+                      ),
+                    );
+                  }
+                }}
+                disabled={savingChatter}
+                size="sm"
+                className="w-full h-8 text-xs bg-accent text-accent-foreground hover:bg-accent/90"
+              >
+                {savingChatter ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <><Save className="h-3.5 w-3.5 mr-1.5" />Speichern</>}
+              </Button>
+            </div>
+
+
             {/* Currently assigned accounts */}
             {(() => {
               const assigned = reassignTarget?.assigned_accounts || [];
@@ -8251,6 +8380,11 @@ export default function AdminDashboard() {
                             {acc.is_manual ? "Freier Account" : "Account-Pool"}
                           </span>
                         </div>
+                        {acc.model_id && modelNames[acc.model_id] && (
+                          <p className="text-[10px] text-accent font-medium truncate">
+                            Model: {modelNames[acc.model_id]}
+                          </p>
+                        )}
                         <p className="text-xs font-medium text-foreground truncate">{acc.account_email}</p>
                         {acc.account_domain && (
                           <p className="text-[10px] text-muted-foreground truncate">{acc.account_domain}</p>

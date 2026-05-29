@@ -1367,6 +1367,42 @@ export type Database = {
         }
         Relationships: []
       }
+      pre_chatters: {
+        Row: {
+          claimed_at: string | null
+          claimed_user_id: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          language: string
+          name: string
+          preassigned_account_id: string | null
+          telegram_id: string
+        }
+        Insert: {
+          claimed_at?: string | null
+          claimed_user_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          language?: string
+          name?: string
+          preassigned_account_id?: string | null
+          telegram_id: string
+        }
+        Update: {
+          claimed_at?: string | null
+          claimed_user_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          language?: string
+          name?: string
+          preassigned_account_id?: string | null
+          telegram_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           account_domain: string | null
@@ -1375,6 +1411,7 @@ export type Database = {
           created_at: string
           group_name: string
           id: string
+          language: string
           offer: string | null
           pwa_installed: boolean
           telegram_id: string | null
@@ -1388,6 +1425,7 @@ export type Database = {
           created_at?: string
           group_name?: string
           id?: string
+          language?: string
           offer?: string | null
           pwa_installed?: boolean
           telegram_id?: string | null
@@ -1401,6 +1439,7 @@ export type Database = {
           created_at?: string
           group_name?: string
           id?: string
+          language?: string
           offer?: string | null
           pwa_installed?: boolean
           telegram_id?: string | null
