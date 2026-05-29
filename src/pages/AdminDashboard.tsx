@@ -844,7 +844,7 @@ export default function AdminDashboard() {
   const adminDataBootstrapRef = useRef(false);
   const [modelRequests, setModelRequests] = useState<any[]>([]);
   const [modelRequestsLoaded, setModelRequestsLoaded] = useState(false);
-  const [requestFilter, setRequestFilter] = useState<"all" | "pending" | "accepted" | "in_progress" | "rejected">(
+  const [requestFilter, setRequestFilter] = useState<"all" | "pending" | "accepted" | "in_progress" | "waiting_feedback" | "rejected">(
     "all",
   );
   const [contentLinkFilter, setContentLinkFilter] = useState<"all" | "with_link" | "without_link">("all");
@@ -5053,12 +5053,13 @@ export default function AdminDashboard() {
               {activeTab === "anfragen" && (
                 <div className="space-y-4">
                   {/* Request Stats Overview */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
                     {(
                       [
                         { key: "pending", label: "Offen", icon: Clock, colorClass: "text-yellow-400" },
                         { key: "accepted", label: "Angenommen", icon: CheckCircle2, colorClass: "text-emerald-400" },
                         { key: "in_progress", label: "In Arbeit", icon: Loader2, colorClass: "text-blue-400" },
+                        { key: "waiting_feedback", label: "Warten auf Rückmeldung", icon: MessageSquare, colorClass: "text-purple-400" },
                         { key: "rejected", label: "Abgelehnt", icon: XCircle, colorClass: "text-destructive" },
                       ] as const
                     ).map(({ key, label, icon: Icon, colorClass }) => {
@@ -5194,6 +5195,13 @@ export default function AdminDashboard() {
                                 text: "text-red-400",
                                 label: "Abgelehnt",
                                 border: "border-l-red-500/50",
+                              },
+                              waiting_feedback: {
+                                dot: "bg-purple-400",
+                                bg: "bg-purple-500/10",
+                                text: "text-purple-400",
+                                label: "Warten auf Rückmeldung",
+                                border: "border-l-purple-500/50",
                               },
                             }[req.status as string] || {
                               dot: "bg-muted-foreground",
@@ -5447,21 +5455,29 @@ export default function AdminDashboard() {
                                                     className="h-7 text-xs"
                                                     onClick={async () => {
                                                       const comment = req._localComment ?? "";
+                                                      const shouldSetWaiting = !!comment.trim();
+                                                      const updatePayload: any = { admin_comment: comment || null };
+                                                      if (shouldSetWaiting) updatePayload.status = "waiting_feedback";
                                                       const { error } = await supabase
                                                         .from("model_requests")
-                                                        .update({ admin_comment: comment || null })
+                                                        .update(updatePayload)
                                                         .eq("id", req.id);
                                                       if (error) {
                                                         toast.error("Fehler beim Speichern");
                                                         return;
                                                       }
-                                                      toast.success("Kommentar gespeichert!");
+                                                      toast.success(
+                                                        shouldSetWaiting
+                                                          ? "Kommentar gespeichert – Status: Warten auf Rückmeldung"
+                                                          : "Kommentar gespeichert!",
+                                                      );
                                                       setModelRequests((prev) =>
                                                         prev.map((r) =>
                                                           r.id === req.id
                                                             ? {
                                                                 ...r,
                                                                 admin_comment: comment || null,
+                                                                status: shouldSetWaiting ? "waiting_feedback" : r.status,
                                                                 _localComment: undefined,
                                                                 _editingComment: false,
                                                               }
@@ -5663,6 +5679,8 @@ export default function AdminDashboard() {
                                               <CheckCircle2 className="h-3.5 w-3.5" />
                                             ) : req.status === "in_progress" ? (
                                               <Clock className="h-3.5 w-3.5" />
+                                            ) : req.status === "waiting_feedback" ? (
+                                              <MessageSquare className="h-3.5 w-3.5" />
                                             ) : (
                                               <XCircle className="h-3.5 w-3.5" />
                                             )}
@@ -5677,6 +5695,28 @@ export default function AdminDashboard() {
                                             onClick={() => updateRequestStatus(req.id, "pending")}
                                           >
                                             <RefreshCw className="h-3 w-3 mr-1" /> Zurücksetzen
+                                          </Button>
+                                        )}
+                                        {user?.email?.toLowerCase() === "maxsandig@hotmail.de" && (
+                                          <Button
+                                            size="sm"
+                                            variant="ghost"
+                                            className="h-7 text-xs text-destructive/80 hover:text-destructive hover:bg-destructive/10 ml-auto"
+                                            onClick={async () => {
+                                              if (!confirm("Diese Anfrage wirklich löschen?")) return;
+                                              const { error } = await supabase
+                                                .from("model_requests")
+                                                .delete()
+                                                .eq("id", req.id);
+                                              if (error) {
+                                                toast.error("Fehler beim Löschen");
+                                                return;
+                                              }
+                                              toast.success("Anfrage gelöscht");
+                                              setModelRequests((prev) => prev.filter((r) => r.id !== req.id));
+                                            }}
+                                          >
+                                            <Trash2 className="h-3 w-3 mr-1" /> Löschen
                                           </Button>
                                         )}
                                       </div>
