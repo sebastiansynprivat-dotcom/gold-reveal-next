@@ -220,10 +220,7 @@ export default function Dashboard() {
     }[]
   >([]);
   const [modelInactiveInfoOpen, setModelInactiveInfoOpen] = useState(false);
-  const [profileViewOpen, setProfileViewOpen] = useState(false);
-  const [biographyOpen, setBiographyOpen] = useState(false);
   const [demoModelInactive, setDemoModelInactive] = useState(false);
-  const [accountsOpen, setAccountsOpen] = useState(true);
   const [myRequests, setMyRequests] = useState<any[]>([]);
   const [requestsOpen, setRequestsOpen] = useState(false);
   const [editRequest, setEditRequest] = useState<any>(null);
