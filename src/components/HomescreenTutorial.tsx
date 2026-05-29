@@ -33,27 +33,62 @@ interface HomescreenTutorialProps {
   onDismiss?: () => void;
 }
 
+const isStandaloneNow = () =>
+  window.matchMedia("(display-mode: standalone)").matches ||
+  (window.navigator as any).standalone === true;
+
 export default function HomescreenTutorial({ isFirstLogin, manualOpen, onManualClose, onDismiss }: HomescreenTutorialProps) {
   const [open, setOpen] = useState(false);
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
+  // Forced mode: not dismissable until app is added to homescreen
+  const [forced, setForced] = useState(false);
 
   useEffect(() => {
     if (!isFirstLogin) return;
-    const isStandalone = window.matchMedia("(display-mode: standalone)").matches
-      || (window.navigator as any).standalone === true;
-    if (isStandalone) return;
+    if (isStandaloneNow()) return;
     const seen = localStorage.getItem(TUTORIAL_KEY);
     if (!seen) {
-      const timer = setTimeout(() => setOpen(true), 1200);
+      const timer = setTimeout(() => {
+        setForced(true);
+        setOpen(true);
+      }, 1200);
       return () => clearTimeout(timer);
     }
   }, [isFirstLogin]);
 
   useEffect(() => {
-    if (manualOpen) setOpen(true);
+    if (manualOpen) {
+      setForced(false);
+      setOpen(true);
+    }
   }, [manualOpen]);
 
+  // Auto-close when user installs to homescreen (standalone mode detected)
+  useEffect(() => {
+    if (!open || !forced) return;
+    const check = () => {
+      if (isStandaloneNow()) {
+        localStorage.setItem(TUTORIAL_KEY, "true");
+        setForced(false);
+        setOpen(false);
+        onDismiss?.();
+      }
+    };
+    const interval = setInterval(check, 1000);
+    const mql = window.matchMedia("(display-mode: standalone)");
+    const onChange = () => check();
+    mql.addEventListener?.("change", onChange);
+    window.addEventListener("visibilitychange", check);
+    return () => {
+      clearInterval(interval);
+      mql.removeEventListener?.("change", onChange);
+      window.removeEventListener("visibilitychange", check);
+    };
+  }, [open, forced, onDismiss]);
+
   const handleClose = () => {
+    // Block dismissal in forced mode
+    if (forced) return;
     localStorage.setItem(TUTORIAL_KEY, "true");
     setOpen(false);
     onManualClose?.();
@@ -63,7 +98,12 @@ export default function HomescreenTutorial({ isFirstLogin, manualOpen, onManualC
   return (
     <>
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); else setOpen(true); }}>
-      <DialogContent className="glass-card border-border max-w-md mx-auto max-h-[90vh] overflow-y-auto">
+      <DialogContent
+        className={`glass-card border-border max-w-md mx-auto max-h-[90vh] overflow-y-auto ${forced ? "[&>button]:hidden" : ""}`}
+        onInteractOutside={(e) => { if (forced) e.preventDefault(); }}
+        onEscapeKeyDown={(e) => { if (forced) e.preventDefault(); }}
+        onPointerDownOutside={(e) => { if (forced) e.preventDefault(); }}
+      >
         <DialogHeader>
           <DialogTitle className="text-foreground flex items-center gap-2 text-lg">
             <Smartphone className="h-5 w-5 text-accent" />
@@ -80,7 +120,9 @@ export default function HomescreenTutorial({ isFirstLogin, manualOpen, onManualC
           <div>
             <p className="text-sm font-semibold text-foreground">Sehr wichtig!</p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Bitte füge die App jetzt zu deinem Homescreen hinzu. Nur so bekommst du Push-Benachrichtigungen und kannst die App wie gewohnt nutzen. Das dauert nur 30 Sekunden!
+              {forced
+                ? "Dieses Fenster bleibt geöffnet, bis du die App zu deinem Homescreen hinzugefügt hast. Push-Benachrichtigungen sind Pflicht, damit du nichts verpasst. Dauert nur 30 Sekunden!"
+                : "Bitte füge die App jetzt zu deinem Homescreen hinzu. Nur so bekommst du Push-Benachrichtigungen und kannst die App wie gewohnt nutzen. Das dauert nur 30 Sekunden!"}
             </p>
           </div>
         </div>
@@ -109,9 +151,15 @@ export default function HomescreenTutorial({ isFirstLogin, manualOpen, onManualC
           })}
         </div>
 
-        <Button onClick={handleClose} className="w-full mt-2">
-          Verstanden, ich füge die App hinzu!
-        </Button>
+        {forced ? (
+          <div className="mt-2 text-center text-[11px] text-muted-foreground">
+            Sobald du die App zum Homescreen hinzugefügt und sie von dort geöffnet hast, schließt sich dieses Fenster automatisch.
+          </div>
+        ) : (
+          <Button onClick={handleClose} className="w-full mt-2">
+            Verstanden, ich füge die App hinzu!
+          </Button>
+        )}
       </DialogContent>
     </Dialog>
 
