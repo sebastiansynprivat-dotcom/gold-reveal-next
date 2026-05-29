@@ -933,9 +933,9 @@ export default function Dashboard() {
             }
           }}
           onScrollToAccount={() => {
-            const el = document.querySelector('[data-section="accounts"]');
+            const el = document.querySelector('[data-section="requests"]');
             if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-            highlightSection(el, "Deine Accounts");
+            highlightSection(el, "Anfragen an das Model");
           }}
           onScrollToInspiration={() => {
             const el = document.querySelector('[data-section="inspiration"]');
