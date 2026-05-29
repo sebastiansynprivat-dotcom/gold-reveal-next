@@ -1728,7 +1728,7 @@ function DashboardBillingInfo({ onNavigate, groupName }: { onNavigate: () => voi
                 <p className="text-xs font-semibold text-foreground">Empfehle deine Freunde</p>
                 <p className="text-[10px] text-muted-foreground">
                   Verdiene 1% von dem, was sie verdienen –{" "}
-                  <span className="inline-flex items-center bg-accent/20 text-accent border border-accent/40 rounded-md px-1.5 py-0.5 text-[10px] font-bold tracking-wide">
+                  <span className="inline-flex items-center bg-accent/20 text-accent border border-accent/40 rounded-md px-2 py-0.5 text-[11px] font-extrabold tracking-wider uppercase ml-0.5">
                     Lifetime
                   </span>
                 </p>
