@@ -48,7 +48,14 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
       // modelLanguage comes from prop now
       setRequestType(editData.request_type);
       setPrice(editData.price != null ? String(editData.price) : "");
-      setDescription(editData.description);
+      const platformMatch = editData.description.match(/^\[Plattform: (Maloum|Brezzels)\]\s*/);
+      if (platformMatch) {
+        setPlatform(platformMatch[1] as "Maloum" | "Brezzels");
+        setDescription(editData.description.replace(platformMatch[0], ""));
+      } else {
+        setPlatform(null);
+        setDescription(editData.description);
+      }
       setOpen(true);
       // Focus description and place cursor at end after dialog opens
       setTimeout(() => {
