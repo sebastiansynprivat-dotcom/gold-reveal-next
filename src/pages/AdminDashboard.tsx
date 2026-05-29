@@ -5279,6 +5279,8 @@ export default function AdminDashboard() {
                               return false;
                             if (requestFilter === "accepted" && contentLinkFilter === "without_link" && r.content_link)
                               return false;
+                            if (requestSearchQuery.trim() && !String(r.model_name || "").toLowerCase().includes(requestSearchQuery.trim().toLowerCase()))
+                              return false;
                             return true;
                           })
                           .map((req, idx, arr) => {
