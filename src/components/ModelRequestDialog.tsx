@@ -144,7 +144,7 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
         body: {
           event: "new_request",
           title: "📨 NEUE MODEL ANFRAGE",
-          body: `${modelName.trim()} · ${requestType === "individual" ? `Individuell${price ? ` (${price}€)` : ""}` : "Allgemein"}`,
+          body: `${platform} · ${modelName.trim()} · ${requestType === "individual" ? `Individuell${price ? ` (${price}€)` : ""}` : "Allgemein"}`,
           url: "/admin",
         },
       }).catch(() => {});
