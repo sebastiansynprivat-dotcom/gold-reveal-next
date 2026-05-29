@@ -5465,6 +5465,17 @@ export default function AdminDashboard() {
                                     </div>
                                     <div className="flex-1 min-w-0">
                                       <div className="flex items-center gap-2">
+                                        {isReqUnread(req) && (
+                                          <button
+                                            type="button"
+                                            onClick={() => markReqSeen(req)}
+                                            title="Neuer Chatter-Kommentar – klick zum als gelesen markieren"
+                                            className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide px-1.5 h-5 rounded-full bg-red-500/20 text-red-300 border border-red-500/40 hover:bg-red-500/30 transition-colors animate-pulse"
+                                          >
+                                            <span className="h-1.5 w-1.5 rounded-full bg-red-400" />
+                                            Neu
+                                          </button>
+                                        )}
                                         <span className="text-sm font-semibold text-foreground truncate">
                                           {chatterName}
                                         </span>
