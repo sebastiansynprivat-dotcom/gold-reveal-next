@@ -209,6 +209,7 @@ interface ChatterProfile {
   account_password?: string;
   account_domain?: string;
   assigned_accounts?: AccountEntry[];
+  language?: string;
 }
 
 interface AccountEntry {
