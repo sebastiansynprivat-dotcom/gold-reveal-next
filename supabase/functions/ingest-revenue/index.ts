@@ -66,6 +66,18 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
+    // Fetch existing rows so we can diff individual sales
+    const keys = validated.map((r) => ({ date: r.date, platform: r.platform }));
+    const { data: existingRows } = await supabase
+      .from("revenue_report")
+      .select("date, platform, data")
+      .in("date", Array.from(new Set(keys.map((k) => k.date))))
+      .in("platform", Array.from(new Set(keys.map((k) => k.platform))));
+    const existingMap = new Map<string, any>();
+    for (const er of existingRows ?? []) {
+      existingMap.set(`${er.date}|${er.platform}`, er.data ?? {});
+    }
+
     const { data: result, error } = await supabase
       .from("revenue_report")
       .upsert(validated, { onConflict: "date,platform" })
@@ -79,28 +91,48 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Fire-and-forget admin push per row that has a revenue_today
+    // Fire-and-forget admin push for each NEW individual sale (diff vs previous data)
     try {
       const url = `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-admin-push`;
       const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
       for (const r of validated) {
-        if (r.revenue_today == null) continue;
-        const amount = Number(r.revenue_today);
-        fetch(url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${serviceKey}`,
-          },
-          body: JSON.stringify({
-            event: "new_revenue",
-            title: "Neue Einnahme 💰",
-            body: `${r.platform.toUpperCase()} · ${amount.toLocaleString("de-DE", { style: "currency", currency: "EUR" })} (${r.date})`,
-            url: "/admin",
-          }),
-        }).catch(() => {});
+        const newData = (r.data ?? {}) as Record<string, number[]>;
+        const oldData = (existingMap.get(`${r.date}|${r.platform}`) ?? {}) as Record<string, number[]>;
+        if (!newData || typeof newData !== "object") continue;
+
+        for (const [model, salesRaw] of Object.entries(newData)) {
+          const sales = Array.isArray(salesRaw) ? salesRaw.map(Number).filter((n) => Number.isFinite(n)) : [];
+          const oldSales = Array.isArray(oldData[model]) ? oldData[model].map(Number).filter((n) => Number.isFinite(n)) : [];
+
+          // Multiset diff: count occurrences in old, subtract from new
+          const counts = new Map<number, number>();
+          for (const v of oldSales) counts.set(v, (counts.get(v) ?? 0) + 1);
+          const newSales: number[] = [];
+          for (const v of sales) {
+            const c = counts.get(v) ?? 0;
+            if (c > 0) counts.set(v, c - 1);
+            else newSales.push(v);
+          }
+
+          for (const amount of newSales) {
+            fetch(url, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${serviceKey}`,
+              },
+              body: JSON.stringify({
+                event: "new_revenue",
+                title: "Neuer Verkauf 💰",
+                body: `${r.platform.toUpperCase()} · ${model} · ${amount.toLocaleString("de-DE", { style: "currency", currency: "EUR" })}`,
+                url: "/admin",
+              }),
+            }).catch(() => {});
+          }
+        }
       }
     } catch (_) { /* ignore */ }
+
 
     return new Response(JSON.stringify({ success: true, count: result?.length ?? 0, rows: result }), {
       status: 200,
