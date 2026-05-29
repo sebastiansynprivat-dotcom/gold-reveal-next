@@ -5242,7 +5242,13 @@ export default function AdminDashboard() {
                                             : "";
                                         const fullText = `Hey, eine neue Anfrage des Chatters an dich – ich leite sie dir einmal eins zu eins weiter 🙋🏼‍♂️:\n\n${req.description}${priceLine}\n\nGib mir bitte Feedback, ob du das umsetzen möchtest oder nicht. Danke dir ☺️`;
                                         navigator.clipboard.writeText(fullText);
-                                        toast.success("Beschreibung kopiert!");
+                                        toast.success("Nachricht kopiert – WhatsApp geöffnet, Model suchen und einfügen.");
+                                        const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                                        if (isMobile) {
+                                          window.location.href = "whatsapp://";
+                                        } else {
+                                          window.open("https://web.whatsapp.com/", "_blank");
+                                        }
                                       }}
                                       className="glass-card-subtle rounded-lg px-3 py-2.5 text-sm text-foreground/90 leading-relaxed hover:bg-accent/5 transition-colors text-left w-full group"
                                     >
