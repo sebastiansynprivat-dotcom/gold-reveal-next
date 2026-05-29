@@ -1655,7 +1655,7 @@ function BonusModelSection({
     </motion.section>
   );
 }
-const REFERRAL_LINKEDIN_URL = "LINKEDIN_URL";
+const REFERRAL_LINKEDIN_URL = "https://app.youform.com/forms/tcrienu8";
 
 function DashboardBillingInfo({ onNavigate, groupName }: { onNavigate: () => void; groupName: string }) {
   const now = new Date();
