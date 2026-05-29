@@ -38,16 +38,21 @@ export default function HomescreenTutorial({ isFirstLogin, manualOpen, onManualC
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!isFirstLogin) return;
+    const forced = (() => { try { return localStorage.getItem("force_homescreen_tutorial") === "1"; } catch { return false; } })();
+    if (!isFirstLogin && !forced) return;
     const isStandalone = window.matchMedia("(display-mode: standalone)").matches
       || (window.navigator as any).standalone === true;
-    if (isStandalone) return;
+    if (isStandalone) {
+      try { localStorage.removeItem("force_homescreen_tutorial"); } catch {}
+      return;
+    }
     const seen = localStorage.getItem(TUTORIAL_KEY);
-    if (!seen) {
+    if (!seen || forced) {
       const timer = setTimeout(() => setOpen(true), 1200);
       return () => clearTimeout(timer);
     }
   }, [isFirstLogin]);
+
 
   useEffect(() => {
     if (manualOpen) setOpen(true);
