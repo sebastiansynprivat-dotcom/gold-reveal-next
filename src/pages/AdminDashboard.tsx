@@ -71,6 +71,7 @@ import { Switch } from "@/components/ui/switch";
 import AssignAccountToChatterButton from "@/components/admin/AssignAccountToChatterButton";
 import PreChattersDialog from "@/components/admin/PreChattersDialog";
 import SetupNotificationsBell from "@/components/admin/SetupNotificationsBell";
+import PlatformsManager from "@/components/admin/PlatformsManager";
 
 import {
   AlertDialog,
@@ -5850,6 +5851,11 @@ export default function AdminDashboard() {
                       </div>
                     );
                   })()}
+
+                  {/* Plattformen-Verwaltung (global) */}
+                  <section className="glass-card rounded-xl p-4">
+                    <PlatformsManager />
+                  </section>
 
                   {/* Unified BotDMs & Setup Table */}
                   <section className="glass-card rounded-xl overflow-hidden">

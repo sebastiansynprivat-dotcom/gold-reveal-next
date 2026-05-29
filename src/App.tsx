@@ -5,6 +5,10 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
+import { ensurePlatformsLoaded } from "@/lib/platforms";
+
+// Plattform-Registry beim App-Start aus der DB initialisieren
+ensurePlatformsLoaded();
 
 import Onboarding from "./pages/Onboarding";
 import Quiz from "./pages/Quiz";
