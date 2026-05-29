@@ -174,7 +174,7 @@ Deno.serve(async (req) => {
 
       for (const s of pendingSales) {
         const chatter = chatterMap.get(`${s.platform}|${s.model.toLowerCase()}`);
-        const amountStr = s.amount.toLocaleString("de-DE", { style: "currency", currency: "EUR" });
+        const amountStr = s.amount.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "€";
         const parts = [platformLabel(s.platform), s.model];
         if (chatter) parts.push(chatter);
         fetch(url, {
@@ -258,10 +258,10 @@ Deno.serve(async (req) => {
 
           if (bigOne) {
             title = "💰 BIG ONE!";
-            body = `${platformIcon(platform)} ${platform.toUpperCase()} · ${model} · ${bigOne.toLocaleString("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 })} auf einen Schlag 🚀`;
+            body = `${platformIcon(platform)} ${platform.toUpperCase()} · ${model} · ${bigOne.toLocaleString("de-DE", { maximumFractionDigits: 0 })}€ auf einen Schlag 🚀`;
           } else if (recentCount >= BURST_THRESHOLD) {
             title = "🔥 HOT STREAK!";
-            body = `${platformIcon(platform)} ${platform.toUpperCase()} · ${model} · ${recentCount} Sales in ${oldestAgeMin} Min · +${recentSum.toLocaleString("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 })} ⚡`;
+            body = `${platformIcon(platform)} ${platform.toUpperCase()} · ${model} · ${recentCount} Sales in ${oldestAgeMin} Min · +${recentSum.toLocaleString("de-DE", { maximumFractionDigits: 0 })}€ ⚡`;
           } else {
             continue;
           }
