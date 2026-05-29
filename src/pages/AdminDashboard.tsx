@@ -2075,6 +2075,41 @@ export default function AdminDashboard() {
     void loadAdmins();
   };
 
+  const saveAdminName = async (targetUserId: string, name: string) => {
+    setSavingAdminName(true);
+    try {
+      const trimmed = name.trim();
+      const { error } = await supabase
+        .from("admin_profiles")
+        .upsert({ user_id: targetUserId, display_name: trimmed || null }, { onConflict: "user_id" });
+      if (error) throw error;
+      setAdminList((prev) => prev.map((a) => (a.user_id === targetUserId ? { ...a, display_name: trimmed || null } : a)));
+      setAdminNames((prev) => {
+        const next = { ...prev };
+        if (trimmed) next[targetUserId] = trimmed;
+        else delete next[targetUserId];
+        return next;
+      });
+      setEditingAdminName(null);
+      setEditingAdminNameValue("");
+      toast.success("Name gespeichert");
+    } catch (err: any) {
+      toast.error(err.message || "Name konnte nicht gespeichert werden");
+    } finally {
+      setSavingAdminName(false);
+    }
+  };
+
+  const loadAdminNames = async () => {
+    const { data } = await supabase.from("admin_profiles").select("user_id, display_name");
+    if (data) {
+      const map: Record<string, string> = {};
+      for (const r of data) if (r.display_name) map[r.user_id] = r.display_name;
+      setAdminNames((prev) => ({ ...prev, ...map }));
+    }
+  };
+
+
   const addAdmin = async () => {
     if (!newAdminEmail.trim()) return;
     setAddingAdmin(true);
