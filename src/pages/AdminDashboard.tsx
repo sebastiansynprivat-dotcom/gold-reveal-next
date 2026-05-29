@@ -5386,102 +5386,120 @@ export default function AdminDashboard() {
 
                                     {/* Translation buttons */}
                                     <div className="flex gap-2 flex-wrap">
-                                      {(["en", "de"] as const).map((target) => (
-                                        <Button
-                                          key={target}
-                                          size="sm"
-                                          variant="outline"
-                                          disabled={req._translating === target}
-                                          className="h-7 text-[11px] gap-1.5"
-                                          onClick={async () => {
-                                            setModelRequests((prev) =>
-                                              prev.map((r) =>
-                                                r.id === req.id ? { ...r, _translating: target } : r,
-                                              ),
-                                            );
-                                            try {
-                                              const { data, error } = await supabase.functions.invoke(
-                                                "translate-text",
-                                                { body: { text: cleanDescription, target } },
-                                              );
-                                               if (error || !data?.translation) {
-                                                 toast.error(data?.error || "Übersetzung fehlgeschlagen");
-                                                 return;
-                                               }
-                                               // Save translation to state FIRST so it's always shown,
-                                               // even if clipboard access fails (e.g. iOS PWA).
-                                               setModelRequests((prev) =>
-                                                 prev.map((r) =>
-                                                   r.id === req.id
-                                                     ? {
-                                                         ...r,
-                                                         _translations: {
-                                                           ...(r._translations || {}),
-                                                           [target]: data.translation,
-                                                         },
-                                                       }
-                                                     : r,
-                                                 ),
-                                               );
-                                               let copied = false;
-                                               try {
-                                                 if (navigator.clipboard?.writeText) {
-                                                   await navigator.clipboard.writeText(data.translation);
-                                                   copied = true;
-                                                 }
-                                               } catch {
-                                                 // Clipboard blocked (iOS PWA / insecure context) – ignore
-                                               }
-                                               toast.success(
-                                                 copied
-                                                   ? `Übersetzung (${target === "en" ? "EN" : "DE"}) kopiert`
-                                                   : `Übersetzung (${target === "en" ? "EN" : "DE"}) fertig`,
-                                               );
-                                            } catch (err: any) {
-                                              toast.error(err?.message || "Fehler");
-                                            } finally {
+                                      {(["en", "de"] as const).map((target) => {
+                                        const active = !!req._translations?.[target];
+                                        return (
+                                          <Button
+                                            key={target}
+                                            size="sm"
+                                            variant="outline"
+                                            disabled={req._translating === target}
+                                            className="h-7 text-[11px] gap-1.5"
+                                            onClick={async () => {
+                                              // Toggle off if already shown
+                                              if (active) {
+                                                setModelRequests((prev) =>
+                                                  prev.map((r) =>
+                                                    r.id === req.id
+                                                      ? {
+                                                          ...r,
+                                                          _translations: {
+                                                            ...(r._translations || {}),
+                                                            [target]: undefined,
+                                                          },
+                                                        }
+                                                      : r,
+                                                  ),
+                                                );
+                                                return;
+                                              }
+                                              const priceLine =
+                                                req.request_type === "individual" && req.price != null
+                                                  ? `\n\nDer Preis, den der Kunde bereit wäre zu bezahlen: ${req.price}€`
+                                                  : "";
+                                              const fullSource = `Hey, eine neue Anfrage des Chatters an dich – ich leite sie dir einmal eins zu eins weiter 🙋🏼‍♂️:\n\n${cleanDescription}${priceLine}`;
                                               setModelRequests((prev) =>
                                                 prev.map((r) =>
-                                                  r.id === req.id ? { ...r, _translating: undefined } : r,
+                                                  r.id === req.id ? { ...r, _translating: target } : r,
                                                 ),
                                               );
-                                            }
-                                          }}
-                                        >
-                                          {req._translating === target ? (
-                                            <Loader2 className="h-3 w-3 animate-spin" />
-                                          ) : (
-                                            <Languages className="h-3 w-3" />
-                                          )}
-                                          {target === "en" ? "→ Englisch" : "→ Deutsch"}
-                                        </Button>
-                                      ))}
+                                              try {
+                                                const { data, error } = await supabase.functions.invoke(
+                                                  "translate-text",
+                                                  { body: { text: fullSource, target } },
+                                                );
+                                                if (error || !data?.translation) {
+                                                  toast.error(data?.error || "Übersetzung fehlgeschlagen");
+                                                  return;
+                                                }
+                                                setModelRequests((prev) =>
+                                                  prev.map((r) =>
+                                                    r.id === req.id
+                                                      ? {
+                                                          ...r,
+                                                          _translations: {
+                                                            ...(r._translations || {}),
+                                                            [target]: data.translation,
+                                                          },
+                                                        }
+                                                      : r,
+                                                  ),
+                                                );
+                                              } catch (err: any) {
+                                                toast.error(err?.message || "Fehler");
+                                              } finally {
+                                                setModelRequests((prev) =>
+                                                  prev.map((r) =>
+                                                    r.id === req.id ? { ...r, _translating: undefined } : r,
+                                                  ),
+                                                );
+                                              }
+                                            }}
+                                          >
+                                            {req._translating === target ? (
+                                              <Loader2 className="h-3 w-3 animate-spin" />
+                                            ) : (
+                                              <Languages className="h-3 w-3" />
+                                            )}
+                                            {target === "en" ? "→ Englisch" : "→ Deutsch"}
+                                            {active && <span className="ml-1 text-accent">×</span>}
+                                          </Button>
+                                        );
+                                      })}
                                     </div>
                                     {req._translations &&
                                       (["en", "de"] as const).map((lang) =>
                                         req._translations?.[lang] ? (
-                                          <div
+                                          <button
                                             key={lang}
-                                            className="glass-card-subtle rounded-lg px-3 py-2 space-y-1"
+                                            onClick={() => {
+                                              const fullText = req._translations![lang]!;
+                                              try {
+                                                navigator.clipboard?.writeText(fullText);
+                                              } catch {}
+                                              const encoded = encodeURIComponent(fullText);
+                                              const isMobile = /iPhone|iPad|iPod|Android/i.test(
+                                                navigator.userAgent,
+                                              );
+                                              if (isMobile) {
+                                                toast.success("Nachricht kopiert – Empfänger in WhatsApp wählen.");
+                                                window.location.href = `whatsapp://send?text=${encoded}`;
+                                              } else {
+                                                toast.success("Nachricht kopiert – Empfänger wählen & einfügen.");
+                                                window.open(
+                                                  `https://api.whatsapp.com/send?text=${encoded}`,
+                                                  "_blank",
+                                                );
+                                              }
+                                            }}
+                                            className="glass-card-subtle rounded-lg px-3 py-2.5 text-sm text-foreground/90 leading-relaxed hover:bg-accent/5 transition-colors text-left w-full group block"
                                           >
-                                            <div className="flex items-center justify-between">
-                                              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                                                {lang === "en" ? "Englisch" : "Deutsch"}
-                                              </p>
-                                              <button
-                                                onClick={() => {
-                                                  navigator.clipboard.writeText(req._translations![lang]!);
-                                                  toast.success("Kopiert");
-                                                }}
-                                                className="text-[10px] text-accent hover:text-accent/80 transition-colors font-medium"
-                                              >
-                                                Kopieren
-                                              </button>
-                                            </div>
-                                            <p className="text-xs text-foreground leading-relaxed whitespace-pre-wrap">
-                                              {req._translations[lang]}
+                                            <p className="text-[10px] text-muted-foreground uppercase tracking-wide mb-1.5">
+                                              {lang === "en" ? "Englisch" : "Deutsch"}
                                             </p>
-                                          </div>
+                                            <p className="whitespace-pre-wrap">{req._translations[lang]}</p>
+                                            <Copy className="h-3 w-3 inline-block ml-1.5 opacity-0 group-hover:opacity-40 transition-opacity" />
+                                          </button>
                                         ) : null,
                                       )}
 
