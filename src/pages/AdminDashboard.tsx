@@ -2054,7 +2054,15 @@ export default function AdminDashboard() {
         throw new Error(data.error);
       }
 
-      setAdminList(data?.admins ?? []);
+      const list = data?.admins ?? [];
+      setAdminList(list);
+      setAdminNames((prev) => {
+        const next = { ...prev };
+        for (const a of list) {
+          if (a.display_name) next[a.user_id] = a.display_name;
+        }
+        return next;
+      });
     } catch (err: any) {
       toast.error(err.message || "Fehler beim Laden der Admins");
     } finally {
