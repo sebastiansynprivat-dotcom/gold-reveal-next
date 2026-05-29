@@ -15,7 +15,6 @@ import {
   ChevronRight,
   Copy,
   Smartphone,
-  Mic,
   MessageSquare,
   ExternalLink,
   Gift,
@@ -26,7 +25,6 @@ import {
   EyeOff,
   Check,
   Trophy,
-  UserCircle,
 } from "lucide-react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import {
