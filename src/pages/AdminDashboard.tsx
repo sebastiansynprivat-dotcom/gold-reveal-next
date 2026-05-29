@@ -2371,7 +2371,7 @@ export default function AdminDashboard() {
   const loadModelRequests = async () => {
     const [{ data }, { data: modelsData }] = await Promise.all([
       supabase.from("model_requests").select("*").order("created_at", { ascending: false }),
-      supabase.from("models").select("id, name, model_agency, model_language, model_active").range(0, 9999),
+      supabase.from("models").select("id, name, username, model_agency, model_language, model_active").range(0, 9999),
     ]);
     const normalizeModelKey = (s: any) =>
       String(s || "")
@@ -2381,9 +2381,25 @@ export default function AdminDashboard() {
         .trim();
     const modelByName = new Map<string, any>();
     (modelsData || []).forEach((m: any) => {
-      const key = normalizeModelKey(m.name);
-      if (key) modelByName.set(key, m);
+      const k1 = normalizeModelKey(m.name);
+      const k2 = normalizeModelKey(m.username);
+      if (k1) modelByName.set(k1, m);
+      if (k2 && !modelByName.has(k2)) modelByName.set(k2, m);
+      // Also index each whitespace-separated name part (e.g. "Girina Kseniya" → "girina", "kseniya")
+      String(m.name || "").split(/\s+/).forEach((part) => {
+        const kp = normalizeModelKey(part);
+        if (kp && kp.length >= 3 && !modelByName.has(kp)) modelByName.set(kp, m);
+      });
     });
+    const findModel = (raw: any) => {
+      const key = normalizeModelKey(raw);
+      if (!key) return null;
+      if (modelByName.has(key)) return modelByName.get(key);
+      for (const [k, m] of modelByName) {
+        if (k.length >= 3 && key.length >= 3 && (k.includes(key) || key.includes(k))) return m;
+      }
+      return null;
+    };
     if (data) {
       const ids = data.map((r: any) => r.id);
       let msgsByReq: Record<string, any[]> = {};
@@ -2401,7 +2417,7 @@ export default function AdminDashboard() {
         data.map((r: any) => ({
           ...r,
           _messages: msgsByReq[r.id] || [],
-          _model: modelByName.get(normalizeModelKey(r.model_name)) || null,
+          _model: findModel(r.model_name),
         })),
       );
     }
