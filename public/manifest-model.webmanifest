@@ -1,6 +1,6 @@
 {
-  "name": "SheX Model",
-  "short_name": "SheX Model",
+  "name": "SheX",
+  "short_name": "SheX",
   "description": "SheX Model Dashboard",
   "id": "/model",
   "start_url": "/model",
