@@ -79,6 +79,29 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Fire-and-forget admin push per row that has a revenue_today
+    try {
+      const url = `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-admin-push`;
+      const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      for (const r of validated) {
+        if (r.revenue_today == null) continue;
+        const amount = Number(r.revenue_today);
+        fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${serviceKey}`,
+          },
+          body: JSON.stringify({
+            event: "new_revenue",
+            title: "Neue Einnahme 💰",
+            body: `${r.platform.toUpperCase()} · ${amount.toLocaleString("de-DE", { style: "currency", currency: "EUR" })} (${r.date})`,
+            url: "/admin",
+          }),
+        }).catch(() => {});
+      }
+    } catch (_) { /* ignore */ }
+
     return new Response(JSON.stringify({ success: true, count: result?.length ?? 0, rows: result }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
