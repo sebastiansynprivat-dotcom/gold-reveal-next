@@ -2369,7 +2369,14 @@ export default function AdminDashboard() {
     toast.success("Geplante Benachrichtigung gelöscht");
   };
   const loadModelRequests = async () => {
-    const { data } = await supabase.from("model_requests").select("*").order("created_at", { ascending: false });
+    const [{ data }, { data: modelsData }] = await Promise.all([
+      supabase.from("model_requests").select("*").order("created_at", { ascending: false }),
+      supabase.from("models").select("id, name, model_agency, model_language, model_active").range(0, 9999),
+    ]);
+    const modelByName = new Map<string, any>();
+    (modelsData || []).forEach((m: any) => {
+      if (m.name) modelByName.set(String(m.name).toLowerCase().trim(), m);
+    });
     if (data) {
       const ids = data.map((r: any) => r.id);
       let msgsByReq: Record<string, any[]> = {};
@@ -2383,10 +2390,37 @@ export default function AdminDashboard() {
           (msgsByReq[m.request_id] ||= []).push(m);
         });
       }
-      setModelRequests(data.map((r: any) => ({ ...r, _messages: msgsByReq[r.id] || [] })));
+      setModelRequests(
+        data.map((r: any) => ({
+          ...r,
+          _messages: msgsByReq[r.id] || [],
+          _model: modelByName.get(String(r.model_name || "").toLowerCase().trim()) || null,
+        })),
+      );
     }
     setModelRequestsLoaded(true);
   };
+
+  const toggleModelActive = async (modelId: string, requestId: string, nextActive: boolean) => {
+    // Optimistic flip everywhere this model appears
+    setModelRequests((prev) =>
+      prev.map((r) =>
+        r._model && r._model.id === modelId ? { ...r, _model: { ...r._model, model_active: nextActive } } : r,
+      ),
+    );
+    const { error } = await supabase.from("models").update({ model_active: nextActive }).eq("id", modelId);
+    if (error) {
+      toast.error("Status konnte nicht geändert werden");
+      setModelRequests((prev) =>
+        prev.map((r) =>
+          r._model && r._model.id === modelId ? { ...r, _model: { ...r._model, model_active: !nextActive } } : r,
+        ),
+      );
+      return;
+    }
+    toast.success(nextActive ? "Model auf Aktiv gesetzt" : "Model auf Inaktiv gesetzt");
+  };
+
 
   const updateRequestStatus = async (id: string, status: string) => {
     // Optimistic update so the new status is visible immediately
