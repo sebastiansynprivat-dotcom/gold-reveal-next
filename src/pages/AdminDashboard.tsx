@@ -2405,11 +2405,12 @@ export default function AdminDashboard() {
       pending: "Offen",
     };
     toast.success(`Status: ${labelMap[status] || status}`);
-    // Send push notification for status changes (except reset to pending)
+    // Send push notification for status changes (except reset to pending) — fire & forget
     if (status !== "pending") {
-      try {
-        const req = modelRequests.find((r) => r.id === id);
-        if (req?.user_id) {
+      (async () => {
+        try {
+          const req = modelRequests.find((r) => r.id === id);
+          if (!req?.user_id) return;
           let tplTitle = "Update zu deiner Anfrage 📋";
           let tplBody = "Es gibt Neuigkeiten zu deiner Content-Anfrage! Schau jetzt nach.";
           const { data: tpl } = await supabase
@@ -2423,7 +2424,7 @@ export default function AdminDashboard() {
           }
           const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
           const session = await supabase.auth.getSession();
-          await fetch(`https://${projectId}.supabase.co/functions/v1/send-notification`, {
+          fetch(`https://${projectId}.supabase.co/functions/v1/send-notification`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
@@ -2431,9 +2432,9 @@ export default function AdminDashboard() {
               Authorization: `Bearer ${session.data.session?.access_token}`,
             },
             body: JSON.stringify({ title: tplTitle, body: tplBody, target_user_id: req.user_id }),
-          });
-        }
-      } catch {}
+          }).catch(() => {});
+        } catch {}
+      })();
     }
   };
 
