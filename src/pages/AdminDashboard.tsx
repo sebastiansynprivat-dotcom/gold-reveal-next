@@ -850,6 +850,7 @@ export default function AdminDashboard() {
     "all",
   );
   const [contentLinkFilter, setContentLinkFilter] = useState<"all" | "with_link" | "without_link">("all");
+  const [requestSearchQuery, setRequestSearchQuery] = useState("");
   const [notifTitle, setNotifTitle] = useState("");
   const [notifBody, setNotifBody] = useState("");
   const [notifSending, setNotifSending] = useState(false);
