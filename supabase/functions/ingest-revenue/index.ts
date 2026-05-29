@@ -92,6 +92,8 @@ Deno.serve(async (req) => {
     }
 
     // Fire-and-forget admin push for each NEW individual sale (diff vs previous data)
+    // Also collect new sales for surge detection
+    const newSalesAll: Array<{ platform: string; model: string; amount: number }> = [];
     try {
       const url = `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-admin-push`;
       const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -115,6 +117,7 @@ Deno.serve(async (req) => {
           }
 
           for (const amount of newSales) {
+            newSalesAll.push({ platform: r.platform, model, amount });
             fetch(url, {
               method: "POST",
               headers: {
@@ -132,6 +135,105 @@ Deno.serve(async (req) => {
         }
       }
     } catch (_) { /* ignore */ }
+
+    // ============ SURGE DETECTION ============
+    // Log new sales and check for bursts/big sales worthy of a "🔥 HOT STREAK" push
+    try {
+      if (newSalesAll.length > 0) {
+        const adminPushUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-admin-push`;
+        const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        const BURST_WINDOW_MIN = 15;
+        const BURST_THRESHOLD = 3;
+        const BIG_SALE_THRESHOLD = 100;
+        const COOLDOWN_MIN = 20;
+        const platformIcon = (p: string) =>
+          p === "maloum" ? "🟠" : p === "brezzels" ? "🔵" : p === "4based" ? "🔴" : "⚪";
+
+        // 1. Persist all new sale events
+        await supabase.from("revenue_sale_events").insert(
+          newSalesAll.map((s) => ({ platform: s.platform, model: s.model, amount: s.amount })),
+        );
+
+        // 2. Group by platform+model
+        const groups = new Map<string, { platform: string; model: string; amounts: number[] }>();
+        for (const s of newSalesAll) {
+          const key = `${s.platform}|${s.model}`;
+          if (!groups.has(key)) groups.set(key, { platform: s.platform, model: s.model, amounts: [] });
+          groups.get(key)!.amounts.push(s.amount);
+        }
+
+        const windowStart = new Date(Date.now() - BURST_WINDOW_MIN * 60_000).toISOString();
+
+        for (const { platform, model, amounts } of groups.values()) {
+          const scope = `${platform}|${model}`;
+
+          // Cooldown check
+          const { data: cooldown } = await supabase
+            .from("revenue_surge_log")
+            .select("last_sent_at")
+            .eq("scope", scope)
+            .maybeSingle();
+          if (cooldown?.last_sent_at) {
+            const ageMin = (Date.now() - new Date(cooldown.last_sent_at).getTime()) / 60_000;
+            if (ageMin < COOLDOWN_MIN) continue;
+          }
+
+          // Detect BIG SALE
+          const bigOne = amounts.find((a) => a >= BIG_SALE_THRESHOLD);
+
+          // Detect BURST: count sales in window
+          const { data: recent } = await supabase
+            .from("revenue_sale_events")
+            .select("amount, occurred_at")
+            .eq("platform", platform)
+            .eq("model", model)
+            .gte("occurred_at", windowStart)
+            .order("occurred_at", { ascending: true });
+
+          const recentCount = recent?.length ?? 0;
+          const recentSum = (recent ?? []).reduce((a: number, r: any) => a + Number(r.amount || 0), 0);
+          const oldestAgeMin = recent && recent.length > 0
+            ? Math.max(1, Math.round((Date.now() - new Date(recent[0].occurred_at).getTime()) / 60_000))
+            : BURST_WINDOW_MIN;
+
+          let title = "";
+          let body = "";
+
+          if (bigOne) {
+            title = "💰 BIG ONE!";
+            body = `${platformIcon(platform)} ${platform.toUpperCase()} · ${model} · ${bigOne.toLocaleString("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 })} auf einen Schlag 🚀`;
+          } else if (recentCount >= BURST_THRESHOLD) {
+            title = "🔥 HOT STREAK!";
+            body = `${platformIcon(platform)} ${platform.toUpperCase()} · ${model} · ${recentCount} Sales in ${oldestAgeMin} Min · +${recentSum.toLocaleString("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 })} ⚡`;
+          } else {
+            continue;
+          }
+
+          // Send surge push
+          fetch(adminPushUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${serviceKey}`,
+            },
+            body: JSON.stringify({
+              event: "revenue_surge",
+              title,
+              body,
+              url: "/admin",
+              tag: `surge-${platform}-${model}`,
+            }),
+          }).catch(() => {});
+
+          // Update cooldown
+          await supabase
+            .from("revenue_surge_log")
+            .upsert({ scope, last_sent_at: new Date().toISOString() }, { onConflict: "scope" });
+        }
+      }
+    } catch (e) {
+      console.error("Surge detection error:", e);
+    }
 
 
     return new Response(JSON.stringify({ success: true, count: result?.length ?? 0, rows: result }), {

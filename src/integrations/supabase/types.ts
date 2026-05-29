@@ -1493,6 +1493,45 @@ export type Database = {
         }
         Relationships: []
       }
+      revenue_sale_events: {
+        Row: {
+          amount: number
+          id: string
+          model: string
+          occurred_at: string
+          platform: string
+        }
+        Insert: {
+          amount: number
+          id?: string
+          model: string
+          occurred_at?: string
+          platform: string
+        }
+        Update: {
+          amount?: number
+          id?: string
+          model?: string
+          occurred_at?: string
+          platform?: string
+        }
+        Relationships: []
+      }
+      revenue_surge_log: {
+        Row: {
+          last_sent_at: string
+          scope: string
+        }
+        Insert: {
+          last_sent_at?: string
+          scope: string
+        }
+        Update: {
+          last_sent_at?: string
+          scope?: string
+        }
+        Relationships: []
+      }
       route_counter: {
         Row: {
           counter: number
