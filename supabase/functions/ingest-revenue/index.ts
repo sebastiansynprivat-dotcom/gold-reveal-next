@@ -155,9 +155,17 @@ Deno.serve(async (req) => {
       const platformLabel = (p: string) =>
         p === "maloum" ? "🟠 Maloum" : p === "brezzels" ? "🔵 Brezzels" : p === "4based" ? "🔴 4based" : "⚪ New";
 
+      const getTitle = (amount: number): string => {
+        const s = amount.toLocaleString("de-DE", { style: "currency", currency: "EUR" });
+        if (amount >= 250) return `👑 WHALE ALERT! ${s} 🐋`;
+        if (amount >= 100) return `🚀 MEGA! ${s} DEAL!`;
+        if (amount >= 50) return `🔥 BOOM! ${s} SALE!`;
+        if (amount >= 20) return `💰 NEUER ${s} VERKAUF!`;
+        return `💸 +${s} rein!`;
+      };
+
       for (const s of pendingSales) {
         const chatter = chatterMap.get(`${s.platform}|${s.model.toLowerCase()}`);
-        const amountStr = s.amount.toLocaleString("de-DE", { style: "currency", currency: "EUR" });
         const parts = [platformLabel(s.platform), s.model];
         if (chatter) parts.push(chatter);
         fetch(url, {
@@ -168,7 +176,7 @@ Deno.serve(async (req) => {
           },
           body: JSON.stringify({
             event: "new_revenue",
-            title: `💰NEUER ${amountStr} VERKAUF!`,
+            title: getTitle(s.amount),
             body: parts.join(" · "),
             url: "/admin",
           }),
