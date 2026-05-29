@@ -40,10 +40,10 @@ Deno.serve(async (req) => {
       p === "maloum" ? "🟠" : p === "brezzels" ? "🔵" : p === "4based" ? "🔴" : "⚪";
     const breakdown = Array.from(byPlatform.entries())
       .sort((a, b) => b[1] - a[1])
-      .map(([p, v]) => `${icon(p)} ${v.toLocaleString("de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 })}`)
+      .map(([p, v]) => `${icon(p)} ${v.toLocaleString("de-DE", { maximumFractionDigits: 0 })}€`)
       .join(" · ");
 
-    const totalStr = total.toLocaleString("de-DE", { style: "currency", currency: "EUR" });
+    const totalStr = total.toLocaleString("de-DE", { minimumFractionDigits: 0, maximumFractionDigits: 0 }) + "€";
     const title = `⏰ LETZTE STUNDE: ${totalStr}`;
     const body = `${count} Sales · ${breakdown}`;
 
