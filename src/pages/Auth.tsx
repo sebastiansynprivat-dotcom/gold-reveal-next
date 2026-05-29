@@ -414,10 +414,25 @@ const Auth = () => {
                     name="telegram_id"
                     id="signup-telegram-id"
                     inputMode="numeric"
+                    pattern="[0-9]*"
                     autoComplete="off"
                     placeholder="Telegram-ID"
                     value={telegramId}
-                    onChange={(e) => setTelegramId(e.target.value)}
+                    onChange={(e) => setTelegramId(e.target.value.replace(/\D/g, ""))}
+                    onPaste={(e) => {
+                      e.preventDefault();
+                      const text = e.clipboardData.getData("text").replace(/\D/g, "");
+                      setTelegramId(text);
+                    }}
+                    onKeyDown={(e) => {
+                      if (
+                        e.key.length === 1 &&
+                        !/[0-9]/.test(e.key) &&
+                        !e.ctrlKey && !e.metaKey
+                      ) {
+                        e.preventDefault();
+                      }
+                    }}
                     required
                     className={inputClass}
                   />
