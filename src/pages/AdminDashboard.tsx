@@ -5252,7 +5252,7 @@ export default function AdminDashboard() {
               {activeTab === "anfragen" && (
                 <div className="space-y-4">
                   {/* Request Stats Overview */}
-                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-6 gap-3">
                     {(
                       [
                         { key: "pending", label: "Offen", icon: Clock, colorClass: "text-yellow-400" },
@@ -5260,6 +5260,7 @@ export default function AdminDashboard() {
                         { key: "in_progress", label: "In Arbeit", icon: Loader2, colorClass: "text-blue-400" },
                         { key: "waiting_feedback", label: "Warten auf Rückmeldung", icon: MessageSquare, colorClass: "text-purple-400" },
                         { key: "rejected", label: "Abgelehnt", icon: XCircle, colorClass: "text-destructive" },
+                        { key: "archived", label: "Erledigt", icon: CheckCircle2, colorClass: "text-muted-foreground" },
                       ] as const
                     ).map(({ key, label, icon: Icon, colorClass }) => {
                       const count = modelRequests.filter((r) => r.status === key).length;
