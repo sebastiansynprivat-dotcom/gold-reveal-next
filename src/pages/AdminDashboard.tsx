@@ -5858,6 +5858,7 @@ export default function AdminDashboard() {
                       <Badge variant="secondary" className="text-[10px] ml-auto">
                         {accounts.length} Accounts
                       </Badge>
+                      <SetupNotificationsBell />
                     </div>
 
                     {/* Search + Platform filter */}
