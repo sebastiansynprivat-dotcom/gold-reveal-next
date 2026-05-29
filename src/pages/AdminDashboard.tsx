@@ -5790,7 +5790,7 @@ export default function AdminDashboard() {
                                                       </p>
                                                     </div>
                                                   </div>
-                                                ))}
+                                                ); })}
                                               </div>
                                             </div>
                                           )}
