@@ -521,7 +521,6 @@ export default function Dashboard() {
         waitForDismiss={!homescreenDismissed}
       />
       <PushNotificationDialog />
-      <AccountMemoDialog open={showMemo} onOpenChange={setShowMemo} />
       <FrageMemoDialog open={showFrageMemo} onOpenChange={setShowFrageMemo} />
       {/* Header with Telegram + Umsatz inline */}
       <header className="header-gradient-border">
