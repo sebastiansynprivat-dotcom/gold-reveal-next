@@ -850,6 +850,7 @@ export default function AdminDashboard() {
     "all",
   );
   const [contentLinkFilter, setContentLinkFilter] = useState<"all" | "with_link" | "without_link">("all");
+  const [requestSearchQuery, setRequestSearchQuery] = useState("");
   const [notifTitle, setNotifTitle] = useState("");
   const [notifBody, setNotifBody] = useState("");
   const [notifSending, setNotifSending] = useState(false);
@@ -5204,18 +5205,29 @@ export default function AdminDashboard() {
                         <p className="text-[10px] text-muted-foreground">
                           {modelRequests.length} Anfrage{modelRequests.length !== 1 ? "n" : ""} insgesamt
                         </p>
+                       </div>
+                      <div className="flex items-center gap-2">
+                        <div className="relative">
+                          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                          <Input
+                            placeholder="Model suchen..."
+                            value={requestSearchQuery}
+                            onChange={(e) => setRequestSearchQuery(e.target.value)}
+                            className="h-8 pl-8 text-xs bg-secondary/50 border-border/50 w-40 sm:w-56 focus:w-48 sm:focus:w-64 transition-all"
+                          />
+                        </div>
+                        {requestFilter !== "all" && (
+                          <button
+                            onClick={() => {
+                              setRequestFilter("all");
+                              setContentLinkFilter("all");
+                            }}
+                            className="text-[10px] text-accent hover:text-accent/80 transition-colors font-medium whitespace-nowrap"
+                          >
+                            Alle anzeigen
+                          </button>
+                        )}
                       </div>
-                      {requestFilter !== "all" && (
-                        <button
-                          onClick={() => {
-                            setRequestFilter("all");
-                            setContentLinkFilter("all");
-                          }}
-                          className="text-[10px] text-accent hover:text-accent/80 transition-colors font-medium"
-                        >
-                          Alle anzeigen
-                        </button>
-                      )}
                     </div>
 
                     {requestFilter === "accepted" && (
@@ -5248,6 +5260,8 @@ export default function AdminDashboard() {
                         return false;
                       if (requestFilter === "accepted" && contentLinkFilter === "without_link" && r.content_link)
                         return false;
+                      if (requestSearchQuery.trim() && !String(r.model_name || "").toLowerCase().includes(requestSearchQuery.trim().toLowerCase()))
+                        return false;
                       return true;
                     }).length === 0 ? (
                       <div className="p-12 text-center">
@@ -5264,6 +5278,8 @@ export default function AdminDashboard() {
                             if (requestFilter === "accepted" && contentLinkFilter === "with_link" && !r.content_link)
                               return false;
                             if (requestFilter === "accepted" && contentLinkFilter === "without_link" && r.content_link)
+                              return false;
+                            if (requestSearchQuery.trim() && !String(r.model_name || "").toLowerCase().includes(requestSearchQuery.trim().toLowerCase()))
                               return false;
                             return true;
                           })
