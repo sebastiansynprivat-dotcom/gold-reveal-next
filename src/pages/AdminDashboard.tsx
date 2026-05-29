@@ -5874,17 +5874,23 @@ export default function AdminDashboard() {
                                                       toast.error("Fehler beim Speichern");
                                                       return;
                                                     }
-                                                    await supabase
-                                                      .from("model_requests")
-                                                      .update({ status: "waiting_feedback" })
-                                                      .eq("id", req.id);
-                                                    toast.success("Nachricht gesendet – Status: Warten auf Rückmeldung");
+                                                    const protectedStatuses = ["accepted", "in_progress", "completed", "rejected"];
+                                                    const shouldChangeStatus = !req.status || !protectedStatuses.includes(req.status);
+                                                    if (shouldChangeStatus) {
+                                                      await supabase
+                                                        .from("model_requests")
+                                                        .update({ status: "waiting_feedback" })
+                                                        .eq("id", req.id);
+                                                      toast.success("Nachricht gesendet – Status: Warten auf Rückmeldung");
+                                                    } else {
+                                                      toast.success("Nachricht gesendet");
+                                                    }
                                                     setModelRequests((prev) =>
                                                       prev.map((r) =>
                                                         r.id === req.id
                                                           ? {
                                                               ...r,
-                                                              status: "waiting_feedback",
+                                                              status: shouldChangeStatus ? "waiting_feedback" : r.status,
                                                               _messages: [...(r._messages || []), ins],
                                                               _editingComment: false,
                                                               _localComment: undefined,
