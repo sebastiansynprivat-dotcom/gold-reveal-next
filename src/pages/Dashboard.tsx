@@ -1240,6 +1240,15 @@ export default function Dashboard() {
                                   ),
                                 );
                                 setReplyDrafts((prev) => ({ ...prev, [req.id]: "" }));
+                                // Fire-and-forget admin push (Vanessa & Max)
+                                supabase.functions.invoke("send-admin-push", {
+                                  body: {
+                                    event: "new_request_comment",
+                                    title: `💬 NEUER KOMMENTAR · ${req.model_name || "Anfrage"}`,
+                                    body: body.length > 120 ? body.slice(0, 117) + "..." : body,
+                                    url: "/admin",
+                                  },
+                                }).catch(() => {});
                                 toast.success("Antwort gesendet");
                               };
                               return (
