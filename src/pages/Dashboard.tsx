@@ -222,6 +222,7 @@ export default function Dashboard() {
   const [modelInactiveInfoOpen, setModelInactiveInfoOpen] = useState(false);
   const [demoModelInactive, setDemoModelInactive] = useState(false);
   const [myRequests, setMyRequests] = useState<any[]>([]);
+  const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
   const [requestsOpen, setRequestsOpen] = useState(false);
   const [editRequest, setEditRequest] = useState<any>(null);
   const [seenRequestIds, setSeenRequestIds] = useState<Set<string>>(() => {
