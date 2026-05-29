@@ -844,7 +844,7 @@ export default function AdminDashboard() {
   const adminDataBootstrapRef = useRef(false);
   const [modelRequests, setModelRequests] = useState<any[]>([]);
   const [modelRequestsLoaded, setModelRequestsLoaded] = useState(false);
-  const [requestFilter, setRequestFilter] = useState<"all" | "pending" | "accepted" | "in_progress" | "rejected">(
+  const [requestFilter, setRequestFilter] = useState<"all" | "pending" | "accepted" | "in_progress" | "waiting_feedback" | "rejected">(
     "all",
   );
   const [contentLinkFilter, setContentLinkFilter] = useState<"all" | "with_link" | "without_link">("all");
