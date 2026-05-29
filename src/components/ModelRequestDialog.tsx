@@ -170,12 +170,7 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
               <Send className="h-7 w-7 text-accent-foreground" />
             </motion.div>
             <div className="relative text-left flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1 flex-wrap">
-                <p className="text-lg font-bold text-foreground">Neue Anfrage erstellen</p>
-                <span className="text-[10px] font-bold uppercase tracking-wider bg-accent text-accent-foreground rounded-full px-2 py-0.5 animate-pulse">
-                  Direkt
-                </span>
-              </div>
+              <p className="text-lg font-bold text-foreground mb-1">Neue Anfrage erstellen</p>
               <p className="text-sm text-muted-foreground leading-snug">
                 Klicke hier, um eine Anfrage an dein <span className="text-accent font-bold">Model</span> zu stellen
               </p>
