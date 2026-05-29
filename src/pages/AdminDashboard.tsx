@@ -6289,6 +6289,10 @@ export default function AdminDashboard() {
                 </div>
               )}
 
+              {activeTab === "push_settings" && (
+                <AdminPushSettings />
+              )}
+
               {activeTab === "notifications" && (
                 <div className="space-y-4">
                   {/* Stats Cards */}
