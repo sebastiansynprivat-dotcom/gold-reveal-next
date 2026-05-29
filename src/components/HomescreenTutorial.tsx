@@ -46,11 +46,8 @@ export default function HomescreenTutorial({ isFirstLogin, manualOpen, onManualC
       try { localStorage.removeItem("force_homescreen_tutorial"); } catch {}
       return;
     }
-    const seen = localStorage.getItem(TUTORIAL_KEY);
-    if (!seen || forced) {
-      const timer = setTimeout(() => setOpen(true), 1200);
-      return () => clearTimeout(timer);
-    }
+    const timer = setTimeout(() => setOpen(true), 1200);
+    return () => clearTimeout(timer);
   }, [isFirstLogin]);
 
 
@@ -58,19 +55,42 @@ export default function HomescreenTutorial({ isFirstLogin, manualOpen, onManualC
     if (manualOpen) setOpen(true);
   }, [manualOpen]);
 
-  const handleClose = () => {
-    localStorage.setItem(TUTORIAL_KEY, "true");
-    try { localStorage.removeItem("force_homescreen_tutorial"); } catch {}
-
-    setOpen(false);
-    onManualClose?.();
-    onDismiss?.();
-  };
+  // Auto-close as soon as the app is actually installed (standalone mode)
+  useEffect(() => {
+    if (!open) return;
+    const mql = window.matchMedia("(display-mode: standalone)");
+    const check = () => {
+      const isStandalone = mql.matches || (window.navigator as any).standalone === true;
+      if (isStandalone) {
+        localStorage.setItem(TUTORIAL_KEY, "true");
+        try { localStorage.removeItem("force_homescreen_tutorial"); } catch {}
+        setOpen(false);
+        onManualClose?.();
+        onDismiss?.();
+      }
+    };
+    mql.addEventListener?.("change", check);
+    const interval = setInterval(check, 1500);
+    const onVis = () => check();
+    document.addEventListener("visibilitychange", onVis);
+    window.addEventListener("focus", onVis);
+    return () => {
+      mql.removeEventListener?.("change", check);
+      clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("focus", onVis);
+    };
+  }, [open, onManualClose, onDismiss]);
 
   return (
     <>
-    <Dialog open={open} onOpenChange={(v) => { if (!v) handleClose(); else setOpen(true); }}>
-      <DialogContent className="glass-card border-border max-w-md mx-auto max-h-[90vh] overflow-y-auto">
+    <Dialog open={open}>
+      <DialogContent
+        className="glass-card border-border max-w-md mx-auto max-h-[90vh] overflow-y-auto [&>button]:hidden"
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle className="text-foreground flex items-center gap-2 text-lg">
             <Smartphone className="h-5 w-5 text-accent" />
@@ -85,9 +105,9 @@ export default function HomescreenTutorial({ isFirstLogin, manualOpen, onManualC
         <div className="flex items-start gap-3 p-3 rounded-xl bg-accent/10 border border-accent/20">
           <AlertTriangle className="h-5 w-5 text-accent shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-semibold text-foreground">Sehr wichtig!</p>
+            <p className="text-sm font-semibold text-foreground">Pflicht-Schritt!</p>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Bitte füge die App jetzt zu deinem Homescreen hinzu. Nur so bekommst du Push-Benachrichtigungen und kannst die App wie gewohnt nutzen. Das dauert nur 30 Sekunden!
+              Dieses Fenster verschwindet automatisch, sobald du die App zum Homescreen hinzugefügt und von dort geöffnet hast. Das dauert nur 30 Sekunden!
             </p>
           </div>
         </div>
@@ -115,12 +135,9 @@ export default function HomescreenTutorial({ isFirstLogin, manualOpen, onManualC
             );
           })}
         </div>
-
-        <Button onClick={handleClose} className="w-full mt-2">
-          Verstanden, ich füge die App hinzu!
-        </Button>
       </DialogContent>
     </Dialog>
+
 
     {/* Video Player Dialog */}
     <Dialog open={!!activeVideo} onOpenChange={(v) => { if (!v) setActiveVideo(null); }}>
