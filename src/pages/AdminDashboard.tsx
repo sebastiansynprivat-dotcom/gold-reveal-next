@@ -2417,6 +2417,8 @@ export default function AdminDashboard() {
     toast.success("Geplante Benachrichtigung gelöscht");
   };
   const loadModelRequests = async () => {
+    void loadAdminNames();
+
     const [{ data }, { data: modelsData }] = await Promise.all([
       supabase.from("model_requests").select("*").order("created_at", { ascending: false }),
       supabase.from("models").select("id, name, username, model_agency, model_language, model_active").range(0, 9999),
