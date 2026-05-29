@@ -375,7 +375,7 @@ const Auth = () => {
                     name="group_name"
                     id="signup-group-name"
                     autoComplete="off"
-                    placeholder="Gruppenname (Beispiel: ⬜️ (M) Max Mu)"
+                    placeholder="Gruppenname (Beispiel: Max Mustermann)"
                     value={groupName}
                     onChange={(e) => setGroupName(e.target.value)}
                     required

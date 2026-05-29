@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useLayoutEffect, useMemo, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { cleanDisplayName } from "@/lib/utils";
 import {
   Users,
   Send,
@@ -2159,6 +2160,7 @@ export default function AdminDashboard() {
 
     const enriched = (data || []).map((c) => ({
       ...c,
+      group_name: cleanDisplayName(c.group_name || ""),
       assigned_accounts: accs.filter((a) => a.assigned_to === c.user_id),
     }));
     setChatters(enriched);
