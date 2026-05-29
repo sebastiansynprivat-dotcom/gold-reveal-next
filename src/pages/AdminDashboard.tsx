@@ -5468,7 +5468,19 @@ export default function AdminDashboard() {
                                         navigator.clipboard.writeText(fullText);
                                         const encoded = encodeURIComponent(fullText);
                                         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                                        if (isMobile) {
+                                        const agencyRaw = String(req._model?.model_agency || "").toLowerCase();
+                                        const isSyn = agencyRaw === "syn" || agencyRaw === "simp";
+                                        if (isSyn) {
+                                          toast.success("Nachricht kopiert – Kontakt in Telegram wählen.");
+                                          if (isMobile) {
+                                            window.location.href = `tg://msg?text=${encoded}`;
+                                            setTimeout(() => {
+                                              window.open(`https://t.me/share/url?url=&text=${encoded}`, "_blank");
+                                            }, 400);
+                                          } else {
+                                            window.open(`https://t.me/share/url?url=&text=${encoded}`, "_blank");
+                                          }
+                                        } else if (isMobile) {
                                           toast.success("Nachricht kopiert – Empfänger in WhatsApp wählen.");
                                           window.location.href = `whatsapp://send?text=${encoded}`;
                                         } else {
