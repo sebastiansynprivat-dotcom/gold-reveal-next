@@ -104,7 +104,7 @@ const BONUS_TIERS = [
   { name: "Silber", emoji: "🥈", min: 1000, max: 1499, rate: 22 },
   { name: "Gold", emoji: "🏆", min: 1500, max: 1999, rate: 23 },
   { name: "Platin", emoji: "💠", min: 2000, max: 2999, rate: 24 },
-  { name: "Diamond", emoji: "💎", min: 3000, max: 49999, rate: 25 },
+  { name: "Elite", emoji: "💎", min: 3000, max: 49999, rate: 25 },
   { name: "Titan", emoji: "🔱", min: 50000, max: Infinity, rate: 35 },
 ] as const;
 
