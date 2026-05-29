@@ -144,6 +144,9 @@ Deno.serve(async (req) => {
             (n || "")
               .replace(/\s*\([^)]*\)\s*/g, " ")
               .replace(/\p{Extended_Pictographic}/gu, "")
+              // strip ZWJ, variation selectors, zero-width & bidi marks that iOS renders as wide gaps
+              .replace(/[\u200B-\u200F\u2028-\u202F\u205F-\u206F\uFE00-\uFE0F\uFEFF]/g, "")
+              .replace(/[\t\n\r\f\v\u00A0\u1680\u2000-\u200A\u3000]+/g, " ")
               .replace(/\s+/g, " ")
               .trim();
           for (const p of profs ?? []) profileMap.set(p.user_id, cleanName(p.group_name || ""));
