@@ -63,6 +63,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import AdminPushSettings from "@/components/admin/AdminPushSettings";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
@@ -3044,7 +3045,7 @@ export default function AdminDashboard() {
     return c?.group_name || c?.telegram_id || userId.slice(0, 8);
   };
 
-  const SUPER_ADMIN_TABS = new Set(["notifications", "kiprompt", "platzhalter", "gdrive", "settings", "admin_mgmt", "fanvue"]);
+  const SUPER_ADMIN_TABS = new Set(["notifications", "push_settings", "kiprompt", "platzhalter", "gdrive", "settings", "admin_mgmt", "fanvue"]);
 
   const allTabItems = [
     { key: "einnahmen" as const, label: "Einnahmen", icon: TrendingUp, onClick: () => { setActiveTab("einnahmen"); setTimeFilter("heute"); } },
@@ -3078,6 +3079,12 @@ export default function AdminDashboard() {
         if (!schedulesLoaded) loadSchedules();
         if (!notifTemplatesLoaded) loadNotifTemplates();
       },
+    },
+    {
+      key: "push_settings" as const,
+      label: "Push-Benachrichtigungen",
+      icon: Bell,
+      onClick: () => setActiveTab("push_settings"),
     },
     {
       key: "kiprompt" as const,
@@ -6280,6 +6287,10 @@ export default function AdminDashboard() {
                     </div>
                   </section>
                 </div>
+              )}
+
+              {activeTab === "push_settings" && (
+                <AdminPushSettings />
               )}
 
               {activeTab === "notifications" && (
