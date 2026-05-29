@@ -3,35 +3,42 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { ensurePlatformsLoaded } from "@/lib/platforms";
 
 // Plattform-Registry beim App-Start aus der DB initialisieren
 ensurePlatformsLoaded();
 
-import Onboarding from "./pages/Onboarding";
-import Quiz from "./pages/Quiz";
-import OfferA from "./pages/OfferA";
-import OfferB from "./pages/OfferB";
-import OfferC from "./pages/OfferC";
-import Dashboard from "./pages/Dashboard";
-import AdminNotifications from "./pages/AdminNotifications";
-import AdminDashboard from "./pages/AdminDashboard";
-import AdminLogin from "./pages/AdminLogin";
-import Auth from "./pages/Auth";
-import NotFound from "./pages/NotFound";
-import Invoice from "./pages/Invoice";
-import ModelLogin from "./pages/ModelLogin";
-import ModelDashboard from "./pages/ModelDashboard";
-import AdminModelView from "./pages/AdminModelView";
-import Leaderboard from "./pages/Leaderboard";
-import FanvueLogin from "./pages/FanvueLogin";
-import FanvueDashboard from "./pages/FanvueDashboard";
-import ChatBreakdown from "./pages/ChatBreakdown";
-import CoachingBasics from "./pages/CoachingBasics";
-import SalesScripts from "./pages/SalesScripts";
-import Library from "./pages/Library";
+// Lazy-loaded routes — drastically reduces initial JS bundle and TTI
+const Onboarding = lazy(() => import("./pages/Onboarding"));
+const Quiz = lazy(() => import("./pages/Quiz"));
+const OfferA = lazy(() => import("./pages/OfferA"));
+const OfferB = lazy(() => import("./pages/OfferB"));
+const OfferC = lazy(() => import("./pages/OfferC"));
+const Dashboard = lazy(() => import("./pages/Dashboard"));
+const AdminNotifications = lazy(() => import("./pages/AdminNotifications"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const AdminLogin = lazy(() => import("./pages/AdminLogin"));
+const Auth = lazy(() => import("./pages/Auth"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+const Invoice = lazy(() => import("./pages/Invoice"));
+const ModelLogin = lazy(() => import("./pages/ModelLogin"));
+const ModelDashboard = lazy(() => import("./pages/ModelDashboard"));
+const AdminModelView = lazy(() => import("./pages/AdminModelView"));
+const Leaderboard = lazy(() => import("./pages/Leaderboard"));
+const FanvueLogin = lazy(() => import("./pages/FanvueLogin"));
+const FanvueDashboard = lazy(() => import("./pages/FanvueDashboard"));
+const ChatBreakdown = lazy(() => import("./pages/ChatBreakdown"));
+const CoachingBasics = lazy(() => import("./pages/CoachingBasics"));
+const SalesScripts = lazy(() => import("./pages/SalesScripts"));
+const Library = lazy(() => import("./pages/Library"));
+
+const RouteFallback = () => (
+  <div className="min-h-screen flex items-center justify-center bg-background">
+    <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+  </div>
+);
 
 
 const queryClient = new QueryClient();
