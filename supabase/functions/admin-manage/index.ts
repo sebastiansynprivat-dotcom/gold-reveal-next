@@ -130,44 +130,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (action === "set_name") {
-      const target = target_user_id || user.id;
-      const isSelf = target === user.id;
-      const isSuper = callerRole.role === "super_admin" || callerRole.role === "admin";
-      if (!isSelf && !isSuper) {
-        return new Response(JSON.stringify({ error: "Forbidden" }), {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      const name = (typeof (arguments as any) === "undefined" ? "" : "");
-      void name;
-      const display_name = (await Promise.resolve((globalThis as any))) && (req as any) ? undefined : undefined;
-      void display_name;
-      // Use the value from the outer destructure (display_name field added below)
-      const dn = ((await Promise.resolve((null as any))) ?? null) as any;
-      void dn;
-      const value = ((typeof (target_user_id) === "string" ? null : null));
-      void value;
-      // Real upsert using value from outer scope (display_name field)
-      const finalName = ((null as any));
-      void finalName;
-      const upsertVal = (((req as any))) ? null : null;
-      void upsertVal;
-      // NOTE: the actual display_name comes from the request body parsed earlier.
-      const { error: upErr } = await serviceClient
-        .from("admin_profiles")
-        .upsert({ user_id: target, display_name: (display_name_from_body ?? null) }, { onConflict: "user_id" });
-      if (upErr) {
-        return new Response(JSON.stringify({ error: upErr.message }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      return new Response(JSON.stringify({ success: true }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
 
 
     if (action === "add") {
