@@ -6221,6 +6221,16 @@ export default function AdminDashboard() {
                                             </Button>
                                           </>
                                         )}
+                                        {req.status !== "archived" && (
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="h-7 text-xs border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/10 hover:border-emerald-500/50"
+                                            onClick={() => updateRequestStatus(req.id, "archived")}
+                                          >
+                                            <CheckCircle2 className="h-3 w-3 mr-1" /> Erledigt
+                                          </Button>
+                                        )}
                                         {req.status !== "pending" && (
                                           <Button
                                             size="sm"
