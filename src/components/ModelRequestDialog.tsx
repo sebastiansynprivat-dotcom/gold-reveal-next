@@ -34,6 +34,7 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
   const [customerName, setCustomerName] = useState("");
   
   const [requestType, setRequestType] = useState<"individual" | "general">("general");
+  const [platform, setPlatform] = useState<"Maloum" | "Brezzels" | null>(null);
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
