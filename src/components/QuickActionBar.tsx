@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Zap, FileText, HelpCircle, User, BookOpen, Eye } from "lucide-react";
+import { Zap, FileText, HelpCircle, MessageSquare, BookOpen, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface QuickActionBarProps {
@@ -11,7 +11,7 @@ interface QuickActionBarProps {
 }
 
 const allActions = [
-  { icon: User, label: "Account", action: "account" },
+  { icon: MessageSquare, label: "Anfragen", action: "account" },
   { icon: BookOpen, label: "Inspiration", action: "inspiration" },
   { icon: FileText, label: "Auszahlung", action: "invoice" },
   { icon: Zap, label: "Bestenliste", action: "leaderboard" },
