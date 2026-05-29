@@ -1727,7 +1727,10 @@ function DashboardBillingInfo({ onNavigate, groupName }: { onNavigate: () => voi
               <div className="flex-1 min-w-0">
                 <p className="text-xs font-semibold text-foreground">Empfehle deine Freunde</p>
                 <p className="text-[10px] text-muted-foreground">
-                  Verdiene 1% von dem, was sie verdienen – <span className="text-accent font-semibold">Lifetime</span>
+                  Verdiene 1% von dem, was sie verdienen –{" "}
+                  <span className="inline-flex items-center bg-accent/20 text-accent border border-accent/40 rounded-md px-1.5 py-0.5 text-[10px] font-bold tracking-wide">
+                    Lifetime
+                  </span>
                 </p>
               </div>
               <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
