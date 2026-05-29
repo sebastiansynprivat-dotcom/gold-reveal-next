@@ -1718,22 +1718,34 @@ function DashboardBillingInfo({ onNavigate, groupName }: { onNavigate: () => voi
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="glass-card-subtle rounded-xl p-5 cursor-pointer group hover:gold-border-glow transition-all"
+            className="relative overflow-hidden rounded-2xl p-6 cursor-pointer group transition-all border-2 border-accent/40 hover:border-accent/70 bg-gradient-to-br from-accent/15 via-accent/5 to-transparent hover:shadow-[0_0_40px_-5px_hsl(var(--accent)/0.5)]"
           >
-            <div className="flex items-center gap-4">
-              <div className="h-11 w-11 rounded-xl bg-accent/10 flex items-center justify-center shrink-0 group-hover:bg-accent/20 transition-colors">
-                <Gift className="h-5 w-5 text-accent" />
-              </div>
+            <div className="pointer-events-none absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 bg-gradient-to-r from-transparent via-accent/20 to-transparent" />
+            <div className="pointer-events-none absolute -top-10 -right-10 h-32 w-32 rounded-full bg-accent/30 blur-3xl" />
+
+            <div className="relative flex items-center gap-4">
+              <motion.div
+                animate={{ rotate: [0, -8, 8, -8, 0] }}
+                transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
+                className="h-14 w-14 rounded-2xl bg-gradient-to-br from-accent to-accent/60 flex items-center justify-center shrink-0 shadow-lg shadow-accent/30"
+              >
+                <Gift className="h-7 w-7 text-accent-foreground" />
+              </motion.div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-foreground">Empfehle deine Freunde</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">
-                  Verdiene 1% von dem, was sie verdienen –{" "}
-                  <span className="inline-flex items-center bg-accent/20 text-accent border border-accent/40 rounded-md px-2 py-0.5 text-[12px] font-extrabold tracking-wider uppercase ml-0.5">
+                <div className="flex items-center gap-2 mb-1 flex-wrap">
+                  <p className="text-lg font-bold text-foreground">Empfehle deine Freunde</p>
+                  <span className="text-[10px] font-bold uppercase tracking-wider bg-accent text-accent-foreground rounded-full px-2 py-0.5 animate-pulse">
+                    Neu
+                  </span>
+                </div>
+                <p className="text-sm text-muted-foreground leading-snug">
+                  Verdiene <span className="text-accent font-bold">1%</span> von dem, was sie verdienen –{" "}
+                  <span className="inline-flex items-center bg-accent/20 text-accent border border-accent/50 rounded-md px-2 py-0.5 text-[12px] font-extrabold tracking-wider uppercase">
                     Lifetime
                   </span>
                 </p>
               </div>
-              <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" />
+              <ChevronDown className="h-5 w-5 text-accent shrink-0 group-hover:translate-y-0.5 transition-transform" />
             </div>
           </motion.div>
         </DialogTrigger>
