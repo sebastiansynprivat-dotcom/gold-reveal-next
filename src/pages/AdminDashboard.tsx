@@ -846,7 +846,7 @@ export default function AdminDashboard() {
   const adminDataBootstrapRef = useRef(false);
   const [modelRequests, setModelRequests] = useState<any[]>([]);
   const [modelRequestsLoaded, setModelRequestsLoaded] = useState(false);
-  const [requestFilter, setRequestFilter] = useState<"all" | "pending" | "accepted" | "in_progress" | "waiting_feedback" | "rejected">(
+  const [requestFilter, setRequestFilter] = useState<"all" | "pending" | "accepted" | "in_progress" | "waiting_feedback" | "rejected" | "archived">(
     "all",
   );
   const [contentLinkFilter, setContentLinkFilter] = useState<"all" | "with_link" | "without_link">("all");
@@ -5252,7 +5252,7 @@ export default function AdminDashboard() {
               {activeTab === "anfragen" && (
                 <div className="space-y-4">
                   {/* Request Stats Overview */}
-                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                  <div className="grid grid-cols-2 sm:grid-cols-6 gap-3">
                     {(
                       [
                         { key: "pending", label: "Offen", icon: Clock, colorClass: "text-yellow-400" },
@@ -5260,6 +5260,7 @@ export default function AdminDashboard() {
                         { key: "in_progress", label: "In Arbeit", icon: Loader2, colorClass: "text-blue-400" },
                         { key: "waiting_feedback", label: "Warten auf Rückmeldung", icon: MessageSquare, colorClass: "text-purple-400" },
                         { key: "rejected", label: "Abgelehnt", icon: XCircle, colorClass: "text-destructive" },
+                        { key: "archived", label: "Erledigt", icon: CheckCircle2, colorClass: "text-muted-foreground" },
                       ] as const
                     ).map(({ key, label, icon: Icon, colorClass }) => {
                       const count = modelRequests.filter((r) => r.status === key).length;
@@ -5364,6 +5365,7 @@ export default function AdminDashboard() {
 
                     {modelRequests.filter((r) => {
                       if (unreadOnly && !isReqUnread(r)) return false;
+                      if (requestFilter === "all" && (r.status === "rejected" || r.status === "archived")) return false;
                       if (requestFilter !== "all" && r.status !== requestFilter) return false;
                       if (requestFilter === "accepted" && contentLinkFilter === "with_link" && !r.content_link)
                         return false;
@@ -5384,6 +5386,7 @@ export default function AdminDashboard() {
                         {modelRequests
                           .filter((r) => {
                             if (unreadOnly && !isReqUnread(r)) return false;
+                            if (requestFilter === "all" && (r.status === "rejected" || r.status === "archived")) return false;
                             if (requestFilter !== "all" && r.status !== requestFilter) return false;
                             if (requestFilter === "accepted" && contentLinkFilter === "with_link" && !r.content_link)
                               return false;
@@ -5436,6 +5439,13 @@ export default function AdminDashboard() {
                                 text: "text-purple-400",
                                 label: "Warten auf Rückmeldung",
                                 border: "border-l-purple-500/50",
+                              },
+                              archived: {
+                                dot: "bg-muted-foreground",
+                                bg: "bg-secondary",
+                                text: "text-muted-foreground",
+                                label: "Erledigt",
+                                border: "border-l-border",
                               },
                             }[req.status as string] || {
                               dot: "bg-muted-foreground",
@@ -6167,6 +6177,8 @@ export default function AdminDashboard() {
                                               <Clock className="h-3.5 w-3.5" />
                                             ) : req.status === "waiting_feedback" ? (
                                               <MessageSquare className="h-3.5 w-3.5" />
+                                            ) : req.status === "archived" ? (
+                                              <CheckCircle2 className="h-3.5 w-3.5" />
                                             ) : (
                                               <XCircle className="h-3.5 w-3.5" />
                                             )}
@@ -6210,6 +6222,16 @@ export default function AdminDashboard() {
                                               <XCircle className="h-3 w-3 mr-1" /> Ablehnen
                                             </Button>
                                           </>
+                                        )}
+                                        {req.status !== "archived" && (
+                                          <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="h-7 text-xs border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/10 hover:border-emerald-500/50"
+                                            onClick={() => updateRequestStatus(req.id, "archived")}
+                                          >
+                                            <CheckCircle2 className="h-3 w-3 mr-1" /> Erledigt
+                                          </Button>
                                         )}
                                         {req.status !== "pending" && (
                                           <Button
