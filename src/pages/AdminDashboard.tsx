@@ -8185,10 +8185,15 @@ export default function AdminDashboard() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Reassign Account Dialog */}
+      {/* Chatter bearbeiten Dialog (Reassign + Daten) */}
       <Dialog
         open={!!reassignTarget}
         onOpenChange={(o) => {
+          if (o && reassignTarget) {
+            setEditName(reassignTarget.group_name || "");
+            setEditTelegram(reassignTarget.telegram_id || "");
+            setEditLanguage(((reassignTarget as any).language || "de") as "de" | "en");
+          }
           if (!o) {
             setReassignTarget(null);
             setReassignOpenFolder(null);
@@ -8203,10 +8208,10 @@ export default function AdminDashboard() {
           <DialogHeader className="pb-0">
             <div className="flex items-center gap-3 mb-1">
               <div className="h-10 w-10 rounded-xl bg-accent/10 flex items-center justify-center shrink-0 gold-glow">
-                <KeyRound className="h-5 w-5 text-accent" />
+                <Pencil className="h-5 w-5 text-accent" />
               </div>
               <div className="flex-1 min-w-0">
-                <DialogTitle className="text-foreground text-base font-bold">Accounts verwalten</DialogTitle>
+                <DialogTitle className="text-foreground text-base font-bold">Chatter bearbeiten</DialogTitle>
                 <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
                   {reassignTarget?.group_name || "Chatter"}
                 </p>
@@ -8215,6 +8220,87 @@ export default function AdminDashboard() {
           </DialogHeader>
 
           <div className="overflow-y-auto flex-1 space-y-4 pr-1 -mr-1 pt-3">
+            {/* Datensatz bearbeiten */}
+            <div className="glass-card-subtle rounded-xl p-3 space-y-2.5">
+              <div className="flex items-center gap-2 px-1">
+                <div className="h-1.5 w-1.5 rounded-full bg-accent" />
+                <p className="text-[11px] font-semibold text-foreground tracking-wide uppercase">Datensatz</p>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <label className="text-[10px] text-muted-foreground uppercase tracking-wide">Name</label>
+                  <Input
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    placeholder="Gruppenname"
+                    className="h-8 text-xs bg-secondary/30 border-transparent"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] text-muted-foreground uppercase tracking-wide">Telegram-ID</label>
+                  <Input
+                    value={editTelegram}
+                    onChange={(e) => setEditTelegram(e.target.value)}
+                    placeholder="@username"
+                    className="h-8 text-xs bg-secondary/30 border-transparent"
+                  />
+                </div>
+                <div className="space-y-1 sm:col-span-2">
+                  <label className="text-[10px] text-muted-foreground uppercase tracking-wide">Sprache</label>
+                  <div className="flex gap-1.5">
+                    {(["de", "en"] as const).map((lang) => (
+                      <button
+                        key={lang}
+                        type="button"
+                        onClick={() => setEditLanguage(lang)}
+                        className={cn(
+                          "flex-1 h-8 rounded-md text-xs font-medium transition-all border",
+                          editLanguage === lang
+                            ? "bg-accent text-accent-foreground border-accent"
+                            : "bg-secondary/30 text-muted-foreground border-transparent hover:text-foreground",
+                        )}
+                      >
+                        {lang === "de" ? "🇩🇪 Deutsch" : "🇬🇧 Englisch"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <Button
+                onClick={async () => {
+                  if (!reassignTarget) return;
+                  setSavingChatter(true);
+                  const { error } = await supabase
+                    .from("profiles")
+                    .update({
+                      group_name: editName,
+                      telegram_id: editTelegram,
+                      language: editLanguage,
+                    } as any)
+                    .eq("user_id", reassignTarget.user_id);
+                  setSavingChatter(false);
+                  if (error) {
+                    toast.error("Speichern fehlgeschlagen: " + error.message);
+                  } else {
+                    toast.success("Datensatz gespeichert");
+                    setChatters((prev) =>
+                      prev.map((c) =>
+                        c.user_id === reassignTarget.user_id
+                          ? ({ ...c, group_name: editName, telegram_id: editTelegram, language: editLanguage } as any)
+                          : c,
+                      ),
+                    );
+                  }
+                }}
+                disabled={savingChatter}
+                size="sm"
+                className="w-full h-8 text-xs bg-accent text-accent-foreground hover:bg-accent/90"
+              >
+                {savingChatter ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <><Save className="h-3.5 w-3.5 mr-1.5" />Speichern</>}
+              </Button>
+            </div>
+
+
             {/* Currently assigned accounts */}
             {(() => {
               const assigned = reassignTarget?.assigned_accounts || [];
