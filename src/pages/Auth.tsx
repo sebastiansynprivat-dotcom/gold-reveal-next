@@ -32,6 +32,7 @@ const Auth = () => {
   const [showGroupHelp, setShowGroupHelp] = useState(false);
   const [showTelegramHelp, setShowTelegramHelp] = useState(false);
   const [showGroupConfirm, setShowGroupConfirm] = useState(false);
+  const [showTelegramConfirm, setShowTelegramConfirm] = useState(false);
   const pendingSubmitRef = useRef<React.FormEvent | null>(null);
 
   // Mouse-following particles
