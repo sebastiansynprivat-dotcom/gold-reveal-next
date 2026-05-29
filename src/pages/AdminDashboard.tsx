@@ -5787,7 +5787,7 @@ export default function AdminDashboard() {
                                               className="h-7 text-xs border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/50"
                                               onClick={() => updateRequestStatus(req.id, "accepted")}
                                             >
-                                              <Check className="h-3 w-3 mr-1" /> Annehmen
+                                              <Check className="h-3 w-3 mr-1" /> Ans Model weitergeleitet
                                             </Button>
                                             <Button
                                               size="sm"
