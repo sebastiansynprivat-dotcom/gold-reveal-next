@@ -991,10 +991,25 @@ export default function AdminDashboard() {
     if (!latest) return;
     setSeenRequestMsgs((prev) => (prev[req.id] === latest ? prev : { ...prev, [req.id]: latest }));
   }, [getLatestChatterMsgAt]);
+  const markAllReqsSeen = useCallback(() => {
+    setSeenRequestMsgs((prev) => {
+      const next = { ...prev };
+      let changed = false;
+      for (const r of modelRequests) {
+        const latest = getLatestChatterMsgAt(r);
+        if (latest && next[r.id] !== latest) {
+          next[r.id] = latest;
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [modelRequests, getLatestChatterMsgAt]);
   const unreadCount = useMemo(
     () => modelRequests.filter((r) => isReqUnread(r)).length,
     [modelRequests, isReqUnread],
   );
+
 
   // Earnings per agency, last 30 days. Uses the platform revenue feed and maps
   // every profile alias back to one unique model, so multiple profiles are
@@ -5352,6 +5367,18 @@ export default function AdminDashboard() {
                             </span>
                           )}
                         </button>
+                        {unreadCount > 0 && (
+                          <button
+                            onClick={() => {
+                              markAllReqsSeen();
+                              toast.success("Alle als gelesen markiert");
+                            }}
+                            className="h-8 px-2.5 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-all border bg-secondary/50 text-muted-foreground border-border/50 hover:text-foreground hover:border-accent/40 whitespace-nowrap"
+                            title="Alle neuen Kommentare als gelesen markieren"
+                          >
+                            ✓ Alle gelesen
+                          </button>
+                        )}
                         <div className="relative min-w-0 flex-1 sm:flex-none">
                           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                           <Input
