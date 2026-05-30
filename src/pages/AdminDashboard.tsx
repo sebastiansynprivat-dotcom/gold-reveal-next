@@ -5459,7 +5459,7 @@ export default function AdminDashboard() {
                         return false;
                       if (requestPlatformFilter !== "all") {
                         const _pm = (r.description || "").match(/^\[Plattform:\s*([^\]]+)\]\s*/i);
-                        if (!_pm || _pm[1].trim() !== requestPlatformFilter) return false;
+                        if (!_pm || _pm[1].trim().toLowerCase() !== requestPlatformFilter.toLowerCase()) return false;
                       }
                       if (requestAgencyFilter !== "all") {
                         const chatter = chatters.find((c) => c.user_id === r.user_id);
