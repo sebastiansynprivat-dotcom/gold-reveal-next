@@ -5391,8 +5391,8 @@ export default function AdminDashboard() {
 
                     {(() => {
                       const agencyOptions = [
-                        { label: "SheX", value: "Agentur Shex" },
-                        { label: "SYN", value: "SYN" },
+                        { label: "SheX", value: "shex" },
+                        { label: "SYN", value: "syn" },
                       ];
                       return (
                         <div className="px-5 py-2 border-b border-border/50 flex items-center gap-2 flex-wrap">
@@ -5442,7 +5442,9 @@ export default function AdminDashboard() {
                       }
                       if (requestAgencyFilter !== "all") {
                         const chatter = chatters.find((c) => c.user_id === r.user_id);
-                        if (!chatter || chatter.group_name !== requestAgencyFilter) return false;
+                        const agencies = (chatter?.assigned_accounts || [])
+                          .map((a: any) => String(a.model_agency || "").toLowerCase());
+                        if (!agencies.includes(requestAgencyFilter)) return false;
                       }
                       return true;
                     }).length === 0 ? (
@@ -5471,7 +5473,9 @@ export default function AdminDashboard() {
                             }
                             if (requestAgencyFilter !== "all") {
                               const chatter = chatters.find((c) => c.user_id === r.user_id);
-                              if (!chatter || chatter.group_name !== requestAgencyFilter) return false;
+                              const agencies = (chatter?.assigned_accounts || [])
+                                .map((a: any) => String(a.model_agency || "").toLowerCase());
+                              if (!agencies.includes(requestAgencyFilter)) return false;
                             }
                             return true;
                           })
