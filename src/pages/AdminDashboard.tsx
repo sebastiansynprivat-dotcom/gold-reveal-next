@@ -58,6 +58,7 @@ import {
   ArrowLeftRight,
   Download,
   Pencil,
+  MessageCircle,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
@@ -6290,13 +6291,33 @@ export default function AdminDashboard() {
                                           </span>
                                         )}
                                         {req.status === "accepted" && (
+                                          <>
+                                            <Button
+                                              size="sm"
+                                              variant="outline"
+                                              className="h-7 text-xs border-blue-500/30 text-blue-400 hover:bg-blue-500/10 hover:border-blue-500/50"
+                                              onClick={() => updateRequestStatus(req.id, "in_progress")}
+                                            >
+                                              <Clock className="h-3 w-3 mr-1" /> In Arbeit
+                                            </Button>
+                                            <Button
+                                              size="sm"
+                                              variant="outline"
+                                              className="h-7 text-xs border-amber-500/30 text-amber-400 hover:bg-amber-500/10 hover:border-amber-500/50"
+                                              onClick={() => updateRequestStatus(req.id, "waiting_feedback")}
+                                            >
+                                              <MessageCircle className="h-3 w-3 mr-1" /> Warten auf Rückmeldung
+                                            </Button>
+                                          </>
+                                        )}
+                                        {req.status === "in_progress" && (
                                           <Button
                                             size="sm"
                                             variant="outline"
-                                            className="h-7 text-xs border-blue-500/30 text-blue-400 hover:bg-blue-500/10 hover:border-blue-500/50"
-                                            onClick={() => updateRequestStatus(req.id, "in_progress")}
+                                            className="h-7 text-xs border-amber-500/30 text-amber-400 hover:bg-amber-500/10 hover:border-amber-500/50"
+                                            onClick={() => updateRequestStatus(req.id, "waiting_feedback")}
                                           >
-                                            <Clock className="h-3 w-3 mr-1" /> In Arbeit
+                                            <MessageCircle className="h-3 w-3 mr-1" /> Warten auf Rückmeldung
                                           </Button>
                                         )}
                                         {req.status === "waiting_feedback" && (
