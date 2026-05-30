@@ -6908,29 +6908,20 @@ export default function AdminDashboard() {
 
                                     {/* Posting Behavior (Placeholder — alle Plattformen) */}
                                     <div className="glass-card-subtle rounded-xl p-4 space-y-3 border border-border/40">
-                                      <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                          <span className="text-[9px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-red-500/15 text-red-400 border border-red-500/30">
-                                            Media Not Found
-                                          </span>
-                                        </div>
-                                        <button
-                                          type="button"
-                                          disabled
-                                          className="text-[10px] font-semibold px-2.5 py-1 rounded-md bg-red-500/80 text-white opacity-70 cursor-not-allowed"
-                                        >
-                                          Reset Media
-                                        </button>
-                                      </div>
-
                                       <h3 className="text-sm font-bold text-foreground">
                                         Edit [{acc.account_email}] Posting Behavior
                                       </h3>
 
                                       <div className="flex items-center gap-2">
-                                        <Switch checked={false} disabled />
-                                        <span className="text-[11px] font-semibold text-muted-foreground">OFF</span>
+                                        <Switch
+                                          checked={!!acc.post}
+                                          onCheckedChange={(v) => updateAccountField(acc.id, { post: v })}
+                                        />
+                                        <span className={`text-[11px] font-semibold ${acc.post ? "text-emerald-400" : "text-muted-foreground"}`}>
+                                          {acc.post ? "ON" : "OFF"}
+                                        </span>
                                       </div>
+
 
                                       <div className="text-[11px] text-foreground">
                                         <span className="font-semibold">Posts Per Day:</span>{" "}
