@@ -5389,6 +5389,48 @@ export default function AdminDashboard() {
                       ))}
                     </div>
 
+                    {(() => {
+                      const requestAgencies = Array.from(
+                        new Set(
+                          chatters
+                            .filter((c) => modelRequests.some((r) => r.user_id === c.user_id))
+                            .map((c) => c.group_name)
+                            .filter(Boolean),
+                        ),
+                      ).sort();
+                      if (requestAgencies.length === 0) return null;
+                      return (
+                        <div className="px-5 py-2 border-b border-border/50 flex items-center gap-2 flex-wrap">
+                          <span className="text-[10px] text-muted-foreground mr-1 shrink-0">Agentur:</span>
+                          <button
+                            onClick={() => setRequestAgencyFilter("all")}
+                            className={cn(
+                              "text-[10px] px-2.5 py-1 rounded-full transition-all font-medium",
+                              requestAgencyFilter === "all"
+                                ? "bg-accent/20 text-accent ring-1 ring-accent/30"
+                                : "bg-secondary/50 text-muted-foreground hover:text-foreground",
+                            )}
+                          >
+                            Alle
+                          </button>
+                          {requestAgencies.map((agency) => (
+                            <button
+                              key={agency}
+                              onClick={() => setRequestAgencyFilter(agency)}
+                              className={cn(
+                                "text-[10px] px-2.5 py-1 rounded-full transition-all font-medium",
+                                requestAgencyFilter === agency
+                                  ? "bg-accent/20 text-accent ring-1 ring-accent/30"
+                                  : "bg-secondary/50 text-muted-foreground hover:text-foreground",
+                              )}
+                            >
+                              {agency}
+                            </button>
+                          ))}
+                        </div>
+                      );
+                    })()}
+
                     {modelRequests.filter((r) => {
                       if (unreadOnly && !isReqUnread(r)) return false;
                       if (requestFilter === "all" && (r.status === "rejected" || r.status === "archived")) return false;
