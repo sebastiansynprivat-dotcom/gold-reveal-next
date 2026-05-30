@@ -5330,10 +5330,11 @@ export default function AdminDashboard() {
                         {requestFilter !== "all" && (
                           <button
                             onClick={() => {
-                              setRequestFilter("all");
-                              setContentLinkFilter("all");
-                              setRequestPlatformFilter("all");
-                            }}
+                            setRequestFilter("all");
+                            setContentLinkFilter("all");
+                            setRequestPlatformFilter("all");
+                            setRequestAgencyFilter("all");
+                          }}
                             className="text-[10px] text-accent hover:text-accent/80 transition-colors font-medium whitespace-nowrap"
                           >
                             Alle anzeigen
