@@ -5611,7 +5611,7 @@ export default function AdminDashboard() {
                                           {statusConfig.label}
                                         </span>
                                       </div>
-                                      <div className="flex items-center gap-2 mt-0.5">
+                                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1">
                                         <Badge variant="outline" className="text-[10px] h-4 px-1.5 border-border/50">
                                           {req.request_type === "individual" ? "Individuell" : "Allgemein"}
                                         </Badge>
