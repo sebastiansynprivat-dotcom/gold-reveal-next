@@ -233,6 +233,11 @@ interface AccountEntry {
   model_language?: string;
   model_agency?: string;
   model_id?: string | null;
+  post?: boolean;
+  message?: boolean;
+  main_message?: string;
+  follow_message?: string;
+  media_id?: string;
 }
 
 const PLATFORM_STYLES = PLATFORM_STYLES_GLOBAL;
