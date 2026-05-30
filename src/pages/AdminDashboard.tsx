@@ -758,6 +758,22 @@ export default function AdminDashboard() {
 
   // Account pool state
   const [accounts, setAccounts] = useState<AccountEntry[]>([]);
+  const [mainDrafts, setMainDrafts] = useState<Record<string, string>>({});
+  const [followDrafts, setFollowDrafts] = useState<Record<string, string>>({});
+  const [mediaDrafts, setMediaDrafts] = useState<Record<string, string>>({});
+
+  const updateAccountField = useCallback(
+    async (accId: string, patch: Partial<AccountEntry>) => {
+      setAccounts((prev) => prev.map((a) => (a.id === accId ? { ...a, ...patch } : a)));
+      const { error } = await supabase.from("accounts").update(patch as any).eq("id", accId);
+      if (error) {
+        toast.error("Failed to save");
+      } else {
+        toast.success("Saved");
+      }
+    },
+    []
+  );
   const [modelNames, setModelNames] = useState<Record<string, string>>({});
   const [accountPoolOpen, setAccountPoolOpen] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState("");
