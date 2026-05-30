@@ -5396,6 +5396,10 @@ export default function AdminDashboard() {
                         return false;
                       if (requestSearchQuery.trim() && !String(r.model_name || "").toLowerCase().includes(requestSearchQuery.trim().toLowerCase()))
                         return false;
+                      if (requestPlatformFilter !== "all") {
+                        const _pm = (r.description || "").match(/^\[Plattform:\s*([^\]]+)\]\s*/i);
+                        if (!_pm || _pm[1].trim() !== requestPlatformFilter) return false;
+                      }
                       return true;
                     }).length === 0 ? (
                       <div className="p-12 text-center">
