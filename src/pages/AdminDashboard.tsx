@@ -6972,28 +6972,18 @@ export default function AdminDashboard() {
 
                                     {/* Messaging Behavior (Placeholder — alle Plattformen) */}
                                     <div className="glass-card-subtle rounded-xl p-4 space-y-3 border border-border/40">
-                                      <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                          <span className="text-[9px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                                            ON
-                                          </span>
-                                        </div>
-                                        <button
-                                          type="button"
-                                          disabled
-                                          className="text-[10px] font-semibold px-2.5 py-1 rounded-md bg-red-500/80 text-white opacity-70 cursor-not-allowed"
-                                        >
-                                          Reset Media
-                                        </button>
-                                      </div>
-
                                       <h3 className="text-sm font-bold text-foreground">
                                         Edit [{acc.account_email}] Mass DM Behavior
                                       </h3>
 
                                       <div className="flex items-center gap-2">
-                                        <Switch checked disabled />
-                                        <span className="text-[11px] font-semibold text-emerald-400">ON</span>
+                                        <Switch
+                                          checked={!!acc.message}
+                                          onCheckedChange={(v) => updateAccountField(acc.id, { message: v })}
+                                        />
+                                        <span className={`text-[11px] font-semibold ${acc.message ? "text-emerald-400" : "text-muted-foreground"}`}>
+                                          {acc.message ? "ON" : "OFF"}
+                                        </span>
                                       </div>
 
                                       <div className="text-[11px] text-foreground">
@@ -7001,67 +6991,96 @@ export default function AdminDashboard() {
                                         <span className="text-muted-foreground">—</span>
                                       </div>
 
-                                      {/* Main Message */}
-                                      <div className="space-y-1.5">
-                                        <p className="text-[11px] font-semibold text-foreground">Main Message:</p>
-                                        <div className="flex gap-2">
-                                          <Textarea
-                                            disabled
-                                            placeholder="Ich hab grad nen neuen Slip an… rate mal welche Farbe er hat 😉"
-                                            className="text-xs min-h-[60px] resize-none bg-background/40 border-border/40 flex-1"
-                                          />
-                                          <button
-                                            type="button"
-                                            disabled
-                                            className="text-[10px] font-semibold px-3 py-1 h-fit rounded-md bg-emerald-500/80 text-white opacity-70 cursor-not-allowed"
-                                          >
-                                            Set
-                                          </button>
-                                        </div>
-                                        <div className="flex gap-2">
-                                          <span className="text-[10px] font-semibold px-2.5 py-1 rounded-md border border-border/40 text-muted-foreground">
-                                            No Media Set
-                                          </span>
-                                          <button
-                                            type="button"
-                                            disabled
-                                            className="text-[10px] font-semibold px-2.5 py-1 rounded-md bg-blue-500/80 text-white opacity-70 cursor-not-allowed"
-                                          >
-                                            Set Media
-                                          </button>
-                                        </div>
-                                      </div>
+                                      {(() => {
+                                        const savedMain = acc.main_message ?? "";
+                                        const savedFollow = acc.follow_message ?? "";
+                                        const savedMedia = acc.media_id ?? "";
+                                        const mainVal = mainDrafts[acc.id] ?? savedMain;
+                                        const followVal = followDrafts[acc.id] ?? savedFollow;
+                                        const mediaVal = mediaDrafts[acc.id] ?? savedMedia;
+                                        const mainDirty = mainVal !== savedMain;
+                                        const followDirty = followVal !== savedFollow;
+                                        return (
+                                          <>
+                                            {/* Main Message */}
+                                            <div className="space-y-1.5">
+                                              <p className="text-[11px] font-semibold text-foreground">Main Message:</p>
+                                              <div className="flex gap-2">
+                                                <Textarea
+                                                  value={mainVal}
+                                                  onChange={(e) =>
+                                                    setMainDrafts((d) => ({ ...d, [acc.id]: e.target.value }))
+                                                  }
+                                                  placeholder="Ich hab grad nen neuen Slip an… rate mal welche Farbe er hat 😉"
+                                                  className="text-xs min-h-[60px] resize-none bg-background/40 border-border/40 flex-1"
+                                                />
+                                                <button
+                                                  type="button"
+                                                  disabled={!mainDirty}
+                                                  onClick={() => updateAccountField(acc.id, { main_message: mainVal })}
+                                                  className={`text-[10px] font-semibold px-3 py-1 h-fit rounded-md text-white ${
+                                                    mainDirty
+                                                      ? "bg-emerald-500 hover:bg-emerald-600 cursor-pointer"
+                                                      : "bg-emerald-500/40 opacity-60 cursor-not-allowed"
+                                                  }`}
+                                                >
+                                                  Set
+                                                </button>
+                                              </div>
+                                            </div>
 
-                                      {/* Follow Up */}
-                                      <div className="space-y-1.5 pt-1 border-t border-border/30">
-                                        <p className="text-[11px] font-semibold text-foreground pt-2">Follow Up:</p>
-                                        <div className="flex gap-2">
-                                          <Textarea
-                                            disabled
-                                            placeholder="Falsch geraten? Dann muss ich ihn wohl ausziehen und dir zeigen…"
-                                            className="text-xs min-h-[60px] resize-none bg-background/40 border-border/40 flex-1"
-                                          />
-                                          <button
-                                            type="button"
-                                            disabled
-                                            className="text-[10px] font-semibold px-3 py-1 h-fit rounded-md bg-emerald-500/80 text-white opacity-70 cursor-not-allowed"
-                                          >
-                                            Set
-                                          </button>
-                                        </div>
-                                        <div className="flex gap-2">
-                                          <span className="text-[10px] font-semibold px-2.5 py-1 rounded-md border border-border/40 text-muted-foreground">
-                                            No Media Set
-                                          </span>
-                                          <button
-                                            type="button"
-                                            disabled
-                                            className="text-[10px] font-semibold px-2.5 py-1 rounded-md bg-blue-500/80 text-white opacity-70 cursor-not-allowed"
-                                          >
-                                            Set Media
-                                          </button>
-                                        </div>
-                                      </div>
+                                            {/* Follow Up */}
+                                            <div className="space-y-1.5 pt-1 border-t border-border/30">
+                                              <p className="text-[11px] font-semibold text-foreground pt-2">Follow Up:</p>
+                                              <div className="flex gap-2">
+                                                <Textarea
+                                                  value={followVal}
+                                                  onChange={(e) =>
+                                                    setFollowDrafts((d) => ({ ...d, [acc.id]: e.target.value }))
+                                                  }
+                                                  placeholder="Falsch geraten? Dann muss ich ihn wohl ausziehen und dir zeigen…"
+                                                  className="text-xs min-h-[60px] resize-none bg-background/40 border-border/40 flex-1"
+                                                />
+                                                <button
+                                                  type="button"
+                                                  disabled={!followDirty}
+                                                  onClick={() => updateAccountField(acc.id, { follow_message: followVal })}
+                                                  className={`text-[10px] font-semibold px-3 py-1 h-fit rounded-md text-white ${
+                                                    followDirty
+                                                      ? "bg-emerald-500 hover:bg-emerald-600 cursor-pointer"
+                                                      : "bg-emerald-500/40 opacity-60 cursor-not-allowed"
+                                                  }`}
+                                                >
+                                                  Set
+                                                </button>
+                                              </div>
+                                            </div>
+
+                                            {/* Media */}
+                                            <div className="space-y-1.5 pt-1 border-t border-border/30">
+                                              <p className="text-[11px] font-semibold text-foreground pt-2">Media:</p>
+                                              <div className="flex gap-2">
+                                                <Input
+                                                  value={mediaVal}
+                                                  onChange={(e) =>
+                                                    setMediaDrafts((d) => ({ ...d, [acc.id]: e.target.value }))
+                                                  }
+                                                  placeholder="No Media Set"
+                                                  className="text-xs h-8 bg-background/40 border-border/40 flex-1"
+                                                />
+                                                <button
+                                                  type="button"
+                                                  disabled
+                                                  className="text-[10px] font-semibold px-2.5 py-1 h-8 rounded-md bg-blue-500/80 text-white opacity-70 cursor-not-allowed"
+                                                >
+                                                  {savedMedia ? "Refresh Media" : "Set Media"}
+                                                </button>
+                                              </div>
+                                            </div>
+                                          </>
+                                        );
+                                      })()}
+
 
                                       {/* Last 7 Days */}
                                       <div className="pt-1">
