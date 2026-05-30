@@ -5391,8 +5391,8 @@ export default function AdminDashboard() {
 
                     {(() => {
                       const agencyOptions = [
-                        { label: "SheX", value: "Agentur Shex" },
-                        { label: "SYN", value: "SYN" },
+                        { label: "SheX", value: "shex" },
+                        { label: "SYN", value: "syn" },
                       ];
                       return (
                         <div className="px-5 py-2 border-b border-border/50 flex items-center gap-2 flex-wrap">
