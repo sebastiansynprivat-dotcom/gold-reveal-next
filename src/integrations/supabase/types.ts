@@ -814,6 +814,39 @@ export type Database = {
         }
         Relationships: []
       }
+      message_reports: {
+        Row: {
+          account_id: string
+          created_at: string
+          date: string
+          follow: number
+          id: string
+          main: number
+          total: number | null
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          date: string
+          follow?: number
+          id?: string
+          main?: number
+          total?: number | null
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          date?: string
+          follow?: number
+          id?: string
+          main?: number
+          total?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       model_biographies: {
         Row: {
           drive_file_id: string | null
@@ -1470,6 +1503,36 @@ export type Database = {
           key?: string
           label?: string
           sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      post_reports: {
+        Row: {
+          account_id: string
+          created_at: string
+          date: string
+          failed: number
+          id: string
+          posted: number
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          date: string
+          failed?: number
+          id?: string
+          posted?: number
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          date?: string
+          failed?: number
+          id?: string
+          posted?: number
           updated_at?: string
         }
         Relationships: []
