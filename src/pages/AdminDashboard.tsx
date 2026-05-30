@@ -7190,44 +7190,40 @@ export default function AdminDashboard() {
 
 
                                       {/* Last 7 Days */}
-                                      <div className="pt-1">
-                                        <p className="text-[11px] font-semibold text-foreground mb-1.5">Last 7 Days</p>
-                                        <div className="rounded-lg border border-border/40 overflow-hidden">
-                                          <div className="grid grid-cols-[70px_repeat(7,1fr)] text-[9px]">
-                                            <div className="bg-secondary/30 px-1.5 py-1.5 uppercase tracking-wider text-muted-foreground font-semibold border-b border-border/30">
-                                              Dates
+                                      {(() => {
+                                        const rep = reports7d[acc.id];
+                                        const dates: string[] = [];
+                                        for (let i = 6; i >= 0; i--) {
+                                          const d = new Date();
+                                          d.setDate(d.getDate() - i);
+                                          dates.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`);
+                                        }
+                                        return (
+                                          <div className="pt-1">
+                                            <p className="text-[11px] font-semibold text-foreground mb-1.5">Last 7 Days</p>
+                                            <div className="rounded-lg border border-border/40 overflow-hidden">
+                                              <div className="grid grid-cols-[70px_repeat(7,1fr)] text-[9px]">
+                                                <div className="bg-secondary/30 px-1.5 py-1.5 uppercase tracking-wider text-muted-foreground font-semibold border-b border-border/30">Dates</div>
+                                                {dates.map((d) => (
+                                                  <div key={`d-${d}`} className="px-1 py-1.5 text-center font-semibold text-foreground border-b border-l border-border/30">{d.slice(5)}</div>
+                                                ))}
+                                                <div className="bg-secondary/30 px-1.5 py-1.5 uppercase tracking-wider text-muted-foreground font-semibold border-b border-border/30">Main</div>
+                                                {dates.map((d) => (
+                                                  <div key={`m-${d}`} className="px-1 py-1.5 text-center text-foreground border-b border-l border-border/30">{rep?.messages?.[d]?.main ?? "—"}</div>
+                                                ))}
+                                                <div className="bg-secondary/30 px-1.5 py-1.5 uppercase tracking-wider text-muted-foreground font-semibold border-b border-border/30">Follow</div>
+                                                {dates.map((d) => (
+                                                  <div key={`f-${d}`} className="px-1 py-1.5 text-center text-foreground border-b border-l border-border/30">{rep?.messages?.[d]?.follow ?? "—"}</div>
+                                                ))}
+                                                <div className="bg-secondary/30 px-1.5 py-1.5 uppercase tracking-wider text-muted-foreground font-semibold">Total</div>
+                                                {dates.map((d) => (
+                                                  <div key={`t-${d}`} className="px-1 py-1.5 text-center text-accent font-semibold border-l border-border/30">{rep?.messages?.[d]?.total ?? "—"}</div>
+                                                ))}
+                                              </div>
                                             </div>
-                                            {Array.from({ length: 7 }).map((_, i) => {
-                                              const d = new Date();
-                                              d.setDate(d.getDate() - (6 - i));
-                                              const label = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-                                              return (
-                                                <div key={`d-${i}`} className="px-1 py-1.5 text-center font-semibold text-foreground border-b border-l border-border/30">
-                                                  {label}
-                                                </div>
-                                              );
-                                            })}
-                                            <div className="bg-secondary/30 px-1.5 py-1.5 uppercase tracking-wider text-muted-foreground font-semibold border-b border-border/30">
-                                              Main
-                                            </div>
-                                            {Array.from({ length: 7 }).map((_, i) => (
-                                              <div key={`m-${i}`} className="px-1 py-1.5 text-center text-muted-foreground border-b border-l border-border/30">—</div>
-                                            ))}
-                                            <div className="bg-secondary/30 px-1.5 py-1.5 uppercase tracking-wider text-muted-foreground font-semibold border-b border-border/30">
-                                              Follow
-                                            </div>
-                                            {Array.from({ length: 7 }).map((_, i) => (
-                                              <div key={`f-${i}`} className="px-1 py-1.5 text-center text-muted-foreground border-b border-l border-border/30">—</div>
-                                            ))}
-                                            <div className="bg-secondary/30 px-1.5 py-1.5 uppercase tracking-wider text-muted-foreground font-semibold">
-                                              Total
-                                            </div>
-                                            {Array.from({ length: 7 }).map((_, i) => (
-                                              <div key={`t-${i}`} className="px-1 py-1.5 text-center text-muted-foreground border-l border-border/30">—</div>
-                                            ))}
                                           </div>
-                                        </div>
-                                      </div>
+                                        );
+                                      })()}
                                     </div>
 
                                     {/* Bot Message + Follow-up + Save + Aktiv — only for Maloum (DISABLED) */}
