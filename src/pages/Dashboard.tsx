@@ -224,6 +224,7 @@ export default function Dashboard() {
   const [myRequests, setMyRequests] = useState<any[]>([]);
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
   const [requestsOpen, setRequestsOpen] = useState(false);
+  const [showArchivedRequests, setShowArchivedRequests] = useState(false);
   const [editRequest, setEditRequest] = useState<any>(null);
   const [seenRequestIds, setSeenRequestIds] = useState<Set<string>>(() => {
     try {
@@ -234,6 +235,7 @@ export default function Dashboard() {
     }
   });
 
+
   const loadMyRequests = useCallback(async () => {
     if (!user) return;
     const { data } = await supabase
@@ -241,7 +243,8 @@ export default function Dashboard() {
       .select("*")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
-      .limit(20);
+      .limit(100);
+
     if (data) {
       const ids = data.map((r: any) => r.id);
       let msgsByReq: Record<string, any[]> = {};
@@ -262,6 +265,28 @@ export default function Dashboard() {
   useEffect(() => {
     if (user) loadMyRequests();
   }, [user, loadMyRequests]);
+
+  // Realtime: update request status/comments live when admin changes them
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`my_requests_${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "model_requests", filter: `user_id=eq.${user.id}` },
+        () => loadMyRequests(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "model_request_messages", filter: `user_id=eq.${user.id}` },
+        () => loadMyRequests(),
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, loadMyRequests]);
+
 
   const [isFirstLogin, setIsFirstLogin] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
@@ -1116,7 +1141,7 @@ export default function Dashboard() {
                   >
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-semibold text-foreground">
-                        Deine Anfragen ({myRequests.length})
+                        Deine Anfragen ({myRequests.filter((r) => r.status !== "archived" && r.status !== "rejected").length})
                       </span>
                       {unseenCount > 0 && (
                         <span className="h-5 min-w-5 px-1.5 rounded-full bg-accent text-accent-foreground text-[10px] font-bold flex items-center justify-center animate-in zoom-in duration-200">
@@ -1151,19 +1176,21 @@ export default function Dashboard() {
                           </DialogHeader>
                         </DialogContent>
                       </Dialog>
-                      {[...myRequests]
-                        .sort((a, b) =>
-                          a.status === "rejected" && b.status !== "rejected"
-                            ? 1
-                            : b.status === "rejected" && a.status !== "rejected"
-                              ? -1
-                              : 0,
-                        )
-                        .map((req) => (
+                      {(() => {
+                        const isPastReq = (r: any) => r.status === "rejected" || r.status === "archived";
+                        const activeReqs = myRequests.filter((r) => !isPastReq(r));
+                        const pastReqs = myRequests.filter(isPastReq);
+                        const visibleReqs = showArchivedRequests ? [...activeReqs, ...pastReqs] : activeReqs;
+                        return (
+                          <>
+                            {visibleReqs.map((req) => {
+                              const isPast = isPastReq(req);
+                              return (
                           <div
                             key={req.id}
-                            className="rounded-lg border border-border/50 bg-secondary/20 p-3 space-y-1.5"
+                            className={`rounded-lg border border-border/50 bg-secondary/20 p-3 space-y-1.5 transition-opacity ${isPast ? "opacity-60 grayscale-[40%]" : ""}`}
                           >
+
                             <div className="flex items-center justify-between gap-2">
                               <div className="flex flex-col">
                                 <span className="text-xs font-medium text-foreground">{req.model_name}</span>
@@ -1193,7 +1220,10 @@ export default function Dashboard() {
                                       ? "⏳ Wird bearbeitet"
                                       : req.status === "waiting_feedback"
                                         ? "💬 Warten auf Rückmeldung"
-                                        : "❌ Abgelehnt"}
+                                        : req.status === "archived"
+                                          ? "✔️ Erledigt"
+                                          : "❌ Abgelehnt"}
+
                               </Badge>
                             </div>
                             <p className="text-[10px] text-muted-foreground line-clamp-2">{req.description}</p>
@@ -1390,7 +1420,22 @@ export default function Dashboard() {
                               </button>
                             )}
                           </div>
-                        ))}
+                              );
+                            })}
+                            {pastReqs.length > 0 && (
+                              <button
+                                onClick={() => setShowArchivedRequests((v) => !v)}
+                                className="w-full mt-2 flex items-center justify-center gap-1.5 rounded-md border border-border/40 bg-secondary/10 px-3 py-1.5 text-[10px] text-muted-foreground hover:text-foreground hover:bg-secondary/30 transition-colors"
+                              >
+                                {showArchivedRequests
+                                  ? `Archiv ausblenden`
+                                  : `Archiv anzeigen (${pastReqs.length})`}
+                              </button>
+                            )}
+                          </>
+                        );
+                      })()}
+
                     </div>
                   )}
                 </div>
