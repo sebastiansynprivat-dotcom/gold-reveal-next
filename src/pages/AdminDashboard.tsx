@@ -5364,6 +5364,28 @@ export default function AdminDashboard() {
                       </div>
                     )}
 
+                    <div className="px-5 py-2 border-b border-border/50 flex items-center gap-2">
+                      <span className="text-[10px] text-muted-foreground mr-1">Plattform:</span>
+                      {[
+                        { key: "all" as const, label: "Alle" },
+                        { key: "Maloum" as const, label: "Maloum" },
+                        { key: "Brezzels" as const, label: "Brezzels" },
+                      ].map(({ key, label }) => (
+                        <button
+                          key={key}
+                          onClick={() => setRequestPlatformFilter(key)}
+                          className={cn(
+                            "text-[10px] px-2.5 py-1 rounded-full transition-all font-medium",
+                            requestPlatformFilter === key
+                              ? "bg-accent/20 text-accent ring-1 ring-accent/30"
+                              : "bg-secondary/50 text-muted-foreground hover:text-foreground",
+                          )}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+
                     {modelRequests.filter((r) => {
                       if (unreadOnly && !isReqUnread(r)) return false;
                       if (requestFilter === "all" && (r.status === "rejected" || r.status === "archived")) return false;
