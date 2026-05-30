@@ -1,20 +1,36 @@
-## Ziel
-Im Dashboard von Martin Mo (User `ad822168-efed-495f-b1da-84fdf75538f3`, Gruppe „(Br) Martin Mo") soll die Bonus-Stufe immer mindestens 25% sein — also die Starter/Bronze/Silber/Gold/Platin-Logik (20–24%) greift bei ihm nicht. Alle anderen Chatter bleiben unverändert.
+## Goal
+Persist the Posting Behavior and Mass DM Behavior toggle + textarea state on each account by adding 4 new columns to the `accounts` table, then wire the existing UI in `AdminDashboard.tsx` to read/write them.
 
-## Umsetzung
-In `src/pages/Dashboard.tsx`:
+## Step 1 — Database migration
 
-1. Konstante hinzufügen:
-   ```ts
-   const FORCED_ELITE_USER_IDS = new Set(["ad822168-efed-495f-b1da-84fdf75538f3"]);
-   ```
-2. Nach `const currentTier = getCurrentTier(monthlyRevenue);` prüfen, ob der eingeloggte User in dem Set ist. Wenn ja:
-   - `currentTier` wird auf den Elite-Tier (💎, 25%) gesetzt, sofern der aktuelle Tier eine niedrigere Rate als 25% hat. Liegt er bereits bei Elite oder Titan, bleibt es unverändert.
-   - `nextTier` wird entsprechend neu berechnet (Titan oder `null`).
-3. Damit greifen automatisch: angezeigter Tier-Name/Emoji, Rate, Monatsübersicht (`MonthSummaryWidget`), Bonus-Übersicht (außer Demo-Modus, der bleibt zum Durchklicken erhalten).
+Add 4 columns to `public.accounts`:
 
-Keine DB-Änderung nötig — es ist eine reine UI-/Berechnungs-Override, exklusiv für Martin Mo.
+| Column | Type | Default | Purpose |
+|---|---|---|---|
+| `post` | `boolean` | `false` | Posting Behavior ON/OFF toggle |
+| `message` | `boolean` | `false` | Mass DM Behavior ON/OFF toggle |
+| `main_message` | `text` | `''` | Main Message textarea |
+| `follow_message` | `text` | `''` | Follow-up Message textarea |
 
-## Nicht im Scope
-- Andere Dashboards (Admin, Model) — dort wird die Bonus-Tier-Logik nicht angezeigt.
-- Auszahlungs-/Rechnungsberechnung im Backend (separat, falls überhaupt nötig).
+Note: column names use snake_case (`main_message`, `follow_message`) since Postgres identifiers shouldn't contain hyphens. `post` and `message` stay as requested.
+
+No new RLS/grants needed — existing policies on `accounts` already cover these columns.
+
+## Step 2 — Wire UI in `src/pages/AdminDashboard.tsx`
+
+In the Posting Behavior section:
+- Bind the toggle to `acc.post`, persist via existing account update flow.
+- (Existing textareas in Posting Behavior already exist — confirm whether they should also map to a column. Currently this plan keeps Posting Behavior untouched aside from the toggle. **Open question below.**)
+
+In the new Mass DM Behavior section (currently disabled placeholders):
+- Bind the ON toggle to `acc.message`.
+- Bind Main Message textarea to `acc.main_message`.
+- Bind Follow Up textarea to `acc.follow_message`.
+- Enable the controls (they are currently `disabled`).
+- Save on blur / via the existing per-account save pattern used by other fields in the same row.
+
+The 7-day stats table stays as placeholder for now (not part of this task).
+
+## Open questions
+1. Should `post` and the Posting Behavior textareas be wired too, or only the toggle for now? (You said "post → bool" so the toggle yes, but Posting Behavior already has textareas — should those map to existing/new columns or stay as-is?)
+2. Confirm snake_case column names `main_message` / `follow_message` are fine (vs. the hyphenated names from the request, which Postgres doesn't allow without quoting).
