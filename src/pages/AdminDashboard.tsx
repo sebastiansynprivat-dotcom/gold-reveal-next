@@ -878,6 +878,7 @@ export default function AdminDashboard() {
   const [requestAgencyFilter, setRequestAgencyFilter] = useState<string>("all");
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [seenRequestMsgs, setSeenRequestMsgs] = useState<Record<string, string>>({});
+  const [msgReactions, setMsgReactions] = useState<Record<string, "👍">>({});
   const [notifTitle, setNotifTitle] = useState("");
   const [notifBody, setNotifBody] = useState("");
   const [notifSending, setNotifSending] = useState(false);
@@ -971,6 +972,21 @@ export default function AdminDashboard() {
       localStorage.setItem(`admin_seen_request_msgs_${user.id}`, JSON.stringify(seenRequestMsgs));
     } catch {}
   }, [seenRequestMsgs, user?.id]);
+
+  // Load/persist message reactions per admin
+  useEffect(() => {
+    if (!user?.id) return;
+    try {
+      const raw = localStorage.getItem(`admin_msg_reactions_${user.id}`);
+      if (raw) setMsgReactions(JSON.parse(raw));
+    } catch {}
+  }, [user?.id]);
+  useEffect(() => {
+    if (!user?.id) return;
+    try {
+      localStorage.setItem(`admin_msg_reactions_${user.id}`, JSON.stringify(msgReactions));
+    } catch {}
+  }, [msgReactions, user?.id]);
 
   const getLatestChatterMsgAt = useCallback((req: any): string | null => {
     const msgs = (req?._messages || []) as Array<{ sender_role: string; created_at: string }>;
@@ -5963,13 +5979,25 @@ export default function AdminDashboard() {
                                               <div className="space-y-1.5">
                                                 {allMsgs.map((m) => {
                                                   const adminName = m.sender_role === "admin" && m.user_id ? adminNames[m.user_id] : undefined;
+                                                  const reaction = msgReactions[m.id];
+                                                  const isChatter = m.sender_role === "chatter";
                                                   return (
                                                   <div
                                                     key={m.id}
                                                     className={`flex ${m.sender_role === "admin" ? "justify-start" : "justify-end"}`}
                                                   >
                                                     <div
-                                                      className={`max-w-[85%] rounded-lg px-3 py-2 ${
+                                                      onDoubleClick={isChatter ? () => {
+                                                        markReqSeen(req);
+                                                        setMsgReactions((prev) => {
+                                                          const next = { ...prev };
+                                                          if (next[m.id] === "👍") delete next[m.id];
+                                                          else next[m.id] = "👍";
+                                                          return next;
+                                                        });
+                                                      } : undefined}
+                                                      title={isChatter ? "Doppelklick: als gelesen markieren + 👍" : undefined}
+                                                      className={`relative max-w-[85%] rounded-lg px-3 py-2 ${isChatter ? "cursor-pointer select-none" : ""} ${
                                                         m.sender_role === "admin"
                                                           ? "bg-accent/10 border border-accent/20"
                                                           : "bg-secondary/40 border border-border/40"
@@ -5987,6 +6015,11 @@ export default function AdminDashboard() {
                                                       <p className="text-xs text-foreground leading-relaxed whitespace-pre-wrap">
                                                         {m.body}
                                                       </p>
+                                                      {reaction && (
+                                                        <span className="absolute -bottom-2 -right-1 text-sm bg-card border border-accent/40 rounded-full h-6 w-6 flex items-center justify-center shadow-sm">
+                                                          {reaction}
+                                                        </span>
+                                                      )}
                                                     </div>
                                                   </div>
                                                 ); })}
