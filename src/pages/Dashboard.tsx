@@ -224,6 +224,7 @@ export default function Dashboard() {
   const [myRequests, setMyRequests] = useState<any[]>([]);
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
   const [requestsOpen, setRequestsOpen] = useState(false);
+  const [showArchivedRequests, setShowArchivedRequests] = useState(false);
   const [editRequest, setEditRequest] = useState<any>(null);
   const [seenRequestIds, setSeenRequestIds] = useState<Set<string>>(() => {
     try {
@@ -233,6 +234,7 @@ export default function Dashboard() {
       return new Set();
     }
   });
+
 
   const loadMyRequests = useCallback(async () => {
     if (!user) return;
