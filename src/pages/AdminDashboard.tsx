@@ -5474,6 +5474,10 @@ export default function AdminDashboard() {
                               const _pm = (r.description || "").match(/^\[Plattform:\s*([^\]]+)\]\s*/i);
                               if (!_pm || _pm[1].trim() !== requestPlatformFilter) return false;
                             }
+                            if (requestAgencyFilter !== "all") {
+                              const chatter = chatters.find((c) => c.user_id === r.user_id);
+                              if (!chatter || chatter.group_name !== requestAgencyFilter) return false;
+                            }
                             return true;
                           })
                           .map((req, idx, arr) => {
