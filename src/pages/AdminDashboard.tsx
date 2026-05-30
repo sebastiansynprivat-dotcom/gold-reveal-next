@@ -4578,7 +4578,7 @@ export default function AdminDashboard() {
 
                         {manualSectionOpen && (
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            {DEFAULT_PLATFORMS.map((p) => {
+                            {platforms.map((p) => {
                               const pKey = p.toLowerCase();
                               const style = PLATFORM_STYLES[pKey] || {
                                 bg: "bg-secondary/10",
