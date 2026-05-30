@@ -5320,17 +5320,19 @@ export default function AdminDashboard() {
                   </div>
 
                   <section className="glass-card rounded-xl overflow-hidden">
-                    <div className="px-5 py-4 border-b border-border/50 flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-lg bg-accent/10 flex items-center justify-center">
+                    <div className="px-4 sm:px-5 py-4 border-b border-border/50 flex flex-col gap-3 sm:flex-row sm:items-center">
+                      <div className="flex items-center gap-3 min-w-0">
+                      <div className="h-8 w-8 rounded-lg bg-accent/10 flex shrink-0 items-center justify-center">
                         <Send className="h-4 w-4 text-accent" />
                       </div>
-                      <div className="flex-1">
+                      <div className="min-w-0 flex-1">
                         <h2 className="text-sm font-bold text-foreground">Custom Anfragen</h2>
                         <p className="text-[10px] text-muted-foreground">
                           {modelRequests.length} Anfrage{modelRequests.length !== 1 ? "n" : ""} insgesamt
                         </p>
                        </div>
-                      <div className="flex items-center gap-2">
+                      </div>
+                      <div className="flex min-w-0 flex-col gap-2 sm:ml-auto sm:flex-row sm:items-center">
                         <button
                           onClick={() => setUnreadOnly((v) => !v)}
                           className={cn(
@@ -5349,13 +5351,13 @@ export default function AdminDashboard() {
                             </span>
                           )}
                         </button>
-                        <div className="relative">
+                        <div className="relative min-w-0 flex-1 sm:flex-none">
                           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                           <Input
                             placeholder="Model suchen..."
                             value={requestSearchQuery}
                             onChange={(e) => setRequestSearchQuery(e.target.value)}
-                            className="h-8 pl-8 text-xs bg-secondary/50 border-border/50 w-40 sm:w-56 focus:w-48 sm:focus:w-64 transition-all"
+                            className="h-8 w-full min-w-0 pl-8 text-xs bg-secondary/50 border-border/50 sm:w-56 sm:focus:w-64 transition-all"
                           />
                         </div>
                         {requestFilter !== "all" && (
