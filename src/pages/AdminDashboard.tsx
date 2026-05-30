@@ -5400,17 +5400,17 @@ export default function AdminDashboard() {
                       </div>
                     )}
 
-                    <div className="px-5 py-2 border-b border-border/50 flex items-center gap-2">
-                      <span className="text-[10px] text-muted-foreground mr-1">Plattform:</span>
+                    <div className="px-4 sm:px-5 py-2 border-b border-border/50 flex items-center gap-2 overflow-x-auto [-webkit-overflow-scrolling:touch]">
+                      <span className="text-[10px] text-muted-foreground mr-1 shrink-0">Plattform:</span>
                       {[
                         { key: "all", label: "Alle" },
-                        ...PLATFORM_LABELS.map((label) => ({ key: label, label })),
+                        ...requestPlatformOptions.map((label) => ({ key: label, label })),
                       ].map(({ key, label }) => (
                         <button
                           key={key}
                           onClick={() => setRequestPlatformFilter(key)}
                           className={cn(
-                            "text-[10px] px-2.5 py-1 rounded-full transition-all font-medium",
+                            "shrink-0 text-[10px] px-2.5 py-1 rounded-full transition-all font-medium whitespace-nowrap",
                             requestPlatformFilter === key
                               ? "bg-accent/20 text-accent ring-1 ring-accent/30"
                               : "bg-secondary/50 text-muted-foreground hover:text-foreground",
