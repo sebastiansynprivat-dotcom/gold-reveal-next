@@ -61,13 +61,17 @@ export type Database = {
           currency: string
           drive_folder_id: string | null
           folder_name: string | null
+          follow_message: string
           id: string
           is_manual: boolean
+          main_message: string
+          message: boolean
           model_active: boolean
           model_agency: string
           model_id: string | null
           model_language: string
           platform: string
+          post: boolean
           subfolder_name: string | null
         }
         Insert: {
@@ -81,13 +85,17 @@ export type Database = {
           currency?: string
           drive_folder_id?: string | null
           folder_name?: string | null
+          follow_message?: string
           id?: string
           is_manual?: boolean
+          main_message?: string
+          message?: boolean
           model_active?: boolean
           model_agency?: string
           model_id?: string | null
           model_language?: string
           platform?: string
+          post?: boolean
           subfolder_name?: string | null
         }
         Update: {
@@ -101,13 +109,17 @@ export type Database = {
           currency?: string
           drive_folder_id?: string | null
           folder_name?: string | null
+          follow_message?: string
           id?: string
           is_manual?: boolean
+          main_message?: string
+          message?: boolean
           model_active?: boolean
           model_agency?: string
           model_id?: string | null
           model_language?: string
           platform?: string
+          post?: boolean
           subfolder_name?: string | null
         }
         Relationships: [
