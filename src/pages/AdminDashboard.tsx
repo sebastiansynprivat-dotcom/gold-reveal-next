@@ -5390,15 +5390,7 @@ export default function AdminDashboard() {
                     </div>
 
                     {(() => {
-                      const requestAgencies = Array.from(
-                        new Set(
-                          chatters
-                            .filter((c) => modelRequests.some((r) => r.user_id === c.user_id))
-                            .map((c) => c.group_name)
-                            .filter(Boolean),
-                        ),
-                      ).sort();
-                      if (requestAgencies.length === 0) return null;
+                      const requestAgencies = ["Agentur Shex", "SYN"];
                       return (
                         <div className="px-5 py-2 border-b border-border/50 flex items-center gap-2 flex-wrap">
                           <span className="text-[10px] text-muted-foreground mr-1 shrink-0">Agentur:</span>
