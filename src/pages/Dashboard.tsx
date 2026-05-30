@@ -1289,14 +1289,18 @@ export default function Dashboard() {
                                   ),
                                 );
                                 setReplyDrafts((prev) => ({ ...prev, [req.id]: "" }));
-                                // If request was archived/rejected, reopen it so admins see it again
-                                if (req.status === "archived" || req.status === "rejected") {
+                                // If request was archived/rejected/waiting_feedback, reopen it so admins see it again
+                                if (
+                                  req.status === "archived" ||
+                                  req.status === "rejected" ||
+                                  req.status === "waiting_feedback"
+                                ) {
                                   await supabase
                                     .from("model_requests")
-                                    .update({ status: "pending" })
+                                    .update({ status: "in_progress" })
                                     .eq("id", req.id);
                                   setMyRequests((prev) =>
-                                    prev.map((r) => (r.id === req.id ? { ...r, status: "pending" } : r)),
+                                    prev.map((r) => (r.id === req.id ? { ...r, status: "in_progress" } : r)),
                                   );
                                 }
                                 // Fire-and-forget admin push (Vanessa & Max)
