@@ -6958,96 +6958,144 @@ export default function AdminDashboard() {
                                       </div>
                                     </div>
 
-                                    {/* Bot Message + Follow-up + Save + Aktiv — only for Maloum */}
-                                    {acc.platform === "Maloum" && (
-                                      <>
-                                        {/* Aktiv Toggle */}
-                                        <div className="flex items-center justify-between glass-card-subtle rounded-lg px-3 py-2">
-                                          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                            Bot aktiv
+                                    {/* Messaging Behavior (Placeholder — alle Plattformen) */}
+                                    <div className="glass-card-subtle rounded-xl p-4 space-y-3 border border-border/40">
+                                      <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-[9px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                                            ON
                                           </span>
-                                          <Switch
-                                            checked={entry.isActive}
-                                            onCheckedChange={(checked) => {
-                                              setBotMessages((prev) => ({
-                                                ...prev,
-                                                [acc.id]: { ...entry, isActive: checked },
-                                              }));
-                                            }}
-                                          />
                                         </div>
-                                        <div className="space-y-1.5">
-                                          <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                            Bot-Nachricht
-                                          </label>
-                                          <div className="input-gold-shimmer rounded-lg">
-                                            <Textarea
-                                              value={entry.message}
-                                              onChange={(e) =>
-                                                setBotMessages((prev) => ({
-                                                  ...prev,
-                                                  [acc.id]: { ...entry, message: e.target.value },
-                                                }))
-                                              }
-                                              placeholder="Hey! Schreib mir gerne eine Nachricht 💋"
-                                              className="text-sm min-h-[60px] resize-none bg-background/50 border-transparent"
-                                              onClick={(e) => e.stopPropagation()}
-                                            />
-                                          </div>
-                                        </div>
-
-                                        <div className="space-y-1.5">
-                                          <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                                            Follow-up Nachricht
-                                          </label>
-                                          <div className="input-gold-shimmer rounded-lg">
-                                            <Textarea
-                                              value={entry.followUp}
-                                              onChange={(e) =>
-                                                setBotMessages((prev) => ({
-                                                  ...prev,
-                                                  [acc.id]: { ...entry, followUp: e.target.value },
-                                                }))
-                                              }
-                                              placeholder="Na, hast du meine letzte Nachricht gelesen? 😏"
-                                              className="text-sm min-h-[60px] resize-none bg-background/50 border-transparent"
-                                              onClick={(e) => e.stopPropagation()}
-                                            />
-                                          </div>
-                                        </div>
-
-                                        <Button
-                                          onClick={() => saveBotMessage(acc.id)}
-                                          disabled={entry.saving || !hasChanges}
-                                          variant={hasChanges ? "default" : "secondary"}
-                                          className="w-full"
-                                          size="sm"
+                                        <button
+                                          type="button"
+                                          disabled
+                                          className="text-[10px] font-semibold px-2.5 py-1 rounded-md bg-red-500/80 text-white opacity-70 cursor-not-allowed"
                                         >
-                                          {entry.saving ? (
-                                            <>
-                                              <div className="h-3.5 w-3.5 border-2 border-current border-t-transparent rounded-full animate-spin mr-1.5" />
-                                              Wird gespeichert...
-                                            </>
-                                          ) : hasChanges ? (
-                                            <>
-                                              <Save className="h-3.5 w-3.5 mr-1.5" />
-                                              Speichern
-                                            </>
-                                          ) : (
-                                            <>
-                                              <svg
-                                                className="h-3.5 w-3.5 mr-1.5"
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke="currentColor"
-                                                strokeWidth={2.5}
-                                              >
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                                              </svg>
-                                              Gespeichert
-                                            </>
-                                          )}
-                                        </Button>
+                                          Reset Media
+                                        </button>
+                                      </div>
+
+                                      <h3 className="text-sm font-bold text-foreground">
+                                        Edit [{acc.account_email}] Mass DM Behavior
+                                      </h3>
+
+                                      <div className="flex items-center gap-2">
+                                        <Switch checked disabled />
+                                        <span className="text-[11px] font-semibold text-emerald-400">ON</span>
+                                      </div>
+
+                                      <div className="text-[11px] text-foreground">
+                                        <span className="font-semibold">DMs Per Day:</span>{" "}
+                                        <span className="text-muted-foreground">—</span>
+                                      </div>
+
+                                      {/* Main Message */}
+                                      <div className="space-y-1.5">
+                                        <p className="text-[11px] font-semibold text-foreground">Main Message:</p>
+                                        <div className="flex gap-2">
+                                          <Textarea
+                                            disabled
+                                            placeholder="Ich hab grad nen neuen Slip an… rate mal welche Farbe er hat 😉"
+                                            className="text-xs min-h-[60px] resize-none bg-background/40 border-border/40 flex-1"
+                                          />
+                                          <button
+                                            type="button"
+                                            disabled
+                                            className="text-[10px] font-semibold px-3 py-1 h-fit rounded-md bg-emerald-500/80 text-white opacity-70 cursor-not-allowed"
+                                          >
+                                            Set
+                                          </button>
+                                        </div>
+                                        <div className="flex gap-2">
+                                          <span className="text-[10px] font-semibold px-2.5 py-1 rounded-md border border-border/40 text-muted-foreground">
+                                            No Media Set
+                                          </span>
+                                          <button
+                                            type="button"
+                                            disabled
+                                            className="text-[10px] font-semibold px-2.5 py-1 rounded-md bg-blue-500/80 text-white opacity-70 cursor-not-allowed"
+                                          >
+                                            Set Media
+                                          </button>
+                                        </div>
+                                      </div>
+
+                                      {/* Follow Up */}
+                                      <div className="space-y-1.5 pt-1 border-t border-border/30">
+                                        <p className="text-[11px] font-semibold text-foreground pt-2">Follow Up:</p>
+                                        <div className="flex gap-2">
+                                          <Textarea
+                                            disabled
+                                            placeholder="Falsch geraten? Dann muss ich ihn wohl ausziehen und dir zeigen…"
+                                            className="text-xs min-h-[60px] resize-none bg-background/40 border-border/40 flex-1"
+                                          />
+                                          <button
+                                            type="button"
+                                            disabled
+                                            className="text-[10px] font-semibold px-3 py-1 h-fit rounded-md bg-emerald-500/80 text-white opacity-70 cursor-not-allowed"
+                                          >
+                                            Set
+                                          </button>
+                                        </div>
+                                        <div className="flex gap-2">
+                                          <span className="text-[10px] font-semibold px-2.5 py-1 rounded-md border border-border/40 text-muted-foreground">
+                                            No Media Set
+                                          </span>
+                                          <button
+                                            type="button"
+                                            disabled
+                                            className="text-[10px] font-semibold px-2.5 py-1 rounded-md bg-blue-500/80 text-white opacity-70 cursor-not-allowed"
+                                          >
+                                            Set Media
+                                          </button>
+                                        </div>
+                                      </div>
+
+                                      {/* Last 7 Days */}
+                                      <div className="pt-1">
+                                        <p className="text-[11px] font-semibold text-foreground mb-1.5">Last 7 Days</p>
+                                        <div className="rounded-lg border border-border/40 overflow-hidden">
+                                          <div className="grid grid-cols-[70px_repeat(7,1fr)] text-[9px]">
+                                            <div className="bg-secondary/30 px-1.5 py-1.5 uppercase tracking-wider text-muted-foreground font-semibold border-b border-border/30">
+                                              Dates
+                                            </div>
+                                            {Array.from({ length: 7 }).map((_, i) => {
+                                              const d = new Date();
+                                              d.setDate(d.getDate() - (6 - i));
+                                              const label = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+                                              return (
+                                                <div key={`d-${i}`} className="px-1 py-1.5 text-center font-semibold text-foreground border-b border-l border-border/30">
+                                                  {label}
+                                                </div>
+                                              );
+                                            })}
+                                            <div className="bg-secondary/30 px-1.5 py-1.5 uppercase tracking-wider text-muted-foreground font-semibold border-b border-border/30">
+                                              Main
+                                            </div>
+                                            {Array.from({ length: 7 }).map((_, i) => (
+                                              <div key={`m-${i}`} className="px-1 py-1.5 text-center text-muted-foreground border-b border-l border-border/30">—</div>
+                                            ))}
+                                            <div className="bg-secondary/30 px-1.5 py-1.5 uppercase tracking-wider text-muted-foreground font-semibold border-b border-border/30">
+                                              Follow
+                                            </div>
+                                            {Array.from({ length: 7 }).map((_, i) => (
+                                              <div key={`f-${i}`} className="px-1 py-1.5 text-center text-muted-foreground border-b border-l border-border/30">—</div>
+                                            ))}
+                                            <div className="bg-secondary/30 px-1.5 py-1.5 uppercase tracking-wider text-muted-foreground font-semibold">
+                                              Total
+                                            </div>
+                                            {Array.from({ length: 7 }).map((_, i) => (
+                                              <div key={`t-${i}`} className="px-1 py-1.5 text-center text-muted-foreground border-l border-border/30">—</div>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+
+                                    {/* Bot Message + Follow-up + Save + Aktiv — only for Maloum (DISABLED) */}
+                                    {false && acc.platform === "Maloum" && (
+                                      <>
+                                        {/* Disabled section */}
                                       </>
                                     )}
                                     {user?.email?.toLowerCase() === "maxsandig@hotmail.de" && (
