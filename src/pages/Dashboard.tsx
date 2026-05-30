@@ -243,7 +243,8 @@ export default function Dashboard() {
       .select("*")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
-      .limit(20);
+      .limit(100);
+
     if (data) {
       const ids = data.map((r: any) => r.id);
       let msgsByReq: Record<string, any[]> = {};
