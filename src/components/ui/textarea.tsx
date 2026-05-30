@@ -113,10 +113,11 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
         }}
         className={cn(
           baseClasses,
-          "whitespace-pre-wrap break-words overflow-y-auto cursor-text",
+          "flex-col whitespace-pre-wrap break-words overflow-y-auto cursor-text",
           "before:text-muted-foreground empty:before:content-[attr(data-placeholder)]",
           className,
         )}
+
       />
     );
   },
