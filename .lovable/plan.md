@@ -1,36 +1,42 @@
-## Goal
-Persist the Posting Behavior and Mass DM Behavior toggle + textarea state on each account by adding 4 new columns to the `accounts` table, then wire the existing UI in `AdminDashboard.tsx` to read/write them.
+## Wire Posting + Mass DM Behavior to `accounts`
 
-## Step 1 — Database migration
+### Step 1 — Migration
+Add to `public.accounts`:
+- `media_id` — `text`, default `''`
 
-Add 4 columns to `public.accounts`:
+(`post`, `message`, `main_message`, `follow_message` already added.)
 
-| Column | Type | Default | Purpose |
-|---|---|---|---|
-| `post` | `boolean` | `false` | Posting Behavior ON/OFF toggle |
-| `message` | `boolean` | `false` | Mass DM Behavior ON/OFF toggle |
-| `main_message` | `text` | `''` | Main Message textarea |
-| `follow_message` | `text` | `''` | Follow-up Message textarea |
+### Step 2 — UI wiring in `src/pages/AdminDashboard.tsx`
 
-Note: column names use snake_case (`main_message`, `follow_message`) since Postgres identifiers shouldn't contain hyphens. `post` and `message` stay as requested.
+Helper `updateAccountField(accId, patch)`:
+- Optimistic `setAccounts` update
+- `supabase.from("accounts").update(patch).eq("id", accId)`
+- On success: `toast.success("Saved")`
+- On error: `toast.error("Failed to save")` + reload accounts
 
-No new RLS/grants needed — existing policies on `accounts` already cover these columns.
+**Status pills removed** from both Posting and Mass DM cards. All status feedback now flows through the existing toast system.
 
-## Step 2 — Wire UI in `src/pages/AdminDashboard.tsx`
+**Posting Behavior card**:
+- Switch → controlled by `acc.post`, `onCheckedChange` → `updateAccountField(acc.id, { post: v })`.
+- "ON"/"OFF" label reflects `acc.post`.
+- Other elements stay placeholder.
 
-In the Posting Behavior section:
-- Bind the toggle to `acc.post`, persist via existing account update flow.
-- (Existing textareas in Posting Behavior already exist — confirm whether they should also map to a column. Currently this plan keeps Posting Behavior untouched aside from the toggle. **Open question below.**)
+**Mass DM Behavior card**:
+- ON Switch → bound to `acc.message`, persists immediately on toggle.
+- Main Message `<Textarea>`: local draft state (`mainDraft`), no autosave. Enabled.
+  - Green **"Set"** button is the only way to persist → `updateAccountField(acc.id, { main_message: mainDraft })`. Visual "dirty" state when draft ≠ saved value.
+- Follow Up `<Textarea>` + green **"Set"** button: same pattern with `follow_message` / `followDraft`.
+- Textareas re-sync from `acc.main_message` / `acc.follow_message` when the account row changes.
 
-In the new Mass DM Behavior section (currently disabled placeholders):
-- Bind the ON toggle to `acc.message`.
-- Bind Main Message textarea to `acc.main_message`.
-- Bind Follow Up textarea to `acc.follow_message`.
-- Enable the controls (they are currently `disabled`).
-- Save on blur / via the existing per-account save pattern used by other fields in the same row.
+**Media row**:
+- "No Media Set" becomes an `<Input>` controlled by `mediaDraft`, initialized from `acc.media_id`. Enabled.
+- **"Set Media" button**:
+  - Label = `acc.media_id ? "Refresh Media" : "Set Media"`.
+  - Stays **disabled** for now (logic not yet hooked) — per user, the button itself isn't wired yet.
+- "Reset Media" stays as a disabled placeholder.
+- 7-day grid stays as visual placeholder.
 
-The 7-day stats table stays as placeholder for now (not part of this task).
+### Type
+`AccountEntry` gets optional `post`, `message`, `main_message`, `follow_message`, `media_id` if strictly typed.
 
-## Open questions
-1. Should `post` and the Posting Behavior textareas be wired too, or only the toggle for now? (You said "post → bool" so the toggle yes, but Posting Behavior already has textareas — should those map to existing/new columns or stay as-is?)
-2. Confirm snake_case column names `main_message` / `follow_message` are fine (vs. the hyphenated names from the request, which Postgres doesn't allow without quoting).
+No RLS changes — existing `accounts` policies cover these columns.

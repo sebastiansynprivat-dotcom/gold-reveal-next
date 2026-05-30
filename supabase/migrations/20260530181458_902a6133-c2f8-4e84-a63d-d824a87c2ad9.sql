@@ -1,0 +1,1 @@
+ALTER TABLE public.accounts ADD COLUMN IF NOT EXISTS media_id text NOT NULL DEFAULT ''::text;
