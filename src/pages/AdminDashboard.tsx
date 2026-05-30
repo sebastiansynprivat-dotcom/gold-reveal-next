@@ -7021,6 +7021,21 @@ export default function AdminDashboard() {
                                         <span className="text-muted-foreground">4</span>
                                       </div>
 
+                                      <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px]">
+                                        <div className="text-muted-foreground">
+                                          <span className="font-semibold text-foreground">Active Media:</span> —
+                                        </div>
+                                        <div className="text-muted-foreground">
+                                          <span className="font-semibold text-foreground">Posted Media:</span> —
+                                        </div>
+                                        <div className="text-muted-foreground">
+                                          <span className="font-semibold text-foreground">Failed Media:</span> —
+                                        </div>
+                                        <div className="text-muted-foreground">
+                                          <span className="font-semibold text-foreground">Remaining Media:</span> —
+                                        </div>
+                                      </div>
+
                                       {(() => {
                                         const rep = reports7d[acc.id];
                                         const dates: string[] = [];
@@ -7029,20 +7044,9 @@ export default function AdminDashboard() {
                                           d.setDate(d.getDate() - i);
                                           dates.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`);
                                         }
-                                        const postedTotal = dates.reduce((s, d) => s + (rep?.posts?.[d]?.posted ?? 0), 0);
-                                        const failedTotal = dates.reduce((s, d) => s + (rep?.posts?.[d]?.failed ?? 0), 0);
                                         return (
                                           <>
-                                            <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px]">
-                                              <div className="text-muted-foreground">
-                                                <span className="font-semibold text-foreground">Posted (7d):</span>{" "}
-                                                <span className="text-emerald-400 font-semibold">{postedTotal}</span>
-                                              </div>
-                                              <div className="text-muted-foreground">
-                                                <span className="font-semibold text-foreground">Failed (7d):</span>{" "}
-                                                <span className={failedTotal > 0 ? "text-red-400 font-semibold" : ""}>{failedTotal}</span>
-                                              </div>
-                                            </div>
+
 
                                             <div className="pt-1">
                                               <p className="text-[11px] font-semibold text-foreground mb-1.5">Last 7 days</p>
