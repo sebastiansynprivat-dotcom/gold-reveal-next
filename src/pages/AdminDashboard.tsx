@@ -851,6 +851,7 @@ export default function AdminDashboard() {
   );
   const [contentLinkFilter, setContentLinkFilter] = useState<"all" | "with_link" | "without_link">("all");
   const [requestSearchQuery, setRequestSearchQuery] = useState("");
+  const [requestPlatformFilter, setRequestPlatformFilter] = useState<"all" | "Maloum" | "Brezzels">("all");
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [seenRequestMsgs, setSeenRequestMsgs] = useState<Record<string, string>>({});
   const [notifTitle, setNotifTitle] = useState("");
@@ -5330,6 +5331,7 @@ export default function AdminDashboard() {
                             onClick={() => {
                               setRequestFilter("all");
                               setContentLinkFilter("all");
+                              setRequestPlatformFilter("all");
                             }}
                             className="text-[10px] text-accent hover:text-accent/80 transition-colors font-medium whitespace-nowrap"
                           >
@@ -5363,6 +5365,28 @@ export default function AdminDashboard() {
                       </div>
                     )}
 
+                    <div className="px-5 py-2 border-b border-border/50 flex items-center gap-2">
+                      <span className="text-[10px] text-muted-foreground mr-1">Plattform:</span>
+                      {[
+                        { key: "all" as const, label: "Alle" },
+                        { key: "Maloum" as const, label: "Maloum" },
+                        { key: "Brezzels" as const, label: "Brezzels" },
+                      ].map(({ key, label }) => (
+                        <button
+                          key={key}
+                          onClick={() => setRequestPlatformFilter(key)}
+                          className={cn(
+                            "text-[10px] px-2.5 py-1 rounded-full transition-all font-medium",
+                            requestPlatformFilter === key
+                              ? "bg-accent/20 text-accent ring-1 ring-accent/30"
+                              : "bg-secondary/50 text-muted-foreground hover:text-foreground",
+                          )}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+
                     {modelRequests.filter((r) => {
                       if (unreadOnly && !isReqUnread(r)) return false;
                       if (requestFilter === "all" && (r.status === "rejected" || r.status === "archived")) return false;
@@ -5373,6 +5397,10 @@ export default function AdminDashboard() {
                         return false;
                       if (requestSearchQuery.trim() && !String(r.model_name || "").toLowerCase().includes(requestSearchQuery.trim().toLowerCase()))
                         return false;
+                      if (requestPlatformFilter !== "all") {
+                        const _pm = (r.description || "").match(/^\[Plattform:\s*([^\]]+)\]\s*/i);
+                        if (!_pm || _pm[1].trim() !== requestPlatformFilter) return false;
+                      }
                       return true;
                     }).length === 0 ? (
                       <div className="p-12 text-center">
@@ -5394,6 +5422,10 @@ export default function AdminDashboard() {
                               return false;
                             if (requestSearchQuery.trim() && !String(r.model_name || "").toLowerCase().includes(requestSearchQuery.trim().toLowerCase()))
                               return false;
+                            if (requestPlatformFilter !== "all") {
+                              const _pm = (r.description || "").match(/^\[Plattform:\s*([^\]]+)\]\s*/i);
+                              if (!_pm || _pm[1].trim() !== requestPlatformFilter) return false;
+                            }
                             return true;
                           })
                           .map((req, idx, arr) => {
