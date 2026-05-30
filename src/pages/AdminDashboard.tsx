@@ -873,7 +873,7 @@ export default function AdminDashboard() {
   );
   const [contentLinkFilter, setContentLinkFilter] = useState<"all" | "with_link" | "without_link">("all");
   const [requestSearchQuery, setRequestSearchQuery] = useState("");
-  const [requestPlatformFilter, setRequestPlatformFilter] = useState<"all" | "Maloum" | "Brezzels">("all");
+  const [requestPlatformFilter, setRequestPlatformFilter] = useState<string>("all");
   const [requestAgencyFilter, setRequestAgencyFilter] = useState<string>("all");
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [seenRequestMsgs, setSeenRequestMsgs] = useState<Record<string, string>>({});
