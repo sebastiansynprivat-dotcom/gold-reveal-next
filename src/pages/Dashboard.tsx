@@ -1185,10 +1185,17 @@ export default function Dashboard() {
                           <>
                             {visibleReqs.map((req) => {
                               const isPast = isPastReq(req);
+                              const needsReply = req.status === "waiting_feedback";
                               return (
                           <div
                             key={req.id}
-                            className={`rounded-lg border border-border/50 bg-secondary/20 p-3 space-y-1.5 transition-opacity ${isPast ? "opacity-60 grayscale-[40%]" : ""}`}
+                            className={`rounded-lg border p-3 space-y-1.5 transition-opacity ${
+                              isPast
+                                ? "opacity-60 grayscale-[40%] border-border/50 bg-secondary/20"
+                                : needsReply
+                                  ? "border-amber-500/50 bg-amber-500/5 ring-1 ring-amber-500/30 shadow-[0_0_18px_hsl(38_92%_50%/0.15)]"
+                                  : "border-border/50 bg-secondary/20"
+                            }`}
                           >
 
                             <div className="flex items-center justify-between gap-2">
@@ -1210,7 +1217,7 @@ export default function Dashboard() {
                                         ? "secondary"
                                         : "secondary"
                                 }
-                                className="text-[10px]"
+                                className={`text-[10px] ${needsReply ? "bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse" : ""}`}
                               >
                                 {req.status === "pending"
                                   ? "⏳ Ausstehend"
@@ -1219,13 +1226,19 @@ export default function Dashboard() {
                                     : req.status === "in_progress"
                                       ? "⏳ Wird bearbeitet"
                                       : req.status === "waiting_feedback"
-                                        ? "💬 Warten auf Rückmeldung"
+                                        ? "💬 Deine Antwort benötigt"
                                         : req.status === "archived"
                                           ? "✔️ Erledigt"
                                           : "❌ Abgelehnt"}
 
                               </Badge>
                             </div>
+                            {needsReply && (
+                              <div className="rounded-md border border-amber-500/40 bg-amber-500/10 px-2.5 py-2 text-[11px] text-amber-200 leading-snug">
+                                <strong className="font-semibold">Das Model hat eine Rückfrage.</strong>{" "}
+                                Bitte antworte unten im Kommentarverlauf, damit die Anfrage richtig bearbeitet werden kann.
+                              </div>
+                            )}
                             <p className="text-[10px] text-muted-foreground line-clamp-2">{req.description}</p>
                             {/* Kommentarverlauf */}
                             {(() => {
