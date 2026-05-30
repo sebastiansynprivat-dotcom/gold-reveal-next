@@ -266,6 +266,28 @@ export default function Dashboard() {
     if (user) loadMyRequests();
   }, [user, loadMyRequests]);
 
+  // Realtime: update request status/comments live when admin changes them
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`my_requests_${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "model_requests", filter: `user_id=eq.${user.id}` },
+        () => loadMyRequests(),
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "model_request_messages", filter: `user_id=eq.${user.id}` },
+        () => loadMyRequests(),
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, loadMyRequests]);
+
+
   const [isFirstLogin, setIsFirstLogin] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
