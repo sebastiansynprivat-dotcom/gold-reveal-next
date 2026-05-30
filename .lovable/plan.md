@@ -1,33 +1,20 @@
 ## Ziel
-Wenn ein Model im Admin Dashboard auf **inaktiv** gesetzt wird, soll dieser Status automatisch für **alle Plattform-Accounts** des Models gelten – sodass keine Chatter mehr Anfragen stellen oder das Model bearbeiten können.
+Im Dashboard von Martin Mo (User `ad822168-efed-495f-b1da-84fdf75538f3`, Gruppe „(Br) Martin Mo") soll die Bonus-Stufe immer mindestens 25% sein — also die Starter/Bronze/Silber/Gold/Platin-Logik (20–24%) greift bei ihm nicht. Alle anderen Chatter bleiben unverändert.
 
-## Aktuelle Situation
-- `models.model_active` (Model-Ebene) und `accounts.model_active` (Account-Ebene) sind getrennt.
-- Das Toggle im Admin ändert nur `models.model_active`.
-- Die Chatter-UI prüft `accounts.model_active` → daher hat das Admin-Toggle aktuell **keinen Effekt**.
+## Umsetzung
+In `src/pages/Dashboard.tsx`:
 
-## Lösung
+1. Konstante hinzufügen:
+   ```ts
+   const FORCED_ELITE_USER_IDS = new Set(["ad822168-efed-495f-b1da-84fdf75538f3"]);
+   ```
+2. Nach `const currentTier = getCurrentTier(monthlyRevenue);` prüfen, ob der eingeloggte User in dem Set ist. Wenn ja:
+   - `currentTier` wird auf den Elite-Tier (💎, 25%) gesetzt, sofern der aktuelle Tier eine niedrigere Rate als 25% hat. Liegt er bereits bei Elite oder Titan, bleibt es unverändert.
+   - `nextTier` wird entsprechend neu berechnet (Titan oder `null`).
+3. Damit greifen automatisch: angezeigter Tier-Name/Emoji, Rate, Monatsübersicht (`MonthSummaryWidget`), Bonus-Übersicht (außer Demo-Modus, der bleibt zum Durchklicken erhalten).
 
-### 1. Datenbank-Trigger (Migration)
-Trigger auf `models` (AFTER UPDATE OF model_active):
-- Bei Änderung von `models.model_active` → alle `accounts` mit `model_id = NEW.id` auf denselben Wert setzen.
-- Damit werden Bestandsdaten und zukünftige Änderungen automatisch synchron gehalten.
-
-### 2. Einmalige Datensynchronisation
-Initiales Update, um bestehende Diskrepanzen zu beseitigen:
-```sql
-UPDATE accounts SET model_active = m.model_active
-FROM models m WHERE accounts.model_id = m.id AND accounts.model_active <> m.model_active;
-```
-
-### 3. Admin Dashboard UI
-- Beim Toggle des Model-Status: kurzer Hinweis-Toast „Status gilt jetzt für alle X Plattformen dieses Models".
-- Keine zusätzliche Logik nötig – der DB-Trigger erledigt die Kaskade.
+Keine DB-Änderung nötig — es ist eine reine UI-/Berechnungs-Override, exklusiv für Martin Mo.
 
 ## Nicht im Scope
-- Manuelle Accounts ohne `model_id` bleiben unberührt (haben kein zugeordnetes Model).
-- Das einzelne Deaktivieren eines Accounts bleibt weiterhin möglich (wird beim nächsten Model-Update jedoch überschrieben).
-
-## Geänderte Dateien
-- Neue Migration (Trigger + initiales Sync-Update)
-- `src/pages/AdminDashboard.tsx` (Toast-Hinweis beim Toggle)
+- Andere Dashboards (Admin, Model) — dort wird die Bonus-Tier-Logik nicht angezeigt.
+- Auszahlungs-/Rechnungsberechnung im Backend (separat, falls überhaupt nötig).
