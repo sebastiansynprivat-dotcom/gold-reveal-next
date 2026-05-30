@@ -1220,7 +1220,10 @@ export default function Dashboard() {
                                       ? "⏳ Wird bearbeitet"
                                       : req.status === "waiting_feedback"
                                         ? "💬 Warten auf Rückmeldung"
-                                        : "❌ Abgelehnt"}
+                                        : req.status === "archived"
+                                          ? "✔️ Erledigt"
+                                          : "❌ Abgelehnt"}
+
                               </Badge>
                             </div>
                             <p className="text-[10px] text-muted-foreground line-clamp-2">{req.description}</p>
