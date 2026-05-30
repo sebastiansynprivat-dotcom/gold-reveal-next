@@ -5392,9 +5392,8 @@ export default function AdminDashboard() {
                     <div className="px-5 py-2 border-b border-border/50 flex items-center gap-2">
                       <span className="text-[10px] text-muted-foreground mr-1">Plattform:</span>
                       {[
-                        { key: "all" as const, label: "Alle" },
-                        { key: "Maloum" as const, label: "Maloum" },
-                        { key: "Brezzels" as const, label: "Brezzels" },
+                        { key: "all", label: "Alle" },
+                        ...PLATFORM_LABELS.map((label) => ({ key: label, label })),
                       ].map(({ key, label }) => (
                         <button
                           key={key}
