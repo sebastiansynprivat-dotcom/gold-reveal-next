@@ -1141,7 +1141,7 @@ export default function Dashboard() {
                   >
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-semibold text-foreground">
-                        Deine Anfragen ({myRequests.length})
+                        Deine Anfragen ({myRequests.filter((r) => r.status !== "archived" && r.status !== "rejected").length})
                       </span>
                       {unseenCount > 0 && (
                         <span className="h-5 min-w-5 px-1.5 rounded-full bg-accent text-accent-foreground text-[10px] font-bold flex items-center justify-center animate-in zoom-in duration-200">
