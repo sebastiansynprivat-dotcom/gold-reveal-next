@@ -1420,7 +1420,22 @@ export default function Dashboard() {
                               </button>
                             )}
                           </div>
-                        ))}
+                              );
+                            })}
+                            {pastReqs.length > 0 && (
+                              <button
+                                onClick={() => setShowArchivedRequests((v) => !v)}
+                                className="w-full mt-2 flex items-center justify-center gap-1.5 rounded-md border border-border/40 bg-secondary/10 px-3 py-1.5 text-[10px] text-muted-foreground hover:text-foreground hover:bg-secondary/30 transition-colors"
+                              >
+                                {showArchivedRequests
+                                  ? `Archiv ausblenden`
+                                  : `Archiv anzeigen (${pastReqs.length})`}
+                              </button>
+                            )}
+                          </>
+                        );
+                      })()}
+
                     </div>
                   )}
                 </div>
