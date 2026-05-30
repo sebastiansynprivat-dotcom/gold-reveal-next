@@ -878,6 +878,7 @@ export default function AdminDashboard() {
   const [requestAgencyFilter, setRequestAgencyFilter] = useState<string>("all");
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [seenRequestMsgs, setSeenRequestMsgs] = useState<Record<string, string>>({});
+  const [msgReactions, setMsgReactions] = useState<Record<string, "👍">>({});
   const [notifTitle, setNotifTitle] = useState("");
   const [notifBody, setNotifBody] = useState("");
   const [notifSending, setNotifSending] = useState(false);
