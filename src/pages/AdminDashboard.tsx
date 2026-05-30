@@ -973,6 +973,21 @@ export default function AdminDashboard() {
     } catch {}
   }, [seenRequestMsgs, user?.id]);
 
+  // Load/persist message reactions per admin
+  useEffect(() => {
+    if (!user?.id) return;
+    try {
+      const raw = localStorage.getItem(`admin_msg_reactions_${user.id}`);
+      if (raw) setMsgReactions(JSON.parse(raw));
+    } catch {}
+  }, [user?.id]);
+  useEffect(() => {
+    if (!user?.id) return;
+    try {
+      localStorage.setItem(`admin_msg_reactions_${user.id}`, JSON.stringify(msgReactions));
+    } catch {}
+  }, [msgReactions, user?.id]);
+
   const getLatestChatterMsgAt = useCallback((req: any): string | null => {
     const msgs = (req?._messages || []) as Array<{ sender_role: string; created_at: string }>;
     let latest: string | null = null;
