@@ -5390,7 +5390,10 @@ export default function AdminDashboard() {
                     </div>
 
                     {(() => {
-                      const requestAgencies = ["Agentur Shex", "SYN"];
+                      const agencyOptions = [
+                        { label: "SheX", value: "Agentur Shex" },
+                        { label: "SYN", value: "SYN" },
+                      ];
                       return (
                         <div className="px-5 py-2 border-b border-border/50 flex items-center gap-2 flex-wrap">
                           <span className="text-[10px] text-muted-foreground mr-1 shrink-0">Agentur:</span>
@@ -5405,18 +5408,18 @@ export default function AdminDashboard() {
                           >
                             Alle
                           </button>
-                          {requestAgencies.map((agency) => (
+                          {agencyOptions.map((opt) => (
                             <button
-                              key={agency}
-                              onClick={() => setRequestAgencyFilter(agency)}
+                              key={opt.value}
+                              onClick={() => setRequestAgencyFilter(opt.value)}
                               className={cn(
                                 "text-[10px] px-2.5 py-1 rounded-full transition-all font-medium",
-                                requestAgencyFilter === agency
+                                requestAgencyFilter === opt.value
                                   ? "bg-accent/20 text-accent ring-1 ring-accent/30"
                                   : "bg-secondary/50 text-muted-foreground hover:text-foreground",
                               )}
                             >
-                              {agency}
+                              {opt.label}
                             </button>
                           ))}
                         </div>
