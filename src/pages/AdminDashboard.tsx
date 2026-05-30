@@ -5331,6 +5331,7 @@ export default function AdminDashboard() {
                             onClick={() => {
                               setRequestFilter("all");
                               setContentLinkFilter("all");
+                              setRequestPlatformFilter("all");
                             }}
                             className="text-[10px] text-accent hover:text-accent/80 transition-colors font-medium whitespace-nowrap"
                           >
