@@ -920,6 +920,34 @@ export default function AdminDashboard() {
   >({});
   const [botMessagesLoaded, setBotMessagesLoaded] = useState(false);
   const [expandedBot, setExpandedBot] = useState<string | null>(null);
+  const [reports7d, setReports7d] = useState<Record<string, {
+    messages: Record<string, { main: number; follow: number; total: number }>;
+    posts: Record<string, { posted: number; failed: number }>;
+  }>>({});
+
+  useEffect(() => {
+    if (!expandedBot) return;
+    if (reports7d[expandedBot]) return;
+    const accId = expandedBot;
+    (async () => {
+      const from = new Date();
+      from.setDate(from.getDate() - 6);
+      const fromStr = `${from.getFullYear()}-${String(from.getMonth() + 1).padStart(2, "0")}-${String(from.getDate()).padStart(2, "0")}`;
+      const [msgRes, postRes] = await Promise.all([
+        supabase.from("message_reports").select("date,main,follow,total").eq("account_id", accId).gte("date", fromStr),
+        supabase.from("post_reports").select("date,posted,failed").eq("account_id", accId).gte("date", fromStr),
+      ]);
+      const messages: Record<string, { main: number; follow: number; total: number }> = {};
+      (msgRes.data || []).forEach((r: any) => {
+        messages[r.date] = { main: r.main ?? 0, follow: r.follow ?? 0, total: r.total ?? (r.main ?? 0) + (r.follow ?? 0) };
+      });
+      const posts: Record<string, { posted: number; failed: number }> = {};
+      (postRes.data || []).forEach((r: any) => {
+        posts[r.date] = { posted: r.posted ?? 0, failed: r.failed ?? 0 };
+      });
+      setReports7d((prev) => ({ ...prev, [accId]: { messages, posts } }));
+    })();
+  }, [expandedBot]);
   const [savedBotState, setSavedBotState] = useState<
     Record<string, { message: string; followUp: string; isActive: boolean }>
   >({});
