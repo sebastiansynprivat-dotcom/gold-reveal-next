@@ -5474,10 +5474,9 @@ export default function AdminDashboard() {
                         if (!_pm || _pm[1].trim().toLowerCase() !== requestPlatformFilter.toLowerCase()) return false;
                       }
                       if (requestAgencyFilter !== "all") {
-                        const chatter = chatters.find((c) => c.user_id === r.user_id);
-                        const agencies = (chatter?.assigned_accounts || [])
-                          .map((a: any) => String(a.model_agency || "").toLowerCase());
-                        if (!agencies.includes(requestAgencyFilter)) return false;
+                        const agencyRaw = String((r as any)._model?.model_agency || "").toLowerCase();
+                        const normalized = agencyRaw === "simp" ? "syn" : agencyRaw;
+                        if (normalized !== requestAgencyFilter) return false;
                       }
                       return true;
                     }).length === 0 ? (
