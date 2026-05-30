@@ -1176,19 +1176,21 @@ export default function Dashboard() {
                           </DialogHeader>
                         </DialogContent>
                       </Dialog>
-                      {[...myRequests]
-                        .sort((a, b) =>
-                          a.status === "rejected" && b.status !== "rejected"
-                            ? 1
-                            : b.status === "rejected" && a.status !== "rejected"
-                              ? -1
-                              : 0,
-                        )
-                        .map((req) => (
+                      {(() => {
+                        const isPastReq = (r: any) => r.status === "rejected" || r.status === "archived";
+                        const activeReqs = myRequests.filter((r) => !isPastReq(r));
+                        const pastReqs = myRequests.filter(isPastReq);
+                        const visibleReqs = showArchivedRequests ? [...activeReqs, ...pastReqs] : activeReqs;
+                        return (
+                          <>
+                            {visibleReqs.map((req) => {
+                              const isPast = isPastReq(req);
+                              return (
                           <div
                             key={req.id}
-                            className="rounded-lg border border-border/50 bg-secondary/20 p-3 space-y-1.5"
+                            className={`rounded-lg border border-border/50 bg-secondary/20 p-3 space-y-1.5 transition-opacity ${isPast ? "opacity-60 grayscale-[40%]" : ""}`}
                           >
+
                             <div className="flex items-center justify-between gap-2">
                               <div className="flex flex-col">
                                 <span className="text-xs font-medium text-foreground">{req.model_name}</span>
