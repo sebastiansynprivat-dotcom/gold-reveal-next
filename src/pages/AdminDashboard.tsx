@@ -2766,8 +2766,16 @@ export default function AdminDashboard() {
     loadAccounts();
   };
 
-  const DEFAULT_PLATFORMS = PLATFORM_LABELS;
-  const platforms = DEFAULT_PLATFORMS;
+  const activePlatformLabels = registryPlatforms.length > 0 ? registryPlatforms.map((p) => p.label) : PLATFORM_LABELS;
+  const requestPlatformOptions = [
+    ...new Set([
+      ...activePlatformLabels,
+      ...modelRequests
+        .map((r) => (r.description || "").match(/^\[Plattform:\s*([^\]]+)\]\s*/i)?.[1]?.trim())
+        .filter(Boolean),
+    ]),
+  ];
+  const platforms = activePlatformLabels;
   const manualPlatforms = [
     ...new Set(
       accounts
