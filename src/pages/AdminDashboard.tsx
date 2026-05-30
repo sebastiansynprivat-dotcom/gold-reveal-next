@@ -141,7 +141,7 @@ const revokeDriveAccess = async (accountIds: string[], userId: string) => {
 };
 
 // Platform colors – premium aesthetic matching gold/dark theme
-import { PLATFORMS, PLATFORM_COLORS, PLATFORM_STYLES as PLATFORM_STYLES_GLOBAL, PLATFORM_LABELS, usePlatforms } from "@/lib/platforms";
+import { PLATFORMS, PLATFORM_COLORS, PLATFORM_STYLES as PLATFORM_STYLES_GLOBAL, PLATFORM_LABELS, DEFAULT_PLATFORM_LABELS, usePlatforms } from "@/lib/platforms";
 
 // Generate 90 days of fictional revenue data with upward trend
 const generateFakeRevenueData = () => {
@@ -2767,15 +2767,16 @@ export default function AdminDashboard() {
   };
 
   const activePlatformLabels = registryPlatforms.length > 0 ? registryPlatforms.map((p) => p.label) : PLATFORM_LABELS;
+  const allKnownPlatformLabels = [...new Set([...DEFAULT_PLATFORM_LABELS, ...activePlatformLabels])];
   const requestPlatformOptions = [
     ...new Set([
-      ...activePlatformLabels,
+      ...allKnownPlatformLabels,
       ...modelRequests
         .map((r) => (r.description || "").match(/^\[Plattform:\s*([^\]]+)\]\s*/i)?.[1]?.trim())
         .filter(Boolean),
     ]),
   ];
-  const platforms = activePlatformLabels;
+  const platforms = allKnownPlatformLabels;
   const manualPlatforms = [
     ...new Set(
       accounts
