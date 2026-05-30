@@ -50,6 +50,8 @@ const DEFAULT_SEED: PlatformDef[] = [
   { label: "Slushy",   key: "slushy",   color: "#8b5cf6", isActive: true, sortOrder: 60, styles: styleForIndex(5) },
 ];
 
+export const DEFAULT_PLATFORM_LABELS = DEFAULT_SEED.map((p) => p.label);
+
 // ---- Mutable Exports (Referenz bleibt erhalten) ----------------------------
 
 export const PLATFORMS: PlatformDef[] = [...DEFAULT_SEED];

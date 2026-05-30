@@ -141,7 +141,7 @@ const revokeDriveAccess = async (accountIds: string[], userId: string) => {
 };
 
 // Platform colors – premium aesthetic matching gold/dark theme
-import { PLATFORMS, PLATFORM_COLORS, PLATFORM_STYLES as PLATFORM_STYLES_GLOBAL, PLATFORM_LABELS } from "@/lib/platforms";
+import { PLATFORMS, PLATFORM_COLORS, PLATFORM_STYLES as PLATFORM_STYLES_GLOBAL, PLATFORM_LABELS, DEFAULT_PLATFORM_LABELS, usePlatforms } from "@/lib/platforms";
 
 // Generate 90 days of fictional revenue data with upward trend
 const generateFakeRevenueData = () => {
@@ -744,6 +744,7 @@ export default function AdminDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { isSuperAdmin } = useAdminRole();
+  const registryPlatforms = usePlatforms();
   const [chatters, setChatters] = useState<ChatterProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -2765,8 +2766,17 @@ export default function AdminDashboard() {
     loadAccounts();
   };
 
-  const DEFAULT_PLATFORMS = PLATFORM_LABELS;
-  const platforms = DEFAULT_PLATFORMS;
+  const activePlatformLabels = registryPlatforms.length > 0 ? registryPlatforms.map((p) => p.label) : PLATFORM_LABELS;
+  const allKnownPlatformLabels = [...new Set([...DEFAULT_PLATFORM_LABELS, ...activePlatformLabels])];
+  const requestPlatformOptions = [
+    ...new Set([
+      ...allKnownPlatformLabels,
+      ...modelRequests
+        .map((r) => (r.description || "").match(/^\[Plattform:\s*([^\]]+)\]\s*/i)?.[1]?.trim())
+        .filter(Boolean),
+    ]),
+  ];
+  const platforms = allKnownPlatformLabels;
   const manualPlatforms = [
     ...new Set(
       accounts
@@ -4569,7 +4579,7 @@ export default function AdminDashboard() {
 
                         {manualSectionOpen && (
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            {DEFAULT_PLATFORMS.map((p) => {
+                            {platforms.map((p) => {
                               const pKey = p.toLowerCase();
                               const style = PLATFORM_STYLES[pKey] || {
                                 bg: "bg-secondary/10",
@@ -5311,17 +5321,19 @@ export default function AdminDashboard() {
                   </div>
 
                   <section className="glass-card rounded-xl overflow-hidden">
-                    <div className="px-5 py-4 border-b border-border/50 flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-lg bg-accent/10 flex items-center justify-center">
+                    <div className="px-4 sm:px-5 py-4 border-b border-border/50 flex flex-col gap-3 sm:flex-row sm:items-center">
+                      <div className="flex items-center gap-3 min-w-0">
+                      <div className="h-8 w-8 rounded-lg bg-accent/10 flex shrink-0 items-center justify-center">
                         <Send className="h-4 w-4 text-accent" />
                       </div>
-                      <div className="flex-1">
+                      <div className="min-w-0 flex-1">
                         <h2 className="text-sm font-bold text-foreground">Custom Anfragen</h2>
                         <p className="text-[10px] text-muted-foreground">
                           {modelRequests.length} Anfrage{modelRequests.length !== 1 ? "n" : ""} insgesamt
                         </p>
                        </div>
-                      <div className="flex items-center gap-2">
+                      </div>
+                      <div className="flex min-w-0 flex-col gap-2 sm:ml-auto sm:flex-row sm:items-center">
                         <button
                           onClick={() => setUnreadOnly((v) => !v)}
                           className={cn(
@@ -5340,13 +5352,13 @@ export default function AdminDashboard() {
                             </span>
                           )}
                         </button>
-                        <div className="relative">
+                        <div className="relative min-w-0 flex-1 sm:flex-none">
                           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                           <Input
                             placeholder="Model suchen..."
                             value={requestSearchQuery}
                             onChange={(e) => setRequestSearchQuery(e.target.value)}
-                            className="h-8 pl-8 text-xs bg-secondary/50 border-border/50 w-40 sm:w-56 focus:w-48 sm:focus:w-64 transition-all"
+                            className="h-8 w-full min-w-0 pl-8 text-xs bg-secondary/50 border-border/50 sm:w-56 sm:focus:w-64 transition-all"
                           />
                         </div>
                         {requestFilter !== "all" && (
@@ -5389,17 +5401,17 @@ export default function AdminDashboard() {
                       </div>
                     )}
 
-                    <div className="px-5 py-2 border-b border-border/50 flex items-center gap-2">
-                      <span className="text-[10px] text-muted-foreground mr-1">Plattform:</span>
+                    <div className="px-4 sm:px-5 py-2 border-b border-border/50 flex items-center gap-2 overflow-x-auto [-webkit-overflow-scrolling:touch]">
+                      <span className="text-[10px] text-muted-foreground mr-1 shrink-0">Plattform:</span>
                       {[
                         { key: "all", label: "Alle" },
-                        ...PLATFORM_LABELS.map((label) => ({ key: label, label })),
+                        ...requestPlatformOptions.map((label) => ({ key: label, label })),
                       ].map(({ key, label }) => (
                         <button
                           key={key}
                           onClick={() => setRequestPlatformFilter(key)}
                           className={cn(
-                            "text-[10px] px-2.5 py-1 rounded-full transition-all font-medium",
+                            "shrink-0 text-[10px] px-2.5 py-1 rounded-full transition-all font-medium whitespace-nowrap",
                             requestPlatformFilter === key
                               ? "bg-accent/20 text-accent ring-1 ring-accent/30"
                               : "bg-secondary/50 text-muted-foreground hover:text-foreground",
