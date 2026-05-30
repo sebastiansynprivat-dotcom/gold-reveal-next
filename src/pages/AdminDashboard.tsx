@@ -991,20 +991,6 @@ export default function AdminDashboard() {
     if (!latest) return;
     setSeenRequestMsgs((prev) => (prev[req.id] === latest ? prev : { ...prev, [req.id]: latest }));
   }, [getLatestChatterMsgAt]);
-  const markAllReqsSeen = useCallback(() => {
-    setSeenRequestMsgs((prev) => {
-      const next = { ...prev };
-      let changed = false;
-      for (const r of modelRequests) {
-        const latest = getLatestChatterMsgAt(r);
-        if (latest && next[r.id] !== latest) {
-          next[r.id] = latest;
-          changed = true;
-        }
-      }
-      return changed ? next : prev;
-    });
-  }, [modelRequests, getLatestChatterMsgAt]);
   const unreadCount = useMemo(
     () => modelRequests.filter((r) => isReqUnread(r)).length,
     [modelRequests, isReqUnread],
