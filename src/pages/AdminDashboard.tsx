@@ -141,7 +141,7 @@ const revokeDriveAccess = async (accountIds: string[], userId: string) => {
 };
 
 // Platform colors – premium aesthetic matching gold/dark theme
-import { PLATFORMS, PLATFORM_COLORS, PLATFORM_STYLES as PLATFORM_STYLES_GLOBAL, PLATFORM_LABELS } from "@/lib/platforms";
+import { PLATFORMS, PLATFORM_COLORS, PLATFORM_STYLES as PLATFORM_STYLES_GLOBAL, PLATFORM_LABELS, usePlatforms } from "@/lib/platforms";
 
 // Generate 90 days of fictional revenue data with upward trend
 const generateFakeRevenueData = () => {
@@ -744,6 +744,7 @@ export default function AdminDashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { isSuperAdmin } = useAdminRole();
+  const registryPlatforms = usePlatforms();
   const [chatters, setChatters] = useState<ChatterProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
