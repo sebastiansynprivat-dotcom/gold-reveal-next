@@ -873,7 +873,7 @@ export default function AdminDashboard() {
   );
   const [contentLinkFilter, setContentLinkFilter] = useState<"all" | "with_link" | "without_link">("all");
   const [requestSearchQuery, setRequestSearchQuery] = useState("");
-  const [requestPlatformFilter, setRequestPlatformFilter] = useState<"all" | "Maloum" | "Brezzels">("all");
+  const [requestPlatformFilter, setRequestPlatformFilter] = useState<string>("all");
   const [requestAgencyFilter, setRequestAgencyFilter] = useState<string>("all");
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [seenRequestMsgs, setSeenRequestMsgs] = useState<Record<string, string>>({});
@@ -5392,9 +5392,8 @@ export default function AdminDashboard() {
                     <div className="px-5 py-2 border-b border-border/50 flex items-center gap-2">
                       <span className="text-[10px] text-muted-foreground mr-1">Plattform:</span>
                       {[
-                        { key: "all" as const, label: "Alle" },
-                        { key: "Maloum" as const, label: "Maloum" },
-                        { key: "Brezzels" as const, label: "Brezzels" },
+                        { key: "all", label: "Alle" },
+                        ...PLATFORM_LABELS.map((label) => ({ key: label, label })),
                       ].map(({ key, label }) => (
                         <button
                           key={key}
@@ -5460,7 +5459,7 @@ export default function AdminDashboard() {
                         return false;
                       if (requestPlatformFilter !== "all") {
                         const _pm = (r.description || "").match(/^\[Plattform:\s*([^\]]+)\]\s*/i);
-                        if (!_pm || _pm[1].trim() !== requestPlatformFilter) return false;
+                        if (!_pm || _pm[1].trim().toLowerCase() !== requestPlatformFilter.toLowerCase()) return false;
                       }
                       if (requestAgencyFilter !== "all") {
                         const chatter = chatters.find((c) => c.user_id === r.user_id);
@@ -5491,7 +5490,7 @@ export default function AdminDashboard() {
                               return false;
                             if (requestPlatformFilter !== "all") {
                               const _pm = (r.description || "").match(/^\[Plattform:\s*([^\]]+)\]\s*/i);
-                              if (!_pm || _pm[1].trim() !== requestPlatformFilter) return false;
+                              if (!_pm || _pm[1].trim().toLowerCase() !== requestPlatformFilter.toLowerCase()) return false;
                             }
                             if (requestAgencyFilter !== "all") {
                               const chatter = chatters.find((c) => c.user_id === r.user_id);
