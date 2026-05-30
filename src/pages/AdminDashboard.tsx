@@ -5473,7 +5473,9 @@ export default function AdminDashboard() {
                             }
                             if (requestAgencyFilter !== "all") {
                               const chatter = chatters.find((c) => c.user_id === r.user_id);
-                              if (!chatter || chatter.group_name !== requestAgencyFilter) return false;
+                              const agencies = (chatter?.assigned_accounts || [])
+                                .map((a: any) => String(a.model_agency || "").toLowerCase());
+                              if (!agencies.includes(requestAgencyFilter)) return false;
                             }
                             return true;
                           })
