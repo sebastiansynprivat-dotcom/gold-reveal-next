@@ -21,6 +21,7 @@ const AdminNotifications = lazy(() => import("./pages/AdminNotifications"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const AdminLogin = lazy(() => import("./pages/AdminLogin"));
 const Auth = lazy(() => import("./pages/Auth"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Invoice = lazy(() => import("./pages/Invoice"));
 const ModelLogin = lazy(() => import("./pages/ModelLogin"));
@@ -155,6 +156,7 @@ const App = () => (
               <Route path="/offer-b" element={<OfferB />} />
               <Route path="/offer-c" element={<OfferC />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/leaderboard" element={<ProtectedRoute><Leaderboard /></ProtectedRoute>} />
               <Route path="/admin/login" element={<AdminLogin />} />
