@@ -7087,18 +7087,32 @@ export default function AdminDashboard() {
 
                                       <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px]">
                                         <div className="text-muted-foreground">
-                                          <span className="font-semibold text-foreground">Active Media:</span> —
+                                          <span className="font-semibold text-foreground">Active Media:</span> {mediaStats[acc.id]?.active ?? "—"}
                                         </div>
                                         <div className="text-muted-foreground">
-                                          <span className="font-semibold text-foreground">Posted Media:</span> —
+                                          <span className="font-semibold text-foreground">Posted Media:</span> {mediaStats[acc.id]?.posted ?? "—"}
                                         </div>
                                         <div className="text-muted-foreground">
-                                          <span className="font-semibold text-foreground">Failed Media:</span> —
+                                          <span className="font-semibold text-foreground">Failed Media:</span> {mediaStats[acc.id]?.failed ?? "—"}
                                         </div>
                                         <div className="text-muted-foreground">
-                                          <span className="font-semibold text-foreground">Remaining Media:</span> —
+                                          <span className="font-semibold text-foreground">Remaining Media:</span> {mediaStats[acc.id]?.remaining ?? "—"}
                                         </div>
                                       </div>
+
+                                      <div>
+                                        <button
+                                          type="button"
+                                          disabled={!!mediaResetting[acc.id]}
+                                          onClick={() => resetMedia(acc)}
+                                          className={`text-[10px] font-semibold px-3 py-1 rounded-md border border-red-500/40 text-red-300 hover:bg-red-500/10 transition-colors ${
+                                            mediaResetting[acc.id] ? "opacity-50 cursor-not-allowed" : ""
+                                          }`}
+                                        >
+                                          {mediaResetting[acc.id] ? "Resetting…" : "Reset Media"}
+                                        </button>
+                                      </div>
+
 
                                       {(() => {
                                         const rep = reports7d[acc.id];
