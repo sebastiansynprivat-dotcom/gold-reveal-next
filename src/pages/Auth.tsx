@@ -399,7 +399,7 @@ const Auth = () => {
                     className="mt-2 p-3 rounded-xl bg-card border border-border text-xs text-muted-foreground leading-relaxed space-y-2"
                   >
                     <p>
-                      Wir haben mit dir eine <span className="text-foreground font-medium">WhatsApp-Gruppe</span> eröffnet. Den Gruppennamen findest du direkt oben in der Gruppe – kopiere ihn einfach 1:1 und füge ihn hier ein.
+                      Wir haben mit dir eine Gruppe eröffnet. Den Gruppennamen findest du direkt oben in der Gruppe – kopiere ihn einfach 1:1 und füge ihn hier ein. Beispiel (Der Gruppenname enthält immer deinen Namen): Max Mustermann oder Max Mu
                     </p>
                     <p className="text-primary font-semibold">
                       ⚠️ Es ist extrem wichtig, dass du den richtigen Gruppennamen angibst, damit du korrekt abgerechnet werden kannst!
