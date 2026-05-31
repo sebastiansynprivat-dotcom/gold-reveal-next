@@ -1,71 +1,26 @@
-## Reports tables + ingest edge functions
+## Wire up Media Stats + Reset Media + remove DMs Per Day
 
-### 1. Migration — two new tables
+In `src/pages/AdminDashboard.tsx`, Setup → Account expansion:
 
-**`public.message_reports`**
-- `id` uuid pk
-- `account_id` uuid not null
-- `date` date not null
-- `main` integer not null default 0
-- `follow` integer not null default 0
-- `total` integer **generated always as (`main + follow`) stored** — always equals sent + follow, cannot be set independently
-- `created_at`, `updated_at` timestamptz
-- Unique: `(account_id, date)` so upsert by account+day is clean
-- Index on `(account_id, date desc)` for fast last-7-days lookup
-
-**`public.post_reports`**
-- `id` uuid pk
-- `account_id` uuid not null
-- `date` date not null
-- `posted` integer not null default 0
-- `failed` integer not null default 0
-- `created_at`, `updated_at` timestamptz
-- Unique: `(account_id, date)`
-- Index on `(account_id, date desc)`
-
-**GRANTs (both tables):**
-- `authenticated`: SELECT, INSERT, UPDATE, DELETE
-- `service_role`: ALL
-- No `anon`.
-
-**RLS (mirror existing `accounts` pattern):**
-- Super admins: ALL via `has_role(auth.uid(),'super_admin')`
-- Sub admins: SELECT/UPDATE via `can_access_account(auth.uid(), account_id)`
-- Assigned chatter: SELECT where `account_id` is one they're assigned to
-- Models: SELECT via `model_users` membership
-- Service role bypasses RLS, so edge function upserts are unaffected
-
-`updated_at` trigger on both using existing `public.update_updated_at_column()`.
-
-### 2. Edge functions
-
-Two new functions, both auth'd via header `x-api-key` matching the existing `REVENUE_INGEST_API_KEY` secret (same pattern as `ingest-revenue` / `ingest-daily-revenue`). Both use `SUPABASE_SERVICE_ROLE_KEY` to upsert.
-
-**`supabase/functions/ingest-message-reports/index.ts`**
-- POST, accepts a single row or array:
+### 1. Media stats fetch (Posting Behavior block)
+- Add state `mediaStats: Record<string, { active: number; posted: number; failed: number; remaining: number }>` and `mediaLoading: Record<string, boolean>`.
+- Add helper `fetchMediaStats(acc)` that POSTs to a blank URL (constant `MEDIA_STATS_URL = ""` at top of the section, easy to fill in later) with JSON body:
   ```
-  { account_id: uuid, date: "YYYY-MM-DD", main: number, follow: number }
+  { id: acc.id, platform: acc.platform, email: acc.account_email }
   ```
-- Validates UUID, date format, non-negative integers
-- **`total` is NOT accepted from the client** — it's a generated column (`main + follow`) in the DB
-- `supabase.from("message_reports").upsert(rows, { onConflict: "account_id,date" })`
-- Returns `{ success, count, rows }` (selected rows include the computed `total`)
+  Expects response `{ active, posted, failed, remaining }`, stores into `mediaStats[acc.id]`. Guarded so empty URL is a no-op.
+- Trigger it in the existing `useEffect` that runs on `expandedBot` change (same place reports7d is fetched), once per expanded account.
+- Replace the four `—` placeholders with `mediaStats[acc.id]?.active ?? "—"` etc.
 
-**`supabase/functions/ingest-post-reports/index.ts`**
-- POST, accepts a single row or array:
-  ```
-  { account_id: uuid, date: "YYYY-MM-DD", posted: number, failed: number }
-  ```
-- Same validation pattern
-- Upsert on `(account_id, date)`
-- Returns `{ success, count, rows }`
+### 2. Reset Media button (Posting Behavior block)
+- Add a small button under the stats grid labeled "Reset Media" (subtle destructive style, matching existing button language).
+- On click: POST to `MEDIA_RESET_URL = ""` (also blank) with the same body `{ id, platform, email }`. Response shape `{ active, posted, failed, remaining }` — write straight into `mediaStats[acc.id]` so the UI updates.
+- Disabled + spinner state while in flight; toast on success/error.
 
-Both include the standard CORS block, OPTIONS handler, and JSON error responses used by the existing ingest functions. No `supabase/config.toml` change needed (default `verify_jwt = false` already applies).
-
-### 3. UI wiring — out of scope here
-The "last 7 days" grid hookup in `AdminDashboard.tsx` will happen in a separate step once data is flowing. This plan only delivers schema + ingest endpoints.
+### 3. Remove "DMs Per Day" row (Mass DM Behavior block)
+- Delete lines ~7100-7103 (the `DMs Per Day: —` row). Nothing else in that block changes.
 
 ### Technical notes
-- Tables store **daily aggregates** (one row per account per day) — matches the "last 7 days" UI and makes the remote scraper idempotent via upsert.
-- `total` being a generated column guarantees it's always exactly `main + follow` — no drift possible from a buggy client.
-- No FK from `account_id` → `accounts.id` to stay consistent with existing tables in this project; integrity is enforced by RLS + the ingest validator.
+- Both endpoints are plain `fetch` calls with `Content-Type: application/json`. URLs left as empty string constants near the component for the user to fill in later; no edge function created.
+- No DB schema or migration changes.
+- Stats are fetched lazily on account expand and after a reset — no polling.

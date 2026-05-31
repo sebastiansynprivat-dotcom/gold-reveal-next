@@ -924,11 +924,74 @@ export default function AdminDashboard() {
     messages: Record<string, { main: number; follow: number; total: number }>;
     posts: Record<string, { posted: number; failed: number }>;
   }>>({});
+  const [mediaStats, setMediaStats] = useState<Record<string, { active: number; posted: number; failed: number; remaining: number }>>({});
+  const [mediaResetting, setMediaResetting] = useState<Record<string, boolean>>({});
+
+  // Leave blank — fill in real endpoints later
+  const MEDIA_STATS_URL = "";
+  const MEDIA_RESET_URL = "";
+
+  const fetchMediaStats = async (acc: AccountEntry) => {
+    if (!MEDIA_STATS_URL) return;
+    try {
+      const res = await fetch(MEDIA_STATS_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: acc.id, platform: acc.platform, email: acc.account_email }),
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      setMediaStats((prev) => ({
+        ...prev,
+        [acc.id]: {
+          active: Number(data?.active ?? 0),
+          posted: Number(data?.posted ?? 0),
+          failed: Number(data?.failed ?? 0),
+          remaining: Number(data?.remaining ?? 0),
+        },
+      }));
+    } catch {
+      /* noop until URL is configured */
+    }
+  };
+
+  const resetMedia = async (acc: AccountEntry) => {
+    if (!MEDIA_RESET_URL) {
+      toast.error("Reset endpoint nicht konfiguriert");
+      return;
+    }
+    setMediaResetting((p) => ({ ...p, [acc.id]: true }));
+    try {
+      const res = await fetch(MEDIA_RESET_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: acc.id, platform: acc.platform, email: acc.account_email }),
+      });
+      if (!res.ok) throw new Error(String(res.status));
+      const data = await res.json();
+      setMediaStats((prev) => ({
+        ...prev,
+        [acc.id]: {
+          active: Number(data?.active ?? 0),
+          posted: Number(data?.posted ?? 0),
+          failed: Number(data?.failed ?? 0),
+          remaining: Number(data?.remaining ?? 0),
+        },
+      }));
+      toast.success("Media zurückgesetzt");
+    } catch {
+      toast.error("Reset fehlgeschlagen");
+    } finally {
+      setMediaResetting((p) => ({ ...p, [acc.id]: false }));
+    }
+  };
 
   useEffect(() => {
     if (!expandedBot) return;
-    if (reports7d[expandedBot]) return;
     const accId = expandedBot;
+    const acc = accounts.find((a) => a.id === accId);
+    if (acc && !mediaStats[accId]) fetchMediaStats(acc);
+    if (reports7d[accId]) return;
     (async () => {
       const from = new Date();
       from.setDate(from.getDate() - 6);
@@ -947,7 +1010,8 @@ export default function AdminDashboard() {
       });
       setReports7d((prev) => ({ ...prev, [accId]: { messages, posts } }));
     })();
-  }, [expandedBot]);
+  }, [expandedBot, accounts]);
+
   const [savedBotState, setSavedBotState] = useState<
     Record<string, { message: string; followUp: string; isActive: boolean }>
   >({});
@@ -7023,18 +7087,32 @@ export default function AdminDashboard() {
 
                                       <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-[11px]">
                                         <div className="text-muted-foreground">
-                                          <span className="font-semibold text-foreground">Active Media:</span> —
+                                          <span className="font-semibold text-foreground">Active Media:</span> {mediaStats[acc.id]?.active ?? "—"}
                                         </div>
                                         <div className="text-muted-foreground">
-                                          <span className="font-semibold text-foreground">Posted Media:</span> —
+                                          <span className="font-semibold text-foreground">Posted Media:</span> {mediaStats[acc.id]?.posted ?? "—"}
                                         </div>
                                         <div className="text-muted-foreground">
-                                          <span className="font-semibold text-foreground">Failed Media:</span> —
+                                          <span className="font-semibold text-foreground">Failed Media:</span> {mediaStats[acc.id]?.failed ?? "—"}
                                         </div>
                                         <div className="text-muted-foreground">
-                                          <span className="font-semibold text-foreground">Remaining Media:</span> —
+                                          <span className="font-semibold text-foreground">Remaining Media:</span> {mediaStats[acc.id]?.remaining ?? "—"}
                                         </div>
                                       </div>
+
+                                      <div>
+                                        <button
+                                          type="button"
+                                          disabled={!!mediaResetting[acc.id]}
+                                          onClick={() => resetMedia(acc)}
+                                          className={`text-[10px] font-semibold px-3 py-1 rounded-md border border-red-500/40 text-red-300 hover:bg-red-500/10 transition-colors ${
+                                            mediaResetting[acc.id] ? "opacity-50 cursor-not-allowed" : ""
+                                          }`}
+                                        >
+                                          {mediaResetting[acc.id] ? "Resetting…" : "Reset Media"}
+                                        </button>
+                                      </div>
+
 
                                       {(() => {
                                         const rep = reports7d[acc.id];
@@ -7097,10 +7175,7 @@ export default function AdminDashboard() {
                                         </span>
                                       </div>
 
-                                      <div className="text-[11px] text-foreground">
-                                        <span className="font-semibold">DMs Per Day:</span>{" "}
-                                        <span className="text-muted-foreground">—</span>
-                                      </div>
+
 
                                       {(() => {
                                         const savedMain = acc.main_message ?? "";
