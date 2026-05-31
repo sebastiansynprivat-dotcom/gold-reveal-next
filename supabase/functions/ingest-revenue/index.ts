@@ -122,9 +122,9 @@ Deno.serve(async (req) => {
         }
       }
 
-      // Build chatter lookup: platform+model -> chatter group_name
+      // Build chatter lookup: platform+model -> { user_id, name }
       // Match accounts via linked model.name OR folder_name/subfolder_name (case-insensitive platform)
-      const chatterMap = new Map<string, string>();
+      const chatterMap = new Map<string, { user_id: string; name: string }>();
       if (pendingSales.length > 0) {
         const uniquePairs = new Set(pendingSales.map((s) => `${s.platform}|${s.model.toLowerCase()}`));
 
@@ -165,8 +165,10 @@ Deno.serve(async (req) => {
           for (const name of candidates) {
             const key = `${accPlatform}|${name}`;
             if (uniquePairs.has(key) && a.assigned_to) {
-              const ch = profileMap.get(a.assigned_to);
-              if (ch && !chatterMap.has(key)) chatterMap.set(key, ch);
+              const ch = profileMap.get(a.assigned_to) ?? "";
+              if (!chatterMap.has(key)) {
+                chatterMap.set(key, { user_id: a.assigned_to, name: ch });
+              }
             }
           }
         }
@@ -179,7 +181,7 @@ Deno.serve(async (req) => {
         const chatter = chatterMap.get(`${s.platform}|${s.model.toLowerCase()}`);
         const amountStr = s.amount.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "€";
         const parts = [platformLabel(s.platform), s.model];
-        if (chatter) parts.push(chatter);
+        if (chatter?.name) parts.push(chatter.name);
         const bodyText = parts.join(" · ");
         fetch(url, {
           method: "POST",
@@ -194,6 +196,133 @@ Deno.serve(async (req) => {
             url: "/admin",
           }),
         }).catch(() => {});
+      }
+
+      // ============ CHATTER PUSHES (gamified, per-sale, only to assigned chatter) ============
+      try {
+        const chatterPushUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/send-notification`;
+        const HYPE_TITLES = [
+          "💸 KA-CHING!",
+          "🔥 NEUER VERKAUF!",
+          "🚀 BOOM!",
+          "⚡ SALE!",
+          "🎰 JACKPOT!",
+          "💎 Cha-Ching!",
+          "🤑 GELD REIN!",
+          "✨ BÄÄÄM!",
+        ];
+        const HYPE_BODIES = [
+          "Weiter so 🏆",
+          "Du Maschine 💪",
+          "On Fire 🔥",
+          "Next Level 🚀",
+          "Lass es krachen 💥",
+          "Geilo! 🤘",
+          "Push it 💰",
+        ];
+        const pick = <T,>(arr: T[]) => arr[Math.floor(Math.random() * arr.length)];
+
+        // Track per-chatter sales in this batch for combo logic
+        const chatterBatch = new Map<string, { sales: number[]; name: string }>();
+
+        for (const s of pendingSales) {
+          const ch = chatterMap.get(`${s.platform}|${s.model.toLowerCase()}`);
+          if (!ch?.user_id) continue;
+
+          const amountStr = s.amount.toLocaleString("de-DE", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          }) + "€";
+          const big = s.amount >= 100;
+          const title = big
+            ? `🏆 BIG SALE! +${amountStr}`
+            : `${pick(HYPE_TITLES)} +${amountStr}`;
+          const body = big
+            ? `„${s.model}" — das ist Top-Liga 💪🔥`
+            : `„${s.model}" hat gerade gezahlt · ${pick(HYPE_BODIES)}`;
+
+          fetch(chatterPushUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${serviceKey}`,
+            },
+            body: JSON.stringify({
+              title,
+              body,
+              target_user_id: ch.user_id,
+            }),
+          }).catch(() => {});
+
+          if (!chatterBatch.has(ch.user_id)) chatterBatch.set(ch.user_id, { sales: [], name: ch.name });
+          chatterBatch.get(ch.user_id)!.sales.push(s.amount);
+        }
+
+        // Combo / streak push per chatter: ≥3 sales in 15 min, 20 min cooldown
+        const BURST_WINDOW_MIN = 15;
+        const BURST_THRESHOLD = 3;
+        const COOLDOWN_MIN = 20;
+        const windowStart = new Date(Date.now() - BURST_WINDOW_MIN * 60_000).toISOString();
+
+        for (const [userId] of chatterBatch.entries()) {
+          const scope = `chatter:${userId}`;
+
+          const { data: cooldown } = await supabase
+            .from("revenue_surge_log")
+            .select("last_sent_at")
+            .eq("scope", scope)
+            .maybeSingle();
+          if (cooldown?.last_sent_at) {
+            const ageMin = (Date.now() - new Date(cooldown.last_sent_at).getTime()) / 60_000;
+            if (ageMin < COOLDOWN_MIN) continue;
+          }
+
+          // Collect this chatter's (platform|model) keys to filter recent events
+          const userKeys = Array.from(chatterMap.entries())
+            .filter(([, v]) => v.user_id === userId)
+            .map(([k]) => k.split("|"));
+          if (userKeys.length === 0) continue;
+
+          const platforms = Array.from(new Set(userKeys.map(([p]) => p)));
+
+          const { data: recent } = await supabase
+            .from("revenue_sale_events")
+            .select("amount, occurred_at, platform, model")
+            .in("platform", platforms)
+            .gte("occurred_at", windowStart)
+            .order("occurred_at", { ascending: true });
+
+          const mine = (recent ?? []).filter((r: any) =>
+            userKeys.some(([p, m]) => p === r.platform && (r.model || "").toLowerCase() === m)
+          );
+          if (mine.length < BURST_THRESHOLD) continue;
+
+          const sum = mine.reduce((a: number, r: any) => a + Number(r.amount || 0), 0);
+          const ageMin = Math.max(
+            1,
+            Math.round((Date.now() - new Date(mine[0].occurred_at).getTime()) / 60_000),
+          );
+          const sumStr = sum.toLocaleString("de-DE", { maximumFractionDigits: 0 }) + "€";
+
+          fetch(chatterPushUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${serviceKey}`,
+            },
+            body: JSON.stringify({
+              title: `🔥🔥 STREAK x${mine.length}!`,
+              body: `+${sumStr} in ${ageMin} min — du bist on fire! 🚀`,
+              target_user_id: userId,
+            }),
+          }).catch(() => {});
+
+          await supabase
+            .from("revenue_surge_log")
+            .upsert({ scope, last_sent_at: new Date().toISOString() }, { onConflict: "scope" });
+        }
+      } catch (e) {
+        console.error("Chatter push error:", e);
       }
     } catch (_) { /* ignore */ }
 
