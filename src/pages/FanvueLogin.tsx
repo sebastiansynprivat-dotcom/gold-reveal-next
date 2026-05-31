@@ -4,6 +4,7 @@ import { Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import logo from "@/assets/logo.png";
+import ForgotPasswordDialog from "@/components/ForgotPasswordDialog";
 
 const translateError = (msg: string): string => {
   if (msg.includes("Invalid login credentials")) return "E-Mail oder Passwort ist falsch.";
@@ -24,6 +25,7 @@ export default function FanvueLogin() {
   const [submitting, setSubmitting] = useState(false);
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
   const [signingOut, setSigningOut] = useState(false);
+  const [showForgot, setShowForgot] = useState(false);
 
   useEffect(() => {
     if (!user || signingOut) return;
