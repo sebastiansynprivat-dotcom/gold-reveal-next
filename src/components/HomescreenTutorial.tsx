@@ -40,6 +40,13 @@ export default function HomescreenTutorial({ isFirstLogin, manualOpen, onManualC
   useEffect(() => {
     const forced = (() => { try { return localStorage.getItem("force_homescreen_tutorial") === "1"; } catch { return false; } })();
     if (!isFirstLogin && !forced) return;
+    // Only show on mobile devices — desktops should never see the "add to homescreen" tutorial
+    const isMobile = /Android|iPhone|iPad|iPod|Mobile|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+      || (window.matchMedia && window.matchMedia("(max-width: 768px)").matches && "ontouchstart" in window);
+    if (!isMobile) {
+      try { localStorage.removeItem("force_homescreen_tutorial"); } catch {}
+      return;
+    }
     const isStandalone = window.matchMedia("(display-mode: standalone)").matches
       || (window.navigator as any).standalone === true;
     if (isStandalone) {
@@ -49,6 +56,7 @@ export default function HomescreenTutorial({ isFirstLogin, manualOpen, onManualC
     const timer = setTimeout(() => setOpen(true), 1200);
     return () => clearTimeout(timer);
   }, [isFirstLogin]);
+
 
 
   useEffect(() => {
