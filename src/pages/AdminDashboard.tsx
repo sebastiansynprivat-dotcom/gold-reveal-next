@@ -7175,10 +7175,7 @@ export default function AdminDashboard() {
                                         </span>
                                       </div>
 
-                                      <div className="text-[11px] text-foreground">
-                                        <span className="font-semibold">DMs Per Day:</span>{" "}
-                                        <span className="text-muted-foreground">—</span>
-                                      </div>
+
 
                                       {(() => {
                                         const savedMain = acc.main_message ?? "";
