@@ -924,11 +924,74 @@ export default function AdminDashboard() {
     messages: Record<string, { main: number; follow: number; total: number }>;
     posts: Record<string, { posted: number; failed: number }>;
   }>>({});
+  const [mediaStats, setMediaStats] = useState<Record<string, { active: number; posted: number; failed: number; remaining: number }>>({});
+  const [mediaResetting, setMediaResetting] = useState<Record<string, boolean>>({});
+
+  // Leave blank — fill in real endpoints later
+  const MEDIA_STATS_URL = "";
+  const MEDIA_RESET_URL = "";
+
+  const fetchMediaStats = async (acc: AccountEntry) => {
+    if (!MEDIA_STATS_URL) return;
+    try {
+      const res = await fetch(MEDIA_STATS_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: acc.id, platform: acc.platform, email: acc.account_email }),
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      setMediaStats((prev) => ({
+        ...prev,
+        [acc.id]: {
+          active: Number(data?.active ?? 0),
+          posted: Number(data?.posted ?? 0),
+          failed: Number(data?.failed ?? 0),
+          remaining: Number(data?.remaining ?? 0),
+        },
+      }));
+    } catch {
+      /* noop until URL is configured */
+    }
+  };
+
+  const resetMedia = async (acc: AccountEntry) => {
+    if (!MEDIA_RESET_URL) {
+      toast.error("Reset endpoint nicht konfiguriert");
+      return;
+    }
+    setMediaResetting((p) => ({ ...p, [acc.id]: true }));
+    try {
+      const res = await fetch(MEDIA_RESET_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: acc.id, platform: acc.platform, email: acc.account_email }),
+      });
+      if (!res.ok) throw new Error(String(res.status));
+      const data = await res.json();
+      setMediaStats((prev) => ({
+        ...prev,
+        [acc.id]: {
+          active: Number(data?.active ?? 0),
+          posted: Number(data?.posted ?? 0),
+          failed: Number(data?.failed ?? 0),
+          remaining: Number(data?.remaining ?? 0),
+        },
+      }));
+      toast.success("Media zurückgesetzt");
+    } catch {
+      toast.error("Reset fehlgeschlagen");
+    } finally {
+      setMediaResetting((p) => ({ ...p, [acc.id]: false }));
+    }
+  };
 
   useEffect(() => {
     if (!expandedBot) return;
-    if (reports7d[expandedBot]) return;
     const accId = expandedBot;
+    const acc = accounts.find((a) => a.id === accId);
+    if (acc && !mediaStats[accId]) fetchMediaStats(acc);
+    if (reports7d[accId]) return;
     (async () => {
       const from = new Date();
       from.setDate(from.getDate() - 6);
@@ -947,7 +1010,8 @@ export default function AdminDashboard() {
       });
       setReports7d((prev) => ({ ...prev, [accId]: { messages, posts } }));
     })();
-  }, [expandedBot]);
+  }, [expandedBot, accounts]);
+
   const [savedBotState, setSavedBotState] = useState<
     Record<string, { message: string; followUp: string; isActive: boolean }>
   >({});
