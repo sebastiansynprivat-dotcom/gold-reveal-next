@@ -4,6 +4,7 @@ import { Navigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import logo from "@/assets/logo.png";
+import ForgotPasswordDialog from "@/components/ForgotPasswordDialog";
 
 const translateError = (msg: string): string => {
   if (msg.includes("Invalid login credentials")) return "E-Mail oder Passwort ist falsch.";
@@ -24,6 +25,7 @@ export default function ModelLogin() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [isModel, setIsModel] = useState<boolean | null>(null);
+  const [showForgot, setShowForgot] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
 
   // If logged in as non-model, sign out automatically so model can log in fresh
@@ -138,7 +140,11 @@ export default function ModelLogin() {
           <button type="submit" disabled={submitting} className="w-full px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold tracking-wide hover:scale-[1.02] transition-all duration-200 disabled:opacity-50">
             {submitting ? "Bitte warten..." : "Anmelden"}
           </button>
+          <button type="button" onClick={() => setShowForgot(true)} className="w-full text-center text-xs text-primary hover:text-primary/80 transition-colors underline underline-offset-2">
+            Passwort vergessen?
+          </button>
         </form>
+        <ForgotPasswordDialog open={showForgot} onClose={() => setShowForgot(false)} defaultEmail={email} />
       </motion.div>
     </div>
   );

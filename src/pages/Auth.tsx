@@ -4,6 +4,7 @@ import { Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import logo from "@/assets/logo.png";
+import ForgotPasswordDialog from "@/components/ForgotPasswordDialog";
 
 const translateError = (msg: string): string => {
   if (msg.includes("Invalid login credentials")) return "E-Mail oder Passwort ist falsch.";
@@ -33,6 +34,7 @@ const Auth = () => {
   const [showTelegramHelp, setShowTelegramHelp] = useState(false);
   const [showGroupConfirm, setShowGroupConfirm] = useState(false);
   const [showTelegramConfirm, setShowTelegramConfirm] = useState(false);
+  const [showForgot, setShowForgot] = useState(false);
   const pendingSubmitRef = useRef<React.FormEvent | null>(null);
 
   // Mouse-following particles
@@ -524,7 +526,19 @@ const Auth = () => {
             >
               {submitting ? "Bitte warten..." : isSignUp ? "Konto erstellen" : "Anmelden"}
             </button>
+
+            {!isSignUp && (
+              <button
+                type="button"
+                onClick={() => setShowForgot(true)}
+                className="w-full text-center text-xs text-primary hover:text-primary/80 transition-colors underline underline-offset-2"
+              >
+                Passwort vergessen?
+              </button>
+            )}
           </form>
+
+          <ForgotPasswordDialog open={showForgot} onClose={() => setShowForgot(false)} defaultEmail={email} />
 
           <button
             onClick={() => {
