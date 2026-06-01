@@ -246,9 +246,32 @@ export default function ModelGroupsPanel({
           (accs || []).map((a: any) => [a.id, a.platform])
         );
 
+        // Per-platform commission resolver: platform override -> default override -> group default
+        const baseDefault =
+          m.commission_override != null && Number(m.commission_override) !== 0
+            ? Number(m.commission_override)
+            : Number(selected.default_commission);
+        const pctFor = (key: "fourbased" | "maloum" | "brezzels") => {
+          const v =
+            key === "fourbased"
+              ? m.commission_override_fourbased
+              : key === "maloum"
+              ? m.commission_override_maloum
+              : m.commission_override_brezzels;
+          return v != null && Number(v) !== 0 ? Number(v) : baseDefault;
+        };
+
         // Manually entered revenue (model_dashboard) — primary source
         let gross = 0;
-        const breakdown: Array<{ name: string; gross: number }> = [];
+        let commission_total = 0;
+        const breakdown: Array<{ name: string; gross: number; pct: number; commission: number }> = [];
+        const pushLine = (name: string, g: number, pct: number) => {
+          const c = +(g * (pct / 100)).toFixed(2);
+          breakdown.push({ name, gross: g, pct, commission: c });
+          gross += g;
+          commission_total += c;
+        };
+
         if (accountIds.length > 0) {
           const { data: md } = await supabase
             .from("model_dashboard")
@@ -261,39 +284,43 @@ export default function ModelGroupsPanel({
             const ml = Number(d.maloum_revenue) || 0;
             const br = Number(d.brezzels_revenue) || 0;
             const sum = fb + ml + br;
-            const total = sum || Number(d.monthly_revenue) || 0;
-            if (total <= 0) return;
+            const totalRow = sum || Number(d.monthly_revenue) || 0;
+            if (totalRow <= 0) return;
             const platform = platformByAcc.get(d.account_id) || "Account";
-            // If sum exists, push detailed; else push aggregated
             if (sum > 0) {
-              if (fb > 0) breakdown.push({ name: "4Based", gross: fb });
-              if (ml > 0) breakdown.push({ name: "Maloum", gross: ml });
-              if (br > 0) breakdown.push({ name: "Brezzels", gross: br });
+              if (fb > 0) pushLine("4Based", fb, pctFor("fourbased"));
+              if (ml > 0) pushLine("Maloum", ml, pctFor("maloum"));
+              if (br > 0) pushLine("Brezzels", br, pctFor("brezzels"));
             } else {
-              breakdown.push({ name: platform, gross: total });
+              const key =
+                platform.toLowerCase().includes("4based")
+                  ? "fourbased"
+                  : platform.toLowerCase().includes("maloum")
+                  ? "maloum"
+                  : platform.toLowerCase().includes("brezzels")
+                  ? "brezzels"
+                  : null;
+              pushLine(platform, totalRow, key ? pctFor(key) : baseDefault);
             }
-            gross += total;
           });
         }
 
-        const pct =
-          m.commission_override != null && m.commission_override !== 0
-            ? Number(m.commission_override)
-            : Number(selected.default_commission);
-        const commission_amount = +(gross * (pct / 100)).toFixed(2);
+        const commission_amount = +commission_total.toFixed(2);
         const net_payout = commission_amount;
+        const effectivePct = gross > 0 ? +(commission_amount / gross * 100).toFixed(2) : baseDefault;
         items.push({
           model_id: m.id,
           model_name: m.name,
-          referral_source: m.referral_source || selected.referral_source || "",
+          referral_source: m.referrer_tag || m.referral_source || selected.referral_source || "",
           gross: +gross.toFixed(2),
-          commission_pct: pct,
+          commission_pct: effectivePct,
           commission_amount,
           net_payout,
           breakdown,
           currency: m.currency || "EUR",
         });
       }
+
       setBillingItems(items);
 
       // Persist snapshot
