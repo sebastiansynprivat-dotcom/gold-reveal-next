@@ -1204,6 +1204,8 @@ export default function AdminDashboard() {
   const [editingAdminNameValue, setEditingAdminNameValue] = useState("");
   const [savingAdminName, setSavingAdminName] = useState(false);
   const [adminNames, setAdminNames] = useState<Record<string, string>>({});
+  const [adminLanguages, setAdminLanguages] = useState<Record<string, "de" | "en">>({});
+  const [savingAdminLang, setSavingAdminLang] = useState<string | null>(null);
   const [newAdminEmail, setNewAdminEmail] = useState("");
   const [addingAdmin, setAddingAdmin] = useState(false);
   const [removeAdminConfirm, setRemoveAdminConfirm] = useState<string | null>(null);
@@ -2273,6 +2275,20 @@ export default function AdminDashboard() {
         }
         return next;
       });
+      // Load UI languages for admins from profiles
+      const ids = list.map((a: any) => a.user_id).filter(Boolean);
+      if (ids.length > 0) {
+        const { data: profs } = await supabase
+          .from("profiles")
+          .select("user_id, ui_language")
+          .in("user_id", ids);
+        const map: Record<string, "de" | "en"> = {};
+        for (const p of profs || []) {
+          const v = (p as any).ui_language;
+          map[(p as any).user_id] = v === "en" ? "en" : "de";
+        }
+        setAdminLanguages(map);
+      }
     } catch (err: any) {
       toast.error(err.message || "Fehler beim Laden der Admins");
     } finally {
@@ -2307,6 +2323,23 @@ export default function AdminDashboard() {
       toast.error(err.message || "Name konnte nicht gespeichert werden");
     } finally {
       setSavingAdminName(false);
+    }
+  };
+
+  const saveAdminLanguage = async (targetUserId: string, next: "de" | "en") => {
+    setSavingAdminLang(targetUserId);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ ui_language: next } as any)
+        .eq("user_id", targetUserId);
+      if (error) throw error;
+      setAdminLanguages((prev) => ({ ...prev, [targetUserId]: next }));
+      toast.success(next === "en" ? "Language set to English" : "Sprache auf Deutsch gesetzt");
+    } catch (err: any) {
+      toast.error(err.message || "Sprache konnte nicht gespeichert werden");
+    } finally {
+      setSavingAdminLang(null);
     }
   };
 
@@ -8842,7 +8875,36 @@ export default function AdminDashboard() {
                                   </>
                                 )}
                               </div>
+
+                              {/* Language row */}
+                              <div className="flex items-center gap-2 pl-5">
+                                <span className="text-[11px] text-muted-foreground">Sprache:</span>
+                                <div className="inline-flex rounded-md border border-border/50 overflow-hidden">
+                                  {(["de", "en"] as const).map((l) => {
+                                    const active = (adminLanguages[admin.user_id] || "de") === l;
+                                    const saving = savingAdminLang === admin.user_id;
+                                    return (
+                                      <button
+                                        key={l}
+                                        type="button"
+                                        disabled={saving || active}
+                                        onClick={() => saveAdminLanguage(admin.user_id, l)}
+                                        className={cn(
+                                          "px-2.5 py-0.5 text-[10px] font-semibold transition-colors",
+                                          active
+                                            ? "bg-accent/20 text-accent"
+                                            : "bg-transparent text-muted-foreground hover:text-foreground hover:bg-accent/5",
+                                          saving && "opacity-50 cursor-wait",
+                                        )}
+                                      >
+                                        {l.toUpperCase()}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
                             </div>
+
                             );
                           })}
                         </div>
