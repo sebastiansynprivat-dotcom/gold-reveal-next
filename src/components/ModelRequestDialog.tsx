@@ -71,6 +71,14 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
     }
   }, [editData]);
 
+  // Auto-select platform when chatter is only assigned to one
+  useEffect(() => {
+    if (!platform && availablePlatforms && availablePlatforms.length === 1) {
+      setPlatform(availablePlatforms[0]);
+    }
+  }, [availablePlatforms, platform, open]);
+
+
   const resetForm = () => {
     setModelName("");
     setCustomerName("");
