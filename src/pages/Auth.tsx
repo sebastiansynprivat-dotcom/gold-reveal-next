@@ -245,12 +245,12 @@ const Auth = () => {
             animate={{ opacity: 1, scale: 1 }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-bold text-foreground text-center">Ist das dein Gruppenname?</h3>
+            <h3 className="text-lg font-bold text-foreground text-center">{t("auth.confirmGroup.title")}</h3>
             <div className="text-center py-3 px-4 rounded-xl bg-muted border border-border">
               <span className="text-foreground font-semibold text-base">{groupName.trim()}</span>
             </div>
             <p className="text-muted-foreground text-xs text-center leading-relaxed">
-              Bitte checke nochmal in deiner <span className="text-foreground font-medium">WhatsApp-Gruppe</span>, ob der Name exakt übereinstimmt. Der korrekte Gruppenname ist wichtig für deine Abrechnung.
+              {t("auth.confirmGroup.body")} <span className="text-foreground font-medium">{t("auth.confirmGroup.bodyMid")}</span>{t("auth.confirmGroup.bodyEnd")}
             </p>
             <div className="flex gap-3">
               <button
@@ -258,14 +258,14 @@ const Auth = () => {
                 onClick={() => setShowGroupConfirm(false)}
                 className="flex-1 px-4 py-2.5 rounded-xl border border-border text-muted-foreground text-sm font-medium hover:bg-muted transition-colors"
               >
-                Nein, ändern
+                {t("auth.confirm.no")}
               </button>
               <button
                 type="button"
                 onClick={handleConfirmGroup}
                 className="flex-1 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:scale-[1.02] transition-all"
               >
-                Ja, stimmt!
+                {t("auth.confirm.yes")}
               </button>
             </div>
           </motion.div>
@@ -286,12 +286,12 @@ const Auth = () => {
             animate={{ opacity: 1, scale: 1 }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-bold text-foreground text-center">Ist das deine Telegram-ID?</h3>
+            <h3 className="text-lg font-bold text-foreground text-center">{t("auth.confirmTg.title")}</h3>
             <div className="text-center py-3 px-4 rounded-xl bg-muted border border-border">
               <span className="text-foreground font-semibold text-base font-mono">{telegramId.replace(/\s+/g, "")}</span>
             </div>
             <p className="text-muted-foreground text-xs text-center leading-relaxed">
-              Bitte <span className="text-foreground font-medium">double-checke</span> deine Telegram-ID. Du kannst nur abgerechnet werden, wenn die ID korrekt ist – sonst können wir dich nicht zuordnen.
+              {t("auth.confirmTg.body")} <span className="text-foreground font-medium">{t("auth.confirmTg.bodyMid")}</span> {t("auth.confirmTg.bodyEnd")}
             </p>
             <div className="flex gap-3">
               <button
@@ -299,7 +299,7 @@ const Auth = () => {
                 onClick={() => setShowTelegramConfirm(false)}
                 className="flex-1 px-4 py-2.5 rounded-xl border border-border text-muted-foreground text-sm font-medium hover:bg-muted transition-colors"
               >
-                Nein, ändern
+                {t("auth.confirm.no")}
               </button>
               <button
                 type="button"
@@ -307,7 +307,7 @@ const Auth = () => {
                 disabled={submitting}
                 className="flex-1 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:scale-[1.02] transition-all disabled:opacity-50"
               >
-                {submitting ? "Bitte warten..." : "Ja, stimmt!"}
+                {submitting ? t("auth.btn.wait") : t("auth.confirm.yes")}
               </button>
             </div>
           </motion.div>
@@ -334,14 +334,13 @@ const Auth = () => {
             <span className="text-2xl">✉️</span>
           </div>
           <h2 className="gold-gradient-text text-xl font-bold">
-            Bestätige deine E-Mail
+            {t("auth.success.title")}
           </h2>
           <p className="text-muted-foreground text-sm leading-relaxed">
-            Wir haben dir eine E-Mail an <span className="text-foreground font-medium">{email}</span> gesendet.
-            Klicke auf den Link in der E-Mail, um dein Konto zu aktivieren.
+            {t("auth.success.body")} <span className="text-foreground font-medium">{email}</span>{t("auth.success.bodyEnd")}
           </p>
           <p className="text-muted-foreground/60 text-xs">
-            Keine E-Mail erhalten? Schau im Spam-Ordner nach.
+            {t("auth.success.spam")}
           </p>
           <button
             onClick={() => {
@@ -353,7 +352,7 @@ const Auth = () => {
             }}
             className="mt-3 text-sm text-primary hover:text-primary/80 transition-colors underline underline-offset-2"
           >
-            Zurück zur Anmeldung
+            {t("auth.success.back")}
           </button>
         </motion.div>
       ) : (
@@ -364,10 +363,10 @@ const Auth = () => {
           transition={{ duration: 0.35, delay: 0.08 }}
         >
           <h1 className="text-gold-gradient-shimmer text-2xl font-bold text-center tracking-tight leading-tight mb-2">
-            {isSignUp ? "Erstelle ein kostenloses Konto bei SheX" : "Willkommen zurück"}
+            {isSignUp ? t("auth.signup.title") : t("auth.signin.title")}
           </h1>
           <p className="text-muted-foreground text-sm text-center mb-7">
-            {isSignUp ? "Erstelle dein kostenloses Konto, um deinen Account zu bekommen und damit Geld zu verdienen." : "Melde dich an, um weiterzumachen"}
+            {isSignUp ? t("auth.signup.subtitle") : t("auth.signin.subtitle")}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
