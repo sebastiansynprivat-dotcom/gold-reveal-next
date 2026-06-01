@@ -13,6 +13,8 @@ const PAGES = Array.from({ length: 10 }, (_, i) => `/content/breakdown-01/page-$
 
 export default function ChatBreakdown() {
   const { reads, markProgress, markCompleted, unmarkCompleted } = useLibraryReads();
+  const { lang } = useUILanguage();
+  const useReactVersion = lang === "en";
   const read = reads[CONTENT_KEY];
   const completed = !!read?.completed_at;
 
