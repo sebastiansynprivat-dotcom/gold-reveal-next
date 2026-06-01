@@ -5,15 +5,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import logo from "@/assets/logo.png";
 import ForgotPasswordDialog from "@/components/ForgotPasswordDialog";
+import { useUILanguage } from "@/hooks/useUILanguage";
 
-const translateError = (msg: string): string => {
-  if (msg.includes("Invalid login credentials")) return "E-Mail oder Passwort ist falsch.";
-  if (msg.includes("Email not confirmed")) return "Bitte bestätige zuerst deine E-Mail.";
-  if (msg.includes("already registered")) return "Diese E-Mail ist bereits registriert.";
-  if (msg.includes("invalid")) return "Bitte gib eine gültige E-Mail-Adresse ein.";
-  if (msg.includes("security purposes")) return "Bitte warte einen Moment und versuche es erneut.";
-  if (msg.includes("rate limit")) return "Zu viele Versuche. Bitte warte einen Moment und versuche es erneut.";
-  if (msg.includes("Password should be")) return "Das Passwort muss mindestens 6 Zeichen haben.";
+const translateError = (msg: string, t: (k: string) => string): string => {
+  if (msg.includes("Invalid login credentials")) return t("auth.error.invalidCreds");
+  if (msg.includes("Email not confirmed")) return t("auth.error.notConfirmed");
+  if (msg.includes("already registered")) return t("auth.error.alreadyRegistered");
+  if (msg.includes("invalid")) return t("auth.error.invalidEmail");
+  if (msg.includes("security purposes")) return t("auth.error.security");
+  if (msg.includes("rate limit")) return t("auth.error.rateLimit");
+  if (msg.includes("Password should be")) return t("auth.error.passwordShort");
   return msg;
 };
 
@@ -22,6 +23,7 @@ const inputClass =
 
 const Auth = () => {
   const { user, loading, signUp, signIn } = useAuth();
+  const { t } = useUILanguage();
   const [isSignUp, setIsSignUp] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -185,12 +187,12 @@ const Auth = () => {
 
     if (isSignUp) {
       if (!groupName.trim()) {
-        setError("Bitte gib deinen Gruppennamen ein.");
+        setError(t("auth.error.groupRequired"));
         return;
       }
       const cleanedTgId = telegramId.replace(/\s+/g, "");
       if (!/^\d{5,}$/.test(cleanedTgId)) {
-        setError("Bitte gib eine gültige Telegram-ID ein (nur Zahlen, mindestens 5 Stellen).");
+        setError(t("auth.error.tgInvalid"));
         return;
       }
       localStorage.setItem("pending_telegram_id", cleanedTgId);
@@ -203,7 +205,7 @@ const Auth = () => {
     setSubmitting(true);
     const { error } = await signIn(email, password);
     if (error) {
-      setError(translateError(error.message));
+      setError(translateError(error.message, t));
     }
     setSubmitting(false);
   };
@@ -218,7 +220,7 @@ const Auth = () => {
     setSubmitting(true);
     const { error } = await signUp(email, password, { group_name: groupName.trim() });
     if (error) {
-      setError(translateError(error.message));
+      setError(translateError(error.message, t));
     } else {
       setSignUpSuccess(true);
     }
@@ -243,12 +245,12 @@ const Auth = () => {
             animate={{ opacity: 1, scale: 1 }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-bold text-foreground text-center">Ist das dein Gruppenname?</h3>
+            <h3 className="text-lg font-bold text-foreground text-center">{t("auth.confirmGroup.title")}</h3>
             <div className="text-center py-3 px-4 rounded-xl bg-muted border border-border">
               <span className="text-foreground font-semibold text-base">{groupName.trim()}</span>
             </div>
             <p className="text-muted-foreground text-xs text-center leading-relaxed">
-              Bitte checke nochmal in deiner <span className="text-foreground font-medium">WhatsApp-Gruppe</span>, ob der Name exakt übereinstimmt. Der korrekte Gruppenname ist wichtig für deine Abrechnung.
+              {t("auth.confirmGroup.body")} <span className="text-foreground font-medium">{t("auth.confirmGroup.bodyMid")}</span>{t("auth.confirmGroup.bodyEnd")}
             </p>
             <div className="flex gap-3">
               <button
@@ -256,14 +258,14 @@ const Auth = () => {
                 onClick={() => setShowGroupConfirm(false)}
                 className="flex-1 px-4 py-2.5 rounded-xl border border-border text-muted-foreground text-sm font-medium hover:bg-muted transition-colors"
               >
-                Nein, ändern
+                {t("auth.confirm.no")}
               </button>
               <button
                 type="button"
                 onClick={handleConfirmGroup}
                 className="flex-1 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:scale-[1.02] transition-all"
               >
-                Ja, stimmt!
+                {t("auth.confirm.yes")}
               </button>
             </div>
           </motion.div>
@@ -284,12 +286,12 @@ const Auth = () => {
             animate={{ opacity: 1, scale: 1 }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-lg font-bold text-foreground text-center">Ist das deine Telegram-ID?</h3>
+            <h3 className="text-lg font-bold text-foreground text-center">{t("auth.confirmTg.title")}</h3>
             <div className="text-center py-3 px-4 rounded-xl bg-muted border border-border">
               <span className="text-foreground font-semibold text-base font-mono">{telegramId.replace(/\s+/g, "")}</span>
             </div>
             <p className="text-muted-foreground text-xs text-center leading-relaxed">
-              Bitte <span className="text-foreground font-medium">double-checke</span> deine Telegram-ID. Du kannst nur abgerechnet werden, wenn die ID korrekt ist – sonst können wir dich nicht zuordnen.
+              {t("auth.confirmTg.body")} <span className="text-foreground font-medium">{t("auth.confirmTg.bodyMid")}</span> {t("auth.confirmTg.bodyEnd")}
             </p>
             <div className="flex gap-3">
               <button
@@ -297,7 +299,7 @@ const Auth = () => {
                 onClick={() => setShowTelegramConfirm(false)}
                 className="flex-1 px-4 py-2.5 rounded-xl border border-border text-muted-foreground text-sm font-medium hover:bg-muted transition-colors"
               >
-                Nein, ändern
+                {t("auth.confirm.no")}
               </button>
               <button
                 type="button"
@@ -305,7 +307,7 @@ const Auth = () => {
                 disabled={submitting}
                 className="flex-1 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:scale-[1.02] transition-all disabled:opacity-50"
               >
-                {submitting ? "Bitte warten..." : "Ja, stimmt!"}
+                {submitting ? t("auth.btn.wait") : t("auth.confirm.yes")}
               </button>
             </div>
           </motion.div>
@@ -332,14 +334,13 @@ const Auth = () => {
             <span className="text-2xl">✉️</span>
           </div>
           <h2 className="gold-gradient-text text-xl font-bold">
-            Bestätige deine E-Mail
+            {t("auth.success.title")}
           </h2>
           <p className="text-muted-foreground text-sm leading-relaxed">
-            Wir haben dir eine E-Mail an <span className="text-foreground font-medium">{email}</span> gesendet.
-            Klicke auf den Link in der E-Mail, um dein Konto zu aktivieren.
+            {t("auth.success.body")} <span className="text-foreground font-medium">{email}</span>{t("auth.success.bodyEnd")}
           </p>
           <p className="text-muted-foreground/60 text-xs">
-            Keine E-Mail erhalten? Schau im Spam-Ordner nach.
+            {t("auth.success.spam")}
           </p>
           <button
             onClick={() => {
@@ -351,7 +352,7 @@ const Auth = () => {
             }}
             className="mt-3 text-sm text-primary hover:text-primary/80 transition-colors underline underline-offset-2"
           >
-            Zurück zur Anmeldung
+            {t("auth.success.back")}
           </button>
         </motion.div>
       ) : (
@@ -362,10 +363,10 @@ const Auth = () => {
           transition={{ duration: 0.35, delay: 0.08 }}
         >
           <h1 className="text-gold-gradient-shimmer text-2xl font-bold text-center tracking-tight leading-tight mb-2">
-            {isSignUp ? "Erstelle ein kostenloses Konto bei SheX" : "Willkommen zurück"}
+            {isSignUp ? t("auth.signup.title") : t("auth.signin.title")}
           </h1>
           <p className="text-muted-foreground text-sm text-center mb-7">
-            {isSignUp ? "Erstelle dein kostenloses Konto, um deinen Account zu bekommen und damit Geld zu verdienen." : "Melde dich an, um weiterzumachen"}
+            {isSignUp ? t("auth.signup.subtitle") : t("auth.signin.subtitle")}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -377,7 +378,7 @@ const Auth = () => {
                     name="group_name"
                     id="signup-group-name"
                     autoComplete="off"
-                    placeholder="Gruppenname (Beispiel: Max Mustermann)"
+                    placeholder={t("auth.placeholder.groupName")}
                     value={groupName}
                     onChange={(e) => setGroupName(e.target.value)}
                     required
@@ -389,7 +390,7 @@ const Auth = () => {
                   onClick={() => setShowGroupHelp((v) => !v)}
                   className="mt-1.5 w-full text-center text-xs text-primary hover:text-primary/80 transition-colors underline underline-offset-2"
                 >
-                  Wo finde ich meinen Gruppennamen?
+                  {t("auth.help.groupName")}
                 </button>
                 {showGroupHelp && (
                   <motion.div
@@ -399,10 +400,10 @@ const Auth = () => {
                     className="mt-2 p-3 rounded-xl bg-card border border-border text-xs text-muted-foreground leading-relaxed space-y-2"
                   >
                     <p>
-                      Wir haben mit dir eine Gruppe eröffnet. Den Gruppennamen findest du direkt oben in der Gruppe – kopiere ihn einfach 1:1 und füge ihn hier ein. Beispiel (Der Gruppenname enthält immer deinen Namen): Max Mustermann oder Max Mu
+                      {t("auth.help.groupName.body")}
                     </p>
                     <p className="text-primary font-semibold">
-                      ⚠️ Es ist extrem wichtig, dass du den richtigen Gruppennamen angibst, damit du korrekt abgerechnet werden kannst!
+                      {t("auth.help.groupName.warning")}
                     </p>
                   </motion.div>
                 )}
@@ -418,7 +419,7 @@ const Auth = () => {
                     inputMode="numeric"
                     pattern="[0-9]*"
                     autoComplete="off"
-                    placeholder="Telegram-ID"
+                    placeholder={t("auth.placeholder.telegramId")}
                     value={telegramId}
                     onChange={(e) => setTelegramId(e.target.value.replace(/\D/g, ""))}
                     onPaste={(e) => {
@@ -444,7 +445,7 @@ const Auth = () => {
                   onClick={() => setShowTelegramHelp((v) => !v)}
                   className="mt-1.5 w-full text-center text-xs text-primary hover:text-primary/80 transition-colors underline underline-offset-2"
                 >
-                  Wo finde ich meine Telegram-ID?
+                  {t("auth.help.telegram")}
                 </button>
                 {showTelegramHelp && (
                   <motion.div
@@ -454,7 +455,7 @@ const Auth = () => {
                     className="mt-2 p-3 rounded-xl bg-card border border-border text-xs text-muted-foreground leading-relaxed space-y-2"
                   >
                     <p className="flex flex-wrap items-center gap-1.5">
-                      1. Öffne Telegram und starte den Bot{" "}
+                      {t("auth.help.telegram.step1")}{" "}
                       <a
                         href="https://t.me/userinfobot"
                         target="_blank"
@@ -464,20 +465,20 @@ const Auth = () => {
                         <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
                           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 0 0-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/>
                         </svg>
-                        Hier klicken – @userinfobot
+                        {t("auth.help.telegram.botLink")}
                       </a>
                     </p>
                     <p>
-                      2. Tippe <span className="text-foreground font-medium">/start</span> und schicke es ab.
+                      {t("auth.help.telegram.step2.pre")} <span className="text-foreground font-medium">/start</span> {t("auth.help.telegram.step2.post")}
                     </p>
                     <p>
-                      3. Du bekommst eine Antwort mit <span className="text-foreground font-medium">ID: 123456789</span> — klicke einmal auf die Zahl neben „ID:“. Damit ist sie automatisch kopiert.
+                      {t("auth.help.telegram.step3.pre")} <span className="text-foreground font-medium">ID: 123456789</span> {t("auth.help.telegram.step3.post")}
                     </p>
                     <p>
-                      4. Füge sie einfach hier in das Feld ein.
+                      {t("auth.help.telegram.step4")}
                     </p>
                     <p className="text-primary font-semibold">
-                      ⚠️ Nur Zahlen, kein @username – die ID brauchen wir für deine Benachrichtigungen.
+                      {t("auth.help.telegram.warning")}
                     </p>
                   </motion.div>
                 )}
@@ -493,7 +494,7 @@ const Auth = () => {
                 autoCorrect="off"
                 spellCheck={false}
                 inputMode="email"
-                placeholder="E-Mail Adresse"
+                placeholder={t("auth.placeholder.email")}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -506,7 +507,7 @@ const Auth = () => {
                 name="password"
                 id="auth-password"
                 autoComplete={isSignUp ? "new-password" : "current-password"}
-                placeholder="Passwort (min. 6 Zeichen)"
+                placeholder={t("auth.placeholder.password")}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -524,7 +525,7 @@ const Auth = () => {
               disabled={submitting}
               className="w-full px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold tracking-wide hover:scale-[1.02] transition-all duration-200 disabled:opacity-50"
             >
-              {submitting ? "Bitte warten..." : isSignUp ? "Konto erstellen" : "Anmelden"}
+              {submitting ? t("auth.btn.wait") : isSignUp ? t("auth.btn.createAccount") : t("auth.btn.signin")}
             </button>
 
             {!isSignUp && (
@@ -533,7 +534,7 @@ const Auth = () => {
                 onClick={() => setShowForgot(true)}
                 className="w-full text-center text-xs text-primary hover:text-primary/80 transition-colors underline underline-offset-2"
               >
-                Passwort vergessen?
+                {t("auth.btn.forgot")}
               </button>
             )}
           </form>
@@ -547,7 +548,7 @@ const Auth = () => {
             }}
             className="mt-6 w-full text-sm text-muted-foreground hover:text-foreground transition-colors text-center"
           >
-            {isSignUp ? "Bereits ein Konto? Hier anmelden" : "Noch kein Konto? Hier registrieren"}
+            {isSignUp ? t("auth.switch.toSignin") : t("auth.switch.toSignup")}
           </button>
         </motion.div>
       )}
