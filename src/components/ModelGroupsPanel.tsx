@@ -255,15 +255,12 @@ export default function ModelGroupsPanel({
       }
       const items: LineItem[] = [];
       for (const m of groupModels) {
-        // All accounts of this model
+        // All accounts of this model (for label/platform context only)
         const { data: accs } = await supabase
           .from("accounts")
           .select("id, platform")
           .eq("model_id", m.id);
-        const accountIds = (accs || []).map((a: any) => a.id);
-        const platformByAcc = new Map<string, string>(
-          (accs || []).map((a: any) => [a.id, a.platform])
-        );
+        const hasAccounts = (accs || []).length > 0;
 
         // Per-platform commission resolver: platform override -> default override -> group default
         const baseDefault =
@@ -280,7 +277,7 @@ export default function ModelGroupsPanel({
           return v != null && Number(v) !== 0 ? Number(v) : baseDefault;
         };
 
-        // Manually entered revenue (model_dashboard) — primary source
+        // Manually entered revenue (model_dashboard) — one row per model_id
         let gross = 0;
         let commission_total = 0;
         const breakdown: Array<{ name: string; gross: number; pct: number; commission: number }> = [];
@@ -291,48 +288,27 @@ export default function ModelGroupsPanel({
           commission_total += c;
         };
 
-        if (accountIds.length > 0) {
-          const { data: md } = await supabase
+        if (hasAccounts) {
+          const { data: md } = await (supabase as any)
             .from("model_dashboard")
-            .select(
-              "account_id, fourbased_revenue, maloum_revenue, brezzels_revenue, monthly_revenue"
-            )
-            .in("account_id", accountIds);
-          (md || []).forEach((d: any) => {
+            .select("fourbased_revenue, maloum_revenue, brezzels_revenue, monthly_revenue")
+            .eq("model_id", m.id)
+            .maybeSingle();
+          if (md) {
+            const d: any = md;
             const fbUsd = Number(d.fourbased_revenue) || 0;
             const fb = +(fbUsd * usdToEur).toFixed(2); // USD → EUR
             const ml = Number(d.maloum_revenue) || 0;
             const br = Number(d.brezzels_revenue) || 0;
-            const sum = fb + ml + br;
-            const totalRow = sum || Number(d.monthly_revenue) || 0;
-            if (totalRow <= 0) return;
-            const platform = platformByAcc.get(d.account_id) || "Account";
-            if (sum > 0) {
-              if (fb > 0)
-                pushLine(
-                  `4Based ($${fbUsd.toFixed(2)} @ ${usdToEur.toFixed(4)})`,
-                  fb,
-                  pctFor("fourbased"),
-                );
-              if (ml > 0) pushLine("Maloum", ml, pctFor("maloum"));
-              if (br > 0) pushLine("Brezzels", br, pctFor("brezzels"));
-            } else {
-              const key =
-                platform.toLowerCase().includes("4based")
-                  ? "fourbased"
-                  : platform.toLowerCase().includes("maloum")
-                  ? "maloum"
-                  : platform.toLowerCase().includes("brezzels")
-                  ? "brezzels"
-                  : null;
-              const amt = key === "fourbased" ? +(totalRow * usdToEur).toFixed(2) : totalRow;
-              const label =
-                key === "fourbased"
-                  ? `${platform} ($${totalRow.toFixed(2)} @ ${usdToEur.toFixed(4)})`
-                  : platform;
-              pushLine(label, amt, key ? pctFor(key) : baseDefault);
-            }
-          });
+            if (fb > 0)
+              pushLine(
+                `4Based ($${fbUsd.toFixed(2)} @ ${usdToEur.toFixed(4)})`,
+                fb,
+                pctFor("fourbased"),
+              );
+            if (ml > 0) pushLine("Maloum", ml, pctFor("maloum"));
+            if (br > 0) pushLine("Brezzels", br, pctFor("brezzels"));
+          }
         }
 
         const commission_amount = +commission_total.toFixed(2);
