@@ -957,42 +957,33 @@ export default function ModelDashboardTab() {
   return (
     <div className="space-y-5">
       {/* ── Header ── */}
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3">
-        <div className="h-9 w-9 rounded-xl bg-accent/15 flex items-center justify-center gold-glow">
+      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-wrap items-center gap-3">
+        <div className="h-9 w-9 rounded-xl bg-accent/15 flex items-center justify-center gold-glow shrink-0">
           <FolderTree className="h-4.5 w-4.5 text-accent" />
         </div>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <h1 className="text-lg font-bold text-gold-gradient-shimmer tracking-wide">Model-Verwaltung</h1>
           <p className="text-xs text-muted-foreground">{models.length} Models registriert</p>
         </div>
-        <Button
-          onClick={runMigrateLogins}
-          size="sm"
-          variant="outline"
-          disabled={migratingLogins}
-          title="Erzeugt für alle bestehenden Model-Logins clean <slug>@shex.app Emails + neue Passwörter"
-          className="gap-1.5 border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
-        >
-          {migratingLogins ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Mail className="h-3.5 w-3.5" />}
-          Emails bereinigen
-        </Button>
-        <Button
-          onClick={() => setGroupsPanelOpen(true)}
-          size="sm"
-          variant="outline"
-          className="gap-1.5 border-accent/30 text-accent hover:bg-accent/10"
-        >
-          <Tag className="h-3.5 w-3.5" />
-          Gruppen
-        </Button>
-        <Button
-          onClick={() => setCreateDialogOpen(true)}
-          size="sm"
-          className="gap-1.5 bg-accent hover:bg-accent/90 text-accent-foreground gold-glow"
-        >
-          <Plus className="h-3.5 w-3.5" />
-          Model anlegen
-        </Button>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <Button
+            onClick={() => setGroupsPanelOpen(true)}
+            size="sm"
+            variant="outline"
+            className="gap-1.5 border-accent/30 text-accent hover:bg-accent/10 flex-1 sm:flex-none"
+          >
+            <Tag className="h-3.5 w-3.5" />
+            Gruppen
+          </Button>
+          <Button
+            onClick={() => setCreateDialogOpen(true)}
+            size="sm"
+            className="gap-1.5 bg-accent hover:bg-accent/90 text-accent-foreground gold-glow flex-1 sm:flex-none"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Model anlegen
+          </Button>
+        </div>
       </motion.div>
 
       {/* ── Search ── */}
