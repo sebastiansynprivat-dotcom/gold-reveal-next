@@ -1243,6 +1243,9 @@ export type Database = {
           bank_iban: string | null
           bank_name: string | null
           commission_override: number | null
+          commission_override_brezzels: number | null
+          commission_override_fourbased: number | null
+          commission_override_maloum: number | null
           contract_file_path: string | null
           created_at: string
           created_by: string | null
@@ -1290,6 +1293,9 @@ export type Database = {
           bank_iban?: string | null
           bank_name?: string | null
           commission_override?: number | null
+          commission_override_brezzels?: number | null
+          commission_override_fourbased?: number | null
+          commission_override_maloum?: number | null
           contract_file_path?: string | null
           created_at?: string
           created_by?: string | null
@@ -1337,6 +1343,9 @@ export type Database = {
           bank_iban?: string | null
           bank_name?: string | null
           commission_override?: number | null
+          commission_override_brezzels?: number | null
+          commission_override_fourbased?: number | null
+          commission_override_maloum?: number | null
           contract_file_path?: string | null
           created_at?: string
           created_by?: string | null
