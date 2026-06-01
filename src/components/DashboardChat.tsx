@@ -134,9 +134,10 @@ export default function DashboardChat({ externalOpen, onExternalOpenChange }: Da
       }
     } catch (e) {
       console.error(e);
-      toast.error("Verbindung zum KI-Support fehlgeschlagen.");
+      toast.error(lang === "en" ? "Connection to AI support failed." : "Verbindung zum KI-Support fehlgeschlagen.");
     } finally {
       setIsLoading(false);
+      (window as any).__lvBusy = false;
     }
   };
 
