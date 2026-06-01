@@ -121,7 +121,7 @@ export const dict: Dict = {
   "auth.help.telegram.step2.pre": { de: "2. Tippe", en: "2. Type" },
   "auth.help.telegram.step2.post": { de: "und schicke es ab.", en: "and send it." },
   "auth.help.telegram.step3.pre": { de: "3. Du bekommst eine Antwort mit", en: "3. You'll get a reply with" },
-  "auth.help.telegram.step3.post": { de: "— klicke einmal auf die Zahl neben „ID:". Damit ist sie automatisch kopiert.", en: "— tap the number next to \"ID:\" once. It's copied automatically." },
+  "auth.help.telegram.step3.post": { de: "— klicke einmal auf die Zahl neben \"ID:\". Damit ist sie automatisch kopiert.", en: "— tap the number next to \"ID:\" once. It's copied automatically." },
   "auth.help.telegram.step4": { de: "4. Füge sie einfach hier in das Feld ein.", en: "4. Paste it into the field here." },
   "auth.help.telegram.warning": { de: "⚠️ Nur Zahlen, kein @username – die ID brauchen wir für deine Benachrichtigungen.", en: "⚠️ Numbers only, no @username – we need the ID for your notifications." },
   "auth.btn.createAccount": { de: "Konto erstellen", en: "Create account" },
