@@ -12,13 +12,11 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { useUILanguage } from "@/hooks/useUILanguage";
 
 const STREAK_GOAL = 7;
 const DAILY_TARGET = 30;
 const STORAGE_KEY = "streak_data";
-
-const WHATSAPP_TEXT =
-  "Hey, ich habe die 7-Tage-Challenge geschafft! 🔥 Ich möchte gerne mein Account-Upgrade erhalten.";
 
 interface StreakData {
   dates: string[];
@@ -78,12 +76,14 @@ function fireConfetti() {
 }
 
 export default function StreakTracker({ dailyRevenue }: { dailyRevenue: number }) {
+  const { t, lang } = useUILanguage();
   const [streak, setStreak] = useState<StreakData>(loadStreak);
   const [showStreakDialog, setShowStreakDialog] = useState(false);
   const [demoMode, setDemoMode] = useState(false);
   const [copied, setCopied] = useState(false);
   const { playStreakSound } = useSoundEffects();
 
+  const whatsappText = t("streak.whatsappText");
   const today = getToday();
   const displayStreak = demoMode ? buildDemoStreak() : streak;
   const todayCompleted = displayStreak.dates.includes(today);
@@ -95,7 +95,7 @@ export default function StreakTracker({ dailyRevenue }: { dailyRevenue: number }
       const updated = { ...streak, dates: [...streak.dates, today], lastCheckedDate: today };
       setStreak(updated);
       saveStreak(updated);
-      toast.success("🔥 Tagesziel erreicht! Streak +1");
+      toast.success(t("streak.toastReached"));
       playStreakSound();
 
       const newConsecutive = getConsecutiveDays(updated.dates);
@@ -112,7 +112,6 @@ export default function StreakTracker({ dailyRevenue }: { dailyRevenue: number }
     }
   }, [demoMode]);
 
-  // Fire confetti when dialog opens
   useEffect(() => {
     if (showStreakDialog) {
       setTimeout(fireConfetti, 300);
@@ -124,18 +123,12 @@ export default function StreakTracker({ dailyRevenue }: { dailyRevenue: number }
     setShowStreakDialog(true);
   };
 
-  const copyText = async () => {
-    await navigator.clipboard.writeText(WHATSAPP_TEXT);
-    setCopied(true);
-    toast.success("Text kopiert!");
-    setTimeout(() => setCopied(false), 2000);
-  };
-
+  const dateLocale = lang === "en" ? "en-US" : "de-DE";
   const last7Days = Array.from({ length: STREAK_GOAL }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() - (STREAK_GOAL - 1 - i));
     const dateStr = d.toISOString().split("T")[0];
-    const dayLabel = d.toLocaleDateString("de-DE", { weekday: "short" }).slice(0, 2);
+    const dayLabel = d.toLocaleDateString(dateLocale, { weekday: "short" }).slice(0, 2);
     const completed = displayStreak.dates.includes(dateStr);
     const isToday = dateStr === today;
     return { dateStr, dayLabel, completed, isToday };
@@ -146,19 +139,19 @@ export default function StreakTracker({ dailyRevenue }: { dailyRevenue: number }
       <div className="flex items-center justify-between">
         <h2 className="text-sm lg:text-base font-semibold text-foreground flex items-center gap-2">
           <Flame className="h-4 w-4 text-accent" />
-          Account Upgrade – 7-Tage-Challenge
+          {t("streak.heading")}
         </h2>
         <div className="flex items-center gap-2">
           <button
             onClick={startDemo}
             className="text-[10px] text-muted-foreground hover:text-accent transition-colors flex items-center gap-1 opacity-50 hover:opacity-100"
-            title="Demo starten"
+            title={t("streak.demo")}
           >
             <Play className="h-3 w-3" />
-            Demo
+            {t("streak.demo")}
           </button>
           <span className="text-2xl font-bold text-gold-gradient">{consecutiveDays}</span>
-          <span className="text-xs text-muted-foreground">/ {STREAK_GOAL} Tage</span>
+          <span className="text-xs text-muted-foreground">/ {STREAK_GOAL} {t("streak.daysSuffix")}</span>
         </div>
       </div>
 
@@ -194,7 +187,7 @@ export default function StreakTracker({ dailyRevenue }: { dailyRevenue: number }
               ) : day.dayLabel}
             </div>
             <span className={`text-[10px] ${day.isToday ? "text-accent font-semibold" : "text-muted-foreground"}`}>
-              {day.isToday ? "Heute" : day.dayLabel}
+              {day.isToday ? t("streak.today") : day.dayLabel}
             </span>
           </motion.div>
         ))}
@@ -205,15 +198,15 @@ export default function StreakTracker({ dailyRevenue }: { dailyRevenue: number }
         {streakComplete ? (
           <span className="flex items-center gap-2 text-gold-gradient font-semibold">
             <Trophy className="h-4 w-4 text-accent" />
-            Account-Upgrade freigeschaltet! 🎉
+            {t("streak.unlocked")}
           </span>
         ) : todayCompleted ? (
           <span className="text-accent">
-            🔥 Tagesziel erreicht – weiter so, jeder Euro zählt! Noch {STREAK_GOAL - consecutiveDays} Tage bis zum Upgrade!
+            {t("streak.todayDone")} {t("streak.daysToUpgradePre")} {STREAK_GOAL - consecutiveDays} {t("streak.daysToUpgradeSuffix")}
           </span>
         ) : (
           <span className="text-muted-foreground">
-            Erreiche heute <strong className="text-foreground">{DAILY_TARGET}€</strong> Umsatz, um deine Streak fortzusetzen.
+            {t("streak.openTodayPre")} <strong className="text-foreground">{DAILY_TARGET}€</strong> {t("streak.openTodaySuffix")}
           </span>
         )}
       </div>
@@ -226,16 +219,16 @@ export default function StreakTracker({ dailyRevenue }: { dailyRevenue: number }
               <Trophy className="h-8 w-8 text-accent" />
             </div>
             <DialogTitle className="text-xl text-gold-gradient">
-              🎉 7-Tage-Challenge geschafft!
+              {t("streak.dialog.title")}
             </DialogTitle>
             <DialogDescription className="text-muted-foreground text-center text-sm pt-3 space-y-2" asChild>
               <div>
                 <p className="text-base font-medium text-foreground">
-                  Du hast <span className="text-accent font-bold">7 Tage in Folge</span> dein Tagesziel von <span className="text-accent font-bold">{DAILY_TARGET}€</span> erreicht! 🔥
+                  {t("streak.dialog.bodyPre")} <span className="text-accent font-bold">{t("streak.dialog.bodyMid")}</span> <span className="text-accent font-bold">{DAILY_TARGET}€</span> {t("streak.dialog.bodyEnd")}
                 </p>
-                <p className="text-accent font-semibold">Du bekommst jetzt einen besseren Account.</p>
+                <p className="text-accent font-semibold">{t("streak.dialog.upgrade")}</p>
                 <p className="text-muted-foreground pt-1">
-                  Sende diesen Text in deine WhatsApp-Gruppe:
+                  {t("streak.dialog.sendText")}
                 </p>
               </div>
             </DialogDescription>
@@ -243,19 +236,18 @@ export default function StreakTracker({ dailyRevenue }: { dailyRevenue: number }
 
           <div className="space-y-3 pt-2">
             <p className="text-xs text-muted-foreground text-center">
-              👇 Tippe auf die Nachricht – sie wird kopiert & du landest direkt in WhatsApp.
+              {t("streak.dialog.tapHint")}
             </p>
-            {/* Clickable text block - copies & opens WhatsApp */}
             <button
               className="w-full rounded-lg bg-secondary p-3 text-sm text-foreground text-left hover:bg-secondary/80 transition-colors cursor-pointer flex items-center gap-2"
               onClickCapture={async (e) => {
                 e.stopPropagation();
-                await navigator.clipboard.writeText(WHATSAPP_TEXT);
-                toast.success("Text kopiert!");
-                window.open(`https://wa.me/?text=${encodeURIComponent(WHATSAPP_TEXT)}`, "_blank");
+                await navigator.clipboard.writeText(whatsappText);
+                toast.success(t("streak.copied"));
+                window.open(`https://wa.me/?text=${encodeURIComponent(whatsappText)}`, "_blank");
               }}
             >
-              <p className="flex-1">{WHATSAPP_TEXT}</p>
+              <p className="flex-1">{whatsappText}</p>
               <Copy className="h-4 w-4 text-muted-foreground shrink-0" />
             </button>
           </div>

@@ -8,52 +8,43 @@ import { ClipboardCheck, Copy, Check, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import GoldenAudioPlayer from "@/components/GoldenAudioPlayer";
 import { useSoundEffects } from "@/hooks/useSoundEffects";
+import { useUILanguage } from "@/hooks/useUILanguage";
 
-const TASKS = [
-  { id: 1, label: "Hast du bis zu 6 MassDM's gemacht?", audioHint: "/audio/massdm-info.mp3", audioLabel: "Wieso ist das wichtig?", massDmPopup: true, massDmPopupLabel: "Muss ich 6 MassDMs machen?" },
-  { id: 2, label: "Deine alte MassDM gelöscht bevor eine neue gesendet wird?" },
-  { id: 3, label: "Feedback gegeben, wie der heutige Tag lief?", popupHint: true, popupLabel: "Wie mache ich das?" },
-  { id: 4, label: "Geschaut ob wir für dich gepostet haben? (Falls nicht, gib uns bitte eine Info in der Gruppe)" },
-  { id: 5, label: "Auf alle Nachrichten geantwortet die in deinem Account offen sind?", audioHint: "/audio/open-chats-info.mp3", audioLabel: "Wie weiß ich das alles beantwortet ist?" },
-  { id: 6, label: "Mindestens 10 Posts von anderen Models kommentiert?" },
-];
-
-const FEEDBACK_TEMPLATE = `Feedback zum heutigen Tag:
-
-Umsatz:
-
-MassDMs gesendet:
-
-Was lief gut?:
-
-Was lief schlecht?:
-
-Offene Fragen (optional):`;
+const TASK_DEFS = [
+  { id: 1, key: "checklist.task1", audioHint: "/audio/massdm-info.mp3", audioKey: "checklist.task1.audio", massDmPopup: true, massDmPopupKey: "checklist.task1.popup" },
+  { id: 2, key: "checklist.task2" },
+  { id: 3, key: "checklist.task3", popupHint: true, popupKey: "checklist.task3.popup" },
+  { id: 4, key: "checklist.task4" },
+  { id: 5, key: "checklist.task5", audioHint: "/audio/open-chats-info.mp3", audioKey: "checklist.task5.audio" },
+  { id: 6, key: "checklist.task6" },
+] as const;
 
 function FeedbackTemplate() {
   const [copied, setCopied] = useState(false);
+  const { t } = useUILanguage();
+  const template = t("checklist.feedback.template");
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(FEEDBACK_TEMPLATE);
+      await navigator.clipboard.writeText(template);
       setCopied(true);
-      toast.success("Vorlage kopiert! 📋");
+      toast.success(t("checklist.feedback.copied"));
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error("Kopieren fehlgeschlagen");
+      toast.error(t("checklist.feedback.copyFail"));
     }
   };
 
   return (
     <div className="space-y-3">
       <div className="rounded-lg bg-secondary/50 border border-border/40 p-3">
-        <pre className="text-xs text-foreground whitespace-pre-wrap font-sans leading-relaxed">{FEEDBACK_TEMPLATE}</pre>
+        <pre className="text-xs text-foreground whitespace-pre-wrap font-sans leading-relaxed">{template}</pre>
       </div>
       <button
         onClick={handleCopy}
         className="w-full h-10 rounded-lg bg-accent text-accent-foreground font-semibold text-xs transition-all hover:brightness-110 active:scale-[0.98] flex items-center justify-center gap-2"
       >
-        {copied ? <><Check className="h-4 w-4" /> Kopiert!</> : <><Copy className="h-4 w-4" /> Vorlage kopieren</>}
+        {copied ? <><Check className="h-4 w-4" /> {t("checklist.feedback.copied")}</> : <><Copy className="h-4 w-4" /> {t("checklist.feedback.copy")}</>}
       </button>
     </div>
   );
@@ -64,6 +55,7 @@ function getTodayKey() {
 }
 
 export default function DailyChecklist() {
+  const { t } = useUILanguage();
   const [completed, setCompleted] = useState<Set<number>>(() => {
     try {
       const saved = localStorage.getItem(getTodayKey());
@@ -98,8 +90,8 @@ export default function DailyChecklist() {
     setOpenAudioId((prev) => prev === id ? null : id);
   };
 
-  const progress = (completed.size / TASKS.length) * 100;
-  const allDone = completed.size === TASKS.length;
+  const progress = (completed.size / TASK_DEFS.length) * 100;
+  const allDone = completed.size === TASK_DEFS.length;
 
   const [isOpen, setIsOpen] = useState(true);
 
@@ -116,14 +108,14 @@ export default function DailyChecklist() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <ClipboardCheck className="h-4 w-4 text-accent" />
-              <h2 className="text-sm lg:text-base font-semibold text-foreground">Tägliche Aufgaben</h2>
+              <h2 className="text-sm lg:text-base font-semibold text-foreground">{t("checklist.title")}</h2>
             </div>
             <div className="flex items-center gap-2">
               {!isOpen && (
                 <Progress value={progress} className="h-1.5 w-16 [&>div]:bg-accent shimmer-bar" />
               )}
               <span className="text-xs text-muted-foreground">
-                {completed.size}/{TASKS.length} erledigt
+                {completed.size}/{TASK_DEFS.length} {t("checklist.completedSuffix")}
               </span>
               <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`} />
             </div>
@@ -135,7 +127,7 @@ export default function DailyChecklist() {
             <Progress value={progress} className="h-2 [&>div]:bg-accent shimmer-bar" />
 
             <div className="space-y-1">
-              {TASKS.map((task) => {
+              {TASK_DEFS.map((task) => {
                 const done = completed.has(task.id);
                 return (
                   <div key={task.id}>
@@ -148,7 +140,7 @@ export default function DailyChecklist() {
                         className="mt-0.5 border-accent/40 data-[state=checked]:bg-accent data-[state=checked]:border-accent"
                       />
                       <span className={`text-sm leading-snug transition-all ${done ? "line-through text-muted-foreground" : "text-foreground"}`}>
-                        {task.label}
+                        {t(task.key)}
                       </span>
                     </label>
                     {task.audioHint && (
@@ -157,7 +149,7 @@ export default function DailyChecklist() {
                           onClick={() => handleAudioToggle(task.id)}
                           className="text-xs text-accent/70 hover:text-accent transition-colors underline underline-offset-2"
                         >
-                          {task.audioLabel}
+                          {t((task as any).audioKey)}
                         </button>
                         <AnimatePresence>
                           {openAudioId === task.id && (
@@ -182,7 +174,7 @@ export default function DailyChecklist() {
                           onClick={() => setFeedbackPopupOpen(true)}
                           className="text-xs text-accent/70 hover:text-accent transition-colors underline underline-offset-2"
                         >
-                          {(task as any).popupLabel}
+                          {t((task as any).popupKey)}
                         </button>
                       </div>
                     )}
@@ -192,7 +184,7 @@ export default function DailyChecklist() {
                           onClick={() => setMassDmPopupOpen(true)}
                           className="text-xs text-accent/70 hover:text-accent transition-colors underline underline-offset-2"
                         >
-                          {(task as any).massDmPopupLabel}
+                          {t((task as any).massDmPopupKey)}
                         </button>
                       </div>
                     )}
@@ -207,7 +199,7 @@ export default function DailyChecklist() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
               >
-                🎉 Alle Aufgaben erledigt – weiter so!
+                {t("checklist.allDone")}
               </motion.p>
             )}
           </div>
@@ -218,9 +210,9 @@ export default function DailyChecklist() {
       <Dialog open={feedbackPopupOpen} onOpenChange={setFeedbackPopupOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Tägliches Feedback</DialogTitle>
+            <DialogTitle>{t("checklist.feedback.title")}</DialogTitle>
             <DialogDescription>
-              Bitte diese Vorlage einmal pro Tag aus und schick sie in deine WhatsApp-Gruppe.
+              {t("checklist.feedback.desc")}
             </DialogDescription>
           </DialogHeader>
           <FeedbackTemplate />
@@ -231,9 +223,9 @@ export default function DailyChecklist() {
       <Dialog open={massDmPopupOpen} onOpenChange={setMassDmPopupOpen}>
         <DialogContent className="max-w-sm">
           <DialogHeader>
-            <DialogTitle>Muss ich 6 MassDMs machen?</DialogTitle>
+            <DialogTitle>{t("checklist.massdm.title")}</DialogTitle>
             <DialogDescription>
-              Du solltest mindestens eine MassDM am Tag machen. Wenn du aber keine Käufer findest, mach bitte mehr. Das ist wichtig, weil es deine Chance erhöht, Käufer zu finden.
+              {t("checklist.massdm.desc")}
             </DialogDescription>
           </DialogHeader>
         </DialogContent>

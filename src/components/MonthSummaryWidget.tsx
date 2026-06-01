@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { endOfMonth, differenceInDays } from "date-fns";
 import { Target, CalendarClock, TrendingUp } from "lucide-react";
+import { useUILanguage } from "@/hooks/useUILanguage";
 
 interface MonthSummaryWidgetProps {
   monthlyRevenue: number;
@@ -11,6 +12,7 @@ interface MonthSummaryWidgetProps {
 }
 
 export default function MonthSummaryWidget({ monthlyRevenue, rate, tierName, tierEmoji }: MonthSummaryWidgetProps) {
+  const { t, lang } = useUILanguage();
   const today = new Date();
   const monthEnd = endOfMonth(today);
   const daysLeft = differenceInDays(monthEnd, today);
@@ -32,6 +34,7 @@ export default function MonthSummaryWidget({ monthlyRevenue, rate, tierName, tie
   const radius = 38;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - progressPercent / 100 * circumference;
+  const locale = lang === "en" ? "en-US" : "de-DE";
 
   return (
     <motion.div
@@ -41,10 +44,8 @@ export default function MonthSummaryWidget({ monthlyRevenue, rate, tierName, tie
       className="glass-card-subtle rounded-xl p-4 card-inner-glow">
       
       <div className="mb-3">
-        <p className="text-xs font-medium text-muted-foreground">Dein Monat auf einen Blick</p>
-        <p className="text-[10px] text-muted-foreground/70 mt-1 leading-relaxed">Diese Zahlen sind eine Vorausrechnung. Sie basiert auf deinem bisherigen Tagesdurchschnitt in diesem Monat. 
-
-        </p>
+        <p className="text-xs font-medium text-muted-foreground">{t("monthSummary.heading")}</p>
+        <p className="text-[10px] text-muted-foreground/70 mt-1 leading-relaxed">{t("monthSummary.disclaimer")}</p>
       </div>
       <div className="flex items-center gap-5">
         {/* Progress Ring */}
@@ -71,7 +72,7 @@ export default function MonthSummaryWidget({ monthlyRevenue, rate, tierName, tie
           </svg>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <span className="text-lg font-bold text-foreground">{progressPercent}%</span>
-            <span className="text-[9px] text-muted-foreground">des Monats</span>
+            <span className="text-[9px] text-muted-foreground">{t("monthSummary.ofMonth")}</span>
           </div>
         </div>
 
@@ -80,21 +81,21 @@ export default function MonthSummaryWidget({ monthlyRevenue, rate, tierName, tie
           <div className="flex items-center gap-2">
             <TrendingUp className="h-3.5 w-3.5 text-accent shrink-0" />
             <div>
-              <p className="text-[10px] text-muted-foreground">Voraussichtlicher Monatsumsatz</p>
-              <p className="text-sm font-bold text-foreground">{projected.toLocaleString("de-DE")}€</p>
+              <p className="text-[10px] text-muted-foreground">{t("monthSummary.projectedRevenue")}</p>
+              <p className="text-sm font-bold text-foreground">{projected.toLocaleString(locale)}€</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <Target className="h-3.5 w-3.5 text-accent shrink-0" />
             <div>
-              <p className="text-[10px] text-muted-foreground">Voraussichtlicher Verdienst</p>
-              <p className="text-sm font-bold text-gold-gradient">{projectedEarnings.toLocaleString("de-DE")}€</p>
+              <p className="text-[10px] text-muted-foreground">{t("monthSummary.projectedEarnings")}</p>
+              <p className="text-sm font-bold text-gold-gradient">{projectedEarnings.toLocaleString(locale)}€</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
             <CalendarClock className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
             <p className="text-[10px] text-muted-foreground">
-              Noch <span className="text-foreground font-semibold">{daysLeft} Tage</span> bis Monatsende
+              {t("monthSummary.daysLeftPre")} <span className="text-foreground font-semibold">{daysLeft} {t("monthSummary.daysLeftSuffix")}</span>
             </p>
           </div>
         </div>
