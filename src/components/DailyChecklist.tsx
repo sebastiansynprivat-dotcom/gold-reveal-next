@@ -10,14 +10,25 @@ import GoldenAudioPlayer from "@/components/GoldenAudioPlayer";
 import { useSoundEffects } from "@/hooks/useSoundEffects";
 import { useUILanguage } from "@/hooks/useUILanguage";
 
-const TASK_DEFS = [
+type TaskDef = {
+  id: number;
+  key: string;
+  audioHint?: string;
+  audioKey?: string;
+  popupHint?: boolean;
+  popupKey?: string;
+  massDmPopup?: boolean;
+  massDmPopupKey?: string;
+};
+
+const TASK_DEFS: TaskDef[] = [
   { id: 1, key: "checklist.task1", audioHint: "/audio/massdm-info.mp3", audioKey: "checklist.task1.audio", massDmPopup: true, massDmPopupKey: "checklist.task1.popup" },
   { id: 2, key: "checklist.task2" },
   { id: 3, key: "checklist.task3", popupHint: true, popupKey: "checklist.task3.popup" },
   { id: 4, key: "checklist.task4" },
   { id: 5, key: "checklist.task5", audioHint: "/audio/open-chats-info.mp3", audioKey: "checklist.task5.audio" },
   { id: 6, key: "checklist.task6" },
-] as const;
+];
 
 function FeedbackTemplate() {
   const [copied, setCopied] = useState(false);
