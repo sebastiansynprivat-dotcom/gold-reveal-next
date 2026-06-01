@@ -1368,29 +1368,31 @@ export default function Dashboard() {
                                       </div>
                                     </div>
                                   ))}
-                                  {allMsgs.length > 0 && req.status !== "rejected" && (
-                                    <div className="flex gap-1.5 pt-1">
-                                      <Textarea
-                                        placeholder="Antwort an Admin..."
-                                        value={draft}
-                                        onChange={(e) =>
-                                          setReplyDrafts((prev) => ({ ...prev, [req.id]: e.target.value }))
-                                        }
-                                        rows={1}
-                                        className="text-[11px] bg-secondary/30 border-border/40 resize-none min-h-[32px] py-1.5"
-                                      />
-                                      {draft.trim() && (
-                                        <Button
-                                          size="sm"
-                                          variant="outline"
-                                          className="h-8 px-2 text-[10px] shrink-0"
-                                          onClick={sendReply}
-                                        >
-                                          Senden
-                                        </Button>
-                                      )}
-                                    </div>
-                                  )}
+                                  <div className="flex gap-1.5 pt-1">
+                                    <Textarea
+                                      placeholder={
+                                        allMsgs.length === 0
+                                          ? "Feedback oder Frage an Admin..."
+                                          : "Antwort an Admin..."
+                                      }
+                                      value={draft}
+                                      onChange={(e) =>
+                                        setReplyDrafts((prev) => ({ ...prev, [req.id]: e.target.value }))
+                                      }
+                                      rows={1}
+                                      className="text-[11px] bg-secondary/30 border-border/40 resize-none min-h-[32px] py-1.5"
+                                    />
+                                    {draft.trim() && (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="h-8 px-2 text-[10px] shrink-0"
+                                        onClick={sendReply}
+                                      >
+                                        Senden
+                                      </Button>
+                                    )}
+                                  </div>
                                 </div>
                               );
                             })()}
