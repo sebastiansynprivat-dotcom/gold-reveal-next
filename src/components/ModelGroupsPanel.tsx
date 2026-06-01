@@ -491,7 +491,7 @@ export default function ModelGroupsPanel({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl bg-card border-accent/20 p-0 overflow-hidden">
+      <DialogContent className="max-w-4xl bg-card border-accent/20 p-0 overflow-hidden max-h-[90vh] flex flex-col">
         <DialogHeader className="px-6 pt-6 pb-3 border-b border-accent/10">
           <DialogTitle className="text-foreground flex items-center gap-2">
             {selected ? (
