@@ -6529,19 +6529,20 @@ export default function AdminDashboard() {
                                                 const link = req._localContentLink ?? "";
                                                 const { error } = await supabase
                                                   .from("model_requests")
-                                                  .update({ content_link: link || null } as any)
+                                                  .update({ content_link: link || null, status: "archived" } as any)
                                                   .eq("id", req.id);
                                                 if (error) {
                                                   toast.error("Fehler beim Speichern");
                                                   return;
                                                 }
-                                                toast.success("Content-Link gespeichert!");
+                                                toast.success("Content-Link gespeichert & Anfrage erledigt!");
                                                 setModelRequests((prev) =>
                                                   prev.map((r) =>
                                                     r.id === req.id
                                                       ? {
                                                           ...r,
                                                           content_link: link || null,
+                                                          status: "archived",
                                                           _localContentLink: undefined,
                                                         }
                                                       : r,
