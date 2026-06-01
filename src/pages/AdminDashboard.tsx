@@ -2326,6 +2326,23 @@ export default function AdminDashboard() {
     }
   };
 
+  const saveAdminLanguage = async (targetUserId: string, next: "de" | "en") => {
+    setSavingAdminLang(targetUserId);
+    try {
+      const { error } = await supabase
+        .from("profiles")
+        .update({ ui_language: next } as any)
+        .eq("user_id", targetUserId);
+      if (error) throw error;
+      setAdminLanguages((prev) => ({ ...prev, [targetUserId]: next }));
+      toast.success(next === "en" ? "Language set to English" : "Sprache auf Deutsch gesetzt");
+    } catch (err: any) {
+      toast.error(err.message || "Sprache konnte nicht gespeichert werden");
+    } finally {
+      setSavingAdminLang(null);
+    }
+  };
+
   const loadAdminNames = async () => {
     const { data } = await supabase.from("admin_profiles").select("user_id, display_name");
     if (data) {
