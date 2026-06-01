@@ -1198,7 +1198,7 @@ export default function AdminDashboard() {
 
   // Admin management state
   const [adminSectionOpen, setAdminSectionOpen] = useState(false);
-  const [adminList, setAdminList] = useState<{ user_id: string; email: string; has_totp: boolean; role: string; display_name?: string | null }[]>([]);
+  const [adminList, setAdminList] = useState<{ user_id: string; email: string; has_totp: boolean; role: string; display_name?: string | null; ui_language?: "de" | "en" }[]>([]);
   const [adminListLoading, setAdminListLoading] = useState(false);
   const [editingAdminName, setEditingAdminName] = useState<string | null>(null);
   const [editingAdminNameValue, setEditingAdminNameValue] = useState("");
@@ -2275,20 +2275,9 @@ export default function AdminDashboard() {
         }
         return next;
       });
-      // Load UI languages for admins from profiles
-      const ids = list.map((a: any) => a.user_id).filter(Boolean);
-      if (ids.length > 0) {
-        const { data: profs } = await supabase
-          .from("profiles")
-          .select("user_id, ui_language")
-          .in("user_id", ids);
-        const map: Record<string, "de" | "en"> = {};
-        for (const p of profs || []) {
-          const v = (p as any).ui_language;
-          map[(p as any).user_id] = v === "en" ? "en" : "de";
-        }
-        setAdminLanguages(map);
-      }
+      const languageMap: Record<string, "de" | "en"> = {};
+      for (const a of list) languageMap[a.user_id] = a.ui_language === "en" ? "en" : "de";
+      setAdminLanguages(languageMap);
     } catch (err: any) {
       toast.error(err.message || "Fehler beim Laden der Admins");
     } finally {
@@ -2331,10 +2320,10 @@ export default function AdminDashboard() {
     try {
       const { error } = await supabase
         .from("profiles")
-        .update({ ui_language: next } as any)
-        .eq("user_id", targetUserId);
+        .upsert({ user_id: targetUserId, group_name: "", ui_language: next } as any, { onConflict: "user_id" });
       if (error) throw error;
       setAdminLanguages((prev) => ({ ...prev, [targetUserId]: next }));
+      setAdminList((prev) => prev.map((a) => (a.user_id === targetUserId ? { ...a, ui_language: next } : a)));
       toast.success(next === "en" ? "Language set to English" : "Sprache auf Deutsch gesetzt");
     } catch (err: any) {
       toast.error(err.message || "Sprache konnte nicht gespeichert werden");
@@ -2375,7 +2364,9 @@ export default function AdminDashboard() {
         throw new Error(data.error);
       }
 
-      if (data?.created && data?.generated_password) {
+      if (data?.already_admin) {
+        toast.success("Dieser Benutzer ist bereits Admin.");
+      } else if (data?.created && data?.generated_password) {
         setNewAdminCredentials({ email: data.email, password: data.generated_password });
         toast.success("Neuer Admin erstellt! Zugangsdaten wurden generiert.");
       } else {
