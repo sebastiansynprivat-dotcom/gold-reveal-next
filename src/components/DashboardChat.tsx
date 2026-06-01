@@ -173,7 +173,7 @@ export default function DashboardChat({ externalOpen, onExternalOpenChange }: Da
       </div>
 
       {/* Messages */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[200px] max-h-[400px]">
+      <div ref={scrollRef} data-no-translate className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[200px] max-h-[400px]">
         {messages.length === 0 && (
           <div className="space-y-2">
             <p className="text-xs text-muted-foreground">Häufige Fragen:</p>
