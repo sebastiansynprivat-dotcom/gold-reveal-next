@@ -1024,7 +1024,7 @@ export default function AdminDashboard() {
   const [setupSearch, setSetupSearch] = useState("");
   const [setupPlatform, setSetupPlatform] = useState<"all" | "4Based" | "Maloum" | "Brezzels">("all");
   const [setupStatusFilter, setSetupStatusFilter] = useState<
-    "alle" | "botdm_missing" | "setup_missing" | "massdm_missing" | "bot_active" | "bot_inactive"
+    "alle" | "botdm_missing" | "setup_missing" | "welcome_missing" | "feedfolder_missing" | "feedbot_missing"
   >("alle");
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("heute");
   const timeFilterRef = useRef<TimeFilter>("heute");
