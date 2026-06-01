@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useLayoutEffect, useMemo, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cleanDisplayName } from "@/lib/utils";
+import { translateString } from "@/lib/translateText";
 import {
   Users,
   Send,
