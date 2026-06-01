@@ -234,6 +234,15 @@ export default function ModelGroupsPanel({
     setBillingLoading(true);
     setBillingOpen(true);
     try {
+      // 4Based revenue is reported in USD → convert to EUR for billing
+      let usdToEur = 0.92;
+      try {
+        const r = await fetch("https://api.frankfurter.app/latest?from=USD&to=EUR");
+        const j = await r.json();
+        if (j?.rates?.EUR) usdToEur = Number(j.rates.EUR);
+      } catch {
+        // keep fallback
+      }
       const items: LineItem[] = [];
       for (const m of groupModels) {
         // All accounts of this model
@@ -280,7 +289,8 @@ export default function ModelGroupsPanel({
             )
             .in("account_id", accountIds);
           (md || []).forEach((d: any) => {
-            const fb = Number(d.fourbased_revenue) || 0;
+            const fbUsd = Number(d.fourbased_revenue) || 0;
+            const fb = +(fbUsd * usdToEur).toFixed(2); // USD → EUR
             const ml = Number(d.maloum_revenue) || 0;
             const br = Number(d.brezzels_revenue) || 0;
             const sum = fb + ml + br;
@@ -288,7 +298,12 @@ export default function ModelGroupsPanel({
             if (totalRow <= 0) return;
             const platform = platformByAcc.get(d.account_id) || "Account";
             if (sum > 0) {
-              if (fb > 0) pushLine("4Based", fb, pctFor("fourbased"));
+              if (fb > 0)
+                pushLine(
+                  `4Based ($${fbUsd.toFixed(2)} @ ${usdToEur.toFixed(4)})`,
+                  fb,
+                  pctFor("fourbased"),
+                );
               if (ml > 0) pushLine("Maloum", ml, pctFor("maloum"));
               if (br > 0) pushLine("Brezzels", br, pctFor("brezzels"));
             } else {
@@ -300,7 +315,12 @@ export default function ModelGroupsPanel({
                   : platform.toLowerCase().includes("brezzels")
                   ? "brezzels"
                   : null;
-              pushLine(platform, totalRow, key ? pctFor(key) : baseDefault);
+              const amt = key === "fourbased" ? +(totalRow * usdToEur).toFixed(2) : totalRow;
+              const label =
+                key === "fourbased"
+                  ? `${platform} ($${totalRow.toFixed(2)} @ ${usdToEur.toFixed(4)})`
+                  : platform;
+              pushLine(label, amt, key ? pctFor(key) : baseDefault);
             }
           });
         }
