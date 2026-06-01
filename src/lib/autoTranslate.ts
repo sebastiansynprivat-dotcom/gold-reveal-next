@@ -100,13 +100,17 @@ function applyTranslation(german: string, english: string) {
   loadCache()[german] = english;
   saveCacheSoon();
   // Swap any text nodes we've seen with this original
-  for (const [node, orig] of textNodeRegistry.entries()) {
-    if (orig === german && node.isConnected && node.nodeValue !== english) {
-      try { node.nodeValue = english; } catch { }
+  const dead: Text[] = [];
+  recentTextNodes.forEach((node) => {
+    if (!node.isConnected) { dead.push(node); return; }
+    const orig = textNodeRegistry.get(node);
+    if (orig === german && node.nodeValue !== english) {
+      try { node.nodeValue = english; } catch { /* noop */ }
     }
-  }
+  });
+  dead.forEach((n) => recentTextNodes.delete(n));
   // Swap attributes
-  document.querySelectorAll<HTMLElement>(`[data-lt-orig~="${cssEscape(hashShort(german))}"]`).forEach((el) => {
+  document.querySelectorAll<HTMLElement>("[data-lt-orig]").forEach((el) => {
     for (const attr of ATTR_KEYS) {
       const stored = el.getAttribute(`data-lt-${attr}`);
       if (stored === german && el.getAttribute(attr) !== english) {
