@@ -48,9 +48,10 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    let systemPrompt = await getSystemPrompt();
-    const lang = uiLanguage === "en" ? "en" : "de";
+    const lang: "de" | "en" = uiLanguage === "en" ? "en" : "de";
+    let systemPrompt = await getSystemPrompt(lang);
     if (lang === "en") {
+      // Reinforce English replies even if the loaded prompt is German (e.g. EN column empty).
       systemPrompt += `\n\n---\nIMPORTANT: The user's UI language is English. Reply ONLY in clear, friendly English. Keep the same tone (casual "you", motivating, direct). Keep product names unchanged (SheX, Maloum, Brezzels, 4Based, Fanvue, Telegram, WhatsApp). If you must show the "no information" fallback, use: "Sorry, I don't have exact info on that right now. Please ask in your WhatsApp group — the team will help you immediately!"`;
     }
 
