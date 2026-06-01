@@ -7032,7 +7032,11 @@ export default function AdminDashboard() {
 
                     {/* Table Body */}
                     {(() => {
-                      const getDash = (accId: string) => setupDashboards.find((d: any) => d.account_id === accId);
+                      const getDash = (accId: string) => {
+                        const acc = accounts.find((a: any) => a.id === accId);
+                        if (!acc?.model_id) return undefined;
+                        return setupDashboards.find((d: any) => d.model_id === acc.model_id);
+                      };
 
                       const getField = (platform: string, type: "botdm" | "welcome" | "massdm") => {
                         if (type === "botdm")
@@ -7055,6 +7059,11 @@ export default function AdminDashboard() {
                       };
 
                       const toggleSetupField = async (accountId: string, field: string, currentVal: boolean) => {
+                        const acc = accounts.find((a: any) => a.id === accountId);
+                        if (!acc?.model_id) {
+                          toast.error("Account hat kein Model");
+                          return;
+                        }
                         const dash = getDash(accountId);
                         if (dash) {
                           await supabase
@@ -7064,7 +7073,7 @@ export default function AdminDashboard() {
                         } else {
                           await supabase
                             .from("model_dashboard")
-                            .insert({ account_id: accountId, [field]: !currentVal } as any);
+                            .insert({ model_id: acc.model_id, [field]: !currentVal } as any);
                         }
                         await loadSetupDashboards();
                       };
