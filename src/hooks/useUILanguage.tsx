@@ -138,7 +138,7 @@ export function useUILanguage() {
   const setLang = useCallback(async (next: Lang) => {
     lastManualLanguageChangeAt = Date.now();
     setLangState(next);
-    notifyLang(next);
+    notifyLang(next, true);
     if (user) {
       await supabase.from("profiles").update({ ui_language: next }).eq("user_id", user.id);
     }
