@@ -34,7 +34,7 @@ const ChatBreakdown = lazy(() => import("./pages/ChatBreakdown"));
 const CoachingBasics = lazy(() => import("./pages/CoachingBasics"));
 const SalesScripts = lazy(() => import("./pages/SalesScripts"));
 const Library = lazy(() => import("./pages/Library"));
-import FloatingLanguageToggle from "@/components/FloatingLanguageToggle";
+
 import AutoTranslator from "@/components/AutoTranslator";
 
 const RouteFallback = () => (
@@ -149,7 +149,6 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <FloatingLanguageToggle />
           <AutoTranslator />
           <Suspense fallback={<RouteFallback />}>
             <Routes>
