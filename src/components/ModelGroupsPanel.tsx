@@ -697,7 +697,7 @@ export default function ModelGroupsPanel({
                   })}
 
                 </div>
-              </ScrollArea>
+              </div>
             </div>
           ) : (
             // ── Group list ──
