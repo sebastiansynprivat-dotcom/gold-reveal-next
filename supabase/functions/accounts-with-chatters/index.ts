@@ -48,12 +48,18 @@ Deno.serve(async (req) => {
 
     const accountIds = (accounts ?? []).map((a: any) => a.id);
 
-    const { data: assignments, error: asgErr } = await supabase
-      .from("account_assignments")
-      .select("account_id, user_id")
-      .is("unassigned_at", null)
-      .in("account_id", accountIds.length ? accountIds : ["00000000-0000-0000-0000-000000000000"]);
-    if (asgErr) return json({ error: asgErr.message }, 500);
+    const BATCH = 100;
+    const assignments: { account_id: string; user_id: string }[] = [];
+    for (let i = 0; i < accountIds.length; i += BATCH) {
+      const batch = accountIds.slice(i, i + BATCH);
+      const { data, error: asgErr } = await supabase
+        .from("account_assignments")
+        .select("account_id, user_id")
+        .is("unassigned_at", null)
+        .in("account_id", batch);
+      if (asgErr) return json({ error: asgErr.message }, 500);
+      if (data) assignments.push(...(data as any));
+    }
 
     // Build account -> set of user_ids
     const accountUsers = new Map<string, Set<string>>();
