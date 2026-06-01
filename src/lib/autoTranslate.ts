@@ -10,7 +10,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
-const LS_KEY = "auto_translate_cache_v1";
+const LS_KEY = "auto_translate_cache_v2";
 const MAX_BATCH = 60;
 const DEBOUNCE_MS = 120;
 
@@ -265,9 +265,15 @@ async function flush() {
           // The AI sometimes double-escapes quotes (\" -> literal backslash + quote)
           // and occasionally wraps the whole string in extra straight quotes.
           // Strip these artifacts so the rendered UI stays clean.
-          e = e.replace(/\\"/g, '"').replace(/\\'/g, "'");
+          e = e.replace(/\\+"/g, '"').replace(/\\+'/g, "'");
           if (e.length >= 2 && e.startsWith('"') && e.endsWith('"') && !g.startsWith('"')) {
             e = e.slice(1, -1).trim();
+          }
+          // Strip CJK / other non-Latin scripts the model occasionally hallucinates
+          // when the source string contains none of those scripts.
+          const sourceHasCJK = /[\u3000-\u9fff\uac00-\ud7af\u3040-\u30ff]/.test(g);
+          if (!sourceHasCJK) {
+            e = e.replace(/[\u3000-\u9fff\uac00-\ud7af\u3040-\u30ff]+/g, "").replace(/\s{2,}/g, " ").trim();
           }
           if (e && e !== g) applyTranslation(g, e);
         }
