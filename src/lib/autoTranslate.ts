@@ -21,12 +21,12 @@ const SKIP_TAGS = new Set([
 
 const ATTR_KEYS = ["placeholder", "title", "aria-label", "alt"] as const;
 
-// Quick "looks German" heuristic to avoid translating already-English strings.
-const GERMAN_RE = /[äöüßÄÖÜ]/;
-const GERMAN_WORDS = /\b(der|die|das|und|oder|nicht|ist|sind|war|waren|wird|werden|wurde|wurden|kein|keine|hat|habe|haben|hatte|hatten|nur|auch|noch|schon|sehr|mehr|weniger|hier|dort|jetzt|heute|morgen|gestern|gut|schlecht|besser|mit|ohne|für|gegen|über|unter|vor|nach|seit|bei|bis|aus|zu|zum|zur|von|vom|am|im|an|auf|in|als|wie|wenn|dann|weil|denn|damit|aber|doch|jedoch|sondern|mein|meine|dein|deine|sein|seine|ihr|ihre|unser|euer|euch|dich|mich|sich|man|ich|du|er|sie|es|wir|ihr|sehen|kommen|gehen|machen|sagen|fragen|wissen|können|müssen|sollen|wollen|dürfen|mögen|abmelden|anmelden|speichern|bestätigen|zurück|weiter|abbrechen|schließen|öffnen|löschen|bearbeiten|hinzufügen|umsatz|verkauf|verkäufe|antwort|frage|aufgabe|tag|woche|monat|jahr|stunde|minute|geld|punkte|sterne|streak|fortschritt|hilfe|einstellungen|abonnieren|deine|dein|quite|coachings|customs)\b/i;
-
-function looksGerman(s: string): boolean {
-  return GERMAN_RE.test(s) || GERMAN_WORDS.test(s);
+// We deliberately do NOT pre-filter for "German-looking" strings. Many UI strings
+// are compound words (Monatsumsatz, Gesamtumsatz, Gruppenname) without umlauts or
+// common German function words and would otherwise be skipped. The AI gateway
+// reliably passes English strings through unchanged.
+function looksGerman(_s: string): boolean {
+  return true;
 }
 
 function isJunk(s: string): boolean {
