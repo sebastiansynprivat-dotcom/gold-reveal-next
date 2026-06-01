@@ -2251,7 +2251,10 @@ export default function AdminDashboard() {
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      if (!session) return;
+      if (!session) {
+        toast.error("Bitte neu als Admin einloggen und erneut versuchen.");
+        return;
+      }
 
       const { data, error } = await supabase.functions.invoke("admin-manage", {
         body: { action: "list" },
@@ -2365,7 +2368,7 @@ export default function AdminDashboard() {
       }
 
       if (data?.already_admin) {
-        toast.success("Dieser Benutzer ist bereits Admin.");
+        toast.success(data.role === "super_admin" ? "Dieser Benutzer ist bereits Super-Admin." : "Dieser Benutzer ist bereits Admin.");
       } else if (data?.created && data?.generated_password) {
         setNewAdminCredentials({ email: data.email, password: data.generated_password });
         toast.success("Neuer Admin erstellt! Zugangsdaten wurden generiert.");

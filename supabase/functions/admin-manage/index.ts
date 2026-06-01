@@ -79,6 +79,7 @@ Deno.serve(async (req) => {
     }
 
     const { action, email, target_user_id, new_role } = await req.json();
+    console.log("admin-manage: action", { action, email: email ? String(email).toLowerCase().trim() : undefined });
 
     if (action === "list") {
       const { data: roles } = await serviceClient
@@ -140,7 +141,8 @@ Deno.serve(async (req) => {
 
 
     if (action === "add") {
-      if (!email) {
+      const normalizedEmail = String(email || "").toLowerCase().trim();
+      if (!normalizedEmail) {
         return new Response(JSON.stringify({ error: "E-Mail erforderlich" }), {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -154,7 +156,7 @@ Deno.serve(async (req) => {
       while (!targetUser) {
         const { data: { users }, error: listErr } = await serviceClient.auth.admin.listUsers({ page, perPage });
         if (listErr || !users || users.length === 0) break;
-        targetUser = users.find(u => u.email?.toLowerCase() === email.toLowerCase()) || null;
+        targetUser = users.find(u => u.email?.toLowerCase() === normalizedEmail) || null;
         if (users.length < perPage) break;
         page++;
       }
@@ -165,7 +167,7 @@ Deno.serve(async (req) => {
       if (!targetUser) {
         generatedPassword = generatePassword(14);
         const { data: authData, error: authError } = await serviceClient.auth.admin.createUser({
-          email: email.toLowerCase().trim(),
+          email: normalizedEmail,
           password: generatedPassword,
           email_confirm: true,
         });
@@ -196,21 +198,28 @@ Deno.serve(async (req) => {
 
       if (existing) {
         return new Response(
-          JSON.stringify({ success: true, created, already_admin: true, role: existing.role }),
+          JSON.stringify({ success: true, created, already_admin: true, role: existing.role, email: normalizedEmail }),
           {
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           }
         );
       }
 
-      await serviceClient
+      const { error: roleInsertError } = await serviceClient
         .from("user_roles")
         .insert({ user_id: targetUser.id, role: "sub_admin" });
 
-      const response: Record<string, any> = { success: true, created };
+      if (roleInsertError) {
+        console.error("admin-manage: role insert failed", roleInsertError.message);
+        return new Response(JSON.stringify({ error: roleInsertError.message }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const response: Record<string, any> = { success: true, created, email: normalizedEmail };
       if (created) {
         response.generated_password = generatedPassword;
-        response.email = email.toLowerCase().trim();
       }
 
       return new Response(JSON.stringify(response), {
