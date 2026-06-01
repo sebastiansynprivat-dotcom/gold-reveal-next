@@ -360,6 +360,21 @@ export default function ModelDashboardTab() {
     const { data } = await supabase.from("model_groups").select("id, name, default_commission, referral_source").order("name");
     setGroupsList((data as any) || []);
   }, []);
+  const groupForModel = useCallback(
+    (m: { group_id?: string | null; referrer_tag?: string | null }) => {
+      if (m.group_id) {
+        const g = groupsList.find((x) => x.id === m.group_id);
+        if (g) return { name: g.name, auto: false };
+      }
+      const tag = (m.referrer_tag || "").trim().toLowerCase();
+      if (tag) {
+        const g = groupsList.find((x) => (x.referral_source || "").trim().toLowerCase() === tag);
+        if (g) return { name: g.name, auto: true };
+      }
+      return null;
+    },
+    [groupsList],
+  );
   useEffect(() => {
     loadGroups();
   }, [loadGroups]);
@@ -1075,6 +1090,18 @@ export default function ModelDashboardTab() {
                         <p className={cn("text-xs font-medium truncate", isSelected ? "text-accent" : "text-foreground")}>
                           {model.name || "Unbenannt"}
                         </p>
+                        {(() => {
+                          const g = groupForModel(model);
+                          if (!g) return null;
+                          return (
+                            <span
+                              className="text-[9px] px-1.5 py-[1px] rounded border border-accent/40 text-accent shrink-0 bg-accent/5"
+                              title={g.auto ? "Per Referrer-Tag automatisch erkannt" : "Gruppe zugeordnet"}
+                            >
+                              {g.name}{g.auto ? " · Auto" : ""}
+                            </span>
+                          );
+                        })()}
                       </div>
                       {model.address && <p className="text-[10px] text-muted-foreground truncate">{model.address}</p>}
                     </div>
@@ -1116,7 +1143,21 @@ export default function ModelDashboardTab() {
                 {selectedModel.name.charAt(0).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-foreground truncate">{selectedModel.name}</p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="text-sm font-semibold text-foreground truncate">{selectedModel.name}</p>
+                  {(() => {
+                    const g = groupForModel(selectedModel as any);
+                    if (!g) return null;
+                    return (
+                      <span
+                        className="text-[10px] px-2 py-[2px] rounded-full border border-accent/40 text-accent bg-accent/10"
+                        title={g.auto ? "Per Referrer-Tag automatisch erkannt" : "Gruppe zugeordnet"}
+                      >
+                        Gruppe: {g.name}{g.auto ? " · Auto" : ""}
+                      </span>
+                    );
+                  })()}
+                </div>
                 <p className="text-xs text-muted-foreground truncate">
                   {selectedModel.username && `@${selectedModel.username} · `}
                   {modelAccounts.length} Plattform-Account{modelAccounts.length !== 1 ? "s" : ""}
