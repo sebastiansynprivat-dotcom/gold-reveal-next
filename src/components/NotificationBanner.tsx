@@ -2,8 +2,10 @@ import { useState, useEffect } from "react";
 import { BellOff, Settings } from "lucide-react";
 import { isPushSubscribed, subscribeToPush } from "@/lib/pushNotifications";
 import { toast } from "sonner";
+import { useUILanguage } from "@/hooks/useUILanguage";
 
 export default function NotificationBanner() {
+  const { t } = useUILanguage();
   const [show, setShow] = useState(false);
   const [isDenied, setIsDenied] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -17,7 +19,6 @@ export default function NotificationBanner() {
     isPushSubscribed().then((subscribed) => {
       if (subscribed) return;
 
-      // No Notification API at all (older iOS) → show banner
       if (!("Notification" in window)) {
         setShow(true);
         setIsDenied(true);
@@ -29,7 +30,6 @@ export default function NotificationBanner() {
         setShow(true);
         setIsDenied(true);
       } else if (perm === "default") {
-        // Not yet asked or dismissed without answering
         setShow(true);
         setIsDenied(false);
       }
@@ -46,20 +46,19 @@ export default function NotificationBanner() {
     const ok = await subscribeToPush();
     setLoading(false);
     if (ok) {
-      toast.success("Benachrichtigungen aktiviert! 🔔");
+      toast.success(t("pushDialog.toastOk"));
       setShow(false);
     } else {
-      // After retry, permission is now denied
       setIsDenied(true);
-      toast.error("Bitte aktiviere Benachrichtigungen in deinen Geräte-Einstellungen.");
+      toast.error(t("pushBanner.toastDenied"));
     }
   };
 
   const instruction = isIOS
-    ? "Gehe zu Einstellungen → diese App → Mitteilungen → aktivieren."
+    ? t("pushBanner.iosInstruction")
     : isAndroid
-    ? "Halte das App-Icon gedrückt → App-Info → Benachrichtigungen → aktivieren."
-    : "Öffne die Browser-Einstellungen und erlaube Benachrichtigungen für diese Seite.";
+    ? t("pushBanner.androidInstruction")
+    : t("pushBanner.desktopInstruction");
 
   return (
     <div className="glass-card-subtle rounded-xl p-3 lg:p-4 border border-accent/20 bg-accent/5 hover:border-accent/40 transition-all">
@@ -69,10 +68,10 @@ export default function NotificationBanner() {
         </div>
         <div className="flex-1 min-w-0 space-y-2">
           <p className="text-xs font-semibold text-foreground">
-            Benachrichtigungen sind nicht aktiv
+            {t("pushBanner.title")}
           </p>
           <p className="text-[11px] text-muted-foreground leading-relaxed">
-            Du verpasst wichtige Updates wie Account-Upgrades und Team-Nachrichten.
+            {t("pushBanner.body")}
           </p>
 
           {isDenied ? (
@@ -86,7 +85,7 @@ export default function NotificationBanner() {
               disabled={loading}
               className="w-full h-9 rounded-lg bg-accent text-accent-foreground font-semibold text-xs transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2"
             >
-              {loading ? "Wird aktiviert..." : "Jetzt aktivieren 🔔"}
+              {loading ? t("pushBanner.ctaLoading") : t("pushBanner.cta")}
             </button>
           )}
         </div>

@@ -1,6 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { HelpCircle } from "lucide-react";
 import GoldenAudioPlayer from "@/components/GoldenAudioPlayer";
+import { useUILanguage } from "@/hooks/useUILanguage";
 
 const reviews = [
   { name: "Mark", date: "Jan 2026", title: "Sehr positiver Einstieg und tolles Arbeitsumfeld", text: "Ich wurde von Anfang an sehr herzlich aufgenommen und umfassend eingearbeitet. Der Einstieg verlief reibungslos. Das gesamte Team ist ausgesprochen freundlich, hilfsbereit und gut organisiert. Auch die Bezahlung verläuft zuverlässig und problemlos.", stars: 5 },
@@ -30,22 +31,23 @@ const reviews = [
 ];
 
 export default function BillingAudioDialog() {
+  const { t } = useUILanguage();
   return (
     <Dialog>
       <DialogTrigger asChild>
         <button className="flex items-center gap-1 text-[10px] text-accent hover:text-accent/80 transition-colors">
           <HelpCircle className="h-3 w-3" />
-          Warum dauert das so lange?
+          {t("billingAudio.trigger")}
         </button>
       </DialogTrigger>
       <DialogContent className="glass-card border-accent/20 sm:max-w-xl max-h-[85vh] overflow-y-auto shadow-[0_0_30px_-5px_hsl(var(--accent)/0.15),0_0_60px_-10px_hsl(var(--accent)/0.08)]">
         <DialogHeader className="pr-6">
-          <DialogTitle className="text-foreground text-sm">Warum dauert das so lange?</DialogTitle>
-          <DialogDescription className="text-muted-foreground text-xs">Hier erkläre ich es dir kurz per Sprachmemo.</DialogDescription>
+          <DialogTitle className="text-foreground text-sm">{t("billingAudio.title")}</DialogTitle>
+          <DialogDescription className="text-muted-foreground text-xs">{t("billingAudio.desc")}</DialogDescription>
         </DialogHeader>
         <GoldenAudioPlayer src="/audio/billing-info.mp3" />
         <div className="space-y-3 pt-2">
-          <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Was andere sagen</p>
+          <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">{t("billingAudio.othersSay")}</p>
           {reviews.map((review, i) => (
             <div key={i} className="glass-card-subtle rounded-lg p-3 space-y-2">
               <div className="flex items-center gap-2.5">
@@ -74,7 +76,7 @@ export default function BillingAudioDialog() {
             rel="noopener noreferrer"
             className="block w-full text-center py-2.5 rounded-lg bg-accent text-accent-foreground font-semibold text-sm hover:bg-accent/90 transition-colors"
           >
-            Mehr Bewertungen lesen
+            {t("billingAudio.moreReviews")}
           </a>
         </div>
       </DialogContent>
