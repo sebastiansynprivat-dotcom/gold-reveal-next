@@ -315,7 +315,7 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
             <div className="input-gold-shimmer rounded-lg">
               <Textarea
                 ref={descriptionRef}
-                placeholder={modelLanguage === "en" ? "Describe the request to the model here..." : "Beschreibe hier die Anfrage an das Model..."}
+                placeholder={lang === "en" ? "Describe the request to the model here..." : "Beschreibe hier die Anfrage an das Model..."}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 maxLength={2000}
