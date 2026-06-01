@@ -26,10 +26,12 @@ interface ModelRequestDialogProps {
   editData?: EditRequestData | null;
   onEditClear?: () => void;
   modelLanguage?: "de" | "en";
+  availablePlatforms?: string[];
 }
 
-const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage = "de" }: ModelRequestDialogProps) => {
+const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage = "de", availablePlatforms }: ModelRequestDialogProps) => {
   const { user } = useAuth();
+  const { lang } = useUILanguage();
   const [open, setOpen] = useState(false);
   const [modelName, setModelName] = useState("");
   const [customerName, setCustomerName] = useState("");
