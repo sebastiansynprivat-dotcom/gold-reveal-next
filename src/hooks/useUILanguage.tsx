@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { translate, type Lang } from "@/i18n/translations";
@@ -67,8 +67,6 @@ export function useUILanguage() {
     };
   }, []);
 
-  const localChangeRef = useRef(0);
-
   // Keep DB-driven language changes in sync. This is intentionally revalidated
   // because backend-side/admin-side profile updates are not guaranteed to reach
   // every already-open dashboard tab via realtime immediately.
@@ -131,7 +129,6 @@ export function useUILanguage() {
 
   const setLang = useCallback(async (next: Lang) => {
     lastManualLanguageChangeAt = Date.now();
-    localChangeRef.current = lastManualLanguageChangeAt;
     setLangState(next);
     notifyLang(next);
     if (user) {
