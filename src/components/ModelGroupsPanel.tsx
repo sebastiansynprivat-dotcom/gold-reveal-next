@@ -44,7 +44,11 @@ type ModelLite = {
   username: string | null;
   group_id: string | null;
   commission_override: number | null;
+  commission_override_fourbased: number | null;
+  commission_override_maloum: number | null;
+  commission_override_brezzels: number | null;
   referral_source: string;
+  referrer_tag: string;
   revenue_percentage: number;
   currency: string;
   crypto_address: string | null;
@@ -67,7 +71,7 @@ type LineItem = {
   commission_pct: number;
   commission_amount: number;
   net_payout: number;
-  breakdown: Array<{ name: string; gross: number }>;
+  breakdown: Array<{ name: string; gross: number; pct: number; commission: number }>;
   currency: string;
 };
 
@@ -113,7 +117,7 @@ export default function ModelGroupsPanel({
       supabase
         .from("models")
         .select(
-          "id, name, username, group_id, commission_override, referral_source, revenue_percentage, currency, crypto_address, payment_method, bank_name, bank_iban, bank_bic, bank_account_holder, provider_name_override, provider_address, provider_is_business, provider_vat_id"
+          "id, name, username, group_id, commission_override, commission_override_fourbased, commission_override_maloum, commission_override_brezzels, referral_source, referrer_tag, revenue_percentage, currency, crypto_address, payment_method, bank_name, bank_iban, bank_bic, bank_account_holder, provider_name_override, provider_address, provider_is_business, provider_vat_id"
         )
         .order("name"),
     ]);
@@ -126,10 +130,46 @@ export default function ModelGroupsPanel({
     if (open) load();
   }, [open]);
 
-  const groupModels = useMemo(
-    () => (selected ? models.filter((m) => m.group_id === selected.id) : []),
-    [models, selected]
-  );
+  // Auto-pull: include models explicitly in the group OR matching by referrer_tag (case-insensitive)
+  const groupModels = useMemo(() => {
+    if (!selected) return [];
+    const tag = (selected.referral_source || "").trim().toLowerCase();
+    return models.filter((m) => {
+      if (m.group_id === selected.id) return true;
+      if (tag && (m.referrer_tag || "").trim().toLowerCase() === tag) return true;
+      return false;
+    });
+  }, [models, selected]);
+
+  // One-click: persist auto-matched models into the group (sets group_id on all matches)
+  const syncByTag = async () => {
+    if (!selected) return;
+    const tag = (selected.referral_source || "").trim().toLowerCase();
+    if (!tag) {
+      toast.error("Setze zuerst einen Referrer-Tag in der Gruppe.");
+      return;
+    }
+    const matches = models.filter(
+      (m) => m.group_id !== selected.id && (m.referrer_tag || "").trim().toLowerCase() === tag,
+    );
+    if (matches.length === 0) {
+      toast.info("Keine weiteren passenden Models gefunden.");
+      return;
+    }
+    const ids = matches.map((m) => m.id);
+    const { error } = await supabase
+      .from("models")
+      .update({ group_id: selected.id } as any)
+      .in("id", ids);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success(`${matches.length} Models in Gruppe verschoben`);
+    await load();
+    onChanged?.();
+  };
+
 
   const resetForm = () => {
     setForm({ name: "", default_commission: 30, referral_source: "", color: "#D4AF37", notes: "" });
@@ -206,9 +246,32 @@ export default function ModelGroupsPanel({
           (accs || []).map((a: any) => [a.id, a.platform])
         );
 
+        // Per-platform commission resolver: platform override -> default override -> group default
+        const baseDefault =
+          m.commission_override != null && Number(m.commission_override) !== 0
+            ? Number(m.commission_override)
+            : Number(selected.default_commission);
+        const pctFor = (key: "fourbased" | "maloum" | "brezzels") => {
+          const v =
+            key === "fourbased"
+              ? m.commission_override_fourbased
+              : key === "maloum"
+              ? m.commission_override_maloum
+              : m.commission_override_brezzels;
+          return v != null && Number(v) !== 0 ? Number(v) : baseDefault;
+        };
+
         // Manually entered revenue (model_dashboard) — primary source
         let gross = 0;
-        const breakdown: Array<{ name: string; gross: number }> = [];
+        let commission_total = 0;
+        const breakdown: Array<{ name: string; gross: number; pct: number; commission: number }> = [];
+        const pushLine = (name: string, g: number, pct: number) => {
+          const c = +(g * (pct / 100)).toFixed(2);
+          breakdown.push({ name, gross: g, pct, commission: c });
+          gross += g;
+          commission_total += c;
+        };
+
         if (accountIds.length > 0) {
           const { data: md } = await supabase
             .from("model_dashboard")
@@ -221,39 +284,43 @@ export default function ModelGroupsPanel({
             const ml = Number(d.maloum_revenue) || 0;
             const br = Number(d.brezzels_revenue) || 0;
             const sum = fb + ml + br;
-            const total = sum || Number(d.monthly_revenue) || 0;
-            if (total <= 0) return;
+            const totalRow = sum || Number(d.monthly_revenue) || 0;
+            if (totalRow <= 0) return;
             const platform = platformByAcc.get(d.account_id) || "Account";
-            // If sum exists, push detailed; else push aggregated
             if (sum > 0) {
-              if (fb > 0) breakdown.push({ name: "4Based", gross: fb });
-              if (ml > 0) breakdown.push({ name: "Maloum", gross: ml });
-              if (br > 0) breakdown.push({ name: "Brezzels", gross: br });
+              if (fb > 0) pushLine("4Based", fb, pctFor("fourbased"));
+              if (ml > 0) pushLine("Maloum", ml, pctFor("maloum"));
+              if (br > 0) pushLine("Brezzels", br, pctFor("brezzels"));
             } else {
-              breakdown.push({ name: platform, gross: total });
+              const key =
+                platform.toLowerCase().includes("4based")
+                  ? "fourbased"
+                  : platform.toLowerCase().includes("maloum")
+                  ? "maloum"
+                  : platform.toLowerCase().includes("brezzels")
+                  ? "brezzels"
+                  : null;
+              pushLine(platform, totalRow, key ? pctFor(key) : baseDefault);
             }
-            gross += total;
           });
         }
 
-        const pct =
-          m.commission_override != null && m.commission_override !== 0
-            ? Number(m.commission_override)
-            : Number(selected.default_commission);
-        const commission_amount = +(gross * (pct / 100)).toFixed(2);
+        const commission_amount = +commission_total.toFixed(2);
         const net_payout = commission_amount;
+        const effectivePct = gross > 0 ? +(commission_amount / gross * 100).toFixed(2) : baseDefault;
         items.push({
           model_id: m.id,
           model_name: m.name,
-          referral_source: m.referral_source || selected.referral_source || "",
+          referral_source: m.referrer_tag || m.referral_source || selected.referral_source || "",
           gross: +gross.toFixed(2),
-          commission_pct: pct,
+          commission_pct: effectivePct,
           commission_amount,
           net_payout,
           breakdown,
           currency: m.currency || "EUR",
         });
       }
+
       setBillingItems(items);
 
       // Persist snapshot
@@ -334,7 +401,7 @@ export default function ModelGroupsPanel({
         ? item.breakdown.map((b) => ({
             name: b.name,
             gross: b.gross,
-            pct: item.commission_pct,
+            pct: b.pct,
           }))
         : [{ name: "Revenue Share", gross: item.gross, pct: item.commission_pct }];
 
@@ -454,11 +521,22 @@ export default function ModelGroupsPanel({
           ) : selected ? (
             // ── Group detail ──
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-wrap gap-2">
                 <p className="text-xs text-muted-foreground">
-                  {groupModels.length} Models · Referral: {selected.referral_source || "—"}
+                  {groupModels.length} Models · Tag:{" "}
+                  <span className="text-accent font-medium">{selected.referral_source || "—"}</span>
                 </p>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-accent/30"
+                    onClick={syncByTag}
+                    disabled={!selected.referral_source}
+                    title="Alle Models mit passendem Referrer-Tag dieser Gruppe zuweisen"
+                  >
+                    <Tag className="h-3 w-3 mr-1" /> Auto-Sync nach Tag
+                  </Button>
                   <Button
                     size="sm"
                     variant="outline"
@@ -495,6 +573,7 @@ export default function ModelGroupsPanel({
                 </div>
               </div>
 
+
               <div className="flex items-end gap-3 p-3 rounded-lg bg-muted/30 border border-accent/10">
                 <div className="flex-1">
                   <Label className="text-[10px] text-muted-foreground">Zeitraum von</Label>
@@ -524,54 +603,99 @@ export default function ModelGroupsPanel({
                     </p>
                   )}
                   {groupModels.map((m) => {
-                    const effective =
-                      m.commission_override != null && m.commission_override !== 0
-                        ? m.commission_override
-                        : selected.default_commission;
+                    const baseDefault =
+                      m.commission_override != null && Number(m.commission_override) !== 0
+                        ? Number(m.commission_override)
+                        : Number(selected.default_commission);
+                    const autoMatched = m.group_id !== selected.id;
+                    const platformInput = (
+                      key: "fourbased" | "maloum" | "brezzels",
+                      label: string,
+                      current: number | null,
+                      patchKey:
+                        | "commission_override_fourbased"
+                        | "commission_override_maloum"
+                        | "commission_override_brezzels",
+                    ) => (
+                      <div className="space-y-0.5">
+                        <Label className="text-[9px] text-muted-foreground">{label}</Label>
+                        <Input
+                          type="number"
+                          defaultValue={current ?? ""}
+                          onBlur={(e) => {
+                            const v = e.target.value === "" ? null : Number(e.target.value);
+                            if (v !== current) updateModelField(m.id, { [patchKey]: v } as any);
+                          }}
+                          className="h-7 text-xs"
+                          placeholder={String(baseDefault)}
+                        />
+                      </div>
+                    );
                     return (
                       <div
                         key={m.id}
-                        className="grid grid-cols-12 gap-2 items-center p-3 rounded-lg bg-card border border-accent/10 hover:border-accent/30 transition"
+                        className="p-3 rounded-lg bg-card border border-accent/10 hover:border-accent/30 transition space-y-2"
                       >
-                        <div className="col-span-4">
-                          <p className="text-sm font-medium text-foreground">{m.name}</p>
-                          <p className="text-[10px] text-muted-foreground">@{m.username || "—"}</p>
-                        </div>
-                        <div className="col-span-4">
-                          <Label className="text-[10px] text-muted-foreground">Referral</Label>
-                          <Input
-                            defaultValue={m.referral_source}
-                            onBlur={(e) =>
-                              e.target.value !== m.referral_source &&
-                              updateModelField(m.id, { referral_source: e.target.value })
-                            }
-                            className="h-7 text-xs"
-                            placeholder={selected.referral_source || "—"}
-                          />
-                        </div>
-                        <div className="col-span-3">
-                          <Label className="text-[10px] text-muted-foreground">
-                            Override (sonst {selected.default_commission}%)
-                          </Label>
-                          <Input
-                            type="number"
-                            defaultValue={m.commission_override ?? ""}
-                            onBlur={(e) => {
-                              const v = e.target.value === "" ? null : Number(e.target.value);
-                              if (v !== m.commission_override) updateModelField(m.id, { commission_override: v });
-                            }}
-                            className="h-7 text-xs"
-                            placeholder={String(selected.default_commission)}
-                          />
-                        </div>
-                        <div className="col-span-1 text-right">
-                          <Badge variant="outline" className="border-accent/40 text-accent text-[10px]">
-                            {effective}%
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-foreground truncate">{m.name}</p>
+                              <p className="text-[10px] text-muted-foreground truncate">
+                                @{m.username || "—"} · Tag: {m.referrer_tag || "—"}
+                              </p>
+                            </div>
+                            {autoMatched && (
+                              <Badge
+                                variant="outline"
+                                className="border-accent/40 text-accent text-[9px] shrink-0"
+                                title="Per Referrer-Tag automatisch erkannt – noch nicht fest zugeordnet"
+                              >
+                                Auto
+                              </Badge>
+                            )}
+                          </div>
+                          <Badge variant="outline" className="border-accent/40 text-accent text-[10px] shrink-0">
+                            Default {baseDefault}%
                           </Badge>
+                        </div>
+                        <div className="grid grid-cols-4 gap-2">
+                          <div className="space-y-0.5">
+                            <Label className="text-[9px] text-muted-foreground">Default Override</Label>
+                            <Input
+                              type="number"
+                              defaultValue={m.commission_override ?? ""}
+                              onBlur={(e) => {
+                                const v = e.target.value === "" ? null : Number(e.target.value);
+                                if (v !== m.commission_override)
+                                  updateModelField(m.id, { commission_override: v });
+                              }}
+                              className="h-7 text-xs"
+                              placeholder={String(selected.default_commission)}
+                            />
+                          </div>
+                          {platformInput(
+                            "fourbased",
+                            "4Based %",
+                            m.commission_override_fourbased,
+                            "commission_override_fourbased",
+                          )}
+                          {platformInput(
+                            "maloum",
+                            "Maloum %",
+                            m.commission_override_maloum,
+                            "commission_override_maloum",
+                          )}
+                          {platformInput(
+                            "brezzels",
+                            "Brezzels %",
+                            m.commission_override_brezzels,
+                            "commission_override_brezzels",
+                          )}
                         </div>
                       </div>
                     );
                   })}
+
                 </div>
               </ScrollArea>
             </div>
@@ -597,7 +721,12 @@ export default function ModelGroupsPanel({
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {groups.map((g) => {
-                    const count = models.filter((m) => m.group_id === g.id).length;
+                    const tag = (g.referral_source || "").trim().toLowerCase();
+                    const count = models.filter(
+                      (m) =>
+                        m.group_id === g.id ||
+                        (tag && (m.referrer_tag || "").trim().toLowerCase() === tag),
+                    ).length;
                     return (
                       <motion.div
                         key={g.id}
@@ -610,7 +739,7 @@ export default function ModelGroupsPanel({
                           <div>
                             <p className="font-semibold text-foreground">{g.name}</p>
                             <p className="text-[11px] text-muted-foreground">
-                              {g.referral_source || "—"} · {count} Models
+                              Tag: {g.referral_source || "—"} · {count} Models
                             </p>
                           </div>
                           <Badge variant="outline" className="border-accent/30 text-accent">
@@ -645,12 +774,15 @@ export default function ModelGroupsPanel({
                 />
               </div>
               <div>
-                <Label className="text-xs">Referral-Quelle</Label>
+                <Label className="text-xs">Referrer-Tag</Label>
                 <Input
                   value={form.referral_source}
                   onChange={(e) => setForm((p) => ({ ...p, referral_source: e.target.value }))}
-                  placeholder="z. B. Partner XY / Telegram-Pool"
+                  placeholder="z. B. Opus – Models mit diesem Tag werden automatisch zugeordnet"
                 />
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  Alle Models, deren Referrer-Tag (case-insensitive) übereinstimmt, erscheinen automatisch in dieser Gruppe.
+                </p>
               </div>
               <div>
                 <div className="flex justify-between items-center mb-2">
