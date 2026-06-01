@@ -1019,6 +1019,7 @@ export default function AdminDashboard() {
   const [botPlatformFilter, setBotPlatformFilter] = useState<string>("alle");
   const [botSearch, setBotSearch] = useState("");
   const [setupDashboards, setSetupDashboards] = useState<any[]>([]);
+  const [platformsOpen, setPlatformsOpen] = useState(false);
   const [setupDashboardsLoaded, setSetupDashboardsLoaded] = useState(false);
   const [setupSearch, setSetupSearch] = useState("");
   const [setupPlatform, setSetupPlatform] = useState<"all" | "4Based" | "Maloum" | "Brezzels">("all");
