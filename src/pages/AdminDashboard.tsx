@@ -7024,32 +7024,53 @@ export default function AdminDashboard() {
                         <div className="divide-y divide-border/30">
                           {filteredSetupAccounts.map((acc, i) => {
                             const dash = getDash(acc.id);
-                            const botdmField = getField(acc.platform, "botdm");
-                            const welcomeField = getField(acc.platform, "welcome");
-                            const massdmField = getField(acc.platform, "massdm");
-                            const botdmVal = !!(dash as any)?.[botdmField];
-                            const welcomeVal = !!(dash as any)?.[welcomeField];
-                            const massdmVal = !!(dash as any)?.[massdmField];
-                            const entry = botMessages[acc.id] || {
-                              message: "",
-                              followUp: "",
-                              isActive: false,
-                              saving: false,
-                            };
-                            const saved = savedBotState[acc.id];
-                            const hasChanges =
-                              !saved ||
-                              entry.message !== saved.message ||
-                              entry.followUp !== saved.followUp ||
-                              entry.isActive !== saved.isActive;
+                            const s = computeStates(acc);
                             const isExpanded = expandedBot === acc.id;
+
+                            const CellCheck = ({
+                              done,
+                              auto,
+                              onToggle,
+                              disabled,
+                            }: {
+                              done: boolean;
+                              auto?: boolean;
+                              onToggle?: () => void;
+                              disabled?: boolean;
+                            }) => (
+                              <div
+                                className="flex justify-center py-2"
+                                onClick={(e) => e.stopPropagation()}
+                                title={auto ? "Automatisch erkannt" : undefined}
+                              >
+                                <button
+                                  onClick={() => !disabled && onToggle?.()}
+                                  disabled={disabled}
+                                  className={cn(
+                                    "h-5 w-5 rounded border-2 flex items-center justify-center transition-all duration-200",
+                                    disabled && "opacity-30 cursor-not-allowed",
+                                    done
+                                      ? auto
+                                        ? "border-emerald-400 bg-emerald-400/20"
+                                        : "border-accent bg-accent/20"
+                                      : "border-muted-foreground/30 bg-transparent hover:border-accent/50",
+                                  )}
+                                >
+                                  {done && (
+                                    <CheckCircle2
+                                      className={cn("h-3 w-3", auto ? "text-emerald-400" : "text-accent")}
+                                    />
+                                  )}
+                                </button>
+                              </div>
+                            );
 
                             return (
                               <div key={acc.id}>
                                 {/* Row */}
                                 <div
                                   className={cn(
-                                    "grid grid-cols-[1fr_72px_44px_44px_44px_44px] gap-0 items-center transition-colors cursor-pointer hover:bg-accent/5",
+                                    "grid grid-cols-[1fr_72px_38px_38px_38px_38px_38px] gap-0 items-center transition-colors cursor-pointer hover:bg-accent/5",
                                     i % 2 === 0 ? "bg-card/40" : "bg-card/20",
                                     isExpanded && "bg-accent/5",
                                   )}
@@ -7084,67 +7105,36 @@ export default function AdminDashboard() {
                                       {acc.platform}
                                     </span>
                                   </div>
-                                  {/* Bot DM checkbox — only Maloum */}
-                                  {acc.platform === "Maloum" && (
-                                    <div className="flex justify-center py-2" onClick={(e) => e.stopPropagation()}>
-                                      <button
-                                        onClick={() => toggleSetupField(acc.id, botdmField, botdmVal)}
-                                        className={cn(
-                                          "h-5 w-5 rounded border-2 flex items-center justify-center transition-all duration-200",
-                                          botdmVal
-                                            ? "border-accent bg-accent/20"
-                                            : "border-muted-foreground/30 bg-transparent hover:border-accent/50",
-                                        )}
-                                      >
-                                        {botdmVal && <CheckCircle2 className="h-3 w-3 text-accent" />}
-                                      </button>
-                                    </div>
-                                  )}
-                                  {acc.platform !== "Maloum" && <div />}
-                                  {/* Setup checkbox — all platforms */}
-                                  <div className="flex justify-center py-2" onClick={(e) => e.stopPropagation()}>
-                                    <button
-                                      onClick={() => toggleSetupField(acc.id, welcomeField, welcomeVal)}
-                                      className={cn(
-                                        "h-5 w-5 rounded border-2 flex items-center justify-center transition-all duration-200",
-                                        welcomeVal
-                                          ? "border-accent bg-accent/20"
-                                          : "border-muted-foreground/30 bg-transparent hover:border-accent/50",
-                                      )}
-                                    >
-                                      {welcomeVal && <CheckCircle2 className="h-3 w-3 text-accent" />}
-                                    </button>
-                                  </div>
-                                  {/* MassDM checkbox — all platforms */}
-                                  <div className="flex justify-center py-2" onClick={(e) => e.stopPropagation()}>
-                                    <button
-                                      onClick={() => toggleSetupField(acc.id, massdmField, massdmVal)}
-                                      className={cn(
-                                        "h-5 w-5 rounded border-2 flex items-center justify-center transition-all duration-200",
-                                        massdmVal
-                                          ? "border-accent bg-accent/20"
-                                          : "border-muted-foreground/30 bg-transparent hover:border-accent/50",
-                                      )}
-                                    >
-                                      {massdmVal && <CheckCircle2 className="h-3 w-3 text-accent" />}
-                                    </button>
-                                  </div>
-                                  {/* Active indicator — only Maloum */}
-                                  {acc.platform === "Maloum" && (
+                                  {/* Bot DM — only Maloum (Brezzels & 4Based haben keinen Bot) */}
+                                  {s.hasBot ? (
+                                    <CellCheck
+                                      done={s.botdmDone}
+                                      onToggle={() => toggleSetupField(acc.id, s.botdmF, s.botdmDone)}
+                                    />
+                                  ) : (
                                     <div className="flex justify-center py-2">
-                                      <div
-                                        className={cn(
-                                          "h-5 w-5 rounded-full border-2 flex items-center justify-center",
-                                          entry.isActive
-                                            ? "border-accent bg-accent/20"
-                                            : "border-muted-foreground/30 bg-transparent",
-                                        )}
-                                      >
-                                        {entry.isActive && <span className="h-2 w-2 rounded-full bg-accent" />}
-                                      </div>
+                                      <span className="text-[10px] text-muted-foreground/40">—</span>
                                     </div>
                                   )}
-                                  {acc.platform !== "Maloum" && <div />}
+                                  {/* Account Setup */}
+                                  <CellCheck
+                                    done={s.accountSetupDone}
+                                    onToggle={() => toggleSetupField(acc.id, s.welcomeF, s.accountSetupDone)}
+                                  />
+                                  {/* Welcome-Nachricht (auto-derived from Mass DM) */}
+                                  <CellCheck
+                                    done={s.welcomeDone}
+                                    auto={s.welcomeAuto}
+                                    onToggle={() => toggleSetupField(acc.id, s.massdmF, !!(dash as any)?.[s.massdmF])}
+                                  />
+                                  {/* Feed Posting Folder (derived) */}
+                                  <CellCheck done={s.feedFolderDone} auto={s.feedFolderDone} disabled />
+                                  {/* Feed Bot Post (derived from acc.post) */}
+                                  <CellCheck
+                                    done={s.feedBotDone}
+                                    auto={s.feedBotDone}
+                                    onToggle={() => updateAccountField(acc.id, { post: !acc.post })}
+                                  />
                                 </div>
 
                                 {/* Expanded: Bot Message + Follow-Up editing */}
