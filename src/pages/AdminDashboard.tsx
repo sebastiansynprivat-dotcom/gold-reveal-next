@@ -3724,6 +3724,28 @@ export default function AdminDashboard() {
             </div>
           </button>
           <div className="flex-1" />
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                if ("caches" in window) {
+                  const names = await caches.keys();
+                  await Promise.all(names.map((n) => caches.delete(n)));
+                }
+                if ("serviceWorker" in navigator) {
+                  const regs = await navigator.serviceWorker.getRegistrations();
+                  await Promise.all(regs.map((r) => r.unregister()));
+                }
+              } catch (e) {
+                console.error("Refresh failed:", e);
+              }
+              window.location.reload();
+            }}
+            aria-label="App aktualisieren"
+            className="shrink-0 h-9 w-9 flex items-center justify-center rounded-xl text-accent border border-accent/20 bg-accent/5 hover:bg-accent/15 hover:border-accent/40 transition-all shadow-[inset_0_1px_0_hsl(var(--accent)/0.15)]"
+          >
+            <RefreshCw className="h-4 w-4" />
+          </button>
           {isSuperAdmin && (
             <Button
               type="button"

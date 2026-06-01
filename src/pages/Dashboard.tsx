@@ -24,6 +24,7 @@ import {
   Eye,
   EyeOff,
   Check,
+  RefreshCw,
 } from "lucide-react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import {
@@ -693,7 +694,7 @@ export default function Dashboard() {
 
           {/* Mobile: stacked layout */}
           <div className="flex sm:hidden flex-col gap-3">
-            {/* Row 1: Logo + Title + Badge */}
+            {/* Row 1: Logo + Title + Badge + Refresh */}
             <div className="flex items-center gap-2">
               <img src={logo} alt="Logo" className="h-8 w-8 rounded-full shrink-0" />
               <div className="flex-1 min-w-0">
@@ -705,6 +706,29 @@ export default function Dashboard() {
                 className="hidden"
                 aria-hidden
               />
+
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    if ("caches" in window) {
+                      const names = await caches.keys();
+                      await Promise.all(names.map((n) => caches.delete(n)));
+                    }
+                    if ("serviceWorker" in navigator) {
+                      const regs = await navigator.serviceWorker.getRegistrations();
+                      await Promise.all(regs.map((r) => r.unregister()));
+                    }
+                  } catch (e) {
+                    console.error("Refresh failed:", e);
+                  }
+                  window.location.reload();
+                }}
+                aria-label="App aktualisieren"
+                className="shrink-0 h-8 w-8 flex items-center justify-center rounded-lg text-accent border border-accent/20 bg-accent/5 hover:bg-accent/15 hover:border-accent/40 transition-all"
+              >
+                <RefreshCw className="h-4 w-4" />
+              </button>
 
               <Badge
                 className={`shrink-0 text-[10px] ${isTopTier ? "bg-accent text-accent-foreground gold-glow" : "bg-secondary text-secondary-foreground"}`}
