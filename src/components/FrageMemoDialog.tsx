@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import GoldenAudioPlayer from "@/components/GoldenAudioPlayer";
+import { useUILanguage } from "@/hooks/useUILanguage";
 
 interface FrageMemoDialogProps {
   open: boolean;
@@ -7,6 +8,7 @@ interface FrageMemoDialogProps {
 }
 
 export default function FrageMemoDialog({ open, onOpenChange }: FrageMemoDialogProps) {
+  const { t } = useUILanguage();
   const [key, setKey] = useState(0);
 
   useEffect(() => {
@@ -36,7 +38,7 @@ export default function FrageMemoDialog({ open, onOpenChange }: FrageMemoDialogP
 
               {/* Hint text */}
               <p className="text-[11px] text-muted-foreground text-center leading-relaxed">
-                Tippe auf den Chat-Button unten rechts
+                {t("frage.hint")}
               </p>
             </div>
 

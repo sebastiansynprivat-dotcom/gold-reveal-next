@@ -7,6 +7,7 @@ import { Slider } from "@/components/ui/slider";
 import GoldParticles from "@/components/GoldParticles";
 import AnimatedNumber from "@/components/AnimatedNumber";
 import logo from "@/assets/logo.png";
+import { useUILanguage } from "@/hooks/useUILanguage";
 
 const FIRST_NAMES = [
   "Sebastian","Maximilian","Alexander","Lukas","Jonas","Leon","Finn","Noah","Elias","Ben",
@@ -145,6 +146,7 @@ function getDaysInMonth() {
 
 export default function Leaderboard() {
   const navigate = useNavigate();
+  const { t } = useUILanguage();
   const daysInMonth = getDaysInMonth();
   const [selectedDay, setSelectedDay] = useState(new Date().getDate());
 
@@ -175,12 +177,12 @@ export default function Leaderboard() {
           </Button>
           <img src={logo} alt="Logo" className="h-8 w-8 rounded-full" />
           <div>
-            <h1 className="text-base font-bold text-foreground">Bestenliste</h1>
-            <p className="text-[10px] text-muted-foreground">Top-Chatter nach Monatsumsatz</p>
+            <h1 className="text-base font-bold text-foreground">{t("leaderboard.headerTitle")}</h1>
+            <p className="text-[10px] text-muted-foreground">{t("leaderboard.subtitle")}</p>
           </div>
           <div className="ml-auto flex items-center gap-1.5">
             <Trophy className="h-4 w-4 text-accent" />
-            <span className="text-xs font-semibold text-accent">Top 100</span>
+            <span className="text-xs font-semibold text-accent">{t("leaderboard.top100")}</span>
           </div>
         </div>
       </header>
@@ -191,10 +193,10 @@ export default function Leaderboard() {
           <div className="flex items-center justify-between mb-2.5">
             <div className="flex items-center gap-2">
               <Calendar className="h-3.5 w-3.5 text-accent" />
-              <span className="text-[11px] text-muted-foreground">Monatstag</span>
+              <span className="text-[11px] text-muted-foreground">{t("leaderboard.dayOfMonth")}</span>
             </div>
             <span className="text-sm font-bold text-gold-gradient tabular-nums">
-              Tag {selectedDay} / {daysInMonth}
+              {t("leaderboard.dayLabel")} {selectedDay} / {daysInMonth}
             </span>
           </div>
           <Slider

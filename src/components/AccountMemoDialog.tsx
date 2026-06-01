@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import GoldenAudioPlayer from "@/components/GoldenAudioPlayer";
+import { useUILanguage } from "@/hooks/useUILanguage";
 
 interface AccountMemoDialogProps {
   open: boolean;
@@ -9,6 +10,7 @@ interface AccountMemoDialogProps {
 
 export default function AccountMemoDialog({ open, onOpenChange }: AccountMemoDialogProps) {
   const [key, setKey] = useState(0);
+  const { t } = useUILanguage();
 
   useEffect(() => {
     if (open) setKey((k) => k + 1);
@@ -21,9 +23,9 @@ export default function AccountMemoDialog({ open, onOpenChange }: AccountMemoDia
         <div className="px-5 pt-5 pb-5">
           <DialogHeader className="space-y-2 mb-4">
             <DialogTitle className="text-center text-base font-bold text-gold-gradient">
-              Sprachmemo
+              {t("accountMemo.title")}
             </DialogTitle>
-            <DialogDescription className="sr-only">Audio-Nachricht abspielen</DialogDescription>
+            <DialogDescription className="sr-only">{t("accountMemo.title")}</DialogDescription>
           </DialogHeader>
           <GoldenAudioPlayer key={key} src="/audio/account-memo.mp3" autoPlay />
         </div>

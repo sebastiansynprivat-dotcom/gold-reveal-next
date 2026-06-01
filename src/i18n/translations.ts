@@ -189,7 +189,76 @@ export const dict: Dict = {
   "auth.error.invalidEmail": { de: "Bitte gib eine gültige E-Mail-Adresse ein.", en: "Please enter a valid email address." },
   "auth.error.rateLimit": { de: "Zu viele Versuche. Bitte warte einen Moment und versuche es erneut.", en: "Too many attempts. Please wait a moment and try again." },
   "auth.error.passwordShort": { de: "Das Passwort muss mindestens 6 Zeichen haben.", en: "Password must be at least 6 characters." },
-  "auth.error.security": { de: "Bitte warte einen Moment und versuche es erneut.", en: "Please wait a moment and try again." },
+  // --- Library ---
+  "library.back": { de: "Zurück", en: "Back" },
+  "library.title": { de: "Inspirations-Bibliothek", en: "Inspiration Library" },
+  "library.subtitlePre": { de: "Alle PDFs, Skripte und Breakdowns an einem Ort. Chatter, die diese Inhalte durcharbeiten, machen im Schnitt", en: "All PDFs, scripts and breakdowns in one place. Chatters who work through this content earn on average" },
+  "library.subtitleHighlight": { de: "4× so viel Umsatz", en: "4× the revenue" },
+  "library.subtitleEnd": { de: ".", en: "." },
+  "library.readCount": { de: "gelesen", en: "read" },
+  "library.statusRead": { de: "GELESEN", en: "READ" },
+  "library.statusNew": { de: "NEU", en: "NEW" },
+  "library.comingSoon": { de: "Weitere Inhalte folgen – die Bibliothek wird laufend erweitert.", en: "More content coming soon — the library is continuously expanded." },
+  "library.item1.title": { de: "Vom Hi zum 115 € Abschluss", en: "From 'Hi' to a €115 sale" },
+  "library.item1.subtitle": { de: "Echter Chat, Nachricht für Nachricht erklärt", en: "Real chat, explained message by message" },
+  "library.item2.title": { de: "Verkaufs-Skripte", en: "Sales scripts" },
+  "library.item2.subtitle": { de: "Wort-für-Wort Vorlagen, die wirklich kaufen lassen", en: "Word-for-word templates that actually drive sales" },
+  "library.item3.title": { de: "Coaching Basics", en: "Coaching basics" },
+  "library.item3.subtitle": { de: "Die Basics, die jeder Top-Chatter beherrscht", en: "The basics every top chatter masters" },
+
+  // --- Leaderboard ---
+  "leaderboard.headerTitle": { de: "Bestenliste", en: "Leaderboard" },
+  "leaderboard.subtitle": { de: "Top-Chatter nach Monatsumsatz", en: "Top chatters by monthly revenue" },
+  "leaderboard.top100": { de: "Top 100", en: "Top 100" },
+  "leaderboard.dayOfMonth": { de: "Monatstag", en: "Day of month" },
+  "leaderboard.dayLabel": { de: "Tag", en: "Day" },
+
+  // --- Dialog: Frage / Question ---
+  "frage.hint": { de: "Tippe auf den Chat-Button unten rechts", en: "Tap the chat button in the bottom right" },
+
+  // --- Dialog: Billing audio / Trustpilot reviews ---
+  "billingAudio.trigger": { de: "Warum dauert das so lange?", en: "Why does this take so long?" },
+  "billingAudio.title": { de: "Warum dauert das so lange?", en: "Why does this take so long?" },
+  "billingAudio.desc": { de: "Hier erkläre ich es dir kurz per Sprachmemo.", en: "I'll explain it briefly in a voice memo." },
+  "billingAudio.othersSay": { de: "Was andere sagen", en: "What others say" },
+  "billingAudio.moreReviews": { de: "Mehr Bewertungen lesen", en: "Read more reviews" },
+
+  // --- Dialog: Gewerbe / Business registration ---
+  "gewerbe.trigger": { de: "Wie mache ich das?", en: "How do I do this?" },
+  "gewerbe.title": { de: "📋 Gewerbeanmeldung – So geht's", en: "📋 Business registration — how it works" },
+  "gewerbe.desc": { de: "Hier erkläre ich dir, wieso du ein Gewerbe brauchst.", en: "Here I'll explain why you need a business registration." },
+  "gewerbe.audioLabel": { de: "🎧 Hier erkläre ich dir, wieso du ein Gewerbe brauchst:", en: "🎧 Here I'll explain why you need a business registration:" },
+  "gewerbe.textLabel": { de: "📝 So meldest du ein Gewerbe an:", en: "📝 How to register a business:" },
+  "gewerbe.text": {
+    de: "Über Gewerbeanmeldung-Service.de oder Gewerbeanmeldung24.de 🖥️ kannst du dein Gewerbe ganz einfach online anmelden.\n\nDu gibst deine Daten ein (Name, Adresse, Startdatum) 📋 und beschreibst deine Tätigkeit.\n\nIn deinem Fall:\n\n„Verkauf von digitalen Inhalten über Online-Plattformen, Bereitstellung von Unterhaltungs- und Informationsdiensten als selbstständiger Content-Manager sowie Angebot von exklusivem Content und persönlichem Austausch gegen Entgelt über das Internet.\" 💻📲\n\nDu bekommst deinen Gewerbeschein 🎉 und das Finanzamt meldet sich automatisch 🏦.\n\nDamit bist du offiziell angemeldet ✅",
+    en: "Through Gewerbeanmeldung-Service.de or Gewerbeanmeldung24.de 🖥️ you can register your business completely online.\n\nYou enter your details (name, address, start date) 📋 and describe your activity.\n\nIn your case:\n\n\"Sale of digital content via online platforms, providing entertainment and information services as a self-employed content manager, plus offering exclusive content and personal interaction for payment over the internet.\" 💻📲\n\nYou'll receive your business license 🎉 and the tax office will contact you automatically 🏦.\n\nThat way you're officially registered ✅",
+  },
+  "gewerbe.openLink1": { de: "Gewerbeanmeldung-Service.de öffnen", en: "Open Gewerbeanmeldung-Service.de" },
+  "gewerbe.openLink2": { de: "Gewerbeanmeldung24.de öffnen", en: "Open Gewerbeanmeldung24.de" },
+
+  // --- Dialog: Push opt-in ---
+  "pushDialog.title": { de: "Bleib immer up to date", en: "Stay always up to date" },
+  "pushDialog.desc": { de: "Aktiviere Benachrichtigungen und verpasse keine Chance mehr.", en: "Enable notifications and never miss an opportunity." },
+  "pushDialog.perk1": { de: "Account-Upgrades sofort erfahren", en: "Hear about account upgrades instantly" },
+  "pushDialog.perk2": { de: "Exklusive Tipps & neue Features", en: "Exclusive tips & new features" },
+  "pushDialog.perk3": { de: "Team-Updates in Echtzeit", en: "Team updates in real time" },
+  "pushDialog.cta": { de: "Benachrichtigungen aktivieren 🔔", en: "Enable notifications 🔔" },
+  "pushDialog.ctaLoading": { de: "Wird aktiviert...", en: "Enabling..." },
+  "pushDialog.toastOk": { de: "Benachrichtigungen aktiviert! 🔔", en: "Notifications enabled! 🔔" },
+  "pushDialog.toastFail": { de: "Benachrichtigungen konnten nicht aktiviert werden.", en: "Could not enable notifications." },
+
+  // --- Banner: Notification recovery ---
+  "pushBanner.title": { de: "Benachrichtigungen sind nicht aktiv", en: "Notifications are not active" },
+  "pushBanner.body": { de: "Du verpasst wichtige Updates wie Account-Upgrades und Team-Nachrichten.", en: "You're missing important updates like account upgrades and team messages." },
+  "pushBanner.cta": { de: "Jetzt aktivieren 🔔", en: "Enable now 🔔" },
+  "pushBanner.ctaLoading": { de: "Wird aktiviert...", en: "Enabling..." },
+  "pushBanner.toastDenied": { de: "Bitte aktiviere Benachrichtigungen in deinen Geräte-Einstellungen.", en: "Please enable notifications in your device settings." },
+  "pushBanner.iosInstruction": { de: "Gehe zu Einstellungen → diese App → Mitteilungen → aktivieren.", en: "Go to Settings → this app → Notifications → enable." },
+  "pushBanner.androidInstruction": { de: "Halte das App-Icon gedrückt → App-Info → Benachrichtigungen → aktivieren.", en: "Long-press the app icon → App info → Notifications → enable." },
+  "pushBanner.desktopInstruction": { de: "Öffne die Browser-Einstellungen und erlaube Benachrichtigungen für diese Seite.", en: "Open browser settings and allow notifications for this site." },
+
+  // --- Dialog: Account memo ---
+  "accountMemo.title": { de: "Sprachmemo", en: "Voice memo" },
 };
 
 export function translate(lang: Lang, key: string, fallback?: string): string {
@@ -197,3 +266,4 @@ export function translate(lang: Lang, key: string, fallback?: string): string {
   if (!entry) return fallback ?? key;
   return entry[lang] ?? entry.de ?? key;
 }
+
