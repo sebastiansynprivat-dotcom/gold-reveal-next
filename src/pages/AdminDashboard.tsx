@@ -1024,7 +1024,7 @@ export default function AdminDashboard() {
   const [setupSearch, setSetupSearch] = useState("");
   const [setupPlatform, setSetupPlatform] = useState<"all" | "4Based" | "Maloum" | "Brezzels">("all");
   const [setupStatusFilter, setSetupStatusFilter] = useState<
-    "alle" | "botdm_missing" | "setup_missing" | "massdm_missing" | "bot_active" | "bot_inactive"
+    "alle" | "botdm_missing" | "setup_missing" | "welcome_missing" | "feedfolder_missing" | "feedbot_missing"
   >("alle");
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("heute");
   const timeFilterRef = useRef<TimeFilter>("heute");
@@ -6866,11 +6866,11 @@ export default function AdminDashboard() {
                         {(
                           [
                             { key: "alle", label: "Alle" },
-                            { key: "botdm_missing", label: "Bot DM fehlt" },
-                            { key: "setup_missing", label: "Setup fehlt" },
-                            { key: "massdm_missing", label: "MassDM fehlt" },
-                            { key: "bot_active", label: "Bot aktiv" },
-                            { key: "bot_inactive", label: "Bot inaktiv" },
+                            { key: "botdm_missing", label: "Bot DM-Setup fehlt" },
+                            { key: "setup_missing", label: "Account Setup fehlt" },
+                            { key: "welcome_missing", label: "Welcome-Nachricht fehlt" },
+                            { key: "feedfolder_missing", label: "Feed Posting Folder fehlt" },
+                            { key: "feedbot_missing", label: "Feed Bot Post fehlt" },
                           ] as const
                         ).map((f) => (
                           <button
@@ -6897,24 +6897,27 @@ export default function AdminDashboard() {
                     </div>
 
                     {/* Table Header */}
-                    <div className="grid grid-cols-[1fr_72px_44px_44px_44px_44px] gap-0 bg-accent/10 border-b border-accent/20">
+                    <div className="grid grid-cols-[1fr_72px_38px_38px_38px_38px_38px] gap-0 bg-accent/10 border-b border-accent/20">
                       <div className="px-3 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold">
                         Account
                       </div>
-                      <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">
+                      <div className="px-1 py-2 text-[9px] uppercase tracking-wider text-accent font-semibold text-center">
                         Plattform
                       </div>
-                      <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">
-                        {setupPlatform === "all" || setupPlatform === "Maloum" ? "Bot" : ""}
+                      <div className="px-0.5 py-2 text-[8px] uppercase tracking-wider text-accent font-semibold text-center leading-tight">
+                        Bot<br/>DM
                       </div>
-                      <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">
-                        Setup
+                      <div className="px-0.5 py-2 text-[8px] uppercase tracking-wider text-accent font-semibold text-center leading-tight">
+                        Acc<br/>Setup
                       </div>
-                      <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">
-                        Mass
+                      <div className="px-0.5 py-2 text-[8px] uppercase tracking-wider text-accent font-semibold text-center leading-tight">
+                        Wel<br/>come
                       </div>
-                      <div className="px-1 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">
-                        {setupPlatform === "all" || setupPlatform === "Maloum" ? "Aktiv" : ""}
+                      <div className="px-0.5 py-2 text-[8px] uppercase tracking-wider text-accent font-semibold text-center leading-tight">
+                        Feed<br/>Folder
+                      </div>
+                      <div className="px-0.5 py-2 text-[8px] uppercase tracking-wider text-accent font-semibold text-center leading-tight">
+                        Feed<br/>Post
                       </div>
                     </div>
 
@@ -6975,24 +6978,38 @@ export default function AdminDashboard() {
                         return true;
                       });
 
+                      // Smart derived states helper
+                      const computeStates = (acc: any) => {
+                        const d = getDash(acc.id);
+                        const botdmF = getField(acc.platform, "botdm");
+                        const welcomeF = getField(acc.platform, "welcome");
+                        const massdmF = getField(acc.platform, "massdm");
+                        const hasBot = acc.platform === "Maloum";
+                        const botdmDone = hasBot ? !!(d as any)?.[botdmF] : true;
+                        const accountSetupDone = !!(d as any)?.[welcomeF];
+                        // Welcome auto-complete: messaging on + main + follow + media set
+                        const welcomeAuto =
+                          !!acc.message &&
+                          !!(acc.main_message?.trim()) &&
+                          !!(acc.follow_message?.trim()) &&
+                          !!(acc.media_id?.trim());
+                        const welcomeDone = welcomeAuto || !!(d as any)?.[massdmF];
+                        // Feed Posting Folder: drive_folder_id or folder_name set
+                        const feedFolderDone = !!(acc.drive_folder_id?.trim() || acc.folder_name?.trim());
+                        // Feed Bot Post: acc.post toggled on
+                        const feedBotDone = !!acc.post;
+                        return { hasBot, botdmDone, accountSetupDone, welcomeDone, welcomeAuto, feedFolderDone, feedBotDone, botdmF, welcomeF, massdmF };
+                      };
+
                       // Apply status filter
                       if (setupStatusFilter !== "alle") {
                         filteredSetupAccounts = filteredSetupAccounts.filter((acc) => {
-                          const d = getDash(acc.id);
-                          const botdmF = getField(acc.platform, "botdm");
-                          const welcomeF = getField(acc.platform, "welcome");
-                          const massdmF = getField(acc.platform, "massdm");
-                          const botdmDone = !!(d as any)?.[botdmF];
-                          const welcomeDone = !!(d as any)?.[welcomeF];
-                          const massdmDone = !!(d as any)?.[massdmF];
-                          const entry = botMessages[acc.id];
-                          const saved = savedBotState[acc.id];
-
-                          if (setupStatusFilter === "botdm_missing") return !botdmDone;
-                          if (setupStatusFilter === "setup_missing") return !welcomeDone;
-                          if (setupStatusFilter === "massdm_missing") return !massdmDone;
-                          if (setupStatusFilter === "bot_active") return saved && saved.isActive;
-                          if (setupStatusFilter === "bot_inactive") return !saved || !saved.isActive;
+                          const s = computeStates(acc);
+                          if (setupStatusFilter === "botdm_missing") return s.hasBot && !s.botdmDone;
+                          if (setupStatusFilter === "setup_missing") return !s.accountSetupDone;
+                          if (setupStatusFilter === "welcome_missing") return !s.welcomeDone;
+                          if (setupStatusFilter === "feedfolder_missing") return !s.feedFolderDone;
+                          if (setupStatusFilter === "feedbot_missing") return !s.feedBotDone;
                           return true;
                         });
                       }
@@ -7007,32 +7024,53 @@ export default function AdminDashboard() {
                         <div className="divide-y divide-border/30">
                           {filteredSetupAccounts.map((acc, i) => {
                             const dash = getDash(acc.id);
-                            const botdmField = getField(acc.platform, "botdm");
-                            const welcomeField = getField(acc.platform, "welcome");
-                            const massdmField = getField(acc.platform, "massdm");
-                            const botdmVal = !!(dash as any)?.[botdmField];
-                            const welcomeVal = !!(dash as any)?.[welcomeField];
-                            const massdmVal = !!(dash as any)?.[massdmField];
-                            const entry = botMessages[acc.id] || {
-                              message: "",
-                              followUp: "",
-                              isActive: false,
-                              saving: false,
-                            };
-                            const saved = savedBotState[acc.id];
-                            const hasChanges =
-                              !saved ||
-                              entry.message !== saved.message ||
-                              entry.followUp !== saved.followUp ||
-                              entry.isActive !== saved.isActive;
+                            const s = computeStates(acc);
                             const isExpanded = expandedBot === acc.id;
+
+                            const CellCheck = ({
+                              done,
+                              auto,
+                              onToggle,
+                              disabled,
+                            }: {
+                              done: boolean;
+                              auto?: boolean;
+                              onToggle?: () => void;
+                              disabled?: boolean;
+                            }) => (
+                              <div
+                                className="flex justify-center py-2"
+                                onClick={(e) => e.stopPropagation()}
+                                title={auto ? "Automatisch erkannt" : undefined}
+                              >
+                                <button
+                                  onClick={() => !disabled && onToggle?.()}
+                                  disabled={disabled}
+                                  className={cn(
+                                    "h-5 w-5 rounded border-2 flex items-center justify-center transition-all duration-200",
+                                    disabled && "opacity-30 cursor-not-allowed",
+                                    done
+                                      ? auto
+                                        ? "border-emerald-400 bg-emerald-400/20"
+                                        : "border-accent bg-accent/20"
+                                      : "border-muted-foreground/30 bg-transparent hover:border-accent/50",
+                                  )}
+                                >
+                                  {done && (
+                                    <CheckCircle2
+                                      className={cn("h-3 w-3", auto ? "text-emerald-400" : "text-accent")}
+                                    />
+                                  )}
+                                </button>
+                              </div>
+                            );
 
                             return (
                               <div key={acc.id}>
                                 {/* Row */}
                                 <div
                                   className={cn(
-                                    "grid grid-cols-[1fr_72px_44px_44px_44px_44px] gap-0 items-center transition-colors cursor-pointer hover:bg-accent/5",
+                                    "grid grid-cols-[1fr_72px_38px_38px_38px_38px_38px] gap-0 items-center transition-colors cursor-pointer hover:bg-accent/5",
                                     i % 2 === 0 ? "bg-card/40" : "bg-card/20",
                                     isExpanded && "bg-accent/5",
                                   )}
@@ -7067,67 +7105,36 @@ export default function AdminDashboard() {
                                       {acc.platform}
                                     </span>
                                   </div>
-                                  {/* Bot DM checkbox — only Maloum */}
-                                  {acc.platform === "Maloum" && (
-                                    <div className="flex justify-center py-2" onClick={(e) => e.stopPropagation()}>
-                                      <button
-                                        onClick={() => toggleSetupField(acc.id, botdmField, botdmVal)}
-                                        className={cn(
-                                          "h-5 w-5 rounded border-2 flex items-center justify-center transition-all duration-200",
-                                          botdmVal
-                                            ? "border-accent bg-accent/20"
-                                            : "border-muted-foreground/30 bg-transparent hover:border-accent/50",
-                                        )}
-                                      >
-                                        {botdmVal && <CheckCircle2 className="h-3 w-3 text-accent" />}
-                                      </button>
-                                    </div>
-                                  )}
-                                  {acc.platform !== "Maloum" && <div />}
-                                  {/* Setup checkbox — all platforms */}
-                                  <div className="flex justify-center py-2" onClick={(e) => e.stopPropagation()}>
-                                    <button
-                                      onClick={() => toggleSetupField(acc.id, welcomeField, welcomeVal)}
-                                      className={cn(
-                                        "h-5 w-5 rounded border-2 flex items-center justify-center transition-all duration-200",
-                                        welcomeVal
-                                          ? "border-accent bg-accent/20"
-                                          : "border-muted-foreground/30 bg-transparent hover:border-accent/50",
-                                      )}
-                                    >
-                                      {welcomeVal && <CheckCircle2 className="h-3 w-3 text-accent" />}
-                                    </button>
-                                  </div>
-                                  {/* MassDM checkbox — all platforms */}
-                                  <div className="flex justify-center py-2" onClick={(e) => e.stopPropagation()}>
-                                    <button
-                                      onClick={() => toggleSetupField(acc.id, massdmField, massdmVal)}
-                                      className={cn(
-                                        "h-5 w-5 rounded border-2 flex items-center justify-center transition-all duration-200",
-                                        massdmVal
-                                          ? "border-accent bg-accent/20"
-                                          : "border-muted-foreground/30 bg-transparent hover:border-accent/50",
-                                      )}
-                                    >
-                                      {massdmVal && <CheckCircle2 className="h-3 w-3 text-accent" />}
-                                    </button>
-                                  </div>
-                                  {/* Active indicator — only Maloum */}
-                                  {acc.platform === "Maloum" && (
+                                  {/* Bot DM — only Maloum (Brezzels & 4Based haben keinen Bot) */}
+                                  {s.hasBot ? (
+                                    <CellCheck
+                                      done={s.botdmDone}
+                                      onToggle={() => toggleSetupField(acc.id, s.botdmF, s.botdmDone)}
+                                    />
+                                  ) : (
                                     <div className="flex justify-center py-2">
-                                      <div
-                                        className={cn(
-                                          "h-5 w-5 rounded-full border-2 flex items-center justify-center",
-                                          entry.isActive
-                                            ? "border-accent bg-accent/20"
-                                            : "border-muted-foreground/30 bg-transparent",
-                                        )}
-                                      >
-                                        {entry.isActive && <span className="h-2 w-2 rounded-full bg-accent" />}
-                                      </div>
+                                      <span className="text-[10px] text-muted-foreground/40">—</span>
                                     </div>
                                   )}
-                                  {acc.platform !== "Maloum" && <div />}
+                                  {/* Account Setup */}
+                                  <CellCheck
+                                    done={s.accountSetupDone}
+                                    onToggle={() => toggleSetupField(acc.id, s.welcomeF, s.accountSetupDone)}
+                                  />
+                                  {/* Welcome-Nachricht (auto-derived from Mass DM) */}
+                                  <CellCheck
+                                    done={s.welcomeDone}
+                                    auto={s.welcomeAuto}
+                                    onToggle={() => toggleSetupField(acc.id, s.massdmF, !!(dash as any)?.[s.massdmF])}
+                                  />
+                                  {/* Feed Posting Folder (derived) */}
+                                  <CellCheck done={s.feedFolderDone} auto={s.feedFolderDone} disabled />
+                                  {/* Feed Bot Post (derived from acc.post) */}
+                                  <CellCheck
+                                    done={s.feedBotDone}
+                                    auto={s.feedBotDone}
+                                    onToggle={() => updateAccountField(acc.id, { post: !acc.post })}
+                                  />
                                 </div>
 
                                 {/* Expanded: Bot Message + Follow-Up editing */}
