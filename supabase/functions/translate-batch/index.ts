@@ -20,7 +20,7 @@ Rules:
 - Keep product names unchanged: SheX, BasedBuilders, Maloum, Brezzels, 4Based, Fanvue, Telegram, WhatsApp, Lovable, Loom, Trustpilot.
 - Keep €, £, $ and amounts unchanged.
 - Multi-line text: keep paragraph & list structure (newlines, dashes, numbered lists, emoji bullets).
-- Do NOT add explanations, quotes, or extra punctuation.
+- Do NOT add explanations, extra quotes, or extra punctuation. Do NOT escape quotes (write " not \\"). Do NOT add any non-Latin characters (no Chinese, Japanese, Korean, Arabic, etc.) unless the source already contains them.
 - If a string is already in ${target}, return it unchanged.
 - Return ONLY a JSON object: {"t": ["...", "...", ...]} with translations in the same order.`;
 }
