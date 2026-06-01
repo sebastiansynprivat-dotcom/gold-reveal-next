@@ -191,6 +191,7 @@ export default function Dashboard() {
   const platform = searchParams.get("platform") || "Brezzels";
 
   const { user } = useAuth();
+  const { lang } = useUILanguage();
 
   const [telegramId, setTelegramId] = useState("");
   const [telegramSaved, setTelegramSaved] = useState(false);
