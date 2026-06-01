@@ -1090,6 +1090,18 @@ export default function ModelDashboardTab() {
                         <p className={cn("text-xs font-medium truncate", isSelected ? "text-accent" : "text-foreground")}>
                           {model.name || "Unbenannt"}
                         </p>
+                        {(() => {
+                          const g = groupForModel(model);
+                          if (!g) return null;
+                          return (
+                            <span
+                              className="text-[9px] px-1.5 py-[1px] rounded border border-accent/40 text-accent shrink-0 bg-accent/5"
+                              title={g.auto ? "Per Referrer-Tag automatisch erkannt" : "Gruppe zugeordnet"}
+                            >
+                              {g.name}{g.auto ? " · Auto" : ""}
+                            </span>
+                          );
+                        })()}
                       </div>
                       {model.address && <p className="text-[10px] text-muted-foreground truncate">{model.address}</p>}
                     </div>
