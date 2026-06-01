@@ -2871,10 +2871,15 @@ export default function AdminDashboard() {
           if (!req?.user_id) return;
           let tplTitle = "Update zu deiner Anfrage 📋";
           let tplBody = "Es gibt Neuigkeiten zu deiner Content-Anfrage! Schau jetzt nach.";
+          if (status === "archived") {
+            tplTitle = "✅ Anfrage erledigt!";
+            tplBody = "Deine Content-Anfrage wurde als erledigt markiert. Schau jetzt rein!";
+          }
+          const tplKey = status === "archived" ? "request_done" : "request_update";
           const { data: tpl } = await supabase
             .from("notification_templates")
             .select("title, body")
-            .eq("template_key", "request_update")
+            .eq("template_key", tplKey)
             .maybeSingle();
           if (tpl && tpl.title.trim() && tpl.body.trim()) {
             tplTitle = tpl.title;
