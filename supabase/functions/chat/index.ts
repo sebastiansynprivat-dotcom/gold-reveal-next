@@ -16,19 +16,23 @@ Du darfst AUSSCHLIESSLICH die Informationen aus der unten stehenden "SheX Wissen
 Wenn ein Nutzer eine Frage stellt, die NICHT explizit in diesen Punkten behandelt wird, darfst du dir KEINE Antwort ausdenken. In diesem Fall MUSST du zwingend Folgendes antworten: 
 "Tut mir leid, aber dazu liegen mir aktuell keine genauen Informationen vor. Bitte stelle diese Frage direkt in deiner WhatsApp-Gruppe, dort hilft dir das Team sofort weiter!"`;
 
-async function getSystemPrompt(): Promise<string> {
+async function getSystemPrompt(lang: "de" | "en"): Promise<string> {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
-    
+
     const { data } = await supabase
       .from("ai_prompts")
-      .select("prompt_text")
+      .select("prompt_text, prompt_text_en")
       .eq("prompt_key", "system_prompt")
       .single();
-    
-    return data?.prompt_text || DEFAULT_SYSTEM_PROMPT;
+
+    if (lang === "en") {
+      const en = (data as any)?.prompt_text_en?.trim();
+      if (en) return en;
+    }
+    return (data as any)?.prompt_text || DEFAULT_SYSTEM_PROMPT;
   } catch {
     return DEFAULT_SYSTEM_PROMPT;
   }
@@ -44,9 +48,10 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    let systemPrompt = await getSystemPrompt();
-    const lang = uiLanguage === "en" ? "en" : "de";
+    const lang: "de" | "en" = uiLanguage === "en" ? "en" : "de";
+    let systemPrompt = await getSystemPrompt(lang);
     if (lang === "en") {
+      // Reinforce English replies even if the loaded prompt is German (e.g. EN column empty).
       systemPrompt += `\n\n---\nIMPORTANT: The user's UI language is English. Reply ONLY in clear, friendly English. Keep the same tone (casual "you", motivating, direct). Keep product names unchanged (SheX, Maloum, Brezzels, 4Based, Fanvue, Telegram, WhatsApp). If you must show the "no information" fallback, use: "Sorry, I don't have exact info on that right now. Please ask in your WhatsApp group — the team will help you immediately!"`;
     }
 

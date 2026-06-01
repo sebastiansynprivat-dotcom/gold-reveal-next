@@ -1,6 +1,7 @@
-// Batch-translate German UI strings to English via Lovable AI Gateway.
-// Public (verify_jwt = false) so it can run before profile is loaded.
-// Returns: { translations: string[] } in the same order as input.
+// Batch translator via Lovable AI Gateway.
+// Body: { strings: string[], sourceLang?: "de"|"en", targetLang?: "de"|"en" }
+// Default: de -> en. Returns { translations: string[] } in same order.
+// Public (verify_jwt = false) — short input cap (200) prevents abuse.
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,16 +9,21 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const SYSTEM = `You are a professional German→English UI translator for a chatter/creator-economy dashboard.
+const LANG_NAMES: Record<string, string> = { de: "German", en: "English" };
+
+function systemPrompt(source: string, target: string) {
+  return `You are a professional ${source}→${target} UI translator for a chatter/creator-economy dashboard.
 Rules:
-- Translate each input string to natural, concise English suitable for app UI.
-- Keep tone: friendly, motivating, slightly informal (use "you").
+- Translate each input string to natural, concise ${target} suitable for app UI / push notifications / system prompts.
+- Keep tone: friendly, motivating, slightly informal (use "you" / informal "du").
 - Preserve emojis, numbers, placeholders like {name}, {{count}}, %s, and currency symbols exactly.
 - Keep product names unchanged: SheX, BasedBuilders, Maloum, Brezzels, 4Based, Fanvue, Telegram, WhatsApp, Lovable, Loom, Trustpilot.
 - Keep €, £, $ and amounts unchanged.
+- Multi-line text: keep paragraph & list structure (newlines, dashes, numbered lists, emoji bullets).
 - Do NOT add explanations, quotes, or extra punctuation.
-- If a string is already English, return it unchanged.
+- If a string is already in ${target}, return it unchanged.
 - Return ONLY a JSON object: {"t": ["...", "...", ...]} with translations in the same order.`;
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -25,6 +31,14 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json().catch(() => ({}));
     const strings: unknown = body?.strings;
+    const sourceLang = body?.sourceLang === "en" ? "en" : "de";
+    const targetLang = body?.targetLang === "de" ? "de" : "en";
+    if (sourceLang === targetLang) {
+      const passthrough = Array.isArray(strings) ? strings.map((s) => String(s ?? "")) : [];
+      return new Response(JSON.stringify({ translations: passthrough }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     if (!Array.isArray(strings) || strings.length === 0) {
       return new Response(JSON.stringify({ translations: [] }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -40,23 +54,21 @@ Deno.serve(async (req) => {
       });
     }
 
-    const userMsg = JSON.stringify({ strings: inputs });
-
     const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
-          { role: "system", content: SYSTEM },
-          { role: "user", content: userMsg },
+          { role: "system", content: systemPrompt(LANG_NAMES[sourceLang], LANG_NAMES[targetLang]) },
+          { role: "user", content: JSON.stringify({ strings: inputs }) },
         ],
         tools: [
           {
             type: "function",
             function: {
               name: "return_translations",
-              description: "Return the English translations in input order.",
+              description: `Return the ${LANG_NAMES[targetLang]} translations in input order.`,
               parameters: {
                 type: "object",
                 properties: {
@@ -88,13 +100,8 @@ Deno.serve(async (req) => {
     let parsed: any = null;
     try { parsed = typeof args === "string" ? JSON.parse(args) : args; } catch {}
     let out: string[] = Array.isArray(parsed?.t) ? parsed.t.map((s: unknown) => String(s ?? "")) : [];
-
-    // Fallback: pad / trim to expected length
-    if (out.length < inputs.length) {
-      out = [...out, ...inputs.slice(out.length)];
-    } else if (out.length > inputs.length) {
-      out = out.slice(0, inputs.length);
-    }
+    if (out.length < inputs.length) out = [...out, ...inputs.slice(out.length)];
+    else if (out.length > inputs.length) out = out.slice(0, inputs.length);
 
     return new Response(JSON.stringify({ translations: out }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
