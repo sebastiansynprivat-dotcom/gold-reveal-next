@@ -1672,20 +1672,18 @@ function BonusModelSection({
         <motion.div
           variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
         >
-          <div data-tour="bonus-tiers" className="grid grid-cols-3 lg:grid-cols-7 gap-2 lg:gap-2.5">
+          <div data-tour="bonus-tiers" className="grid grid-cols-2 gap-2 lg:gap-2.5">
             {BONUS_TIERS.map((tier, idx) => {
               const isActive = activeTier.name === tier.name;
               const isPassed = activeRevenue > tier.max;
-              const isTitan = tier.name === "Titan";
               return (
                 <motion.div
                   key={tier.name}
                   animate={isActive ? { scale: 1 } : { scale: 1 }}
                   className={cn(
                     "relative rounded-xl overflow-hidden transition-all duration-300",
-                    isTitan && "col-span-3 lg:col-span-1",
                     isActive
-                      ? tier.name === "Elite" || tier.name === "Titan"
+                      ? tier.name === "Elite"
                         ? "gold-gradient-border-animated bg-[hsl(0_0%_8%/0.8)]"
                         : "border border-accent/50 bg-[hsl(0_0%_8%/0.8)] shadow-[0_0_24px_hsl(43_56%_52%/0.15)]"
                       : isPassed
@@ -1693,6 +1691,7 @@ function BonusModelSection({
                         : "border border-border/20 bg-[hsl(0_0%_6%/0.4)]",
                   )}
                 >
+
                   {/* Active top shine */}
                   {isActive && (
                     <div className="absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-accent/10 to-transparent pointer-events-none" />
