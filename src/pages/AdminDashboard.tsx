@@ -2180,12 +2180,29 @@ export default function AdminDashboard() {
   const saveKiPrompt = async () => {
     setKiPromptSaving(true);
     try {
-      const { error } = await supabase
-        .from("ai_prompts")
-        .update({ prompt_text: kiPrompt, updated_at: new Date().toISOString(), updated_by: user?.id })
-        .eq("prompt_key", "system_prompt");
+      const patch: any = {
+        prompt_text: kiPrompt,
+        prompt_text_de_is_auto: false, // admin just edited DE manually
+        updated_at: new Date().toISOString(),
+        updated_by: user?.id,
+      };
+      // Auto-translate to EN if EN is still flagged auto (or empty)
+      try {
+        const { data: cur } = await supabase
+          .from("ai_prompts")
+          .select("prompt_text_en, prompt_text_en_is_auto")
+          .eq("prompt_key", "system_prompt")
+          .maybeSingle();
+        const enIsAuto = (cur as any)?.prompt_text_en_is_auto !== false;
+        const enEmpty = !((cur as any)?.prompt_text_en || "").trim();
+        if (enIsAuto || enEmpty) {
+          const en = await translateString(kiPrompt, "de", "en");
+          if (en) { patch.prompt_text_en = en; patch.prompt_text_en_is_auto = true; }
+        }
+      } catch {}
+      const { error } = await supabase.from("ai_prompts").update(patch).eq("prompt_key", "system_prompt");
       if (error) throw error;
-      toast.success("Dashboard-Chat Prompt gespeichert!");
+      toast.success("Dashboard-Chat Prompt gespeichert (DE + EN synchronisiert)");
       setKiPromptSaved(true);
       setKiPromptOriginal(kiPrompt);
     } catch {
@@ -2197,12 +2214,28 @@ export default function AdminDashboard() {
   const saveAnalysisPrompt = async () => {
     setAnalysisPromptSaving(true);
     try {
-      const { error } = await supabase
-        .from("ai_prompts")
-        .update({ prompt_text: analysisPrompt, updated_at: new Date().toISOString(), updated_by: user?.id })
-        .eq("prompt_key", "analysis_prompt");
+      const patch: any = {
+        prompt_text: analysisPrompt,
+        prompt_text_de_is_auto: false,
+        updated_at: new Date().toISOString(),
+        updated_by: user?.id,
+      };
+      try {
+        const { data: cur } = await supabase
+          .from("ai_prompts")
+          .select("prompt_text_en, prompt_text_en_is_auto")
+          .eq("prompt_key", "analysis_prompt")
+          .maybeSingle();
+        const enIsAuto = (cur as any)?.prompt_text_en_is_auto !== false;
+        const enEmpty = !((cur as any)?.prompt_text_en || "").trim();
+        if (enIsAuto || enEmpty) {
+          const en = await translateString(analysisPrompt, "de", "en");
+          if (en) { patch.prompt_text_en = en; patch.prompt_text_en_is_auto = true; }
+        }
+      } catch {}
+      const { error } = await supabase.from("ai_prompts").update(patch).eq("prompt_key", "analysis_prompt");
       if (error) throw error;
-      toast.success("Chat-Analysen Prompt gespeichert!");
+      toast.success("Chat-Analysen Prompt gespeichert (DE + EN synchronisiert)");
       setAnalysisPromptOriginal(analysisPrompt);
     } catch {
       toast.error("Fehler beim Speichern des Analyse-Prompts");
