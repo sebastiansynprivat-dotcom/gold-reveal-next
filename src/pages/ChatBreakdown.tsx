@@ -4,6 +4,8 @@ import { ArrowLeft, Download, Check, Circle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useLibraryReads } from "@/hooks/useLibraryReads";
+import { useUILanguage } from "@/hooks/useUILanguage";
+import ChatBreakdownReact from "@/components/ChatBreakdownReact";
 
 const PDF_URL = "/content/chat-breakdown-01.pdf";
 const CONTENT_KEY = "chat-breakdown-01";
