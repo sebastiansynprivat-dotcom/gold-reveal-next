@@ -1207,31 +1207,32 @@ export default function Dashboard() {
                                   </span>
                                 )}
                               </div>
-                              <Badge
-                                variant={
-                                  req.status === "accepted"
-                                    ? "default"
-                                    : req.status === "rejected"
-                                      ? "destructive"
-                                      : req.status === "in_progress"
-                                        ? "secondary"
-                                        : "secondary"
-                                }
-                                className={`text-[10px] ${needsReply ? "bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse" : ""}`}
-                              >
-                                {req.status === "pending"
-                                  ? "⏳ Ausstehend"
-                                  : req.status === "accepted"
-                                    ? "✅ Ans Model weitergeleitet"
-                                    : req.status === "in_progress"
-                                      ? "⏳ Wird bearbeitet"
-                                      : req.status === "waiting_feedback"
-                                        ? "💬 Deine Antwort benötigt"
-                                        : req.status === "archived"
-                                          ? "✔️ Erledigt"
-                                          : "❌ Abgelehnt"}
-
-                              </Badge>
+                              {(() => {
+                                const statusStyles: Record<string, string> = {
+                                  pending: "bg-amber-500/15 text-amber-300 border border-amber-500/40",
+                                  accepted: "bg-sky-500/15 text-sky-300 border border-sky-500/40",
+                                  in_progress: "bg-blue-500/15 text-blue-300 border border-blue-500/40",
+                                  waiting_feedback: "bg-amber-500/20 text-amber-300 border border-amber-500/40 animate-pulse",
+                                  archived: "bg-emerald-500/15 text-emerald-300 border border-emerald-500/50",
+                                  rejected: "bg-red-500/15 text-red-300 border border-red-500/40",
+                                };
+                                const statusLabels: Record<string, string> = {
+                                  pending: "⏳ Ausstehend",
+                                  accepted: "✅ Ans Model weitergeleitet",
+                                  in_progress: "⏳ Wird bearbeitet",
+                                  waiting_feedback: "💬 Deine Antwort benötigt",
+                                  archived: "✔️ Erledigt",
+                                  rejected: "❌ Abgelehnt",
+                                };
+                                const cls = needsReply
+                                  ? statusStyles.waiting_feedback
+                                  : statusStyles[req.status as string] || statusStyles.pending;
+                                return (
+                                  <Badge className={`text-[10px] ${cls}`}>
+                                    {statusLabels[req.status as string] || req.status}
+                                  </Badge>
+                                );
+                              })()}
                             </div>
                             {needsReply && (
                               <div className="rounded-md border border-amber-500/40 bg-amber-500/10 px-2.5 py-2 text-[11px] text-amber-200 leading-snug">
