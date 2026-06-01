@@ -1372,7 +1372,7 @@ export default function Dashboard() {
                             })()}
                             {/* Content Link with Tutorial Dialog */}
                             {(req as any).content_link &&
-                              (req.status === "accepted" || req.status === "in_progress") && (
+                              (req.status === "accepted" || req.status === "in_progress" || req.status === "archived") && (
                                 <Dialog>
                                   <DialogTrigger asChild>
                                     <button className="flex items-center gap-1.5 rounded-md bg-accent/10 border border-accent/20 px-2.5 py-2 mt-1 hover:bg-accent/15 transition-colors w-full text-left">
