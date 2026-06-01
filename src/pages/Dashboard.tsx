@@ -53,6 +53,7 @@ import StreakTracker from "@/components/StreakTracker";
 import MonthlyStreakTracker from "@/components/MonthlyStreakTracker";
 import NotificationBanner from "@/components/NotificationBanner";
 import { useAuth } from "@/hooks/useAuth";
+import { useUILanguage } from "@/hooks/useUILanguage";
 import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo.png";
 import GoldParticles from "@/components/GoldParticles";
