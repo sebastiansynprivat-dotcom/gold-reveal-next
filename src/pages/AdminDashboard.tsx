@@ -1114,21 +1114,6 @@ export default function AdminDashboard() {
     const m = String(req?.description || "").match(/^\[Plattform:\s*([^\]]+)\]\s*/i);
     return m ? m[1].trim().toLowerCase() : "";
   }, []);
-  const myAdminName = (user?.id ? adminNames[user.id] : "")?.toLowerCase() || "";
-  const isReqForMe = useCallback((req: any): boolean => {
-    const platform = getReqPlatform(req);
-    if (myAdminName.includes("vanessa")) return platform === "maloum";
-    if (myAdminName.includes("max")) return platform !== "maloum";
-    return true;
-  }, [myAdminName, getReqPlatform]);
-  const isReqUnreadForMe = useCallback(
-    (req: any) => isReqUnread(req) && isReqForMe(req),
-    [isReqUnread, isReqForMe],
-  );
-  const unreadCount = useMemo(
-    () => modelRequests.filter((r) => isReqUnreadForMe(r)).length,
-    [modelRequests, isReqUnreadForMe],
-  );
 
 
   // Earnings per agency, last 30 days. Uses the platform revenue feed and maps
