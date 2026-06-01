@@ -396,6 +396,7 @@ const LESSONS: Lesson[] = [
 
 export default function CoachingBasics() {
   const { reads, markProgress, markCompleted, unmarkCompleted } = useLibraryReads();
+  const { lang } = useUILanguage();
   const read = reads[CONTENT_KEY];
   const completed = !!read?.completed_at;
 
