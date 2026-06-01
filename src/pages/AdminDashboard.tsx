@@ -7219,8 +7219,8 @@ export default function AdminDashboard() {
                                     auto={s.feedBotDone}
                                     onToggle={() => updateAccountField(acc.id, { post: !acc.post })}
                                   />
-                                  <div />
                                 </div>
+
 
                                 {/* Expanded: Bot Message + Follow-Up editing */}
                                 {isExpanded && (
