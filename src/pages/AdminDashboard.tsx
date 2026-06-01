@@ -6866,11 +6866,11 @@ export default function AdminDashboard() {
                         {(
                           [
                             { key: "alle", label: "Alle" },
-                            { key: "botdm_missing", label: "Bot DM fehlt" },
-                            { key: "setup_missing", label: "Setup fehlt" },
-                            { key: "massdm_missing", label: "MassDM fehlt" },
-                            { key: "bot_active", label: "Bot aktiv" },
-                            { key: "bot_inactive", label: "Bot inaktiv" },
+                            { key: "botdm_missing", label: "Bot DM-Setup fehlt" },
+                            { key: "setup_missing", label: "Account Setup fehlt" },
+                            { key: "welcome_missing", label: "Welcome-Nachricht fehlt" },
+                            { key: "feedfolder_missing", label: "Feed Posting Folder fehlt" },
+                            { key: "feedbot_missing", label: "Feed Bot Post fehlt" },
                           ] as const
                         ).map((f) => (
                           <button
