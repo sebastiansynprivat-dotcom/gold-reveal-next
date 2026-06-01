@@ -11,10 +11,15 @@ type Msg = { role: "user" | "assistant"; content: string };
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
-const QUICK_QUESTIONS = [
+const QUICK_QUESTIONS_DE = [
   "Wann wird ausgezahlt?",
   "Wie erhöhe ich meine Rate?",
   "Technische Probleme",
+];
+const QUICK_QUESTIONS_EN = [
+  "When do I get paid?",
+  "How do I increase my rate?",
+  "Technical issues",
 ];
 
 interface DashboardChatProps {
@@ -49,6 +54,7 @@ export default function DashboardChat({ externalOpen, onExternalOpenChange }: Da
     setMessages(allMessages);
     setInput("");
     setIsLoading(true);
+    (window as any).__lvBusy = true;
 
     let assistantSoFar = "";
     const upsertAssistant = (chunk: string) => {
@@ -128,9 +134,10 @@ export default function DashboardChat({ externalOpen, onExternalOpenChange }: Da
       }
     } catch (e) {
       console.error(e);
-      toast.error("Verbindung zum KI-Support fehlgeschlagen.");
+      toast.error(lang === "en" ? "Connection to AI support failed." : "Verbindung zum KI-Support fehlgeschlagen.");
     } finally {
       setIsLoading(false);
+      (window as any).__lvBusy = false;
     }
   };
 
@@ -164,8 +171,8 @@ export default function DashboardChat({ externalOpen, onExternalOpenChange }: Da
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-border">
         <div>
-          <span className="text-sm font-semibold text-foreground"><span className="grayscale-0 sepia saturate-[5] hue-rotate-[10deg] brightness-110 inline-block">🧠</span> Sebastian's Mastermind KI</span>
-          <p className="text-[11px] text-muted-foreground/80 mt-1 leading-relaxed">Diese KI wurde persönlich von Sebastian trainiert und hilft dir bei den meisten Fragen direkt weiter.</p>
+          <span className="text-sm font-semibold text-foreground"><span className="grayscale-0 sepia saturate-[5] hue-rotate-[10deg] brightness-110 inline-block">🧠</span> {lang === "en" ? "Sebastian's Mastermind AI" : "Sebastian's Mastermind KI"}</span>
+          <p className="text-[11px] text-muted-foreground/80 mt-1 leading-relaxed">{lang === "en" ? "This AI was personally trained by Sebastian and helps you with most questions directly." : "Diese KI wurde persönlich von Sebastian trainiert und hilft dir bei den meisten Fragen direkt weiter."}</p>
         </div>
         <button onClick={() => setOpen(false)} className="text-muted-foreground hover:text-foreground shrink-0 ml-2">
           <X className="h-5 w-5" />
@@ -173,11 +180,11 @@ export default function DashboardChat({ externalOpen, onExternalOpenChange }: Da
       </div>
 
       {/* Messages */}
-      <div ref={scrollRef} data-no-translate className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[200px] max-h-[400px]">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[200px] max-h-[400px]">
         {messages.length === 0 && (
           <div className="space-y-2">
-            <p className="text-xs text-muted-foreground">Häufige Fragen:</p>
-            {QUICK_QUESTIONS.map((q) => (
+            <p className="text-xs text-muted-foreground">{lang === "en" ? "Common questions:" : "Häufige Fragen:"}</p>
+            {(lang === "en" ? QUICK_QUESTIONS_EN : QUICK_QUESTIONS_DE).map((q) => (
               <button
                 key={q}
                 onClick={() => send(q)}
@@ -191,6 +198,7 @@ export default function DashboardChat({ externalOpen, onExternalOpenChange }: Da
         {messages.map((m, i) => (
           <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
             <div
+              data-no-translate
               className={`max-w-[85%] rounded-2xl px-4 py-2 text-sm ${
                 m.role === "user"
                   ? "bg-primary text-primary-foreground"
@@ -215,6 +223,7 @@ export default function DashboardChat({ externalOpen, onExternalOpenChange }: Da
           </div>
         )}
       </div>
+
 
       {/* Input */}
       <form
