@@ -58,10 +58,15 @@ serve(async (req) => {
         .from("admin_profiles")
         .select("user_id, display_name")
         .in("user_id", adminIds);
+      const platformLower = String(platform || "").trim().toLowerCase();
+      const isMaloum = platformLower === "maloum";
       const matchIds = (profs ?? [])
         .filter((p: any) => {
           const n = String(p.display_name || "").toLowerCase();
-          return n.includes("vanessa") || n.includes("max");
+          // Route by platform: Maloum → Vanessa, everything else → Max.
+          // If no platform supplied, fall back to both.
+          if (!platformLower) return n.includes("vanessa") || n.includes("max");
+          return isMaloum ? n.includes("vanessa") : n.includes("max");
         })
         .map((p: any) => p.user_id);
       adminIds = matchIds;
