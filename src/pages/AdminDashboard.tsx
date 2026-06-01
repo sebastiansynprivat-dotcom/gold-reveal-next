@@ -7358,14 +7358,55 @@ export default function AdminDashboard() {
                                                   placeholder="No Media Set"
                                                   className="text-xs h-8 bg-background/40 border-border/40 flex-1"
                                                 />
+                                                <input
+                                                  id={`media-upload-${acc.id}`}
+                                                  type="file"
+                                                  accept="image/*,video/*"
+                                                  className="hidden"
+                                                  onChange={async (e) => {
+                                                    const file = e.target.files?.[0];
+                                                    e.target.value = "";
+                                                    if (!file) return;
+                                                    if (file.size > 20 * 1024 * 1024) {
+                                                      toast.error("Datei zu groß (max. 20 MB)");
+                                                      return;
+                                                    }
+                                                    const ext = file.name.split(".").pop() || "bin";
+                                                    const path = `${acc.id}/${Date.now()}.${ext}`;
+                                                    const t = toast.loading("Lade Media hoch…");
+                                                    const { error: upErr } = await supabase.storage
+                                                      .from("mass-dm-media")
+                                                      .upload(path, file, { upsert: true, contentType: file.type });
+                                                    if (upErr) {
+                                                      toast.error("Upload fehlgeschlagen: " + upErr.message, { id: t });
+                                                      return;
+                                                    }
+                                                    const { data: pub } = supabase.storage
+                                                      .from("mass-dm-media")
+                                                      .getPublicUrl(path);
+                                                    const url = pub.publicUrl;
+                                                    setMediaDrafts((d) => ({ ...d, [acc.id]: url }));
+                                                    await updateAccountField(acc.id, { media_id: url });
+                                                    toast.success("Media hochgeladen", { id: t });
+                                                  }}
+                                                />
                                                 <button
                                                   type="button"
-                                                  disabled
-                                                  className="text-[10px] font-semibold px-2.5 py-1 h-8 rounded-md bg-blue-500/80 text-white opacity-70 cursor-not-allowed"
+                                                  onClick={() =>
+                                                    document.getElementById(`media-upload-${acc.id}`)?.click()
+                                                  }
+                                                  className="text-[10px] font-semibold px-2.5 py-1 h-8 rounded-md bg-blue-500/80 hover:bg-blue-500 text-white transition-colors cursor-pointer"
                                                 >
                                                   {savedMedia ? "Refresh Media" : "Set Media"}
                                                 </button>
                                               </div>
+                                              {savedMedia && /\.(png|jpe?g|webp|gif)$/i.test(savedMedia) && (
+                                                <img
+                                                  src={savedMedia}
+                                                  alt="Mass DM Media"
+                                                  className="mt-2 max-h-32 rounded-md border border-border/40 object-cover"
+                                                />
+                                              )}
                                             </div>
                                           </>
                                         );
