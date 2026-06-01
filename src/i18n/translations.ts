@@ -207,7 +207,7 @@ export const dict: Dict = {
   "library.item3.subtitle": { de: "Die Basics, die jeder Top-Chatter beherrscht", en: "The basics every top chatter masters" },
 
   // --- Leaderboard ---
-  "leaderboard.title": { de: "Bestenliste", en: "Leaderboard" },
+  "leaderboard.headerTitle": { de: "Bestenliste", en: "Leaderboard" },
   "leaderboard.subtitle": { de: "Top-Chatter nach Monatsumsatz", en: "Top chatters by monthly revenue" },
   "leaderboard.top100": { de: "Top 100", en: "Top 100" },
   "leaderboard.dayOfMonth": { de: "Monatstag", en: "Day of month" },
