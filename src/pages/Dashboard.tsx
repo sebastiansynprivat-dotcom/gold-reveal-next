@@ -53,6 +53,7 @@ import StreakTracker from "@/components/StreakTracker";
 import MonthlyStreakTracker from "@/components/MonthlyStreakTracker";
 import NotificationBanner from "@/components/NotificationBanner";
 import { useAuth } from "@/hooks/useAuth";
+import { useUILanguage } from "@/hooks/useUILanguage";
 import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/logo.png";
 import GoldParticles from "@/components/GoldParticles";
@@ -190,6 +191,7 @@ export default function Dashboard() {
   const platform = searchParams.get("platform") || "Brezzels";
 
   const { user } = useAuth();
+  const { lang } = useUILanguage();
 
   const [telegramId, setTelegramId] = useState("");
   const [telegramSaved, setTelegramSaved] = useState(false);
@@ -734,7 +736,7 @@ export default function Dashboard() {
                     <Input
                       value={groupName}
                       onChange={(e) => setGroupName(e.target.value)}
-                      placeholder="Gruppenname eingeben"
+                      placeholder={lang === "en" ? "Enter group name" : "Gruppenname eingeben"}
                       className="h-7 text-xs w-full border-transparent"
                     />
                   </div>
