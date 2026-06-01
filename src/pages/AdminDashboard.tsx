@@ -6897,8 +6897,8 @@ export default function AdminDashboard() {
                     </div>
 
                     {/* Table Header */}
-                    <div className="grid grid-cols-[1fr_72px_38px_38px_38px_38px_38px] gap-0 bg-accent/10 border-b border-accent/20">
-                      <div className="px-3 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold">
+                    <div className="grid grid-cols-[minmax(140px,220px)_64px_44px_44px_44px_44px_44px_1fr] gap-0 bg-accent/10 border-b border-accent/20">
+                      <div className="px-3 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold truncate">
                         Account
                       </div>
                       <div className="px-1 py-2 text-[9px] uppercase tracking-wider text-accent font-semibold text-center">
@@ -6919,6 +6919,7 @@ export default function AdminDashboard() {
                       <div className="px-0.5 py-2 text-[8px] uppercase tracking-wider text-accent font-semibold text-center leading-tight">
                         Feed<br/>Post
                       </div>
+                      <div />
                     </div>
 
                     {/* Table Body */}
