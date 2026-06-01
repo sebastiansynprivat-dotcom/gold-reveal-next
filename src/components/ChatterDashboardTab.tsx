@@ -13,6 +13,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import CreditNoteForm from "@/components/CreditNoteForm";
 import { supabase } from "@/integrations/supabase/client";
+import LanguageToggle from "@/components/LanguageToggle";
 
 // Helper to query chatters table (not yet in generated types)
 const chattersTable = () => supabase.from("chatters" as any);
