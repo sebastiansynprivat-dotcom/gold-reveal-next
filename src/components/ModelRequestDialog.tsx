@@ -10,6 +10,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useUILanguage } from "@/hooks/useUILanguage";
 
 export interface EditRequestData {
   id: string;
@@ -25,16 +26,18 @@ interface ModelRequestDialogProps {
   editData?: EditRequestData | null;
   onEditClear?: () => void;
   modelLanguage?: "de" | "en";
+  availablePlatforms?: string[];
 }
 
-const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage = "de" }: ModelRequestDialogProps) => {
+const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage = "de", availablePlatforms }: ModelRequestDialogProps) => {
   const { user } = useAuth();
+  const { lang } = useUILanguage();
   const [open, setOpen] = useState(false);
   const [modelName, setModelName] = useState("");
   const [customerName, setCustomerName] = useState("");
   
   const [requestType, setRequestType] = useState<"individual" | "general">("general");
-  const [platform, setPlatform] = useState<"Maloum" | "Brezzels" | null>(null);
+  const [platform, setPlatform] = useState<string | null>(null);
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
@@ -48,9 +51,9 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
       // modelLanguage comes from prop now
       setRequestType(editData.request_type);
       setPrice(editData.price != null ? String(editData.price) : "");
-      const platformMatch = editData.description.match(/^\[Plattform: (Maloum|Brezzels)\]\s*/);
+      const platformMatch = editData.description.match(/^\[Plattform: ([^\]]+)\]\s*/);
       if (platformMatch) {
-        setPlatform(platformMatch[1] as "Maloum" | "Brezzels");
+        setPlatform(platformMatch[1]);
         setDescription(editData.description.replace(platformMatch[0], ""));
       } else {
         setPlatform(null);
@@ -67,6 +70,14 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
       }, 150);
     }
   }, [editData]);
+
+  // Auto-select platform when chatter is only assigned to one
+  useEffect(() => {
+    if (!platform && availablePlatforms && availablePlatforms.length === 1) {
+      setPlatform(availablePlatforms[0]);
+    }
+  }, [availablePlatforms, platform, open]);
+
 
   const resetForm = () => {
     setModelName("");
@@ -241,25 +252,38 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
             </RadioGroup>
           </div>
 
-          <div className="space-y-2">
-            <Label className="text-xs text-foreground">Plattform *</Label>
-            <div className="grid grid-cols-2 gap-2">
-              {(["Maloum", "Brezzels"] as const).map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  onClick={() => setPlatform(p)}
-                  className={`px-4 py-2.5 rounded-lg border text-xs font-semibold transition-all ${
-                    platform === p
-                      ? "border-accent bg-accent/15 text-accent shadow-[0_0_16px_hsl(43_56%_52%/0.25)]"
-                      : "border-border/50 bg-secondary/20 text-muted-foreground hover:border-accent/40 hover:text-foreground"
-                  }`}
-                >
-                  {p}
-                </button>
-              ))}
-            </div>
-          </div>
+          {(() => {
+            const platforms = (availablePlatforms && availablePlatforms.length > 0)
+              ? Array.from(new Set(availablePlatforms))
+              : ["Maloum", "Brezzels"];
+            return (
+              <div className="space-y-2">
+                <Label className="text-xs text-foreground">Plattform *</Label>
+                {platforms.length === 0 ? (
+                  <p className="text-xs text-muted-foreground italic">
+                    {lang === "en" ? "No platforms assigned yet." : "Noch keine Plattformen zugewiesen."}
+                  </p>
+                ) : (
+                  <div className={`grid gap-2 ${platforms.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
+                    {platforms.map((p) => (
+                      <button
+                        key={p}
+                        type="button"
+                        onClick={() => setPlatform(p)}
+                        className={`px-4 py-2.5 rounded-lg border text-xs font-semibold transition-all ${
+                          platform === p
+                            ? "border-accent bg-accent/15 text-accent shadow-[0_0_16px_hsl(43_56%_52%/0.25)]"
+                            : "border-border/50 bg-secondary/20 text-muted-foreground hover:border-accent/40 hover:text-foreground"
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
 
 
@@ -299,7 +323,7 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
             <div className="input-gold-shimmer rounded-lg">
               <Textarea
                 ref={descriptionRef}
-                placeholder={modelLanguage === "en" ? "Describe the request to the model here..." : "Beschreibe hier die Anfrage an das Model..."}
+                placeholder={lang === "en" ? "Describe the request to the model here..." : "Beschreibe hier die Anfrage an das Model..."}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 maxLength={2000}
