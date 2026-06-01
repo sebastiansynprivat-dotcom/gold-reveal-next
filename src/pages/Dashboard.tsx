@@ -736,7 +736,7 @@ export default function Dashboard() {
                     <Input
                       value={groupName}
                       onChange={(e) => setGroupName(e.target.value)}
-                      placeholder="Gruppenname eingeben"
+                      placeholder={lang === "en" ? "Enter group name" : "Gruppenname eingeben"}
                       className="h-7 text-xs w-full border-transparent"
                     />
                   </div>
