@@ -47,3 +47,6 @@ verify_jwt = false
 
 [functions.send-admin-push]
 verify_jwt = false
+
+[functions.accounts-with-chatters]
+verify_jwt = false
