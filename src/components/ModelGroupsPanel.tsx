@@ -603,54 +603,99 @@ export default function ModelGroupsPanel({
                     </p>
                   )}
                   {groupModels.map((m) => {
-                    const effective =
-                      m.commission_override != null && m.commission_override !== 0
-                        ? m.commission_override
-                        : selected.default_commission;
+                    const baseDefault =
+                      m.commission_override != null && Number(m.commission_override) !== 0
+                        ? Number(m.commission_override)
+                        : Number(selected.default_commission);
+                    const autoMatched = m.group_id !== selected.id;
+                    const platformInput = (
+                      key: "fourbased" | "maloum" | "brezzels",
+                      label: string,
+                      current: number | null,
+                      patchKey:
+                        | "commission_override_fourbased"
+                        | "commission_override_maloum"
+                        | "commission_override_brezzels",
+                    ) => (
+                      <div className="space-y-0.5">
+                        <Label className="text-[9px] text-muted-foreground">{label}</Label>
+                        <Input
+                          type="number"
+                          defaultValue={current ?? ""}
+                          onBlur={(e) => {
+                            const v = e.target.value === "" ? null : Number(e.target.value);
+                            if (v !== current) updateModelField(m.id, { [patchKey]: v } as any);
+                          }}
+                          className="h-7 text-xs"
+                          placeholder={String(baseDefault)}
+                        />
+                      </div>
+                    );
                     return (
                       <div
                         key={m.id}
-                        className="grid grid-cols-12 gap-2 items-center p-3 rounded-lg bg-card border border-accent/10 hover:border-accent/30 transition"
+                        className="p-3 rounded-lg bg-card border border-accent/10 hover:border-accent/30 transition space-y-2"
                       >
-                        <div className="col-span-4">
-                          <p className="text-sm font-medium text-foreground">{m.name}</p>
-                          <p className="text-[10px] text-muted-foreground">@{m.username || "—"}</p>
-                        </div>
-                        <div className="col-span-4">
-                          <Label className="text-[10px] text-muted-foreground">Referral</Label>
-                          <Input
-                            defaultValue={m.referral_source}
-                            onBlur={(e) =>
-                              e.target.value !== m.referral_source &&
-                              updateModelField(m.id, { referral_source: e.target.value })
-                            }
-                            className="h-7 text-xs"
-                            placeholder={selected.referral_source || "—"}
-                          />
-                        </div>
-                        <div className="col-span-3">
-                          <Label className="text-[10px] text-muted-foreground">
-                            Override (sonst {selected.default_commission}%)
-                          </Label>
-                          <Input
-                            type="number"
-                            defaultValue={m.commission_override ?? ""}
-                            onBlur={(e) => {
-                              const v = e.target.value === "" ? null : Number(e.target.value);
-                              if (v !== m.commission_override) updateModelField(m.id, { commission_override: v });
-                            }}
-                            className="h-7 text-xs"
-                            placeholder={String(selected.default_commission)}
-                          />
-                        </div>
-                        <div className="col-span-1 text-right">
-                          <Badge variant="outline" className="border-accent/40 text-accent text-[10px]">
-                            {effective}%
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-foreground truncate">{m.name}</p>
+                              <p className="text-[10px] text-muted-foreground truncate">
+                                @{m.username || "—"} · Tag: {m.referrer_tag || "—"}
+                              </p>
+                            </div>
+                            {autoMatched && (
+                              <Badge
+                                variant="outline"
+                                className="border-accent/40 text-accent text-[9px] shrink-0"
+                                title="Per Referrer-Tag automatisch erkannt – noch nicht fest zugeordnet"
+                              >
+                                Auto
+                              </Badge>
+                            )}
+                          </div>
+                          <Badge variant="outline" className="border-accent/40 text-accent text-[10px] shrink-0">
+                            Default {baseDefault}%
                           </Badge>
+                        </div>
+                        <div className="grid grid-cols-4 gap-2">
+                          <div className="space-y-0.5">
+                            <Label className="text-[9px] text-muted-foreground">Default Override</Label>
+                            <Input
+                              type="number"
+                              defaultValue={m.commission_override ?? ""}
+                              onBlur={(e) => {
+                                const v = e.target.value === "" ? null : Number(e.target.value);
+                                if (v !== m.commission_override)
+                                  updateModelField(m.id, { commission_override: v });
+                              }}
+                              className="h-7 text-xs"
+                              placeholder={String(selected.default_commission)}
+                            />
+                          </div>
+                          {platformInput(
+                            "fourbased",
+                            "4Based %",
+                            m.commission_override_fourbased,
+                            "commission_override_fourbased",
+                          )}
+                          {platformInput(
+                            "maloum",
+                            "Maloum %",
+                            m.commission_override_maloum,
+                            "commission_override_maloum",
+                          )}
+                          {platformInput(
+                            "brezzels",
+                            "Brezzels %",
+                            m.commission_override_brezzels,
+                            "commission_override_brezzels",
+                          )}
                         </div>
                       </div>
                     );
                   })}
+
                 </div>
               </ScrollArea>
             </div>
