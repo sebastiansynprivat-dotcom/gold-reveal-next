@@ -217,6 +217,7 @@ interface ChatterProfile {
   account_domain?: string;
   assigned_accounts?: AccountEntry[];
   language?: string;
+  ui_language?: string;
 }
 
 interface AccountEntry {
@@ -2419,7 +2420,7 @@ export default function AdminDashboard() {
     const { data, error } = await supabase
       .from("profiles")
       .select(
-        "user_id, group_name, telegram_id, created_at, account_email, account_password, account_domain, pwa_installed, language",
+        "user_id, group_name, telegram_id, created_at, account_email, account_password, account_domain, pwa_installed, language, ui_language",
       )
       .order("created_at", { ascending: false });
     if (error) {
@@ -9570,7 +9571,7 @@ export default function AdminDashboard() {
           if (o && reassignTarget) {
             setEditName(reassignTarget.group_name || "");
             setEditTelegram(reassignTarget.telegram_id || "");
-            setEditLanguage(((reassignTarget as any).language || "de") as "de" | "en");
+            setEditLanguage(((reassignTarget as any).ui_language || (reassignTarget as any).language || "de") as "de" | "en");
           }
           if (!o) {
             setReassignTarget(null);
