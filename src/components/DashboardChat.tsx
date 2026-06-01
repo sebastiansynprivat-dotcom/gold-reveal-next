@@ -225,7 +225,7 @@ export default function DashboardChat({ externalOpen, onExternalOpenChange }: Da
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Frage stellen..."
+            placeholder={lang === "en" ? "Ask a question..." : "Frage stellen..."}
             className="flex-1 border-transparent"
             disabled={isLoading}
           />

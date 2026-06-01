@@ -20,6 +20,7 @@ import {
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useLibraryReads } from "@/hooks/useLibraryReads";
+import { useUILanguage } from "@/hooks/useUILanguage";
 
 const PDF_URL = "/content/coaching-basics.pdf";
 const CONTENT_KEY = "coaching-basics";
@@ -574,7 +575,7 @@ export default function CoachingBasics() {
               className="mt-10 flex items-center justify-center gap-2 rounded-xl bg-emerald-500/10 border border-emerald-500/40 text-emerald-400 py-4 font-bold"
             >
               <Check className="h-5 w-5" />
-              Erledigt – du hast die Coaching Basics durch.
+              {lang === "en" ? "Done – you've completed the Coaching Basics." : "Erledigt – du hast die Coaching Basics durch."}
             </motion.div>
           )}
         </AnimatePresence>
