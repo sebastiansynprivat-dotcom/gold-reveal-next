@@ -1,9 +1,10 @@
 // Structured React rendition of the chat-breakdown PDF.
-// Used for English (and other future-translated) viewers so the
-// AutoTranslator can render the entire breakdown in the user's language.
-// German users keep the original styled JPGs.
+// Visually rebuilt 1:1 from the original 10-page JPG design so the
+// AutoTranslator can render the entire breakdown in any language.
+// German viewers still see the original JPGs (handled in ChatBreakdown.tsx).
 
 import { motion } from "framer-motion";
+import { Lock } from "lucide-react";
 
 type Msg = {
   side: "k" | "m"; // customer | model
@@ -16,11 +17,13 @@ type Msg = {
 type Phase = {
   num: number;
   title: string;
+  titleGold?: string; // optional gold-colored suffix in the title (e.g. "20 €, 30 €, 50 €")
   kicker: string;
   messages: Msg[];
-  // Insert explanation boxes after a given message index (inclusive). Multiple per phase OK.
   boxes: { afterIdx: number; title: string; body: string }[];
 };
+
+const GOLD = "#DDB62A";
 
 const HEADER = {
   kicker: "SHEX COACHING · CHAT-ANALYSE",
@@ -33,14 +36,29 @@ const HEADER = {
     { label: "UMSATZ", value: "115 € / 5 Verkäufe" },
     { label: "STUFE", value: "Einsteiger" },
   ],
-  legend: "So liest du dieses PDF: Kunde links (grau), Model rechts (gold). In den goldenen Boxen erklären wir dir Schritt für Schritt, warum genau dieser Satz verkauft.",
+  legend:
+    "So liest du dieses PDF: Kunde links (grau), Model rechts (gold). In den goldenen Boxen erklären wir dir Schritt für Schritt, warum genau dieser Satz verkauft.",
+};
+
+const CLOSING = {
+  divider: true,
+  lines: [
+    "Das war der komplette Chatverlauf – vom ersten Hallo bis zum 115 €-Abschluss.",
+    "",
+    "Wenn du jede einzelne Phase verstanden hast, kannst du sie ab heute in jedem deiner Chats anwenden. Die Preisleiter, das Hinhalten, das Gratis-Selfie zum Schluss – das sind keine Tricks, das ist Handwerk.",
+    "",
+    "Mach es einmal sauber, dann zweimal, dann zehnmal. Spätestens beim zwanzigsten Mal sitzt es so, dass du nicht mehr drüber nachdenkst. Genau dann beginnen die richtig großen Tage.",
+    "",
+    "— Sebastian & das SheX-Team",
+  ],
 };
 
 const PHASES: Phase[] = [
   {
     num: 1,
     title: "Kennenlernen – das Eis brechen",
-    kicker: "Noch keine Anspielungen. Erst Mensch sein. Ziel: er fühlt sich wirklich gesehen.",
+    kicker:
+      "Noch keine Anspielungen. Erst Mensch sein. Ziel: er fühlt sich wirklich gesehen.",
     messages: [
       { side: "m", text: "hey :)", time: "21:04" },
       { side: "m", text: "danke fürs abo, schatz! wie heißt du eigentlich?", time: "21:04" },
@@ -67,7 +85,8 @@ const PHASES: Phase[] = [
   {
     num: 2,
     title: "Überleitung – vom Smalltalk in den Verkauf",
-    kicker: "Sauber aus dem Plaudern in die Spannung wechseln. Das erste Bild ist gratis – aber mit Aufbau.",
+    kicker:
+      "Sauber aus dem Plaudern in die Spannung wechseln. Das erste Bild ist gratis – aber mit Aufbau.",
     messages: [
       { side: "m", text: "okay du … ich hab gerade ein bild gemacht, weiß aber nicht, ob ich es posten soll, haha", time: "21:14" },
       { side: "k", text: "zeig her, sofort!!", time: "21:14" },
@@ -92,8 +111,10 @@ const PHASES: Phase[] = [
   },
   {
     num: 3,
-    title: "Die ersten Stufen – 5 € und 10 €",
-    kicker: "Sebastians Preisleiter startet immer klein. 5 € fühlen sich nach nichts an – der erste Kauf ist der wichtigste.",
+    title: "Die ersten Stufen – ",
+    titleGold: "5 € und 10 €",
+    kicker:
+      "Sebastians Preisleiter startet immer klein. 5 € fühlen sich nach nichts an – der erste Kauf ist der wichtigste.",
     messages: [
       { side: "m", text: "okay, ich könnt dir was schicken … aber du musst mir vorher was versprechen", time: "21:19" },
       { side: "k", text: "alles", time: "21:19" },
@@ -122,8 +143,10 @@ const PHASES: Phase[] = [
   },
   {
     num: 4,
-    title: "Aufbauen – 20 €, 30 €, 50 €",
-    kicker: "Der Preis steigt mit der Erregung. Jeder neue Verkauf ist die logische Fortsetzung seiner Fantasie.",
+    title: "Aufbauen – ",
+    titleGold: "20 €, 30 €, 50 €",
+    kicker:
+      "Der Preis steigt mit der Erregung. Jeder neue Verkauf ist die logische Fortsetzung seiner Fantasie.",
     messages: [
       { side: "m", text: "stell dir vor, wir würden kuscheln und ich hätte nur das an … wo wären deine hände?", time: "21:25" },
       { side: "k", text: "überall. erst auf dem bauch, dann tiefer", time: "21:26" },
@@ -163,7 +186,8 @@ const PHASES: Phase[] = [
   {
     num: 5,
     title: "Sauberer Abschluss – damit er morgen wiederkommt",
-    kicker: "Der wichtigste Schritt kommt NACH dem letzten Kauf. Hier entscheidet sich, ob er morgen wieder zahlt.",
+    kicker:
+      "Der wichtigste Schritt kommt NACH dem letzten Kauf. Hier entscheidet sich, ob er morgen wieder zahlt.",
     messages: [
       { side: "k", text: "bestes geld, das ich je ausgegeben hab", time: "21:36", bought: true },
       { side: "m", text: "warte … ich hab noch was für dich. nur für dich, gratis", time: "21:37" },
@@ -181,109 +205,263 @@ const PHASES: Phase[] = [
   },
 ];
 
+/* ---------- Building blocks ---------- */
+
+function GoldDivider() {
+  return <div className="h-px w-full" style={{ background: GOLD }} />;
+}
+
+function PageFooter({ page }: { page: number }) {
+  return (
+    <div className="mt-8">
+      <div className="h-px w-full bg-white/10" />
+      <div className="flex justify-between items-center text-[10px] uppercase tracking-widest text-white/40 pt-3">
+        <span>SheX Coaching · Chat-Breakdown 01</span>
+        <span>Seite {page} / 10</span>
+      </div>
+    </div>
+  );
+}
+
+function Avatar({ side }: { side: "k" | "m" }) {
+  const isM = side === "m";
+  return (
+    <div
+      className={`w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 ${
+        isM ? "text-white" : "text-white/90 bg-[#2D2D2D]"
+      }`}
+      style={isM ? { background: GOLD } : undefined}
+    >
+      {isM ? "M" : "K"}
+    </div>
+  );
+}
+
 function Bubble({ msg }: { msg: Msg }) {
   const isModel = msg.side === "m";
+
+  // Asymmetric corners — sharp on the inner side (toward the speaker)
+  const bubbleShape = isModel
+    ? "rounded-2xl rounded-br-sm"
+    : "rounded-2xl rounded-bl-sm";
+
+  if (msg.media) {
+    return (
+      <div className={`flex ${isModel ? "justify-end" : "justify-start"} items-end gap-2 my-2`}>
+        {!isModel && <Avatar side="k" />}
+        <div className={`flex flex-col ${isModel ? "items-end" : "items-start"}`}>
+          <div
+            className="rounded-2xl bg-[#1C1C1C] px-5 py-4 min-w-[200px] max-w-[320px] flex flex-col items-center gap-2"
+            style={{ border: `1px solid ${GOLD}` }}
+          >
+            <div
+              className="w-9 h-9 rounded-full flex items-center justify-center"
+              style={{ background: "rgba(221,182,42,0.12)" }}
+            >
+              <Lock className="w-4 h-4" style={{ color: GOLD }} />
+            </div>
+            <div className="text-[11px] uppercase tracking-wider text-white/70 text-center">
+              {msg.media.label}
+            </div>
+            <div
+              className="mt-1 px-5 py-1.5 rounded-full text-sm font-extrabold text-white"
+              style={{ background: GOLD }}
+            >
+              {msg.media.price}
+            </div>
+          </div>
+          <div className={`text-[10px] text-white/40 mt-1 px-1 flex items-center gap-1.5 ${isModel ? "justify-end" : ""}`}>
+            <span>{msg.time}</span>
+          </div>
+        </div>
+        {isModel && <Avatar side="m" />}
+      </div>
+    );
+  }
+
   return (
     <div className={`flex ${isModel ? "justify-end" : "justify-start"} items-end gap-2 my-1.5`}>
-      {!isModel && (
-        <div className="w-7 h-7 rounded-full bg-secondary/70 border border-border flex items-center justify-center text-[10px] font-bold text-muted-foreground shrink-0">K</div>
-      )}
+      {!isModel && <Avatar side="k" />}
       <div className={`max-w-[78%] flex flex-col ${isModel ? "items-end" : "items-start"}`}>
-        {msg.media ? (
-          <div className="rounded-2xl overflow-hidden border border-amber-500/40 bg-gradient-to-br from-amber-500/15 to-yellow-600/5 px-4 py-3 min-w-[180px]">
-            <div className="text-[11px] uppercase tracking-wider text-amber-300/80 mb-1">{msg.media.label}</div>
-            <div className="text-lg font-extrabold text-gold-gradient">{msg.media.price}</div>
-          </div>
-        ) : (
-          <div
-            className={`rounded-2xl px-3.5 py-2 text-sm leading-snug ${
-              isModel
-                ? "bg-gradient-to-br from-amber-400 to-amber-500 text-black font-medium rounded-br-md"
-                : "bg-secondary/60 text-foreground border border-border/60 rounded-bl-md"
-            }`}
-          >
-            {msg.text}
-          </div>
-        )}
-        <div className="text-[10px] text-muted-foreground mt-0.5 px-1 flex items-center gap-1.5">
+        <div
+          className={`${bubbleShape} px-4 py-2.5 text-[15px] leading-snug text-white`}
+          style={{ background: isModel ? GOLD : "#2D2D2D" }}
+        >
+          {msg.text}
+        </div>
+        <div className="text-[10px] text-white/40 mt-1 px-1 flex items-center gap-1.5">
           <span>{msg.time}</span>
           {msg.bought && (
-            <span className="text-emerald-400 font-bold">· gekauft</span>
+            <span className="italic" style={{ color: GOLD }}>
+              · gekauft
+            </span>
           )}
         </div>
       </div>
-      {isModel && (
-        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-[10px] font-bold text-black shrink-0">M</div>
-      )}
+      {isModel && <Avatar side="m" />}
     </div>
   );
 }
 
 function ExplainBox({ title, body }: { title: string; body: string }) {
   return (
-    <div className="my-4 rounded-xl border-l-4 border-amber-400 bg-amber-500/[0.06] p-4">
-      <div className="text-[10px] uppercase tracking-widest font-bold text-amber-300 mb-1">Warum das funktioniert</div>
-      <div className="text-base font-bold text-foreground mb-2">{title}</div>
-      <p className="text-sm text-muted-foreground leading-relaxed">{body}</p>
+    <div
+      className="my-5 rounded-lg bg-[#1C1C1C] p-5 relative overflow-hidden"
+      style={{ borderLeft: `4px solid ${GOLD}` }}
+    >
+      <div
+        className="text-[10px] uppercase tracking-[0.25em] font-bold mb-2"
+        style={{ color: GOLD }}
+      >
+        Warum das funktioniert
+      </div>
+      <div className="text-base font-bold text-white mb-2 leading-snug">{title}</div>
+      <p className="text-[14px] text-white/80 leading-relaxed">{body}</p>
     </div>
   );
 }
 
-export default function ChatBreakdownReact() {
+function PhaseHeader({ phase }: { phase: Phase }) {
   return (
-    <div className="space-y-8">
-      {/* Cover / intro */}
-      <motion.section
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="rounded-2xl border border-amber-500/30 bg-gradient-to-b from-amber-500/[0.07] to-transparent p-6 sm:p-8 shadow-[0_0_40px_rgba(212,175,55,0.15)]"
-      >
-        <div className="text-[11px] uppercase tracking-[0.2em] text-amber-300/80 font-bold mb-3">{HEADER.kicker}</div>
-        <h2 className="text-3xl sm:text-4xl font-extrabold text-foreground leading-tight">
-          {HEADER.title1}<br />
-          <span className="text-gold-gradient">{HEADER.title2}</span>
+    <div className="mb-6">
+      <div className="text-[11px] uppercase tracking-[0.25em] font-bold text-white mb-2">
+        PHASE {phase.num} / {PHASES.length}
+      </div>
+      <h3 className="text-2xl sm:text-3xl font-extrabold leading-tight text-white">
+        {phase.title}
+        {phase.titleGold && <span style={{ color: GOLD }}>{phase.titleGold}</span>}
+      </h3>
+      <p className="text-sm text-white/60 mt-2 leading-relaxed">{phase.kicker}</p>
+    </div>
+  );
+}
+
+/* ---------- Page sections ---------- */
+
+function CoverPage() {
+  return (
+    <section className="bg-[#0A0A0A] px-6 sm:px-10 py-10 sm:py-14">
+      <GoldDivider />
+      <div className="pt-10">
+        <div
+          className="text-[11px] uppercase tracking-[0.3em] text-white mb-6"
+        >
+          {HEADER.kicker}
+        </div>
+        <h2 className="text-4xl sm:text-5xl font-extrabold text-white leading-[1.05]">
+          {HEADER.title1}
+          <br />
+          <span style={{ color: GOLD }}>{HEADER.title2}</span>
         </h2>
-        <p className="text-sm sm:text-base text-muted-foreground mt-3 leading-snug">{HEADER.sub}</p>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
+        <p className="text-base sm:text-lg text-white/85 mt-5 leading-relaxed max-w-2xl">
+          {HEADER.sub}
+        </p>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-px mt-10 bg-white/10 border border-white/10 rounded-lg overflow-hidden">
           {HEADER.meta.map((m) => (
-            <div key={m.label} className="rounded-xl bg-secondary/40 border border-border/60 p-3">
-              <div className="text-[10px] uppercase tracking-widest text-amber-300/80 font-bold">{m.label}</div>
-              <div className="text-sm font-bold text-foreground mt-1">{m.value}</div>
+            <div key={m.label} className="bg-[#0A0A0A] p-4">
+              <div
+                className="text-[10px] uppercase tracking-widest font-bold mb-1"
+                style={{ color: GOLD }}
+              >
+                {m.label}
+              </div>
+              <div className="text-sm font-bold text-white">{m.value}</div>
             </div>
           ))}
         </div>
-        <p className="text-xs text-muted-foreground mt-5 italic">{HEADER.legend}</p>
-      </motion.section>
 
-      {/* Phases */}
-      {PHASES.map((phase) => (
-        <motion.section
-          key={phase.num}
-          initial={{ opacity: 0, y: 12 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.1 }}
-          transition={{ duration: 0.4 }}
-          className="rounded-2xl border border-border/60 bg-secondary/20 p-5 sm:p-7"
-        >
-          <div className="text-[11px] uppercase tracking-[0.2em] text-amber-300/80 font-bold">
-            Phase {phase.num} / {PHASES.length}
+        {/* Legend with example bubbles */}
+        <div className="mt-10 rounded-lg bg-[#1C1C1C] p-5" style={{ borderLeft: `4px solid ${GOLD}` }}>
+          <div className="text-[10px] uppercase tracking-[0.25em] font-bold mb-3" style={{ color: GOLD }}>
+            So liest du dieses PDF
           </div>
-          <h3 className="text-2xl sm:text-3xl font-extrabold text-foreground mt-1 leading-tight">{phase.title}</h3>
-          <p className="text-sm text-muted-foreground mt-2">{phase.kicker}</p>
+          <div className="flex flex-wrap items-center gap-3 mb-3">
+            <span className="text-xs text-white/70">Kunde</span>
+            <div className="rounded-lg px-3 py-1.5 text-xs text-white bg-[#2D2D2D]">Beispieltext</div>
+            <span className="text-white/30">·</span>
+            <span className="text-xs text-white/70">Model</span>
+            <div className="rounded-lg px-3 py-1.5 text-xs text-white font-medium" style={{ background: GOLD }}>
+              Beispieltext
+            </div>
+          </div>
+          <p className="text-sm text-white/80 leading-relaxed">{HEADER.legend}</p>
+        </div>
+      </div>
+      <PageFooter page={1} />
+    </section>
+  );
+}
 
-          <div className="mt-5">
-            {phase.messages.map((m, i) => {
-              const boxAfter = phase.boxes.find((b) => b.afterIdx === i);
-              return (
-                <div key={i}>
-                  <Bubble msg={m} />
-                  {boxAfter && <ExplainBox title={boxAfter.title} body={boxAfter.body} />}
-                </div>
-              );
-            })}
-          </div>
-        </motion.section>
+function PhaseSection({ phase, startPage }: { phase: Phase; startPage: number }) {
+  return (
+    <motion.section
+      initial={{ opacity: 0, y: 12 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.05 }}
+      transition={{ duration: 0.4 }}
+      className="bg-[#0A0A0A] px-6 sm:px-10 py-10"
+    >
+      <GoldDivider />
+      <div className="pt-8">
+        <PhaseHeader phase={phase} />
+        <div>
+          {phase.messages.map((m, i) => {
+            const boxAfter = phase.boxes.find((b) => b.afterIdx === i);
+            return (
+              <div key={i}>
+                <Bubble msg={m} />
+                {boxAfter && <ExplainBox title={boxAfter.title} body={boxAfter.body} />}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+      <PageFooter page={startPage} />
+    </motion.section>
+  );
+}
+
+function ClosingPage() {
+  return (
+    <section className="bg-[#0A0A0A] px-6 sm:px-10 py-14 sm:py-20">
+      <GoldDivider />
+      <div className="pt-16 max-w-2xl mx-auto">
+        <div
+          className="h-0.5 w-16 mb-8 mx-auto"
+          style={{ background: GOLD }}
+        />
+        <div className="space-y-4">
+          {CLOSING.lines.map((line, i) =>
+            line === "" ? (
+              <div key={i} className="h-2" />
+            ) : line.startsWith("—") ? (
+              <p key={i} className="text-sm text-white/60 italic pt-2">
+                {line}
+              </p>
+            ) : (
+              <p key={i} className="text-base sm:text-lg text-white leading-relaxed">
+                {line}
+              </p>
+            )
+          )}
+        </div>
+      </div>
+      <PageFooter page={10} />
+    </section>
+  );
+}
+
+/* ---------- Root ---------- */
+
+export default function ChatBreakdownReact() {
+  return (
+    <div className="rounded-xl overflow-hidden border border-white/10 bg-[#0A0A0A] shadow-[0_0_40px_rgba(221,182,42,0.10)] divide-y divide-white/10">
+      <CoverPage />
+      {PHASES.map((phase, idx) => (
+        <PhaseSection key={phase.num} phase={phase} startPage={idx + 3} />
       ))}
+      <ClosingPage />
     </div>
   );
 }
