@@ -1328,13 +1328,16 @@ export default function Dashboard() {
                                     prev.map((r) => (r.id === req.id ? { ...r, status: "in_progress" } : r)),
                                   );
                                 }
-                                // Fire-and-forget admin push (Vanessa & Max)
+                                // Fire-and-forget admin push (routed by platform: Maloum→Vanessa, sonst→Max)
+                                const _pm = String(req.description || "").match(/^\[Plattform:\s*([^\]]+)\]\s*/i);
+                                const _platform = _pm ? _pm[1].trim() : "";
                                 supabase.functions.invoke("send-admin-push", {
                                   body: {
                                     event: "new_request_comment",
                                     title: `💬 NEUER KOMMENTAR · ${req.model_name || "Anfrage"}`,
                                     body: body.length > 120 ? body.slice(0, 117) + "..." : body,
                                     url: "/admin",
+                                    platform: _platform,
                                   },
                                 }).catch(() => {});
                                 toast.success("Antwort gesendet");
