@@ -187,12 +187,12 @@ const Auth = () => {
 
     if (isSignUp) {
       if (!groupName.trim()) {
-        setError("Bitte gib deinen Gruppennamen ein.");
+        setError(t("auth.error.groupRequired"));
         return;
       }
       const cleanedTgId = telegramId.replace(/\s+/g, "");
       if (!/^\d{5,}$/.test(cleanedTgId)) {
-        setError("Bitte gib eine gültige Telegram-ID ein (nur Zahlen, mindestens 5 Stellen).");
+        setError(t("auth.error.tgInvalid"));
         return;
       }
       localStorage.setItem("pending_telegram_id", cleanedTgId);
@@ -205,7 +205,7 @@ const Auth = () => {
     setSubmitting(true);
     const { error } = await signIn(email, password);
     if (error) {
-      setError(translateError(error.message));
+      setError(translateError(error.message, t));
     }
     setSubmitting(false);
   };
@@ -220,7 +220,7 @@ const Auth = () => {
     setSubmitting(true);
     const { error } = await signUp(email, password, { group_name: groupName.trim() });
     if (error) {
-      setError(translateError(error.message));
+      setError(translateError(error.message, t));
     } else {
       setSignUpSuccess(true);
     }
