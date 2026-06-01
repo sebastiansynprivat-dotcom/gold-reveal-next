@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import { AreaChart, Area, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { format, subDays } from "date-fns";
-import { de } from "date-fns/locale";
+import { de, enUS } from "date-fns/locale";
 import { motion } from "framer-motion";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { useUILanguage } from "@/hooks/useUILanguage";
 
 interface RevenueChartProps {
   userId: string;
@@ -13,6 +14,9 @@ interface RevenueChartProps {
 export default function RevenueChart({ userId }: RevenueChartProps) {
   const [data, setData] = useState<{ day: string; amount: number }[]>([]);
   const [loading, setLoading] = useState(true);
+  const { t, lang } = useUILanguage();
+  const dateLocale = lang === "en" ? enUS : de;
+  const numLocale = lang === "en" ? "en-US" : "de-DE";
 
   useEffect(() => {
     const load = async () => {
@@ -28,13 +32,12 @@ export default function RevenueChart({ userId }: RevenueChartProps) {
         .lte("date", to)
         .order("date", { ascending: true });
 
-      // Build full 7-day array, fill missing days with 0
       const mapped: { day: string; amount: number }[] = [];
       for (let i = 6; i >= 0; i--) {
         const d = format(subDays(today, i), "yyyy-MM-dd");
         const entry = rows?.find((r) => r.date === d);
         mapped.push({
-          day: format(new Date(d), "EEE", { locale: de }),
+          day: format(new Date(d), "EEE", { locale: dateLocale }),
           amount: entry ? Number(entry.amount) : 0,
         });
       }
@@ -42,7 +45,7 @@ export default function RevenueChart({ userId }: RevenueChartProps) {
       setLoading(false);
     };
     load();
-  }, [userId]);
+  }, [userId, dateLocale]);
 
   if (loading) {
     return (
@@ -65,13 +68,13 @@ export default function RevenueChart({ userId }: RevenueChartProps) {
       className="glass-card-subtle rounded-xl p-4 card-inner-glow"
     >
       <div className="flex items-center justify-between mb-3">
-        <p className="text-xs font-medium text-muted-foreground">Letzte 7 Tage</p>
+        <p className="text-xs font-medium text-muted-foreground">{t("chart.last7Days")}</p>
         <div className="flex items-center gap-1.5">
           {trend === "up" && <TrendingUp className="h-3.5 w-3.5 text-green-400" />}
           {trend === "down" && <TrendingDown className="h-3.5 w-3.5 text-red-400" />}
           {trend === "flat" && <Minus className="h-3.5 w-3.5 text-muted-foreground" />}
           <span className="text-sm font-bold text-foreground">
-            {total.toLocaleString("de-DE")}€
+            {total.toLocaleString(numLocale)}€
           </span>
         </div>
       </div>
@@ -94,7 +97,7 @@ export default function RevenueChart({ userId }: RevenueChartProps) {
               axisLine={false}
               tickLine={false}
               tick={{ fontSize: 9, fill: "hsl(0, 0%, 55%)" }}
-              tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toLocaleString("de-DE")}k` : `${v}€`}
+              tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toLocaleString(numLocale)}k` : `${v}€`}
               width={35}
             />
             <Tooltip
@@ -105,7 +108,7 @@ export default function RevenueChart({ userId }: RevenueChartProps) {
                 fontSize: "12px",
                 color: "hsl(43, 56%, 52%)",
               }}
-              formatter={(value: number) => [`${value.toLocaleString("de-DE")}€`, "Umsatz"]}
+              formatter={(value: number) => [`${value.toLocaleString(numLocale)}€`, t("chart.revenue")]}
               labelStyle={{ color: "hsl(0, 0%, 55%)" }}
             />
             <Area

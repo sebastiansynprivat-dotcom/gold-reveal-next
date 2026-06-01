@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useUILanguage } from "@/hooks/useUILanguage";
 
 export default function DailyGoal() {
   const [goalAmount, setGoalAmount] = useState<number>(30);
   const [loading, setLoading] = useState(true);
+  const { t, lang } = useUILanguage();
 
   useEffect(() => {
     const fetchGoal = async () => {
@@ -35,11 +37,13 @@ export default function DailyGoal() {
     );
   }
 
+  const locale = lang === "en" ? "en-US" : "de-DE";
+
   return (
     <div className="glass-card-subtle rounded-xl p-3 lg:p-5 text-center">
-      <p className="text-[10px] lg:text-xs text-muted-foreground mb-0.5">Tagesziel</p>
+      <p className="text-[10px] lg:text-xs text-muted-foreground mb-0.5">{t("dailyGoal.label")}</p>
       <p className="text-xl lg:text-2xl font-bold text-gold-gradient">
-        {goalAmount.toLocaleString("de-DE")}€
+        {goalAmount.toLocaleString(locale)}€
       </p>
     </div>
   );
