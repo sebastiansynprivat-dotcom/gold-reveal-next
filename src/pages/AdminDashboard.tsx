@@ -1213,6 +1213,21 @@ export default function AdminDashboard() {
   const [editingAdminNameValue, setEditingAdminNameValue] = useState("");
   const [savingAdminName, setSavingAdminName] = useState(false);
   const [adminNames, setAdminNames] = useState<Record<string, string>>({});
+  const myAdminName = ((user?.id ? adminNames[user.id] : "") || "").toLowerCase();
+  const isReqForMe = useCallback((req: any): boolean => {
+    const platform = getReqPlatform(req);
+    if (myAdminName.includes("vanessa")) return platform === "maloum";
+    if (myAdminName.includes("max")) return platform !== "maloum";
+    return true;
+  }, [myAdminName, getReqPlatform]);
+  const isReqUnreadForMe = useCallback(
+    (req: any) => isReqUnread(req) && isReqForMe(req),
+    [isReqUnread, isReqForMe],
+  );
+  const unreadCount = useMemo(
+    () => modelRequests.filter((r) => isReqUnreadForMe(r)).length,
+    [modelRequests, isReqUnreadForMe],
+  );
   const [adminLanguages, setAdminLanguages] = useState<Record<string, "de" | "en">>({});
   const [savingAdminLang, setSavingAdminLang] = useState<string | null>(null);
   const [newAdminEmail, setNewAdminEmail] = useState("");
