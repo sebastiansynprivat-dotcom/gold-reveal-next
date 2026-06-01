@@ -244,25 +244,38 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
             </RadioGroup>
           </div>
 
-          <div className="space-y-2">
-            <Label className="text-xs text-foreground">Plattform *</Label>
-            <div className="grid grid-cols-2 gap-2">
-              {(["Maloum", "Brezzels"] as const).map((p) => (
-                <button
-                  key={p}
-                  type="button"
-                  onClick={() => setPlatform(p)}
-                  className={`px-4 py-2.5 rounded-lg border text-xs font-semibold transition-all ${
-                    platform === p
-                      ? "border-accent bg-accent/15 text-accent shadow-[0_0_16px_hsl(43_56%_52%/0.25)]"
-                      : "border-border/50 bg-secondary/20 text-muted-foreground hover:border-accent/40 hover:text-foreground"
-                  }`}
-                >
-                  {p}
-                </button>
-              ))}
-            </div>
-          </div>
+          {(() => {
+            const platforms = (availablePlatforms && availablePlatforms.length > 0)
+              ? Array.from(new Set(availablePlatforms))
+              : ["Maloum", "Brezzels"];
+            return (
+              <div className="space-y-2">
+                <Label className="text-xs text-foreground">Plattform *</Label>
+                {platforms.length === 0 ? (
+                  <p className="text-xs text-muted-foreground italic">
+                    {lang === "en" ? "No platforms assigned yet." : "Noch keine Plattformen zugewiesen."}
+                  </p>
+                ) : (
+                  <div className={`grid gap-2 ${platforms.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
+                    {platforms.map((p) => (
+                      <button
+                        key={p}
+                        type="button"
+                        onClick={() => setPlatform(p)}
+                        className={`px-4 py-2.5 rounded-lg border text-xs font-semibold transition-all ${
+                          platform === p
+                            ? "border-accent bg-accent/15 text-accent shadow-[0_0_16px_hsl(43_56%_52%/0.25)]"
+                            : "border-border/50 bg-secondary/20 text-muted-foreground hover:border-accent/40 hover:text-foreground"
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
 
 
