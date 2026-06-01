@@ -5642,13 +5642,16 @@ export default function AdminDashboard() {
                     })()}
 
                     {modelRequests.filter((r) => {
-                      if (unreadOnly && !isReqUnread(r)) return false;
-                      if (requestFilter === "all" && (r.status === "rejected" || r.status === "archived")) return false;
-                      if (requestFilter !== "all" && r.status !== requestFilter) return false;
-                      if (requestFilter === "accepted" && contentLinkFilter === "with_link" && !r.content_link)
-                        return false;
-                      if (requestFilter === "accepted" && contentLinkFilter === "without_link" && r.content_link)
-                        return false;
+                      if (unreadOnly) {
+                        if (!isReqUnread(r)) return false;
+                      } else {
+                        if (requestFilter === "all" && (r.status === "rejected" || r.status === "archived")) return false;
+                        if (requestFilter !== "all" && r.status !== requestFilter) return false;
+                        if (requestFilter === "accepted" && contentLinkFilter === "with_link" && !r.content_link)
+                          return false;
+                        if (requestFilter === "accepted" && contentLinkFilter === "without_link" && r.content_link)
+                          return false;
+                      }
                       if (requestSearchQuery.trim() && !String(r.model_name || "").toLowerCase().includes(requestSearchQuery.trim().toLowerCase()))
                         return false;
                       if (requestPlatformFilter !== "all") {
@@ -5672,13 +5675,16 @@ export default function AdminDashboard() {
                       <div className="p-3 space-y-4">
                         {modelRequests
                           .filter((r) => {
-                            if (unreadOnly && !isReqUnread(r)) return false;
-                            if (requestFilter === "all" && (r.status === "rejected" || r.status === "archived")) return false;
-                            if (requestFilter !== "all" && r.status !== requestFilter) return false;
-                            if (requestFilter === "accepted" && contentLinkFilter === "with_link" && !r.content_link)
-                              return false;
-                            if (requestFilter === "accepted" && contentLinkFilter === "without_link" && r.content_link)
-                              return false;
+                            if (unreadOnly) {
+                              if (!isReqUnread(r)) return false;
+                            } else {
+                              if (requestFilter === "all" && (r.status === "rejected" || r.status === "archived")) return false;
+                              if (requestFilter !== "all" && r.status !== requestFilter) return false;
+                              if (requestFilter === "accepted" && contentLinkFilter === "with_link" && !r.content_link)
+                                return false;
+                              if (requestFilter === "accepted" && contentLinkFilter === "without_link" && r.content_link)
+                                return false;
+                            }
                             if (requestSearchQuery.trim() && !String(r.model_name || "").toLowerCase().includes(requestSearchQuery.trim().toLowerCase()))
                               return false;
                             if (requestPlatformFilter !== "all") {
