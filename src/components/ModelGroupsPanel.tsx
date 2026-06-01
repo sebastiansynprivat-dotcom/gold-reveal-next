@@ -769,12 +769,15 @@ export default function ModelGroupsPanel({
                 />
               </div>
               <div>
-                <Label className="text-xs">Referral-Quelle</Label>
+                <Label className="text-xs">Referrer-Tag</Label>
                 <Input
                   value={form.referral_source}
                   onChange={(e) => setForm((p) => ({ ...p, referral_source: e.target.value }))}
-                  placeholder="z. B. Partner XY / Telegram-Pool"
+                  placeholder="z. B. Opus – Models mit diesem Tag werden automatisch zugeordnet"
                 />
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  Alle Models, deren Referrer-Tag (case-insensitive) übereinstimmt, erscheinen automatisch in dieser Gruppe.
+                </p>
               </div>
               <div>
                 <div className="flex justify-between items-center mb-2">
