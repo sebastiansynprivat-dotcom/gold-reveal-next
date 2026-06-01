@@ -43,10 +43,9 @@ serve(async (req) => {
     const { data: subscriptions, error: fetchError } = await query;
     if (fetchError) throw fetchError;
 
-    // Build per-user language map if an EN version exists
-    const hasEn = typeof title_en === "string" && typeof body_en === "string" && title_en.trim() && body_en.trim();
+    // Build per-user language map
     const langMap = new Map<string, "de" | "en">();
-    if (hasEn && subscriptions && subscriptions.length > 0) {
+    if (subscriptions && subscriptions.length > 0) {
       const userIds = Array.from(new Set(subscriptions.map((s: any) => s.user_id).filter(Boolean)));
       if (userIds.length > 0) {
         const { data: profs } = await adminClient
@@ -60,8 +59,43 @@ serve(async (req) => {
       }
     }
 
+    const anyEnRecipient = Array.from(langMap.values()).some((v) => v === "en");
+    let finalTitleEn = typeof title_en === "string" && title_en.trim() ? title_en : "";
+    let finalBodyEn = typeof body_en === "string" && body_en.trim() ? body_en : "";
+
+    // Auto-translate DE -> EN if any English recipient and no EN provided
+    if (anyEnRecipient && (!finalTitleEn || !finalBodyEn)) {
+      try {
+        const apiKey = Deno.env.get("LOVABLE_API_KEY");
+        if (apiKey) {
+          const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+            body: JSON.stringify({
+              model: "google/gemini-3-flash-preview",
+              messages: [
+                { role: "system", content: "Translate German push notifications to natural, punchy English. Preserve emojis, numbers, currency symbols, names in quotes. Reply ONLY with JSON: {\"title\":\"...\",\"body\":\"...\"}" },
+                { role: "user", content: JSON.stringify({ title, body }) },
+              ],
+            }),
+          });
+          if (r.ok) {
+            const j = await r.json();
+            const txt = j?.choices?.[0]?.message?.content || "";
+            const m = txt.match(/\{[\s\S]*\}/);
+            if (m) {
+              const parsed = JSON.parse(m[0]);
+              if (parsed.title) finalTitleEn = parsed.title;
+              if (parsed.body) finalBodyEn = parsed.body;
+            }
+          }
+        }
+      } catch (e) { console.error("translate err", e); }
+    }
+
+    const hasEn = !!(finalTitleEn && finalBodyEn);
     const payloadDe = JSON.stringify({ title, body, url: "/dashboard" });
-    const payloadEn = hasEn ? JSON.stringify({ title: title_en, body: body_en, url: "/dashboard" }) : payloadDe;
+    const payloadEn = hasEn ? JSON.stringify({ title: finalTitleEn, body: finalBodyEn, url: "/dashboard" }) : payloadDe;
 
     let sent = 0;
     const failed: string[] = [];

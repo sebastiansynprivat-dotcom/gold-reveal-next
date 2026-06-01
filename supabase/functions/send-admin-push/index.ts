@@ -96,13 +96,57 @@ serve(async (req) => {
       .select("*")
       .in("user_id", targetIds);
 
-    const payload = JSON.stringify({ title, body, url: url ?? "/admin" });
+    // Per-admin language
+    const langMap = new Map<string, "de" | "en">();
+    const { data: profs2 } = await admin
+      .from("profiles")
+      .select("user_id, ui_language")
+      .in("user_id", targetIds);
+    for (const p of profs2 || []) {
+      langMap.set((p as any).user_id, (p as any).ui_language === "en" ? "en" : "de");
+    }
+
+    const anyEn = Array.from(langMap.values()).some((v) => v === "en");
+    let titleEn = title;
+    let bodyEn = body;
+    if (anyEn) {
+      try {
+        const apiKey = Deno.env.get("LOVABLE_API_KEY");
+        if (apiKey) {
+          const r = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+            body: JSON.stringify({
+              model: "google/gemini-3-flash-preview",
+              messages: [
+                { role: "system", content: "Translate German push notifications to natural, punchy English. Preserve emojis, numbers, currency symbols, names in quotes, platform names. Reply ONLY with JSON: {\"title\":\"...\",\"body\":\"...\"}" },
+                { role: "user", content: JSON.stringify({ title, body }) },
+              ],
+            }),
+          });
+          if (r.ok) {
+            const j = await r.json();
+            const txt = j?.choices?.[0]?.message?.content || "";
+            const m = txt.match(/\{[\s\S]*\}/);
+            if (m) {
+              const parsed = JSON.parse(m[0]);
+              if (parsed.title) titleEn = parsed.title;
+              if (parsed.body) bodyEn = parsed.body;
+            }
+          }
+        }
+      } catch (e) { console.error("admin translate err", e); }
+    }
+
+    const payloadDe = JSON.stringify({ title, body, url: url ?? "/admin" });
+    const payloadEn = JSON.stringify({ title: titleEn, body: bodyEn, url: url ?? "/admin" });
     let sent = 0;
     for (const sub of subs ?? []) {
       try {
+        const lang = langMap.get(sub.user_id) === "en" ? "en" : "de";
         await webpush.sendNotification(
           { endpoint: sub.endpoint, keys: { p256dh: sub.keys_p256dh, auth: sub.keys_auth } },
-          payload
+          lang === "en" ? payloadEn : payloadDe
         );
         sent++;
       } catch (err: any) {
