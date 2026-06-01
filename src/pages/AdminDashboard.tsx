@@ -3676,9 +3676,10 @@ export default function AdminDashboard() {
         }))
     : [];
 
-  const tabItems = isSuperAdmin
+  const tabItems = (isSuperAdmin
     ? [...allTabItems, ...subAdminTabs]
-    : allTabItems.filter((t) => !SUPER_ADMIN_TABS.has(t.key));
+    : allTabItems.filter((t) => !SUPER_ADMIN_TABS.has(t.key))
+  ).filter((t) => !(hideRevenue && t.key === "einnahmen"));
 
   return (
     <div className="min-h-screen relative">
