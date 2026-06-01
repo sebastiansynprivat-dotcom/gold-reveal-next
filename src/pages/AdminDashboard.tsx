@@ -2275,6 +2275,20 @@ export default function AdminDashboard() {
         }
         return next;
       });
+      // Load UI languages for admins from profiles
+      const ids = list.map((a: any) => a.user_id).filter(Boolean);
+      if (ids.length > 0) {
+        const { data: profs } = await supabase
+          .from("profiles")
+          .select("user_id, ui_language")
+          .in("user_id", ids);
+        const map: Record<string, "de" | "en"> = {};
+        for (const p of profs || []) {
+          const v = (p as any).ui_language;
+          map[(p as any).user_id] = v === "en" ? "en" : "de";
+        }
+        setAdminLanguages(map);
+      }
     } catch (err: any) {
       toast.error(err.message || "Fehler beim Laden der Admins");
     } finally {
