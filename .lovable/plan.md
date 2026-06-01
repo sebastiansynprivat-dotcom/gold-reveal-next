@@ -1,46 +1,80 @@
-# Englischer Sprachsupport für den Chatter-Bereich
+## Goal
 
-Ziel: Komplette EN-Übersetzung des Chatter-Bereichs (UI, Dialoge, AI-Antworten, Push-Notifications). Default DE, Browser erkennt EN automatisch, User kann jederzeit überschreiben.
+Add a "Umsatz abrufen" card inside `ModelDashboardTab` → section "Einnahmen & Anteil" (above the per-account revenue list). Admin picks month + year, clicks the button, an edge function calls the external backend, and the response populates `model_dashboard` (one row per model, keyed by `model_id`).
 
-## Umsetzung in 3 Phasen
+## 1. Database migration
 
-### Phase 1 — Sprach-Infrastruktur (diese Iteration)
+Schema change for `public.model_dashboard`:
 
-1. **DB-Feld** `ui_language` (`'de' | 'en'`) auf `profiles` (Default `de`).
-2. **`useUILanguage()` Hook** mit:
-   - Initial: Wert aus `profiles.ui_language` falls gesetzt, sonst `navigator.language` → `en-*` ⇒ `en`, sonst `de`.
-   - Realtime-Sync zur DB, Cache in `localStorage`.
-   - Exportiert `lang`, `setLang`, `t(key)`.
-3. **Translation-Dictionary** `src/i18n/translations.ts` mit allen DE/EN-Strings nach Bereichen (`dashboard.*`, `checklist.*`, `streak.*`, `chat.*`, …).
-4. **Sprach-Toggle** in der Dashboard-Header-Zone (DE | EN Pill).
+- Add new column `model_id uuid` (nullable initially).
+- Add `last_fetched_at timestamptz`, `last_fetched_month smallint`, `last_fetched_year smallint`.
+- Backfill `model_id` from `accounts.model_id` using `account_id`.
+- Collapse to one row per model: for every model, aggregate existing rows (sum `fourbased_revenue`, `maloum_revenue`, `brezzels_revenue`; max of submitted/done booleans; latest `updated_at` for `monthly_revenue`, `yesterday_revenue`, `notes`, `revenue_percentage`, `crypto_address`, `contract_file_path`, `currency`); delete the rest.
+- Drop column `account_id`.
+- Make `model_id` `NOT NULL` and add `UNIQUE (model_id)`.
+- Update RLS policies that reference `account_id`:
+  - "Models can view own model_dashboard" → match `model_users.model_id = model_dashboard.model_id`.
+  - Admin policy stays as `is_admin()`.
 
-### Phase 2 — UI-Übersetzung (folgt direkt)
+No new table is created, so no GRANT block needed.
 
-Dateien werden auf `t(...)` umgestellt:
-- `src/pages/Dashboard.tsx`
-- `src/components/ChatterDashboardTab.tsx`, `DailyChecklist.tsx`, `StreakTracker.tsx`, `MonthlyStreakTracker.tsx`, `ThirtyDayChallenge.tsx`, `MonthSummaryWidget.tsx`, `RevenueChart.tsx`, `QuickActionBar.tsx`, `DashboardOnboarding.tsx`, `DailyGoal.tsx`, `ProgressChecklist.tsx`, `LiveActivityTicker.tsx`, `SocialProofBar.tsx`, `LootBoxReward.tsx`, `PushNotificationDialog.tsx`, `NotificationBanner.tsx`, `BillingAudioDialog.tsx`, `GewerbeDialog.tsx`, `FrageMemoDialog.tsx`, `AccountMemoDialog.tsx`, `DashboardChat.tsx`, `ExitIntentPopup.tsx`, `HomescreenTutorial.tsx`, `InspirationLibrary.tsx`, `MassDmGenerator.tsx`
-- Seiten: `Auth.tsx`, `Onboarding.tsx`, `Quiz.tsx`, `Library.tsx`, `Invoice.tsx`, `Leaderboard.tsx`, `SalesScripts.tsx`, `ResetPassword.tsx`, Offer-Pages, `Index.tsx`
-- Date-fns Locale: `de` ↔ `enUS` dynamisch.
+## 2. Edge function: `fetch-model-revenue`
 
-### Phase 3 — AI & Push (folgt)
+New Supabase edge function (admin-only, JWT verified in code via `getClaims` + `is_admin` check).
 
-- Edge Functions `chat`, `generate-massdm`, `generate-chatter-summary`, `translate-text`, `hourly-revenue-push`, `notify-account-assigned`, `process-scheduled-notifications`, `send-notification`, `ingest-revenue` (Sale-Push) bekommen System-Prompts/Templates mit Sprach-Switch basierend auf `profiles.ui_language` des Empfängers.
-- `notifications`-Templates erweitert um `body_en`/`title_en` Spalten; Admin-UI bekommt EN-Tab.
-- Push-Texte (BIG SALE, Streak, 24h-Follow-up) auf Empfänger-Sprache.
+Why an edge function: hides the `X-API-KEY` secret, avoids browser CORS to the ngrok host, performs the upsert with service role.
 
-## Technische Details
+- Input from client: `{ model_id, month, year }`.
+- Server loads the model (id, name) and its accounts (id, platform, account_email, account_password) using the service role.
+- POSTs to `${REVENUE_BACKEND_URL}/getmonthlyrevenue` with:
+  - Headers: `X-API-KEY: ${REVENUE_BACKEND_TOKEN}`, `Content-Type: application/json`.
+  - Body:
+    ```json
+    {
+      "month": 11,
+      "year": 2026,
+      "model": { "id": "...", "name": "..." },
+      "accounts": [
+        { "id": "...", "platform": "maloum", "email": "...", "password": "..." }
+      ]
+    }
+    ```
+- Expected response: `{ model_id, date: "dd-mm-yyyy", fourbased_revenue, maloum_revenue, brezzels_revenue, ... }` (extra `*_revenue` fields are upserted dynamically when their column exists in `model_dashboard`).
+- Upserts `model_dashboard` on `model_id`: sets `fourbased_revenue`, `maloum_revenue`, `brezzels_revenue`, `monthly_revenue = fb+ml+br`, stamps `last_fetched_at/month/year`.
+- Returns the saved row.
 
-- **Reaktivität**: Hook abonniert Realtime-Channel `profiles:user_id=eq.{uid}` → Sprachwechsel propagiert ohne Reload.
-- **Mass DM/Inspiration**: Bleiben DE/EN je nach `model_language` des Accounts (das ist Content-Sprache, nicht UI).
-- **Admin-Bereich**: Bleibt komplett DE (außerhalb Scope).
-- **Model-Dashboard**: Hat schon eigenes Toggle via `model_language` — wird nicht angefasst.
+Secrets to add (via `add_secret`):
+- `REVENUE_BACKEND_URL` — base URL (e.g. `https://api.shexadmin.ngrok.pro`).
+- `REVENUE_BACKEND_TOKEN` — value sent in the `X-API-KEY` header.
 
-## Was diese Iteration konkret ändert
+`supabase/config.toml`: add `[functions.fetch-model-revenue]` block with `verify_jwt = false` (we validate manually in code, matching the project pattern).
 
-- Migration `profiles.ui_language`
-- `src/i18n/translations.ts` (initiale Keys für Dashboard-Kern)
-- `src/hooks/useUILanguage.ts`
-- Sprach-Toggle in `Dashboard.tsx` Header
-- `Dashboard.tsx` + `ChatterDashboardTab.tsx` + `DailyChecklist.tsx` + `StreakTracker.tsx` + `QuickActionBar.tsx` + `MonthSummaryWidget.tsx` + `RevenueChart.tsx` als erste Übersetzungswelle
+## 3. Frontend — `src/components/ModelDashboardTab.tsx`
 
-Phase 2 (restliche Widgets/Seiten) und Phase 3 (AI/Push) folgen in eigenen Nachrichten, damit Du jeweils das Ergebnis prüfen kannst.
+New card above the per-account list in section "Einnahmen & Anteil":
+
+- Month `<Select>` (1–12, German labels) and Year `<Select>` (current year ± 2), defaults to today's month/year.
+- Gold gradient "Umsatz abrufen" button with loading spinner.
+- If `last_fetched_month`/`last_fetched_year` already match the selection, show a confirm `AlertDialog` ("Werte überschreiben?") before fetching.
+- On success: toast, refresh `dashboardRevenues` / `platformRevenues`, show "Zuletzt geholt: dd.mm.yyyy HH:mm".
+
+Data layer updates in the same file:
+
+- `loadModelAccounts(modelId)` queries `model_dashboard` with `.eq("model_id", modelId).maybeSingle()` and maps the single row's per-platform fields onto each account by `acc.platform`.
+- The existing inline per-platform `<Input>` (around lines 1512–1551) now upserts on `model_id = selectedModelId` (single row), writing only the field for that account's platform plus a recomputed `monthly_revenue`.
+
+## 4. Files touched
+
+- New migration (schema collapse + RLS update).
+- New `supabase/functions/fetch-model-revenue/index.ts`.
+- `supabase/config.toml` — add function block.
+- `src/components/ModelDashboardTab.tsx` — new card + updated read/write logic.
+- New memory file `mem://features/model-revenue-fetch` + index entry.
+
+## Execution order
+
+1. Request the two secrets (`REVENUE_BACKEND_URL`, `REVENUE_BACKEND_TOKEN`).
+2. Run the migration.
+3. Create the edge function + config.toml entry.
+4. Update `ModelDashboardTab.tsx`.
+5. Save memory + verify build.
