@@ -14,19 +14,24 @@ const updateSW = registerSW({
   },
 });
 
-// Reload immediately when new SW takes control (force-update for installed PWAs)
+// Reload immediately when new SW takes control (force-update for installed PWAs).
+// Skip the reload while a critical in-flight operation is running (e.g. chat
+// streaming) so we don't abort the user's request and show a connection error.
 if ("serviceWorker" in navigator) {
   let reloading = false;
-  navigator.serviceWorker.addEventListener("controllerchange", () => {
+  const tryReload = () => {
     if (reloading) return;
+    // Defer if a streaming operation is in progress.
+    if ((window as any).__lvBusy === true) {
+      setTimeout(tryReload, 1500);
+      return;
+    }
     reloading = true;
     window.location.reload();
-  });
+  };
+  navigator.serviceWorker.addEventListener("controllerchange", tryReload);
   navigator.serviceWorker.addEventListener("message", (event) => {
-    if (event.data?.type === "SW_UPDATED" && !reloading) {
-      reloading = true;
-      window.location.reload();
-    }
+    if (event.data?.type === "SW_UPDATED") tryReload();
   });
 }
 
