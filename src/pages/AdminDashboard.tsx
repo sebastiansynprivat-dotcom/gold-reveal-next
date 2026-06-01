@@ -9482,7 +9482,7 @@ export default function AdminDashboard() {
                   />
                 </div>
                 <div className="space-y-1 sm:col-span-2">
-                  <label className="text-[10px] text-muted-foreground uppercase tracking-wide">Sprache</label>
+                  <label className="text-[10px] text-muted-foreground uppercase tracking-wide">Sprache (Dashboard + AI/Push)</label>
                   <div className="flex gap-1.5">
                     {(["de", "en"] as const).map((lang) => (
                       <button
@@ -9496,10 +9496,11 @@ export default function AdminDashboard() {
                             : "bg-secondary/30 text-muted-foreground border-transparent hover:text-foreground",
                         )}
                       >
-                        {lang === "de" ? "🇩🇪 Deutsch" : "🇬🇧 Englisch"}
+                        {lang === "de" ? "🇩🇪 Deutsch" : "🇬🇧 English"}
                       </button>
                     ))}
                   </div>
+                  <p className="text-[10px] text-muted-foreground/70 mt-1">Setzt UI-Sprache des Chatters + Sprache für AI-Antworten & Push-Nachrichten.</p>
                 </div>
               </div>
               <Button
@@ -9512,6 +9513,7 @@ export default function AdminDashboard() {
                       group_name: editName,
                       telegram_id: editTelegram,
                       language: editLanguage,
+                      ui_language: editLanguage,
                     } as any)
                     .eq("user_id", reassignTarget.user_id);
                   setSavingChatter(false);
@@ -9522,7 +9524,7 @@ export default function AdminDashboard() {
                     setChatters((prev) =>
                       prev.map((c) =>
                         c.user_id === reassignTarget.user_id
-                          ? ({ ...c, group_name: editName, telegram_id: editTelegram, language: editLanguage } as any)
+                          ? ({ ...c, group_name: editName, telegram_id: editTelegram, language: editLanguage, ui_language: editLanguage } as any)
                           : c,
                       ),
                     );
