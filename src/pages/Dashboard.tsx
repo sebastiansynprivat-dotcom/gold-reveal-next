@@ -1097,6 +1097,7 @@ export default function Dashboard() {
                   editData={editRequest}
                   onEditClear={() => setEditRequest(null)}
                   modelLanguage={assignedAccounts.length > 0 ? (assignedAccounts[0] as any).model_language || "de" : "de"}
+                  availablePlatforms={Array.from(new Set(assignedAccounts.map((a) => a.platform).filter(Boolean)))}
                 />
               </div>
             )}
