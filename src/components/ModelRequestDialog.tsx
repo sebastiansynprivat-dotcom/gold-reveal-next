@@ -51,9 +51,9 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
       // modelLanguage comes from prop now
       setRequestType(editData.request_type);
       setPrice(editData.price != null ? String(editData.price) : "");
-      const platformMatch = editData.description.match(/^\[Plattform: (Maloum|Brezzels)\]\s*/);
+      const platformMatch = editData.description.match(/^\[Plattform: ([^\]]+)\]\s*/);
       if (platformMatch) {
-        setPlatform(platformMatch[1] as "Maloum" | "Brezzels");
+        setPlatform(platformMatch[1]);
         setDescription(editData.description.replace(platformMatch[0], ""));
       } else {
         setPlatform(null);
