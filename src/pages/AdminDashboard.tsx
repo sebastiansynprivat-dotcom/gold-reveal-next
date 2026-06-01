@@ -7270,192 +7270,194 @@ export default function AdminDashboard() {
                                       })()}
                                     </div>
 
-                                    {/* Messaging Behavior (Placeholder — alle Plattformen) */}
-                                    <div className="glass-card-subtle rounded-xl p-4 space-y-3 border border-border/40">
-                                      <h3 className="text-sm font-bold text-foreground">
-                                        Edit [{acc.account_email}] Mass DM Behavior
-                                      </h3>
+                                    {/* Messaging Behavior — ausgeblendet für Brezzels */}
+                                    {acc.platform !== "Brezzels" && (
+                                      <div className="glass-card-subtle rounded-xl p-4 space-y-3 border border-border/40">
+                                        <h3 className="text-sm font-bold text-foreground">
+                                          Edit [{acc.account_email}] Mass DM Behavior
+                                        </h3>
 
-                                      <div className="flex items-center gap-2">
-                                        <Switch
-                                          checked={!!acc.message}
-                                          onCheckedChange={(v) => updateAccountField(acc.id, { message: v })}
-                                        />
-                                        <span className={`text-[11px] font-semibold ${acc.message ? "text-emerald-400" : "text-muted-foreground"}`}>
-                                          {acc.message ? "ON" : "OFF"}
-                                        </span>
+                                        <div className="flex items-center gap-2">
+                                          <Switch
+                                            checked={!!acc.message}
+                                            onCheckedChange={(v) => updateAccountField(acc.id, { message: v })}
+                                          />
+                                          <span className={`text-[11px] font-semibold ${acc.message ? "text-emerald-400" : "text-muted-foreground"}`}>
+                                            {acc.message ? "ON" : "OFF"}
+                                          </span>
+                                        </div>
+
+
+
+                                        {(() => {
+                                          const savedMain = acc.main_message ?? "";
+                                          const savedFollow = acc.follow_message ?? "";
+                                          const savedMedia = acc.media_id ?? "";
+                                          const mainVal = mainDrafts[acc.id] ?? savedMain;
+                                          const followVal = followDrafts[acc.id] ?? savedFollow;
+                                          const mediaVal = mediaDrafts[acc.id] ?? savedMedia;
+                                          const mainDirty = mainVal !== savedMain;
+                                          const followDirty = followVal !== savedFollow;
+                                          return (
+                                            <>
+                                              {/* Main Message */}
+                                              <div className="space-y-1.5">
+                                                <p className="text-[11px] font-semibold text-foreground">Main Message:</p>
+                                                <div className="flex gap-2">
+                                                  <Textarea
+                                                    value={mainVal}
+                                                    onChange={(e) =>
+                                                      setMainDrafts((d) => ({ ...d, [acc.id]: e.target.value }))
+                                                    }
+                                                    placeholder="Ich hab grad nen neuen Slip an… rate mal welche Farbe er hat 😉"
+                                                    className="text-xs min-h-[60px] resize-none bg-background/40 border-border/40 flex-1"
+                                                  />
+                                                  <button
+                                                    type="button"
+                                                    disabled={!mainDirty}
+                                                    onClick={() => updateAccountField(acc.id, { main_message: mainVal })}
+                                                    className={`text-[10px] font-semibold px-3 py-1 h-fit rounded-md text-white ${
+                                                      mainDirty
+                                                        ? "bg-emerald-500 hover:bg-emerald-600 cursor-pointer"
+                                                        : "bg-emerald-500/40 opacity-60 cursor-not-allowed"
+                                                    }`}
+                                                  >
+                                                    Set
+                                                  </button>
+                                                </div>
+                                              </div>
+
+                                              {/* Follow Up */}
+                                              <div className="space-y-1.5 pt-1 border-t border-border/30">
+                                                <p className="text-[11px] font-semibold text-foreground pt-2">Follow Up:</p>
+                                                <div className="flex gap-2">
+                                                  <Textarea
+                                                    value={followVal}
+                                                    onChange={(e) =>
+                                                      setFollowDrafts((d) => ({ ...d, [acc.id]: e.target.value }))
+                                                    }
+                                                    placeholder="Falsch geraten? Dann muss ich ihn wohl ausziehen und dir zeigen…"
+                                                    className="text-xs min-h-[60px] resize-none bg-background/40 border-border/40 flex-1"
+                                                  />
+                                                  <button
+                                                    type="button"
+                                                    disabled={!followDirty}
+                                                    onClick={() => updateAccountField(acc.id, { follow_message: followVal })}
+                                                    className={`text-[10px] font-semibold px-3 py-1 h-fit rounded-md text-white ${
+                                                      followDirty
+                                                        ? "bg-emerald-500 hover:bg-emerald-600 cursor-pointer"
+                                                        : "bg-emerald-500/40 opacity-60 cursor-not-allowed"
+                                                    }`}
+                                                  >
+                                                    Set
+                                                  </button>
+                                                </div>
+                                              </div>
+
+                                              {/* Media */}
+                                              <div className="space-y-1.5 pt-1 border-t border-border/30">
+                                                <p className="text-[11px] font-semibold text-foreground pt-2">Media:</p>
+                                                <div className="flex gap-2">
+                                                  <Input
+                                                    value={mediaVal}
+                                                    onChange={(e) =>
+                                                      setMediaDrafts((d) => ({ ...d, [acc.id]: e.target.value }))
+                                                    }
+                                                    placeholder="No Media Set"
+                                                    className="text-xs h-8 bg-background/40 border-border/40 flex-1"
+                                                  />
+                                                  <input
+                                                    id={`media-upload-${acc.id}`}
+                                                    type="file"
+                                                    accept="image/*,video/*"
+                                                    className="hidden"
+                                                    onChange={async (e) => {
+                                                      const file = e.target.files?.[0];
+                                                      e.target.value = "";
+                                                      if (!file) return;
+                                                      if (file.size > 20 * 1024 * 1024) {
+                                                        toast.error("Datei zu groß (max. 20 MB)");
+                                                        return;
+                                                      }
+                                                      const ext = file.name.split(".").pop() || "bin";
+                                                      const path = `${acc.id}/${Date.now()}.${ext}`;
+                                                      const t = toast.loading("Lade Media hoch…");
+                                                      const { error: upErr } = await supabase.storage
+                                                        .from("mass-dm-media")
+                                                        .upload(path, file, { upsert: true, contentType: file.type });
+                                                      if (upErr) {
+                                                        toast.error("Upload fehlgeschlagen: " + upErr.message, { id: t });
+                                                        return;
+                                                      }
+                                                      const { data: pub } = supabase.storage
+                                                        .from("mass-dm-media")
+                                                        .getPublicUrl(path);
+                                                      const url = pub.publicUrl;
+                                                      setMediaDrafts((d) => ({ ...d, [acc.id]: url }));
+                                                      await updateAccountField(acc.id, { media_id: url });
+                                                      toast.success("Media hochgeladen", { id: t });
+                                                    }}
+                                                  />
+                                                  <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                      document.getElementById(`media-upload-${acc.id}`)?.click()
+                                                    }
+                                                    className="text-[10px] font-semibold px-2.5 py-1 h-8 rounded-md bg-blue-500/80 hover:bg-blue-500 text-white transition-colors cursor-pointer"
+                                                  >
+                                                    {savedMedia ? "Refresh Media" : "Set Media"}
+                                                  </button>
+                                                </div>
+                                                {savedMedia && /\.(png|jpe?g|webp|gif)$/i.test(savedMedia) && (
+                                                  <img
+                                                    src={savedMedia}
+                                                    alt="Mass DM Media"
+                                                    className="mt-2 max-h-32 rounded-md border border-border/40 object-cover"
+                                                  />
+                                                )}
+                                              </div>
+                                            </>
+                                          );
+                                        })()}
+
+
+                                        {/* Last 7 Days */}
+                                        {(() => {
+                                          const rep = reports7d[acc.id];
+                                          const dates: string[] = [];
+                                          for (let i = 6; i >= 0; i--) {
+                                            const d = new Date();
+                                            d.setDate(d.getDate() - i);
+                                            dates.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`);
+                                          }
+                                          return (
+                                            <div className="pt-1">
+                                              <p className="text-[11px] font-semibold text-foreground mb-1.5">Last 7 Days</p>
+                                              <div className="rounded-lg border border-border/40 overflow-hidden">
+                                                <div className="grid grid-cols-[70px_repeat(7,1fr)] text-[9px]">
+                                                  <div className="bg-secondary/30 px-1.5 py-1.5 uppercase tracking-wider text-muted-foreground font-semibold border-b border-border/30">Dates</div>
+                                                  {dates.map((d) => (
+                                                    <div key={`d-${d}`} className="px-1 py-1.5 text-center font-semibold text-foreground border-b border-l border-border/30">{d.slice(5)}</div>
+                                                  ))}
+                                                  <div className="bg-secondary/30 px-1.5 py-1.5 uppercase tracking-wider text-muted-foreground font-semibold border-b border-border/30">Main</div>
+                                                  {dates.map((d) => (
+                                                    <div key={`m-${d}`} className="px-1 py-1.5 text-center text-foreground border-b border-l border-border/30">{rep?.messages?.[d]?.main ?? "—"}</div>
+                                                  ))}
+                                                  <div className="bg-secondary/30 px-1.5 py-1.5 uppercase tracking-wider text-muted-foreground font-semibold border-b border-border/30">Follow</div>
+                                                  {dates.map((d) => (
+                                                    <div key={`f-${d}`} className="px-1 py-1.5 text-center text-foreground border-b border-l border-border/30">{rep?.messages?.[d]?.follow ?? "—"}</div>
+                                                  ))}
+                                                  <div className="bg-secondary/30 px-1.5 py-1.5 uppercase tracking-wider text-muted-foreground font-semibold">Total</div>
+                                                  {dates.map((d) => (
+                                                    <div key={`t-${d}`} className="px-1 py-1.5 text-center text-accent font-semibold border-l border-border/30">{rep?.messages?.[d]?.total ?? "—"}</div>
+                                                  ))}
+                                                </div>
+                                              </div>
+                                            </div>
+                                          );
+                                        })()}
                                       </div>
-
-
-
-                                      {(() => {
-                                        const savedMain = acc.main_message ?? "";
-                                        const savedFollow = acc.follow_message ?? "";
-                                        const savedMedia = acc.media_id ?? "";
-                                        const mainVal = mainDrafts[acc.id] ?? savedMain;
-                                        const followVal = followDrafts[acc.id] ?? savedFollow;
-                                        const mediaVal = mediaDrafts[acc.id] ?? savedMedia;
-                                        const mainDirty = mainVal !== savedMain;
-                                        const followDirty = followVal !== savedFollow;
-                                        return (
-                                          <>
-                                            {/* Main Message */}
-                                            <div className="space-y-1.5">
-                                              <p className="text-[11px] font-semibold text-foreground">Main Message:</p>
-                                              <div className="flex gap-2">
-                                                <Textarea
-                                                  value={mainVal}
-                                                  onChange={(e) =>
-                                                    setMainDrafts((d) => ({ ...d, [acc.id]: e.target.value }))
-                                                  }
-                                                  placeholder="Ich hab grad nen neuen Slip an… rate mal welche Farbe er hat 😉"
-                                                  className="text-xs min-h-[60px] resize-none bg-background/40 border-border/40 flex-1"
-                                                />
-                                                <button
-                                                  type="button"
-                                                  disabled={!mainDirty}
-                                                  onClick={() => updateAccountField(acc.id, { main_message: mainVal })}
-                                                  className={`text-[10px] font-semibold px-3 py-1 h-fit rounded-md text-white ${
-                                                    mainDirty
-                                                      ? "bg-emerald-500 hover:bg-emerald-600 cursor-pointer"
-                                                      : "bg-emerald-500/40 opacity-60 cursor-not-allowed"
-                                                  }`}
-                                                >
-                                                  Set
-                                                </button>
-                                              </div>
-                                            </div>
-
-                                            {/* Follow Up */}
-                                            <div className="space-y-1.5 pt-1 border-t border-border/30">
-                                              <p className="text-[11px] font-semibold text-foreground pt-2">Follow Up:</p>
-                                              <div className="flex gap-2">
-                                                <Textarea
-                                                  value={followVal}
-                                                  onChange={(e) =>
-                                                    setFollowDrafts((d) => ({ ...d, [acc.id]: e.target.value }))
-                                                  }
-                                                  placeholder="Falsch geraten? Dann muss ich ihn wohl ausziehen und dir zeigen…"
-                                                  className="text-xs min-h-[60px] resize-none bg-background/40 border-border/40 flex-1"
-                                                />
-                                                <button
-                                                  type="button"
-                                                  disabled={!followDirty}
-                                                  onClick={() => updateAccountField(acc.id, { follow_message: followVal })}
-                                                  className={`text-[10px] font-semibold px-3 py-1 h-fit rounded-md text-white ${
-                                                    followDirty
-                                                      ? "bg-emerald-500 hover:bg-emerald-600 cursor-pointer"
-                                                      : "bg-emerald-500/40 opacity-60 cursor-not-allowed"
-                                                  }`}
-                                                >
-                                                  Set
-                                                </button>
-                                              </div>
-                                            </div>
-
-                                            {/* Media */}
-                                            <div className="space-y-1.5 pt-1 border-t border-border/30">
-                                              <p className="text-[11px] font-semibold text-foreground pt-2">Media:</p>
-                                              <div className="flex gap-2">
-                                                <Input
-                                                  value={mediaVal}
-                                                  onChange={(e) =>
-                                                    setMediaDrafts((d) => ({ ...d, [acc.id]: e.target.value }))
-                                                  }
-                                                  placeholder="No Media Set"
-                                                  className="text-xs h-8 bg-background/40 border-border/40 flex-1"
-                                                />
-                                                <input
-                                                  id={`media-upload-${acc.id}`}
-                                                  type="file"
-                                                  accept="image/*,video/*"
-                                                  className="hidden"
-                                                  onChange={async (e) => {
-                                                    const file = e.target.files?.[0];
-                                                    e.target.value = "";
-                                                    if (!file) return;
-                                                    if (file.size > 20 * 1024 * 1024) {
-                                                      toast.error("Datei zu groß (max. 20 MB)");
-                                                      return;
-                                                    }
-                                                    const ext = file.name.split(".").pop() || "bin";
-                                                    const path = `${acc.id}/${Date.now()}.${ext}`;
-                                                    const t = toast.loading("Lade Media hoch…");
-                                                    const { error: upErr } = await supabase.storage
-                                                      .from("mass-dm-media")
-                                                      .upload(path, file, { upsert: true, contentType: file.type });
-                                                    if (upErr) {
-                                                      toast.error("Upload fehlgeschlagen: " + upErr.message, { id: t });
-                                                      return;
-                                                    }
-                                                    const { data: pub } = supabase.storage
-                                                      .from("mass-dm-media")
-                                                      .getPublicUrl(path);
-                                                    const url = pub.publicUrl;
-                                                    setMediaDrafts((d) => ({ ...d, [acc.id]: url }));
-                                                    await updateAccountField(acc.id, { media_id: url });
-                                                    toast.success("Media hochgeladen", { id: t });
-                                                  }}
-                                                />
-                                                <button
-                                                  type="button"
-                                                  onClick={() =>
-                                                    document.getElementById(`media-upload-${acc.id}`)?.click()
-                                                  }
-                                                  className="text-[10px] font-semibold px-2.5 py-1 h-8 rounded-md bg-blue-500/80 hover:bg-blue-500 text-white transition-colors cursor-pointer"
-                                                >
-                                                  {savedMedia ? "Refresh Media" : "Set Media"}
-                                                </button>
-                                              </div>
-                                              {savedMedia && /\.(png|jpe?g|webp|gif)$/i.test(savedMedia) && (
-                                                <img
-                                                  src={savedMedia}
-                                                  alt="Mass DM Media"
-                                                  className="mt-2 max-h-32 rounded-md border border-border/40 object-cover"
-                                                />
-                                              )}
-                                            </div>
-                                          </>
-                                        );
-                                      })()}
-
-
-                                      {/* Last 7 Days */}
-                                      {(() => {
-                                        const rep = reports7d[acc.id];
-                                        const dates: string[] = [];
-                                        for (let i = 6; i >= 0; i--) {
-                                          const d = new Date();
-                                          d.setDate(d.getDate() - i);
-                                          dates.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`);
-                                        }
-                                        return (
-                                          <div className="pt-1">
-                                            <p className="text-[11px] font-semibold text-foreground mb-1.5">Last 7 Days</p>
-                                            <div className="rounded-lg border border-border/40 overflow-hidden">
-                                              <div className="grid grid-cols-[70px_repeat(7,1fr)] text-[9px]">
-                                                <div className="bg-secondary/30 px-1.5 py-1.5 uppercase tracking-wider text-muted-foreground font-semibold border-b border-border/30">Dates</div>
-                                                {dates.map((d) => (
-                                                  <div key={`d-${d}`} className="px-1 py-1.5 text-center font-semibold text-foreground border-b border-l border-border/30">{d.slice(5)}</div>
-                                                ))}
-                                                <div className="bg-secondary/30 px-1.5 py-1.5 uppercase tracking-wider text-muted-foreground font-semibold border-b border-border/30">Main</div>
-                                                {dates.map((d) => (
-                                                  <div key={`m-${d}`} className="px-1 py-1.5 text-center text-foreground border-b border-l border-border/30">{rep?.messages?.[d]?.main ?? "—"}</div>
-                                                ))}
-                                                <div className="bg-secondary/30 px-1.5 py-1.5 uppercase tracking-wider text-muted-foreground font-semibold border-b border-border/30">Follow</div>
-                                                {dates.map((d) => (
-                                                  <div key={`f-${d}`} className="px-1 py-1.5 text-center text-foreground border-b border-l border-border/30">{rep?.messages?.[d]?.follow ?? "—"}</div>
-                                                ))}
-                                                <div className="bg-secondary/30 px-1.5 py-1.5 uppercase tracking-wider text-muted-foreground font-semibold">Total</div>
-                                                {dates.map((d) => (
-                                                  <div key={`t-${d}`} className="px-1 py-1.5 text-center text-accent font-semibold border-l border-border/30">{rep?.messages?.[d]?.total ?? "—"}</div>
-                                                ))}
-                                              </div>
-                                            </div>
-                                          </div>
-                                        );
-                                      })()}
-                                    </div>
+                                    )}
 
                                     {/* Bot Message + Follow-up + Save + Aktiv — only for Maloum (DISABLED) */}
                                     {false && acc.platform === "Maloum" && (
