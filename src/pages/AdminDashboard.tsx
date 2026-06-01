@@ -2604,36 +2604,83 @@ export default function AdminDashboard() {
         .replace(/\p{Extended_Pictographic}/gu, "")
         .replace(/[^a-z0-9]/g, "")
         .trim();
+    const modelById = new Map<string, any>();
+    (modelsData || []).forEach((m: any) => modelById.set(String(m.id), m));
     const modelByName = new Map<string, any>();
     (modelsData || []).forEach((m: any) => {
       const k1 = normalizeModelKey(m.name);
       const k2 = normalizeModelKey(m.username);
       if (k1) modelByName.set(k1, m);
       if (k2 && !modelByName.has(k2)) modelByName.set(k2, m);
-      // Also index each whitespace-separated name part (e.g. "Girina Kseniya" → "girina", "kseniya")
       String(m.name || "").split(/\s+/).forEach((part) => {
         const kp = normalizeModelKey(part);
         if (kp && kp.length >= 3 && !modelByName.has(kp)) modelByName.set(kp, m);
       });
     });
-    const findModel = (raw: any, contextText?: string) => {
+
+    // Build per-chatter assigned model_ids via account_assignments → accounts
+    const chatterUserIds = Array.from(new Set((data || []).map((r: any) => r.user_id).filter(Boolean)));
+    const assignedModelsByUser = new Map<string, Set<string>>();
+    if (chatterUserIds.length > 0) {
+      const { data: assignments } = await supabase
+        .from("account_assignments")
+        .select("user_id, account_id")
+        .is("unassigned_at", null)
+        .in("user_id", chatterUserIds);
+      const accountIds = Array.from(new Set((assignments || []).map((a: any) => a.account_id).filter(Boolean)));
+      const accountModelMap = new Map<string, string>();
+      if (accountIds.length > 0) {
+        const { data: accs } = await supabase
+          .from("accounts")
+          .select("id, model_id")
+          .in("id", accountIds);
+        (accs || []).forEach((a: any) => {
+          if (a.model_id) accountModelMap.set(String(a.id), String(a.model_id));
+        });
+      }
+      (assignments || []).forEach((a: any) => {
+        const mid = accountModelMap.get(String(a.account_id));
+        if (!mid) return;
+        const set = assignedModelsByUser.get(a.user_id) || new Set<string>();
+        set.add(mid);
+        assignedModelsByUser.set(a.user_id, set);
+      });
+    }
+
+    const findModel = (raw: any, contextText?: string, userId?: string) => {
+      const assignedSet = userId ? assignedModelsByUser.get(userId) : null;
       const key = normalizeModelKey(raw);
-      if (!key) return null;
-      if (modelByName.has(key)) return modelByName.get(key);
-      // Collect all substring candidates
+      // Collect candidates by name match
       const candidates: any[] = [];
       const seen = new Set<string>();
-      for (const [k, m] of modelByName) {
-        if (k.length >= 3 && key.length >= 3 && (k.includes(key) || key.includes(k))) {
-          if (!seen.has(m.id)) { seen.add(m.id); candidates.push(m); }
+      if (key) {
+        if (modelByName.has(key)) {
+          const m = modelByName.get(key);
+          seen.add(m.id);
+          candidates.push(m);
+        }
+        for (const [k, m] of modelByName) {
+          if (k.length >= 3 && key.length >= 3 && (k.includes(key) || key.includes(k))) {
+            if (!seen.has(m.id)) { seen.add(m.id); candidates.push(m); }
+          }
+        }
+      }
+      // Prefer any candidate that matches the chatter's assigned models
+      if (assignedSet && assignedSet.size > 0) {
+        const match = candidates.find((m) => assignedSet.has(String(m.id)));
+        if (match) return match;
+        // No name candidate is assigned — if chatter has exactly one assigned model, use it
+        if (candidates.length === 0 && assignedSet.size === 1) {
+          const onlyId = Array.from(assignedSet)[0];
+          const m = modelById.get(onlyId);
+          if (m) return m;
         }
       }
       if (candidates.length === 0) return null;
       if (candidates.length === 1) return candidates[0];
-      // Disambiguate via context: look for exact username/name token in context text
+      // Disambiguate via context text (e.g. chat history mentions username)
       const ctx = normalizeModelKey(contextText || "");
       if (ctx) {
-        // Prefer candidate whose username/name appears in ctx
         const scored = candidates.map((m) => {
           const u = normalizeModelKey(m.username);
           const n = normalizeModelKey(m.name);
@@ -2666,7 +2713,7 @@ export default function AdminDashboard() {
           return {
             ...r,
             _messages: msgs,
-            _model: findModel(r.model_name, ctx),
+            _model: findModel(r.model_name, ctx, r.user_id),
           };
         }),
       );
