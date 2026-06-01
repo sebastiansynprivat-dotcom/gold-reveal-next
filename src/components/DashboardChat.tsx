@@ -23,6 +23,7 @@ interface DashboardChatProps {
 }
 
 export default function DashboardChat({ externalOpen, onExternalOpenChange }: DashboardChatProps) {
+  const { lang } = useUILanguage();
   const [open, setOpen] = useState(false);
 
   // Sync external open state
