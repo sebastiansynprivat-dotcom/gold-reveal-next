@@ -285,6 +285,12 @@ const platformColors: Record<string, string> = {
 
 // ─── Main Component ───
 export default function ModelDashboardTab() {
+  // Reactive platform list — updates automatically when platforms are activated/deactivated in Setup
+  const platformDefs = usePlatforms();
+  const PLATFORMS = useMemo(
+    () => (platformDefs.length > 0 ? platformDefs.map((p) => p.label) : PLATFORMS_FALLBACK),
+    [platformDefs],
+  );
   // Models
   const [models, setModels] = useState<ModelRow[]>([]);
   const [selectedModelId, setSelectedModelId] = useState<string>("");
