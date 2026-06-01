@@ -4,7 +4,8 @@ import { useUILanguage } from "@/hooks/useUILanguage";
 import { startAutoTranslate, stopAutoTranslate } from "@/lib/autoTranslate";
 
 // Routes that should NOT be auto-translated (kept in German for staff).
-const SKIP_PREFIXES = ["/admin", "/model", "/fanvue"];
+// Admin dashboard IS auto-translated so English-speaking admins/sub-admins see EN UI.
+const SKIP_PREFIXES = ["/model", "/fanvue"];
 
 const AutoTranslator = () => {
   const { lang } = useUILanguage();
