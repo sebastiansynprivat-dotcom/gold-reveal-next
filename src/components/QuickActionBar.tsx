@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { FileText, HelpCircle, MessageSquare, BookOpen, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useUILanguage } from "@/hooks/useUILanguage";
 
 interface QuickActionBarProps {
   onAskQuestion: () => void;
@@ -10,16 +11,17 @@ interface QuickActionBarProps {
   onStartTour: () => void;
 }
 
-const allActions = [
-  { icon: MessageSquare, label: "Anfragen", action: "account" },
-  { icon: BookOpen, label: "Inspiration", action: "inspiration" },
-  { icon: FileText, label: "Auszahlung", action: "invoice" },
-  { icon: HelpCircle, label: "Ich habe eine Frage", action: "question" },
-  { icon: Eye, label: "Tour", action: "tour" },
-] as const;
-
 export default function QuickActionBar({ onAskQuestion, onFocusRevenue, onScrollToAccount, onScrollToInspiration, onStartTour }: QuickActionBarProps) {
   const navigate = useNavigate();
+  const { t } = useUILanguage();
+
+  const allActions = [
+    { icon: MessageSquare, label: t("quick.requests"), action: "account" },
+    { icon: BookOpen, label: t("quick.inspiration"), action: "inspiration" },
+    { icon: FileText, label: t("quick.invoice"), action: "invoice" },
+    { icon: HelpCircle, label: t("quick.question"), action: "question" },
+    { icon: Eye, label: t("quick.tour"), action: "tour" },
+  ] as const;
 
   const handleAction = (action: string) => {
     switch (action) {
