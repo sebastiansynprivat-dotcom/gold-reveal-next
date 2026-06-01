@@ -1204,6 +1204,8 @@ export default function AdminDashboard() {
   const [editingAdminNameValue, setEditingAdminNameValue] = useState("");
   const [savingAdminName, setSavingAdminName] = useState(false);
   const [adminNames, setAdminNames] = useState<Record<string, string>>({});
+  const [adminLanguages, setAdminLanguages] = useState<Record<string, "de" | "en">>({});
+  const [savingAdminLang, setSavingAdminLang] = useState<string | null>(null);
   const [newAdminEmail, setNewAdminEmail] = useState("");
   const [addingAdmin, setAddingAdmin] = useState(false);
   const [removeAdminConfirm, setRemoveAdminConfirm] = useState<string | null>(null);
