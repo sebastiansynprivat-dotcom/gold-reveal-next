@@ -7071,7 +7071,7 @@ export default function AdminDashboard() {
                                 {/* Row */}
                                 <div
                                   className={cn(
-                                    "grid grid-cols-[1fr_72px_38px_38px_38px_38px_38px] gap-0 items-center transition-colors cursor-pointer hover:bg-accent/5",
+                                    "grid grid-cols-[minmax(140px,220px)_64px_44px_44px_44px_44px_44px_1fr] gap-0 items-center transition-colors cursor-pointer hover:bg-accent/5",
                                     i % 2 === 0 ? "bg-card/40" : "bg-card/20",
                                     isExpanded && "bg-accent/5",
                                   )}
