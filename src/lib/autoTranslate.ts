@@ -196,7 +196,13 @@ function scanDocument() {
   // Attribute walk (only elements that have any of our attrs)
   const sel = ATTR_KEYS.map((a) => `[${a}]`).join(",");
   document.querySelectorAll<HTMLElement>(sel).forEach((el) => {
-    if (shouldSkipElement(el)) return;
+    // For attribute walk we accept INPUT/TEXTAREA/SELECT (placeholders, etc.)
+    // even though they're skipped for text-node descent.
+    if (SKIP_TAGS.has(el.tagName)) return;
+    if ((el as HTMLElement).isContentEditable) return;
+    if (el.hasAttribute("data-no-translate")) return;
+    const lng = el.getAttribute("lang");
+    if (lng && lng.toLowerCase().startsWith("en")) return;
     if (shouldSkipAncestors(el)) return;
     for (const attr of ATTR_KEYS) {
       const val = el.getAttribute(attr);
