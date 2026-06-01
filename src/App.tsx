@@ -35,6 +35,7 @@ const CoachingBasics = lazy(() => import("./pages/CoachingBasics"));
 const SalesScripts = lazy(() => import("./pages/SalesScripts"));
 const Library = lazy(() => import("./pages/Library"));
 import FloatingLanguageToggle from "@/components/FloatingLanguageToggle";
+import AutoTranslator from "@/components/AutoTranslator";
 
 const RouteFallback = () => (
   <div className="min-h-screen flex items-center justify-center bg-background">
@@ -149,6 +150,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <FloatingLanguageToggle />
+          <AutoTranslator />
           <Suspense fallback={<RouteFallback />}>
             <Routes>
               <Route path="/" element={<ProtectedRoute><Navigate to="/dashboard" replace /></ProtectedRoute>} />
