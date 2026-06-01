@@ -595,7 +595,7 @@ export default function ModelGroupsPanel({
                 </div>
               </div>
 
-              <ScrollArea className="max-h-[420px] pr-2">
+              <div className="pr-2">
                 <div className="space-y-2">
                   {groupModels.length === 0 && (
                     <p className="text-center text-sm text-muted-foreground py-8">
