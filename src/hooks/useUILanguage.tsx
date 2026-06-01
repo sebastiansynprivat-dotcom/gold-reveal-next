@@ -5,18 +5,19 @@ import { translate, type Lang } from "@/i18n/translations";
 
 const LS_KEY = "ui_language";
 const UI_LANG_EVENT = "ui-language-change";
+type ProfileLanguageRow = { ui_language?: string | null };
 
 function isLang(value: unknown): value is Lang {
   return value === "de" || value === "en";
 }
 
 function cacheLang(next: Lang) {
-  try { window.localStorage.setItem(LS_KEY, next); } catch {}
+  try { window.localStorage.setItem(LS_KEY, next); } catch { return; }
 }
 
 function notifyLang(next: Lang) {
   cacheLang(next);
-  try { window.dispatchEvent(new CustomEvent(UI_LANG_EVENT, { detail: next })); } catch {}
+  try { window.dispatchEvent(new CustomEvent(UI_LANG_EVENT, { detail: next })); } catch { return; }
 }
 
 function detectBrowserLang(): Lang {
@@ -73,14 +74,14 @@ export function useUILanguage() {
         .eq("user_id", user.id)
         .maybeSingle();
       if (cancelled) return;
-      const dbLang = (data as any)?.ui_language as Lang | null | undefined;
+      const dbLang = (data as ProfileLanguageRow | null)?.ui_language;
       if (isLang(dbLang)) {
         setLangState(dbLang);
         cacheLang(dbLang);
       } else {
         // First time: persist the detected browser language so the user keeps it
         const detected = readCached();
-        await supabase.from("profiles").update({ ui_language: detected } as any).eq("user_id", user.id);
+        await supabase.from("profiles").update({ ui_language: detected }).eq("user_id", user.id);
       }
     })();
     return () => { cancelled = true; };
@@ -95,7 +96,7 @@ export function useUILanguage() {
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "profiles", filter: `user_id=eq.${user.id}` },
         (payload) => {
-          const next = (payload.new as any)?.ui_language;
+          const next = (payload.new as ProfileLanguageRow)?.ui_language;
           if (isLang(next)) {
             setLangState(next);
             notifyLang(next);
@@ -110,7 +111,7 @@ export function useUILanguage() {
     setLangState(next);
     notifyLang(next);
     if (user) {
-      await supabase.from("profiles").update({ ui_language: next } as any).eq("user_id", user.id);
+      await supabase.from("profiles").update({ ui_language: next }).eq("user_id", user.id);
     }
   }, [user]);
 
