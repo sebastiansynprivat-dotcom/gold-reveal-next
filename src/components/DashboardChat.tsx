@@ -160,7 +160,9 @@ export default function DashboardChat({ externalOpen, onExternalOpenChange }: Da
             animate={{ y: 0, opacity: 1, scale: 1 }}
             exit={{ y: 40, opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.25, ease: "easeOut" }}
-            className="fixed bottom-0 right-0 z-50 w-full sm:bottom-6 sm:right-6 sm:w-[400px] sm:max-h-[600px] flex flex-col glass-card rounded-t-2xl sm:rounded-2xl overflow-hidden border border-border">
+            className="fixed bottom-0 right-0 z-50 w-full sm:bottom-6 sm:right-6 sm:w-[400px] sm:max-h-[600px] flex flex-col glass-card rounded-t-2xl sm:rounded-2xl overflow-hidden border border-border"
+            data-no-translate
+          >
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-border">
         <div>
