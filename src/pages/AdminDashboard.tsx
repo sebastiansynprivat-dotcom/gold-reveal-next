@@ -6978,30 +6978,30 @@ export default function AdminDashboard() {
                     </div>
 
                     {/* Table Header */}
-                    <div className="grid grid-cols-[minmax(140px,220px)_64px_44px_44px_44px_44px_44px_1fr] gap-0 bg-accent/10 border-b border-accent/20">
-                      <div className="px-3 py-2 text-[10px] uppercase tracking-wider text-accent font-semibold truncate">
+                    <div className="grid grid-cols-[minmax(220px,1fr)_110px_96px_120px_104px_112px_104px] gap-0 bg-accent/10 border-b border-accent/20">
+                      <div className="px-4 py-2.5 text-[10px] uppercase tracking-wider text-accent font-semibold">
                         Account
                       </div>
-                      <div className="px-1 py-2 text-[9px] uppercase tracking-wider text-accent font-semibold text-center">
+                      <div className="px-2 py-2.5 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">
                         Plattform
                       </div>
-                      <div className="px-0.5 py-2 text-[8px] uppercase tracking-wider text-accent font-semibold text-center leading-tight">
-                        Bot<br/>DM
+                      <div className="px-2 py-2.5 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">
+                        Bot DM
                       </div>
-                      <div className="px-0.5 py-2 text-[8px] uppercase tracking-wider text-accent font-semibold text-center leading-tight">
-                        Acc<br/>Setup
+                      <div className="px-2 py-2.5 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">
+                        Account Setup
                       </div>
-                      <div className="px-0.5 py-2 text-[8px] uppercase tracking-wider text-accent font-semibold text-center leading-tight">
-                        Wel<br/>come
+                      <div className="px-2 py-2.5 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">
+                        Welcome
                       </div>
-                      <div className="px-0.5 py-2 text-[8px] uppercase tracking-wider text-accent font-semibold text-center leading-tight">
-                        Feed<br/>Folder
+                      <div className="px-2 py-2.5 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">
+                        Feed Folder
                       </div>
-                      <div className="px-0.5 py-2 text-[8px] uppercase tracking-wider text-accent font-semibold text-center leading-tight">
-                        Feed<br/>Post
+                      <div className="px-2 py-2.5 text-[10px] uppercase tracking-wider text-accent font-semibold text-center">
+                        Feed Post
                       </div>
-                      <div />
                     </div>
+
 
                     {/* Table Body */}
                     {(() => {
