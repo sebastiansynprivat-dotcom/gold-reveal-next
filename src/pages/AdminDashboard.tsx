@@ -7159,25 +7159,26 @@ export default function AdminDashboard() {
                                   onClick={() => setExpandedBot(isExpanded ? null : acc.id)}
                                 >
 
-                                  <div className="px-3 py-2.5 min-w-0 flex items-center gap-2">
+                                  <div className="px-4 py-3 min-w-0 flex items-center gap-2.5">
                                     <ChevronDown
                                       className={cn(
-                                        "h-3 w-3 text-muted-foreground shrink-0 transition-transform duration-200",
+                                        "h-3.5 w-3.5 text-muted-foreground shrink-0 transition-transform duration-200",
                                         isExpanded ? "rotate-0" : "-rotate-90",
                                       )}
                                     />
-                                    <div className="min-w-0">
-                                      <p className="text-xs font-medium text-foreground truncate">
+                                    <div className="min-w-0 flex-1">
+                                      <p className="text-sm font-medium text-foreground truncate">
                                         {acc.account_email}
                                       </p>
                                       {acc.account_domain && (
-                                        <p className="text-[10px] text-muted-foreground truncate">
+                                        <p className="text-[11px] text-muted-foreground truncate mt-0.5">
                                           {acc.account_domain}
                                         </p>
                                       )}
                                     </div>
                                   </div>
-                                  <div className="px-1 py-2 flex justify-center">
+                                  <div className="px-2 py-2 flex justify-center">
+
                                     <span
                                       className={cn(
                                         "text-[9px] font-medium px-2 py-0.5 rounded-full border",
