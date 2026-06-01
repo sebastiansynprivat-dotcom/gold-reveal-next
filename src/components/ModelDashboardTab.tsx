@@ -1811,6 +1811,81 @@ export default function ModelDashboardTab() {
             {/* ── Revenue & Payout ── */}
             <Section icon={TrendingUp} title="Einnahmen & Anteil" delay={0.05}>
               <div className="space-y-4">
+                {/* ── Umsatz abrufen (externes Backend) ── */}
+                <div className="rounded-xl border border-accent/30 bg-gradient-to-br from-accent/[0.06] to-accent/[0.02] p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] uppercase tracking-wider text-accent/90 font-semibold">
+                      Umsatz abrufen
+                    </p>
+                    {lastFetchInfo.at && (
+                      <span className="text-[9px] text-muted-foreground">
+                        Zuletzt: {new Date(lastFetchInfo.at).toLocaleString("de-DE")}
+                        {lastFetchInfo.month && lastFetchInfo.year
+                          ? ` · ${String(lastFetchInfo.month).padStart(2, "0")}/${lastFetchInfo.year}`
+                          : ""}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Select value={String(fetchMonth)} onValueChange={(v) => setFetchMonth(Number(v))}>
+                      <SelectTrigger className="w-[130px] h-9 text-sm bg-secondary/40 border-border/40">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"].map((label, i) => (
+                          <SelectItem key={i+1} value={String(i+1)}>{label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select value={String(fetchYear)} onValueChange={(v) => setFetchYear(Number(v))}>
+                      <SelectTrigger className="w-[100px] h-9 text-sm bg-secondary/40 border-border/40">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[now.getFullYear() - 2, now.getFullYear() - 1, now.getFullYear(), now.getFullYear() + 1].map((y) => (
+                          <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={fetchingRevenue || !selectedModelId}
+                      className="flex-1 h-9 px-3 bg-gradient-to-r from-accent/90 to-accent text-accent-foreground hover:from-accent hover:to-accent/90 shadow-sm"
+                      onClick={async () => {
+                        if (!selectedModelId) return;
+                        const sameMonth =
+                          lastFetchInfo.month === fetchMonth && lastFetchInfo.year === fetchYear;
+                        if (sameMonth && !confirmOverwrite) {
+                          if (!confirm(`Werte für ${String(fetchMonth).padStart(2,"0")}/${fetchYear} bereits vorhanden. Überschreiben?`)) return;
+                          setConfirmOverwrite(true);
+                        }
+                        setFetchingRevenue(true);
+                        try {
+                          const { data, error } = await supabase.functions.invoke("fetch-model-revenue", {
+                            body: { model_id: selectedModelId, month: fetchMonth, year: fetchYear },
+                          });
+                          if (error) throw new Error(error.message);
+                          if ((data as any)?.error) throw new Error((data as any).error);
+                          toast.success(`Umsatz für ${String(fetchMonth).padStart(2,"0")}/${fetchYear} aktualisiert ✅`);
+                          await loadModelAccounts(selectedModelId);
+                        } catch (err: any) {
+                          toast.error(err.message || "Umsatz konnte nicht abgerufen werden");
+                        } finally {
+                          setFetchingRevenue(false);
+                          setConfirmOverwrite(false);
+                        }
+                      }}
+                    >
+                      {fetchingRevenue ? (
+                        <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> Lädt…</>
+                      ) : (
+                        <><Download className="h-3.5 w-3.5 mr-1.5" /> Fetch Revenue</>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
                 {/* Billing month + "Anteil berechnen" — basis for Provider Invoice */}
                 <div className="rounded-xl border border-accent/20 bg-accent/[0.03] p-3 space-y-2">
                   <div className="flex items-center justify-between">
