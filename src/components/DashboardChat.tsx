@@ -54,6 +54,7 @@ export default function DashboardChat({ externalOpen, onExternalOpenChange }: Da
     setMessages(allMessages);
     setInput("");
     setIsLoading(true);
+    (window as any).__lvBusy = true;
 
     let assistantSoFar = "";
     const upsertAssistant = (chunk: string) => {
