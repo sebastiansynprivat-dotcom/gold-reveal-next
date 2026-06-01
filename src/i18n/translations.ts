@@ -261,7 +261,9 @@ export const dict: Dict = {
   "accountMemo.title": { de: "Sprachmemo", en: "Voice memo" },
 };
 
+export function translate(lang: Lang, key: string, fallback?: string): string {
   const entry = dict[key];
   if (!entry) return fallback ?? key;
   return entry[lang] ?? entry.de ?? key;
 }
+
