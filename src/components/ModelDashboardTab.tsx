@@ -446,6 +446,14 @@ export default function ModelDashboardTab() {
   const [shareCalculated, setShareCalculated] = useState(false);
   const [calcTrigger, setCalcTrigger] = useState(0);
 
+  // ─── Revenue fetch (external backend) ───
+  const now = new Date();
+  const [fetchMonth, setFetchMonth] = useState<number>(now.getMonth() + 1);
+  const [fetchYear, setFetchYear] = useState<number>(now.getFullYear());
+  const [fetchingRevenue, setFetchingRevenue] = useState(false);
+  const [confirmOverwrite, setConfirmOverwrite] = useState(false);
+  const [lastFetchInfo, setLastFetchInfo] = useState<{ at: string | null; month: number | null; year: number | null }>({ at: null, month: null, year: null });
+
 
 
   const detailRef = useRef<HTMLDivElement>(null);
@@ -470,25 +478,45 @@ export default function ModelDashboardTab() {
       )
       .eq("model_id", modelId)
       .order("platform");
-    if (data) setModelAccounts(data as any as AccountRow[]);
+    const accs = ((data as any as AccountRow[]) || []);
+    setModelAccounts(accs);
 
-    // Load revenue data from model_dashboard for these accounts
-    const { data: dashData } = await supabase
+    // Load the single model_dashboard row for this model (one row per model_id)
+    const { data: dashRow } = await (supabase as any)
       .from("model_dashboard")
-      .select("account_id, fourbased_revenue, maloum_revenue, brezzels_revenue, monthly_revenue");
-    if (dashData) {
-      const revMap: Record<string, number> = {};
-      const platRevMap: Record<string, { fourbased: number; maloum: number; brezzels: number }> = {};
-      for (const d of dashData) {
-        const fb = Number((d as any).fourbased_revenue) || 0;
-        const ml = Number((d as any).maloum_revenue) || 0;
-        const br = Number((d as any).brezzels_revenue) || 0;
-        revMap[d.account_id] = fb + ml + br || Number((d as any).monthly_revenue) || 0;
-        platRevMap[d.account_id] = { fourbased: fb, maloum: ml, brezzels: br };
+      .select("fourbased_revenue, maloum_revenue, brezzels_revenue, monthly_revenue, last_fetched_at, last_fetched_month, last_fetched_year")
+      .eq("model_id", modelId)
+      .maybeSingle();
+
+    const revMap: Record<string, number> = {};
+    const platRevMap: Record<string, { fourbased: number; maloum: number; brezzels: number }> = {};
+    if (dashRow) {
+      const fb = Number((dashRow as any).fourbased_revenue) || 0;
+      const ml = Number((dashRow as any).maloum_revenue) || 0;
+      const br = Number((dashRow as any).brezzels_revenue) || 0;
+      const platformValue: Record<string, number> = { "4Based": fb, Maloum: ml, Brezzels: br };
+      // Map platform revenue onto the first account per platform so totals don't double-count
+      const seenPlatform = new Set<string>();
+      for (const acc of accs) {
+        const val = seenPlatform.has(acc.platform) ? 0 : platformValue[acc.platform] || 0;
+        seenPlatform.add(acc.platform);
+        revMap[acc.id] = val;
+        platRevMap[acc.id] = {
+          fourbased: acc.platform === "4Based" ? val : 0,
+          maloum: acc.platform === "Maloum" ? val : 0,
+          brezzels: acc.platform === "Brezzels" ? val : 0,
+        };
       }
-      setDashboardRevenues(revMap);
-      setPlatformRevenues(platRevMap);
+      setLastFetchInfo({
+        at: (dashRow as any).last_fetched_at || null,
+        month: (dashRow as any).last_fetched_month || null,
+        year: (dashRow as any).last_fetched_year || null,
+      });
+    } else {
+      setLastFetchInfo({ at: null, month: null, year: null });
     }
+    setDashboardRevenues(revMap);
+    setPlatformRevenues(platRevMap);
   }, []);
 
   // ─── Load selected model data into form ───
@@ -1521,25 +1549,33 @@ export default function ModelDashboardTab() {
                                 defaultValue={rev > 0 ? rev.toFixed(2) : ""}
                                 className="bg-secondary/40 border-transparent text-sm h-8 tabular-nums"
                                 onBlur={async (e) => {
+                                  if (!acc.model_id) {
+                                    toast.error("Account hat kein Model — Umsatz kann nicht gespeichert werden");
+                                    return;
+                                  }
                                   const raw = e.target.value.replace(",", ".");
                                   const newVal = Math.round((Number(raw) || 0) * 100) / 100;
                                   if (newVal === rev) return;
-                                  const updateData: Record<string, any> = {
-                                    [revenueField]: newVal,
-                                    monthly_revenue: newVal,
-                                  };
-                                  const { data: existing } = await supabase
+                                  // Read current row to recompute monthly_revenue across all platforms
+                                  const { data: existing } = await (supabase as any)
                                     .from("model_dashboard")
-                                    .select("id")
-                                    .eq("account_id", acc.id)
+                                    .select("id, fourbased_revenue, maloum_revenue, brezzels_revenue")
+                                    .eq("model_id", acc.model_id)
                                     .maybeSingle();
+                                  const fb = revenueField === "fourbased_revenue" ? newVal : Number(existing?.fourbased_revenue) || 0;
+                                  const ml = revenueField === "maloum_revenue" ? newVal : Number(existing?.maloum_revenue) || 0;
+                                  const br = revenueField === "brezzels_revenue" ? newVal : Number(existing?.brezzels_revenue) || 0;
+                                  const payload: Record<string, any> = {
+                                    model_id: acc.model_id,
+                                    fourbased_revenue: fb,
+                                    maloum_revenue: ml,
+                                    brezzels_revenue: br,
+                                    monthly_revenue: fb + ml + br,
+                                  };
                                   if (existing) {
-                                    await supabase.from("model_dashboard").update(updateData).eq("account_id", acc.id);
+                                    await (supabase as any).from("model_dashboard").update(payload).eq("model_id", acc.model_id);
                                   } else {
-                                    await supabase.from("model_dashboard").insert({
-                                      account_id: acc.id,
-                                      ...updateData,
-                                    } as any);
+                                    await (supabase as any).from("model_dashboard").insert(payload);
                                   }
                                   toast.success(`${acc.platform} Umsatz aktualisiert ✅`);
                                   if (selectedModelId) loadModelAccounts(selectedModelId);
@@ -1775,6 +1811,81 @@ export default function ModelDashboardTab() {
             {/* ── Revenue & Payout ── */}
             <Section icon={TrendingUp} title="Einnahmen & Anteil" delay={0.05}>
               <div className="space-y-4">
+                {/* ── Umsatz abrufen (externes Backend) ── */}
+                <div className="rounded-xl border border-accent/30 bg-gradient-to-br from-accent/[0.06] to-accent/[0.02] p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] uppercase tracking-wider text-accent/90 font-semibold">
+                      Umsatz abrufen
+                    </p>
+                    {lastFetchInfo.at && (
+                      <span className="text-[9px] text-muted-foreground">
+                        Zuletzt: {new Date(lastFetchInfo.at).toLocaleString("de-DE")}
+                        {lastFetchInfo.month && lastFetchInfo.year
+                          ? ` · ${String(lastFetchInfo.month).padStart(2, "0")}/${lastFetchInfo.year}`
+                          : ""}
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Select value={String(fetchMonth)} onValueChange={(v) => setFetchMonth(Number(v))}>
+                      <SelectTrigger className="w-[130px] h-9 text-sm bg-secondary/40 border-border/40">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"].map((label, i) => (
+                          <SelectItem key={i+1} value={String(i+1)}>{label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select value={String(fetchYear)} onValueChange={(v) => setFetchYear(Number(v))}>
+                      <SelectTrigger className="w-[100px] h-9 text-sm bg-secondary/40 border-border/40">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[now.getFullYear() - 2, now.getFullYear() - 1, now.getFullYear(), now.getFullYear() + 1].map((y) => (
+                          <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={fetchingRevenue || !selectedModelId}
+                      className="flex-1 h-9 px-3 bg-gradient-to-r from-accent/90 to-accent text-accent-foreground hover:from-accent hover:to-accent/90 shadow-sm"
+                      onClick={async () => {
+                        if (!selectedModelId) return;
+                        const sameMonth =
+                          lastFetchInfo.month === fetchMonth && lastFetchInfo.year === fetchYear;
+                        if (sameMonth && !confirmOverwrite) {
+                          if (!confirm(`Werte für ${String(fetchMonth).padStart(2,"0")}/${fetchYear} bereits vorhanden. Überschreiben?`)) return;
+                          setConfirmOverwrite(true);
+                        }
+                        setFetchingRevenue(true);
+                        try {
+                          const { data, error } = await supabase.functions.invoke("fetch-model-revenue", {
+                            body: { model_id: selectedModelId, month: fetchMonth, year: fetchYear },
+                          });
+                          if (error) throw new Error(error.message);
+                          if ((data as any)?.error) throw new Error((data as any).error);
+                          toast.success(`Umsatz für ${String(fetchMonth).padStart(2,"0")}/${fetchYear} aktualisiert ✅`);
+                          await loadModelAccounts(selectedModelId);
+                        } catch (err: any) {
+                          toast.error(err.message || "Umsatz konnte nicht abgerufen werden");
+                        } finally {
+                          setFetchingRevenue(false);
+                          setConfirmOverwrite(false);
+                        }
+                      }}
+                    >
+                      {fetchingRevenue ? (
+                        <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> Lädt…</>
+                      ) : (
+                        <><Download className="h-3.5 w-3.5 mr-1.5" /> Fetch Revenue</>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
                 {/* Billing month + "Anteil berechnen" — basis for Provider Invoice */}
                 <div className="rounded-xl border border-accent/20 bg-accent/[0.03] p-3 space-y-2">
                   <div className="flex items-center justify-between">
