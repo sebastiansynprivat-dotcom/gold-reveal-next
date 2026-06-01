@@ -16,8 +16,8 @@ serve(async (req) => {
   }
 
   try {
-    const { event, title, body, url } = await req.json() as {
-      event: Event; title: string; body: string; url?: string;
+    const { event, title, body, url, platform } = await req.json() as {
+      event: Event; title: string; body: string; url?: string; platform?: string;
     };
 
     if (!event || !title || !body) {
