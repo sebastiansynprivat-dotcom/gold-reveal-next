@@ -6978,24 +6978,38 @@ export default function AdminDashboard() {
                         return true;
                       });
 
+                      // Smart derived states helper
+                      const computeStates = (acc: any) => {
+                        const d = getDash(acc.id);
+                        const botdmF = getField(acc.platform, "botdm");
+                        const welcomeF = getField(acc.platform, "welcome");
+                        const massdmF = getField(acc.platform, "massdm");
+                        const hasBot = acc.platform === "Maloum";
+                        const botdmDone = hasBot ? !!(d as any)?.[botdmF] : true;
+                        const accountSetupDone = !!(d as any)?.[welcomeF];
+                        // Welcome auto-complete: messaging on + main + follow + media set
+                        const welcomeAuto =
+                          !!acc.message &&
+                          !!(acc.main_message?.trim()) &&
+                          !!(acc.follow_message?.trim()) &&
+                          !!(acc.media_id?.trim());
+                        const welcomeDone = welcomeAuto || !!(d as any)?.[massdmF];
+                        // Feed Posting Folder: drive_folder_id or folder_name set
+                        const feedFolderDone = !!(acc.drive_folder_id?.trim() || acc.folder_name?.trim());
+                        // Feed Bot Post: acc.post toggled on
+                        const feedBotDone = !!acc.post;
+                        return { hasBot, botdmDone, accountSetupDone, welcomeDone, welcomeAuto, feedFolderDone, feedBotDone, botdmF, welcomeF, massdmF };
+                      };
+
                       // Apply status filter
                       if (setupStatusFilter !== "alle") {
                         filteredSetupAccounts = filteredSetupAccounts.filter((acc) => {
-                          const d = getDash(acc.id);
-                          const botdmF = getField(acc.platform, "botdm");
-                          const welcomeF = getField(acc.platform, "welcome");
-                          const massdmF = getField(acc.platform, "massdm");
-                          const botdmDone = !!(d as any)?.[botdmF];
-                          const welcomeDone = !!(d as any)?.[welcomeF];
-                          const massdmDone = !!(d as any)?.[massdmF];
-                          const entry = botMessages[acc.id];
-                          const saved = savedBotState[acc.id];
-
-                          if (setupStatusFilter === "botdm_missing") return !botdmDone;
-                          if (setupStatusFilter === "setup_missing") return !welcomeDone;
-                          if (setupStatusFilter === "massdm_missing") return !massdmDone;
-                          if (setupStatusFilter === "bot_active") return saved && saved.isActive;
-                          if (setupStatusFilter === "bot_inactive") return !saved || !saved.isActive;
+                          const s = computeStates(acc);
+                          if (setupStatusFilter === "botdm_missing") return s.hasBot && !s.botdmDone;
+                          if (setupStatusFilter === "setup_missing") return !s.accountSetupDone;
+                          if (setupStatusFilter === "welcome_missing") return !s.welcomeDone;
+                          if (setupStatusFilter === "feedfolder_missing") return !s.feedFolderDone;
+                          if (setupStatusFilter === "feedbot_missing") return !s.feedBotDone;
                           return true;
                         });
                       }
