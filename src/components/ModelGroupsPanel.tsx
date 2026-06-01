@@ -91,6 +91,7 @@ export default function ModelGroupsPanel({
   const [loading, setLoading] = useState(false);
   const [groups, setGroups] = useState<Group[]>([]);
   const [models, setModels] = useState<ModelLite[]>([]);
+  const [platformsByModel, setPlatformsByModel] = useState<Record<string, string[]>>({});
   const [selected, setSelected] = useState<Group | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [billingOpen, setBillingOpen] = useState(false);
@@ -112,7 +113,7 @@ export default function ModelGroupsPanel({
 
   const load = async () => {
     setLoading(true);
-    const [{ data: gs }, { data: ms }] = await Promise.all([
+    const [{ data: gs }, { data: ms }, { data: accs }] = await Promise.all([
       supabase.from("model_groups").select("*").order("name"),
       supabase
         .from("models")
@@ -120,9 +121,18 @@ export default function ModelGroupsPanel({
           "id, name, username, group_id, commission_override, commission_override_fourbased, commission_override_maloum, commission_override_brezzels, referral_source, referrer_tag, revenue_percentage, currency, crypto_address, payment_method, bank_name, bank_iban, bank_bic, bank_account_holder, provider_name_override, provider_address, provider_is_business, provider_vat_id"
         )
         .order("name"),
+      supabase.from("accounts").select("model_id, platform").not("model_id", "is", null),
     ]);
     setGroups((gs as any) || []);
     setModels((ms as any) || []);
+    const map: Record<string, Set<string>> = {};
+    ((accs as any[]) || []).forEach((a) => {
+      if (!a.model_id || !a.platform) return;
+      (map[a.model_id] ||= new Set()).add(String(a.platform));
+    });
+    setPlatformsByModel(
+      Object.fromEntries(Object.entries(map).map(([k, v]) => [k, Array.from(v).sort()])),
+    );
     setLoading(false);
   };
 
@@ -663,6 +673,29 @@ export default function ModelGroupsPanel({
                               <p className="text-[10px] text-muted-foreground truncate">
                                 @{m.username || "—"} · Tag: {m.referrer_tag || "—"}
                               </p>
+                              {(() => {
+                                const plats = platformsByModel[m.id] || [];
+                                if (plats.length === 0) {
+                                  return (
+                                    <p className="text-[10px] text-muted-foreground/70 italic mt-1">
+                                      Keine Plattformen
+                                    </p>
+                                  );
+                                }
+                                return (
+                                  <div className="flex flex-wrap gap-1 mt-1">
+                                    {plats.map((p) => (
+                                      <Badge
+                                        key={p}
+                                        variant="outline"
+                                        className="border-accent/30 text-accent/90 bg-accent/5 text-[9px] px-1.5 py-0 h-4"
+                                      >
+                                        {p}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                );
+                              })()}
                             </div>
                             {autoMatched && (
                               <Badge
