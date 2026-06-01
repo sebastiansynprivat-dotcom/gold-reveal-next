@@ -2616,14 +2616,35 @@ export default function AdminDashboard() {
         if (kp && kp.length >= 3 && !modelByName.has(kp)) modelByName.set(kp, m);
       });
     });
-    const findModel = (raw: any) => {
+    const findModel = (raw: any, contextText?: string) => {
       const key = normalizeModelKey(raw);
       if (!key) return null;
       if (modelByName.has(key)) return modelByName.get(key);
+      // Collect all substring candidates
+      const candidates: any[] = [];
+      const seen = new Set<string>();
       for (const [k, m] of modelByName) {
-        if (k.length >= 3 && key.length >= 3 && (k.includes(key) || key.includes(k))) return m;
+        if (k.length >= 3 && key.length >= 3 && (k.includes(key) || key.includes(k))) {
+          if (!seen.has(m.id)) { seen.add(m.id); candidates.push(m); }
+        }
       }
-      return null;
+      if (candidates.length === 0) return null;
+      if (candidates.length === 1) return candidates[0];
+      // Disambiguate via context: look for exact username/name token in context text
+      const ctx = normalizeModelKey(contextText || "");
+      if (ctx) {
+        // Prefer candidate whose username/name appears in ctx
+        const scored = candidates.map((m) => {
+          const u = normalizeModelKey(m.username);
+          const n = normalizeModelKey(m.name);
+          let score = 0;
+          if (u && u.length >= 3 && ctx.includes(u)) score += 10;
+          if (n && n.length >= 3 && ctx.includes(n)) score += 5;
+          return { m, score };
+        }).sort((a, b) => b.score - a.score);
+        if (scored[0].score > 0) return scored[0].m;
+      }
+      return candidates[0];
     };
     if (data) {
       const ids = data.map((r: any) => r.id);
@@ -2639,11 +2660,15 @@ export default function AdminDashboard() {
         });
       }
       setModelRequests(
-        data.map((r: any) => ({
-          ...r,
-          _messages: msgsByReq[r.id] || [],
-          _model: findModel(r.model_name),
-        })),
+        data.map((r: any) => {
+          const msgs = msgsByReq[r.id] || [];
+          const ctx = [r.description, r.customer_name, ...msgs.map((m: any) => m.body)].filter(Boolean).join(" ");
+          return {
+            ...r,
+            _messages: msgs,
+            _model: findModel(r.model_name, ctx),
+          };
+        }),
       );
     }
     setModelRequestsLoaded(true);
