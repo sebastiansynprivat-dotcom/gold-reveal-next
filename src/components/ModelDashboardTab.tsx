@@ -360,6 +360,21 @@ export default function ModelDashboardTab() {
     const { data } = await supabase.from("model_groups").select("id, name, default_commission, referral_source").order("name");
     setGroupsList((data as any) || []);
   }, []);
+  const groupForModel = useCallback(
+    (m: { group_id?: string | null; referrer_tag?: string | null }) => {
+      if (m.group_id) {
+        const g = groupsList.find((x) => x.id === m.group_id);
+        if (g) return { name: g.name, auto: false };
+      }
+      const tag = (m.referrer_tag || "").trim().toLowerCase();
+      if (tag) {
+        const g = groupsList.find((x) => (x.referral_source || "").trim().toLowerCase() === tag);
+        if (g) return { name: g.name, auto: true };
+      }
+      return null;
+    },
+    [groupsList],
+  );
   useEffect(() => {
     loadGroups();
   }, [loadGroups]);
