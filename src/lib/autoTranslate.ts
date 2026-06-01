@@ -16,8 +16,12 @@ const DEBOUNCE_MS = 120;
 
 const SKIP_TAGS = new Set([
   "SCRIPT", "STYLE", "NOSCRIPT", "CODE", "PRE", "SVG", "PATH", "CANVAS", "IFRAME",
-  "INPUT", "TEXTAREA", "SELECT", "OPTION",
+  "OPTION",
 ]);
+// Tags where we skip text-node descent but STILL translate attributes
+// (placeholder / aria-label / title). Input fields don't have visible text
+// children, but their placeholder is user-visible UI copy.
+const ATTR_ONLY_TAGS = new Set(["INPUT", "TEXTAREA", "SELECT"]);
 
 const ATTR_KEYS = ["placeholder", "title", "aria-label", "alt"] as const;
 
@@ -192,7 +196,13 @@ function scanDocument() {
   // Attribute walk (only elements that have any of our attrs)
   const sel = ATTR_KEYS.map((a) => `[${a}]`).join(",");
   document.querySelectorAll<HTMLElement>(sel).forEach((el) => {
-    if (shouldSkipElement(el)) return;
+    // For attribute walk we accept INPUT/TEXTAREA/SELECT (placeholders, etc.)
+    // even though they're skipped for text-node descent.
+    if (SKIP_TAGS.has(el.tagName)) return;
+    if ((el as HTMLElement).isContentEditable) return;
+    if (el.hasAttribute("data-no-translate")) return;
+    const lng = el.getAttribute("lang");
+    if (lng && lng.toLowerCase().startsWith("en")) return;
     if (shouldSkipAncestors(el)) return;
     for (const attr of ATTR_KEYS) {
       const val = el.getAttribute(attr);
@@ -234,19 +244,21 @@ async function flush() {
   try {
     const all = Array.from(pending);
     pending.clear();
-    // Process in chunks of MAX_BATCH
-    for (let i = 0; i < all.length; i += MAX_BATCH) {
-      const chunk = all.slice(i, i + MAX_BATCH);
+    const chunks: string[][] = [];
+    for (let i = 0; i < all.length; i += MAX_BATCH) chunks.push(all.slice(i, i + MAX_BATCH));
+    // Run chunks in parallel so long pages translate in one round-trip
+    // worth of latency instead of N * latency.
+    await Promise.all(chunks.map(async (chunk) => {
       try {
         const { data, error } = await supabase.functions.invoke("translate-batch", {
           body: { strings: chunk },
         });
         if (error) {
           console.warn("[auto-translate] error", error);
-          continue;
+          return;
         }
         const out = (data as any)?.translations as string[] | undefined;
-        if (!Array.isArray(out)) continue;
+        if (!Array.isArray(out)) return;
         for (let j = 0; j < chunk.length; j++) {
           const g = chunk[j];
           const e = (out[j] ?? "").trim();
@@ -255,10 +267,9 @@ async function flush() {
       } catch (e) {
         console.warn("[auto-translate] invoke failed", e);
       }
-    }
+    }));
   } finally {
     flushing = false;
-    // If new strings arrived while flushing, drain them.
     if (pending.size > 0) scheduleFlush();
   }
 }
