@@ -744,6 +744,11 @@ function ChatterOverviewTab({
 
 export default function AdminDashboard() {
   const { user } = useAuth();
+  const HIDE_REVENUE_USERS = new Set([
+    "94d8895b-e855-4ae7-a4b0-6fb347b5a9f0",
+    "24905382-5351-4de6-bc93-3cbc2fd85255",
+  ]);
+  const hideRevenue = user ? HIDE_REVENUE_USERS.has(user.id) : false;
   const navigate = useNavigate();
   const { isSuperAdmin } = useAdminRole();
   const registryPlatforms = usePlatforms();
@@ -2033,6 +2038,12 @@ export default function AdminDashboard() {
       loadRevenueUsers();
     }
   }, [activeTab]);
+
+  useEffect(() => {
+    if (hideRevenue && activeTab === "einnahmen") {
+      setActiveTab("chatter");
+    }
+  }, [hideRevenue, activeTab]);
 
   useEffect(() => {
     if (isSuperAdmin) loadAdmins();
@@ -3671,9 +3682,10 @@ export default function AdminDashboard() {
         }))
     : [];
 
-  const tabItems = isSuperAdmin
+  const tabItems = (isSuperAdmin
     ? [...allTabItems, ...subAdminTabs]
-    : allTabItems.filter((t) => !SUPER_ADMIN_TABS.has(t.key));
+    : allTabItems.filter((t) => !SUPER_ADMIN_TABS.has(t.key))
+  ).filter((t) => !(hideRevenue && t.key === "einnahmen"));
 
   return (
     <div className="min-h-screen relative">
