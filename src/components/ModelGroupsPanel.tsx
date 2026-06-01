@@ -234,6 +234,15 @@ export default function ModelGroupsPanel({
     setBillingLoading(true);
     setBillingOpen(true);
     try {
+      // 4Based revenue is reported in USD → convert to EUR for billing
+      let usdToEur = 0.92;
+      try {
+        const r = await fetch("https://api.frankfurter.app/latest?from=USD&to=EUR");
+        const j = await r.json();
+        if (j?.rates?.EUR) usdToEur = Number(j.rates.EUR);
+      } catch {
+        // keep fallback
+      }
       const items: LineItem[] = [];
       for (const m of groupModels) {
         // All accounts of this model
