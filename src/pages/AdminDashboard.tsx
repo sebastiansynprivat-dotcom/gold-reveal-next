@@ -6782,9 +6782,40 @@ export default function AdminDashboard() {
                     );
                   })()}
 
-                  {/* Plattformen-Verwaltung (global) */}
-                  <section className="glass-card rounded-xl p-4">
-                    <PlatformsManager />
+                  {/* Plattformen-Verwaltung (global) – ausklappbar */}
+                  <section className="glass-card rounded-xl overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => setPlatformsOpen((v) => !v)}
+                      className="w-full flex items-center gap-2 px-4 py-3 hover:bg-accent/5 transition-colors"
+                    >
+                      <CheckCircle2 className="h-4 w-4 text-accent" />
+                      <h2 className="text-sm font-semibold text-foreground">Plattformen</h2>
+                      <Badge variant="secondary" className="text-[10px] ml-auto">
+                        Verwalten
+                      </Badge>
+                      <ChevronDown
+                        className={cn(
+                          "h-4 w-4 text-muted-foreground transition-transform duration-200",
+                          platformsOpen && "rotate-180",
+                        )}
+                      />
+                    </button>
+                    <AnimatePresence initial={false}>
+                      {platformsOpen && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                          className="overflow-hidden border-t border-border/50"
+                        >
+                          <div className="p-4">
+                            <PlatformsManager />
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </section>
 
                   {/* Unified BotDMs & Setup Table */}
