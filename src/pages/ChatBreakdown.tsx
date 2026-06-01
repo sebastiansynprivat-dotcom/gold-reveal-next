@@ -4,6 +4,8 @@ import { ArrowLeft, Download, Check, Circle } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useLibraryReads } from "@/hooks/useLibraryReads";
+import { useUILanguage } from "@/hooks/useUILanguage";
+import ChatBreakdownReact from "@/components/ChatBreakdownReact";
 
 const PDF_URL = "/content/chat-breakdown-01.pdf";
 const CONTENT_KEY = "chat-breakdown-01";
@@ -11,6 +13,8 @@ const PAGES = Array.from({ length: 10 }, (_, i) => `/content/breakdown-01/page-$
 
 export default function ChatBreakdown() {
   const { reads, markProgress, markCompleted, unmarkCompleted } = useLibraryReads();
+  const { lang } = useUILanguage();
+  const useReactVersion = lang === "en";
   const read = reads[CONTENT_KEY];
   const completed = !!read?.completed_at;
 
@@ -122,26 +126,48 @@ export default function ChatBreakdown() {
       </header>
 
       <main className="flex-1 max-w-4xl w-full mx-auto p-3 sm:p-6 space-y-4">
-        {PAGES.map((src, i) => (
-          <motion.div
-            key={src}
-            ref={(el) => (refs.current[i] = el)}
-            data-idx={i}
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: i * 0.05 }}
-            className="rounded-xl overflow-hidden border border-border/60 shadow-[0_0_30px_rgba(212,175,55,0.12)] bg-secondary/20"
-          >
-            <img
-              src={src}
-              alt={`Seite ${i + 1}`}
-              loading={i < 2 ? "eager" : "lazy"}
-              onLoad={() => handleImgLoad(i)}
-              className="w-full h-auto block"
+        {useReactVersion ? (
+          <>
+            <ChatBreakdownReact />
+            {/* Bottom sentinel to mark as read once user scrolled through */}
+            <div
+              ref={(el) => {
+                if (!el) return;
+                const io = new IntersectionObserver(
+                  ([e]) => {
+                    if (e.isIntersecting) {
+                      setMaxSeen(PAGES.length);
+                      io.disconnect();
+                    }
+                  },
+                  { threshold: 0.6 }
+                );
+                io.observe(el);
+              }}
+              className="h-2"
             />
-
-          </motion.div>
-        ))}
+          </>
+        ) : (
+          PAGES.map((src, i) => (
+            <motion.div
+              key={src}
+              ref={(el) => (refs.current[i] = el)}
+              data-idx={i}
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: i * 0.05 }}
+              className="rounded-xl overflow-hidden border border-border/60 shadow-[0_0_30px_rgba(212,175,55,0.12)] bg-secondary/20"
+            >
+              <img
+                src={src}
+                alt={`Seite ${i + 1}`}
+                loading={i < 2 ? "eager" : "lazy"}
+                onLoad={() => handleImgLoad(i)}
+                className="w-full h-auto block"
+              />
+            </motion.div>
+          ))
+        )}
 
         <AnimatePresence>
           {completed && (
