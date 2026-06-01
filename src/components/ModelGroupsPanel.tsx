@@ -117,7 +117,7 @@ export default function ModelGroupsPanel({
       supabase
         .from("models")
         .select(
-          "id, name, username, group_id, commission_override, referral_source, revenue_percentage, currency, crypto_address, payment_method, bank_name, bank_iban, bank_bic, bank_account_holder, provider_name_override, provider_address, provider_is_business, provider_vat_id"
+          "id, name, username, group_id, commission_override, commission_override_fourbased, commission_override_maloum, commission_override_brezzels, referral_source, referrer_tag, revenue_percentage, currency, crypto_address, payment_method, bank_name, bank_iban, bank_bic, bank_account_holder, provider_name_override, provider_address, provider_is_business, provider_vat_id"
         )
         .order("name"),
     ]);
@@ -130,10 +130,46 @@ export default function ModelGroupsPanel({
     if (open) load();
   }, [open]);
 
-  const groupModels = useMemo(
-    () => (selected ? models.filter((m) => m.group_id === selected.id) : []),
-    [models, selected]
-  );
+  // Auto-pull: include models explicitly in the group OR matching by referrer_tag (case-insensitive)
+  const groupModels = useMemo(() => {
+    if (!selected) return [];
+    const tag = (selected.referral_source || "").trim().toLowerCase();
+    return models.filter((m) => {
+      if (m.group_id === selected.id) return true;
+      if (tag && (m.referrer_tag || "").trim().toLowerCase() === tag) return true;
+      return false;
+    });
+  }, [models, selected]);
+
+  // One-click: persist auto-matched models into the group (sets group_id on all matches)
+  const syncByTag = async () => {
+    if (!selected) return;
+    const tag = (selected.referral_source || "").trim().toLowerCase();
+    if (!tag) {
+      toast.error("Setze zuerst einen Referrer-Tag in der Gruppe.");
+      return;
+    }
+    const matches = models.filter(
+      (m) => m.group_id !== selected.id && (m.referrer_tag || "").trim().toLowerCase() === tag,
+    );
+    if (matches.length === 0) {
+      toast.info("Keine weiteren passenden Models gefunden.");
+      return;
+    }
+    const ids = matches.map((m) => m.id);
+    const { error } = await supabase
+      .from("models")
+      .update({ group_id: selected.id } as any)
+      .in("id", ids);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success(`${matches.length} Models in Gruppe verschoben`);
+    await load();
+    onChanged?.();
+  };
+
 
   const resetForm = () => {
     setForm({ name: "", default_commission: 30, referral_source: "", color: "#D4AF37", notes: "" });
