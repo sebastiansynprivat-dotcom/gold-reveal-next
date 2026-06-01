@@ -521,11 +521,22 @@ export default function ModelGroupsPanel({
           ) : selected ? (
             // ── Group detail ──
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-wrap gap-2">
                 <p className="text-xs text-muted-foreground">
-                  {groupModels.length} Models · Referral: {selected.referral_source || "—"}
+                  {groupModels.length} Models · Tag:{" "}
+                  <span className="text-accent font-medium">{selected.referral_source || "—"}</span>
                 </p>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-accent/30"
+                    onClick={syncByTag}
+                    disabled={!selected.referral_source}
+                    title="Alle Models mit passendem Referrer-Tag dieser Gruppe zuweisen"
+                  >
+                    <Tag className="h-3 w-3 mr-1" /> Auto-Sync nach Tag
+                  </Button>
                   <Button
                     size="sm"
                     variant="outline"
@@ -561,6 +572,7 @@ export default function ModelGroupsPanel({
                   </Button>
                 </div>
               </div>
+
 
               <div className="flex items-end gap-3 p-3 rounded-lg bg-muted/30 border border-accent/10">
                 <div className="flex-1">
