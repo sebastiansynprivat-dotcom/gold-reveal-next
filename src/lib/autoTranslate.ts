@@ -16,8 +16,12 @@ const DEBOUNCE_MS = 120;
 
 const SKIP_TAGS = new Set([
   "SCRIPT", "STYLE", "NOSCRIPT", "CODE", "PRE", "SVG", "PATH", "CANVAS", "IFRAME",
-  "INPUT", "TEXTAREA", "SELECT", "OPTION",
+  "OPTION",
 ]);
+// Tags where we skip text-node descent but STILL translate attributes
+// (placeholder / aria-label / title). Input fields don't have visible text
+// children, but their placeholder is user-visible UI copy.
+const ATTR_ONLY_TAGS = new Set(["INPUT", "TEXTAREA", "SELECT"]);
 
 const ATTR_KEYS = ["placeholder", "title", "aria-label", "alt"] as const;
 
