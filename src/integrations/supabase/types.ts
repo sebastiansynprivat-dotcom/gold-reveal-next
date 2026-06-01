@@ -885,7 +885,6 @@ export type Database = {
       }
       model_dashboard: {
         Row: {
-          account_id: string
           botdm_done: boolean
           brezzels_botdm_done: boolean
           brezzels_massdm_done: boolean
@@ -900,11 +899,15 @@ export type Database = {
           fourbased_revenue: number | null
           fourbased_submitted: boolean
           id: string
+          last_fetched_at: string | null
+          last_fetched_month: number | null
+          last_fetched_year: number | null
           maloum_botdm_done: boolean
           maloum_massdm_done: boolean
           maloum_revenue: number | null
           maloum_submitted: boolean
           massdm_done: boolean
+          model_id: string
           monthly_revenue: number | null
           notes: string | null
           revenue_percentage: number | null
@@ -913,7 +916,6 @@ export type Database = {
           yesterday_revenue: number | null
         }
         Insert: {
-          account_id: string
           botdm_done?: boolean
           brezzels_botdm_done?: boolean
           brezzels_massdm_done?: boolean
@@ -928,11 +930,15 @@ export type Database = {
           fourbased_revenue?: number | null
           fourbased_submitted?: boolean
           id?: string
+          last_fetched_at?: string | null
+          last_fetched_month?: number | null
+          last_fetched_year?: number | null
           maloum_botdm_done?: boolean
           maloum_massdm_done?: boolean
           maloum_revenue?: number | null
           maloum_submitted?: boolean
           massdm_done?: boolean
+          model_id: string
           monthly_revenue?: number | null
           notes?: string | null
           revenue_percentage?: number | null
@@ -941,7 +947,6 @@ export type Database = {
           yesterday_revenue?: number | null
         }
         Update: {
-          account_id?: string
           botdm_done?: boolean
           brezzels_botdm_done?: boolean
           brezzels_massdm_done?: boolean
@@ -956,11 +961,15 @@ export type Database = {
           fourbased_revenue?: number | null
           fourbased_submitted?: boolean
           id?: string
+          last_fetched_at?: string | null
+          last_fetched_month?: number | null
+          last_fetched_year?: number | null
           maloum_botdm_done?: boolean
           maloum_massdm_done?: boolean
           maloum_revenue?: number | null
           maloum_submitted?: boolean
           massdm_done?: boolean
+          model_id?: string
           monthly_revenue?: number | null
           notes?: string | null
           revenue_percentage?: number | null
@@ -970,10 +979,10 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "model_dashboard_account_id_fkey"
-            columns: ["account_id"]
+            foreignKeyName: "model_dashboard_model_id_fkey"
+            columns: ["model_id"]
             isOneToOne: true
-            referencedRelation: "accounts"
+            referencedRelation: "models"
             referencedColumns: ["id"]
           },
         ]
