@@ -721,7 +721,12 @@ export default function ModelGroupsPanel({
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {groups.map((g) => {
-                    const count = models.filter((m) => m.group_id === g.id).length;
+                    const tag = (g.referral_source || "").trim().toLowerCase();
+                    const count = models.filter(
+                      (m) =>
+                        m.group_id === g.id ||
+                        (tag && (m.referrer_tag || "").trim().toLowerCase() === tag),
+                    ).length;
                     return (
                       <motion.div
                         key={g.id}
@@ -734,7 +739,7 @@ export default function ModelGroupsPanel({
                           <div>
                             <p className="font-semibold text-foreground">{g.name}</p>
                             <p className="text-[11px] text-muted-foreground">
-                              {g.referral_source || "—"} · {count} Models
+                              Tag: {g.referral_source || "—"} · {count} Models
                             </p>
                           </div>
                           <Badge variant="outline" className="border-accent/30 text-accent">
