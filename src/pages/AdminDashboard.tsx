@@ -8875,7 +8875,36 @@ export default function AdminDashboard() {
                                   </>
                                 )}
                               </div>
+
+                              {/* Language row */}
+                              <div className="flex items-center gap-2 pl-5">
+                                <span className="text-[11px] text-muted-foreground">Sprache:</span>
+                                <div className="inline-flex rounded-md border border-border/50 overflow-hidden">
+                                  {(["de", "en"] as const).map((l) => {
+                                    const active = (adminLanguages[admin.user_id] || "de") === l;
+                                    const saving = savingAdminLang === admin.user_id;
+                                    return (
+                                      <button
+                                        key={l}
+                                        type="button"
+                                        disabled={saving || active}
+                                        onClick={() => saveAdminLanguage(admin.user_id, l)}
+                                        className={cn(
+                                          "px-2.5 py-0.5 text-[10px] font-semibold transition-colors",
+                                          active
+                                            ? "bg-accent/20 text-accent"
+                                            : "bg-transparent text-muted-foreground hover:text-foreground hover:bg-accent/5",
+                                          saving && "opacity-50 cursor-wait",
+                                        )}
+                                      >
+                                        {l.toUpperCase()}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
                             </div>
+
                             );
                           })}
                         </div>
