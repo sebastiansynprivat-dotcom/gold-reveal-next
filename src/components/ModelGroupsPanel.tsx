@@ -673,6 +673,29 @@ export default function ModelGroupsPanel({
                               <p className="text-[10px] text-muted-foreground truncate">
                                 @{m.username || "—"} · Tag: {m.referrer_tag || "—"}
                               </p>
+                              {(() => {
+                                const plats = platformsByModel[m.id] || [];
+                                if (plats.length === 0) {
+                                  return (
+                                    <p className="text-[10px] text-muted-foreground/70 italic mt-1">
+                                      Keine Plattformen
+                                    </p>
+                                  );
+                                }
+                                return (
+                                  <div className="flex flex-wrap gap-1 mt-1">
+                                    {plats.map((p) => (
+                                      <Badge
+                                        key={p}
+                                        variant="outline"
+                                        className="border-accent/30 text-accent/90 bg-accent/5 text-[9px] px-1.5 py-0 h-4"
+                                      >
+                                        {p}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                );
+                              })()}
                             </div>
                             {autoMatched && (
                               <Badge
