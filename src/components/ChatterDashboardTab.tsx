@@ -13,6 +13,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import CreditNoteForm from "@/components/CreditNoteForm";
 import { supabase } from "@/integrations/supabase/client";
+import LanguageToggle from "@/components/LanguageToggle";
 
 // Helper to query chatters table (not yet in generated types)
 const chattersTable = () => supabase.from("chatters" as any);
@@ -370,6 +371,9 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
         <div>
           <h2 className="text-lg font-bold text-foreground">Mitarbeiter-Dashboard</h2>
           <p className="text-xs text-muted-foreground">Mitarbeiter & Chatter verwalten & Provider Invoices erstellen</p>
+        </div>
+        <div className="ml-auto">
+          <LanguageToggle />
         </div>
       </motion.div>
 
