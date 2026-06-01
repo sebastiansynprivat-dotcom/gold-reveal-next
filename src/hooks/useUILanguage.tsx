@@ -5,7 +5,11 @@ import { translate, type Lang } from "@/i18n/translations";
 
 const LS_KEY = "ui_language";
 const UI_LANG_EVENT = "ui-language-change";
+const PROFILE_LANG_SYNC_MS = 15000;
+const MANUAL_CHANGE_GRACE_MS = 2500;
 type ProfileLanguageRow = { ui_language?: string | null };
+
+let lastManualLanguageChangeAt = 0;
 
 function isLang(value: unknown): value is Lang {
   return value === "de" || value === "en";
@@ -63,11 +67,13 @@ export function useUILanguage() {
     };
   }, []);
 
-  // Load from DB once we know the user
+  // Keep DB-driven language changes in sync. This is intentionally revalidated
+  // because backend-side/admin-side profile updates are not guaranteed to reach
+  // every already-open dashboard tab via realtime immediately.
   useEffect(() => {
     if (!user) return;
     let cancelled = false;
-    (async () => {
+    const syncProfileLanguage = async () => {
       const { data } = await supabase
         .from("profiles")
         .select("ui_language")
@@ -76,16 +82,30 @@ export function useUILanguage() {
       if (cancelled) return;
       const dbLang = (data as ProfileLanguageRow | null)?.ui_language;
       if (isLang(dbLang)) {
+        if (Date.now() - lastManualLanguageChangeAt < MANUAL_CHANGE_GRACE_MS) return;
         setLangState(dbLang);
-        cacheLang(dbLang);
+        notifyLang(dbLang);
       } else {
         // First time: persist the detected browser language so the user keeps it
         const detected = readCached();
         await supabase.from("profiles").update({ ui_language: detected }).eq("user_id", user.id);
       }
-    })();
-    return () => { cancelled = true; };
-  }, [user]);
+    };
+    void syncProfileLanguage();
+    const onFocus = () => void syncProfileLanguage();
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void syncProfileLanguage();
+    };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisible);
+    const interval = window.setInterval(syncProfileLanguage, PROFILE_LANG_SYNC_MS);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.clearInterval(interval);
+    };
+  }, [user?.id]);
 
   // Realtime sync if changed elsewhere
   useEffect(() => {
@@ -108,6 +128,7 @@ export function useUILanguage() {
   }, [user]);
 
   const setLang = useCallback(async (next: Lang) => {
+    lastManualLanguageChangeAt = Date.now();
     setLangState(next);
     notifyLang(next);
     if (user) {
