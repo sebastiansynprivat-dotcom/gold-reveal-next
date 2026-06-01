@@ -372,6 +372,9 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
           <h2 className="text-lg font-bold text-foreground">Mitarbeiter-Dashboard</h2>
           <p className="text-xs text-muted-foreground">Mitarbeiter & Chatter verwalten & Provider Invoices erstellen</p>
         </div>
+        <div className="ml-auto">
+          <LanguageToggle />
+        </div>
       </motion.div>
 
       {/* Table Section */}
