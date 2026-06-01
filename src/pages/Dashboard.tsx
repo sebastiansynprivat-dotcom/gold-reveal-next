@@ -99,13 +99,8 @@ function getStreakDays(): number {
 }
 
 const BONUS_TIERS = [
-  { name: "Starter", emoji: "⚡", min: 0, max: 499, rate: 20 },
-  { name: "Bronze", emoji: "🥉", min: 500, max: 999, rate: 21 },
-  { name: "Silber", emoji: "🥈", min: 1000, max: 1499, rate: 22 },
-  { name: "Gold", emoji: "🏆", min: 1500, max: 1999, rate: 23 },
-  { name: "Platin", emoji: "💠", min: 2000, max: 2999, rate: 24 },
-  { name: "Elite", emoji: "💎", min: 3000, max: 49999, rate: 25 },
-  { name: "Titan", emoji: "🔱", min: 50000, max: Infinity, rate: 35 },
+  { name: "Starter", emoji: "⚡", min: 0, max: 2999, rate: 20 },
+  { name: "Elite", emoji: "💎", min: 3000, max: Infinity, rate: 25 },
 ] as const;
 
 function getCurrentTier(monthlyRevenue: number) {
@@ -1677,20 +1672,18 @@ function BonusModelSection({
         <motion.div
           variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4 } } }}
         >
-          <div data-tour="bonus-tiers" className="grid grid-cols-3 lg:grid-cols-7 gap-2 lg:gap-2.5">
+          <div data-tour="bonus-tiers" className="grid grid-cols-2 gap-2 lg:gap-2.5">
             {BONUS_TIERS.map((tier, idx) => {
               const isActive = activeTier.name === tier.name;
               const isPassed = activeRevenue > tier.max;
-              const isTitan = tier.name === "Titan";
               return (
                 <motion.div
                   key={tier.name}
                   animate={isActive ? { scale: 1 } : { scale: 1 }}
                   className={cn(
                     "relative rounded-xl overflow-hidden transition-all duration-300",
-                    isTitan && "col-span-3 lg:col-span-1",
                     isActive
-                      ? tier.name === "Elite" || tier.name === "Titan"
+                      ? tier.name === "Elite"
                         ? "gold-gradient-border-animated bg-[hsl(0_0%_8%/0.8)]"
                         : "border border-accent/50 bg-[hsl(0_0%_8%/0.8)] shadow-[0_0_24px_hsl(43_56%_52%/0.15)]"
                       : isPassed
@@ -1698,6 +1691,7 @@ function BonusModelSection({
                         : "border border-border/20 bg-[hsl(0_0%_6%/0.4)]",
                   )}
                 >
+
                   {/* Active top shine */}
                   {isActive && (
                     <div className="absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-accent/10 to-transparent pointer-events-none" />
