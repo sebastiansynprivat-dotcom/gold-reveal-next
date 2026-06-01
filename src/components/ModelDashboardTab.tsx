@@ -1664,17 +1664,6 @@ export default function ModelDashboardTab() {
                       />
                     </div>
                   </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs text-muted-foreground">Referral-Quelle</Label>
-                    <Input
-                      value={(modelForm as any).referral_source || ""}
-                      onChange={(e) =>
-                        setModelForm((prev) => ({ ...(prev as any), referral_source: e.target.value }))
-                      }
-                      placeholder="z. B. Partner XY"
-                      className="h-9 bg-secondary/40 border-border/50 text-sm"
-                    />
-                  </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
                       <Label className="text-xs text-muted-foreground">Sprache</Label>
