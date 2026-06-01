@@ -16,19 +16,23 @@ Du darfst AUSSCHLIESSLICH die Informationen aus der unten stehenden "SheX Wissen
 Wenn ein Nutzer eine Frage stellt, die NICHT explizit in diesen Punkten behandelt wird, darfst du dir KEINE Antwort ausdenken. In diesem Fall MUSST du zwingend Folgendes antworten: 
 "Tut mir leid, aber dazu liegen mir aktuell keine genauen Informationen vor. Bitte stelle diese Frage direkt in deiner WhatsApp-Gruppe, dort hilft dir das Team sofort weiter!"`;
 
-async function getSystemPrompt(): Promise<string> {
+async function getSystemPrompt(lang: "de" | "en"): Promise<string> {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
-    
+
     const { data } = await supabase
       .from("ai_prompts")
-      .select("prompt_text")
+      .select("prompt_text, prompt_text_en")
       .eq("prompt_key", "system_prompt")
       .single();
-    
-    return data?.prompt_text || DEFAULT_SYSTEM_PROMPT;
+
+    if (lang === "en") {
+      const en = (data as any)?.prompt_text_en?.trim();
+      if (en) return en;
+    }
+    return (data as any)?.prompt_text || DEFAULT_SYSTEM_PROMPT;
   } catch {
     return DEFAULT_SYSTEM_PROMPT;
   }
