@@ -4,6 +4,21 @@ import { useAuth } from "@/hooks/useAuth";
 import { translate, type Lang } from "@/i18n/translations";
 
 const LS_KEY = "ui_language";
+const UI_LANG_EVENT = "ui-language-change";
+type ProfileLanguageRow = { ui_language?: string | null };
+
+function isLang(value: unknown): value is Lang {
+  return value === "de" || value === "en";
+}
+
+function cacheLang(next: Lang) {
+  try { window.localStorage.setItem(LS_KEY, next); } catch { return; }
+}
+
+function notifyLang(next: Lang) {
+  cacheLang(next);
+  try { window.dispatchEvent(new CustomEvent(UI_LANG_EVENT, { detail: next })); } catch { return; }
+}
 
 function detectBrowserLang(): Lang {
   if (typeof navigator === "undefined") return "de";
@@ -20,13 +35,33 @@ function detectBrowserLang(): Lang {
 function readCached(): Lang {
   if (typeof window === "undefined") return "de";
   const v = window.localStorage.getItem(LS_KEY);
-  if (v === "de" || v === "en") return v;
+  if (isLang(v)) return v;
   return detectBrowserLang();
 }
 
 export function useUILanguage() {
   const { user } = useAuth();
   const [lang, setLangState] = useState<Lang>(() => readCached());
+
+  // Keep all hook instances in the same tab in sync (toggle, floating toggle,
+  // AutoTranslator, dashboard widgets). Storage events alone do not fire in the
+  // same tab that wrote localStorage.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onLanguageChange = (event: Event) => {
+      const next = (event as CustomEvent<Lang>).detail;
+      if (isLang(next)) setLangState(next);
+    };
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === LS_KEY && isLang(event.newValue)) setLangState(event.newValue);
+    };
+    window.addEventListener(UI_LANG_EVENT, onLanguageChange);
+    window.addEventListener("storage", onStorage);
+    return () => {
+      window.removeEventListener(UI_LANG_EVENT, onLanguageChange);
+      window.removeEventListener("storage", onStorage);
+    };
+  }, []);
 
   // Load from DB once we know the user
   useEffect(() => {
@@ -39,14 +74,14 @@ export function useUILanguage() {
         .eq("user_id", user.id)
         .maybeSingle();
       if (cancelled) return;
-      const dbLang = (data as any)?.ui_language as Lang | null | undefined;
-      if (dbLang === "de" || dbLang === "en") {
+      const dbLang = (data as ProfileLanguageRow | null)?.ui_language;
+      if (isLang(dbLang)) {
         setLangState(dbLang);
-        try { window.localStorage.setItem(LS_KEY, dbLang); } catch {}
+        cacheLang(dbLang);
       } else {
         // First time: persist the detected browser language so the user keeps it
         const detected = readCached();
-        await supabase.from("profiles").update({ ui_language: detected } as any).eq("user_id", user.id);
+        await supabase.from("profiles").update({ ui_language: detected }).eq("user_id", user.id);
       }
     })();
     return () => { cancelled = true; };
@@ -61,10 +96,10 @@ export function useUILanguage() {
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "profiles", filter: `user_id=eq.${user.id}` },
         (payload) => {
-          const next = (payload.new as any)?.ui_language;
-          if (next === "de" || next === "en") {
+          const next = (payload.new as ProfileLanguageRow)?.ui_language;
+          if (isLang(next)) {
             setLangState(next);
-            try { window.localStorage.setItem(LS_KEY, next); } catch {}
+            notifyLang(next);
           }
         }
       )
@@ -74,9 +109,9 @@ export function useUILanguage() {
 
   const setLang = useCallback(async (next: Lang) => {
     setLangState(next);
-    try { window.localStorage.setItem(LS_KEY, next); } catch {}
+    notifyLang(next);
     if (user) {
-      await supabase.from("profiles").update({ ui_language: next } as any).eq("user_id", user.id);
+      await supabase.from("profiles").update({ ui_language: next }).eq("user_id", user.id);
     }
   }, [user]);
 
