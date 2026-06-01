@@ -2509,16 +2509,42 @@ export default function AdminDashboard() {
     const edits = templateEdits[id];
     if (!edits) return;
     setTemplateSaving(id);
-    const { error } = await supabase
-      .from("notification_templates")
-      .update({ title: edits.title, body: edits.body, updated_at: new Date().toISOString() })
-      .eq("id", id);
-    if (error) {
-      toast.error("Fehler beim Speichern");
-    } else {
-      toast.success("Vorlage gespeichert!");
+    try {
+      const patch: any = {
+        title: edits.title,
+        body: edits.body,
+        title_de_is_auto: false,
+        body_de_is_auto: false,
+        updated_at: new Date().toISOString(),
+      };
+      // Auto-translate to EN if EN is still auto/empty
+      try {
+        const { data: cur } = await supabase
+          .from("notification_templates")
+          .select("title_en, body_en, title_en_is_auto, body_en_is_auto")
+          .eq("id", id)
+          .maybeSingle();
+        const titleEnAuto = (cur as any)?.title_en_is_auto !== false || !((cur as any)?.title_en || "").trim();
+        const bodyEnAuto = (cur as any)?.body_en_is_auto !== false || !((cur as any)?.body_en || "").trim();
+        const toTranslate: string[] = [];
+        if (titleEnAuto) toTranslate.push(edits.title);
+        if (bodyEnAuto) toTranslate.push(edits.body);
+        if (toTranslate.length > 0) {
+          const { translateStrings } = await import("@/lib/translateText");
+          const out = await translateStrings(toTranslate, "de", "en");
+          let idx = 0;
+          if (titleEnAuto) { patch.title_en = out[idx++] || ""; patch.title_en_is_auto = true; }
+          if (bodyEnAuto)  { patch.body_en  = out[idx++] || ""; patch.body_en_is_auto  = true; }
+        }
+      } catch (e) { console.warn("template EN auto-translate failed", e); }
+
+      const { error } = await supabase.from("notification_templates").update(patch).eq("id", id);
+      if (error) throw error;
+      toast.success("Vorlage gespeichert (DE + EN synchronisiert)");
       setNotifTemplates((prev) => prev.map((t) => (t.id === id ? { ...t, title: edits.title, body: edits.body } : t)));
       setEditingTemplate(null);
+    } catch {
+      toast.error("Fehler beim Speichern");
     }
     setTemplateSaving(null);
   };
@@ -2530,6 +2556,16 @@ export default function AdminDashboard() {
     }
     setNotifSending(true);
     try {
+      // Auto-translate to EN so en-Empfänger eine englische Push bekommen
+      let titleEn = "";
+      let bodyEn = "";
+      try {
+        const { translateStrings } = await import("@/lib/translateText");
+        const out = await translateStrings([notifTitle.trim(), notifBody.trim()], "de", "en");
+        titleEn = out[0] || "";
+        bodyEn = out[1] || "";
+      } catch (e) { console.warn("sofort-push EN translate failed", e); }
+
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const res = await fetch(`https://${projectId}.supabase.co/functions/v1/send-notification`, {
         method: "POST",
@@ -2537,11 +2573,16 @@ export default function AdminDashboard() {
           "Content-Type": "application/json",
           apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
         },
-        body: JSON.stringify({ title: notifTitle.trim(), body: notifBody.trim() }),
+        body: JSON.stringify({
+          title: notifTitle.trim(),
+          body: notifBody.trim(),
+          title_en: titleEn,
+          body_en: bodyEn,
+        }),
       });
       const result = await res.json();
       if (res.ok) {
-        toast.success(`Gesendet an ${result.sent} Empfänger!`);
+        toast.success(`Gesendet an ${result.sent} Empfänger (DE + EN automatisch)!`);
         setNotifTitle("");
         setNotifBody("");
         await loadNotifHistory();
