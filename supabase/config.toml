@@ -50,3 +50,6 @@ verify_jwt = false
 
 [functions.accounts-with-chatters]
 verify_jwt = false
+
+[functions.translate-batch]
+verify_jwt = false

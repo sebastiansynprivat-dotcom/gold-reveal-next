@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
+import { useUILanguage } from "@/hooks/useUILanguage";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
@@ -22,6 +23,7 @@ interface DashboardChatProps {
 }
 
 export default function DashboardChat({ externalOpen, onExternalOpenChange }: DashboardChatProps) {
+  const { lang } = useUILanguage();
   const [open, setOpen] = useState(false);
 
   // Sync external open state
@@ -67,7 +69,7 @@ export default function DashboardChat({ externalOpen, onExternalOpenChange }: Da
           "Content-Type": "application/json",
           Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
-        body: JSON.stringify({ messages: allMessages }),
+        body: JSON.stringify({ messages: allMessages, uiLanguage: lang }),
       });
 
       if (!resp.ok) {

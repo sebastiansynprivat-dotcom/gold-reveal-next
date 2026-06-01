@@ -40,11 +40,15 @@ serve(async (req) => {
   }
 
   try {
-    const { messages } = await req.json();
+    const { messages, uiLanguage } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const systemPrompt = await getSystemPrompt();
+    let systemPrompt = await getSystemPrompt();
+    const lang = uiLanguage === "en" ? "en" : "de";
+    if (lang === "en") {
+      systemPrompt += `\n\n---\nIMPORTANT: The user's UI language is English. Reply ONLY in clear, friendly English. Keep the same tone (casual "you", motivating, direct). Keep product names unchanged (SheX, Maloum, Brezzels, 4Based, Fanvue, Telegram, WhatsApp). If you must show the "no information" fallback, use: "Sorry, I don't have exact info on that right now. Please ask in your WhatsApp group — the team will help you immediately!"`;
+    }
 
     const response = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
