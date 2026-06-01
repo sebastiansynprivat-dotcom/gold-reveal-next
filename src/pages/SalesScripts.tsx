@@ -539,14 +539,6 @@ export default function SalesScripts() {
             {completed ? <Check className="h-4 w-4" /> : <Circle className="h-4 w-4" />}
             {completed ? "Als ungelesen markieren" : "Als gelesen markieren"}
           </button>
-          <a
-            href={PDF_URL}
-            download="SheX_Verkaufs_Skripte.pdf"
-            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-black font-bold px-6 py-3 text-sm shadow-[0_4px_20px_rgba(212,175,55,0.35)] hover:brightness-110 transition"
-          >
-            <Download className="h-4 w-4" />
-            Original-Transkript als PDF
-          </a>
         </div>
       </main>
     </div>
