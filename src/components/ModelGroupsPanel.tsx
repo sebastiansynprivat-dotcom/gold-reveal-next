@@ -401,7 +401,7 @@ export default function ModelGroupsPanel({
         ? item.breakdown.map((b) => ({
             name: b.name,
             gross: b.gross,
-            pct: item.commission_pct,
+            pct: b.pct,
           }))
         : [{ name: "Revenue Share", gross: item.gross, pct: item.commission_pct }];
 
