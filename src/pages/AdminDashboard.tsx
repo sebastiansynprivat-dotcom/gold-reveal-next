@@ -4548,7 +4548,7 @@ export default function AdminDashboard() {
                         <DualCard
                           labelA="App installiert"
                           valueA={pwaYes}
-                          labelB="App fehlt"
+                          labelB="App"
                           valueB={pwaNo}
                           filterState={filterPwa}
                           onClickA={() => setFilterPwa((p) => toggleFilter(p, true))}
@@ -6725,7 +6725,7 @@ export default function AdminDashboard() {
                               "ring-2 ring-destructive/60 shadow-[0_0_12px_-3px_hsl(var(--destructive)/0.2)] bg-destructive/5",
                           )}
                         >
-                          <p className="text-[9px] text-muted-foreground mb-1 tracking-wide uppercase">Bot-DM fehlt</p>
+                          <p className="text-[9px] text-muted-foreground mb-1 tracking-wide uppercase">Bot-DM</p>
                           <p
                             className={cn(
                               "text-3xl font-bold",
@@ -6866,11 +6866,11 @@ export default function AdminDashboard() {
                         {(
                           [
                             { key: "alle", label: "Alle" },
-                            { key: "botdm_missing", label: "Bot DM-Setup fehlt" },
-                            { key: "setup_missing", label: "Account Setup fehlt" },
-                            { key: "welcome_missing", label: "Welcome-Nachricht fehlt" },
-                            { key: "feedfolder_missing", label: "Feed Posting Folder fehlt" },
-                            { key: "feedbot_missing", label: "Feed Bot Post fehlt" },
+                            { key: "botdm_missing", label: "Bot DM-Setup" },
+                            { key: "setup_missing", label: "Account Setup" },
+                            { key: "welcome_missing", label: "Welcome-Nachricht" },
+                            { key: "feedfolder_missing", label: "Feed Posting Folder" },
+                            { key: "feedbot_missing", label: "Feed Bot Post" },
                           ] as const
                         ).map((f) => (
                           <button
