@@ -1107,10 +1107,13 @@ export default function AdminDashboard() {
     if (!latest) return;
     setSeenRequestMsgs((prev) => (prev[req.id] === latest ? prev : { ...prev, [req.id]: latest }));
   }, [getLatestChatterMsgAt]);
-  const unreadCount = useMemo(
-    () => modelRequests.filter((r) => isReqUnread(r)).length,
-    [modelRequests, isReqUnread],
-  );
+
+  // Platform-based routing for unread comments:
+  // Vanessa → only Maloum, Max → everything except Maloum. Others see all.
+  const getReqPlatform = useCallback((req: any): string => {
+    const m = String(req?.description || "").match(/^\[Plattform:\s*([^\]]+)\]\s*/i);
+    return m ? m[1].trim().toLowerCase() : "";
+  }, []);
 
 
   // Earnings per agency, last 30 days. Uses the platform revenue feed and maps
@@ -1210,6 +1213,21 @@ export default function AdminDashboard() {
   const [editingAdminNameValue, setEditingAdminNameValue] = useState("");
   const [savingAdminName, setSavingAdminName] = useState(false);
   const [adminNames, setAdminNames] = useState<Record<string, string>>({});
+  const myAdminName = ((user?.id ? adminNames[user.id] : "") || "").toLowerCase();
+  const isReqForMe = useCallback((req: any): boolean => {
+    const platform = getReqPlatform(req);
+    if (myAdminName.includes("vanessa")) return platform === "maloum";
+    if (myAdminName.includes("max")) return platform !== "maloum";
+    return true;
+  }, [myAdminName, getReqPlatform]);
+  const isReqUnreadForMe = useCallback(
+    (req: any) => isReqUnread(req) && isReqForMe(req),
+    [isReqUnread, isReqForMe],
+  );
+  const unreadCount = useMemo(
+    () => modelRequests.filter((r) => isReqUnreadForMe(r)).length,
+    [modelRequests, isReqUnreadForMe],
+  );
   const [adminLanguages, setAdminLanguages] = useState<Record<string, "de" | "en">>({});
   const [savingAdminLang, setSavingAdminLang] = useState<string | null>(null);
   const [newAdminEmail, setNewAdminEmail] = useState("");
@@ -5785,7 +5803,7 @@ export default function AdminDashboard() {
 
                     {modelRequests.filter((r) => {
                       if (unreadOnly) {
-                        if (!isReqUnread(r)) return false;
+                        if (!isReqUnreadForMe(r)) return false;
                       } else {
                         if (requestFilter === "all" && (r.status === "rejected" || r.status === "archived")) return false;
                         if (requestFilter !== "all" && r.status !== requestFilter) return false;
@@ -5818,7 +5836,7 @@ export default function AdminDashboard() {
                         {modelRequests
                           .filter((r) => {
                             if (unreadOnly) {
-                              if (!isReqUnread(r)) return false;
+                              if (!isReqUnreadForMe(r)) return false;
                             } else {
                               if (requestFilter === "all" && (r.status === "rejected" || r.status === "archived")) return false;
                               if (requestFilter !== "all" && r.status !== requestFilter) return false;
