@@ -513,7 +513,7 @@ export default function ModelGroupsPanel({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="p-6">
+        <div className="p-6 overflow-y-auto flex-1 min-h-0">
           {loading ? (
             <div className="flex items-center justify-center py-20">
               <Loader2 className="h-6 w-6 animate-spin text-accent" />
