@@ -10,7 +10,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
-const LS_KEY = "auto_translate_cache_v1";
+const LS_KEY = "auto_translate_cache_v2";
 const MAX_BATCH = 60;
 const DEBOUNCE_MS = 120;
 
