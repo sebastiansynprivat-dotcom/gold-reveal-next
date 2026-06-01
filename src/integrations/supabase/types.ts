@@ -238,6 +238,9 @@ export type Database = {
           id: string
           prompt_key: string
           prompt_text: string
+          prompt_text_de_is_auto: boolean
+          prompt_text_en: string
+          prompt_text_en_is_auto: boolean
           updated_at: string
           updated_by: string | null
         }
@@ -245,6 +248,9 @@ export type Database = {
           id?: string
           prompt_key?: string
           prompt_text: string
+          prompt_text_de_is_auto?: boolean
+          prompt_text_en?: string
+          prompt_text_en_is_auto?: boolean
           updated_at?: string
           updated_by?: string | null
         }
@@ -252,6 +258,9 @@ export type Database = {
           id?: string
           prompt_key?: string
           prompt_text?: string
+          prompt_text_de_is_auto?: boolean
+          prompt_text_en?: string
+          prompt_text_en_is_auto?: boolean
           updated_at?: string
           updated_by?: string | null
         }
@@ -1399,28 +1408,46 @@ export type Database = {
       notification_templates: {
         Row: {
           body: string
+          body_de_is_auto: boolean
+          body_en: string
+          body_en_is_auto: boolean
           id: string
           label: string
           template_key: string
           title: string
+          title_de_is_auto: boolean
+          title_en: string
+          title_en_is_auto: boolean
           updated_at: string
           updated_by: string | null
         }
         Insert: {
           body?: string
+          body_de_is_auto?: boolean
+          body_en?: string
+          body_en_is_auto?: boolean
           id?: string
           label?: string
           template_key: string
           title?: string
+          title_de_is_auto?: boolean
+          title_en?: string
+          title_en_is_auto?: boolean
           updated_at?: string
           updated_by?: string | null
         }
         Update: {
           body?: string
+          body_de_is_auto?: boolean
+          body_en?: string
+          body_en_is_auto?: boolean
           id?: string
           label?: string
           template_key?: string
           title?: string
+          title_de_is_auto?: boolean
+          title_en?: string
+          title_en_is_auto?: boolean
           updated_at?: string
           updated_by?: string | null
         }
