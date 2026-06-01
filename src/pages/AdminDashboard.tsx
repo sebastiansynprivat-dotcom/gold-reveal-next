@@ -6089,7 +6089,7 @@ export default function AdminDashboard() {
                                                         });
                                                       } : undefined}
                                                       title={isChatter ? "Doppelklick: als gelesen markieren + 👍" : undefined}
-                                                      className={`relative max-w-[85%] rounded-lg px-3 py-2 ${isChatter ? "cursor-pointer select-none" : ""} ${
+                                                      className={`relative max-w-[85%] rounded-lg px-3 py-2 ${
                                                         m.sender_role === "admin"
                                                           ? "bg-accent/10 border border-accent/20"
                                                           : "bg-secondary/40 border border-border/40"
