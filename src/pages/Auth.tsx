@@ -419,7 +419,7 @@ const Auth = () => {
                     inputMode="numeric"
                     pattern="[0-9]*"
                     autoComplete="off"
-                    placeholder="Telegram-ID"
+                    placeholder={t("auth.placeholder.telegramId")}
                     value={telegramId}
                     onChange={(e) => setTelegramId(e.target.value.replace(/\D/g, ""))}
                     onPaste={(e) => {
@@ -445,7 +445,7 @@ const Auth = () => {
                   onClick={() => setShowTelegramHelp((v) => !v)}
                   className="mt-1.5 w-full text-center text-xs text-primary hover:text-primary/80 transition-colors underline underline-offset-2"
                 >
-                  Wo finde ich meine Telegram-ID?
+                  {t("auth.help.telegram")}
                 </button>
                 {showTelegramHelp && (
                   <motion.div
@@ -455,7 +455,7 @@ const Auth = () => {
                     className="mt-2 p-3 rounded-xl bg-card border border-border text-xs text-muted-foreground leading-relaxed space-y-2"
                   >
                     <p className="flex flex-wrap items-center gap-1.5">
-                      1. Öffne Telegram und starte den Bot{" "}
+                      {t("auth.help.telegram.step1")}{" "}
                       <a
                         href="https://t.me/userinfobot"
                         target="_blank"
@@ -465,20 +465,20 @@ const Auth = () => {
                         <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
                           <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 0 0-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/>
                         </svg>
-                        Hier klicken – @userinfobot
+                        {t("auth.help.telegram.botLink")}
                       </a>
                     </p>
                     <p>
-                      2. Tippe <span className="text-foreground font-medium">/start</span> und schicke es ab.
+                      {t("auth.help.telegram.step2.pre")} <span className="text-foreground font-medium">/start</span> {t("auth.help.telegram.step2.post")}
                     </p>
                     <p>
-                      3. Du bekommst eine Antwort mit <span className="text-foreground font-medium">ID: 123456789</span> — klicke einmal auf die Zahl neben „ID:“. Damit ist sie automatisch kopiert.
+                      {t("auth.help.telegram.step3.pre")} <span className="text-foreground font-medium">ID: 123456789</span> {t("auth.help.telegram.step3.post")}
                     </p>
                     <p>
-                      4. Füge sie einfach hier in das Feld ein.
+                      {t("auth.help.telegram.step4")}
                     </p>
                     <p className="text-primary font-semibold">
-                      ⚠️ Nur Zahlen, kein @username – die ID brauchen wir für deine Benachrichtigungen.
+                      {t("auth.help.telegram.warning")}
                     </p>
                   </motion.div>
                 )}
@@ -494,7 +494,7 @@ const Auth = () => {
                 autoCorrect="off"
                 spellCheck={false}
                 inputMode="email"
-                placeholder="E-Mail Adresse"
+                placeholder={t("auth.placeholder.email")}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -507,7 +507,7 @@ const Auth = () => {
                 name="password"
                 id="auth-password"
                 autoComplete={isSignUp ? "new-password" : "current-password"}
-                placeholder="Passwort (min. 6 Zeichen)"
+                placeholder={t("auth.placeholder.password")}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
@@ -525,7 +525,7 @@ const Auth = () => {
               disabled={submitting}
               className="w-full px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold tracking-wide hover:scale-[1.02] transition-all duration-200 disabled:opacity-50"
             >
-              {submitting ? "Bitte warten..." : isSignUp ? "Konto erstellen" : "Anmelden"}
+              {submitting ? t("auth.btn.wait") : isSignUp ? t("auth.btn.createAccount") : t("auth.btn.signin")}
             </button>
 
             {!isSignUp && (
@@ -534,7 +534,7 @@ const Auth = () => {
                 onClick={() => setShowForgot(true)}
                 className="w-full text-center text-xs text-primary hover:text-primary/80 transition-colors underline underline-offset-2"
               >
-                Passwort vergessen?
+                {t("auth.btn.forgot")}
               </button>
             )}
           </form>
@@ -548,7 +548,7 @@ const Auth = () => {
             }}
             className="mt-6 w-full text-sm text-muted-foreground hover:text-foreground transition-colors text-center"
           >
-            {isSignUp ? "Bereits ein Konto? Hier anmelden" : "Noch kein Konto? Hier registrieren"}
+            {isSignUp ? t("auth.switch.toSignin") : t("auth.switch.toSignup")}
           </button>
         </motion.div>
       )}
