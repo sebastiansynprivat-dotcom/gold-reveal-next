@@ -72,6 +72,7 @@ import InspirationLibrary from "@/components/InspirationLibrary";
 import ThirtyDayChallenge from "@/components/ThirtyDayChallenge";
 import DashboardOnboarding from "@/components/DashboardOnboarding";
 import { highlightSection } from "@/lib/sectionHighlight";
+import LanguageToggle from "@/components/LanguageToggle";
 
 // Streak helper (mirrors StreakTracker logic)
 function getStreakDays(): number {
@@ -697,6 +698,7 @@ export default function Dashboard() {
               <div className="flex-1 min-w-0">
                 <h1 className="text-sm font-bold text-foreground leading-tight">Chatter Dashboard</h1>
               </div>
+              <LanguageToggle />
               <button
                 onClick={() => setShowOnboarding(true)}
                 className="hidden"
