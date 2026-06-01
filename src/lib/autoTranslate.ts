@@ -244,19 +244,21 @@ async function flush() {
   try {
     const all = Array.from(pending);
     pending.clear();
-    // Process in chunks of MAX_BATCH
-    for (let i = 0; i < all.length; i += MAX_BATCH) {
-      const chunk = all.slice(i, i + MAX_BATCH);
+    const chunks: string[][] = [];
+    for (let i = 0; i < all.length; i += MAX_BATCH) chunks.push(all.slice(i, i + MAX_BATCH));
+    // Run chunks in parallel so long pages translate in one round-trip
+    // worth of latency instead of N * latency.
+    await Promise.all(chunks.map(async (chunk) => {
       try {
         const { data, error } = await supabase.functions.invoke("translate-batch", {
           body: { strings: chunk },
         });
         if (error) {
           console.warn("[auto-translate] error", error);
-          continue;
+          return;
         }
         const out = (data as any)?.translations as string[] | undefined;
-        if (!Array.isArray(out)) continue;
+        if (!Array.isArray(out)) return;
         for (let j = 0; j < chunk.length; j++) {
           const g = chunk[j];
           const e = (out[j] ?? "").trim();
@@ -265,10 +267,9 @@ async function flush() {
       } catch (e) {
         console.warn("[auto-translate] invoke failed", e);
       }
-    }
+    }));
   } finally {
     flushing = false;
-    // If new strings arrived while flushing, drain them.
     if (pending.size > 0) scheduleFlush();
   }
 }
