@@ -87,7 +87,9 @@ function shouldSkipElement(el: Element): boolean {
 
 function shouldSkipAncestors(node: Node): boolean {
   let p: Node | null = node.parentNode;
-  while (p && p.nodeType === 1) {
+  // Stop at <body>; <html> has lang="en" (page is technically English-locale)
+  // which would otherwise short-circuit the entire walk.
+  while (p && p.nodeType === 1 && p !== document.body && p !== document.documentElement) {
     if (shouldSkipElement(p as Element)) return true;
     if ((p as Element).hasAttribute?.("data-no-translate")) return true;
     p = p.parentNode;
