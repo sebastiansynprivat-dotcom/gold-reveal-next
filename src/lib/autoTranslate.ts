@@ -261,7 +261,14 @@ async function flush() {
         if (!Array.isArray(out)) return;
         for (let j = 0; j < chunk.length; j++) {
           const g = chunk[j];
-          const e = (out[j] ?? "").trim();
+          let e = (out[j] ?? "").trim();
+          // The AI sometimes double-escapes quotes (\" -> literal backslash + quote)
+          // and occasionally wraps the whole string in extra straight quotes.
+          // Strip these artifacts so the rendered UI stays clean.
+          e = e.replace(/\\"/g, '"').replace(/\\'/g, "'");
+          if (e.length >= 2 && e.startsWith('"') && e.endsWith('"') && !g.startsWith('"')) {
+            e = e.slice(1, -1).trim();
+          }
           if (e && e !== g) applyTranslation(g, e);
         }
       } catch (e) {

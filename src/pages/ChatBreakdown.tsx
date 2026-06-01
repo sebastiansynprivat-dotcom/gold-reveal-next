@@ -177,7 +177,7 @@ export default function ChatBreakdown() {
               className="flex items-center justify-center gap-2 rounded-xl bg-emerald-500/10 border border-emerald-500/40 text-emerald-400 py-4 font-bold"
             >
               <Check className="h-5 w-5" />
-              Erledigt – du hast diese PDF gelesen.
+              {lang === "en" ? "Done – you've read this PDF." : "Erledigt – du hast diese PDF gelesen."}
             </motion.div>
           )}
         </AnimatePresence>
@@ -192,7 +192,9 @@ export default function ChatBreakdown() {
             }`}
           >
             {completed ? <Check className="h-4 w-4" /> : <Circle className="h-4 w-4" />}
-            {completed ? "Als ungelesen markieren" : "Als gelesen markieren"}
+            {lang === "en"
+              ? (completed ? "Mark as unread" : "Mark as read")
+              : (completed ? "Als ungelesen markieren" : "Als gelesen markieren")}
           </button>
           <a
             href={PDF_URL}
