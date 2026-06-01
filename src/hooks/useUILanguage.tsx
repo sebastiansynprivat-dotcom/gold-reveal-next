@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { translate, type Lang } from "@/i18n/translations";
 
 const LS_KEY = "ui_language";
+const LS_MANUAL_KEY = "ui_language_manual";
 const UI_LANG_EVENT = "ui-language-change";
 const PROFILE_LANG_SYNC_MS = 15000;
 const MANUAL_CHANGE_GRACE_MS = 2500;
@@ -15,12 +16,15 @@ function isLang(value: unknown): value is Lang {
   return value === "de" || value === "en";
 }
 
-function cacheLang(next: Lang) {
-  try { window.localStorage.setItem(LS_KEY, next); } catch { return; }
+function cacheLang(next: Lang, manual = false) {
+  try {
+    window.localStorage.setItem(LS_KEY, next);
+    if (manual) window.localStorage.setItem(LS_MANUAL_KEY, "1");
+  } catch { return; }
 }
 
-function notifyLang(next: Lang) {
-  cacheLang(next);
+function notifyLang(next: Lang, manual = false) {
+  cacheLang(next, manual);
   try { window.dispatchEvent(new CustomEvent(UI_LANG_EVENT, { detail: next })); } catch { return; }
 }
 
@@ -38,8 +42,12 @@ function detectBrowserLang(): Lang {
 
 function readCached(): Lang {
   if (typeof window === "undefined") return "de";
+  const manual = window.localStorage.getItem(LS_MANUAL_KEY) === "1";
   const v = window.localStorage.getItem(LS_KEY);
-  if (isLang(v)) return v;
+  // Only honor cached value if the user explicitly toggled it. Otherwise
+  // always follow the current device/browser language so a freshly-installed
+  // English phone sees the signup/login page in English automatically.
+  if (manual && isLang(v)) return v;
   return detectBrowserLang();
 }
 
@@ -130,7 +138,7 @@ export function useUILanguage() {
   const setLang = useCallback(async (next: Lang) => {
     lastManualLanguageChangeAt = Date.now();
     setLangState(next);
-    notifyLang(next);
+    notifyLang(next, true);
     if (user) {
       await supabase.from("profiles").update({ ui_language: next }).eq("user_id", user.id);
     }
