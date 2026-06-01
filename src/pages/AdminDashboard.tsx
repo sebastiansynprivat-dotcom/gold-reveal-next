@@ -7152,12 +7152,13 @@ export default function AdminDashboard() {
                                 {/* Row */}
                                 <div
                                   className={cn(
-                                    "grid grid-cols-[minmax(140px,220px)_64px_44px_44px_44px_44px_44px_1fr] gap-0 items-center transition-colors cursor-pointer hover:bg-accent/5",
+                                    "grid grid-cols-[minmax(220px,1fr)_110px_96px_120px_104px_112px_104px] gap-0 items-center transition-colors cursor-pointer hover:bg-accent/5",
                                     i % 2 === 0 ? "bg-card/40" : "bg-card/20",
                                     isExpanded && "bg-accent/5",
                                   )}
                                   onClick={() => setExpandedBot(isExpanded ? null : acc.id)}
                                 >
+
                                   <div className="px-3 py-2.5 min-w-0 flex items-center gap-2">
                                     <ChevronDown
                                       className={cn(
