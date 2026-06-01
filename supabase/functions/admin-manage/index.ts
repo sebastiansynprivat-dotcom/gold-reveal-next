@@ -118,11 +118,18 @@ Deno.serve(async (req) => {
         .select("user_id, display_name")
         .in("user_id", userIds);
 
+      const { data: profileData } = await serviceClient
+        .from("profiles")
+        .select("user_id, ui_language")
+        .in("user_id", userIds);
+
       for (const admin of admins) {
         const totp = totpData?.find(t => t.user_id === admin.user_id);
         admin.has_totp = totp?.is_verified ?? false;
         const np = nameData?.find(n => n.user_id === admin.user_id);
         admin.display_name = np?.display_name ?? null;
+        const profile = profileData?.find(p => p.user_id === admin.user_id);
+        admin.ui_language = profile?.ui_language === "en" ? "en" : "de";
       }
 
       return new Response(JSON.stringify({ admins }), {
@@ -172,19 +179,25 @@ Deno.serve(async (req) => {
         created = true;
       }
 
+      await serviceClient
+        .from("profiles")
+        .upsert(
+          { user_id: targetUser.id, group_name: "", ui_language: "de" },
+          { onConflict: "user_id" },
+        );
+
       // Check if already admin
       const { data: existing } = await serviceClient
         .from("user_roles")
-        .select("id")
+        .select("id, role")
         .eq("user_id", targetUser.id)
         .in("role", ["admin", "super_admin", "sub_admin"])
         .maybeSingle();
 
       if (existing) {
         return new Response(
-          JSON.stringify({ error: "Dieser Benutzer ist bereits Admin." }),
+          JSON.stringify({ success: true, created, already_admin: true, role: existing.role }),
           {
-            status: 400,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           }
         );
