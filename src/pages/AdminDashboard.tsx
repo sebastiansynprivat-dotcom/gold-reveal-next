@@ -5187,7 +5187,7 @@ export default function AdminDashboard() {
                                       title="Klicken zum Kopieren"
                                     >
                                       {chatter.group_name || "Kein Gruppenname"}
-                                      {chatter.language === "en" ? (
+                                      {(chatter.ui_language || chatter.language) === "en" ? (
                                         <span className="text-[13px] leading-none">🇬🇧</span>
                                       ) : (
                                         <span className="text-[13px] leading-none">🇩🇪</span>
