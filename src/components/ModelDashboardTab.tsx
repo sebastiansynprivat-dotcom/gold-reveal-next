@@ -446,6 +446,14 @@ export default function ModelDashboardTab() {
   const [shareCalculated, setShareCalculated] = useState(false);
   const [calcTrigger, setCalcTrigger] = useState(0);
 
+  // ─── Revenue fetch (external backend) ───
+  const now = new Date();
+  const [fetchMonth, setFetchMonth] = useState<number>(now.getMonth() + 1);
+  const [fetchYear, setFetchYear] = useState<number>(now.getFullYear());
+  const [fetchingRevenue, setFetchingRevenue] = useState(false);
+  const [confirmOverwrite, setConfirmOverwrite] = useState(false);
+  const [lastFetchInfo, setLastFetchInfo] = useState<{ at: string | null; month: number | null; year: number | null }>({ at: null, month: null, year: null });
+
 
 
   const detailRef = useRef<HTMLDivElement>(null);
