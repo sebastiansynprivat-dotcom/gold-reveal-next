@@ -2040,6 +2040,12 @@ export default function AdminDashboard() {
   }, [activeTab]);
 
   useEffect(() => {
+    if (hideRevenue && activeTab === "einnahmen") {
+      setActiveTab("chatter");
+    }
+  }, [hideRevenue, activeTab]);
+
+  useEffect(() => {
     if (isSuperAdmin) loadAdmins();
   }, [isSuperAdmin]);
 
