@@ -44,7 +44,11 @@ type ModelLite = {
   username: string | null;
   group_id: string | null;
   commission_override: number | null;
+  commission_override_fourbased: number | null;
+  commission_override_maloum: number | null;
+  commission_override_brezzels: number | null;
   referral_source: string;
+  referrer_tag: string;
   revenue_percentage: number;
   currency: string;
   crypto_address: string | null;
@@ -67,7 +71,7 @@ type LineItem = {
   commission_pct: number;
   commission_amount: number;
   net_payout: number;
-  breakdown: Array<{ name: string; gross: number }>;
+  breakdown: Array<{ name: string; gross: number; pct: number; commission: number }>;
   currency: string;
 };
 
