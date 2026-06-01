@@ -491,7 +491,7 @@ export default function ModelGroupsPanel({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl bg-card border-accent/20 p-0 overflow-hidden">
+      <DialogContent className="max-w-4xl bg-card border-accent/20 p-0 overflow-hidden max-h-[90vh] flex flex-col">
         <DialogHeader className="px-6 pt-6 pb-3 border-b border-accent/10">
           <DialogTitle className="text-foreground flex items-center gap-2">
             {selected ? (
@@ -513,7 +513,7 @@ export default function ModelGroupsPanel({
           </DialogTitle>
         </DialogHeader>
 
-        <div className="p-6">
+        <div className="p-6 overflow-y-auto flex-1 min-h-0">
           {loading ? (
             <div className="flex items-center justify-center py-20">
               <Loader2 className="h-6 w-6 animate-spin text-accent" />
@@ -595,7 +595,7 @@ export default function ModelGroupsPanel({
                 </div>
               </div>
 
-              <ScrollArea className="max-h-[420px] pr-2">
+              <div className="pr-2">
                 <div className="space-y-2">
                   {groupModels.length === 0 && (
                     <p className="text-center text-sm text-muted-foreground py-8">
@@ -697,7 +697,7 @@ export default function ModelGroupsPanel({
                   })}
 
                 </div>
-              </ScrollArea>
+              </div>
             </div>
           ) : (
             // ── Group list ──
