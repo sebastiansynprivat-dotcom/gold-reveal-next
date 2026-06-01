@@ -6715,7 +6715,7 @@ export default function AdminDashboard() {
                       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                         <div className="glass-card-subtle rounded-xl p-4 flex flex-col items-center justify-center">
                           <p className="text-[9px] text-muted-foreground mb-1 tracking-wide uppercase">Models gesamt</p>
-                          <p className="text-3xl font-bold text-gold-gradient">{allAssignedAccounts.length}</p>
+                          <p className="text-3xl font-bold text-gold-gradient">{accounts.length}</p>
                         </div>
                         <button
                           onClick={() => setBotFilter(botFilter === "missing" ? "alle" : "missing")}
