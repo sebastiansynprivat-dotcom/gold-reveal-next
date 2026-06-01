@@ -5,15 +5,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { motion } from "framer-motion";
 import logo from "@/assets/logo.png";
 import ForgotPasswordDialog from "@/components/ForgotPasswordDialog";
+import { useUILanguage } from "@/hooks/useUILanguage";
 
-const translateError = (msg: string): string => {
-  if (msg.includes("Invalid login credentials")) return "E-Mail oder Passwort ist falsch.";
-  if (msg.includes("Email not confirmed")) return "Bitte bestätige zuerst deine E-Mail.";
-  if (msg.includes("already registered")) return "Diese E-Mail ist bereits registriert.";
-  if (msg.includes("invalid")) return "Bitte gib eine gültige E-Mail-Adresse ein.";
-  if (msg.includes("security purposes")) return "Bitte warte einen Moment und versuche es erneut.";
-  if (msg.includes("rate limit")) return "Zu viele Versuche. Bitte warte einen Moment und versuche es erneut.";
-  if (msg.includes("Password should be")) return "Das Passwort muss mindestens 6 Zeichen haben.";
+const translateError = (msg: string, t: (k: string) => string): string => {
+  if (msg.includes("Invalid login credentials")) return t("auth.error.invalidCreds");
+  if (msg.includes("Email not confirmed")) return t("auth.error.notConfirmed");
+  if (msg.includes("already registered")) return t("auth.error.alreadyRegistered");
+  if (msg.includes("invalid")) return t("auth.error.invalidEmail");
+  if (msg.includes("security purposes")) return t("auth.error.security");
+  if (msg.includes("rate limit")) return t("auth.error.rateLimit");
+  if (msg.includes("Password should be")) return t("auth.error.passwordShort");
   return msg;
 };
 
@@ -22,6 +23,7 @@ const inputClass =
 
 const Auth = () => {
   const { user, loading, signUp, signIn } = useAuth();
+  const { t } = useUILanguage();
   const [isSignUp, setIsSignUp] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
