@@ -1143,7 +1143,21 @@ export default function ModelDashboardTab() {
                 {selectedModel.name.charAt(0).toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-foreground truncate">{selectedModel.name}</p>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="text-sm font-semibold text-foreground truncate">{selectedModel.name}</p>
+                  {(() => {
+                    const g = groupForModel(selectedModel as any);
+                    if (!g) return null;
+                    return (
+                      <span
+                        className="text-[10px] px-2 py-[2px] rounded-full border border-accent/40 text-accent bg-accent/10"
+                        title={g.auto ? "Per Referrer-Tag automatisch erkannt" : "Gruppe zugeordnet"}
+                      >
+                        Gruppe: {g.name}{g.auto ? " · Auto" : ""}
+                      </span>
+                    );
+                  })()}
+                </div>
                 <p className="text-xs text-muted-foreground truncate">
                   {selectedModel.username && `@${selectedModel.username} · `}
                   {modelAccounts.length} Plattform-Account{modelAccounts.length !== 1 ? "s" : ""}
