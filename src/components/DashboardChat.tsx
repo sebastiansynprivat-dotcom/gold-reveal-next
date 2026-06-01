@@ -11,10 +11,15 @@ type Msg = { role: "user" | "assistant"; content: string };
 
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
-const QUICK_QUESTIONS = [
+const QUICK_QUESTIONS_DE = [
   "Wann wird ausgezahlt?",
   "Wie erhöhe ich meine Rate?",
   "Technische Probleme",
+];
+const QUICK_QUESTIONS_EN = [
+  "When do I get paid?",
+  "How do I increase my rate?",
+  "Technical issues",
 ];
 
 interface DashboardChatProps {
