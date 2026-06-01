@@ -1594,6 +1594,7 @@ export type Database = {
           offer: string | null
           pwa_installed: boolean
           telegram_id: string | null
+          ui_language: string
           updated_at: string
           user_id: string
         }
@@ -1608,6 +1609,7 @@ export type Database = {
           offer?: string | null
           pwa_installed?: boolean
           telegram_id?: string | null
+          ui_language?: string
           updated_at?: string
           user_id: string
         }
@@ -1622,6 +1624,7 @@ export type Database = {
           offer?: string | null
           pwa_installed?: boolean
           telegram_id?: string | null
+          ui_language?: string
           updated_at?: string
           user_id?: string
         }
