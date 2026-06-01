@@ -470,25 +470,45 @@ export default function ModelDashboardTab() {
       )
       .eq("model_id", modelId)
       .order("platform");
-    if (data) setModelAccounts(data as any as AccountRow[]);
+    const accs = ((data as any as AccountRow[]) || []);
+    setModelAccounts(accs);
 
-    // Load revenue data from model_dashboard for these accounts
-    const { data: dashData } = await supabase
+    // Load the single model_dashboard row for this model (one row per model_id)
+    const { data: dashRow } = await (supabase as any)
       .from("model_dashboard")
-      .select("account_id, fourbased_revenue, maloum_revenue, brezzels_revenue, monthly_revenue");
-    if (dashData) {
-      const revMap: Record<string, number> = {};
-      const platRevMap: Record<string, { fourbased: number; maloum: number; brezzels: number }> = {};
-      for (const d of dashData) {
-        const fb = Number((d as any).fourbased_revenue) || 0;
-        const ml = Number((d as any).maloum_revenue) || 0;
-        const br = Number((d as any).brezzels_revenue) || 0;
-        revMap[d.account_id] = fb + ml + br || Number((d as any).monthly_revenue) || 0;
-        platRevMap[d.account_id] = { fourbased: fb, maloum: ml, brezzels: br };
+      .select("fourbased_revenue, maloum_revenue, brezzels_revenue, monthly_revenue, last_fetched_at, last_fetched_month, last_fetched_year")
+      .eq("model_id", modelId)
+      .maybeSingle();
+
+    const revMap: Record<string, number> = {};
+    const platRevMap: Record<string, { fourbased: number; maloum: number; brezzels: number }> = {};
+    if (dashRow) {
+      const fb = Number((dashRow as any).fourbased_revenue) || 0;
+      const ml = Number((dashRow as any).maloum_revenue) || 0;
+      const br = Number((dashRow as any).brezzels_revenue) || 0;
+      const platformValue: Record<string, number> = { "4Based": fb, Maloum: ml, Brezzels: br };
+      // Map platform revenue onto the first account per platform so totals don't double-count
+      const seenPlatform = new Set<string>();
+      for (const acc of accs) {
+        const val = seenPlatform.has(acc.platform) ? 0 : platformValue[acc.platform] || 0;
+        seenPlatform.add(acc.platform);
+        revMap[acc.id] = val;
+        platRevMap[acc.id] = {
+          fourbased: acc.platform === "4Based" ? val : 0,
+          maloum: acc.platform === "Maloum" ? val : 0,
+          brezzels: acc.platform === "Brezzels" ? val : 0,
+        };
       }
-      setDashboardRevenues(revMap);
-      setPlatformRevenues(platRevMap);
+      setLastFetchInfo({
+        at: (dashRow as any).last_fetched_at || null,
+        month: (dashRow as any).last_fetched_month || null,
+        year: (dashRow as any).last_fetched_year || null,
+      });
+    } else {
+      setLastFetchInfo({ at: null, month: null, year: null });
     }
+    setDashboardRevenues(revMap);
+    setPlatformRevenues(platRevMap);
   }, []);
 
   // ─── Load selected model data into form ───
