@@ -23,6 +23,8 @@ import {
   Copy,
   X,
   FileDown,
+  Download,
+
 } from "lucide-react";
 import { generateProviderInvoicePdf, downloadPdf } from "@/lib/providerInvoicePdf";
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
@@ -101,6 +103,52 @@ export default function ModelGroupsPanel({
     to: new Date(new Date().getFullYear(), new Date().getMonth(), 0).toISOString().slice(0, 10),
   });
   const [billingLoading, setBillingLoading] = useState(false);
+  const [fetchAllProgress, setFetchAllProgress] = useState<{ done: number; total: number } | null>(null);
+
+  const fetchAllInGroup = async () => {
+    if (!selected || groupModels.length === 0) return;
+    const ref = new Date(billingPeriod.from || new Date().toISOString().slice(0, 10));
+    const month = ref.getMonth() + 1;
+    const year = ref.getFullYear();
+    const targets = groupModels.filter((m) => (platformsByModel[m.id] || []).length > 0);
+    if (targets.length === 0) {
+      toast.error("Keine Plattformen in dieser Gruppe hinterlegt.");
+      return;
+    }
+    setFetchAllProgress({ done: 0, total: targets.length });
+    const allErrors: Array<{ model: string; platform?: string; message?: string }> = [];
+    let successCount = 0;
+    for (let i = 0; i < targets.length; i++) {
+      const m = targets[i];
+      try {
+        const { data, error } = await supabase.functions.invoke("fetch-model-revenue", {
+          body: { model_id: m.id, month, year },
+        });
+        if (error) throw new Error(error.message);
+        if ((data as any)?.error) throw new Error((data as any).error);
+        const errs = ((data as any)?.errors ?? []) as Array<{ platform?: string; message?: string }>;
+        if (errs.length > 0) {
+          errs.forEach((e) => allErrors.push({ model: m.name, platform: e.platform, message: e.message }));
+        } else {
+          successCount++;
+        }
+      } catch (err: any) {
+        allErrors.push({ model: m.name, message: err?.message || "Unbekannter Fehler" });
+      }
+      setFetchAllProgress({ done: i + 1, total: targets.length });
+    }
+    setFetchAllProgress(null);
+    if (allErrors.length > 0) {
+      toast.error(`Fetch abgeschlossen — ${successCount}/${targets.length} ok, ${allErrors.length} Fehler`, {
+        description: allErrors.map((e) => `${e.model}${e.platform ? ` (${e.platform})` : ""}: ${e.message ?? "Unbekannter Fehler"}`).join("\n"),
+        duration: 12000,
+        style: { whiteSpace: "pre-line" },
+      });
+    } else {
+      toast.success(`Umsatz für ${targets.length} Models aktualisiert ✅ (${String(month).padStart(2, "0")}/${year})`);
+    }
+  };
+
 
   const [form, setForm] = useState({
     name: "",
@@ -599,7 +647,22 @@ export default function ModelGroupsPanel({
                     className="h-8"
                   />
                 </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={!!fetchAllProgress || groupModels.length === 0}
+                  onClick={fetchAllInGroup}
+                  className="h-8 bg-gradient-to-r from-accent/90 to-accent text-accent-foreground hover:from-accent hover:to-accent/90 shadow-sm"
+                  title="Umsätze für alle Models der Gruppe für den Monat von 'Zeitraum von' abrufen"
+                >
+                  {fetchAllProgress ? (
+                    <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> {fetchAllProgress.done}/{fetchAllProgress.total}</>
+                  ) : (
+                    <><Download className="h-3.5 w-3.5 mr-1.5" /> Alle fetchen</>
+                  )}
+                </Button>
               </div>
+
 
               <div className="pr-2">
                 <div className="space-y-2">
