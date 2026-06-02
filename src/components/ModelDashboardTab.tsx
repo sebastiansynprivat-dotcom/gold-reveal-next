@@ -1903,11 +1903,25 @@ export default function ModelDashboardTab() {
                           const { data, error } = await supabase.functions.invoke("fetch-model-revenue", {
                             body: { model_id: selectedModelId, month: fetchMonth, year: fetchYear },
                           });
-                          if (error) throw new Error(error.message);
-                          if ((data as any)?.error) throw new Error((data as any).error);
-                          toast.success(`Umsatz für ${String(fetchMonth).padStart(2,"0")}/${fetchYear} aktualisiert ✅`);
-                          await loadModelAccounts(selectedModelId);
-                          setFetchRevenueTick(t => t + 1);
+                           if (error) throw new Error(error.message);
+                           if ((data as any)?.error) throw new Error((data as any).error);
+                           const errs = ((data as any)?.errors ?? []) as Array<{ platform?: string; accountId?: string; code?: string; message?: string }>;
+                           if (errs.length > 0) {
+                             toast.error(
+                               `Umsatz teilweise abgerufen — ${errs.length} Fehler`,
+                               {
+                                 description: errs
+                                   .map(e => `• ${e.platform ?? "?"}${e.code ? ` [${e.code}]` : ""}: ${e.message ?? "Unbekannter Fehler"}`)
+                                   .join("\n"),
+                                 duration: 10000,
+                                 style: { whiteSpace: "pre-line" },
+                               }
+                             );
+                           } else {
+                             toast.success(`Umsatz für ${String(fetchMonth).padStart(2,"0")}/${fetchYear} aktualisiert ✅`);
+                           }
+                           await loadModelAccounts(selectedModelId);
+                           setFetchRevenueTick(t => t + 1);
                         } catch (err: any) {
                           toast.error(err.message || "Umsatz konnte nicht abgerufen werden");
                         } finally {

@@ -85,10 +85,11 @@ Deno.serve(async (req) => {
     }
     const result = await upstream.json();
 
-    const fourbased = Number(result.fourbased_revenue) || 0;
-    const maloum = Number(result.maloum_revenue) || 0;
-    const brezzels = Number(result.brezzels_revenue) || 0;
-    const monthly = fourbased + maloum + brezzels;
+    const fourbased = result.fourbased_revenue == null ? null : Number(result.fourbased_revenue);
+    const maloum = result.maloum_revenue == null ? null : Number(result.maloum_revenue);
+    const brezzels = result.brezzels_revenue == null ? null : Number(result.brezzels_revenue);
+    const monthly = (fourbased || 0) + (maloum || 0) + (brezzels || 0);
+    const errors = Array.isArray(result.errors) ? result.errors : [];
 
     // Upsert into payout_revenue keyed by (model_id, month, year)
     const upsertRow: Record<string, any> = {
@@ -110,7 +111,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
     if (upsertErr) throw upsertErr;
 
-    return new Response(JSON.stringify({ ok: true, row: saved, backend: result }), {
+    return new Response(JSON.stringify({ ok: true, row: saved, backend: result, errors }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
