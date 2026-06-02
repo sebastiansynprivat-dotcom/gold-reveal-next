@@ -2835,15 +2835,8 @@ export default function ModelDashboardTab() {
                   if (sourceTotals) {
                     for (const [name, rev] of Object.entries(sourceTotals)) {
                       const pct = pctMap[name] > 0 ? pctMap[name] : fallback;
-                      agg[name] = { rev: Number(rev) || 0, pct };
-                    }
-                  } else {
-                    // Aggregate per-platform across multiple accounts (same platform → sum)
-                    for (const acc of modelAccounts) {
-                      const rev = convertToBase(dashboardRevenues[acc.id] || 0, acc.currency || baseCurrency);
-                      const pct = pctMap[acc.platform] > 0 ? pctMap[acc.platform] : fallback;
-                      if (!agg[acc.platform]) agg[acc.platform] = { rev: 0, pct };
-                      agg[acc.platform].rev += rev;
+                      const r = Number(rev) || 0;
+                      if (r > 0) agg[name] = { rev: r, pct };
                     }
                   }
                   const builtins = Object.entries(agg).map(([name, v]) => ({ name, rev: v.rev, pct: v.pct }));
