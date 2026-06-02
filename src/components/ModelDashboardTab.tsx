@@ -1904,6 +1904,7 @@ export default function ModelDashboardTab() {
                       onChange={(e) => {
                         setBillingMonth(e.target.value);
                         setShareCalculated(false);
+                        setBillingShare(0);
                       }}
                       className="flex-1 h-9 text-sm bg-secondary/40 border-border/40"
                     />
