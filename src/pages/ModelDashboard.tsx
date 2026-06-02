@@ -13,7 +13,9 @@ export default function ModelDashboard() {
   const [modelId, setModelId] = useState<string | null>(null);
   const [modelName, setModelName] = useState("");
   const [modelUsername, setModelUsername] = useState<string | null>(null);
-  const [modelLanguage, setModelLanguage] = useState<"de" | "en">("de");
+  const [modelLanguage, setModelLanguage] = useState<"de" | "en">(
+    typeof navigator !== "undefined" && navigator.language?.toLowerCase().startsWith("en") ? "en" : "de"
+  );
   const [submittedAt, setSubmittedAt] = useState<string | null>(null);
   const [confirmedAt, setConfirmedAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
