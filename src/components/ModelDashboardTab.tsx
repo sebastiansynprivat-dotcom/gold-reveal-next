@@ -1910,21 +1910,52 @@ export default function ModelDashboardTab() {
                       type="button"
                       size="sm"
                       className="h-9 px-3 bg-gradient-to-r from-accent/90 to-accent text-accent-foreground hover:from-accent hover:to-accent/90 shadow-sm"
-                      onClick={() => {
+                      onClick={async () => {
+                        if (!selectedModelId) return;
+                        const [y, m] = billingMonth.split("-").map(Number);
+                        if (!y || !m) {
+                          toast.error("Bitte gültigen Abrechnungsmonat wählen");
+                          return;
+                        }
+                        const { data: payout, error: payoutErr } = await (supabase as any)
+                          .from("payout_revenue")
+                          .select("fourbased_revenue, maloum_revenue, brezzels_revenue")
+                          .eq("model_id", selectedModelId)
+                          .eq("last_fetched_year", y)
+                          .eq("last_fetched_month", m)
+                          .maybeSingle();
+                        if (payoutErr) {
+                          toast.error(payoutErr.message);
+                          return;
+                        }
+                        if (!payout) {
+                          toast.error(`Keine Umsätze in payout_revenue für ${String(m).padStart(2, "0")}/${y}`);
+                          return;
+                        }
+                        const fb = Number((payout as any).fourbased_revenue) || 0;
+                        const ml = Number((payout as any).maloum_revenue) || 0;
+                        const br = Number((payout as any).brezzels_revenue) || 0;
+                        const fallback = modelForm.revenue_percentage || 0;
+                        const pctFb = modelForm.revenue_percentage_fourbased || fallback;
+                        const pctMl = modelForm.revenue_percentage_maloum || fallback;
+                        const pctBr = modelForm.revenue_percentage_brezzels || fallback;
+                        const calculated = Math.round(
+                          (fb * pctFb) / 100 + (ml * pctMl) / 100 + (br * pctBr) / 100,
+                        );
+                        const lastDay = new Date(y, m, 0).getDate();
+                        setBillingShare(calculated);
                         setShareCalculated(true);
                         setCalcTrigger((t) => t + 1);
-                        const [y, m] = billingMonth.split("-").map(Number);
-                        const lastDay = new Date(y, m, 0).getDate();
                         setModelForm((prev) => ({
                           ...prev,
-                          invoice_net_amount: verdienst,
+                          invoice_net_amount: calculated,
                           invoice_description: "Creator revenue share for digital content",
                           invoice_currency: prev.currency || "EUR",
                           invoice_service_period_start: `${billingMonth}-01`,
                           invoice_service_period_end: `${billingMonth}-${String(lastDay).padStart(2, "0")}`,
                         }));
                         toast.success(
-                          `Anteil berechnet für ${m}/${y} · Verdienst: ${verdienst.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${modelForm.currency || "EUR"}`,
+                          `Anteil berechnet für ${String(m).padStart(2, "0")}/${y} · ${calculated.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${modelForm.currency || "EUR"}`,
                         );
                       }}
                     >
