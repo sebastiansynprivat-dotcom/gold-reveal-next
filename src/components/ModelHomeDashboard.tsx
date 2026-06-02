@@ -77,6 +77,8 @@ const COPY = {
     noInvoices: "Noch keine Abrechnungen.",
     net: "Netto",
     gross: "Brutto",
+    forecast: "Monatsprognose",
+    forecastHint: "Hochrechnung basierend auf dem bisherigen Tagesdurchschnitt",
   },
   en: {
     welcome: "Welcome back",
@@ -107,6 +109,8 @@ const COPY = {
     noInvoices: "No invoices yet.",
     net: "Net",
     gross: "Gross",
+    forecast: "Month forecast",
+    forecastHint: "Projection based on daily average so far",
   },
 };
 
@@ -173,6 +177,7 @@ export default function ModelHomeDashboard({
   const [accounts, setAccounts] = useState<any[]>([]);
   const [revenueByAccount, setRevenueByAccount] = useState<Record<string, number>>({});
   const [lifetimeByAccount, setLifetimeByAccount] = useState<Record<string, number>>({});
+  const [monthRevenue, setMonthRevenue] = useState<number>(0);
   const [requests, setRequests] = useState<any[]>([]);
   const [creditNotes, setCreditNotes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -228,8 +233,16 @@ export default function ModelHomeDashboard({
       let q = (supabase.from("daily_revenue") as any).select("user_id, amount, date").in("user_id", userIds);
       if (range) q = q.gte("date", range.from).lte("date", range.to);
       const lifetimeQ = (supabase.from("daily_revenue") as any).select("user_id, amount").in("user_id", userIds);
+      const monthStart = new Date();
+      const monthFrom = new Date(monthStart.getFullYear(), monthStart.getMonth(), 1).toISOString().slice(0, 10);
+      const monthTo = monthStart.toISOString().slice(0, 10);
+      const monthQ = (supabase.from("daily_revenue") as any)
+        .select("amount")
+        .in("user_id", userIds)
+        .gte("date", monthFrom)
+        .lte("date", monthTo);
 
-      const [{ data: rev }, { data: lifetimeRev }] = await Promise.all([q, lifetimeQ]);
+      const [{ data: rev }, { data: lifetimeRev }, { data: monthRev }] = await Promise.all([q, lifetimeQ, monthQ]);
 
       const byAccount: Record<string, number> = {};
       (rev || []).forEach((r: any) => {
@@ -243,10 +256,12 @@ export default function ModelHomeDashboard({
         if (!accId) return;
         lifetimeAcc[accId] = (lifetimeAcc[accId] || 0) + Number(r.amount || 0);
       });
+      const monthSum = (monthRev || []).reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
 
       if (!cancelled) {
         setRevenueByAccount(byAccount);
         setLifetimeByAccount(lifetimeAcc);
+        setMonthRevenue(monthSum);
         setLoading(false);
       }
     })();
@@ -296,6 +311,11 @@ export default function ModelHomeDashboard({
 
   const openRequests = requests.filter((r) => r.status === "pending").length;
   const nextPayout = nextPayoutDate();
+
+  const now = new Date();
+  const dayOfMonth = now.getDate();
+  const totalDays = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const projectedMonth = dayOfMonth > 0 ? Math.round((monthRevenue / dayOfMonth) * totalDays) : 0;
 
   const copyValue = async (key: string, value: string) => {
     try {
@@ -361,12 +381,21 @@ export default function ModelHomeDashboard({
           })}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="glass-card-subtle rounded-xl p-5 text-center">
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{periodLabels[period]}</p>
             <p className="text-3xl font-bold text-gold-gradient-shimmer mt-1 tabular-nums">
               {loading ? "…" : fmtMoney(total)}
             </p>
+          </div>
+          <div className="glass-card-subtle rounded-xl p-5 text-center relative overflow-hidden">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground flex items-center justify-center gap-1">
+              <TrendingUp className="h-3 w-3" /> {copy.forecast}
+            </p>
+            <p className="text-3xl font-bold text-accent mt-1 tabular-nums">
+              {loading ? "…" : fmtMoney(projectedMonth)}
+            </p>
+            <p className="text-[9px] text-muted-foreground/70 mt-1 leading-tight">{copy.forecastHint}</p>
           </div>
           <div className="glass-card-subtle rounded-xl p-5 text-center">
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{copy.lifetime}</p>
