@@ -464,6 +464,25 @@ export default function ModelDashboardTab() {
   } | null>(null);
   const [fetchRevenueTick, setFetchRevenueTick] = useState(0);
 
+  // ─── Custom platforms (per-model, localStorage) ───
+  type CustomPlatform = { id: string; name: string; revenue: number; percentage: number };
+  const [customPlatforms, setCustomPlatforms] = useState<CustomPlatform[]>([]);
+  // Load on model change
+  useEffect(() => {
+    if (!selectedModelId) { setCustomPlatforms([]); return; }
+    try {
+      const raw = localStorage.getItem(`model:${selectedModelId}:customPlatforms`);
+      setCustomPlatforms(raw ? JSON.parse(raw) : []);
+    } catch { setCustomPlatforms([]); }
+  }, [selectedModelId]);
+  // Persist
+  useEffect(() => {
+    if (!selectedModelId) return;
+    try {
+      localStorage.setItem(`model:${selectedModelId}:customPlatforms`, JSON.stringify(customPlatforms));
+    } catch {}
+  }, [customPlatforms, selectedModelId]);
+
   const detailRef = useRef<HTMLDivElement>(null);
 
   // ─── Load models ───
@@ -684,8 +703,12 @@ export default function ModelDashboardTab() {
       sum += (p.maloum || 0) * pctMl / 100;
       sum += (p.brezzels || 0) * pctBr / 100;
     }
+    for (const cp of customPlatforms) {
+      const pct = cp.percentage > 0 ? cp.percentage : fallback;
+      sum += (cp.revenue || 0) * pct / 100;
+    }
     return Math.round(sum);
-  }, [selectedModelPlatformRevenue, modelForm.revenue_percentage, modelForm.revenue_percentage_fourbased, modelForm.revenue_percentage_maloum, modelForm.revenue_percentage_brezzels]);
+  }, [selectedModelPlatformRevenue, customPlatforms, modelForm.revenue_percentage, modelForm.revenue_percentage_fourbased, modelForm.revenue_percentage_maloum, modelForm.revenue_percentage_brezzels]);
 
   // ─── Create model ───
   const handleCreateModel = async () => {
@@ -2014,8 +2037,12 @@ export default function ModelDashboardTab() {
                         const pctFb = modelForm.revenue_percentage_fourbased || fallback;
                         const pctMl = modelForm.revenue_percentage_maloum || fallback;
                         const pctBr = modelForm.revenue_percentage_brezzels || fallback;
+                        const customsTotal = customPlatforms.reduce((s, cp) => {
+                          const pct = cp.percentage > 0 ? cp.percentage : fallback;
+                          return s + (cp.revenue || 0) * pct / 100;
+                        }, 0);
                         const calculated = Math.round(
-                          (fb * pctFb) / 100 + (ml * pctMl) / 100 + (br * pctBr) / 100,
+                          (fb * pctFb) / 100 + (ml * pctMl) / 100 + (br * pctBr) / 100 + customsTotal,
                         );
                         const lastDay = new Date(y, m, 0).getDate();
                         setBillingShare(calculated);
@@ -2129,17 +2156,19 @@ export default function ModelDashboardTab() {
                     }),
                     { fourbased: 0, maloum: 0, brezzels: 0 },
                   );
-                  const totals = payoutRevenueForMonth ?? liveTotals;
+                  const fetchedTotals = fetchedPayoutRevenue
+                    ? {
+                        fourbased: fetchedPayoutRevenue.fourbased ?? 0,
+                        maloum: fetchedPayoutRevenue.maloum ?? 0,
+                        brezzels: fetchedPayoutRevenue.brezzels ?? 0,
+                      }
+                    : null;
+                  const totals = payoutRevenueForMonth ?? fetchedTotals ?? liveTotals;
                   const rows: Array<{ key: "fourbased" | "maloum" | "brezzels"; label: string; rev: number; pctField: keyof ModelRow }> = [
                     { key: "fourbased", label: "4Based", rev: totals.fourbased, pctField: "revenue_percentage_fourbased" },
                     { key: "maloum", label: "Maloum", rev: totals.maloum, pctField: "revenue_percentage_maloum" },
                     { key: "brezzels", label: "Brezzels", rev: totals.brezzels, pctField: "revenue_percentage_brezzels" },
                   ];
-                  // Resolve currency per-platform from the matching account
-                  const currencyForPlatform = (label: string): string => {
-                    const acc = modelAccounts.find((a) => a.platform === label);
-                    return acc?.currency || modelForm.currency || "EUR";
-                  };
                   return (
                     <div className="space-y-3 rounded-xl border border-accent/15 bg-accent/[0.02] p-3">
                       <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -2184,6 +2213,110 @@ export default function ModelDashboardTab() {
                           </div>
                         );
                       })}
+
+                      {/* Custom platforms */}
+                      {customPlatforms.length > 0 && (
+                        <div className="pt-2 border-t border-accent/10 space-y-3">
+                          <p className="text-[9px] uppercase tracking-wider text-muted-foreground/70">
+                            Eigene Plattformen
+                          </p>
+                          {customPlatforms.map((cp) => {
+                            const effectivePct = cp.percentage > 0 ? cp.percentage : fallback;
+                            const earn = Math.round((cp.revenue * effectivePct) / 100);
+                            return (
+                              <div key={cp.id} className="space-y-1.5 rounded-lg bg-secondary/20 p-2 border border-border/30">
+                                <div className="flex items-center gap-2">
+                                  <Input
+                                    value={cp.name}
+                                    onChange={(e) =>
+                                      setCustomPlatforms((prev) =>
+                                        prev.map((p) => (p.id === cp.id ? { ...p, name: e.target.value } : p)),
+                                      )
+                                    }
+                                    placeholder="Plattform Name"
+                                    className="flex-1 h-7 text-xs bg-secondary/40 border-border/50"
+                                  />
+                                  <Input
+                                    type="number"
+                                    value={cp.revenue || ""}
+                                    onChange={(e) =>
+                                      setCustomPlatforms((prev) =>
+                                        prev.map((p) =>
+                                          p.id === cp.id ? { ...p, revenue: Number(e.target.value) || 0 } : p,
+                                        ),
+                                      )
+                                    }
+                                    placeholder="Umsatz"
+                                    className="w-24 h-7 text-xs bg-secondary/40 border-border/50 tabular-nums"
+                                  />
+                                  <Button
+                                    type="button"
+                                    size="icon"
+                                    variant="ghost"
+                                    onClick={() =>
+                                      setCustomPlatforms((prev) => prev.filter((p) => p.id !== cp.id))
+                                    }
+                                    className="h-7 w-7 text-destructive hover:bg-destructive/10 shrink-0"
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Slider
+                                    value={[cp.percentage]}
+                                    onValueChange={([v]) =>
+                                      setCustomPlatforms((prev) =>
+                                        prev.map((p) => (p.id === cp.id ? { ...p, percentage: v } : p)),
+                                      )
+                                    }
+                                    min={0}
+                                    max={100}
+                                    step={1}
+                                    className="flex-1"
+                                  />
+                                  <span className="text-xs font-bold text-gold-gradient tabular-nums w-10 text-right">
+                                    {cp.percentage}%
+                                  </span>
+                                </div>
+                                <div className="flex justify-between items-center text-[10px] text-muted-foreground tabular-nums">
+                                  <span>
+                                    Umsatz: {(cp.revenue || 0).toLocaleString("de-DE")} {baseCurrency}
+                                    {cp.percentage === 0 && fallback > 0 && (
+                                      <span className="ml-1 text-accent/70">(Standard {fallback}%)</span>
+                                    )}
+                                  </span>
+                                  <span className="text-accent/80">
+                                    → {earn.toLocaleString("de-DE")} {baseCurrency}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() =>
+                          setCustomPlatforms((prev) => [
+                            ...prev,
+                            {
+                              id: (typeof crypto !== "undefined" && (crypto as any).randomUUID)
+                                ? (crypto as any).randomUUID()
+                                : `cp-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                              name: "",
+                              revenue: 0,
+                              percentage: 0,
+                            },
+                          ])
+                        }
+                        className="w-full gap-1.5 text-xs border-accent/30 text-accent hover:bg-accent/10"
+                      >
+                        <Plus className="h-3 w-3" />
+                        Custom Plattform hinzufügen
+                      </Button>
                     </div>
                   );
                 })()}
@@ -2680,15 +2813,48 @@ export default function ModelDashboardTab() {
                     Maloum: modelForm.revenue_percentage_maloum || 0,
                     Brezzels: modelForm.revenue_percentage_brezzels || 0,
                   };
-                  // Aggregate per-platform across multiple accounts (same platform → sum)
+                  // Prefer fetched/calculated payout revenue over live dashboard input,
+                  // matching the "Custom % pro Plattform" card display.
+                  const fetchedTotals = fetchedPayoutRevenue
+                    ? {
+                        "4Based": fetchedPayoutRevenue.fourbased ?? 0,
+                        Maloum: fetchedPayoutRevenue.maloum ?? 0,
+                        Brezzels: fetchedPayoutRevenue.brezzels ?? 0,
+                      }
+                    : null;
+                  const payoutTotals = payoutRevenueForMonth
+                    ? {
+                        "4Based": payoutRevenueForMonth.fourbased,
+                        Maloum: payoutRevenueForMonth.maloum,
+                        Brezzels: payoutRevenueForMonth.brezzels,
+                      }
+                    : null;
+                  const sourceTotals = payoutTotals ?? fetchedTotals;
+
                   const agg: Record<string, { rev: number; pct: number }> = {};
-                  for (const acc of modelAccounts) {
-                    const rev = convertToBase(dashboardRevenues[acc.id] || 0, acc.currency || baseCurrency);
-                    const pct = pctMap[acc.platform] > 0 ? pctMap[acc.platform] : fallback;
-                    if (!agg[acc.platform]) agg[acc.platform] = { rev: 0, pct };
-                    agg[acc.platform].rev += rev;
+                  if (sourceTotals) {
+                    for (const [name, rev] of Object.entries(sourceTotals)) {
+                      const pct = pctMap[name] > 0 ? pctMap[name] : fallback;
+                      agg[name] = { rev: Number(rev) || 0, pct };
+                    }
+                  } else {
+                    // Aggregate per-platform across multiple accounts (same platform → sum)
+                    for (const acc of modelAccounts) {
+                      const rev = convertToBase(dashboardRevenues[acc.id] || 0, acc.currency || baseCurrency);
+                      const pct = pctMap[acc.platform] > 0 ? pctMap[acc.platform] : fallback;
+                      if (!agg[acc.platform]) agg[acc.platform] = { rev: 0, pct };
+                      agg[acc.platform].rev += rev;
+                    }
                   }
-                  return Object.entries(agg).map(([name, v]) => ({ name, rev: v.rev, pct: v.pct }));
+                  const builtins = Object.entries(agg).map(([name, v]) => ({ name, rev: v.rev, pct: v.pct }));
+                  const customs = customPlatforms
+                    .filter((cp) => cp.name.trim() && cp.revenue > 0)
+                    .map((cp) => ({
+                      name: cp.name.trim(),
+                      rev: cp.revenue,
+                      pct: cp.percentage > 0 ? cp.percentage : fallback,
+                    }));
+                  return [...builtins, ...customs];
                 })()}
               />
             </Section>
