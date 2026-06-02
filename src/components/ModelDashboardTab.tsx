@@ -1910,9 +1910,9 @@ export default function ModelDashboardTab() {
                              toast.error(
                                `Umsatz teilweise abgerufen — ${errs.length} Fehler`,
                                {
-                                 description: errs
-                                   .map(e => `• ${e.platform ?? "?"}${e.code ? ` [${e.code}]` : ""}: ${e.message ?? "Unbekannter Fehler"}`)
-                                   .join("\n"),
+                                  description: errs
+                                    .map(e => e.message ?? "Unbekannter Fehler")
+                                    .join("\n"),
                                  duration: 10000,
                                  style: { whiteSpace: "pre-line" },
                                }
