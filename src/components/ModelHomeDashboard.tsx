@@ -233,8 +233,16 @@ export default function ModelHomeDashboard({
       let q = (supabase.from("daily_revenue") as any).select("user_id, amount, date").in("user_id", userIds);
       if (range) q = q.gte("date", range.from).lte("date", range.to);
       const lifetimeQ = (supabase.from("daily_revenue") as any).select("user_id, amount").in("user_id", userIds);
+      const monthStart = new Date();
+      const monthFrom = new Date(monthStart.getFullYear(), monthStart.getMonth(), 1).toISOString().slice(0, 10);
+      const monthTo = monthStart.toISOString().slice(0, 10);
+      const monthQ = (supabase.from("daily_revenue") as any)
+        .select("amount")
+        .in("user_id", userIds)
+        .gte("date", monthFrom)
+        .lte("date", monthTo);
 
-      const [{ data: rev }, { data: lifetimeRev }] = await Promise.all([q, lifetimeQ]);
+      const [{ data: rev }, { data: lifetimeRev }, { data: monthRev }] = await Promise.all([q, lifetimeQ, monthQ]);
 
       const byAccount: Record<string, number> = {};
       (rev || []).forEach((r: any) => {
@@ -248,10 +256,12 @@ export default function ModelHomeDashboard({
         if (!accId) return;
         lifetimeAcc[accId] = (lifetimeAcc[accId] || 0) + Number(r.amount || 0);
       });
+      const monthSum = (monthRev || []).reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
 
       if (!cancelled) {
         setRevenueByAccount(byAccount);
         setLifetimeByAccount(lifetimeAcc);
+        setMonthRevenue(monthSum);
         setLoading(false);
       }
     })();
