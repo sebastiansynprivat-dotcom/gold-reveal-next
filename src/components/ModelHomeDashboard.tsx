@@ -113,6 +113,8 @@ const COPY = {
     noInvoices: "No invoices yet.",
     net: "Net",
     gross: "Gross",
+    yourShare: "Your share",
+    netEarnings: "Your net earnings",
     forecast: "Month forecast",
     forecastHint: "Projection based on daily average so far",
   },
