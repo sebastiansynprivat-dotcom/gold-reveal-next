@@ -78,6 +78,8 @@ const COPY = {
     noInvoices: "Noch keine Abrechnungen.",
     net: "Netto",
     gross: "Brutto",
+    yourShare: "Dein Anteil",
+    netEarnings: "Deine Netto-Einnahmen",
     forecast: "Monatsprognose",
     forecastHint: "Hochrechnung basierend auf dem bisherigen Tagesdurchschnitt",
   },
@@ -111,6 +113,8 @@ const COPY = {
     noInvoices: "No invoices yet.",
     net: "Net",
     gross: "Gross",
+    yourShare: "Your share",
+    netEarnings: "Your net earnings",
     forecast: "Month forecast",
     forecastHint: "Projection based on daily average so far",
   },
@@ -179,6 +183,20 @@ export default function ModelHomeDashboard({
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [shownPwd, setShownPwd] = useState<Record<string, boolean>>({});
   const [openCard, setOpenCard] = useState<Record<string, boolean>>({});
+  const [commissionPct, setCommissionPct] = useState<number>(0);
+
+  // Load model commission %
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await (supabase.from("model_dashboard") as any)
+        .select("revenue_percentage")
+        .eq("model_id", modelId)
+        .maybeSingle();
+      if (!cancelled) setCommissionPct(Number(data?.revenue_percentage || 0));
+    })();
+    return () => { cancelled = true; };
+  }, [modelId]);
 
   // Load model's accounts (full credentials)
   useEffect(() => {
@@ -353,6 +371,11 @@ export default function ModelHomeDashboard({
         <div className="flex items-center gap-2">
           <TrendingUp className="h-4 w-4 text-accent" />
           <h2 className="text-base font-bold text-foreground">{copy.revenue}</h2>
+          {commissionPct > 0 && (
+            <span className="ml-auto inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-accent/15 text-accent border border-accent/30 tabular-nums">
+              {copy.yourShare}: {commissionPct}%
+            </span>
+          )}
         </div>
 
         <div className="flex flex-wrap gap-1.5">
@@ -381,6 +404,11 @@ export default function ModelHomeDashboard({
             <p className="text-3xl font-bold text-gold-gradient-shimmer mt-1 tabular-nums">
               {loading ? "…" : fmtMoney(total)}
             </p>
+            {commissionPct > 0 && (
+              <p className="text-[10px] text-emerald-400 mt-1 tabular-nums">
+                {copy.net}: {fmtMoney(total * commissionPct / 100)}
+              </p>
+            )}
           </div>
           <div className="glass-card-subtle rounded-xl p-5 text-center relative overflow-hidden">
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground flex items-center justify-center gap-1">
@@ -389,6 +417,11 @@ export default function ModelHomeDashboard({
             <p className="text-3xl font-bold text-accent mt-1 tabular-nums">
               {loading ? "…" : fmtMoney(projectedMonth)}
             </p>
+            {commissionPct > 0 && (
+              <p className="text-[10px] text-emerald-400 mt-1 tabular-nums">
+                {copy.net}: {fmtMoney(projectedMonth * commissionPct / 100)}
+              </p>
+            )}
             <p className="text-[9px] text-muted-foreground/70 mt-1 leading-tight">{copy.forecastHint}</p>
           </div>
           <div className="glass-card-subtle rounded-xl p-5 text-center">
@@ -396,9 +429,15 @@ export default function ModelHomeDashboard({
             <p className="text-3xl font-bold text-accent mt-1 tabular-nums">
               {loading ? "…" : fmtMoney(lifetimeTotal)}
             </p>
+            {commissionPct > 0 && (
+              <p className="text-[10px] text-emerald-400 mt-1 tabular-nums">
+                {copy.net}: {fmtMoney(lifetimeTotal * commissionPct / 100)}
+              </p>
+            )}
           </div>
         </div>
       </section>
+
 
       {/* Content Requests */}
       <section className="glass-card rounded-2xl p-5 space-y-3 card-inner-glow">
@@ -505,6 +544,11 @@ export default function ModelHomeDashboard({
                       <p className="text-[9px] text-muted-foreground uppercase tracking-wider">
                         {periodLabels[period]}
                       </p>
+                      {commissionPct > 0 && (
+                        <p className="text-[10px] text-emerald-400 tabular-nums mt-0.5">
+                          {copy.net}: {fmtMoney((revenueByAccount[a.id] || 0) * commissionPct / 100)}
+                        </p>
+                      )}
                     </div>
                     <ChevronDown
                       className={cn(
