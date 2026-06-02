@@ -78,6 +78,8 @@ const COPY = {
     noInvoices: "Noch keine Abrechnungen.",
     net: "Netto",
     gross: "Brutto",
+    yourShare: "Dein Anteil",
+    netEarnings: "Deine Netto-Einnahmen",
     forecast: "Monatsprognose",
     forecastHint: "Hochrechnung basierend auf dem bisherigen Tagesdurchschnitt",
   },
