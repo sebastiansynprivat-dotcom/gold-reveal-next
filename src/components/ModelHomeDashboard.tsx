@@ -371,6 +371,11 @@ export default function ModelHomeDashboard({
         <div className="flex items-center gap-2">
           <TrendingUp className="h-4 w-4 text-accent" />
           <h2 className="text-base font-bold text-foreground">{copy.revenue}</h2>
+          {commissionPct > 0 && (
+            <span className="ml-auto inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-accent/15 text-accent border border-accent/30 tabular-nums">
+              {copy.yourShare}: {commissionPct}%
+            </span>
+          )}
         </div>
 
         <div className="flex flex-wrap gap-1.5">
