@@ -647,7 +647,22 @@ export default function ModelGroupsPanel({
                     className="h-8"
                   />
                 </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={!!fetchAllProgress || groupModels.length === 0}
+                  onClick={fetchAllInGroup}
+                  className="h-8 bg-gradient-to-r from-accent/90 to-accent text-accent-foreground hover:from-accent hover:to-accent/90 shadow-sm"
+                  title="Umsätze für alle Models der Gruppe für den Monat von 'Zeitraum von' abrufen"
+                >
+                  {fetchAllProgress ? (
+                    <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> {fetchAllProgress.done}/{fetchAllProgress.total}</>
+                  ) : (
+                    <><Download className="h-3.5 w-3.5 mr-1.5" /> Alle fetchen</>
+                  )}
+                </Button>
               </div>
+
 
               <div className="pr-2">
                 <div className="space-y-2">
