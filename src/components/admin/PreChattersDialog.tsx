@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { UserPlus, Loader2, Trash2, CheckCircle2, Clock, Search } from "lucide-react";
+import { UserPlus, Loader2, Trash2, CheckCircle2, Clock, Search, X, Check, AtSign, Mail } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -206,37 +206,121 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
                   ))}
                 </div>
               </div>
-              <div className="space-y-1 sm:col-span-2">
+              <div className="space-y-1.5 sm:col-span-2">
                 <label className="text-[10px] text-muted-foreground uppercase tracking-wide">
                   Account vorzuweisen (optional)
                 </label>
-                <div className="relative">
-                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+
+                {/* Search field */}
+                <div className="relative group">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground group-focus-within:text-accent transition-colors" />
                   <Input
                     value={accountSearch}
                     onChange={(e) => setAccountSearch(e.target.value)}
-                    placeholder="Suche nach Model-Username, E-Mail oder Plattform"
-                    className="h-8 pl-7 text-xs bg-secondary/30 border-transparent"
+                    placeholder="Model, E-Mail oder Plattform suchen…"
+                    className="h-9 pl-8 pr-8 text-xs bg-secondary/40 border border-border/40 focus-visible:ring-1 focus-visible:ring-accent/60 focus-visible:border-accent/50 rounded-lg"
                   />
+                  {accountSearch && (
+                    <button
+                      type="button"
+                      onClick={() => setAccountSearch("")}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 h-5 w-5 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition"
+                      aria-label="Suche leeren"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  )}
                 </div>
-                <select
-                  value={accountId}
-                  onChange={(e) => setAccountId(e.target.value)}
-                  size={Math.min(6, Math.max(3, filteredAccounts.length + 1))}
-                  className="w-full text-xs rounded-md bg-secondary/30 border border-transparent px-2 py-1 text-foreground"
-                >
-                  <option value="">— kein Account —</option>
-                  {filteredAccounts.map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {formatAccountLabel(a)}
-                    </option>
-                  ))}
-                </select>
-                {accountSearch && (
-                  <p className="text-[10px] text-muted-foreground">
-                    {filteredAccounts.length} Treffer
-                  </p>
-                )}
+
+                {/* Results list */}
+                <div className="rounded-lg border border-border/40 bg-background/40 overflow-hidden">
+                  <div className="max-h-48 overflow-y-auto divide-y divide-border/20">
+                    {/* "no account" option */}
+                    <button
+                      type="button"
+                      onClick={() => setAccountId("")}
+                      className={cn(
+                        "w-full flex items-center gap-2 px-2.5 py-2 text-left transition-colors",
+                        accountId === ""
+                          ? "bg-accent/10 text-foreground"
+                          : "hover:bg-secondary/40 text-muted-foreground",
+                      )}
+                    >
+                      <div className={cn(
+                        "h-4 w-4 rounded-full border flex items-center justify-center shrink-0",
+                        accountId === "" ? "border-accent bg-accent" : "border-border/60",
+                      )}>
+                        {accountId === "" && <Check className="h-2.5 w-2.5 text-accent-foreground" />}
+                      </div>
+                      <span className="text-[11px] italic">— kein Account zuweisen —</span>
+                    </button>
+
+                    {filteredAccounts.length === 0 ? (
+                      <div className="px-3 py-6 text-center text-[11px] text-muted-foreground">
+                        Keine Treffer
+                      </div>
+                    ) : (
+                      filteredAccounts.map((a) => {
+                        const selected = accountId === a.id;
+                        const username = a.model_id ? modelUsernames[a.model_id] : null;
+                        return (
+                          <button
+                            key={a.id}
+                            type="button"
+                            onClick={() => setAccountId(a.id)}
+                            className={cn(
+                              "w-full flex items-center gap-2.5 px-2.5 py-2 text-left transition-colors",
+                              selected ? "bg-accent/10" : "hover:bg-secondary/40",
+                            )}
+                          >
+                            <div className={cn(
+                              "h-4 w-4 rounded-full border flex items-center justify-center shrink-0",
+                              selected ? "border-accent bg-accent" : "border-border/60",
+                            )}>
+                              {selected && <Check className="h-2.5 w-2.5 text-accent-foreground" />}
+                            </div>
+                            <Badge
+                              variant="secondary"
+                              className="text-[9px] px-1.5 py-0 h-4 shrink-0 bg-accent/15 text-accent border-accent/20 uppercase tracking-wide"
+                            >
+                              {a.platform}
+                            </Badge>
+                            <div className="min-w-0 flex-1 flex items-center gap-2">
+                              {username ? (
+                                <span className="inline-flex items-center gap-0.5 text-[11px] font-medium text-foreground truncate">
+                                  <AtSign className="h-2.5 w-2.5 text-muted-foreground shrink-0" />
+                                  {username}
+                                </span>
+                              ) : a.model_name ? (
+                                <span className="text-[11px] font-medium text-foreground truncate">
+                                  {a.model_name}
+                                </span>
+                              ) : null}
+                              <span className="inline-flex items-center gap-0.5 text-[10px] text-muted-foreground truncate">
+                                <Mail className="h-2.5 w-2.5 shrink-0" />
+                                <span className="truncate">{a.account_email}</span>
+                              </span>
+                            </div>
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+                  <div className="flex items-center justify-between px-2.5 py-1.5 border-t border-border/30 bg-secondary/20">
+                    <span className="text-[9px] uppercase tracking-wide text-muted-foreground">
+                      {accountSearch ? `${filteredAccounts.length} Treffer` : `${freeAccounts.length} freie Accounts`}
+                    </span>
+                    {accountId && (
+                      <button
+                        type="button"
+                        onClick={() => setAccountId("")}
+                        className="text-[9px] uppercase tracking-wide text-muted-foreground hover:text-foreground transition"
+                      >
+                        Auswahl zurücksetzen
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
             <Button
