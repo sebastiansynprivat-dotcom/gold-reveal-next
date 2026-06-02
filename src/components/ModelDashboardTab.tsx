@@ -527,6 +527,36 @@ export default function ModelDashboardTab() {
     setPlatformRevenues(platRevMap);
   }, []);
 
+  // ─── Query payout_revenue for the selected fetch month/year ───
+  useEffect(() => {
+    if (!selectedModelId) {
+      setFetchedPayoutRevenue(null);
+      return;
+    }
+    (async () => {
+      const { data, error } = await (supabase as any)
+        .from("payout_revenue")
+        .select("fourbased_revenue, maloum_revenue, brezzels_revenue")
+        .eq("model_id", selectedModelId)
+        .eq("last_fetched_month", fetchMonth)
+        .eq("last_fetched_year", fetchYear)
+        .maybeSingle();
+      if (error) {
+        setFetchedPayoutRevenue(null);
+        return;
+      }
+      if (data) {
+        setFetchedPayoutRevenue({
+          fourbased: Number((data as any).fourbased_revenue) ?? 0,
+          maloum: Number((data as any).maloum_revenue) ?? 0,
+          brezzels: Number((data as any).brezzels_revenue) ?? 0,
+        });
+      } else {
+        setFetchedPayoutRevenue(null);
+      }
+    })();
+  }, [selectedModelId, fetchMonth, fetchYear, fetchRevenueTick]);
+
   // ─── Load selected model data into form ───
   useEffect(() => {
     if (!selectedModelId) return;
