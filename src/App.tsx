@@ -109,7 +109,7 @@ const ModelProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
   
   if (!user) return <Navigate to="/model/login" replace />;
-  if (isModel === false) return <Navigate to="/dashboard" replace />;
+  if (isModel === false) return <Navigate to="/model/login" replace />;
   
   return <>{children}</>;
 };
