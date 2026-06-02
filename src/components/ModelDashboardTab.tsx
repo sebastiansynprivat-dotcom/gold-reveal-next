@@ -444,6 +444,7 @@ export default function ModelDashboardTab() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
   });
   const [shareCalculated, setShareCalculated] = useState(false);
+  const [billingShare, setBillingShare] = useState(0);
   const [calcTrigger, setCalcTrigger] = useState(0);
 
   // ─── Revenue fetch (external backend) ───
