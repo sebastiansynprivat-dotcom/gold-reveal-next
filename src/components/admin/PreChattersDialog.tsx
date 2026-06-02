@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { UserPlus, Loader2, Trash2, CheckCircle2, Clock } from "lucide-react";
+import { UserPlus, Loader2, Trash2, CheckCircle2, Clock, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -24,6 +24,8 @@ interface AccountOption {
   platform: string;
   account_email: string;
   assigned_to: string | null;
+  model_id?: string | null;
+  model_name?: string | null;
 }
 
 interface Props {
@@ -37,10 +39,14 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  const [name, setName] = useState("");
+  const [groupName, setGroupName] = useState("");
   const [telegram, setTelegram] = useState("");
   const [language, setLanguage] = useState<"de" | "en">("de");
   const [accountId, setAccountId] = useState<string>("");
+  const [accountSearch, setAccountSearch] = useState("");
+
+  // Map of model_id → username (fetched once when dialog opens)
+  const [modelUsernames, setModelUsernames] = useState<Record<string, string>>({});
 
   const load = async () => {
     setLoading(true);
@@ -56,9 +62,45 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
     setList((data as any[]) as PreChatter[]);
   };
 
+  const loadModelUsernames = async () => {
+    const ids = Array.from(new Set(freeAccounts.map((a) => a.model_id).filter(Boolean))) as string[];
+    if (ids.length === 0) {
+      setModelUsernames({});
+      return;
+    }
+    const { data, error } = await supabase.from("models").select("id, username").in("id", ids);
+    if (error) return;
+    const map: Record<string, string> = {};
+    (data || []).forEach((m: any) => {
+      if (m.username) map[m.id] = m.username;
+    });
+    setModelUsernames(map);
+  };
+
   useEffect(() => {
-    if (open) load();
+    if (open) {
+      load();
+      loadModelUsernames();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
+
+  const filteredAccounts = useMemo(() => {
+    const q = accountSearch.trim().toLowerCase();
+    if (!q) return freeAccounts;
+    return freeAccounts.filter((a) => {
+      const username = a.model_id ? (modelUsernames[a.model_id] || "").toLowerCase() : "";
+      const modelName = (a.model_name || "").toLowerCase();
+      const email = (a.account_email || "").toLowerCase();
+      const platform = (a.platform || "").toLowerCase();
+      return (
+        username.includes(q) ||
+        modelName.includes(q) ||
+        email.includes(q) ||
+        platform.includes(q)
+      );
+    });
+  }, [accountSearch, freeAccounts, modelUsernames]);
 
   const add = async () => {
     if (!telegram.trim()) {
@@ -67,7 +109,7 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
     }
     setSaving(true);
     const { error } = await supabase.from("pre_chatters" as any).insert({
-      name: name.trim(),
+      name: groupName.trim(),
       telegram_id: telegram.trim(),
       language,
       preassigned_account_id: accountId || null,
@@ -78,9 +120,10 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
       return;
     }
     toast.success("Chatter vorgemerkt");
-    setName("");
+    setGroupName("");
     setTelegram("");
     setAccountId("");
+    setAccountSearch("");
     setLanguage("de");
     load();
   };
@@ -93,6 +136,15 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
     }
     toast.success("Eintrag entfernt");
     load();
+  };
+
+  const formatAccountLabel = (a: AccountOption) => {
+    const username = a.model_id ? modelUsernames[a.model_id] : null;
+    const parts = [a.platform];
+    if (username) parts.push(`@${username}`);
+    else if (a.model_name) parts.push(a.model_name);
+    parts.push(a.account_email);
+    return parts.filter(Boolean).join(" · ");
   };
 
   return (
@@ -117,10 +169,10 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
           <div className="glass-card-subtle rounded-xl p-3 space-y-2.5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               <div className="space-y-1">
-                <label className="text-[10px] text-muted-foreground uppercase tracking-wide">Name (optional)</label>
+                <label className="text-[10px] text-muted-foreground uppercase tracking-wide">Gruppenname (optional)</label>
                 <Input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  value={groupName}
+                  onChange={(e) => setGroupName(e.target.value)}
                   placeholder="z.B. Max Mustermann"
                   className="h-8 text-xs bg-secondary/30 border-transparent"
                 />
@@ -130,7 +182,7 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
                 <Input
                   value={telegram}
                   onChange={(e) => setTelegram(e.target.value)}
-                  placeholder="@username"
+                  placeholder="Telegram-ID"
                   className="h-8 text-xs bg-secondary/30 border-transparent"
                 />
               </div>
@@ -158,18 +210,33 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
                 <label className="text-[10px] text-muted-foreground uppercase tracking-wide">
                   Account vorzuweisen (optional)
                 </label>
+                <div className="relative">
+                  <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input
+                    value={accountSearch}
+                    onChange={(e) => setAccountSearch(e.target.value)}
+                    placeholder="Suche nach Model-Username, E-Mail oder Plattform"
+                    className="h-8 pl-7 text-xs bg-secondary/30 border-transparent"
+                  />
+                </div>
                 <select
                   value={accountId}
                   onChange={(e) => setAccountId(e.target.value)}
-                  className="w-full h-8 text-xs rounded-md bg-secondary/30 border border-transparent px-2 text-foreground"
+                  size={Math.min(6, Math.max(3, filteredAccounts.length + 1))}
+                  className="w-full text-xs rounded-md bg-secondary/30 border border-transparent px-2 py-1 text-foreground"
                 >
                   <option value="">— kein Account —</option>
-                  {freeAccounts.map((a) => (
+                  {filteredAccounts.map((a) => (
                     <option key={a.id} value={a.id}>
-                      {a.platform} · {a.account_email}
+                      {formatAccountLabel(a)}
                     </option>
                   ))}
                 </select>
+                {accountSearch && (
+                  <p className="text-[10px] text-muted-foreground">
+                    {filteredAccounts.length} Treffer
+                  </p>
+                )}
               </div>
             </div>
             <Button
@@ -223,7 +290,7 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
                         )}
                         {acc && (
                           <Badge variant="secondary" className="text-[9px] px-1.5 py-0">
-                            {acc.platform} · {acc.account_email}
+                            {formatAccountLabel(acc)}
                           </Badge>
                         )}
                       </div>
