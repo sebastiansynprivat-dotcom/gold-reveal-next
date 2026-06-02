@@ -305,7 +305,6 @@ export default function ModelHomeDashboard({
     new Date(d).toLocaleDateString(lang === "en" ? "en-US" : "de-DE", { day: "2-digit", month: "short", year: "numeric" });
 
   const openRequests = requests.filter((r) => r.status === "pending").length;
-  const nextPayout = nextPayoutDate();
 
   const now = new Date();
   const dayOfMonth = now.getDate();
@@ -542,7 +541,7 @@ export default function ModelHomeDashboard({
           <CalendarClock className="h-5 w-5 text-accent shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{copy.nextPayout}</p>
-            <p className="text-sm font-semibold text-foreground">{fmtDate(nextPayout)}</p>
+            <p className="text-sm font-semibold text-foreground">{copy.nextPayoutValue}</p>
           </div>
         </div>
 
