@@ -1948,6 +1948,7 @@ export default function ModelDashboardTab() {
                         );
                         const lastDay = new Date(y, m, 0).getDate();
                         setBillingShare(calculated);
+                        setPayoutRevenueForMonth({ fourbased: fb, maloum: ml, brezzels: br });
                         setShareCalculated(true);
                         setCalcTrigger((t) => t + 1);
                         setModelForm((prev) => ({
