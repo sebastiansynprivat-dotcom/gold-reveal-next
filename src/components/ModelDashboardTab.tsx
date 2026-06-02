@@ -2037,8 +2037,12 @@ export default function ModelDashboardTab() {
                         const pctFb = modelForm.revenue_percentage_fourbased || fallback;
                         const pctMl = modelForm.revenue_percentage_maloum || fallback;
                         const pctBr = modelForm.revenue_percentage_brezzels || fallback;
+                        const customsTotal = customPlatforms.reduce((s, cp) => {
+                          const pct = cp.percentage > 0 ? cp.percentage : fallback;
+                          return s + (cp.revenue || 0) * pct / 100;
+                        }, 0);
                         const calculated = Math.round(
-                          (fb * pctFb) / 100 + (ml * pctMl) / 100 + (br * pctBr) / 100,
+                          (fb * pctFb) / 100 + (ml * pctMl) / 100 + (br * pctBr) / 100 + customsTotal,
                         );
                         const lastDay = new Date(y, m, 0).getDate();
                         setBillingShare(calculated);
