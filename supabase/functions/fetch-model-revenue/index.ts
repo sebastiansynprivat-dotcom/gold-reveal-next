@@ -111,7 +111,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
     if (upsertErr) throw upsertErr;
 
-    return new Response(JSON.stringify({ ok: true, row: saved, backend: result }), {
+    return new Response(JSON.stringify({ ok: true, row: saved, backend: result, errors }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
