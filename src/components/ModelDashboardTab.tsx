@@ -697,18 +697,26 @@ export default function ModelDashboardTab() {
     const pctFb = modelForm.revenue_percentage_fourbased || fallback;
     const pctMl = modelForm.revenue_percentage_maloum || fallback;
     const pctBr = modelForm.revenue_percentage_brezzels || fallback;
+    // Only use fetched/calculated payout revenue (never the live manual dashboard input).
+    const source = payoutRevenueForMonth ?? (fetchedPayoutRevenue
+      ? {
+          fourbased: fetchedPayoutRevenue.fourbased ?? 0,
+          maloum: fetchedPayoutRevenue.maloum ?? 0,
+          brezzels: fetchedPayoutRevenue.brezzels ?? 0,
+        }
+      : null);
     let sum = 0;
-    for (const p of selectedModelPlatformRevenue) {
-      sum += (p.fourbased || 0) * pctFb / 100;
-      sum += (p.maloum || 0) * pctMl / 100;
-      sum += (p.brezzels || 0) * pctBr / 100;
+    if (source) {
+      sum += (source.fourbased || 0) * pctFb / 100;
+      sum += (source.maloum || 0) * pctMl / 100;
+      sum += (source.brezzels || 0) * pctBr / 100;
     }
     for (const cp of customPlatforms) {
       const pct = cp.percentage > 0 ? cp.percentage : fallback;
       sum += (cp.revenue || 0) * pct / 100;
     }
     return Math.round(sum);
-  }, [selectedModelPlatformRevenue, customPlatforms, modelForm.revenue_percentage, modelForm.revenue_percentage_fourbased, modelForm.revenue_percentage_maloum, modelForm.revenue_percentage_brezzels]);
+  }, [payoutRevenueForMonth, fetchedPayoutRevenue, customPlatforms, modelForm.revenue_percentage, modelForm.revenue_percentage_fourbased, modelForm.revenue_percentage_maloum, modelForm.revenue_percentage_brezzels]);
 
   // ─── Create model ───
   const handleCreateModel = async () => {
