@@ -2156,14 +2156,6 @@ export default function ModelDashboardTab() {
                 {/* Per-platform custom percentages */}
                 {(() => {
                   const fallback = modelForm.revenue_percentage || 0;
-                  const liveTotals = selectedModelPlatformRevenue.reduce(
-                    (acc, p) => ({
-                      fourbased: acc.fourbased + (p.fourbased || 0),
-                      maloum: acc.maloum + (p.maloum || 0),
-                      brezzels: acc.brezzels + (p.brezzels || 0),
-                    }),
-                    { fourbased: 0, maloum: 0, brezzels: 0 },
-                  );
                   const fetchedTotals = fetchedPayoutRevenue
                     ? {
                         fourbased: fetchedPayoutRevenue.fourbased ?? 0,
@@ -2171,7 +2163,7 @@ export default function ModelDashboardTab() {
                         brezzels: fetchedPayoutRevenue.brezzels ?? 0,
                       }
                     : null;
-                  const totals = payoutRevenueForMonth ?? fetchedTotals ?? liveTotals;
+                  const totals = payoutRevenueForMonth ?? fetchedTotals ?? { fourbased: 0, maloum: 0, brezzels: 0 };
                   const rows: Array<{ key: "fourbased" | "maloum" | "brezzels"; label: string; rev: number; pctField: keyof ModelRow }> = [
                     { key: "fourbased", label: "4Based", rev: totals.fourbased, pctField: "revenue_percentage_fourbased" },
                     { key: "maloum", label: "Maloum", rev: totals.maloum, pctField: "revenue_percentage_maloum" },
