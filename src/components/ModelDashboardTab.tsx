@@ -456,7 +456,13 @@ export default function ModelDashboardTab() {
   const [confirmOverwrite, setConfirmOverwrite] = useState(false);
   const [lastFetchInfo, setLastFetchInfo] = useState<{ at: string | null; month: number | null; year: number | null }>({ at: null, month: null, year: null });
 
-
+  // Per-platform revenue from payout_revenue for the selected fetch month/year
+  const [fetchedPayoutRevenue, setFetchedPayoutRevenue] = useState<{
+    fourbased: number | null;
+    maloum: number | null;
+    brezzels: number | null;
+  } | null>(null);
+  const [fetchRevenueTick, setFetchRevenueTick] = useState(0);
 
   const detailRef = useRef<HTMLDivElement>(null);
 
