@@ -109,6 +109,8 @@ const COPY = {
     noInvoices: "No invoices yet.",
     net: "Net",
     gross: "Gross",
+    forecast: "Month forecast",
+    forecastHint: "Projection based on daily average so far",
   },
 };
 
