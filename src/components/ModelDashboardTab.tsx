@@ -1968,7 +1968,7 @@ export default function ModelDashboardTab() {
                     <div className="flex items-center justify-between pt-1 border-t border-accent/10">
                       <span className="text-[10px] text-muted-foreground">Berechneter Anteil</span>
                       <span className="text-sm font-bold text-gold-gradient tabular-nums">
-                        {verdienst.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{" "}
+                        {billingShare.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{" "}
                         {modelForm.currency || "EUR"}
                       </span>
                     </div>
