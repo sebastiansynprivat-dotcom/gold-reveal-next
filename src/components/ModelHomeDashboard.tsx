@@ -177,6 +177,7 @@ export default function ModelHomeDashboard({
   const [accounts, setAccounts] = useState<any[]>([]);
   const [revenueByAccount, setRevenueByAccount] = useState<Record<string, number>>({});
   const [lifetimeByAccount, setLifetimeByAccount] = useState<Record<string, number>>({});
+  const [monthRevenue, setMonthRevenue] = useState<number>(0);
   const [requests, setRequests] = useState<any[]>([]);
   const [creditNotes, setCreditNotes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
