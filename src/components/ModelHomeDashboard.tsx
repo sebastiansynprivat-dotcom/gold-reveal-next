@@ -183,6 +183,20 @@ export default function ModelHomeDashboard({
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [shownPwd, setShownPwd] = useState<Record<string, boolean>>({});
   const [openCard, setOpenCard] = useState<Record<string, boolean>>({});
+  const [commissionPct, setCommissionPct] = useState<number>(0);
+
+  // Load model commission %
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await (supabase.from("model_dashboard") as any)
+        .select("revenue_percentage")
+        .eq("model_id", modelId)
+        .maybeSingle();
+      if (!cancelled) setCommissionPct(Number(data?.revenue_percentage || 0));
+    })();
+    return () => { cancelled = true; };
+  }, [modelId]);
 
   // Load model's accounts (full credentials)
   useEffect(() => {
