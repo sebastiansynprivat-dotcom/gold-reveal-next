@@ -6,11 +6,43 @@ import { motion } from "framer-motion";
 import logo from "@/assets/logo.png";
 import ForgotPasswordDialog from "@/components/ForgotPasswordDialog";
 
+const LANG: "de" | "en" =
+  typeof navigator !== "undefined" && navigator.language?.toLowerCase().startsWith("en") ? "en" : "de";
+
+const T = {
+  de: {
+    title: "Model Portal",
+    subtitle: "Melde dich mit deinen Zugangsdaten an",
+    email: "E-Mail Adresse",
+    password: "Passwort",
+    submit: "Anmelden",
+    submitting: "Bitte warten...",
+    forgot: "Passwort vergessen?",
+    invalid: "E-Mail oder Passwort ist falsch.",
+    notConfirmed: "Bitte bestätige zuerst deine E-Mail.",
+    wait: "Bitte warte einen Moment und versuche es erneut.",
+    rate: "Zu viele Versuche. Bitte warte einen Moment.",
+  },
+  en: {
+    title: "Model Portal",
+    subtitle: "Sign in with your credentials",
+    email: "Email address",
+    password: "Password",
+    submit: "Sign in",
+    submitting: "Please wait...",
+    forgot: "Forgot password?",
+    invalid: "Email or password is incorrect.",
+    notConfirmed: "Please confirm your email first.",
+    wait: "Please wait a moment and try again.",
+    rate: "Too many attempts. Please wait a moment.",
+  },
+}[LANG];
+
 const translateError = (msg: string): string => {
-  if (msg.includes("Invalid login credentials")) return "E-Mail oder Passwort ist falsch.";
-  if (msg.includes("Email not confirmed")) return "Bitte bestätige zuerst deine E-Mail.";
-  if (msg.includes("security purposes")) return "Bitte warte einen Moment und versuche es erneut.";
-  if (msg.includes("rate limit")) return "Zu viele Versuche. Bitte warte einen Moment.";
+  if (msg.includes("Invalid login credentials")) return T.invalid;
+  if (msg.includes("Email not confirmed")) return T.notConfirmed;
+  if (msg.includes("security purposes")) return T.wait;
+  if (msg.includes("rate limit")) return T.rate;
   return msg;
 };
 
