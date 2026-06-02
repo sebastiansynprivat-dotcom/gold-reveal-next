@@ -404,6 +404,11 @@ export default function ModelHomeDashboard({
             <p className="text-3xl font-bold text-gold-gradient-shimmer mt-1 tabular-nums">
               {loading ? "…" : fmtMoney(total)}
             </p>
+            {commissionPct > 0 && (
+              <p className="text-[10px] text-emerald-400 mt-1 tabular-nums">
+                {copy.net}: {fmtMoney(total * commissionPct / 100)}
+              </p>
+            )}
           </div>
           <div className="glass-card-subtle rounded-xl p-5 text-center relative overflow-hidden">
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground flex items-center justify-center gap-1">
@@ -412,6 +417,11 @@ export default function ModelHomeDashboard({
             <p className="text-3xl font-bold text-accent mt-1 tabular-nums">
               {loading ? "…" : fmtMoney(projectedMonth)}
             </p>
+            {commissionPct > 0 && (
+              <p className="text-[10px] text-emerald-400 mt-1 tabular-nums">
+                {copy.net}: {fmtMoney(projectedMonth * commissionPct / 100)}
+              </p>
+            )}
             <p className="text-[9px] text-muted-foreground/70 mt-1 leading-tight">{copy.forecastHint}</p>
           </div>
           <div className="glass-card-subtle rounded-xl p-5 text-center">
@@ -419,9 +429,15 @@ export default function ModelHomeDashboard({
             <p className="text-3xl font-bold text-accent mt-1 tabular-nums">
               {loading ? "…" : fmtMoney(lifetimeTotal)}
             </p>
+            {commissionPct > 0 && (
+              <p className="text-[10px] text-emerald-400 mt-1 tabular-nums">
+                {copy.net}: {fmtMoney(lifetimeTotal * commissionPct / 100)}
+              </p>
+            )}
           </div>
         </div>
       </section>
+
 
       {/* Content Requests */}
       <section className="glass-card rounded-2xl p-5 space-y-3 card-inner-glow">
