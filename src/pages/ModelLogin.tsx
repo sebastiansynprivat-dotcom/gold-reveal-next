@@ -6,11 +6,43 @@ import { motion } from "framer-motion";
 import logo from "@/assets/logo.png";
 import ForgotPasswordDialog from "@/components/ForgotPasswordDialog";
 
+const LANG: "de" | "en" =
+  typeof navigator !== "undefined" && navigator.language?.toLowerCase().startsWith("en") ? "en" : "de";
+
+const T = {
+  de: {
+    title: "Model Portal",
+    subtitle: "Melde dich mit deinen Zugangsdaten an",
+    email: "E-Mail Adresse",
+    password: "Passwort",
+    submit: "Anmelden",
+    submitting: "Bitte warten...",
+    forgot: "Passwort vergessen?",
+    invalid: "E-Mail oder Passwort ist falsch.",
+    notConfirmed: "Bitte bestätige zuerst deine E-Mail.",
+    wait: "Bitte warte einen Moment und versuche es erneut.",
+    rate: "Zu viele Versuche. Bitte warte einen Moment.",
+  },
+  en: {
+    title: "Model Portal",
+    subtitle: "Sign in with your credentials",
+    email: "Email address",
+    password: "Password",
+    submit: "Sign in",
+    submitting: "Please wait...",
+    forgot: "Forgot password?",
+    invalid: "Email or password is incorrect.",
+    notConfirmed: "Please confirm your email first.",
+    wait: "Please wait a moment and try again.",
+    rate: "Too many attempts. Please wait a moment.",
+  },
+}[LANG];
+
 const translateError = (msg: string): string => {
-  if (msg.includes("Invalid login credentials")) return "E-Mail oder Passwort ist falsch.";
-  if (msg.includes("Email not confirmed")) return "Bitte bestätige zuerst deine E-Mail.";
-  if (msg.includes("security purposes")) return "Bitte warte einen Moment und versuche es erneut.";
-  if (msg.includes("rate limit")) return "Zu viele Versuche. Bitte warte einen Moment.";
+  if (msg.includes("Invalid login credentials")) return T.invalid;
+  if (msg.includes("Email not confirmed")) return T.notConfirmed;
+  if (msg.includes("security purposes")) return T.wait;
+  if (msg.includes("rate limit")) return T.rate;
   return msg;
 };
 
@@ -124,24 +156,24 @@ export default function ModelLogin() {
         transition={{ duration: 0.35, delay: 0.08 }}
       >
         <h1 className="text-gold-gradient-shimmer text-2xl font-bold text-center tracking-tight leading-tight mb-2">
-          Model Portal
+          {T.title}
         </h1>
         <p className="text-muted-foreground text-sm text-center mb-7">
-          Melde dich mit deinen Zugangsdaten an
+          {T.subtitle}
         </p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="input-gold-shimmer rounded-xl">
-            <input type="email" name="email" id="model-email" autoComplete="username" autoCapitalize="none" autoCorrect="off" spellCheck={false} inputMode="email" placeholder="E-Mail Adresse" value={email} onChange={(e) => setEmail(e.target.value)} required className={inputClass} />
+            <input type="email" name="email" id="model-email" autoComplete="username" autoCapitalize="none" autoCorrect="off" spellCheck={false} inputMode="email" placeholder={T.email} value={email} onChange={(e) => setEmail(e.target.value)} required className={inputClass} />
           </div>
           <div className="input-gold-shimmer rounded-xl">
-            <input type="password" name="password" id="model-password" autoComplete="current-password" placeholder="Passwort" value={password} onChange={(e) => setPassword(e.target.value)} required className={inputClass} />
+            <input type="password" name="password" id="model-password" autoComplete="current-password" placeholder={T.password} value={password} onChange={(e) => setPassword(e.target.value)} required className={inputClass} />
           </div>
           {error && <p className="text-destructive text-sm text-center animate-fade-in">{error}</p>}
           <button type="submit" disabled={submitting} className="w-full px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold tracking-wide hover:scale-[1.02] transition-all duration-200 disabled:opacity-50">
-            {submitting ? "Bitte warten..." : "Anmelden"}
+            {submitting ? T.submitting : T.submit}
           </button>
           <button type="button" onClick={() => setShowForgot(true)} className="w-full text-center text-xs text-primary hover:text-primary/80 transition-colors underline underline-offset-2">
-            Passwort vergessen?
+            {T.forgot}
           </button>
         </form>
         <ForgotPasswordDialog open={showForgot} onClose={() => setShowForgot(false)} defaultEmail={email} />

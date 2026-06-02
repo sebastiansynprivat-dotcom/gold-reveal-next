@@ -13,7 +13,9 @@ export default function ModelDashboard() {
   const [modelId, setModelId] = useState<string | null>(null);
   const [modelName, setModelName] = useState("");
   const [modelUsername, setModelUsername] = useState<string | null>(null);
-  const [modelLanguage, setModelLanguage] = useState<"de" | "en">("de");
+  const [modelLanguage, setModelLanguage] = useState<"de" | "en">(
+    typeof navigator !== "undefined" && navigator.language?.toLowerCase().startsWith("en") ? "en" : "de"
+  );
   const [submittedAt, setSubmittedAt] = useState<string | null>(null);
   const [confirmedAt, setConfirmedAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -56,13 +58,12 @@ export default function ModelDashboard() {
 
       if (resolvedModelId) {
         const { data: model } = await (supabase.from("models") as any)
-          .select("name, username, model_language")
+          .select("name, username")
           .eq("id", resolvedModelId)
           .maybeSingle();
         if (model) {
           setModelName(model.name || "");
           setModelUsername(model.username || null);
-          setModelLanguage(model.model_language === "en" ? "en" : "de");
         }
         await loadProfileMeta(resolvedModelId);
       }
