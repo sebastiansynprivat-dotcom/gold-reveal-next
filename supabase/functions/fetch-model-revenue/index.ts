@@ -90,34 +90,25 @@ Deno.serve(async (req) => {
     const brezzels = Number(result.brezzels_revenue) || 0;
     const monthly = fourbased + maloum + brezzels;
 
-    // Upsert into model_dashboard keyed by model_id
-    const { data: existing } = await admin
-      .from("model_dashboard")
-      .select("id")
-      .eq("model_id", model_id)
-      .maybeSingle();
-
-    const updateRow: Record<string, any> = {
+    // Upsert into payout_revenue keyed by (model_id, month, year)
+    const upsertRow: Record<string, any> = {
       model_id,
+      last_fetched_month: month,
+      last_fetched_year: year,
       fourbased_revenue: fourbased,
       maloum_revenue: maloum,
       brezzels_revenue: brezzels,
       monthly_revenue: monthly,
+      raw_response: result,
       last_fetched_at: new Date().toISOString(),
-      last_fetched_month: month,
-      last_fetched_year: year,
     };
 
-    let saved;
-    if (existing) {
-      const { data, error } = await admin.from("model_dashboard").update(updateRow).eq("model_id", model_id).select().maybeSingle();
-      if (error) throw error;
-      saved = data;
-    } else {
-      const { data, error } = await admin.from("model_dashboard").insert(updateRow).select().maybeSingle();
-      if (error) throw error;
-      saved = data;
-    }
+    const { data: saved, error: upsertErr } = await admin
+      .from("payout_revenue")
+      .upsert(upsertRow, { onConflict: "model_id,last_fetched_month,last_fetched_year" })
+      .select()
+      .maybeSingle();
+    if (upsertErr) throw upsertErr;
 
     return new Response(JSON.stringify({ ok: true, row: saved, backend: result }), {
       status: 200,
