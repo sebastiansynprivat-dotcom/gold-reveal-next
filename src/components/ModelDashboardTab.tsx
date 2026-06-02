@@ -1911,7 +1911,7 @@ export default function ModelDashboardTab() {
                                `Umsatz teilweise abgerufen — ${errs.length} Fehler`,
                                {
                                   description: errs
-                                    .map(e => e.message ?? "Unbekannter Fehler")
+                                    .map(e => `${e.platform ?? "?"}: ${e.message ?? "Unbekannter Fehler"}`)
                                     .join("\n"),
                                  duration: 10000,
                                  style: { whiteSpace: "pre-line" },
