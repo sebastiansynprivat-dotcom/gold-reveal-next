@@ -81,23 +81,28 @@ export default function ModelDashboard() {
     );
   }
 
-  // Determine view: form (initial submission) | dashboard | edit-form
+  // Show form only when user explicitly chooses to edit. Skipping is allowed,
+  // but a persistent reminder banner appears on the dashboard until submitted.
   const needsInitialSubmission = !!modelId && !submittedAt;
-  const showForm = needsInitialSubmission || editingProfile;
+  const showForm = editingProfile;
   const copy = modelLanguage === "en" ? {
     profile: "Profile",
     dashboard: "Model Dashboard",
     back: "Back",
     notLinked: "Your model profile is not linked yet. Please contact the team.",
     fillTitle: "Please fill out your profile",
-    fillBody: "Once you submit your profile, you will get access to your dashboard with earnings, platforms, and requests.",
+    fillBody: "You can skip this for now, but please complete your profile so the team can work with you properly.",
+    fillCta: "Fill profile now",
+    skip: "Skip for now",
   } : {
     profile: "Steckbrief",
     dashboard: "Model Dashboard",
     back: "Zurück",
     notLinked: "Dein Model-Profil ist noch nicht verknüpft. Bitte melde dich beim Team.",
     fillTitle: "Bitte fülle deinen Steckbrief aus",
-    fillBody: "Sobald du den Steckbrief abgesendet hast, bekommst du Zugang zu deinem Dashboard mit Umsätzen, Plattformen und Anfragen.",
+    fillBody: "Du kannst das vorerst überspringen — bitte fülle ihn aber bald aus, damit das Team optimal mit dir arbeiten kann.",
+    fillCta: "Jetzt ausfüllen",
+    skip: "Später",
   };
 
   return (
@@ -144,16 +149,6 @@ export default function ModelDashboard() {
           </div>
         ) : showForm ? (
           <>
-            {needsInitialSubmission && (
-              <div className="glass-card rounded-xl p-4 mb-4 border-l-2 border-accent/60">
-                <p className="text-sm text-foreground font-semibold">
-                  {copy.fillTitle}
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {copy.fillBody}
-                </p>
-              </div>
-            )}
             <ModelProfileForm
               modelId={modelId}
               defaultAccountName={accountName}
@@ -168,14 +163,35 @@ export default function ModelDashboard() {
             />
           </>
         ) : (
-          <ModelHomeDashboard
-            modelId={modelId}
-            modelName={modelName || accountName}
-            modelUsername={modelUsername}
-            profileConfirmed={!!confirmedAt}
-            language={modelLanguage}
-            onEditProfile={() => setEditingProfile(true)}
-          />
+          <>
+            {needsInitialSubmission && (
+              <div className="glass-card rounded-xl p-4 mb-4 border-l-2 border-amber-500/60 flex items-start gap-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-foreground font-semibold">
+                    {copy.fillTitle}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {copy.fillBody}
+                  </p>
+                </div>
+                <Button
+                  size="sm"
+                  onClick={() => setEditingProfile(true)}
+                  className="shrink-0"
+                >
+                  {copy.fillCta}
+                </Button>
+              </div>
+            )}
+            <ModelHomeDashboard
+              modelId={modelId}
+              modelName={modelName || accountName}
+              modelUsername={modelUsername}
+              profileConfirmed={!!confirmedAt}
+              language={modelLanguage}
+              onEditProfile={() => setEditingProfile(true)}
+            />
+          </>
         )}
       </div>
     </div>
