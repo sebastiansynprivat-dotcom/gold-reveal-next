@@ -72,6 +72,7 @@ const COPY = {
     hidePwd: "Verbergen",
     billing: "Abrechnungen",
     nextPayout: "Nächste Abrechnung",
+    nextPayoutValue: "Innerhalb der ersten 10 Tage",
     lifetime: "Gesamtumsatz",
     pastInvoices: "Vergangene Abrechnungen",
     noInvoices: "Noch keine Abrechnungen.",
@@ -104,6 +105,7 @@ const COPY = {
     hidePwd: "Hide",
     billing: "Payouts",
     nextPayout: "Next payout",
+    nextPayoutValue: "Within the first 10 days",
     lifetime: "Lifetime revenue",
     pastInvoices: "Past invoices",
     noInvoices: "No invoices yet.",
@@ -146,13 +148,6 @@ function periodRange(p: Period): { from: string; to: string } | null {
   return null;
 }
 
-// Next payout: within the first 10 days of next month
-function nextPayoutDate(): Date {
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = now.getMonth();
-  return new Date(y, m + 1, 10);
-}
 
 interface Props {
   modelId: string;
