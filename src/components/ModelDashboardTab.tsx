@@ -445,6 +445,7 @@ export default function ModelDashboardTab() {
   });
   const [shareCalculated, setShareCalculated] = useState(false);
   const [billingShare, setBillingShare] = useState(0);
+  const [payoutRevenueForMonth, setPayoutRevenueForMonth] = useState<{ fourbased: number; maloum: number; brezzels: number } | null>(null);
   const [calcTrigger, setCalcTrigger] = useState(0);
 
   // ─── Revenue fetch (external backend) ───
