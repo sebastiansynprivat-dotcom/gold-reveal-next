@@ -464,6 +464,25 @@ export default function ModelDashboardTab() {
   } | null>(null);
   const [fetchRevenueTick, setFetchRevenueTick] = useState(0);
 
+  // ─── Custom platforms (per-model, localStorage) ───
+  type CustomPlatform = { id: string; name: string; revenue: number; percentage: number };
+  const [customPlatforms, setCustomPlatforms] = useState<CustomPlatform[]>([]);
+  // Load on model change
+  useEffect(() => {
+    if (!selectedModelId) { setCustomPlatforms([]); return; }
+    try {
+      const raw = localStorage.getItem(`model:${selectedModelId}:customPlatforms`);
+      setCustomPlatforms(raw ? JSON.parse(raw) : []);
+    } catch { setCustomPlatforms([]); }
+  }, [selectedModelId]);
+  // Persist
+  useEffect(() => {
+    if (!selectedModelId) return;
+    try {
+      localStorage.setItem(`model:${selectedModelId}:customPlatforms`, JSON.stringify(customPlatforms));
+    } catch {}
+  }, [customPlatforms, selectedModelId]);
+
   const detailRef = useRef<HTMLDivElement>(null);
 
   // ─── Load models ───
