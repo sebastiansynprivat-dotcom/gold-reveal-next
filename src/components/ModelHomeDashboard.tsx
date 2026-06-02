@@ -142,14 +142,12 @@ function periodRange(p: Period): { from: string; to: string } | null {
   return null;
 }
 
-// Next payout date: 20th of next month (per current billing cycle)
+// Next payout: within the first 10 days of next month
 function nextPayoutDate(): Date {
   const now = new Date();
   const y = now.getFullYear();
   const m = now.getMonth();
-  // If we're before the 20th of current month, payout is the 20th of next month
-  // (current cycle covers previous month and pays out on 20th of following month).
-  return new Date(y, m + 1, 20);
+  return new Date(y, m + 1, 10);
 }
 
 interface Props {
