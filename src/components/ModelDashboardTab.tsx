@@ -445,6 +445,7 @@ export default function ModelDashboardTab() {
   });
   const [shareCalculated, setShareCalculated] = useState(false);
   const [billingShare, setBillingShare] = useState(0);
+  const [payoutRevenueForMonth, setPayoutRevenueForMonth] = useState<{ fourbased: number; maloum: number; brezzels: number } | null>(null);
   const [calcTrigger, setCalcTrigger] = useState(0);
 
   // ─── Revenue fetch (external backend) ───
@@ -1905,6 +1906,7 @@ export default function ModelDashboardTab() {
                         setBillingMonth(e.target.value);
                         setShareCalculated(false);
                         setBillingShare(0);
+                        setPayoutRevenueForMonth(null);
                       }}
                       className="flex-1 h-9 text-sm bg-secondary/40 border-border/40"
                     />
@@ -1946,6 +1948,7 @@ export default function ModelDashboardTab() {
                         );
                         const lastDay = new Date(y, m, 0).getDate();
                         setBillingShare(calculated);
+                        setPayoutRevenueForMonth({ fourbased: fb, maloum: ml, brezzels: br });
                         setShareCalculated(true);
                         setCalcTrigger((t) => t + 1);
                         setModelForm((prev) => ({
@@ -2047,7 +2050,7 @@ export default function ModelDashboardTab() {
                 {/* Per-platform custom percentages */}
                 {(() => {
                   const fallback = modelForm.revenue_percentage || 0;
-                  const totals = selectedModelPlatformRevenue.reduce(
+                  const liveTotals = selectedModelPlatformRevenue.reduce(
                     (acc, p) => ({
                       fourbased: acc.fourbased + (p.fourbased || 0),
                       maloum: acc.maloum + (p.maloum || 0),
@@ -2055,6 +2058,7 @@ export default function ModelDashboardTab() {
                     }),
                     { fourbased: 0, maloum: 0, brezzels: 0 },
                   );
+                  const totals = payoutRevenueForMonth ?? liveTotals;
                   const rows: Array<{ key: "fourbased" | "maloum" | "brezzels"; label: string; rev: number; pctField: keyof ModelRow }> = [
                     { key: "fourbased", label: "4Based", rev: totals.fourbased, pctField: "revenue_percentage_fourbased" },
                     { key: "maloum", label: "Maloum", rev: totals.maloum, pctField: "revenue_percentage_maloum" },
