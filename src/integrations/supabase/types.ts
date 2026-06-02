@@ -1491,42 +1491,42 @@ export type Database = {
       }
       payout_revenue: {
         Row: {
-          brezzels_revenue: number
+          brezzels_revenue: number | null
           created_at: string
-          fourbased_revenue: number
+          fourbased_revenue: number | null
           id: string
           last_fetched_at: string
           last_fetched_month: number
           last_fetched_year: number
-          maloum_revenue: number
+          maloum_revenue: number | null
           model_id: string
           monthly_revenue: number
           raw_response: Json | null
           updated_at: string
         }
         Insert: {
-          brezzels_revenue?: number
+          brezzels_revenue?: number | null
           created_at?: string
-          fourbased_revenue?: number
+          fourbased_revenue?: number | null
           id?: string
           last_fetched_at?: string
           last_fetched_month: number
           last_fetched_year: number
-          maloum_revenue?: number
+          maloum_revenue?: number | null
           model_id: string
           monthly_revenue?: number
           raw_response?: Json | null
           updated_at?: string
         }
         Update: {
-          brezzels_revenue?: number
+          brezzels_revenue?: number | null
           created_at?: string
-          fourbased_revenue?: number
+          fourbased_revenue?: number | null
           id?: string
           last_fetched_at?: string
           last_fetched_month?: number
           last_fetched_year?: number
-          maloum_revenue?: number
+          maloum_revenue?: number | null
           model_id?: string
           monthly_revenue?: number
           raw_response?: Json | null
