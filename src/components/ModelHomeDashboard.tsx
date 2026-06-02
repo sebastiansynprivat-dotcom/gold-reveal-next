@@ -400,6 +400,60 @@ export default function ModelHomeDashboard({
         </div>
       </section>
 
+      {/* Content Requests */}
+      <section className="glass-card rounded-2xl p-5 space-y-3 card-inner-glow">
+        <div className="flex items-center gap-2">
+          <MessageSquare className="h-4 w-4 text-accent" />
+          <h2 className="text-base font-bold text-foreground">{copy.requests}</h2>
+          {openRequests > 0 && (
+            <span className="ml-auto inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">
+              {openRequests} {copy.open}
+            </span>
+          )}
+        </div>
+
+        {requests.length === 0 ? (
+          <p className="text-xs text-muted-foreground text-center py-6">
+            {copy.noRequests}
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {requests.slice(0, 5).map((r) => (
+              <div
+                key={r.id}
+                className="glass-card-subtle rounded-lg p-3 flex items-start gap-3"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs text-foreground line-clamp-2">{r.description}</p>
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    {new Date(r.created_at).toLocaleDateString(lang === "en" ? "en-US" : "de-DE")} ·{" "}
+                    <span
+                      className={cn(
+                        r.status === "pending" && "text-amber-400",
+                        r.status === "completed" && "text-emerald-400",
+                        r.status === "rejected" && "text-red-400",
+                      )}
+                    >
+                      {r.status === "pending"
+                        ? copy.statusPending
+                        : r.status === "completed"
+                          ? copy.statusCompleted
+                          : copy.statusRejected}
+                    </span>
+                  </p>
+                </div>
+                {r.price && (
+                  <div className="shrink-0 inline-flex items-center gap-1 text-[10px] text-accent">
+                    <Wallet className="h-3 w-3" />
+                    {fmtMoney(Number(r.price))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
       {/* Platforms — expandable cards with credentials */}
       <section className="glass-card rounded-2xl p-5 space-y-4 card-inner-glow">
         <div className="flex items-center gap-2">
