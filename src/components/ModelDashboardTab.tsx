@@ -456,7 +456,13 @@ export default function ModelDashboardTab() {
   const [confirmOverwrite, setConfirmOverwrite] = useState(false);
   const [lastFetchInfo, setLastFetchInfo] = useState<{ at: string | null; month: number | null; year: number | null }>({ at: null, month: null, year: null });
 
-
+  // Per-platform revenue from payout_revenue for the selected fetch month/year
+  const [fetchedPayoutRevenue, setFetchedPayoutRevenue] = useState<{
+    fourbased: number | null;
+    maloum: number | null;
+    brezzels: number | null;
+  } | null>(null);
+  const [fetchRevenueTick, setFetchRevenueTick] = useState(0);
 
   const detailRef = useRef<HTMLDivElement>(null);
 
@@ -520,6 +526,36 @@ export default function ModelDashboardTab() {
     setDashboardRevenues(revMap);
     setPlatformRevenues(platRevMap);
   }, []);
+
+  // ─── Query payout_revenue for the selected fetch month/year ───
+  useEffect(() => {
+    if (!selectedModelId) {
+      setFetchedPayoutRevenue(null);
+      return;
+    }
+    (async () => {
+      const { data, error } = await (supabase as any)
+        .from("payout_revenue")
+        .select("fourbased_revenue, maloum_revenue, brezzels_revenue")
+        .eq("model_id", selectedModelId)
+        .eq("last_fetched_month", fetchMonth)
+        .eq("last_fetched_year", fetchYear)
+        .maybeSingle();
+      if (error) {
+        setFetchedPayoutRevenue(null);
+        return;
+      }
+      if (data) {
+        setFetchedPayoutRevenue({
+          fourbased: Number((data as any).fourbased_revenue) ?? 0,
+          maloum: Number((data as any).maloum_revenue) ?? 0,
+          brezzels: Number((data as any).brezzels_revenue) ?? 0,
+        });
+      } else {
+        setFetchedPayoutRevenue(null);
+      }
+    })();
+  }, [selectedModelId, fetchMonth, fetchYear, fetchRevenueTick]);
 
   // ─── Load selected model data into form ───
   useEffect(() => {
@@ -1871,6 +1907,7 @@ export default function ModelDashboardTab() {
                           if ((data as any)?.error) throw new Error((data as any).error);
                           toast.success(`Umsatz für ${String(fetchMonth).padStart(2,"0")}/${fetchYear} aktualisiert ✅`);
                           await loadModelAccounts(selectedModelId);
+                          setFetchRevenueTick(t => t + 1);
                         } catch (err: any) {
                           toast.error(err.message || "Umsatz konnte nicht abgerufen werden");
                         } finally {
@@ -1885,6 +1922,26 @@ export default function ModelDashboardTab() {
                         <><Download className="h-3.5 w-3.5 mr-1.5" /> Fetch Revenue</>
                       )}
                     </Button>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 pt-1 border-t border-accent/10">
+                    {[
+                      { label: "4Based", key: "fourbased" as const, color: "text-blue-400" },
+                      { label: "Maloum", key: "maloum" as const, color: "text-purple-400" },
+                      { label: "Brezzels", key: "brezzels" as const, color: "text-orange-400" },
+                    ].map((p) => {
+                      const val = fetchedPayoutRevenue?.[p.key];
+                      const hasRow = fetchedPayoutRevenue !== null;
+                      return (
+                        <div key={p.key} className="text-center">
+                          <p className="text-[9px] uppercase tracking-wider text-muted-foreground">{p.label}</p>
+                          <p className={cn("text-sm font-bold tabular-nums", hasRow ? p.color : "text-muted-foreground/50")}>
+                            {hasRow
+                              ? `${(val ?? 0).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`
+                              : "—"}
+                          </p>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
