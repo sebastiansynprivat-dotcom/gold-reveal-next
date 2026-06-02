@@ -312,6 +312,11 @@ export default function ModelHomeDashboard({
   const openRequests = requests.filter((r) => r.status === "pending").length;
   const nextPayout = nextPayoutDate();
 
+  const now = new Date();
+  const dayOfMonth = now.getDate();
+  const totalDays = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const projectedMonth = dayOfMonth > 0 ? Math.round((monthRevenue / dayOfMonth) * totalDays) : 0;
+
   const copyValue = async (key: string, value: string) => {
     try {
       await navigator.clipboard.writeText(value);
