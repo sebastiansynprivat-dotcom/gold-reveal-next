@@ -10,8 +10,22 @@ import {
   CheckCircle2,
   Clock,
   Wallet,
+  Copy,
+  Check,
+  ChevronDown,
+  ExternalLink,
+  Eye,
+  EyeOff,
+  FileText,
+  CalendarClock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 type Period = "today" | "yesterday" | "last7" | "last30" | "month" | "lifetime";
 
@@ -49,6 +63,20 @@ const COPY = {
     statusCompleted: "Erledigt",
     statusRejected: "Abgelehnt",
     editProfile: "Steckbrief bearbeiten",
+    email: "E-Mail",
+    password: "Passwort",
+    domain: "Login-Seite",
+    openLogin: "Login öffnen",
+    copied: "Kopiert",
+    showPwd: "Anzeigen",
+    hidePwd: "Verbergen",
+    billing: "Abrechnungen",
+    nextPayout: "Nächste Abrechnung",
+    lifetime: "Gesamtumsatz",
+    pastInvoices: "Vergangene Abrechnungen",
+    noInvoices: "Noch keine Abrechnungen.",
+    net: "Netto",
+    gross: "Brutto",
   },
   en: {
     welcome: "Welcome back",
@@ -65,6 +93,20 @@ const COPY = {
     statusCompleted: "Completed",
     statusRejected: "Rejected",
     editProfile: "Edit profile",
+    email: "Email",
+    password: "Password",
+    domain: "Login page",
+    openLogin: "Open login",
+    copied: "Copied",
+    showPwd: "Show",
+    hidePwd: "Hide",
+    billing: "Payouts",
+    nextPayout: "Next payout",
+    lifetime: "Lifetime revenue",
+    pastInvoices: "Past invoices",
+    noInvoices: "No invoices yet.",
+    net: "Net",
+    gross: "Gross",
   },
 };
 
@@ -100,6 +142,16 @@ function periodRange(p: Period): { from: string; to: string } | null {
   return null;
 }
 
+// Next payout date: 20th of next month (per current billing cycle)
+function nextPayoutDate(): Date {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = now.getMonth();
+  // If we're before the 20th of current month, payout is the 20th of next month
+  // (current cycle covers previous month and pays out on 20th of following month).
+  return new Date(y, m + 1, 20);
+}
+
 interface Props {
   modelId: string;
   modelName: string;
@@ -112,7 +164,6 @@ interface Props {
 export default function ModelHomeDashboard({
   modelId,
   modelName,
-  modelUsername,
   profileConfirmed,
   onEditProfile,
   language = "de",
@@ -123,52 +174,64 @@ export default function ModelHomeDashboard({
   const [period, setPeriod] = useState<Period>("month");
   const [accounts, setAccounts] = useState<any[]>([]);
   const [revenueByAccount, setRevenueByAccount] = useState<Record<string, number>>({});
+  const [lifetimeByAccount, setLifetimeByAccount] = useState<Record<string, number>>({});
   const [requests, setRequests] = useState<any[]>([]);
+  const [creditNotes, setCreditNotes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const [shownPwd, setShownPwd] = useState<Record<string, boolean>>({});
+  const [openCard, setOpenCard] = useState<Record<string, boolean>>({});
 
-  // Load model's accounts
+  // Load model's accounts (full credentials)
   useEffect(() => {
     let cancelled = false;
     (async () => {
       const { data } = await (supabase.from("accounts") as any)
-        .select("id, platform, account_email, account_domain, assigned_to")
+        .select("id, platform, account_email, account_password, account_domain, assigned_to")
         .eq("model_id", modelId);
       if (!cancelled) setAccounts(data || []);
     })();
     return () => { cancelled = true; };
   }, [modelId]);
 
-  // Load revenue for given period
+  // Load revenue for given period AND lifetime in parallel
   useEffect(() => {
     let cancelled = false;
     (async () => {
       setLoading(true);
       const accountIds = accounts.map((a) => a.id);
       if (accountIds.length === 0) {
-        if (!cancelled) { setRevenueByAccount({}); setLoading(false); }
+        if (!cancelled) {
+          setRevenueByAccount({});
+          setLifetimeByAccount({});
+          setLoading(false);
+        }
         return;
       }
 
       const range = periodRange(period);
-      // Get all assignments (active or historic) for these accounts
       const { data: assigns } = await (supabase.from("account_assignments") as any)
         .select("account_id, user_id")
         .in("account_id", accountIds);
       const userToAccount: Record<string, string> = {};
       (assigns || []).forEach((a: any) => { userToAccount[a.user_id] = a.account_id; });
-
-      // Also include current assignments via accounts.assigned_to
       accounts.forEach((a) => { if (a.assigned_to) userToAccount[a.assigned_to] = a.id; });
 
       const userIds = Object.keys(userToAccount);
       if (userIds.length === 0) {
-        if (!cancelled) { setRevenueByAccount({}); setLoading(false); }
+        if (!cancelled) {
+          setRevenueByAccount({});
+          setLifetimeByAccount({});
+          setLoading(false);
+        }
         return;
       }
 
       let q = (supabase.from("daily_revenue") as any).select("user_id, amount, date").in("user_id", userIds);
       if (range) q = q.gte("date", range.from).lte("date", range.to);
-      const { data: rev } = await q;
+      const lifetimeQ = (supabase.from("daily_revenue") as any).select("user_id, amount").in("user_id", userIds);
+
+      const [{ data: rev }, { data: lifetimeRev }] = await Promise.all([q, lifetimeQ]);
 
       const byAccount: Record<string, number> = {};
       (rev || []).forEach((r: any) => {
@@ -176,9 +239,16 @@ export default function ModelHomeDashboard({
         if (!accId) return;
         byAccount[accId] = (byAccount[accId] || 0) + Number(r.amount || 0);
       });
+      const lifetimeAcc: Record<string, number> = {};
+      (lifetimeRev || []).forEach((r: any) => {
+        const accId = userToAccount[r.user_id];
+        if (!accId) return;
+        lifetimeAcc[accId] = (lifetimeAcc[accId] || 0) + Number(r.amount || 0);
+      });
 
       if (!cancelled) {
         setRevenueByAccount(byAccount);
+        setLifetimeByAccount(lifetimeAcc);
         setLoading(false);
       }
     })();
@@ -197,14 +267,46 @@ export default function ModelHomeDashboard({
     })();
   }, [modelName]);
 
+  // Load past invoices (credit_notes) for any account belonging to this model
+  useEffect(() => {
+    (async () => {
+      if (accounts.length === 0) { setCreditNotes([]); return; }
+      const accountIds = accounts.map((a) => a.id);
+      const { data } = await (supabase.from("credit_notes") as any)
+        .select("id, credit_note_number, credit_note_date, service_period_start, service_period_end, net_amount, gross_amount, payment_date")
+        .in("account_id", accountIds)
+        .order("credit_note_date", { ascending: false })
+        .limit(20);
+      setCreditNotes(data || []);
+    })();
+  }, [accounts]);
+
   const total = useMemo(
     () => Object.values(revenueByAccount).reduce((s, v) => s + v, 0),
     [revenueByAccount],
   );
+  const lifetimeTotal = useMemo(
+    () => Object.values(lifetimeByAccount).reduce((s, v) => s + v, 0),
+    [lifetimeByAccount],
+  );
   const fmtMoney = (v: number) =>
     new Intl.NumberFormat(lang === "en" ? "en-US" : "de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(v);
+  const fmtMoneyDec = (v: number) =>
+    new Intl.NumberFormat(lang === "en" ? "en-US" : "de-DE", { style: "currency", currency: "EUR", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
+  const fmtDate = (d: string | Date) =>
+    new Date(d).toLocaleDateString(lang === "en" ? "en-US" : "de-DE", { day: "2-digit", month: "short", year: "numeric" });
 
   const openRequests = requests.filter((r) => r.status === "pending").length;
+  const nextPayout = nextPayoutDate();
+
+  const copyValue = async (key: string, value: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopiedKey(key);
+      toast.success(copy.copied);
+      setTimeout(() => setCopiedKey((k) => (k === key ? null : k)), 1500);
+    } catch {}
+  };
 
   return (
     <motion.div
@@ -219,11 +321,6 @@ export default function ModelHomeDashboard({
           <div className="min-w-0">
             <p className="text-xs uppercase tracking-wider text-muted-foreground">{copy.welcome}</p>
             <h1 className="text-2xl font-bold text-gold-gradient-shimmer leading-tight">{modelName}</h1>
-            {modelUsername && (
-              <p className="text-[11px] text-muted-foreground mt-1 font-mono">
-                shex-dashboard.com/m/{modelUsername}
-              </p>
-            )}
           </div>
           <div
             className={cn(
@@ -266,15 +363,23 @@ export default function ModelHomeDashboard({
           })}
         </div>
 
-        <div className="glass-card-subtle rounded-xl p-5 text-center">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{periodLabels[period]}</p>
-          <p className="text-4xl font-bold text-gold-gradient-shimmer mt-1 tabular-nums">
-            {loading ? "…" : fmtMoney(total)}
-          </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="glass-card-subtle rounded-xl p-5 text-center">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{periodLabels[period]}</p>
+            <p className="text-3xl font-bold text-gold-gradient-shimmer mt-1 tabular-nums">
+              {loading ? "…" : fmtMoney(total)}
+            </p>
+          </div>
+          <div className="glass-card-subtle rounded-xl p-5 text-center">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{copy.lifetime}</p>
+            <p className="text-3xl font-bold text-accent mt-1 tabular-nums">
+              {loading ? "…" : fmtMoney(lifetimeTotal)}
+            </p>
+          </div>
         </div>
       </section>
 
-      {/* Platforms */}
+      {/* Platforms — expandable cards with credentials */}
       <section className="glass-card rounded-2xl p-5 space-y-4 card-inner-glow">
         <div className="flex items-center gap-2">
           <Layers className="h-4 w-4 text-accent" />
@@ -287,33 +392,174 @@ export default function ModelHomeDashboard({
             {copy.noPlatforms}
           </p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {accounts.map((a) => (
-              <div
-                key={a.id}
-                className="glass-card-subtle rounded-xl p-4 card-hover-glow card-inner-glow"
-              >
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <span className="text-xs font-semibold text-foreground">
-                    {PLATFORM_LABELS[a.platform] || a.platform}
-                  </span>
-                  <span
-                    className={cn(
-                      "h-1.5 w-1.5 rounded-full",
-                      a.assigned_to ? "bg-emerald-400" : "bg-muted-foreground/40",
+          <div className="space-y-2">
+            {accounts.map((a) => {
+              const isOpen = !!openCard[a.id];
+              const isPwdShown = !!shownPwd[a.id];
+              const loginUrl = a.account_domain
+                ? (a.account_domain.startsWith("http") ? a.account_domain : `https://${a.account_domain}`)
+                : "";
+              return (
+                <Collapsible
+                  key={a.id}
+                  open={isOpen}
+                  onOpenChange={(o) => setOpenCard((s) => ({ ...s, [a.id]: o }))}
+                  className="glass-card-subtle rounded-xl card-hover-glow overflow-hidden"
+                >
+                  <CollapsibleTrigger className="w-full p-4 flex items-center gap-3 text-left">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-semibold text-foreground">
+                          {PLATFORM_LABELS[a.platform] || a.platform}
+                        </span>
+                        <span
+                          className={cn(
+                            "h-1.5 w-1.5 rounded-full",
+                            a.assigned_to ? "bg-emerald-400" : "bg-muted-foreground/40",
+                          )}
+                        />
+                      </div>
+                      <p className="text-[10px] text-muted-foreground truncate mt-0.5">
+                        {a.account_email || a.account_domain || "—"}
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className="text-base font-bold text-accent tabular-nums">
+                        {fmtMoney(revenueByAccount[a.id] || 0)}
+                      </p>
+                      <p className="text-[9px] text-muted-foreground uppercase tracking-wider">
+                        {periodLabels[period]}
+                      </p>
+                    </div>
+                    <ChevronDown
+                      className={cn(
+                        "h-4 w-4 text-muted-foreground shrink-0 transition-transform",
+                        isOpen && "rotate-180",
+                      )}
+                    />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="px-4 pb-4 space-y-2 border-t border-border/30 pt-3">
+                    {/* Email */}
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{copy.email}</p>
+                        <p className="text-xs text-foreground font-mono truncate">{a.account_email || "—"}</p>
+                      </div>
+                      {a.account_email && (
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7 shrink-0"
+                          onClick={() => copyValue(`email-${a.id}`, a.account_email)}
+                        >
+                          {copiedKey === `email-${a.id}` ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                        </Button>
+                      )}
+                    </div>
+                    {/* Password */}
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{copy.password}</p>
+                        <p className="text-xs text-foreground font-mono truncate">
+                          {a.account_password ? (isPwdShown ? a.account_password : "•".repeat(Math.min(12, a.account_password.length))) : "—"}
+                        </p>
+                      </div>
+                      {a.account_password && (
+                        <>
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 shrink-0"
+                            onClick={() => setShownPwd((s) => ({ ...s, [a.id]: !s[a.id] }))}
+                            title={isPwdShown ? copy.hidePwd : copy.showPwd}
+                          >
+                            {isPwdShown ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                          </Button>
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 shrink-0"
+                            onClick={() => copyValue(`pwd-${a.id}`, a.account_password)}
+                          >
+                            {copiedKey === `pwd-${a.id}` ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                    {/* Login button */}
+                    {loginUrl && (
+                      <a
+                        href={loginUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-[11px] text-accent hover:underline mt-1"
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                        {copy.openLogin} · {a.account_domain}
+                      </a>
                     )}
-                  />
-                </div>
-                <p className="text-[10px] text-muted-foreground truncate">
-                  {a.account_email || a.account_domain || "—"}
-                </p>
-                <p className="text-lg font-bold text-accent tabular-nums mt-2">
-                  {fmtMoney(revenueByAccount[a.id] || 0)}
-                </p>
-              </div>
-            ))}
+                  </CollapsibleContent>
+                </Collapsible>
+              );
+            })}
           </div>
         )}
+      </section>
+
+      {/* Billing / Invoices */}
+      <section className="glass-card rounded-2xl p-5 space-y-3 card-inner-glow">
+        <div className="flex items-center gap-2">
+          <FileText className="h-4 w-4 text-accent" />
+          <h2 className="text-base font-bold text-foreground">{copy.billing}</h2>
+        </div>
+
+        <div className="glass-card-subtle rounded-xl p-4 flex items-center gap-3">
+          <CalendarClock className="h-5 w-5 text-accent shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{copy.nextPayout}</p>
+            <p className="text-sm font-semibold text-foreground">{fmtDate(nextPayout)}</p>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <p className="text-[10px] uppercase tracking-wider text-muted-foreground px-1">{copy.pastInvoices}</p>
+          {creditNotes.length === 0 ? (
+            <p className="text-xs text-muted-foreground text-center py-4">
+              {copy.noInvoices}
+            </p>
+          ) : (
+            <div className="space-y-1.5">
+              {creditNotes.map((cn) => (
+                <div
+                  key={cn.id}
+                  className="glass-card-subtle rounded-lg p-3 flex items-center gap-3"
+                >
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-foreground truncate">
+                      {cn.credit_note_number}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {cn.service_period_start && cn.service_period_end
+                        ? `${fmtDate(cn.service_period_start)} — ${fmtDate(cn.service_period_end)}`
+                        : fmtDate(cn.credit_note_date)}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-sm font-bold text-accent tabular-nums">
+                      {fmtMoneyDec(Number(cn.net_amount || 0))}
+                    </p>
+                    <p className="text-[9px] text-muted-foreground uppercase tracking-wider">
+                      {copy.net}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </section>
 
       {/* Content Requests */}
