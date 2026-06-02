@@ -381,12 +381,21 @@ export default function ModelHomeDashboard({
           })}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="glass-card-subtle rounded-xl p-5 text-center">
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{periodLabels[period]}</p>
             <p className="text-3xl font-bold text-gold-gradient-shimmer mt-1 tabular-nums">
               {loading ? "…" : fmtMoney(total)}
             </p>
+          </div>
+          <div className="glass-card-subtle rounded-xl p-5 text-center relative overflow-hidden">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground flex items-center justify-center gap-1">
+              <TrendingUp className="h-3 w-3" /> {copy.forecast}
+            </p>
+            <p className="text-3xl font-bold text-accent mt-1 tabular-nums">
+              {loading ? "…" : fmtMoney(projectedMonth)}
+            </p>
+            <p className="text-[9px] text-muted-foreground/70 mt-1 leading-tight">{copy.forecastHint}</p>
           </div>
           <div className="glass-card-subtle rounded-xl p-5 text-center">
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{copy.lifetime}</p>
