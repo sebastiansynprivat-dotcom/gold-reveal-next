@@ -1489,6 +1489,51 @@ export type Database = {
         }
         Relationships: []
       }
+      payout_revenue: {
+        Row: {
+          brezzels_revenue: number
+          created_at: string
+          fourbased_revenue: number
+          id: string
+          last_fetched_at: string
+          last_fetched_month: number
+          last_fetched_year: number
+          maloum_revenue: number
+          model_id: string
+          monthly_revenue: number
+          raw_response: Json | null
+          updated_at: string
+        }
+        Insert: {
+          brezzels_revenue?: number
+          created_at?: string
+          fourbased_revenue?: number
+          id?: string
+          last_fetched_at?: string
+          last_fetched_month: number
+          last_fetched_year: number
+          maloum_revenue?: number
+          model_id: string
+          monthly_revenue?: number
+          raw_response?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          brezzels_revenue?: number
+          created_at?: string
+          fourbased_revenue?: number
+          id?: string
+          last_fetched_at?: string
+          last_fetched_month?: number
+          last_fetched_year?: number
+          maloum_revenue?: number
+          model_id?: string
+          monthly_revenue?: number
+          raw_response?: Json | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pending_notifications: {
         Row: {
           created_at: string
