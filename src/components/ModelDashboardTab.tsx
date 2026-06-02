@@ -1923,6 +1923,26 @@ export default function ModelDashboardTab() {
                       )}
                     </Button>
                   </div>
+                  <div className="grid grid-cols-3 gap-2 pt-1 border-t border-accent/10">
+                    {[
+                      { label: "4Based", key: "fourbased" as const, color: "text-blue-400" },
+                      { label: "Maloum", key: "maloum" as const, color: "text-purple-400" },
+                      { label: "Brezzels", key: "brezzels" as const, color: "text-orange-400" },
+                    ].map((p) => {
+                      const val = fetchedPayoutRevenue?.[p.key];
+                      const hasRow = fetchedPayoutRevenue !== null;
+                      return (
+                        <div key={p.key} className="text-center">
+                          <p className="text-[9px] uppercase tracking-wider text-muted-foreground">{p.label}</p>
+                          <p className={cn("text-sm font-bold tabular-nums", hasRow ? p.color : "text-muted-foreground/50")}>
+                            {hasRow
+                              ? `${(val ?? 0).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`
+                              : "—"}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 {/* Billing month + "Anteil berechnen" — basis for Provider Invoice */}
