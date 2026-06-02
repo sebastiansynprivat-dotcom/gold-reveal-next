@@ -697,18 +697,26 @@ export default function ModelDashboardTab() {
     const pctFb = modelForm.revenue_percentage_fourbased || fallback;
     const pctMl = modelForm.revenue_percentage_maloum || fallback;
     const pctBr = modelForm.revenue_percentage_brezzels || fallback;
+    // Only use fetched/calculated payout revenue (never the live manual dashboard input).
+    const source = payoutRevenueForMonth ?? (fetchedPayoutRevenue
+      ? {
+          fourbased: fetchedPayoutRevenue.fourbased ?? 0,
+          maloum: fetchedPayoutRevenue.maloum ?? 0,
+          brezzels: fetchedPayoutRevenue.brezzels ?? 0,
+        }
+      : null);
     let sum = 0;
-    for (const p of selectedModelPlatformRevenue) {
-      sum += (p.fourbased || 0) * pctFb / 100;
-      sum += (p.maloum || 0) * pctMl / 100;
-      sum += (p.brezzels || 0) * pctBr / 100;
+    if (source) {
+      sum += (source.fourbased || 0) * pctFb / 100;
+      sum += (source.maloum || 0) * pctMl / 100;
+      sum += (source.brezzels || 0) * pctBr / 100;
     }
     for (const cp of customPlatforms) {
       const pct = cp.percentage > 0 ? cp.percentage : fallback;
       sum += (cp.revenue || 0) * pct / 100;
     }
     return Math.round(sum);
-  }, [selectedModelPlatformRevenue, customPlatforms, modelForm.revenue_percentage, modelForm.revenue_percentage_fourbased, modelForm.revenue_percentage_maloum, modelForm.revenue_percentage_brezzels]);
+  }, [payoutRevenueForMonth, fetchedPayoutRevenue, customPlatforms, modelForm.revenue_percentage, modelForm.revenue_percentage_fourbased, modelForm.revenue_percentage_maloum, modelForm.revenue_percentage_brezzels]);
 
   // ─── Create model ───
   const handleCreateModel = async () => {
@@ -2148,14 +2156,6 @@ export default function ModelDashboardTab() {
                 {/* Per-platform custom percentages */}
                 {(() => {
                   const fallback = modelForm.revenue_percentage || 0;
-                  const liveTotals = selectedModelPlatformRevenue.reduce(
-                    (acc, p) => ({
-                      fourbased: acc.fourbased + (p.fourbased || 0),
-                      maloum: acc.maloum + (p.maloum || 0),
-                      brezzels: acc.brezzels + (p.brezzels || 0),
-                    }),
-                    { fourbased: 0, maloum: 0, brezzels: 0 },
-                  );
                   const fetchedTotals = fetchedPayoutRevenue
                     ? {
                         fourbased: fetchedPayoutRevenue.fourbased ?? 0,
@@ -2163,7 +2163,7 @@ export default function ModelDashboardTab() {
                         brezzels: fetchedPayoutRevenue.brezzels ?? 0,
                       }
                     : null;
-                  const totals = payoutRevenueForMonth ?? fetchedTotals ?? liveTotals;
+                  const totals = payoutRevenueForMonth ?? fetchedTotals ?? { fourbased: 0, maloum: 0, brezzels: 0 };
                   const rows: Array<{ key: "fourbased" | "maloum" | "brezzels"; label: string; rev: number; pctField: keyof ModelRow }> = [
                     { key: "fourbased", label: "4Based", rev: totals.fourbased, pctField: "revenue_percentage_fourbased" },
                     { key: "maloum", label: "Maloum", rev: totals.maloum, pctField: "revenue_percentage_maloum" },
@@ -2835,15 +2835,8 @@ export default function ModelDashboardTab() {
                   if (sourceTotals) {
                     for (const [name, rev] of Object.entries(sourceTotals)) {
                       const pct = pctMap[name] > 0 ? pctMap[name] : fallback;
-                      agg[name] = { rev: Number(rev) || 0, pct };
-                    }
-                  } else {
-                    // Aggregate per-platform across multiple accounts (same platform → sum)
-                    for (const acc of modelAccounts) {
-                      const rev = convertToBase(dashboardRevenues[acc.id] || 0, acc.currency || baseCurrency);
-                      const pct = pctMap[acc.platform] > 0 ? pctMap[acc.platform] : fallback;
-                      if (!agg[acc.platform]) agg[acc.platform] = { rev: 0, pct };
-                      agg[acc.platform].rev += rev;
+                      const r = Number(rev) || 0;
+                      if (r > 0) agg[name] = { rev: r, pct };
                     }
                   }
                   const builtins = Object.entries(agg).map(([name, v]) => ({ name, rev: v.rev, pct: v.pct }));
