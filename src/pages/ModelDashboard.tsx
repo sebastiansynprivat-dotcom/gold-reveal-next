@@ -58,13 +58,12 @@ export default function ModelDashboard() {
 
       if (resolvedModelId) {
         const { data: model } = await (supabase.from("models") as any)
-          .select("name, username, model_language")
+          .select("name, username")
           .eq("id", resolvedModelId)
           .maybeSingle();
         if (model) {
           setModelName(model.name || "");
           setModelUsername(model.username || null);
-          setModelLanguage(model.model_language === "en" ? "en" : "de");
         }
         await loadProfileMeta(resolvedModelId);
       }
