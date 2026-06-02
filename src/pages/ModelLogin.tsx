@@ -156,24 +156,24 @@ export default function ModelLogin() {
         transition={{ duration: 0.35, delay: 0.08 }}
       >
         <h1 className="text-gold-gradient-shimmer text-2xl font-bold text-center tracking-tight leading-tight mb-2">
-          Model Portal
+          {T.title}
         </h1>
         <p className="text-muted-foreground text-sm text-center mb-7">
-          Melde dich mit deinen Zugangsdaten an
+          {T.subtitle}
         </p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="input-gold-shimmer rounded-xl">
-            <input type="email" name="email" id="model-email" autoComplete="username" autoCapitalize="none" autoCorrect="off" spellCheck={false} inputMode="email" placeholder="E-Mail Adresse" value={email} onChange={(e) => setEmail(e.target.value)} required className={inputClass} />
+            <input type="email" name="email" id="model-email" autoComplete="username" autoCapitalize="none" autoCorrect="off" spellCheck={false} inputMode="email" placeholder={T.email} value={email} onChange={(e) => setEmail(e.target.value)} required className={inputClass} />
           </div>
           <div className="input-gold-shimmer rounded-xl">
-            <input type="password" name="password" id="model-password" autoComplete="current-password" placeholder="Passwort" value={password} onChange={(e) => setPassword(e.target.value)} required className={inputClass} />
+            <input type="password" name="password" id="model-password" autoComplete="current-password" placeholder={T.password} value={password} onChange={(e) => setPassword(e.target.value)} required className={inputClass} />
           </div>
           {error && <p className="text-destructive text-sm text-center animate-fade-in">{error}</p>}
           <button type="submit" disabled={submitting} className="w-full px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold tracking-wide hover:scale-[1.02] transition-all duration-200 disabled:opacity-50">
-            {submitting ? "Bitte warten..." : "Anmelden"}
+            {submitting ? T.submitting : T.submit}
           </button>
           <button type="button" onClick={() => setShowForgot(true)} className="w-full text-center text-xs text-primary hover:text-primary/80 transition-colors underline underline-offset-2">
-            Passwort vergessen?
+            {T.forgot}
           </button>
         </form>
         <ForgotPasswordDialog open={showForgot} onClose={() => setShowForgot(false)} defaultEmail={email} />
