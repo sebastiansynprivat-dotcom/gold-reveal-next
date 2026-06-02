@@ -1907,6 +1907,7 @@ export default function ModelDashboardTab() {
                           if ((data as any)?.error) throw new Error((data as any).error);
                           toast.success(`Umsatz für ${String(fetchMonth).padStart(2,"0")}/${fetchYear} aktualisiert ✅`);
                           await loadModelAccounts(selectedModelId);
+                          setFetchRevenueTick(t => t + 1);
                         } catch (err: any) {
                           toast.error(err.message || "Umsatz konnte nicht abgerufen werden");
                         } finally {
