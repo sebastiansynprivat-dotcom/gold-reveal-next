@@ -544,6 +544,11 @@ export default function ModelHomeDashboard({
                       <p className="text-[9px] text-muted-foreground uppercase tracking-wider">
                         {periodLabels[period]}
                       </p>
+                      {commissionPct > 0 && (
+                        <p className="text-[10px] text-emerald-400 tabular-nums mt-0.5">
+                          {copy.net}: {fmtMoney((revenueByAccount[a.id] || 0) * commissionPct / 100)}
+                        </p>
+                      )}
                     </div>
                     <ChevronDown
                       className={cn(
