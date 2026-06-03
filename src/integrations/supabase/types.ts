@@ -965,6 +965,7 @@ export type Database = {
           name: string
           notes: string
           other_social: string
+          platform_logins: Json
           social_linked: boolean
           stage: string
           status: string
@@ -989,6 +990,7 @@ export type Database = {
           name?: string
           notes?: string
           other_social?: string
+          platform_logins?: Json
           social_linked?: boolean
           stage?: string
           status?: string
@@ -1013,6 +1015,7 @@ export type Database = {
           name?: string
           notes?: string
           other_social?: string
+          platform_logins?: Json
           social_linked?: boolean
           stage?: string
           status?: string
