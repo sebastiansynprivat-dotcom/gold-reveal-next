@@ -52,6 +52,7 @@ type SocialMediaModel = {
   stage: ModelStage;
   is_active: boolean;
   created_at: string;
+  archived_at: string | null;
 };
 
 const emptyModel: Omit<SocialMediaModel, "id" | "created_at"> = {
