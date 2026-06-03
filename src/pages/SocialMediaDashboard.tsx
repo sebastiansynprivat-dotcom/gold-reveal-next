@@ -19,6 +19,7 @@ import GoldParticles from "@/components/GoldParticles";
 import { useAdminRole } from "@/hooks/useAdminRole";
 
 type Marketer = { name: string; instagram: string; tracking_link?: string; tracking_name?: string };
+type PlatformLogin = { platform: string; email: string; password: string };
 
 export type ModelStage = "onboarding" | "warm_up" | "active" | "ready";
 
@@ -45,6 +46,7 @@ type SocialMediaModel = {
   twitter_url: string;
   other_social: string;
   marketers: Marketer[];
+  platform_logins: PlatformLogin[];
   notes: string;
   status: string;
   stage: ModelStage;
@@ -67,6 +69,7 @@ const emptyModel: Omit<SocialMediaModel, "id" | "created_at"> = {
   twitter_url: "",
   other_social: "",
   marketers: [],
+  platform_logins: [],
   notes: "",
   status: "active",
   stage: "onboarding",
@@ -157,6 +160,7 @@ export default function SocialMediaDashboard() {
       setModels(((data || []) as any[]).map((m) => ({
         ...m,
         marketers: Array.isArray(m.marketers) ? m.marketers : [],
+        platform_logins: Array.isArray(m.platform_logins) ? m.platform_logins : [],
         instagram_urls: Array.isArray(m.instagram_urls) ? m.instagram_urls : [],
         linktree_url: m.linktree_url ?? "",
         stage: (m.stage as ModelStage) ?? "onboarding",
@@ -307,6 +311,13 @@ export default function SocialMediaDashboard() {
     setForm((f) => ({ ...f, marketers: f.marketers.map((m, idx) => idx === i ? { ...m, [field]: value } : m) }));
   const removeMarketer = (i: number) =>
     setForm((f) => ({ ...f, marketers: f.marketers.filter((_, idx) => idx !== i) }));
+
+  const addLogin = () =>
+    setForm((f) => ({ ...f, platform_logins: [...f.platform_logins, { platform: "", email: "", password: "" }] }));
+  const updateLogin = (i: number, field: keyof PlatformLogin, value: string) =>
+    setForm((f) => ({ ...f, platform_logins: f.platform_logins.map((l, idx) => idx === i ? { ...l, [field]: value } : l) }));
+  const removeLogin = (i: number) =>
+    setForm((f) => ({ ...f, platform_logins: f.platform_logins.filter((_, idx) => idx !== i) }));
 
   const addInstagram = () => setForm((f) => ({ ...f, instagram_urls: [...f.instagram_urls, ""] }));
   const updateInstagram = (i: number, v: string) =>
@@ -592,6 +603,44 @@ export default function SocialMediaDashboard() {
                     </div>
                   )}
 
+                  {m.platform_logins?.length > 0 && (
+                    <div className="border-t border-border/30 pt-3 mt-3">
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <KeyRound className="h-3 w-3 text-accent/70" />
+                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Plattform Logins ({m.platform_logins.length})</span>
+                      </div>
+                      <div className="space-y-1.5">
+                        {m.platform_logins.map((lg, i) => (
+                          <div key={i} className="rounded-md border border-border/30 bg-background/40 p-2 text-xs space-y-1">
+                            <div className="font-semibold text-foreground/90 truncate">{lg.platform || "—"}</div>
+                            {lg.email && (
+                              <button
+                                type="button"
+                                onClick={() => { navigator.clipboard.writeText(lg.email); toast.success("E-Mail kopiert"); }}
+                                className="w-full flex items-center justify-between gap-2 text-[11px] text-muted-foreground hover:text-accent transition-colors group/copy"
+                              >
+                                <span className="truncate">{lg.email}</span>
+                                <Copy className="h-3 w-3 opacity-0 group-hover/copy:opacity-100 shrink-0" />
+                              </button>
+                            )}
+                            {lg.password && (
+                              <button
+                                type="button"
+                                onClick={() => { navigator.clipboard.writeText(lg.password); toast.success("Passwort kopiert"); }}
+                                className="w-full flex items-center justify-between gap-2 text-[11px] text-muted-foreground hover:text-accent transition-colors group/copy font-mono"
+                              >
+                                <span className="truncate">{lg.password}</span>
+                                <Copy className="h-3 w-3 opacity-0 group-hover/copy:opacity-100 shrink-0" />
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+
+
                   {/* Login section */}
                   <div className="border-t border-border/30 pt-3 mt-3">
                     <div className="flex items-center gap-1.5 mb-2">
@@ -822,6 +871,56 @@ export default function SocialMediaDashboard() {
                 </div>
               )}
             </div>
+
+            {/* Platform Logins */}
+            <div className="rounded-xl border border-border/40 p-3 sm:p-4 space-y-2 bg-secondary/20">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-xs uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5">
+                  <KeyRound className="h-3 w-3" /> Plattform Logins
+                </h4>
+                <Button size="sm" variant="ghost" onClick={addLogin} className="text-accent h-7">
+                  <Plus className="h-3.5 w-3.5 mr-1" /> Hinzufügen
+                </Button>
+              </div>
+              {form.platform_logins.length === 0 ? (
+                <p className="text-xs text-muted-foreground italic">Noch keine Plattform-Zugänge hinterlegt</p>
+              ) : (
+                <div className="space-y-2">
+                  {form.platform_logins.map((lg, i) => (
+                    <div key={i} className="rounded-lg border border-border/30 p-2.5 space-y-2 bg-background/30">
+                      <div className="flex items-center gap-2">
+                        <Input
+                          placeholder="Plattform (z.B. Fanvue, OnlyFans)"
+                          value={lg.platform}
+                          onChange={(e) => updateLogin(i, "platform", e.target.value)}
+                          className="text-sm flex-1"
+                        />
+                        <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive shrink-0" onClick={() => removeLogin(i)}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <Input
+                          placeholder="E-Mail / Username"
+                          value={lg.email}
+                          onChange={(e) => updateLogin(i, "email", e.target.value)}
+                          className="text-sm"
+                          autoComplete="off"
+                        />
+                        <Input
+                          placeholder="Passwort"
+                          value={lg.password}
+                          onChange={(e) => updateLogin(i, "password", e.target.value)}
+                          className="text-sm font-mono"
+                          autoComplete="off"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
 
             {/* Notes */}
             <div>
