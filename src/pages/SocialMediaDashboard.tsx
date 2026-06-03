@@ -329,6 +329,14 @@ export default function SocialMediaDashboard() {
               className="pl-9 bg-card/40 border-border/50"
             />
           </div>
+          <Button
+            onClick={generateSummary}
+            variant="outline"
+            className="shrink-0 border-accent/40 bg-accent/5 text-accent hover:bg-accent/15 hover:border-accent/60"
+            title="AI Zusammenfassung aller Model-Notizen"
+          >
+            <Sparkles className="h-4 w-4 mr-1.5" /> AI Summary
+          </Button>
           <Button onClick={openCreate} className="bg-accent text-accent-foreground hover:bg-accent/90 shrink-0">
             <Plus className="h-4 w-4 mr-1.5" /> Neues Model
           </Button>
