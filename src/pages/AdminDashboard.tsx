@@ -98,6 +98,7 @@ import ChatterStatsCard from "@/components/ChatterStatsCard";
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import ModelDashboardTab from "@/components/ModelDashboardTab";
 import ChatterDashboardTab from "@/components/ChatterDashboardTab";
+import DeletedRecordsTab from "@/components/admin/DeletedRecordsTab";
 import GoldParticles from "@/components/GoldParticles";
 import SubAdminManager from "@/components/SubAdminManager";
 import { useAdminRole } from "@/hooks/useAdminRole";
