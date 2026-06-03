@@ -102,15 +102,25 @@ Deno.serve(async (req) => {
 
     const slug = slugify(model?.username || model?.name || model_id);
 
-    let email = `${slug}@fanvue.shex.app`;
-    for (let i = 2; i < 100; i++) {
-      const { data: clash } = await admin
-        .from("fanvue_model_users")
-        .select("id")
-        .eq("email", email)
-        .maybeSingle();
-      if (!clash) break;
-      email = `${slug}-${i}@fanvue.shex.app`;
+    // Use dedicated subdomain for Social Media model logins to avoid
+    // collisions with the regular model dashboard (which uses @shex.app).
+    const domain = "social.shex.app";
+    const checkClash = async (candidate: string): Promise<boolean> => {
+      const [{ data: a }, { data: b }] = await Promise.all([
+        admin.from("fanvue_model_users").select("id").eq("email", candidate).maybeSingle(),
+        admin.from("model_users").select("id").eq("email", candidate).maybeSingle(),
+      ]);
+      return !!(a || b);
+    };
+    let email = `${slug}@${domain}`;
+    if (await checkClash(email)) {
+      for (let i = 2; i < 1000; i++) {
+        const candidate = `${slug}-${i}@${domain}`;
+        if (!(await checkClash(candidate))) {
+          email = candidate;
+          break;
+        }
+      }
     }
 
     const password = generatePassword(12);
