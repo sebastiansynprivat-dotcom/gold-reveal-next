@@ -622,6 +622,59 @@ export default function SocialMediaDashboard() {
                   </div>
 
                   {(() => {
+                    const hist = chatterHistory[m.id] ?? [];
+                    if (hist.length === 0 && !m.chatter_name) return null;
+                    const open = hist.find((h) => !h.ended_at);
+                    const past = hist.filter((h) => h.ended_at).length;
+                    const fmtD = (d: string) => new Date(d).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit" });
+                    return (
+                      <div className="mb-3 rounded-xl border border-accent/15 bg-card/30 p-2.5">
+                        <div className="flex items-center justify-between gap-2 mb-1.5">
+                          <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground/70 font-medium">Chatter Verlauf</span>
+                          <div className="flex gap-1">
+                            {open && (
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-6 w-6 text-accent hover:text-accent"
+                                onClick={() => archiveChatter(m)}
+                                title="Chatter archivieren"
+                              >
+                                <Archive className="h-3 w-3" />
+                              </Button>
+                            )}
+                            {hist.length > 0 && (
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                                onClick={() => setHistoryOpenFor(m)}
+                                title="Vollständigen Verlauf öffnen"
+                              >
+                                <Calendar className="h-3 w-3" />
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                        {open ? (
+                          <div className="flex items-center gap-2 text-xs">
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_hsl(140_70%_50%/0.7)]" />
+                            <span className="font-semibold text-foreground truncate">{open.chatter_name}</span>
+                            <span className="text-muted-foreground text-[10px] ml-auto">seit {fmtD(open.started_at)}</span>
+                          </div>
+                        ) : (
+                          <div className="text-xs text-muted-foreground italic">Kein aktiver Chatter</div>
+                        )}
+                        {past > 0 && (
+                          <div className="text-[10px] text-muted-foreground/70 mt-1">
+                            + {past} archiviert{past === 1 ? "" : "e"}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+
+                  {(() => {
                     const igs = m.instagram_urls?.length ? m.instagram_urls : (m.instagram_url ? [m.instagram_url] : []);
                     const hasAny = igs.length > 0 || m.linktree_url;
                     if (!hasAny) return null;
