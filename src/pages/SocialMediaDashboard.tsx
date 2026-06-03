@@ -160,6 +160,7 @@ export default function SocialMediaDashboard() {
       setModels(((data || []) as any[]).map((m) => ({
         ...m,
         marketers: Array.isArray(m.marketers) ? m.marketers : [],
+        platform_logins: Array.isArray(m.platform_logins) ? m.platform_logins : [],
         instagram_urls: Array.isArray(m.instagram_urls) ? m.instagram_urls : [],
         linktree_url: m.linktree_url ?? "",
         stage: (m.stage as ModelStage) ?? "onboarding",
