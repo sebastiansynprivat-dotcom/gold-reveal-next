@@ -175,6 +175,8 @@ const App = () => (
               <Route path="/socialmedia/login" element={<SocialMediaLogin />} />
               <Route path="/socialmedia/register" element={<SocialMediaRegister />} />
               <Route path="/socialmedia/admin" element={<SocialMediaProtectedRoute><SocialMediaDashboard /></SocialMediaProtectedRoute>} />
+              <Route path="/socialmedia/admin/plans" element={<SocialMediaProtectedRoute><SocialMediaContentPlans /></SocialMediaProtectedRoute>} />
+              <Route path="/socialmedia/model" element={<SocialMediaModelProtectedRoute><SocialMediaModelDashboard /></SocialMediaModelProtectedRoute>} />
               {/* Legacy /fanvue → /socialmedia redirects */}
               <Route path="/fanvue/login" element={<Navigate to="/socialmedia/login" replace />} />
               <Route path="/fanvue" element={<Navigate to="/socialmedia/admin" replace />} />
