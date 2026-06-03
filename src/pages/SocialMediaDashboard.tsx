@@ -18,6 +18,15 @@ import { useAdminRole } from "@/hooks/useAdminRole";
 
 type Marketer = { name: string; instagram: string };
 
+export type ModelStage = "onboarding" | "warm_up" | "active" | "ready";
+
+export const STAGE_OPTIONS: { value: ModelStage; label: string; color: string }[] = [
+  { value: "onboarding", label: "Onboarding", color: "bg-blue-500/15 text-blue-300 border-blue-500/30" },
+  { value: "warm_up", label: "Warm up", color: "bg-orange-500/15 text-orange-300 border-orange-500/30" },
+  { value: "active", label: "Aktiv", color: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30" },
+  { value: "ready", label: "Alles ready", color: "bg-accent/20 text-accent border-accent/40" },
+];
+
 type SocialMediaModel = {
   id: string;
   name: string;
@@ -35,6 +44,7 @@ type SocialMediaModel = {
   marketers: Marketer[];
   notes: string;
   status: string;
+  stage: ModelStage;
   is_active: boolean;
   created_at: string;
 };
@@ -55,6 +65,7 @@ const emptyModel: Omit<SocialMediaModel, "id" | "created_at"> = {
   marketers: [],
   notes: "",
   status: "active",
+  stage: "onboarding",
   is_active: true,
 };
 
