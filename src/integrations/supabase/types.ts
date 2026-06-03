@@ -910,6 +910,41 @@ export type Database = {
           },
         ]
       }
+      fanvue_model_chatter_assignments: {
+        Row: {
+          chatter_name: string
+          created_at: string
+          ended_at: string | null
+          id: string
+          model_id: string
+          started_at: string
+        }
+        Insert: {
+          chatter_name: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          model_id: string
+          started_at?: string
+        }
+        Update: {
+          chatter_name?: string
+          created_at?: string
+          ended_at?: string | null
+          id?: string
+          model_id?: string
+          started_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fanvue_model_chatter_assignments_model_id_fkey"
+            columns: ["model_id"]
+            isOneToOne: false
+            referencedRelation: "fanvue_models"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fanvue_model_users: {
         Row: {
           created_at: string

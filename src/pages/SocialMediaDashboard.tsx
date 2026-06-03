@@ -83,6 +83,8 @@ export default function SocialMediaDashboard() {
   const { isSuperAdmin } = useAdminRole();
   const [models, setModels] = useState<SocialMediaModel[]>([]);
   const [snapshots, setSnapshots] = useState<Record<string, { followers: number; recorded_at: string; instagram_url: string | null }[]>>({});
+  const [chatterHistory, setChatterHistory] = useState<Record<string, { id: string; chatter_name: string; started_at: string; ended_at: string | null }[]>>({});
+  const [historyOpenFor, setHistoryOpenFor] = useState<SocialMediaModel | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [archiveFilter, setArchiveFilter] = useState<"active" | "archived" | "all">("active");
@@ -179,6 +181,17 @@ export default function SocialMediaDashboard() {
       (grouped[s.model_id] ||= []).push({ followers: s.followers, recorded_at: s.recorded_at, instagram_url: s.instagram_url ?? null });
     });
     setSnapshots(grouped);
+
+    // Load chatter assignment history
+    const { data: hist } = await supabase
+      .from("fanvue_model_chatter_assignments" as any)
+      .select("id, model_id, chatter_name, started_at, ended_at")
+      .order("started_at", { ascending: false });
+    const histMap: Record<string, { id: string; chatter_name: string; started_at: string; ended_at: string | null }[]> = {};
+    ((hist || []) as any[]).forEach((h) => {
+      (histMap[h.model_id] ||= []).push({ id: h.id, chatter_name: h.chatter_name, started_at: h.started_at, ended_at: h.ended_at });
+    });
+    setChatterHistory(histMap);
 
     // Load model logins
     const { data: lg } = await supabase
@@ -313,6 +326,21 @@ export default function SocialMediaDashboard() {
       toast.error((isArchived ? "Wiederherstellen" : "Archivieren") + " fehlgeschlagen");
     } else {
       toast.success(isArchived ? "Model wiederhergestellt" : "Model archiviert");
+      load();
+    }
+  };
+
+  const archiveChatter = async (m: SocialMediaModel) => {
+    if (!m.chatter_name) return;
+    // Clearing chatter_name triggers the DB trigger which closes the open assignment.
+    const { error } = await supabase
+      .from("fanvue_models" as any)
+      .update({ chatter_name: "", chatter_assigned: false })
+      .eq("id", m.id);
+    if (error) {
+      toast.error("Chatter archivieren fehlgeschlagen");
+    } else {
+      toast.success(`${m.chatter_name} archiviert`);
       load();
     }
   };
@@ -592,6 +620,59 @@ export default function SocialMediaDashboard() {
                     <StatusRow icon={CheckCircle2} label="Account" active={m.account_setup} />
                     <StatusRow icon={MessageCircle} label="Chatter zugeteilt" active={m.chatter_assigned} extra={m.chatter_name} />
                   </div>
+
+                  {(() => {
+                    const hist = chatterHistory[m.id] ?? [];
+                    if (hist.length === 0 && !m.chatter_name) return null;
+                    const open = hist.find((h) => !h.ended_at);
+                    const past = hist.filter((h) => h.ended_at).length;
+                    const fmtD = (d: string) => new Date(d).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit" });
+                    return (
+                      <div className="mb-3 rounded-xl border border-accent/15 bg-card/30 p-2.5">
+                        <div className="flex items-center justify-between gap-2 mb-1.5">
+                          <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground/70 font-medium">Chatter Verlauf</span>
+                          <div className="flex gap-1">
+                            {open && (
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-6 w-6 text-accent hover:text-accent"
+                                onClick={() => archiveChatter(m)}
+                                title="Chatter archivieren"
+                              >
+                                <Archive className="h-3 w-3" />
+                              </Button>
+                            )}
+                            {hist.length > 0 && (
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                                onClick={() => setHistoryOpenFor(m)}
+                                title="Vollständigen Verlauf öffnen"
+                              >
+                                <Calendar className="h-3 w-3" />
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                        {open ? (
+                          <div className="flex items-center gap-2 text-xs">
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_6px_hsl(140_70%_50%/0.7)]" />
+                            <span className="font-semibold text-foreground truncate">{open.chatter_name}</span>
+                            <span className="text-muted-foreground text-[10px] ml-auto">seit {fmtD(open.started_at)}</span>
+                          </div>
+                        ) : (
+                          <div className="text-xs text-muted-foreground italic">Kein aktiver Chatter</div>
+                        )}
+                        {past > 0 && (
+                          <div className="text-[10px] text-muted-foreground/70 mt-1">
+                            + {past} archiviert{past === 1 ? "" : "e"}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
 
                   {(() => {
                     const igs = m.instagram_urls?.length ? m.instagram_urls : (m.instagram_url ? [m.instagram_url] : []);
@@ -1079,6 +1160,80 @@ export default function SocialMediaDashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Chatter History Dialog */}
+      <Dialog open={!!historyOpenFor} onOpenChange={(o) => !o && setHistoryOpenFor(null)}>
+        <DialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:max-w-md max-h-[80vh] overflow-y-auto bg-card border-accent/30">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MessageCircle className="h-4 w-4 text-accent" />
+              Chatter Verlauf — {historyOpenFor?.name}
+            </DialogTitle>
+          </DialogHeader>
+          {(() => {
+            const hist = historyOpenFor ? (chatterHistory[historyOpenFor.id] ?? []) : [];
+            if (hist.length === 0) {
+              return <p className="text-sm text-muted-foreground py-6 text-center">Noch kein Chatter zugewiesen.</p>;
+            }
+            const fmt = (d: string) => new Date(d).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
+            const days = (a: string, b: string) =>
+              Math.max(1, Math.round((new Date(b).getTime() - new Date(a).getTime()) / 86400000));
+            return (
+              <div className="space-y-2 mt-2">
+                {hist.map((h) => {
+                  const isOpen = !h.ended_at;
+                  return (
+                    <div
+                      key={h.id}
+                      className={`rounded-xl border p-3 ${
+                        isOpen ? "border-emerald-500/40 bg-emerald-500/5" : "border-border/40 bg-card/30"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span
+                            className={`h-2 w-2 rounded-full shrink-0 ${
+                              isOpen ? "bg-emerald-400 shadow-[0_0_8px_hsl(140_70%_50%/0.8)]" : "bg-muted-foreground/40"
+                            }`}
+                          />
+                          <span className="font-semibold text-foreground truncate">{h.chatter_name}</span>
+                        </div>
+                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground shrink-0">
+                          {isOpen ? "Aktiv" : `${days(h.started_at, h.ended_at!)} Tage`}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                        <Calendar className="h-3 w-3 text-accent/70" />
+                        <span>{fmt(h.started_at)}</span>
+                        <span className="opacity-50">→</span>
+                        <span>{h.ended_at ? fmt(h.ended_at) : "heute"}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+          {historyOpenFor?.chatter_name && (
+            <DialogFooter>
+              <Button
+                variant="outline"
+                className="border-accent/40 text-accent hover:bg-accent/10"
+                onClick={async () => {
+                  if (historyOpenFor) {
+                    await archiveChatter(historyOpenFor);
+                    setHistoryOpenFor(null);
+                  }
+                }}
+              >
+                <Archive className="h-4 w-4 mr-1.5" />
+                Aktuellen Chatter archivieren
+              </Button>
+            </DialogFooter>
+          )}
+        </DialogContent>
+      </Dialog>
+
 
       {/* AI Summary Dialog */}
       <Dialog open={summaryOpen} onOpenChange={setSummaryOpen}>
