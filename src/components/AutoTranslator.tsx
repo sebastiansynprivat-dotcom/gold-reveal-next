@@ -4,7 +4,7 @@ import { useUILanguage } from "@/hooks/useUILanguage";
 import { startAutoTranslate, stopAutoTranslate } from "@/lib/autoTranslate";
 
 // Model and Fanvue dashboards have their own explicit language handling.
-const SKIP_PREFIXES = ["/model", "/fanvue"];
+const SKIP_PREFIXES = ["/model", "/fanvue", "/socialmedia"];
 
 const AutoTranslator = () => {
   const { lang } = useUILanguage();
