@@ -1543,8 +1543,8 @@ export default function Dashboard() {
         {isDemoMode() && (
           <BonusModelSection
             monthlyRevenue={monthlyRevenue}
-            currentTier={currentTier}
-            nextTier={nextTier}
+            currentTier={currentTier as any}
+            nextTier={nextTier as any}
             progressToNext={progressToNext}
             isTopTier={isTopTier}
             umsatz={umsatz}
