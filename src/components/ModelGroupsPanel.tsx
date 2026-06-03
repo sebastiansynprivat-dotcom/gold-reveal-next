@@ -217,6 +217,11 @@ export default function ModelGroupsPanel({
     if (open) load();
   }, [open]);
 
+  useEffect(() => {
+    if (open && selected) loadRevenueForPeriod();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selected?.id, billingPeriod.from, models.length]);
+
   // Auto-pull: include models explicitly in the group OR matching by referrer_tag (case-insensitive)
   const groupModels = useMemo(() => {
     if (!selected) return [];
