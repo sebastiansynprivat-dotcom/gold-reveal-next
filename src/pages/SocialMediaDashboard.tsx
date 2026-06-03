@@ -369,12 +369,12 @@ export default function SocialMediaDashboard() {
                 >
                   <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
 
-                  <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-start justify-between mb-2 gap-2">
                     <div className="min-w-0">
                       <h3 className="font-bold text-foreground truncate">{m.name || "—"}</h3>
                       {m.username && <p className="text-xs text-muted-foreground truncate">@{m.username}</p>}
                     </div>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                       <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEdit(m)}>
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
@@ -383,6 +383,16 @@ export default function SocialMediaDashboard() {
                       </Button>
                     </div>
                   </div>
+
+                  {(() => {
+                    const s = STAGE_OPTIONS.find((o) => o.value === m.stage) ?? STAGE_OPTIONS[0];
+                    return (
+                      <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[10px] font-semibold uppercase tracking-wider mb-3 ${s.color}`}>
+                        <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                        {s.label}
+                      </div>
+                    );
+                  })()}
 
                   <div className="space-y-1.5 mb-3">
                     <StatusRow icon={CheckCircle2} label="Account" active={m.account_setup} />
