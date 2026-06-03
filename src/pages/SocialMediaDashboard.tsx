@@ -663,6 +663,46 @@ export default function SocialMediaDashboard() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* AI Summary Dialog */}
+      <Dialog open={summaryOpen} onOpenChange={setSummaryOpen}>
+        <DialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:max-w-2xl max-h-[85vh] overflow-y-auto bg-card border-accent/30">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-accent" />
+              AI Summary aller Model-Notizen
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-2 min-h-[120px]">
+            {summaryLoading ? (
+              <div className="flex flex-col items-center justify-center py-10 gap-3">
+                <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                <p className="text-xs text-muted-foreground">AI analysiert {models.filter((m) => m.notes?.trim()).length} Notizen…</p>
+              </div>
+            ) : (
+              <div className="prose prose-sm prose-invert max-w-none text-sm text-foreground/90 prose-headings:text-accent prose-strong:text-foreground prose-li:my-0.5">
+                <ReactMarkdown>{summaryText || "Keine Zusammenfassung verfügbar."}</ReactMarkdown>
+              </div>
+            )}
+          </div>
+          <DialogFooter className="gap-2">
+            {summaryText && !summaryLoading && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  navigator.clipboard.writeText(summaryText);
+                  toast.success("Zusammenfassung kopiert");
+                }}
+              >
+                <Copy className="h-3.5 w-3.5 mr-1.5" /> Kopieren
+              </Button>
+            )}
+            <Button onClick={() => setSummaryOpen(false)} className="bg-accent text-accent-foreground hover:bg-accent/90">
+              Schließen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
