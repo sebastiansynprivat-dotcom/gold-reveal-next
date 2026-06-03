@@ -14,14 +14,16 @@ const updateSW = registerSW({
   },
 });
 
-// Reload immediately when new SW takes control (force-update for installed PWAs).
-// Skip the reload while a critical in-flight operation is running (e.g. chat
-// streaming) so we don't abort the user's request and show a connection error.
+// Reload only when a NEW service worker takes over an already-controlled page
+// (real update). Skip the very first install (no prior controller) — otherwise
+// every fresh visit triggers a spurious reload ~30s after load that bounces the
+// user back to the start route. Also defer while a streaming op is in flight.
 if ("serviceWorker" in navigator) {
+  const hadControllerAtLoad = !!navigator.serviceWorker.controller;
   let reloading = false;
   const tryReload = () => {
     if (reloading) return;
-    // Defer if a streaming operation is in progress.
+    if (!hadControllerAtLoad) return; // first install — do not reload
     if ((window as any).__lvBusy === true) {
       setTimeout(tryReload, 1500);
       return;
