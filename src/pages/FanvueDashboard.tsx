@@ -138,7 +138,11 @@ export default function FanvueDashboard() {
   const openEdit = (m: FanvueModel) => {
     setEditing(m);
     const { id, created_at, ...rest } = m;
-    setForm(rest);
+    // Seed Instagram list from legacy instagram_url if list is empty
+    const igs = Array.isArray(rest.instagram_urls) && rest.instagram_urls.length > 0
+      ? rest.instagram_urls
+      : (rest.instagram_url ? [rest.instagram_url] : []);
+    setForm({ ...rest, instagram_urls: igs });
     setDialogOpen(true);
   };
 
