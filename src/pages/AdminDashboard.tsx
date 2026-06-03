@@ -98,6 +98,7 @@ import ChatterStatsCard from "@/components/ChatterStatsCard";
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import ModelDashboardTab from "@/components/ModelDashboardTab";
 import ChatterDashboardTab from "@/components/ChatterDashboardTab";
+import DeletedRecordsTab from "@/components/admin/DeletedRecordsTab";
 import GoldParticles from "@/components/GoldParticles";
 import SubAdminManager from "@/components/SubAdminManager";
 import { useAdminRole } from "@/hooks/useAdminRole";
@@ -3641,7 +3642,7 @@ export default function AdminDashboard() {
     return c?.group_name || c?.telegram_id || userId.slice(0, 8);
   };
 
-  const SUPER_ADMIN_TABS = new Set(["notifications", "kiprompt", "platzhalter", "gdrive", "settings", "admin_mgmt", "fanvue"]);
+  const SUPER_ADMIN_TABS = new Set(["notifications", "kiprompt", "platzhalter", "gdrive", "settings", "admin_mgmt", "fanvue", "deleted"]);
 
   const allTabItems = [
     { key: "einnahmen" as const, label: "Einnahmen", icon: TrendingUp, onClick: () => { setActiveTab("einnahmen"); setTimeFilter("heute"); } },
@@ -3731,6 +3732,12 @@ export default function AdminDashboard() {
       label: "Fanvue Dashboard",
       icon: Star,
       onClick: () => { window.location.assign("/fanvue"); },
+    },
+    {
+      key: "deleted" as const,
+      label: "Archiv (Gelöscht)",
+      icon: Trash2,
+      onClick: () => setActiveTab("deleted"),
     },
   ];
 
@@ -9069,6 +9076,8 @@ export default function AdminDashboard() {
                   </section>
                 </div>
               )}
+
+              {activeTab === "deleted" && <DeletedRecordsTab />}
             </motion.div>
           </AnimatePresence>
         </main>
