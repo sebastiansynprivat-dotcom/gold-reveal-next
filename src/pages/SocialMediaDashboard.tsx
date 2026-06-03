@@ -11,12 +11,23 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Pencil, Trash2, LogOut, Instagram, Music2, Twitter, Globe, UserCheck, MessageCircle, CheckCircle2, Search, Users, ArrowLeft, TrendingUp, TrendingDown, Minus, Link2, X } from "lucide-react";
+import { Plus, Pencil, Trash2, LogOut, Instagram, Music2, Twitter, Globe, UserCheck, MessageCircle, CheckCircle2, Search, Users, ArrowLeft, TrendingUp, TrendingDown, Minus, Link2, X, Sparkles, Copy } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import ReactMarkdown from "react-markdown";
 import logo from "@/assets/logo.png";
 import GoldParticles from "@/components/GoldParticles";
 import { useAdminRole } from "@/hooks/useAdminRole";
 
 type Marketer = { name: string; instagram: string };
+
+export type ModelStage = "onboarding" | "warm_up" | "active" | "ready";
+
+export const STAGE_OPTIONS: { value: ModelStage; label: string; color: string }[] = [
+  { value: "onboarding", label: "Onboarding", color: "bg-blue-500/15 text-blue-300 border-blue-500/30" },
+  { value: "warm_up", label: "Warm up", color: "bg-orange-500/15 text-orange-300 border-orange-500/30" },
+  { value: "active", label: "Aktiv", color: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30" },
+  { value: "ready", label: "Alles ready", color: "bg-accent/20 text-accent border-accent/40" },
+];
 
 type SocialMediaModel = {
   id: string;
@@ -35,6 +46,7 @@ type SocialMediaModel = {
   marketers: Marketer[];
   notes: string;
   status: string;
+  stage: ModelStage;
   is_active: boolean;
   created_at: string;
 };
@@ -55,6 +67,7 @@ const emptyModel: Omit<SocialMediaModel, "id" | "created_at"> = {
   marketers: [],
   notes: "",
   status: "active",
+  stage: "onboarding",
   is_active: true,
 };
 
@@ -73,6 +86,33 @@ export default function SocialMediaDashboard() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [snapshotFor, setSnapshotFor] = useState<SocialMediaModel | null>(null);
   const [snapshotValue, setSnapshotValue] = useState("");
+  const [summaryOpen, setSummaryOpen] = useState(false);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryText, setSummaryText] = useState("");
+
+  const generateSummary = async () => {
+    setSummaryOpen(true);
+    setSummaryLoading(true);
+    setSummaryText("");
+    try {
+      const payload = models
+        .filter((m) => m.notes && m.notes.trim())
+        .map((m) => ({
+          name: m.name,
+          stage: STAGE_OPTIONS.find((s) => s.value === m.stage)?.label ?? m.stage,
+          notes: m.notes,
+        }));
+      const { data, error } = await supabase.functions.invoke("summarize-model-notes", { body: { notes: payload } });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      setSummaryText((data as any)?.summary ?? "");
+    } catch (e: any) {
+      toast.error("AI Zusammenfassung fehlgeschlagen: " + (e?.message ?? "unbekannter Fehler"));
+      setSummaryOpen(false);
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
 
   const load = async () => {
     setLoading(true);
@@ -88,6 +128,7 @@ export default function SocialMediaDashboard() {
         marketers: Array.isArray(m.marketers) ? m.marketers : [],
         instagram_urls: Array.isArray(m.instagram_urls) ? m.instagram_urls : [],
         linktree_url: m.linktree_url ?? "",
+        stage: (m.stage as ModelStage) ?? "onboarding",
       })));
     }
     // Load all IG snapshots
@@ -288,6 +329,14 @@ export default function SocialMediaDashboard() {
               className="pl-9 bg-card/40 border-border/50"
             />
           </div>
+          <Button
+            onClick={generateSummary}
+            variant="outline"
+            className="shrink-0 border-accent/40 bg-accent/5 text-accent hover:bg-accent/15 hover:border-accent/60"
+            title="AI Zusammenfassung aller Model-Notizen"
+          >
+            <Sparkles className="h-4 w-4 mr-1.5" /> AI Summary
+          </Button>
           <Button onClick={openCreate} className="bg-accent text-accent-foreground hover:bg-accent/90 shrink-0">
             <Plus className="h-4 w-4 mr-1.5" /> Neues Model
           </Button>
@@ -320,12 +369,12 @@ export default function SocialMediaDashboard() {
                 >
                   <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
 
-                  <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-start justify-between mb-2 gap-2">
                     <div className="min-w-0">
                       <h3 className="font-bold text-foreground truncate">{m.name || "—"}</h3>
                       {m.username && <p className="text-xs text-muted-foreground truncate">@{m.username}</p>}
                     </div>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                       <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEdit(m)}>
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
@@ -334,6 +383,16 @@ export default function SocialMediaDashboard() {
                       </Button>
                     </div>
                   </div>
+
+                  {(() => {
+                    const s = STAGE_OPTIONS.find((o) => o.value === m.stage) ?? STAGE_OPTIONS[0];
+                    return (
+                      <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[10px] font-semibold uppercase tracking-wider mb-3 ${s.color}`}>
+                        <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                        {s.label}
+                      </div>
+                    );
+                  })()}
 
                   <div className="space-y-1.5 mb-3">
                     <StatusRow icon={CheckCircle2} label="Account" active={m.account_setup} />
@@ -416,6 +475,21 @@ export default function SocialMediaDashboard() {
                 <Input value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} placeholder="username" />
               </div>
             </div>
+
+            <div>
+              <Label className="text-xs">Stage</Label>
+              <Select value={form.stage} onValueChange={(v) => setForm({ ...form, stage: v as ModelStage })}>
+                <SelectTrigger className="bg-background/40">
+                  <SelectValue placeholder="Stage wählen" />
+                </SelectTrigger>
+                <SelectContent>
+                  {STAGE_OPTIONS.map((s) => (
+                    <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
 
             {/* Status Toggles */}
             <div className="rounded-xl border border-border/40 p-3 sm:p-4 space-y-3 bg-secondary/20">
@@ -585,6 +659,46 @@ export default function SocialMediaDashboard() {
             <Button variant="ghost" onClick={() => setSnapshotFor(null)}>Abbrechen</Button>
             <Button onClick={saveSnapshot} className="bg-accent text-accent-foreground hover:bg-accent/90">
               Speichern
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* AI Summary Dialog */}
+      <Dialog open={summaryOpen} onOpenChange={setSummaryOpen}>
+        <DialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:max-w-2xl max-h-[85vh] overflow-y-auto bg-card border-accent/30">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-accent" />
+              AI Summary aller Model-Notizen
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-2 min-h-[120px]">
+            {summaryLoading ? (
+              <div className="flex flex-col items-center justify-center py-10 gap-3">
+                <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                <p className="text-xs text-muted-foreground">AI analysiert {models.filter((m) => m.notes?.trim()).length} Notizen…</p>
+              </div>
+            ) : (
+              <div className="prose prose-sm prose-invert max-w-none text-sm text-foreground/90 prose-headings:text-accent prose-strong:text-foreground prose-li:my-0.5">
+                <ReactMarkdown>{summaryText || "Keine Zusammenfassung verfügbar."}</ReactMarkdown>
+              </div>
+            )}
+          </div>
+          <DialogFooter className="gap-2">
+            {summaryText && !summaryLoading && (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  navigator.clipboard.writeText(summaryText);
+                  toast.success("Zusammenfassung kopiert");
+                }}
+              >
+                <Copy className="h-3.5 w-3.5 mr-1.5" /> Kopieren
+              </Button>
+            )}
+            <Button onClick={() => setSummaryOpen(false)} className="bg-accent text-accent-foreground hover:bg-accent/90">
+              Schließen
             </Button>
           </DialogFooter>
         </DialogContent>
