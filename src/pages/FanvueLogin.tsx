@@ -125,7 +125,7 @@ export default function FanvueLogin() {
         transition={{ duration: 0.35, delay: 0.08 }}
       >
         <h1 className="text-gold-gradient-shimmer text-2xl font-bold text-center tracking-tight leading-tight mb-2">
-          Fanvue Dashboard
+          Social Media Dashboard
         </h1>
         <p className="text-muted-foreground text-sm text-center mb-7">
           Melde dich mit deinen Zugangsdaten an
