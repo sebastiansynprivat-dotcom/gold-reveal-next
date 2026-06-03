@@ -93,6 +93,33 @@ export default function SocialMediaDashboard() {
   const [summaryText, setSummaryText] = useState("");
   const [logins, setLogins] = useState<Record<string, { email: string; password: string | null }>>({});
   const [loginBusy, setLoginBusy] = useState<string | null>(null);
+  const [scraping, setScraping] = useState(false);
+
+  const runScrape = async () => {
+    setScraping(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("scrape-instagram-followers");
+      if (error) throw error;
+      const saved = (data as any)?.saved ?? 0;
+      const scanned = (data as any)?.scanned ?? 0;
+      toast.success(`Scrape fertig: ${saved}/${scanned} Models aktualisiert`);
+      // Reload snapshots
+      const { data: snaps } = await supabase
+        .from("fanvue_instagram_snapshots" as any)
+        .select("model_id, followers, recorded_at")
+        .order("recorded_at", { ascending: true });
+      const grouped: Record<string, { followers: number; recorded_at: string }[]> = {};
+      (snaps || []).forEach((s: any) => {
+        if (!grouped[s.model_id]) grouped[s.model_id] = [];
+        grouped[s.model_id].push({ followers: s.followers, recorded_at: s.recorded_at });
+      });
+      setSnapshots(grouped);
+    } catch (e: any) {
+      toast.error(e?.message || "Scrape fehlgeschlagen");
+    } finally {
+      setScraping(false);
+    }
+  };
 
   const generateSummary = async () => {
     setSummaryOpen(true);
@@ -394,6 +421,16 @@ export default function SocialMediaDashboard() {
             title="AI Zusammenfassung aller Model-Notizen"
           >
             <Sparkles className="h-4 w-4 mr-1.5" /> AI Summary
+          </Button>
+          <Button
+            onClick={runScrape}
+            disabled={scraping}
+            variant="outline"
+            className="shrink-0 border-accent/40 bg-accent/5 text-accent hover:bg-accent/15 hover:border-accent/60"
+            title="Aktuelle Instagram-Followerzahlen jetzt scrapen"
+          >
+            <RefreshCw className={`h-4 w-4 mr-1.5 ${scraping ? "animate-spin" : ""}`} />
+            {scraping ? "Scrape läuft…" : "IG Scrape"}
           </Button>
           <Button onClick={openCreate} className="bg-accent text-accent-foreground hover:bg-accent/90 shrink-0">
             <Plus className="h-4 w-4 mr-1.5" /> Neues Model
