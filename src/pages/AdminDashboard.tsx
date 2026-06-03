@@ -3674,7 +3674,7 @@ export default function AdminDashboard() {
     return c?.group_name || c?.telegram_id || userId.slice(0, 8);
   };
 
-  const SUPER_ADMIN_TABS = new Set(["notifications", "kiprompt", "platzhalter", "gdrive", "settings", "admin_mgmt", "fanvue", "deleted"]);
+  const SUPER_ADMIN_TABS = new Set(["notifications", "kiprompt", "platzhalter", "gdrive", "settings", "admin_mgmt", "socialmedia", "deleted"]);
 
   const allTabItems = [
     { key: "einnahmen" as const, label: "Einnahmen", icon: TrendingUp, onClick: () => { setActiveTab("einnahmen"); setTimeFilter("heute"); } },
@@ -3760,7 +3760,7 @@ export default function AdminDashboard() {
       },
     },
     {
-      key: "fanvue" as const,
+      key: "socialmedia" as const,
       label: "Social Media Dashboard",
       icon: Star,
       onClick: () => { window.location.assign("/socialmedia/admin"); },

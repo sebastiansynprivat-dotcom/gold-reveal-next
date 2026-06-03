@@ -17,7 +17,7 @@ const translateError = (msg: string): string => {
 const inputClass =
   "w-full px-4 py-3 rounded-xl bg-card border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-transparent hover:border-primary/25 transition-all duration-300";
 
-export default function FanvueLogin() {
+export default function SocialMediaLogin() {
   const { user, loading, signIn } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

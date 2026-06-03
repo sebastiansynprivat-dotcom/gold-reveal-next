@@ -18,7 +18,7 @@ import { useAdminRole } from "@/hooks/useAdminRole";
 
 type Marketer = { name: string; instagram: string };
 
-type FanvueModel = {
+type SocialMediaModel = {
   id: string;
   name: string;
   username: string;
@@ -39,7 +39,7 @@ type FanvueModel = {
   created_at: string;
 };
 
-const emptyModel: Omit<FanvueModel, "id" | "created_at"> = {
+const emptyModel: Omit<SocialMediaModel, "id" | "created_at"> = {
   name: "",
   username: "",
   account_setup: false,
@@ -58,20 +58,20 @@ const emptyModel: Omit<FanvueModel, "id" | "created_at"> = {
   is_active: true,
 };
 
-export default function FanvueDashboard() {
+export default function SocialMediaDashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isSuperAdmin } = useAdminRole();
-  const [models, setModels] = useState<FanvueModel[]>([]);
+  const [models, setModels] = useState<SocialMediaModel[]>([]);
   const [snapshots, setSnapshots] = useState<Record<string, { followers: number; recorded_at: string }[]>>({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editing, setEditing] = useState<FanvueModel | null>(null);
+  const [editing, setEditing] = useState<SocialMediaModel | null>(null);
   const [form, setForm] = useState<typeof emptyModel>(emptyModel);
   const [saving, setSaving] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [snapshotFor, setSnapshotFor] = useState<FanvueModel | null>(null);
+  const [snapshotFor, setSnapshotFor] = useState<SocialMediaModel | null>(null);
   const [snapshotValue, setSnapshotValue] = useState("");
 
   const load = async () => {
@@ -135,7 +135,7 @@ export default function FanvueDashboard() {
     setDialogOpen(true);
   };
 
-  const openEdit = (m: FanvueModel) => {
+  const openEdit = (m: SocialMediaModel) => {
     setEditing(m);
     const { id, created_at, ...rest } = m;
     // Seed Instagram list from legacy instagram_url if list is empty
