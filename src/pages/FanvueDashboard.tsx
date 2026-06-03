@@ -173,7 +173,7 @@ export default function FanvueDashboard() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    navigate("/fanvue/login");
+    navigate("/socialmedia/login");
   };
 
   const addMarketer = () => setForm((f) => ({ ...f, marketers: [...f.marketers, { name: "", instagram: "" }] }));
