@@ -301,6 +301,10 @@ export default function ModelGroupsPanel({
       } catch {
         // keep fallback
       }
+      // Period → month/year used to look up fetched revenue (payout_revenue)
+      const ref = new Date(billingPeriod.from || new Date().toISOString().slice(0, 10));
+      const periodMonth = ref.getMonth() + 1;
+      const periodYear = ref.getFullYear();
       const items: LineItem[] = [];
       for (const m of groupModels) {
         // All accounts of this model (for label/platform context only)
@@ -325,7 +329,6 @@ export default function ModelGroupsPanel({
           return v != null && Number(v) !== 0 ? Number(v) : baseDefault;
         };
 
-        // Manually entered revenue (model_dashboard) — one row per model_id
         let gross = 0;
         let commission_total = 0;
         const breakdown: Array<{ name: string; gross: number; pct: number; commission: number }> = [];
@@ -337,17 +340,31 @@ export default function ModelGroupsPanel({
         };
 
         if (hasAccounts) {
-          const { data: md } = await (supabase as any)
-            .from("model_dashboard")
-            .select("fourbased_revenue, maloum_revenue, brezzels_revenue, monthly_revenue")
+          // 1) Prefer fetched revenue for the selected period (payout_revenue)
+          const { data: pr } = await (supabase as any)
+            .from("payout_revenue")
+            .select("fourbased_revenue, maloum_revenue, brezzels_revenue")
             .eq("model_id", m.id)
+            .eq("last_fetched_month", periodMonth)
+            .eq("last_fetched_year", periodYear)
             .maybeSingle();
-          if (md) {
-            const d: any = md;
-            const fbUsd = Number(d.fourbased_revenue) || 0;
+
+          // 2) Fallback: manually entered revenue (model_dashboard)
+          let src: any = pr;
+          if (!src) {
+            const { data: md } = await (supabase as any)
+              .from("model_dashboard")
+              .select("fourbased_revenue, maloum_revenue, brezzels_revenue, monthly_revenue")
+              .eq("model_id", m.id)
+              .maybeSingle();
+            src = md;
+          }
+
+          if (src) {
+            const fbUsd = Number(src.fourbased_revenue) || 0;
             const fb = +(fbUsd * usdToEur).toFixed(2); // USD → EUR
-            const ml = Number(d.maloum_revenue) || 0;
-            const br = Number(d.brezzels_revenue) || 0;
+            const ml = Number(src.maloum_revenue) || 0;
+            const br = Number(src.brezzels_revenue) || 0;
             if (fb > 0)
               pushLine(
                 `4Based ($${fbUsd.toFixed(2)} @ ${usdToEur.toFixed(4)})`,
