@@ -5732,6 +5732,19 @@ export default function AdminDashboard() {
                       </div>
                       <div className="flex min-w-0 flex-col gap-2 sm:ml-auto sm:flex-row sm:items-center">
                         <button
+                          onClick={() => setContentDropOpen(true)}
+                          className="relative h-8 px-3 rounded-md text-[10px] font-bold uppercase tracking-wide transition-all flex items-center gap-1.5 whitespace-nowrap text-black active:scale-95 overflow-hidden group"
+                          style={{
+                            background: "linear-gradient(135deg, hsl(43 56% 42%), hsl(43 76% 50%))",
+                            boxShadow: "0 0 14px -3px hsl(43 56% 52% / 0.55)",
+                          }}
+                          title="Neuen Content broadcasten"
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                          <Plus className="h-3.5 w-3.5 relative z-10" />
+                          <span className="relative z-10">Neuer Content</span>
+                        </button>
+                        <button
                           onClick={() => setUnreadOnly((v) => !v)}
                           className={cn(
                             "relative h-8 px-2.5 rounded-md text-[10px] font-semibold uppercase tracking-wide transition-all border flex items-center gap-1.5 whitespace-nowrap",
