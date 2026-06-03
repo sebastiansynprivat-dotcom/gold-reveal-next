@@ -19,6 +19,7 @@ import GoldParticles from "@/components/GoldParticles";
 import { useAdminRole } from "@/hooks/useAdminRole";
 
 type Marketer = { name: string; instagram: string; tracking_link?: string; tracking_name?: string };
+type PlatformLogin = { platform: string; email: string; password: string };
 
 export type ModelStage = "onboarding" | "warm_up" | "active" | "ready";
 
