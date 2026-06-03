@@ -1,0 +1,1 @@
+ALTER TABLE public.fanvue_models ADD COLUMN IF NOT EXISTS chatter_needed boolean NOT NULL DEFAULT false;
