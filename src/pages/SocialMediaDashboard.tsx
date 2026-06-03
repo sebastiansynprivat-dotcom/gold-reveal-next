@@ -106,12 +106,12 @@ export default function SocialMediaDashboard() {
       // Reload snapshots
       const { data: snaps } = await supabase
         .from("fanvue_instagram_snapshots" as any)
-        .select("model_id, followers, recorded_at")
+        .select("model_id, followers, recorded_at, instagram_url")
         .order("recorded_at", { ascending: true });
-      const grouped: Record<string, { followers: number; recorded_at: string }[]> = {};
+      const grouped: Record<string, { followers: number; recorded_at: string; instagram_url: string | null }[]> = {};
       (snaps || []).forEach((s: any) => {
         if (!grouped[s.model_id]) grouped[s.model_id] = [];
-        grouped[s.model_id].push({ followers: s.followers, recorded_at: s.recorded_at });
+        grouped[s.model_id].push({ followers: s.followers, recorded_at: s.recorded_at, instagram_url: s.instagram_url ?? null });
       });
       setSnapshots(grouped);
     } catch (e: any) {
