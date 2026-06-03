@@ -86,6 +86,33 @@ export default function SocialMediaDashboard() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [snapshotFor, setSnapshotFor] = useState<SocialMediaModel | null>(null);
   const [snapshotValue, setSnapshotValue] = useState("");
+  const [summaryOpen, setSummaryOpen] = useState(false);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryText, setSummaryText] = useState("");
+
+  const generateSummary = async () => {
+    setSummaryOpen(true);
+    setSummaryLoading(true);
+    setSummaryText("");
+    try {
+      const payload = models
+        .filter((m) => m.notes && m.notes.trim())
+        .map((m) => ({
+          name: m.name,
+          stage: STAGE_OPTIONS.find((s) => s.value === m.stage)?.label ?? m.stage,
+          notes: m.notes,
+        }));
+      const { data, error } = await supabase.functions.invoke("summarize-model-notes", { body: { notes: payload } });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      setSummaryText((data as any)?.summary ?? "");
+    } catch (e: any) {
+      toast.error("AI Zusammenfassung fehlgeschlagen: " + (e?.message ?? "unbekannter Fehler"));
+      setSummaryOpen(false);
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
 
   const load = async () => {
     setLoading(true);
