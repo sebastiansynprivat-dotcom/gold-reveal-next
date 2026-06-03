@@ -138,31 +138,30 @@ Deno.serve(async (req) => {
       continue;
     }
 
-    let total = 0;
-    let got = false;
+    let savedAny = false;
     for (const u of urls) {
       const n = await scrapeOne(u, apiKey);
       if (n !== null) {
-        total += n;
-        got = true;
+        await supabase.from("fanvue_instagram_snapshots").insert({
+          model_id: m.id,
+          instagram_url: u,
+          followers: n,
+        });
+        savedAny = true;
+        results.push({ model_id: m.id, name: m.name, followers: n, urls: 1 });
+      } else {
+        results.push({ model_id: m.id, name: m.name, followers: null, urls: 1 });
       }
     }
-
-    if (got) {
-      await supabase.from("fanvue_instagram_snapshots").insert({
-        model_id: m.id,
-        followers: total,
-      });
-      results.push({ model_id: m.id, name: m.name, followers: total, urls: urls.length });
-    } else {
-      results.push({ model_id: m.id, name: m.name, followers: null, urls: urls.length });
+    if (!savedAny) {
+      // no-op, already pushed null results
     }
   }
 
   return new Response(
     JSON.stringify({
       success: true,
-      scanned: results.length,
+      scanned: (models ?? []).length,
       saved: results.filter((r) => r.followers !== null).length,
       results,
     }),

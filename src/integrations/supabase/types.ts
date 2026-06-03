@@ -878,6 +878,7 @@ export type Database = {
           created_by: string | null
           followers: number
           id: string
+          instagram_url: string | null
           model_id: string
           recorded_at: string
         }
@@ -886,6 +887,7 @@ export type Database = {
           created_by?: string | null
           followers: number
           id?: string
+          instagram_url?: string | null
           model_id: string
           recorded_at?: string
         }
@@ -894,6 +896,7 @@ export type Database = {
           created_by?: string | null
           followers?: number
           id?: string
+          instagram_url?: string | null
           model_id?: string
           recorded_at?: string
         }

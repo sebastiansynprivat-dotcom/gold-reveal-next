@@ -78,7 +78,7 @@ export default function SocialMediaDashboard() {
   const { user } = useAuth();
   const { isSuperAdmin } = useAdminRole();
   const [models, setModels] = useState<SocialMediaModel[]>([]);
-  const [snapshots, setSnapshots] = useState<Record<string, { followers: number; recorded_at: string }[]>>({});
+  const [snapshots, setSnapshots] = useState<Record<string, { followers: number; recorded_at: string; instagram_url: string | null }[]>>({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -106,12 +106,12 @@ export default function SocialMediaDashboard() {
       // Reload snapshots
       const { data: snaps } = await supabase
         .from("fanvue_instagram_snapshots" as any)
-        .select("model_id, followers, recorded_at")
+        .select("model_id, followers, recorded_at, instagram_url")
         .order("recorded_at", { ascending: true });
-      const grouped: Record<string, { followers: number; recorded_at: string }[]> = {};
+      const grouped: Record<string, { followers: number; recorded_at: string; instagram_url: string | null }[]> = {};
       (snaps || []).forEach((s: any) => {
         if (!grouped[s.model_id]) grouped[s.model_id] = [];
-        grouped[s.model_id].push({ followers: s.followers, recorded_at: s.recorded_at });
+        grouped[s.model_id].push({ followers: s.followers, recorded_at: s.recorded_at, instagram_url: s.instagram_url ?? null });
       });
       setSnapshots(grouped);
     } catch (e: any) {
@@ -166,11 +166,11 @@ export default function SocialMediaDashboard() {
     // Load all IG snapshots
     const { data: snaps } = await supabase
       .from("fanvue_instagram_snapshots" as any)
-      .select("model_id, followers, recorded_at")
+      .select("model_id, followers, recorded_at, instagram_url")
       .order("recorded_at", { ascending: true });
-    const grouped: Record<string, { followers: number; recorded_at: string }[]> = {};
+    const grouped: Record<string, { followers: number; recorded_at: string; instagram_url: string | null }[]> = {};
     ((snaps || []) as any[]).forEach((s) => {
-      (grouped[s.model_id] ||= []).push({ followers: s.followers, recorded_at: s.recorded_at });
+      (grouped[s.model_id] ||= []).push({ followers: s.followers, recorded_at: s.recorded_at, instagram_url: s.instagram_url ?? null });
     });
     setSnapshots(grouped);
 
@@ -514,10 +514,36 @@ export default function SocialMediaDashboard() {
                     );
                   })()}
 
-                  <IgGrowthBlock
-                    snaps={snapshots[m.id] || []}
-                    onLog={() => { setSnapshotFor(m); setSnapshotValue(""); }}
-                  />
+                  {(() => {
+                    const igs = (m.instagram_urls?.length ? m.instagram_urls : (m.instagram_url ? [m.instagram_url] : []))
+                      .map((u) => u?.trim()).filter(Boolean);
+                    const all = snapshots[m.id] || [];
+                    const legacy = all.filter((s) => !s.instagram_url);
+                    return (
+                      <div className="space-y-2 border-t border-border/30 pt-3 mt-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5">
+                            <Instagram className="h-3 w-3 text-accent/70" />
+                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">IG Wachstum</span>
+                          </div>
+                          <Button size="sm" variant="ghost" onClick={() => { setSnapshotFor(m); setSnapshotValue(""); }} className="h-6 px-2 text-[10px] text-accent hover:bg-accent/10">
+                            <Plus className="h-3 w-3 mr-1" /> Eintragen
+                          </Button>
+                        </div>
+                        {igs.length === 0 && legacy.length === 0 && (
+                          <p className="text-[11px] text-muted-foreground/70 italic">Noch keine Instagram-Links hinterlegt</p>
+                        )}
+                        {igs.map((u) => {
+                          const snaps = all.filter((s) => s.instagram_url === u);
+                          const merged = snaps.length === 0 && igs.length === 1 ? legacy : snaps;
+                          return <IgGrowthBlock key={u} url={u} snaps={merged} />;
+                        })}
+                        {igs.length === 0 && legacy.length > 0 && (
+                          <IgGrowthBlock url={null} snaps={legacy} />
+                        )}
+                      </div>
+                    );
+                  })()}
 
 
                   {m.marketers.length > 0 && (
@@ -916,14 +942,31 @@ export default function SocialMediaDashboard() {
   );
 }
 
-function IgGrowthBlock({ snaps, onLog }: { snaps: { followers: number; recorded_at: string }[]; onLog: () => void }) {
+function IgGrowthBlock({ url, snaps }: { url: string | null; snaps: { followers: number; recorded_at: string; instagram_url: string | null }[] }) {
   const latest = snaps[snaps.length - 1];
-  const prev = snaps.length >= 2 ? snaps[snaps.length - 2] : null;
-  const first = snaps[0];
-  const delta = latest && prev ? latest.followers - prev.followers : 0;
-  const totalDelta = latest && first && first !== latest ? latest.followers - first.followers : 0;
-  const TrendIcon = delta > 0 ? TrendingUp : delta < 0 ? TrendingDown : Minus;
-  const trendColor = delta > 0 ? "text-emerald-400" : delta < 0 ? "text-red-400" : "text-muted-foreground";
+
+  // 7-day baseline: latest snapshot recorded >=7 days before "latest"
+  const sevenDayBaseline = (() => {
+    if (!latest) return null;
+    const latestT = new Date(latest.recorded_at).getTime();
+    const cutoff = latestT - 7 * 24 * 60 * 60 * 1000;
+    // Walk backwards, pick the closest snapshot on/before cutoff,
+    // or fallback to the oldest snapshot we have if none is old enough.
+    let baseline = null as null | typeof latest;
+    for (let i = snaps.length - 2; i >= 0; i--) {
+      const t = new Date(snaps[i].recorded_at).getTime();
+      if (t <= cutoff) { baseline = snaps[i]; break; }
+    }
+    if (!baseline && snaps.length >= 2) baseline = snaps[0];
+    return baseline;
+  })();
+
+  const delta7 = latest && sevenDayBaseline ? latest.followers - sevenDayBaseline.followers : 0;
+  const pct7 = latest && sevenDayBaseline && sevenDayBaseline.followers > 0
+    ? (delta7 / sevenDayBaseline.followers) * 100
+    : 0;
+  const TrendIcon = delta7 > 0 ? TrendingUp : delta7 < 0 ? TrendingDown : Minus;
+  const trendColor = delta7 > 0 ? "text-emerald-400" : delta7 < 0 ? "text-red-400" : "text-muted-foreground";
 
   // Sparkline
   const w = 100, h = 24;
@@ -939,36 +982,44 @@ function IgGrowthBlock({ snaps, onLog }: { snaps: { followers: number; recorded_
     }).join(" ");
   }
 
+  const handle = url
+    ? url.replace(/^https?:\/\/(www\.)?instagram\.com\//i, "@").replace(/\/$/, "").split("?")[0]
+    : "Legacy";
+
   return (
-    <div className="border-t border-border/30 pt-3 mt-3">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-1.5">
-          <Instagram className="h-3 w-3 text-accent/70" />
-          <span className="text-[10px] uppercase tracking-wider text-muted-foreground">IG Wachstum</span>
-        </div>
-        <Button size="sm" variant="ghost" onClick={onLog} className="h-6 px-2 text-[10px] text-accent hover:bg-accent/10">
-          <Plus className="h-3 w-3 mr-1" /> Eintragen
-        </Button>
+    <div className="rounded-lg border border-border/30 bg-card/30 p-2.5">
+      <div className="flex items-center justify-between mb-1.5">
+        {url ? (
+          <a href={url} target="_blank" rel="noopener noreferrer" className="text-[11px] text-accent/90 hover:underline truncate max-w-[60%]">
+            {handle}
+          </a>
+        ) : (
+          <span className="text-[11px] text-muted-foreground/60 italic">{handle}</span>
+        )}
+        {latest && (
+          <span className="text-xs font-bold text-foreground">
+            {latest.followers.toLocaleString("de-DE")}
+          </span>
+        )}
       </div>
       {!latest ? (
-        <p className="text-[11px] text-muted-foreground/70 italic">Noch keine Follower-Daten</p>
+        <p className="text-[10px] text-muted-foreground/60 italic">Noch keine Daten – beim nächsten Scrape um 00:00 UTC</p>
       ) : (
         <div className="flex items-end justify-between gap-2">
-          <div>
-            <div className="text-lg font-bold text-foreground leading-none">
-              {latest.followers.toLocaleString("de-DE")}
-            </div>
-            <div className={`flex items-center gap-1 text-[11px] mt-1 ${trendColor}`}>
-              <TrendIcon className="h-3 w-3" />
-              {prev ? (
-                <span>{delta > 0 ? "+" : ""}{delta.toLocaleString("de-DE")} vs. letzter</span>
-              ) : (
-                <span className="text-muted-foreground">Erster Eintrag</span>
-              )}
-              {totalDelta !== 0 && snaps.length > 2 && (
-                <span className="text-muted-foreground ml-1">· gesamt {totalDelta > 0 ? "+" : ""}{totalDelta.toLocaleString("de-DE")}</span>
-              )}
-            </div>
+          <div className={`flex items-center gap-1 text-[11px] ${trendColor}`}>
+            <TrendIcon className="h-3 w-3" />
+            {sevenDayBaseline ? (
+              <>
+                <span className="font-semibold">
+                  {delta7 > 0 ? "+" : ""}{delta7.toLocaleString("de-DE")}
+                </span>
+                <span className="text-muted-foreground/80">
+                  ({pct7 > 0 ? "+" : ""}{pct7.toFixed(1)}%) · 7T
+                </span>
+              </>
+            ) : (
+              <span className="text-muted-foreground">Erster Eintrag</span>
+            )}
           </div>
           {path && (
             <svg width={w} height={h} className="shrink-0 overflow-visible">
