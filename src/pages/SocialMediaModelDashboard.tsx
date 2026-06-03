@@ -327,9 +327,24 @@ export default function SocialMediaModelDashboard() {
                                       <div className="flex-1 min-w-0 space-y-1.5">
                                         <div className={`text-sm font-medium ${done ? "line-through text-muted-foreground" : "text-foreground"}`}>
                                           <span className="text-[10px] uppercase tracking-wider mr-2 opacity-70">{t.label}</span>
-                                          {it.title}
+                                          {it.title ? (
+                                            /^https?:\/\//i.test(it.title) ? (
+                                              <a
+                                                href={it.title}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-accent underline break-all"
+                                              >
+                                                {it.title}
+                                              </a>
+                                            ) : (
+                                              <span className="break-all">{it.title}</span>
+                                            )
+                                          ) : (
+                                            <span className="italic text-muted-foreground">Kein Link</span>
+                                          )}
                                         </div>
-                                        {it.notes && <div className="text-[11px] text-muted-foreground">{it.notes}</div>}
+                                        {it.notes && <div className="text-[11px] text-muted-foreground whitespace-pre-wrap">{it.notes}</div>}
                                         <Input
                                           placeholder="Upload-Link (Drive, Notion, ...)"
                                           defaultValue={st?.upload_url || ""}
