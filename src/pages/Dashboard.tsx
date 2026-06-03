@@ -168,6 +168,38 @@ function AnimatedValue({ value, suffix = "€", className }: { value: number; su
   );
 }
 
+function TierLabel({ tier, className }: { tier: { name: string; emoji: string }; className?: string }) {
+  if (tier.name === "Champions League") {
+    return (
+      <span className={`inline-flex items-center gap-1.5 ${className ?? ""}`}>
+        <motion.span
+          initial={{ rotate: -8, scale: 0.9 }}
+          animate={{
+            rotate: [-8, 8, -8],
+            scale: [1, 1.12, 1],
+            filter: [
+              "drop-shadow(0 0 6px hsl(43 76% 56% / 0.6))",
+              "drop-shadow(0 0 14px hsl(43 76% 56% / 0.95))",
+              "drop-shadow(0 0 6px hsl(43 76% 56% / 0.6))",
+            ],
+          }}
+          transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+          className="inline-flex"
+        >
+          <Trophy className="h-[1.05em] w-[1.05em] text-[hsl(43_90%_58%)] fill-[hsl(43_90%_58%)]" />
+        </motion.span>
+        <span className="text-gold-gradient-shimmer is-animated">{tier.name}</span>
+      </span>
+    );
+  }
+  return (
+    <span className={className}>
+      {tier.emoji} {tier.name}
+    </span>
+  );
+}
+
+
 function AnimatedDecimalValue({
   value,
   suffix = "€",
