@@ -401,15 +401,16 @@ export default function SocialMediaContentPlans() {
                                 <t.icon className="h-3.5 w-3.5 mt-1.5 shrink-0" />
                                 <div className="flex-1 space-y-1">
                                   <Input
+                                    type="url"
                                     value={it.title}
                                     onChange={(e) => updateItem(d, idx, { title: e.target.value })}
-                                    placeholder={`${t.label} Titel / Idee`}
+                                    placeholder={`${t.label} Link (z.B. Reel/Reference URL)`}
                                     className="h-7 text-xs bg-background/40"
                                   />
                                   <Input
                                     value={it.notes || ""}
                                     onChange={(e) => updateItem(d, idx, { notes: e.target.value })}
-                                    placeholder="Notizen (optional)"
+                                    placeholder="Beschreibung (optional)"
                                     className="h-7 text-xs bg-background/40"
                                   />
                                 </div>
