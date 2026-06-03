@@ -56,3 +56,7 @@ verify_jwt = false
 
 [functions.create-fanvue-model-login]
 verify_jwt = false
+
+[functions.scrape-instagram-followers]
+verify_jwt = false
+
