@@ -30,6 +30,7 @@ const AdminModelView = lazy(() => import("./pages/AdminModelView"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const FanvueLogin = lazy(() => import("./pages/FanvueLogin"));
 const FanvueDashboard = lazy(() => import("./pages/FanvueDashboard"));
+const SocialMediaRegister = lazy(() => import("./pages/SocialMediaRegister"));
 const ChatBreakdown = lazy(() => import("./pages/ChatBreakdown"));
 const CoachingBasics = lazy(() => import("./pages/CoachingBasics"));
 const SalesScripts = lazy(() => import("./pages/SalesScripts"));
@@ -170,6 +171,7 @@ const App = () => (
               <Route path="/model/login" element={<ModelLogin />} />
               <Route path="/model" element={<ModelProtectedRoute><ModelDashboard /></ModelProtectedRoute>} />
               <Route path="/socialmedia/login" element={<FanvueLogin />} />
+              <Route path="/socialmedia/register" element={<SocialMediaRegister />} />
               <Route path="/socialmedia/admin" element={<FanvueProtectedRoute><FanvueDashboard /></FanvueProtectedRoute>} />
               {/* Legacy /fanvue → /socialmedia redirects */}
               <Route path="/fanvue/login" element={<Navigate to="/socialmedia/login" replace />} />
