@@ -341,18 +341,25 @@ export default function SocialMediaDashboard() {
   const removeInstagram = (i: number) =>
     setForm((f) => ({ ...f, instagram_urls: f.instagram_urls.filter((_, idx) => idx !== i) }));
 
-  const filtered = models.filter((m) =>
-    !search ||
-    m.name.toLowerCase().includes(search.toLowerCase()) ||
-    m.username.toLowerCase().includes(search.toLowerCase()) ||
-    m.chatter_name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = models.filter((m) => {
+    if (archiveFilter === "active" && m.archived_at) return false;
+    if (archiveFilter === "archived" && !m.archived_at) return false;
+    if (!search) return true;
+    const q = search.toLowerCase();
+    return (
+      m.name.toLowerCase().includes(q) ||
+      m.username.toLowerCase().includes(q) ||
+      m.chatter_name.toLowerCase().includes(q)
+    );
+  });
 
+  const activeModels = models.filter((m) => !m.archived_at);
+  const archivedCount = models.length - activeModels.length;
   const stats = {
-    total: models.length,
-    setup: models.filter((m) => m.account_setup).length,
-    chatters: models.filter((m) => m.chatter_assigned).length,
-    needed: models.filter((m) => m.chatter_needed && !m.chatter_assigned).length,
+    total: activeModels.length,
+    setup: activeModels.filter((m) => m.account_setup).length,
+    chatters: activeModels.filter((m) => m.chatter_assigned).length,
+    needed: activeModels.filter((m) => m.chatter_needed && !m.chatter_assigned).length,
   };
 
   return (
