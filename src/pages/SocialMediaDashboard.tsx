@@ -78,7 +78,7 @@ export default function SocialMediaDashboard() {
   const { user } = useAuth();
   const { isSuperAdmin } = useAdminRole();
   const [models, setModels] = useState<SocialMediaModel[]>([]);
-  const [snapshots, setSnapshots] = useState<Record<string, { followers: number; recorded_at: string }[]>>({});
+  const [snapshots, setSnapshots] = useState<Record<string, { followers: number; recorded_at: string; instagram_url: string | null }[]>>({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
