@@ -6202,13 +6202,22 @@ export default function AdminDashboard() {
                                     )}
 
                                     {/* Description with Header */}
+                                    {(() => {
+                                      const isModelEn = String(req._model?.model_language || req.model_language || "de").toLowerCase().startsWith("en");
+                                      const headerText = isModelEn
+                                        ? "Hey, here's a new request from the chatter – passing it on to you one-to-one 🙋🏼‍♂️:"
+                                        : "Hey, eine neue Anfrage des Chatters an dich – ich leite sie dir einmal eins zu eins weiter 🙋🏼‍♂️:";
+                                      const priceLabel = isModelEn
+                                        ? "The price the customer is willing to pay:"
+                                        : "Der Preis, den der Kunde bereit wäre zu bezahlen:";
+                                      return (
                                     <button
                                       onClick={() => {
                                         const priceLine =
                                           req.request_type === "individual" && req.price != null
-                                            ? `\n\nDer Preis, den der Kunde bereit wäre zu bezahlen: ${req.price}€`
+                                            ? `\n\n${priceLabel} ${req.price}€`
                                             : "";
-                                        const fullText = `Hey, eine neue Anfrage des Chatters an dich – ich leite sie dir einmal eins zu eins weiter 🙋🏼‍♂️:\n\n${cleanDescription}${priceLine}`;
+                                        const fullText = `${headerText}\n\n${cleanDescription}${priceLine}`;
                                         navigator.clipboard.writeText(fullText);
                                         const encoded = encodeURIComponent(fullText);
                                         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
@@ -6235,18 +6244,19 @@ export default function AdminDashboard() {
                                       className="glass-card-subtle rounded-lg px-3 py-2.5 text-sm text-foreground/90 leading-relaxed hover:bg-accent/5 transition-colors text-left w-full group"
                                     >
                                       <p className="text-xs text-muted-foreground italic mb-1.5">
-                                        Hey, eine neue Anfrage des Chatters an dich – ich leite sie dir einmal eins zu
-                                        eins weiter 🙋🏼‍♂️:
+                                        {headerText}
                                       </p>
                                       <p className="font-bold whitespace-pre-wrap">{cleanDescription}</p>
                                       {req.request_type === "individual" && req.price != null && (
                                         <p className="text-xs text-muted-foreground mt-1.5">
-                                          Der Preis, den der Kunde bereit wäre zu bezahlen:{" "}
+                                          {priceLabel}{" "}
                                           <span className="text-foreground font-medium">{req.price}€</span>
                                         </p>
                                       )}
                                       <Copy className="h-3 w-3 inline-block ml-1.5 opacity-0 group-hover:opacity-40 transition-opacity" />
                                     </button>
+                                      );
+                                    })()}
 
                                     {/* Translation buttons */}
                                     <div className="flex gap-2 flex-wrap">
@@ -6277,11 +6287,18 @@ export default function AdminDashboard() {
                                                 );
                                                 return;
                                               }
+                                              const isModelEn = String(req._model?.model_language || req.model_language || "de").toLowerCase().startsWith("en");
+                                              const srcHeader = isModelEn
+                                                ? "Hey, here's a new request from the chatter – passing it on to you one-to-one 🙋🏼‍♂️:"
+                                                : "Hey, eine neue Anfrage des Chatters an dich – ich leite sie dir einmal eins zu eins weiter 🙋🏼‍♂️:";
+                                              const srcPriceLabel = isModelEn
+                                                ? "The price the customer is willing to pay:"
+                                                : "Der Preis, den der Kunde bereit wäre zu bezahlen:";
                                               const priceLine =
                                                 req.request_type === "individual" && req.price != null
-                                                  ? `\n\nDer Preis, den der Kunde bereit wäre zu bezahlen: ${req.price}€`
+                                                  ? `\n\n${srcPriceLabel} ${req.price}€`
                                                   : "";
-                                              const fullSource = `Hey, eine neue Anfrage des Chatters an dich – ich leite sie dir einmal eins zu eins weiter 🙋🏼‍♂️:\n\n${cleanDescription}${priceLine}`;
+                                              const fullSource = `${srcHeader}\n\n${cleanDescription}${priceLine}`;
                                               setModelRequests((prev) =>
                                                 prev.map((r) =>
                                                   r.id === req.id ? { ...r, _translating: target } : r,
