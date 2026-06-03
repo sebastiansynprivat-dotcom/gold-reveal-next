@@ -505,7 +505,7 @@ export default function SocialMediaDashboard() {
 
             <div>
               <Label className="text-xs">Stage</Label>
-              <Select value={form.stage} onValueChange={(v) => setForm({ ...form, stage: v as ModelStage })}>
+              <Select value={form.stage} onValueChange={(v) => setForm({ ...form, stage: v as ModelStage, chatter_needed: v === "ready" && !form.chatter_assigned ? true : form.chatter_needed })}>
                 <SelectTrigger className="bg-background/40">
                   <SelectValue placeholder="Stage wählen" />
                 </SelectTrigger>
