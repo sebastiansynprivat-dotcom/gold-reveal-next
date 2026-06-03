@@ -131,6 +131,7 @@ export default function SocialMediaDashboard() {
         instagram_urls: Array.isArray(m.instagram_urls) ? m.instagram_urls : [],
         linktree_url: m.linktree_url ?? "",
         stage: (m.stage as ModelStage) ?? "onboarding",
+        chatter_needed: !!m.chatter_needed,
       })));
     }
     // Load all IG snapshots
