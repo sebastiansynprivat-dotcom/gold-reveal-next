@@ -28,8 +28,8 @@ const ModelLogin = lazy(() => import("./pages/ModelLogin"));
 const ModelDashboard = lazy(() => import("./pages/ModelDashboard"));
 const AdminModelView = lazy(() => import("./pages/AdminModelView"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
-const FanvueLogin = lazy(() => import("./pages/FanvueLogin"));
-const FanvueDashboard = lazy(() => import("./pages/FanvueDashboard"));
+const SocialMediaLogin = lazy(() => import("./pages/SocialMediaLogin"));
+const SocialMediaDashboard = lazy(() => import("./pages/SocialMediaDashboard"));
 const SocialMediaRegister = lazy(() => import("./pages/SocialMediaRegister"));
 const ChatBreakdown = lazy(() => import("./pages/ChatBreakdown"));
 const CoachingBasics = lazy(() => import("./pages/CoachingBasics"));
@@ -115,7 +115,7 @@ const ModelProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-const FanvueProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+const SocialMediaProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
 
@@ -170,9 +170,9 @@ const App = () => (
               <Route path="/rechnung" element={<ProtectedRoute><Invoice /></ProtectedRoute>} />
               <Route path="/model/login" element={<ModelLogin />} />
               <Route path="/model" element={<ModelProtectedRoute><ModelDashboard /></ModelProtectedRoute>} />
-              <Route path="/socialmedia/login" element={<FanvueLogin />} />
+              <Route path="/socialmedia/login" element={<SocialMediaLogin />} />
               <Route path="/socialmedia/register" element={<SocialMediaRegister />} />
-              <Route path="/socialmedia/admin" element={<FanvueProtectedRoute><FanvueDashboard /></FanvueProtectedRoute>} />
+              <Route path="/socialmedia/admin" element={<SocialMediaProtectedRoute><SocialMediaDashboard /></SocialMediaProtectedRoute>} />
               {/* Legacy /fanvue → /socialmedia redirects */}
               <Route path="/fanvue/login" element={<Navigate to="/socialmedia/login" replace />} />
               <Route path="/fanvue" element={<Navigate to="/socialmedia/admin" replace />} />

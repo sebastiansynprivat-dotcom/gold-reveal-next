@@ -3,8 +3,8 @@ import { useLocation } from "react-router-dom";
 import { useUILanguage } from "@/hooks/useUILanguage";
 import { startAutoTranslate, stopAutoTranslate } from "@/lib/autoTranslate";
 
-// Model and Fanvue dashboards have their own explicit language handling.
-const SKIP_PREFIXES = ["/model", "/fanvue", "/socialmedia"];
+// Model and Social Media dashboards have their own explicit language handling.
+const SKIP_PREFIXES = ["/model", "/socialmedia"];
 
 const AutoTranslator = () => {
   const { lang } = useUILanguage();
