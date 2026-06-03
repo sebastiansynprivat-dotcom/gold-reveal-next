@@ -144,6 +144,9 @@ export default function FanvueLogin() {
           <button type="button" onClick={() => setShowForgot(true)} className="w-full text-center text-xs text-primary hover:text-primary/80 transition-colors underline underline-offset-2">
             Passwort vergessen?
           </button>
+          <a href="/socialmedia/register" className="block text-center text-xs text-muted-foreground hover:text-primary transition-colors">
+            Noch keinen Account? <span className="underline underline-offset-2">Registrieren</span>
+          </a>
         </form>
         <ForgotPasswordDialog open={showForgot} onClose={() => setShowForgot(false)} defaultEmail={email} />
       </motion.div>
