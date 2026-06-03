@@ -330,6 +330,21 @@ export default function SocialMediaDashboard() {
     }
   };
 
+  const archiveChatter = async (m: SocialMediaModel) => {
+    if (!m.chatter_name) return;
+    // Clearing chatter_name triggers the DB trigger which closes the open assignment.
+    const { error } = await supabase
+      .from("fanvue_models" as any)
+      .update({ chatter_name: "", chatter_assigned: false })
+      .eq("id", m.id);
+    if (error) {
+      toast.error("Chatter archivieren fehlgeschlagen");
+    } else {
+      toast.success(`${m.chatter_name} archiviert`);
+      load();
+    }
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/socialmedia/login");
