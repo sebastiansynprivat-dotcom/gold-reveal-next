@@ -167,6 +167,7 @@ export default function ModelGroupsPanel({
       setFetchAllProgress({ done: i + 1, total: targets.length });
     }
     setFetchAllProgress(null);
+    await loadRevenueForPeriod();
     if (allErrors.length > 0) {
       toast.error(`Fetch abgeschlossen — ${successCount}/${targets.length} ok, ${allErrors.length} Fehler`, {
         description: allErrors.map((e) => `${e.model}${e.platform ? ` (${e.platform})` : ""}: ${e.message ?? "Unbekannter Fehler"}`).join("\n"),
