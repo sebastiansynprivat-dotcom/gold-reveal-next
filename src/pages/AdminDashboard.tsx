@@ -6119,6 +6119,49 @@ export default function AdminDashboard() {
                                       <Copy className="h-3 w-3 opacity-0 group-hover:opacity-50 transition-opacity ml-auto shrink-0" />
                                     </button>
 
+                                    {/* Resolved model identity (username / account email) for disambiguation */}
+                                    {(req._model?.name ||
+                                      req._model?.username ||
+                                      req._modelAccountEmail) && (
+                                      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 -mt-1 text-[11px] text-muted-foreground">
+                                        {req._model?.name &&
+                                          String(req._model.name).toLowerCase() !==
+                                            String(req.model_name || "").toLowerCase() && (
+                                            <span className="text-foreground/80 font-medium">
+                                              ↳ {req._model.name}
+                                            </span>
+                                          )}
+                                        {req._model?.username && (
+                                          <button
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              navigator.clipboard.writeText(req._model.username);
+                                              toast.success("Username kopiert");
+                                            }}
+                                            className="hover:text-accent transition-colors"
+                                            title="Username kopieren"
+                                          >
+                                            @{req._model.username}
+                                          </button>
+                                        )}
+                                        {req._modelAccountEmail && (
+                                          <button
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              navigator.clipboard.writeText(req._modelAccountEmail);
+                                              toast.success("Account-E-Mail kopiert");
+                                            }}
+                                            className="hover:text-accent transition-colors truncate max-w-full"
+                                            title="Account-E-Mail kopieren"
+                                          >
+                                            {req._modelAccountEmail}
+                                          </button>
+                                        )}
+                                      </div>
+                                    )}
+
                                     {/* Customer Name */}
                                     {(req as any).customer_name && (
                                       <button
