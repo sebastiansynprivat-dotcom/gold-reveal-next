@@ -303,6 +303,20 @@ export default function SocialMediaDashboard() {
     setDeleteId(null);
   };
 
+  const handleArchive = async (m: SocialMediaModel) => {
+    const isArchived = !!m.archived_at;
+    const { error } = await supabase
+      .from("fanvue_models" as any)
+      .update({ archived_at: isArchived ? null : new Date().toISOString() })
+      .eq("id", m.id);
+    if (error) {
+      toast.error((isArchived ? "Wiederherstellen" : "Archivieren") + " fehlgeschlagen");
+    } else {
+      toast.success(isArchived ? "Model wiederhergestellt" : "Model archiviert");
+      load();
+    }
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/socialmedia/login");
