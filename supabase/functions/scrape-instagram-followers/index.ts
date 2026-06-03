@@ -89,17 +89,60 @@ async function firecrawlScrape(url: string, apiKey: string, useStealth: boolean)
   return res;
 }
 
+// Instagram serves an OG meta description like
+//   "1,234 Followers, 567 Following, 89 Posts - See Instagram photos and videos from..."
+// to crawler user-agents. We try a few common bot UAs directly first.
+const CRAWLER_UAS = [
+  "Mozilla/5.0 (compatible; facebookexternalhit/1.1; +http://www.facebook.com/externalhit_uatext.php)",
+  "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+  "Mozilla/5.0 (compatible; Twitterbot/1.0)",
+];
+
+async function scrapeDirect(url: string): Promise<number | null> {
+  for (const ua of CRAWLER_UAS) {
+    try {
+      const res = await fetch(url, {
+        headers: {
+          "User-Agent": ua,
+          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          "Accept-Language": "en-US,en;q=0.9",
+        },
+        redirect: "follow",
+      });
+      if (!res.ok) {
+        console.warn("[scrape-ig] direct fetch status", url, ua.slice(0, 30), res.status);
+        continue;
+      }
+      const html = await res.text();
+      // Pull og:description / meta description
+      const metaMatch =
+        html.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)["']/i) ||
+        html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)["']/i);
+      const desc = metaMatch ? metaMatch[1] : "";
+      const parsed = parseFollowers(desc) ?? parseFollowers(html);
+      if (parsed !== null) return parsed;
+      console.warn("[scrape-ig] direct no parse", url, ua.slice(0, 30), "desc:", desc.slice(0, 120));
+    } catch (e) {
+      console.warn("[scrape-ig] direct exception", url, (e as Error).message);
+    }
+  }
+  return null;
+}
+
 async function scrapeOne(url: string, apiKey: string): Promise<number | null> {
+  // 1) Try direct fetch with crawler UAs (free, fast, works for most public IG profiles)
+  const direct = await scrapeDirect(url);
+  if (direct !== null) return direct;
+
+  // 2) Fallback to Firecrawl (likely returns 403 "not supported" for IG, but kept as best-effort)
   try {
-    // First try without stealth (cheaper). On 403/blocked, retry with stealth proxy.
     let res = await firecrawlScrape(url, apiKey, false);
     if (res.status === 403 || res.status === 401 || res.status === 429) {
-      console.log("[scrape-ig] retrying with stealth proxy", url, res.status);
       res = await firecrawlScrape(url, apiKey, true);
     }
     if (!res.ok) {
       const body = await res.text().catch(() => "");
-      console.warn("[scrape-ig] firecrawl error", url, res.status, body.slice(0, 200));
+      console.warn("[scrape-ig] firecrawl error", url, res.status, body.slice(0, 160));
       return null;
     }
     const json = await res.json();
@@ -108,16 +151,13 @@ async function scrapeOne(url: string, apiKey: string): Promise<number | null> {
     const desc: string = json?.data?.metadata?.description ?? json?.metadata?.description ?? "";
     const ogDesc: string = json?.data?.metadata?.ogDescription ?? json?.metadata?.ogDescription ?? "";
     const title: string = json?.data?.metadata?.title ?? json?.metadata?.title ?? "";
-    const parsed =
+    return (
       parseFollowers(desc) ??
       parseFollowers(ogDesc) ??
       parseFollowers(title) ??
       parseFollowers(md) ??
-      parseFollowers(html);
-    if (parsed === null) {
-      console.warn("[scrape-ig] no follower count parsed", url, "desc:", desc.slice(0, 120));
-    }
-    return parsed;
+      parseFollowers(html)
+    );
   } catch (e) {
     console.warn("[scrape-ig] exception", url, (e as Error).message);
     return null;
