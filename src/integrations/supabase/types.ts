@@ -761,6 +761,7 @@ export type Database = {
           account_setup: boolean
           chatter_assigned: boolean
           chatter_name: string
+          chatter_needed: boolean
           created_at: string
           created_by: string | null
           id: string
@@ -784,6 +785,7 @@ export type Database = {
           account_setup?: boolean
           chatter_assigned?: boolean
           chatter_name?: string
+          chatter_needed?: boolean
           created_at?: string
           created_by?: string | null
           id?: string
@@ -807,6 +809,7 @@ export type Database = {
           account_setup?: boolean
           chatter_assigned?: boolean
           chatter_name?: string
+          chatter_needed?: boolean
           created_at?: string
           created_by?: string | null
           id?: string

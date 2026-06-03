@@ -34,6 +34,7 @@ type SocialMediaModel = {
   name: string;
   username: string;
   account_setup: boolean;
+  chatter_needed: boolean;
   chatter_assigned: boolean;
   chatter_name: string;
   social_linked: boolean;
@@ -55,6 +56,7 @@ const emptyModel: Omit<SocialMediaModel, "id" | "created_at"> = {
   name: "",
   username: "",
   account_setup: false,
+  chatter_needed: false,
   chatter_assigned: false,
   chatter_name: "",
   social_linked: false,
@@ -129,6 +131,7 @@ export default function SocialMediaDashboard() {
         instagram_urls: Array.isArray(m.instagram_urls) ? m.instagram_urls : [],
         linktree_url: m.linktree_url ?? "",
         stage: (m.stage as ModelStage) ?? "onboarding",
+        chatter_needed: !!m.chatter_needed,
       })));
     }
     // Load all IG snapshots
@@ -250,7 +253,7 @@ export default function SocialMediaDashboard() {
     total: models.length,
     setup: models.filter((m) => m.account_setup).length,
     chatters: models.filter((m) => m.chatter_assigned).length,
-    social: models.filter((m) => m.social_linked).length,
+    needed: models.filter((m) => m.chatter_needed && !m.chatter_assigned).length,
   };
 
   return (
@@ -300,7 +303,7 @@ export default function SocialMediaDashboard() {
             { label: "Models gesamt", value: stats.total, icon: Users },
             { label: "Account eingerichtet", value: stats.setup, icon: CheckCircle2 },
             { label: "Mit Chatter", value: stats.chatters, icon: MessageCircle },
-            { label: "Social verlinkt", value: stats.social, icon: Instagram },
+            { label: "Chatter benötigt", value: stats.needed, icon: MessageCircle },
           ].map(({ label, value, icon: Icon }) => (
             <motion.div
               key={label}
@@ -395,9 +398,14 @@ export default function SocialMediaDashboard() {
                   })()}
 
                   <div className="space-y-1.5 mb-3">
+                    {m.chatter_needed && !m.chatter_assigned && (
+                      <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg border border-red-500/50 bg-red-500/15 text-red-300 animate-pulse">
+                        <MessageCircle className="h-3.5 w-3.5" />
+                        <span className="text-xs font-semibold uppercase tracking-wider">Chatter benötigt!</span>
+                      </div>
+                    )}
                     <StatusRow icon={CheckCircle2} label="Account" active={m.account_setup} />
-                    <StatusRow icon={MessageCircle} label="Chatter" active={m.chatter_assigned} extra={m.chatter_name} />
-                    <StatusRow icon={Instagram} label="Social Media" active={m.social_linked} />
+                    <StatusRow icon={MessageCircle} label="Chatter zugeteilt" active={m.chatter_assigned} extra={m.chatter_name} />
                   </div>
 
                   {(() => {
@@ -497,7 +505,7 @@ export default function SocialMediaDashboard() {
 
             <div>
               <Label className="text-xs">Stage</Label>
-              <Select value={form.stage} onValueChange={(v) => setForm({ ...form, stage: v as ModelStage })}>
+              <Select value={form.stage} onValueChange={(v) => setForm({ ...form, stage: v as ModelStage, chatter_needed: v === "ready" && !form.chatter_assigned ? true : form.chatter_needed })}>
                 <SelectTrigger className="bg-background/40">
                   <SelectValue placeholder="Stage wählen" />
                 </SelectTrigger>
@@ -514,7 +522,8 @@ export default function SocialMediaDashboard() {
             <div className="rounded-xl border border-border/40 p-3 sm:p-4 space-y-3 bg-secondary/20">
               <h4 className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Status</h4>
               <ToggleRow label="Account eingerichtet" checked={form.account_setup} onChange={(v) => setForm({ ...form, account_setup: v })} />
-              <ToggleRow label="Chatter zugewiesen" checked={form.chatter_assigned} onChange={(v) => setForm({ ...form, chatter_assigned: v })} />
+              <ToggleRow label="Chatter benötigt" checked={form.chatter_needed} onChange={(v) => setForm({ ...form, chatter_needed: v })} />
+              <ToggleRow label="Chatter zugeteilt" checked={form.chatter_assigned} onChange={(v) => setForm({ ...form, chatter_assigned: v, chatter_needed: v ? false : form.chatter_needed })} />
               {form.chatter_assigned && (
                 <Input
                   value={form.chatter_name}
@@ -523,7 +532,6 @@ export default function SocialMediaDashboard() {
                   className="text-sm"
                 />
               )}
-              <ToggleRow label="Social Media verlinkt" checked={form.social_linked} onChange={(v) => setForm({ ...form, social_linked: v })} />
             </div>
 
             {/* Social Links (Instagram only, dynamic) */}
