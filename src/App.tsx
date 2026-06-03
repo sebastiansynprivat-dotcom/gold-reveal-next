@@ -136,8 +136,8 @@ const FanvueProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  if (!user) return <Navigate to="/fanvue/login" replace />;
-  if (hasAccess === false) return <Navigate to="/fanvue/login" replace />;
+  if (!user) return <Navigate to="/socialmedia/login" replace />;
+  if (hasAccess === false) return <Navigate to="/socialmedia/login" replace />;
 
   return <>{children}</>;
 };
