@@ -476,6 +476,21 @@ export default function SocialMediaDashboard() {
               </div>
             </div>
 
+            <div>
+              <Label className="text-xs">Stage</Label>
+              <Select value={form.stage} onValueChange={(v) => setForm({ ...form, stage: v as ModelStage })}>
+                <SelectTrigger className="bg-background/40">
+                  <SelectValue placeholder="Stage wählen" />
+                </SelectTrigger>
+                <SelectContent>
+                  {STAGE_OPTIONS.map((s) => (
+                    <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+
             {/* Status Toggles */}
             <div className="rounded-xl border border-border/40 p-3 sm:p-4 space-y-3 bg-secondary/20">
               <h4 className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Status</h4>
