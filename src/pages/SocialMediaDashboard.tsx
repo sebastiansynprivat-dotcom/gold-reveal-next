@@ -426,20 +426,39 @@ export default function SocialMediaDashboard() {
                         <UserCheck className="h-3 w-3 text-accent/70" />
                         <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Marketer ({m.marketers.length})</span>
                       </div>
-                      <div className="space-y-1">
+                      <div className="space-y-1.5">
                         {m.marketers.map((mk, i) => (
-                          <div key={i} className="flex items-center justify-between text-xs">
-                            <span className="text-foreground truncate">{mk.name || "—"}</span>
-                            {mk.instagram && (
-                              <a
-                                href={mk.instagram.startsWith("http") ? mk.instagram : `https://instagram.com/${mk.instagram.replace("@", "")}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-accent hover:underline flex items-center gap-1 shrink-0 ml-2"
-                              >
-                                <Instagram className="h-3 w-3" />
-                                <span className="truncate max-w-[100px]">{mk.instagram.replace(/^https?:\/\/(www\.)?instagram\.com\//, "@").replace(/\/$/, "")}</span>
-                              </a>
+                          <div key={i} className="flex flex-col gap-0.5 text-xs">
+                            <div className="flex items-center justify-between">
+                              <span className="text-foreground truncate">{mk.name || "—"}</span>
+                              {mk.instagram && (
+                                <a
+                                  href={mk.instagram.startsWith("http") ? mk.instagram : `https://instagram.com/${mk.instagram.replace("@", "")}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-accent hover:underline flex items-center gap-1 shrink-0 ml-2"
+                                >
+                                  <Instagram className="h-3 w-3" />
+                                  <span className="truncate max-w-[100px]">{mk.instagram.replace(/^https?:\/\/(www\.)?instagram\.com\//, "@").replace(/\/$/, "")}</span>
+                                </a>
+                              )}
+                            </div>
+                            {(mk.tracking_link || mk.tracking_name) && (
+                              <div className="flex items-center gap-1 text-[10px] text-muted-foreground/80">
+                                <Link2 className="h-2.5 w-2.5 shrink-0" />
+                                {mk.tracking_link ? (
+                                  <a
+                                    href={mk.tracking_link.startsWith("http") ? mk.tracking_link : `https://${mk.tracking_link}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-accent/80 hover:underline truncate max-w-[180px]"
+                                  >
+                                    {mk.tracking_name || mk.tracking_link}
+                                  </a>
+                                ) : (
+                                  <span className="truncate">{mk.tracking_name}</span>
+                                )}
+                              </div>
                             )}
                           </div>
                         ))}
