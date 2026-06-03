@@ -490,7 +490,7 @@ export default function SocialMediaDashboard() {
                 <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Anzeigename" />
               </div>
               <div>
-                <Label className="text-xs">Fanvue Username</Label>
+                <Label className="text-xs">Plattform Username</Label>
                 <Input value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} placeholder="username" />
               </div>
             </div>
