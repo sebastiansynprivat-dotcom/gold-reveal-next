@@ -9076,6 +9076,8 @@ export default function AdminDashboard() {
                   </section>
                 </div>
               )}
+
+              {activeTab === "deleted" && <DeletedRecordsTab />}
             </motion.div>
           </AnimatePresence>
         </main>
