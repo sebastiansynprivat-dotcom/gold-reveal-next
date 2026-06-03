@@ -522,7 +522,8 @@ export default function SocialMediaDashboard() {
             <div className="rounded-xl border border-border/40 p-3 sm:p-4 space-y-3 bg-secondary/20">
               <h4 className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Status</h4>
               <ToggleRow label="Account eingerichtet" checked={form.account_setup} onChange={(v) => setForm({ ...form, account_setup: v })} />
-              <ToggleRow label="Chatter zugewiesen" checked={form.chatter_assigned} onChange={(v) => setForm({ ...form, chatter_assigned: v })} />
+              <ToggleRow label="Chatter benötigt" checked={form.chatter_needed} onChange={(v) => setForm({ ...form, chatter_needed: v })} />
+              <ToggleRow label="Chatter zugeteilt" checked={form.chatter_assigned} onChange={(v) => setForm({ ...form, chatter_assigned: v, chatter_needed: v ? false : form.chatter_needed })} />
               {form.chatter_assigned && (
                 <Input
                   value={form.chatter_name}
@@ -531,7 +532,6 @@ export default function SocialMediaDashboard() {
                   className="text-sm"
                 />
               )}
-              <ToggleRow label="Social Media verlinkt" checked={form.social_linked} onChange={(v) => setForm({ ...form, social_linked: v })} />
             </div>
 
             {/* Social Links (Instagram only, dynamic) */}
