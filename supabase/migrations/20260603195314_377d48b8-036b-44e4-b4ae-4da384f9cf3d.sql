@@ -1,0 +1,1 @@
+ALTER TABLE public.fanvue_models ADD COLUMN IF NOT EXISTS instagram_urls jsonb NOT NULL DEFAULT '[]'::jsonb; ALTER TABLE public.fanvue_models ADD COLUMN IF NOT EXISTS linktree_url text;
