@@ -603,6 +603,44 @@ export default function SocialMediaDashboard() {
                     </div>
                   )}
 
+                  {m.platform_logins?.length > 0 && (
+                    <div className="border-t border-border/30 pt-3 mt-3">
+                      <div className="flex items-center gap-1.5 mb-2">
+                        <KeyRound className="h-3 w-3 text-accent/70" />
+                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Plattform Logins ({m.platform_logins.length})</span>
+                      </div>
+                      <div className="space-y-1.5">
+                        {m.platform_logins.map((lg, i) => (
+                          <div key={i} className="rounded-md border border-border/30 bg-background/40 p-2 text-xs space-y-1">
+                            <div className="font-semibold text-foreground/90 truncate">{lg.platform || "—"}</div>
+                            {lg.email && (
+                              <button
+                                type="button"
+                                onClick={() => { navigator.clipboard.writeText(lg.email); toast.success("E-Mail kopiert"); }}
+                                className="w-full flex items-center justify-between gap-2 text-[11px] text-muted-foreground hover:text-accent transition-colors group/copy"
+                              >
+                                <span className="truncate">{lg.email}</span>
+                                <Copy className="h-3 w-3 opacity-0 group-hover/copy:opacity-100 shrink-0" />
+                              </button>
+                            )}
+                            {lg.password && (
+                              <button
+                                type="button"
+                                onClick={() => { navigator.clipboard.writeText(lg.password); toast.success("Passwort kopiert"); }}
+                                className="w-full flex items-center justify-between gap-2 text-[11px] text-muted-foreground hover:text-accent transition-colors group/copy font-mono"
+                              >
+                                <span className="truncate">{lg.password}</span>
+                                <Copy className="h-3 w-3 opacity-0 group-hover/copy:opacity-100 shrink-0" />
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+
+
                   {/* Login section */}
                   <div className="border-t border-border/30 pt-3 mt-3">
                     <div className="flex items-center gap-1.5 mb-2">
