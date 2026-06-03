@@ -398,9 +398,14 @@ export default function SocialMediaDashboard() {
                   })()}
 
                   <div className="space-y-1.5 mb-3">
+                    {m.chatter_needed && !m.chatter_assigned && (
+                      <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg border border-red-500/50 bg-red-500/15 text-red-300 animate-pulse">
+                        <MessageCircle className="h-3.5 w-3.5" />
+                        <span className="text-xs font-semibold uppercase tracking-wider">Chatter benötigt!</span>
+                      </div>
+                    )}
                     <StatusRow icon={CheckCircle2} label="Account" active={m.account_setup} />
-                    <StatusRow icon={MessageCircle} label="Chatter" active={m.chatter_assigned} extra={m.chatter_name} />
-                    <StatusRow icon={Instagram} label="Social Media" active={m.social_linked} />
+                    <StatusRow icon={MessageCircle} label="Chatter zugeteilt" active={m.chatter_assigned} extra={m.chatter_name} />
                   </div>
 
                   {(() => {
