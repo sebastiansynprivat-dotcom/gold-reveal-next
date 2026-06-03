@@ -395,6 +395,16 @@ export default function SocialMediaDashboard() {
           >
             <Sparkles className="h-4 w-4 mr-1.5" /> AI Summary
           </Button>
+          <Button
+            onClick={runScrape}
+            disabled={scraping}
+            variant="outline"
+            className="shrink-0 border-accent/40 bg-accent/5 text-accent hover:bg-accent/15 hover:border-accent/60"
+            title="Aktuelle Instagram-Followerzahlen jetzt scrapen"
+          >
+            <RefreshCw className={`h-4 w-4 mr-1.5 ${scraping ? "animate-spin" : ""}`} />
+            {scraping ? "Scrape läuft…" : "IG Scrape"}
+          </Button>
           <Button onClick={openCreate} className="bg-accent text-accent-foreground hover:bg-accent/90 shrink-0">
             <Plus className="h-4 w-4 mr-1.5" /> Neues Model
           </Button>
