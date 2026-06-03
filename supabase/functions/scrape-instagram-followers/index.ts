@@ -59,33 +59,65 @@ function normalizeUrl(u: string): string | null {
   if (url.startsWith("@")) url = `https://instagram.com/${url.slice(1)}`;
   if (!/^https?:\/\//i.test(url)) url = `https://${url}`;
   if (!/instagram\.com/i.test(url)) return null;
-  return url;
+  // Strip query / fragment (e.g. ?igsh=... share tokens) and trailing slashes,
+  // then rebuild canonical https://www.instagram.com/<handle>/
+  try {
+    const parsed = new URL(url);
+    const handle = parsed.pathname.split("/").filter(Boolean)[0];
+    if (!handle) return null;
+    return `https://www.instagram.com/${handle}/`;
+  } catch {
+    return null;
+  }
+}
+
+async function firecrawlScrape(url: string, apiKey: string, useStealth: boolean) {
+  const res = await fetch(FIRECRAWL_URL, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      url,
+      formats: ["markdown", "html"],
+      onlyMainContent: false,
+      waitFor: 2500,
+      ...(useStealth ? { proxy: "stealth" } : {}),
+    }),
+  });
+  return res;
 }
 
 async function scrapeOne(url: string, apiKey: string): Promise<number | null> {
   try {
-    const res = await fetch(FIRECRAWL_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        url,
-        formats: ["markdown", "html"],
-        onlyMainContent: false,
-        waitFor: 1500,
-      }),
-    });
+    // First try without stealth (cheaper). On 403/blocked, retry with stealth proxy.
+    let res = await firecrawlScrape(url, apiKey, false);
+    if (res.status === 403 || res.status === 401 || res.status === 429) {
+      console.log("[scrape-ig] retrying with stealth proxy", url, res.status);
+      res = await firecrawlScrape(url, apiKey, true);
+    }
     if (!res.ok) {
-      console.warn("[scrape-ig] firecrawl error", url, res.status);
+      const body = await res.text().catch(() => "");
+      console.warn("[scrape-ig] firecrawl error", url, res.status, body.slice(0, 200));
       return null;
     }
     const json = await res.json();
     const md: string = json?.data?.markdown ?? json?.markdown ?? "";
     const html: string = json?.data?.html ?? json?.html ?? "";
     const desc: string = json?.data?.metadata?.description ?? json?.metadata?.description ?? "";
-    return parseFollowers(desc) ?? parseFollowers(md) ?? parseFollowers(html);
+    const ogDesc: string = json?.data?.metadata?.ogDescription ?? json?.metadata?.ogDescription ?? "";
+    const title: string = json?.data?.metadata?.title ?? json?.metadata?.title ?? "";
+    const parsed =
+      parseFollowers(desc) ??
+      parseFollowers(ogDesc) ??
+      parseFollowers(title) ??
+      parseFollowers(md) ??
+      parseFollowers(html);
+    if (parsed === null) {
+      console.warn("[scrape-ig] no follower count parsed", url, "desc:", desc.slice(0, 120));
+    }
+    return parsed;
   } catch (e) {
     console.warn("[scrape-ig] exception", url, (e as Error).message);
     return null;
