@@ -31,6 +31,8 @@ const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const SocialMediaLogin = lazy(() => import("./pages/SocialMediaLogin"));
 const SocialMediaDashboard = lazy(() => import("./pages/SocialMediaDashboard"));
 const SocialMediaRegister = lazy(() => import("./pages/SocialMediaRegister"));
+const SocialMediaContentPlans = lazy(() => import("./pages/SocialMediaContentPlans"));
+const SocialMediaModelDashboard = lazy(() => import("./pages/SocialMediaModelDashboard"));
 const ChatBreakdown = lazy(() => import("./pages/ChatBreakdown"));
 const CoachingBasics = lazy(() => import("./pages/CoachingBasics"));
 const SalesScripts = lazy(() => import("./pages/SalesScripts"));
@@ -143,6 +145,34 @@ const SocialMediaProtectedRoute = ({ children }: { children: React.ReactNode }) 
   return <>{children}</>;
 };
 
+const SocialMediaModelProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, loading } = useAuth();
+  const [hasAccess, setHasAccess] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    import("@/integrations/supabase/client").then(({ supabase }) => {
+      supabase.from("user_roles").select("role").eq("user_id", user.id)
+        .eq("role", "fanvue_model")
+        .maybeSingle()
+        .then(({ data }) => setHasAccess(!!data));
+    });
+  }, [user]);
+
+  if (loading || (user && hasAccess === null)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) return <Navigate to="/socialmedia/login" replace />;
+  if (hasAccess === false) return <Navigate to="/socialmedia/login" replace />;
+
+  return <>{children}</>;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
@@ -173,6 +203,8 @@ const App = () => (
               <Route path="/socialmedia/login" element={<SocialMediaLogin />} />
               <Route path="/socialmedia/register" element={<SocialMediaRegister />} />
               <Route path="/socialmedia/admin" element={<SocialMediaProtectedRoute><SocialMediaDashboard /></SocialMediaProtectedRoute>} />
+              <Route path="/socialmedia/admin/plans" element={<SocialMediaProtectedRoute><SocialMediaContentPlans /></SocialMediaProtectedRoute>} />
+              <Route path="/socialmedia/model" element={<SocialMediaModelProtectedRoute><SocialMediaModelDashboard /></SocialMediaModelProtectedRoute>} />
               {/* Legacy /fanvue → /socialmedia redirects */}
               <Route path="/fanvue/login" element={<Navigate to="/socialmedia/login" replace />} />
               <Route path="/fanvue" element={<Navigate to="/socialmedia/admin" replace />} />
