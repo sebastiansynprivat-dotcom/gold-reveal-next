@@ -24,6 +24,7 @@ export default function SocialMediaLogin() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
+  const [isModel, setIsModel] = useState<boolean>(false);
   const [signingOut, setSigningOut] = useState(false);
   const [showForgot, setShowForgot] = useState(false);
 
@@ -33,13 +34,15 @@ export default function SocialMediaLogin() {
       .from("user_roles")
       .select("role")
       .eq("user_id", user.id)
-      .in("role", ["fanvue_partner", "super_admin", "admin"])
-      .maybeSingle()
+      .in("role", ["fanvue_partner", "super_admin", "admin", "fanvue_model"])
       .then(({ data }) => {
-        if (data) setHasAccess(true);
-        else {
+        const roles = (data || []).map((r: any) => r.role);
+        if (roles.length === 0) {
           setSigningOut(true);
           supabase.auth.signOut().then(() => setSigningOut(false));
+        } else {
+          setIsModel(roles.includes("fanvue_model") && !roles.some((r: string) => ["fanvue_partner", "super_admin", "admin"].includes(r)));
+          setHasAccess(true);
         }
       });
   }, [user, signingOut]);
