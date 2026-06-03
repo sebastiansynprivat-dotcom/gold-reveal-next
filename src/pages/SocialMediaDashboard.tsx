@@ -834,6 +834,56 @@ export default function SocialMediaDashboard() {
               )}
             </div>
 
+            {/* Platform Logins */}
+            <div className="rounded-xl border border-border/40 p-3 sm:p-4 space-y-2 bg-secondary/20">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-xs uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5">
+                  <KeyRound className="h-3 w-3" /> Plattform Logins
+                </h4>
+                <Button size="sm" variant="ghost" onClick={addLogin} className="text-accent h-7">
+                  <Plus className="h-3.5 w-3.5 mr-1" /> Hinzufügen
+                </Button>
+              </div>
+              {form.platform_logins.length === 0 ? (
+                <p className="text-xs text-muted-foreground italic">Noch keine Plattform-Zugänge hinterlegt</p>
+              ) : (
+                <div className="space-y-2">
+                  {form.platform_logins.map((lg, i) => (
+                    <div key={i} className="rounded-lg border border-border/30 p-2.5 space-y-2 bg-background/30">
+                      <div className="flex items-center gap-2">
+                        <Input
+                          placeholder="Plattform (z.B. Fanvue, OnlyFans)"
+                          value={lg.platform}
+                          onChange={(e) => updateLogin(i, "platform", e.target.value)}
+                          className="text-sm flex-1"
+                        />
+                        <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive shrink-0" onClick={() => removeLogin(i)}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <Input
+                          placeholder="E-Mail / Username"
+                          value={lg.email}
+                          onChange={(e) => updateLogin(i, "email", e.target.value)}
+                          className="text-sm"
+                          autoComplete="off"
+                        />
+                        <Input
+                          placeholder="Passwort"
+                          value={lg.password}
+                          onChange={(e) => updateLogin(i, "password", e.target.value)}
+                          className="text-sm font-mono"
+                          autoComplete="off"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+
             {/* Notes */}
             <div>
               <Label className="text-xs">Notizen</Label>
