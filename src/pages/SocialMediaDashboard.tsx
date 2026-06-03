@@ -400,9 +400,9 @@ export default function SocialMediaDashboard() {
 
       {/* Edit/Create Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="w-[calc(100vw-1.5rem)] sm:w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto bg-card border-accent/20 p-4 sm:p-6">
-          <DialogHeader>
-            <DialogTitle className="text-lg">{editing ? "Model bearbeiten" : "Neues Model anlegen"}</DialogTitle>
+        <DialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto overflow-x-hidden bg-card border-accent/20 p-3 sm:p-6">
+          <DialogHeader className="pr-6">
+            <DialogTitle className="text-base sm:text-lg pr-2">{editing ? "Model bearbeiten" : "Neues Model anlegen"}</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
