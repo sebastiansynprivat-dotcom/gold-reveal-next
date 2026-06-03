@@ -802,6 +802,42 @@ export default function ModelGroupsPanel({
                             Default {baseDefault}%
                           </Badge>
                         </div>
+                        {(() => {
+                          const rev = revenueByModel[m.id];
+                          if (!rev) {
+                            return (
+                              <p className="text-[10px] text-muted-foreground/60 italic">
+                                Noch nicht gefetcht für diesen Zeitraum
+                              </p>
+                            );
+                          }
+                          const fmt = (v: number | null, suffix = "€") =>
+                            v == null ? "—" : `${suffix === "$" ? "$" : ""}${v.toLocaleString("de-DE", { maximumFractionDigits: 2 })}${suffix === "€" ? " €" : ""}`;
+                          const total = (rev.fb ?? 0) + (rev.ml ?? 0) + (rev.br ?? 0);
+                          return (
+                            <div className="flex flex-wrap items-center gap-1.5 p-2 rounded-md bg-accent/5 border border-accent/15">
+                              <span className="text-[9px] uppercase tracking-wider text-muted-foreground mr-1">Umsatz:</span>
+                              {rev.fb != null && (
+                                <Badge variant="outline" className="border-accent/30 text-accent text-[10px] px-1.5 py-0 h-5">
+                                  4Based {fmt(rev.fb, "$")}
+                                </Badge>
+                              )}
+                              {rev.ml != null && (
+                                <Badge variant="outline" className="border-accent/30 text-accent text-[10px] px-1.5 py-0 h-5">
+                                  Maloum {fmt(rev.ml)}
+                                </Badge>
+                              )}
+                              {rev.br != null && (
+                                <Badge variant="outline" className="border-accent/30 text-accent text-[10px] px-1.5 py-0 h-5">
+                                  Brezzels {fmt(rev.br)}
+                                </Badge>
+                              )}
+                              <span className="ml-auto text-[10px] text-accent font-semibold">
+                                Σ {total.toLocaleString("de-DE", { maximumFractionDigits: 2 })}
+                              </span>
+                            </div>
+                          );
+                        })()}
                         <div className="grid grid-cols-4 gap-2">
                           <div className="space-y-0.5">
                             <Label className="text-[9px] text-muted-foreground">Default Override</Label>
