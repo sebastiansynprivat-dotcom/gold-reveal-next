@@ -2816,20 +2816,49 @@ export default function AdminDashboard() {
           }
         }
       }
-      // Prefer any candidate that matches the chatter's assigned models
+      // Chatter→Model mapping is the source of truth. If the chatter has any
+      // assigned models, ALWAYS prefer one of those over name-only matches —
+      // this protects against duplicate / mis-configured model records sharing
+      // the same name or email but missing platforms / wrong agency / language.
       if (assignedSet && assignedSet.size > 0) {
-        const match = candidates.find((m) => assignedSet.has(String(m.id)));
-        if (match) return match;
-        // No name candidate is assigned — if chatter has exactly one assigned model, use it
-        if (candidates.length === 0 && assignedSet.size === 1) {
-          const onlyId = Array.from(assignedSet)[0];
-          const m = modelById.get(onlyId);
-          if (m) return m;
+        // 1. Name candidate that is also assigned to the chatter wins.
+        const nameMatch = candidates.find((m) => assignedSet.has(String(m.id)));
+        if (nameMatch) return nameMatch;
+
+        // 2. Otherwise resolve via the chatter's assigned models directly.
+        const assignedModels = Array.from(assignedSet)
+          .map((id) => modelById.get(id))
+          .filter(Boolean);
+
+        if (assignedModels.length === 1) return assignedModels[0];
+
+        // 3. Multiple assigned models → disambiguate via context (email / username / name).
+        const ctx = normalizeModelKey(contextText || "");
+        const accInfos = userId ? assignedAccountsByUser.get(userId) || [] : [];
+        if (ctx && assignedModels.length > 1) {
+          const scored = assignedModels.map((m) => {
+            const u = normalizeModelKey(m.username);
+            const n = normalizeModelKey(m.name);
+            // also score by account_email prefix of accounts whose model_id == m.id
+            const emailPrefixes = accInfos
+              .filter((a) => a.model_id === String(m.id))
+              .map((a) => normalizeModelKey(String(a.account_email || "").split("@")[0]));
+            let score = 0;
+            if (u && u.length >= 3 && ctx.includes(u)) score += 10;
+            if (n && n.length >= 3 && ctx.includes(n)) score += 5;
+            for (const ep of emailPrefixes) {
+              if (ep && ep.length >= 3 && ctx.includes(ep)) score += 8;
+            }
+            return { m, score };
+          }).sort((a, b) => b.score - a.score);
+          if (scored[0].score > 0) return scored[0].m;
         }
+        // Fallback: first assigned model (still guaranteed to be a real chatter-linked record).
+        if (assignedModels.length > 0) return assignedModels[0];
       }
       if (candidates.length === 0) return null;
       if (candidates.length === 1) return candidates[0];
-      // Disambiguate via context text (e.g. chat history mentions username)
+      // No chatter context — disambiguate via context text only.
       const ctx = normalizeModelKey(contextText || "");
       if (ctx) {
         const scored = candidates.map((m) => {
@@ -2844,6 +2873,7 @@ export default function AdminDashboard() {
       }
       return candidates[0];
     };
+
     if (data) {
       const ids = data.map((r: any) => r.id);
       let msgsByReq: Record<string, any[]> = {};
