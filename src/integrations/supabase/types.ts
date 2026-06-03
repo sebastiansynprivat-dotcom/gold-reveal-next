@@ -773,6 +773,7 @@ export type Database = {
           notes: string
           other_social: string
           social_linked: boolean
+          stage: string
           status: string
           tiktok_url: string
           twitter_url: string
@@ -795,6 +796,7 @@ export type Database = {
           notes?: string
           other_social?: string
           social_linked?: boolean
+          stage?: string
           status?: string
           tiktok_url?: string
           twitter_url?: string
@@ -817,6 +819,7 @@ export type Database = {
           notes?: string
           other_social?: string
           social_linked?: boolean
+          stage?: string
           status?: string
           tiktok_url?: string
           twitter_url?: string

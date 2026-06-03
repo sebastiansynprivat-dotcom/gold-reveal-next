@@ -1,0 +1,1 @@
+ALTER TABLE public.fanvue_models ADD COLUMN IF NOT EXISTS stage TEXT NOT NULL DEFAULT 'onboarding';
