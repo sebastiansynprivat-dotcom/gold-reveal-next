@@ -102,7 +102,7 @@ export default function SocialMediaLogin() {
     );
   }
 
-  if (user && hasAccess === true) return <Navigate to="/socialmedia/admin" replace />;
+  if (user && hasAccess === true) return <Navigate to={isModel ? "/socialmedia/model" : "/socialmedia/admin"} replace />;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
