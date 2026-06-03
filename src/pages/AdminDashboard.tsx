@@ -2779,7 +2779,6 @@ export default function AdminDashboard() {
         });
       }
       // chatter user_id -> [{ model_id, account_email, platform }]
-      const assignedAccountsByUser = new Map<string, Array<{ model_id: string | null; account_email: string | null; platform: string | null }>>();
       (assignments || []).forEach((a: any) => {
         const info = accountInfoMap.get(String(a.account_id));
         if (info) {
