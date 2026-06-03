@@ -60,3 +60,6 @@ verify_jwt = false
 [functions.scrape-instagram-followers]
 verify_jwt = false
 
+[functions.ingest-account-revenue]
+verify_jwt = false
+

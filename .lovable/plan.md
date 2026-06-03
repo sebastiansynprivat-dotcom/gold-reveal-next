@@ -1,80 +1,43 @@
-## Goal
+## 1. Migration: `accounts_revenue` table
 
-Add a "Umsatz abrufen" card inside `ModelDashboardTab` → section "Einnahmen & Anteil" (above the per-account revenue list). Admin picks month + year, clicks the button, an edge function calls the external backend, and the response populates `model_dashboard` (one row per model, keyed by `model_id`).
+Columns:
+- `id uuid pk default gen_random_uuid()`
+- `account_id uuid not null references accounts(id) on delete cascade`
+- `date date not null`
+- `platform text not null`
+- `total numeric not null default 0`
+- `amounts jsonb not null default '[]'::jsonb`  — array of `{purchase_id, amount}`
+- `created_at`, `updated_at timestamptz` (+ `update_updated_at` trigger)
+- `UNIQUE (account_id, date, platform)`
+- Index on `(account_id, date desc)`
 
-## 1. Database migration
+Grants:
+- `GRANT SELECT, INSERT, UPDATE, DELETE ON public.accounts_revenue TO authenticated;`
+- `GRANT ALL ON public.accounts_revenue TO service_role;`
 
-Schema change for `public.model_dashboard`:
+Enable RLS, then policies:
+- **Super admin – full access** (ALL): `has_role(auth.uid(), 'super_admin')`
+- **Admins – view only** (SELECT): `is_admin()`
+- **Models – view their account** (SELECT): exists in `model_users mu join accounts a on a.model_id = mu.model_id` where `mu.user_id = auth.uid() AND a.id = accounts_revenue.account_id`
+- **Chatters – view assigned account** (SELECT): exists in `accounts a` where `a.id = accounts_revenue.account_id AND a.assigned_to = auth.uid()`
 
-- Add new column `model_id uuid` (nullable initially).
-- Add `last_fetched_at timestamptz`, `last_fetched_month smallint`, `last_fetched_year smallint`.
-- Backfill `model_id` from `accounts.model_id` using `account_id`.
-- Collapse to one row per model: for every model, aggregate existing rows (sum `fourbased_revenue`, `maloum_revenue`, `brezzels_revenue`; max of submitted/done booleans; latest `updated_at` for `monthly_revenue`, `yesterday_revenue`, `notes`, `revenue_percentage`, `crypto_address`, `contract_file_path`, `currency`); delete the rest.
-- Drop column `account_id`.
-- Make `model_id` `NOT NULL` and add `UNIQUE (model_id)`.
-- Update RLS policies that reference `account_id`:
-  - "Models can view own model_dashboard" → match `model_users.model_id = model_dashboard.model_id`.
-  - Admin policy stays as `is_admin()`.
+## 2. Edge function `ingest-account-revenue`
 
-No new table is created, so no GRANT block needed.
+Path: `supabase/functions/ingest-account-revenue/index.ts`. `verify_jwt = false` in `supabase/config.toml`.
 
-## 2. Edge function: `fetch-model-revenue`
+- Auth: header `x-api-key` must equal env `REVENUE_INGEST_API_KEY` (already configured).
+- CORS handled (OPTIONS + headers on every response).
+- Body: array (or single object) of `{ account_id: uuid, purchase_id: string, date: 'YYYY-MM-DD', platform: string, amount: number }`. Validate each.
+- Service role client.
+- Group incoming rows by `(account_id, date, platform)`.
+- For each group:
+  1. `SELECT total, amounts FROM accounts_revenue WHERE account_id=… AND date=… AND platform=…`
+  2. Build a `Set` of existing `purchase_id`s. Skip incoming entries whose `purchase_id` is already in DB or earlier in the same batch.
+  3. New `amounts` = existing array + new unique `{purchase_id, amount}` entries.
+  4. New `total` = existing total + sum of newly added amounts.
+  5. `upsert` row with `onConflict: 'account_id,date,platform'`.
+- Returns `{ success: true, processed, skipped_duplicates }`.
 
-New Supabase edge function (admin-only, JWT verified in code via `getClaims` + `is_admin` check).
+## 3. Config
 
-Why an edge function: hides the `X-API-KEY` secret, avoids browser CORS to the ngrok host, performs the upsert with service role.
-
-- Input from client: `{ model_id, month, year }`.
-- Server loads the model (id, name) and its accounts (id, platform, account_email, account_password) using the service role.
-- POSTs to `${REVENUE_BACKEND_URL}/getmonthlyrevenue` with:
-  - Headers: `X-API-KEY: ${REVENUE_BACKEND_TOKEN}`, `Content-Type: application/json`.
-  - Body:
-    ```json
-    {
-      "month": 11,
-      "year": 2026,
-      "model": { "id": "...", "name": "..." },
-      "accounts": [
-        { "id": "...", "platform": "maloum", "email": "...", "password": "..." }
-      ]
-    }
-    ```
-- Expected response: `{ model_id, date: "dd-mm-yyyy", fourbased_revenue, maloum_revenue, brezzels_revenue, ... }` (extra `*_revenue` fields are upserted dynamically when their column exists in `model_dashboard`).
-- Upserts `model_dashboard` on `model_id`: sets `fourbased_revenue`, `maloum_revenue`, `brezzels_revenue`, `monthly_revenue = fb+ml+br`, stamps `last_fetched_at/month/year`.
-- Returns the saved row.
-
-Secrets to add (via `add_secret`):
-- `REVENUE_BACKEND_URL` — base URL (e.g. `https://api.shexadmin.ngrok.pro`).
-- `REVENUE_BACKEND_TOKEN` — value sent in the `X-API-KEY` header.
-
-`supabase/config.toml`: add `[functions.fetch-model-revenue]` block with `verify_jwt = false` (we validate manually in code, matching the project pattern).
-
-## 3. Frontend — `src/components/ModelDashboardTab.tsx`
-
-New card above the per-account list in section "Einnahmen & Anteil":
-
-- Month `<Select>` (1–12, German labels) and Year `<Select>` (current year ± 2), defaults to today's month/year.
-- Gold gradient "Umsatz abrufen" button with loading spinner.
-- If `last_fetched_month`/`last_fetched_year` already match the selection, show a confirm `AlertDialog` ("Werte überschreiben?") before fetching.
-- On success: toast, refresh `dashboardRevenues` / `platformRevenues`, show "Zuletzt geholt: dd.mm.yyyy HH:mm".
-
-Data layer updates in the same file:
-
-- `loadModelAccounts(modelId)` queries `model_dashboard` with `.eq("model_id", modelId).maybeSingle()` and maps the single row's per-platform fields onto each account by `acc.platform`.
-- The existing inline per-platform `<Input>` (around lines 1512–1551) now upserts on `model_id = selectedModelId` (single row), writing only the field for that account's platform plus a recomputed `monthly_revenue`.
-
-## 4. Files touched
-
-- New migration (schema collapse + RLS update).
-- New `supabase/functions/fetch-model-revenue/index.ts`.
-- `supabase/config.toml` — add function block.
-- `src/components/ModelDashboardTab.tsx` — new card + updated read/write logic.
-- New memory file `mem://features/model-revenue-fetch` + index entry.
-
-## Execution order
-
-1. Request the two secrets (`REVENUE_BACKEND_URL`, `REVENUE_BACKEND_TOKEN`).
-2. Run the migration.
-3. Create the edge function + config.toml entry.
-4. Update `ModelDashboardTab.tsx`.
-5. Save memory + verify build.
+Add `[functions.ingest-account-revenue] verify_jwt = false` to `supabase/config.toml`.

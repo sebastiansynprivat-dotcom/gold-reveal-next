@@ -135,6 +135,47 @@ export type Database = {
           },
         ]
       }
+      accounts_revenue: {
+        Row: {
+          account_id: string
+          amounts: Json
+          created_at: string
+          date: string
+          id: string
+          platform: string
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          amounts?: Json
+          created_at?: string
+          date: string
+          id?: string
+          platform: string
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          amounts?: Json
+          created_at?: string
+          date?: string
+          id?: string
+          platform?: string
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounts_revenue_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_account_access: {
         Row: {
           account_id: string
