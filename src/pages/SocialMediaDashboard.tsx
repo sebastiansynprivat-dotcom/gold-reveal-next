@@ -312,6 +312,13 @@ export default function SocialMediaDashboard() {
   const removeMarketer = (i: number) =>
     setForm((f) => ({ ...f, marketers: f.marketers.filter((_, idx) => idx !== i) }));
 
+  const addLogin = () =>
+    setForm((f) => ({ ...f, platform_logins: [...f.platform_logins, { platform: "", email: "", password: "" }] }));
+  const updateLogin = (i: number, field: keyof PlatformLogin, value: string) =>
+    setForm((f) => ({ ...f, platform_logins: f.platform_logins.map((l, idx) => idx === i ? { ...l, [field]: value } : l) }));
+  const removeLogin = (i: number) =>
+    setForm((f) => ({ ...f, platform_logins: f.platform_logins.filter((_, idx) => idx !== i) }));
+
   const addInstagram = () => setForm((f) => ({ ...f, instagram_urls: [...f.instagram_urls, ""] }));
   const updateInstagram = (i: number, v: string) =>
     setForm((f) => ({ ...f, instagram_urls: f.instagram_urls.map((u, idx) => idx === i ? v : u) }));
