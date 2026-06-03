@@ -727,7 +727,7 @@ export default function Dashboard() {
                 }
               >
                 <Award className="h-3 w-3 mr-1" />
-                {currentTier.emoji} {currentTier.name}
+                <TierLabel tier={currentTier} />
               </Badge>
             </div>
           </div>
@@ -774,7 +774,7 @@ export default function Dashboard() {
                 className={`shrink-0 text-[10px] ${isTopTier ? "bg-accent text-accent-foreground gold-glow" : "bg-secondary text-secondary-foreground"}`}
               >
                 <Award className="h-3 w-3 mr-1" />
-                {currentTier.emoji} {currentTier.name}
+                <TierLabel tier={currentTier} />
               </Badge>
             </div>
 
@@ -960,7 +960,7 @@ export default function Dashboard() {
             >
               <p className="text-[10px] text-muted-foreground mb-0.5">Status</p>
               <p className={`text-xl font-bold ${isTopTier ? "text-gold-gradient" : "text-foreground"}`}>
-                {currentTier.emoji} {currentTier.name}
+                <TierLabel tier={currentTier} />
               </p>
             </motion.div>
           </motion.div>
@@ -1023,7 +1023,7 @@ export default function Dashboard() {
             >
               <p className="text-xs text-muted-foreground mb-0.5">Status</p>
               <p className={`text-2xl font-bold ${isTopTier ? "text-gold-gradient" : "text-foreground"}`}>
-                {currentTier.emoji} {currentTier.name}
+                <TierLabel tier={currentTier} />
               </p>
             </motion.div>
           </motion.div>
