@@ -34,6 +34,7 @@ type SocialMediaModel = {
   name: string;
   username: string;
   account_setup: boolean;
+  chatter_needed: boolean;
   chatter_assigned: boolean;
   chatter_name: string;
   social_linked: boolean;
@@ -55,6 +56,7 @@ const emptyModel: Omit<SocialMediaModel, "id" | "created_at"> = {
   name: "",
   username: "",
   account_setup: false,
+  chatter_needed: false,
   chatter_assigned: false,
   chatter_name: "",
   social_linked: false,
