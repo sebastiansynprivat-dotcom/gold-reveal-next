@@ -1075,6 +1075,9 @@ export default function Dashboard() {
 
         {/* 7-Day Revenue Chart */}
         <div data-tour="revenue-chart">{user && <RevenueChart userId={user.id} />}</div>
+
+        {/* Neue Content Drops vom Model */}
+        <ContentDropsWidget />
         {/* Anfrage an das Model */}
         <motion.section
           variants={sectionVariants}
