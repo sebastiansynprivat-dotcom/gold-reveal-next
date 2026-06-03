@@ -5840,7 +5840,7 @@ export default function AdminDashboard() {
                         if (!_pm || _pm[1].trim().toLowerCase() !== requestPlatformFilter.toLowerCase()) return false;
                       }
                       if (requestAgencyFilter !== "all") {
-                        const agencyRaw = String((r as any)._model?.model_agency || "").toLowerCase();
+                        const agencyRaw = String((r as any)._agency || (r as any)._model?.model_agency || "").toLowerCase();
                         const normalized = agencyRaw === "simp" ? "syn" : agencyRaw;
                         if (normalized !== requestAgencyFilter) return false;
                       }
@@ -5873,7 +5873,7 @@ export default function AdminDashboard() {
                               if (!_pm || _pm[1].trim().toLowerCase() !== requestPlatformFilter.toLowerCase()) return false;
                             }
                             if (requestAgencyFilter !== "all") {
-                              const agencyRaw = String((r as any)._model?.model_agency || "").toLowerCase();
+                              const agencyRaw = String((r as any)._agency || (r as any)._model?.model_agency || "").toLowerCase();
                               const normalized = agencyRaw === "simp" ? "syn" : agencyRaw;
                               if (normalized !== requestAgencyFilter) return false;
                             }
@@ -6021,7 +6021,7 @@ export default function AdminDashboard() {
                                           <span className="text-[10px] text-accent font-bold">{req.price}€</span>
                                         )}
                                         {(() => {
-                                          const agencyRaw = String(req._model?.model_agency || "").toLowerCase();
+                                          const agencyRaw = String(req._agency || req._model?.model_agency || "").toLowerCase();
                                           const isSyn = agencyRaw === "syn" || agencyRaw === "simp";
                                           const isShex = agencyRaw === "shex";
                                           if (!isSyn && !isShex) return null;
@@ -6122,7 +6122,7 @@ export default function AdminDashboard() {
                                         navigator.clipboard.writeText(fullText);
                                         const encoded = encodeURIComponent(fullText);
                                         const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                                        const agencyRaw = String(req._model?.model_agency || "").toLowerCase();
+                                        const agencyRaw = String(req._agency || req._model?.model_agency || "").toLowerCase();
                                         const isSyn = agencyRaw === "syn" || agencyRaw === "simp";
                                         if (isSyn) {
                                           toast.success("Nachricht kopiert – Kontakt in Telegram wählen.");
@@ -6255,7 +6255,7 @@ export default function AdminDashboard() {
                                               const isMobile = /iPhone|iPad|iPod|Android/i.test(
                                                 navigator.userAgent,
                                               );
-                                              const agencyRaw = String(req._model?.model_agency || "").toLowerCase();
+                                              const agencyRaw = String(req._agency || req._model?.model_agency || "").toLowerCase();
                                               const isSyn = agencyRaw === "syn" || agencyRaw === "simp";
                                               if (isSyn) {
                                                 toast.success("Nachricht kopiert – Kontakt in Telegram wählen.");
