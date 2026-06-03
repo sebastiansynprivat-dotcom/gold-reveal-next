@@ -951,6 +951,7 @@ export type Database = {
       fanvue_models: {
         Row: {
           account_setup: boolean
+          archived_at: string | null
           chatter_assigned: boolean
           chatter_name: string
           chatter_needed: boolean
@@ -976,6 +977,7 @@ export type Database = {
         }
         Insert: {
           account_setup?: boolean
+          archived_at?: string | null
           chatter_assigned?: boolean
           chatter_name?: string
           chatter_needed?: boolean
@@ -1001,6 +1003,7 @@ export type Database = {
         }
         Update: {
           account_setup?: boolean
+          archived_at?: string | null
           chatter_assigned?: boolean
           chatter_name?: string
           chatter_needed?: boolean

@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Pencil, Trash2, LogOut, Instagram, Music2, Twitter, Globe, UserCheck, MessageCircle, CheckCircle2, Search, Users, ArrowLeft, TrendingUp, TrendingDown, Minus, Link2, X, Sparkles, Copy, KeyRound, RefreshCw } from "lucide-react";
+import { Plus, Pencil, Trash2, LogOut, Instagram, Music2, Twitter, Globe, UserCheck, MessageCircle, CheckCircle2, Search, Users, ArrowLeft, TrendingUp, TrendingDown, Minus, Link2, X, Sparkles, Copy, KeyRound, RefreshCw, Archive, ArchiveRestore, Calendar } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ReactMarkdown from "react-markdown";
 import logo from "@/assets/logo.png";
@@ -52,9 +52,10 @@ type SocialMediaModel = {
   stage: ModelStage;
   is_active: boolean;
   created_at: string;
+  archived_at: string | null;
 };
 
-const emptyModel: Omit<SocialMediaModel, "id" | "created_at"> = {
+const emptyModel: Omit<SocialMediaModel, "id" | "created_at" | "archived_at"> = {
   name: "",
   username: "",
   account_setup: false,
@@ -84,6 +85,7 @@ export default function SocialMediaDashboard() {
   const [snapshots, setSnapshots] = useState<Record<string, { followers: number; recorded_at: string; instagram_url: string | null }[]>>({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [archiveFilter, setArchiveFilter] = useState<"active" | "archived" | "all">("active");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<SocialMediaModel | null>(null);
   const [form, setForm] = useState<typeof emptyModel>(emptyModel);
@@ -301,6 +303,20 @@ export default function SocialMediaDashboard() {
     setDeleteId(null);
   };
 
+  const handleArchive = async (m: SocialMediaModel) => {
+    const isArchived = !!m.archived_at;
+    const { error } = await supabase
+      .from("fanvue_models" as any)
+      .update({ archived_at: isArchived ? null : new Date().toISOString() })
+      .eq("id", m.id);
+    if (error) {
+      toast.error((isArchived ? "Wiederherstellen" : "Archivieren") + " fehlgeschlagen");
+    } else {
+      toast.success(isArchived ? "Model wiederhergestellt" : "Model archiviert");
+      load();
+    }
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/socialmedia/login");
@@ -325,18 +341,25 @@ export default function SocialMediaDashboard() {
   const removeInstagram = (i: number) =>
     setForm((f) => ({ ...f, instagram_urls: f.instagram_urls.filter((_, idx) => idx !== i) }));
 
-  const filtered = models.filter((m) =>
-    !search ||
-    m.name.toLowerCase().includes(search.toLowerCase()) ||
-    m.username.toLowerCase().includes(search.toLowerCase()) ||
-    m.chatter_name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = models.filter((m) => {
+    if (archiveFilter === "active" && m.archived_at) return false;
+    if (archiveFilter === "archived" && !m.archived_at) return false;
+    if (!search) return true;
+    const q = search.toLowerCase();
+    return (
+      m.name.toLowerCase().includes(q) ||
+      m.username.toLowerCase().includes(q) ||
+      m.chatter_name.toLowerCase().includes(q)
+    );
+  });
 
+  const activeModels = models.filter((m) => !m.archived_at);
+  const archivedCount = models.length - activeModels.length;
   const stats = {
-    total: models.length,
-    setup: models.filter((m) => m.account_setup).length,
-    chatters: models.filter((m) => m.chatter_assigned).length,
-    needed: models.filter((m) => m.chatter_needed && !m.chatter_assigned).length,
+    total: activeModels.length,
+    setup: activeModels.filter((m) => m.account_setup).length,
+    chatters: activeModels.filter((m) => m.chatter_assigned).length,
+    needed: activeModels.filter((m) => m.chatter_needed && !m.chatter_assigned).length,
   };
 
   return (
@@ -448,6 +471,28 @@ export default function SocialMediaDashboard() {
           </Button>
         </div>
 
+        {/* Archive Filter */}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground/70 font-medium mr-1">Anzeige:</span>
+          {([
+            { v: "active", l: `Aktiv (${activeModels.length})` },
+            { v: "archived", l: `Archiviert (${archivedCount})` },
+            { v: "all", l: `Alle (${models.length})` },
+          ] as const).map((o) => (
+            <button
+              key={o.v}
+              onClick={() => setArchiveFilter(o.v)}
+              className={`px-3 py-1 rounded-full border text-xs font-medium transition-all ${
+                archiveFilter === o.v
+                  ? "bg-accent/20 border-accent/60 text-accent shadow-[0_0_12px_hsl(var(--accent)/0.25)]"
+                  : "bg-card/40 border-border/50 text-muted-foreground hover:border-accent/40 hover:text-foreground"
+              }`}
+            >
+              {o.l}
+            </button>
+          ))}
+        </div>
+
         {/* Model Cards */}
         {loading ? (
           <div className="flex justify-center py-20">
@@ -471,7 +516,11 @@ export default function SocialMediaDashboard() {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  className="rounded-2xl border border-accent/15 bg-card/40 backdrop-blur-sm p-5 relative overflow-hidden hover:border-accent/40 transition-all group"
+                  className={`rounded-2xl border bg-card/40 backdrop-blur-sm p-5 relative overflow-hidden transition-all group ${
+                    m.archived_at
+                      ? "border-muted/30 opacity-70 hover:opacity-100 hover:border-muted/60"
+                      : "border-accent/15 hover:border-accent/40"
+                  }`}
                 >
                   <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
 
@@ -481,10 +530,19 @@ export default function SocialMediaDashboard() {
                       {m.username && <p className="text-xs text-muted-foreground truncate">@{m.username}</p>}
                     </div>
                     <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEdit(m)}>
+                      <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEdit(m)} title="Bearbeiten">
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
-                      <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setDeleteId(m.id)}>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7 text-accent hover:text-accent"
+                        onClick={() => handleArchive(m)}
+                        title={m.archived_at ? "Wiederherstellen" : "Archivieren"}
+                      >
+                        {m.archived_at ? <ArchiveRestore className="h-3.5 w-3.5" /> : <Archive className="h-3.5 w-3.5" />}
+                      </Button>
+                      <Button size="icon" variant="ghost" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => setDeleteId(m.id)} title="Löschen">
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </div>
@@ -493,9 +551,33 @@ export default function SocialMediaDashboard() {
                   {(() => {
                     const s = STAGE_OPTIONS.find((o) => o.value === m.stage) ?? STAGE_OPTIONS[0];
                     return (
-                      <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[10px] font-semibold uppercase tracking-wider mb-3 ${s.color}`}>
-                        <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                        {s.label}
+                      <div className="flex items-center gap-2 mb-3 flex-wrap">
+                        <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border text-[10px] font-semibold uppercase tracking-wider ${s.color}`}>
+                          <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                          {s.label}
+                        </div>
+                        {m.archived_at && (
+                          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full border border-muted/40 bg-muted/10 text-muted-foreground text-[10px] font-semibold uppercase tracking-wider">
+                            <Archive className="h-2.5 w-2.5" />
+                            Archiviert
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+
+                  {(() => {
+                    const fmt = (d: string) => new Date(d).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
+                    return (
+                      <div className="flex items-center gap-2 mb-3 text-[10px] text-muted-foreground/80">
+                        <Calendar className="h-3 w-3 text-accent/70" />
+                        <span>Start: <span className="text-foreground/90 font-medium">{fmt(m.created_at)}</span></span>
+                        {m.archived_at && (
+                          <>
+                            <span className="opacity-40">→</span>
+                            <span>Ende: <span className="text-foreground/90 font-medium">{fmt(m.archived_at)}</span></span>
+                          </>
+                        )}
                       </div>
                     );
                   })()}
