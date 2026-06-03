@@ -145,6 +145,34 @@ const SocialMediaProtectedRoute = ({ children }: { children: React.ReactNode }) 
   return <>{children}</>;
 };
 
+const SocialMediaModelProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, loading } = useAuth();
+  const [hasAccess, setHasAccess] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    import("@/integrations/supabase/client").then(({ supabase }) => {
+      supabase.from("user_roles").select("role").eq("user_id", user.id)
+        .eq("role", "fanvue_model")
+        .maybeSingle()
+        .then(({ data }) => setHasAccess(!!data));
+    });
+  }, [user]);
+
+  if (loading || (user && hasAccess === null)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) return <Navigate to="/socialmedia/login" replace />;
+  if (hasAccess === false) return <Navigate to="/socialmedia/login" replace />;
+
+  return <>{children}</>;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
