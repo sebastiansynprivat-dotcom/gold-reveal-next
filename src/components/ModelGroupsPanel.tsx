@@ -104,6 +104,35 @@ export default function ModelGroupsPanel({
   });
   const [billingLoading, setBillingLoading] = useState(false);
   const [fetchAllProgress, setFetchAllProgress] = useState<{ done: number; total: number } | null>(null);
+  const [revenueByModel, setRevenueByModel] = useState<Record<string, { fb: number | null; ml: number | null; br: number | null; fetched_at: string | null }>>({});
+
+  const loadRevenueForPeriod = async () => {
+    if (!selected) return;
+    const ref = new Date(billingPeriod.from || new Date().toISOString().slice(0, 10));
+    const month = ref.getMonth() + 1;
+    const year = ref.getFullYear();
+    const ids = (selected ? models.filter((m) => {
+      const tag = (selected.referral_source || "").trim().toLowerCase();
+      return m.group_id === selected.id || (tag && (m.referrer_tag || "").trim().toLowerCase() === tag);
+    }) : []).map((m) => m.id);
+    if (ids.length === 0) { setRevenueByModel({}); return; }
+    const { data } = await (supabase as any)
+      .from("payout_revenue")
+      .select("model_id, fourbased_revenue, maloum_revenue, brezzels_revenue, last_fetched_at")
+      .in("model_id", ids)
+      .eq("last_fetched_month", month)
+      .eq("last_fetched_year", year);
+    const map: Record<string, any> = {};
+    ((data as any[]) || []).forEach((r) => {
+      map[r.model_id] = {
+        fb: r.fourbased_revenue == null ? null : Number(r.fourbased_revenue),
+        ml: r.maloum_revenue == null ? null : Number(r.maloum_revenue),
+        br: r.brezzels_revenue == null ? null : Number(r.brezzels_revenue),
+        fetched_at: r.last_fetched_at,
+      };
+    });
+    setRevenueByModel(map);
+  };
 
   const fetchAllInGroup = async () => {
     if (!selected || groupModels.length === 0) return;
