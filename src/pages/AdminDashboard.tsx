@@ -3733,6 +3733,12 @@ export default function AdminDashboard() {
       icon: Star,
       onClick: () => { window.location.assign("/fanvue"); },
     },
+    {
+      key: "deleted" as const,
+      label: "Archiv (Gelöscht)",
+      icon: Trash2,
+      onClick: () => setActiveTab("deleted"),
+    },
   ];
 
   // Dynamic sub-admin tabs for super-admin view
