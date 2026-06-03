@@ -10395,6 +10395,8 @@ export default function AdminDashboard() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <ContentDropDialog open={contentDropOpen} onOpenChange={setContentDropOpen} />
       
     </div>
   );
