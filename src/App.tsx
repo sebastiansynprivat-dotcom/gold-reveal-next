@@ -31,6 +31,8 @@ const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const SocialMediaLogin = lazy(() => import("./pages/SocialMediaLogin"));
 const SocialMediaDashboard = lazy(() => import("./pages/SocialMediaDashboard"));
 const SocialMediaRegister = lazy(() => import("./pages/SocialMediaRegister"));
+const SocialMediaContentPlans = lazy(() => import("./pages/SocialMediaContentPlans"));
+const SocialMediaModelDashboard = lazy(() => import("./pages/SocialMediaModelDashboard"));
 const ChatBreakdown = lazy(() => import("./pages/ChatBreakdown"));
 const CoachingBasics = lazy(() => import("./pages/CoachingBasics"));
 const SalesScripts = lazy(() => import("./pages/SalesScripts"));
