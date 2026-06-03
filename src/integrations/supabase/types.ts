@@ -600,6 +600,63 @@ export type Database = {
         }
         Relationships: []
       }
+      deleted_records: {
+        Row: {
+          data: Json
+          deleted_at: string
+          deleted_by: string | null
+          email: string | null
+          entity_type: string
+          group_name: string | null
+          id: string
+          model_agency: string | null
+          name: string | null
+          original_id: string
+          platform: string | null
+          reason: string | null
+          restored_at: string | null
+          restored_by: string | null
+          telegram_id: string | null
+          username: string | null
+        }
+        Insert: {
+          data?: Json
+          deleted_at?: string
+          deleted_by?: string | null
+          email?: string | null
+          entity_type: string
+          group_name?: string | null
+          id?: string
+          model_agency?: string | null
+          name?: string | null
+          original_id: string
+          platform?: string | null
+          reason?: string | null
+          restored_at?: string | null
+          restored_by?: string | null
+          telegram_id?: string | null
+          username?: string | null
+        }
+        Update: {
+          data?: Json
+          deleted_at?: string
+          deleted_by?: string | null
+          email?: string | null
+          entity_type?: string
+          group_name?: string | null
+          id?: string
+          model_agency?: string | null
+          name?: string | null
+          original_id?: string
+          platform?: string | null
+          reason?: string | null
+          restored_at?: string | null
+          restored_by?: string | null
+          telegram_id?: string | null
+          username?: string | null
+        }
+        Relationships: []
+      }
       fanvue_instagram_snapshots: {
         Row: {
           created_at: string
