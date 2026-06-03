@@ -91,6 +91,8 @@ export default function SocialMediaDashboard() {
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryText, setSummaryText] = useState("");
+  const [logins, setLogins] = useState<Record<string, { email: string; password: string | null }>>({});
+  const [loginBusy, setLoginBusy] = useState<string | null>(null);
 
   const generateSummary = async () => {
     setSummaryOpen(true);
