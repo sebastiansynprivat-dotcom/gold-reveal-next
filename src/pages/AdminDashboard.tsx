@@ -2762,16 +2762,30 @@ export default function AdminDashboard() {
         .in("user_id", chatterUserIds);
       const accountIds = Array.from(new Set((assignments || []).map((a: any) => a.account_id).filter(Boolean)));
       const accountModelMap = new Map<string, string>();
+      const accountInfoMap = new Map<string, { model_id: string | null; account_email: string | null; platform: string | null }>();
       if (accountIds.length > 0) {
         const { data: accs } = await supabase
           .from("accounts")
-          .select("id, model_id")
+          .select("id, model_id, account_email, platform")
           .in("id", accountIds);
         (accs || []).forEach((a: any) => {
           if (a.model_id) accountModelMap.set(String(a.id), String(a.model_id));
+          accountInfoMap.set(String(a.id), {
+            model_id: a.model_id ? String(a.model_id) : null,
+            account_email: a.account_email || null,
+            platform: a.platform || null,
+          });
         });
       }
+      // chatter user_id -> [{ model_id, account_email, platform }]
+      const assignedAccountsByUser = new Map<string, Array<{ model_id: string | null; account_email: string | null; platform: string | null }>>();
       (assignments || []).forEach((a: any) => {
+        const info = accountInfoMap.get(String(a.account_id));
+        if (info) {
+          const list = assignedAccountsByUser.get(a.user_id) || [];
+          list.push(info);
+          assignedAccountsByUser.set(a.user_id, list);
+        }
         const mid = accountModelMap.get(String(a.account_id));
         if (!mid) return;
         const set = assignedModelsByUser.get(a.user_id) || new Set<string>();
@@ -2779,6 +2793,7 @@ export default function AdminDashboard() {
         assignedModelsByUser.set(a.user_id, set);
       });
     }
+
 
     const findModel = (raw: any, contextText?: string, userId?: string) => {
       const assignedSet = userId ? assignedModelsByUser.get(userId) : null;
