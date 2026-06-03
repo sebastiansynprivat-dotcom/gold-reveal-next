@@ -146,7 +146,50 @@ export default function SocialMediaDashboard() {
       (grouped[s.model_id] ||= []).push({ followers: s.followers, recorded_at: s.recorded_at });
     });
     setSnapshots(grouped);
+
+    // Load model logins
+    const { data: lg } = await supabase
+      .from("fanvue_model_users" as any)
+      .select("model_id, email, plaintext_password");
+    const loginMap: Record<string, { email: string; password: string | null }> = {};
+    ((lg || []) as any[]).forEach((r) => {
+      loginMap[r.model_id] = { email: r.email, password: r.plaintext_password };
+    });
+    setLogins(loginMap);
+
     setLoading(false);
+  };
+
+  const callLoginFn = async (modelId: string, action: "create" | "reset" | "delete") => {
+    setLoginBusy(modelId);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-fanvue-model-login", {
+        body: { model_id: modelId, action: action === "create" ? undefined : action },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      if (action === "delete") {
+        setLogins((prev) => {
+          const n = { ...prev };
+          delete n[modelId];
+          return n;
+        });
+        toast.success("Login gelöscht");
+      } else {
+        setLogins((prev) => ({ ...prev, [modelId]: { email: (data as any).email, password: (data as any).password } }));
+        toast.success(action === "create" ? "Login erstellt" : "Passwort zurückgesetzt");
+      }
+    } catch (e: any) {
+      toast.error("Fehler: " + (e?.message ?? "unbekannt"));
+    } finally {
+      setLoginBusy(null);
+    }
+  };
+
+  const copyCreds = (email: string, password: string | null) => {
+    const text = password ? `${email}\n${password}` : email;
+    navigator.clipboard.writeText(text);
+    toast.success("Zugangsdaten kopiert");
   };
 
   const saveSnapshot = async () => {
