@@ -671,7 +671,10 @@ function StatusRow({ icon: Icon, label, active, extra }: { icon: any; label: str
 }
 
 function SocialLink({ href, icon: Icon }: { href: string; icon: any }) {
-  const url = href.startsWith("http") ? href : `https://${href.replace(/^@/, "instagram.com/")}`;
+  let url = href.trim();
+  if (!/^https?:\/\//i.test(url)) {
+    url = url.startsWith("@") ? `https://instagram.com/${url.slice(1)}` : `https://${url}`;
+  }
   return (
     <a href={url} target="_blank" rel="noopener noreferrer" className="h-7 w-7 rounded-lg bg-accent/10 hover:bg-accent/20 border border-accent/20 flex items-center justify-center text-accent transition-colors">
       <Icon className="h-3.5 w-3.5" />
