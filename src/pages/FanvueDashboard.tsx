@@ -86,6 +86,8 @@ export default function FanvueDashboard() {
       setModels(((data || []) as any[]).map((m) => ({
         ...m,
         marketers: Array.isArray(m.marketers) ? m.marketers : [],
+        instagram_urls: Array.isArray(m.instagram_urls) ? m.instagram_urls : [],
+        linktree_url: m.linktree_url ?? "",
       })));
     }
     // Load all IG snapshots
