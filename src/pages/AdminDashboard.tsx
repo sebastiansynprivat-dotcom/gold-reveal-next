@@ -2754,6 +2754,7 @@ export default function AdminDashboard() {
     // Build per-chatter assigned model_ids via account_assignments → accounts
     const chatterUserIds = Array.from(new Set((data || []).map((r: any) => r.user_id).filter(Boolean)));
     const assignedModelsByUser = new Map<string, Set<string>>();
+    const assignedAccountsByUser = new Map<string, Array<{ model_id: string | null; account_email: string | null; platform: string | null }>>();
     if (chatterUserIds.length > 0) {
       const { data: assignments } = await supabase
         .from("account_assignments")
@@ -2762,16 +2763,29 @@ export default function AdminDashboard() {
         .in("user_id", chatterUserIds);
       const accountIds = Array.from(new Set((assignments || []).map((a: any) => a.account_id).filter(Boolean)));
       const accountModelMap = new Map<string, string>();
+      const accountInfoMap = new Map<string, { model_id: string | null; account_email: string | null; platform: string | null }>();
       if (accountIds.length > 0) {
         const { data: accs } = await supabase
           .from("accounts")
-          .select("id, model_id")
+          .select("id, model_id, account_email, platform")
           .in("id", accountIds);
         (accs || []).forEach((a: any) => {
           if (a.model_id) accountModelMap.set(String(a.id), String(a.model_id));
+          accountInfoMap.set(String(a.id), {
+            model_id: a.model_id ? String(a.model_id) : null,
+            account_email: a.account_email || null,
+            platform: a.platform || null,
+          });
         });
       }
+      // chatter user_id -> [{ model_id, account_email, platform }]
       (assignments || []).forEach((a: any) => {
+        const info = accountInfoMap.get(String(a.account_id));
+        if (info) {
+          const list = assignedAccountsByUser.get(a.user_id) || [];
+          list.push(info);
+          assignedAccountsByUser.set(a.user_id, list);
+        }
         const mid = accountModelMap.get(String(a.account_id));
         if (!mid) return;
         const set = assignedModelsByUser.get(a.user_id) || new Set<string>();
@@ -2779,6 +2793,7 @@ export default function AdminDashboard() {
         assignedModelsByUser.set(a.user_id, set);
       });
     }
+
 
     const findModel = (raw: any, contextText?: string, userId?: string) => {
       const assignedSet = userId ? assignedModelsByUser.get(userId) : null;
@@ -2863,11 +2878,21 @@ export default function AdminDashboard() {
             normalizeAgencyVal(_model?.model_agency) ||
             chatterAgencyByUser.get(r.user_id) ||
             "";
+          const chatterAccounts = assignedAccountsByUser.get(r.user_id) || [];
+          // Pick the assigned account matching the resolved model (if any),
+          // otherwise fall back to the first assigned account so we can still
+          // show platform / email context for disambiguation.
+          const matchedAcc =
+            (_model && chatterAccounts.find((a) => a.model_id && a.model_id === String(_model.id))) ||
+            chatterAccounts[0] ||
+            null;
           return {
             ...r,
             _messages: msgs,
             _model,
             _agency,
+            _modelAccountEmail: matchedAcc?.account_email || null,
+            _modelAccountPlatform: matchedAcc?.platform || null,
           };
         }),
       );
@@ -6093,6 +6118,49 @@ export default function AdminDashboard() {
                                       <span className="text-xl text-foreground font-bold tracking-tight">{req.model_name}</span>
                                       <Copy className="h-3 w-3 opacity-0 group-hover:opacity-50 transition-opacity ml-auto shrink-0" />
                                     </button>
+
+                                    {/* Resolved model identity (username / account email) for disambiguation */}
+                                    {(req._model?.name ||
+                                      req._model?.username ||
+                                      req._modelAccountEmail) && (
+                                      <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 -mt-1 text-[11px] text-muted-foreground">
+                                        {req._model?.name &&
+                                          String(req._model.name).toLowerCase() !==
+                                            String(req.model_name || "").toLowerCase() && (
+                                            <span className="text-foreground/80 font-medium">
+                                              ↳ {req._model.name}
+                                            </span>
+                                          )}
+                                        {req._model?.username && (
+                                          <button
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              navigator.clipboard.writeText(req._model.username);
+                                              toast.success("Username kopiert");
+                                            }}
+                                            className="hover:text-accent transition-colors"
+                                            title="Username kopieren"
+                                          >
+                                            @{req._model.username}
+                                          </button>
+                                        )}
+                                        {req._modelAccountEmail && (
+                                          <button
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              navigator.clipboard.writeText(req._modelAccountEmail);
+                                              toast.success("Account-E-Mail kopiert");
+                                            }}
+                                            className="hover:text-accent transition-colors truncate max-w-full"
+                                            title="Account-E-Mail kopieren"
+                                          >
+                                            {req._modelAccountEmail}
+                                          </button>
+                                        )}
+                                      </div>
+                                    )}
 
                                     {/* Customer Name */}
                                     {(req as any).customer_name && (
