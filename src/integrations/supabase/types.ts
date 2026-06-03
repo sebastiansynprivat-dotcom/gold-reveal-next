@@ -524,6 +524,157 @@ export type Database = {
           },
         ]
       }
+      content_plan_assignments: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          id: string
+          model_id: string
+          plan_id: string
+          start_date: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          id?: string
+          model_id: string
+          plan_id: string
+          start_date?: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          id?: string
+          model_id?: string
+          plan_id?: string
+          start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_plan_assignments_model_id_fkey"
+            columns: ["model_id"]
+            isOneToOne: false
+            referencedRelation: "fanvue_models"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_plan_assignments_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "content_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_plan_days: {
+        Row: {
+          created_at: string
+          day_number: number
+          id: string
+          items: Json
+          plan_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          day_number: number
+          id?: string
+          items?: Json
+          plan_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          day_number?: number
+          id?: string
+          items?: Json
+          plan_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_plan_days_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "content_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_plan_task_status: {
+        Row: {
+          assignment_id: string
+          completed_at: string | null
+          created_at: string
+          day_number: number
+          done: boolean
+          id: string
+          item_index: number
+          note: string | null
+          updated_at: string
+          upload_url: string | null
+        }
+        Insert: {
+          assignment_id: string
+          completed_at?: string | null
+          created_at?: string
+          day_number: number
+          done?: boolean
+          id?: string
+          item_index: number
+          note?: string | null
+          updated_at?: string
+          upload_url?: string | null
+        }
+        Update: {
+          assignment_id?: string
+          completed_at?: string | null
+          created_at?: string
+          day_number?: number
+          done?: boolean
+          id?: string
+          item_index?: number
+          note?: string | null
+          updated_at?: string
+          upload_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_plan_task_status_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "content_plan_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_plans: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       credit_notes: {
         Row: {
           account_id: string | null
