@@ -55,7 +55,7 @@ type SocialMediaModel = {
   archived_at: string | null;
 };
 
-const emptyModel: Omit<SocialMediaModel, "id" | "created_at"> = {
+const emptyModel: Omit<SocialMediaModel, "id" | "created_at" | "archived_at"> = {
   name: "",
   username: "",
   account_setup: false,
