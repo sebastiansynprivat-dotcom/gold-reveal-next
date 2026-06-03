@@ -395,7 +395,7 @@ export default function FanvueDashboard() {
 
       {/* Edit/Create Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-card border-accent/20">
+        <DialogContent className="w-[calc(100vw-1.5rem)] sm:w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto bg-card border-accent/20 p-4 sm:p-6">
           <DialogHeader>
             <DialogTitle className="text-lg">{editing ? "Model bearbeiten" : "Neues Model anlegen"}</DialogTitle>
           </DialogHeader>
@@ -413,7 +413,7 @@ export default function FanvueDashboard() {
             </div>
 
             {/* Status Toggles */}
-            <div className="rounded-xl border border-border/40 p-4 space-y-3 bg-secondary/20">
+            <div className="rounded-xl border border-border/40 p-3 sm:p-4 space-y-3 bg-secondary/20">
               <h4 className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Status</h4>
               <ToggleRow label="Account eingerichtet" checked={form.account_setup} onChange={(v) => setForm({ ...form, account_setup: v })} />
               <ToggleRow label="Chatter zugewiesen" checked={form.chatter_assigned} onChange={(v) => setForm({ ...form, chatter_assigned: v })} />
@@ -428,17 +428,52 @@ export default function FanvueDashboard() {
               <ToggleRow label="Social Media verlinkt" checked={form.social_linked} onChange={(v) => setForm({ ...form, social_linked: v })} />
             </div>
 
-            {/* Social Links */}
-            <div className="rounded-xl border border-border/40 p-4 space-y-2 bg-secondary/20">
-              <h4 className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-2">Social Media Links</h4>
-              <SocialInput icon={Instagram} placeholder="Instagram URL oder @handle" value={form.instagram_url} onChange={(v) => setForm({ ...form, instagram_url: v })} />
-              <SocialInput icon={Music2} placeholder="TikTok URL" value={form.tiktok_url} onChange={(v) => setForm({ ...form, tiktok_url: v })} />
-              <SocialInput icon={Twitter} placeholder="Twitter/X URL" value={form.twitter_url} onChange={(v) => setForm({ ...form, twitter_url: v })} />
-              <SocialInput icon={Globe} placeholder="Andere Plattform" value={form.other_social} onChange={(v) => setForm({ ...form, other_social: v })} />
+            {/* Social Links (Instagram only, dynamic) */}
+            <div className="rounded-xl border border-border/40 p-3 sm:p-4 space-y-2 bg-secondary/20">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Instagram Accounts</h4>
+                <Button size="sm" variant="ghost" onClick={addInstagram} className="text-accent h-7">
+                  <Plus className="h-3.5 w-3.5 mr-1" /> Hinzufügen
+                </Button>
+              </div>
+              {form.instagram_urls.length === 0 ? (
+                <p className="text-xs text-muted-foreground italic">Noch kein Instagram Account hinzugefügt</p>
+              ) : (
+                <div className="space-y-2">
+                  {form.instagram_urls.map((url, i) => (
+                    <div key={i} className="flex items-center gap-2 min-w-0">
+                      <Instagram className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <Input
+                        placeholder="Instagram URL oder @handle"
+                        value={url}
+                        onChange={(e) => updateInstagram(i, e.target.value)}
+                        className="text-sm min-w-0 flex-1"
+                      />
+                      <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive shrink-0" onClick={() => removeInstagram(i)}>
+                        <X className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Linktree (separate from social links) */}
+            <div className="rounded-xl border border-border/40 p-3 sm:p-4 space-y-2 bg-secondary/20">
+              <h4 className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-2">Linktree</h4>
+              <div className="flex items-center gap-2 min-w-0">
+                <Link2 className="h-4 w-4 text-muted-foreground shrink-0" />
+                <Input
+                  placeholder="https://linktr.ee/username"
+                  value={form.linktree_url}
+                  onChange={(e) => setForm({ ...form, linktree_url: e.target.value })}
+                  className="text-sm min-w-0 flex-1"
+                />
+              </div>
             </div>
 
             {/* Marketers */}
-            <div className="rounded-xl border border-border/40 p-4 space-y-2 bg-secondary/20">
+            <div className="rounded-xl border border-border/40 p-3 sm:p-4 space-y-2 bg-secondary/20">
               <div className="flex items-center justify-between mb-2">
                 <h4 className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Marketer & Instagram-Links</h4>
                 <Button size="sm" variant="ghost" onClick={addMarketer} className="text-accent h-7">
@@ -450,22 +485,24 @@ export default function FanvueDashboard() {
               ) : (
                 <div className="space-y-2">
                   {form.marketers.map((mk, i) => (
-                    <div key={i} className="flex gap-2 items-center">
+                    <div key={i} className="flex flex-col sm:flex-row gap-2 sm:items-center min-w-0">
                       <Input
                         placeholder="Name"
                         value={mk.name}
                         onChange={(e) => updateMarketer(i, "name", e.target.value)}
-                        className="text-sm flex-1"
+                        className="text-sm min-w-0 flex-1"
                       />
-                      <Input
-                        placeholder="@instagram oder URL"
-                        value={mk.instagram}
-                        onChange={(e) => updateMarketer(i, "instagram", e.target.value)}
-                        className="text-sm flex-1"
-                      />
-                      <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive shrink-0" onClick={() => removeMarketer(i)}>
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
+                      <div className="flex items-center gap-2 min-w-0">
+                        <Input
+                          placeholder="@instagram oder URL"
+                          value={mk.instagram}
+                          onChange={(e) => updateMarketer(i, "instagram", e.target.value)}
+                          className="text-sm min-w-0 flex-1"
+                        />
+                        <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive shrink-0" onClick={() => removeMarketer(i)}>
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
                     </div>
                   ))}
                 </div>
