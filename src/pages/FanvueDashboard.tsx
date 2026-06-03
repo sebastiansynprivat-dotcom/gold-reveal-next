@@ -188,6 +188,12 @@ export default function FanvueDashboard() {
   const removeMarketer = (i: number) =>
     setForm((f) => ({ ...f, marketers: f.marketers.filter((_, idx) => idx !== i) }));
 
+  const addInstagram = () => setForm((f) => ({ ...f, instagram_urls: [...f.instagram_urls, ""] }));
+  const updateInstagram = (i: number, v: string) =>
+    setForm((f) => ({ ...f, instagram_urls: f.instagram_urls.map((u, idx) => idx === i ? v : u) }));
+  const removeInstagram = (i: number) =>
+    setForm((f) => ({ ...f, instagram_urls: f.instagram_urls.filter((_, idx) => idx !== i) }));
+
   const filtered = models.filter((m) =>
     !search ||
     m.name.toLowerCase().includes(search.toLowerCase()) ||
