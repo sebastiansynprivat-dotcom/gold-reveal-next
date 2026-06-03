@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Pencil, Trash2, LogOut, Instagram, Music2, Twitter, Globe, UserCheck, MessageCircle, CheckCircle2, Search, Users, ArrowLeft, TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { Plus, Pencil, Trash2, LogOut, Instagram, Music2, Twitter, Globe, UserCheck, MessageCircle, CheckCircle2, Search, Users, ArrowLeft, TrendingUp, TrendingDown, Minus, Link2, X } from "lucide-react";
 import logo from "@/assets/logo.png";
 import GoldParticles from "@/components/GoldParticles";
 import { useAdminRole } from "@/hooks/useAdminRole";
@@ -27,6 +27,8 @@ type FanvueModel = {
   chatter_name: string;
   social_linked: boolean;
   instagram_url: string;
+  instagram_urls: string[];
+  linktree_url: string;
   tiktok_url: string;
   twitter_url: string;
   other_social: string;
@@ -45,6 +47,8 @@ const emptyModel: Omit<FanvueModel, "id" | "created_at"> = {
   chatter_name: "",
   social_linked: false,
   instagram_url: "",
+  instagram_urls: [],
+  linktree_url: "",
   tiktok_url: "",
   twitter_url: "",
   other_social: "",
