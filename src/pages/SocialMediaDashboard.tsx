@@ -514,10 +514,36 @@ export default function SocialMediaDashboard() {
                     );
                   })()}
 
-                  <IgGrowthBlock
-                    snaps={snapshots[m.id] || []}
-                    onLog={() => { setSnapshotFor(m); setSnapshotValue(""); }}
-                  />
+                  {(() => {
+                    const igs = (m.instagram_urls?.length ? m.instagram_urls : (m.instagram_url ? [m.instagram_url] : []))
+                      .map((u) => u?.trim()).filter(Boolean);
+                    const all = snapshots[m.id] || [];
+                    const legacy = all.filter((s) => !s.instagram_url);
+                    return (
+                      <div className="space-y-2 border-t border-border/30 pt-3 mt-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5">
+                            <Instagram className="h-3 w-3 text-accent/70" />
+                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">IG Wachstum</span>
+                          </div>
+                          <Button size="sm" variant="ghost" onClick={() => { setSnapshotFor(m); setSnapshotValue(""); }} className="h-6 px-2 text-[10px] text-accent hover:bg-accent/10">
+                            <Plus className="h-3 w-3 mr-1" /> Eintragen
+                          </Button>
+                        </div>
+                        {igs.length === 0 && legacy.length === 0 && (
+                          <p className="text-[11px] text-muted-foreground/70 italic">Noch keine Instagram-Links hinterlegt</p>
+                        )}
+                        {igs.map((u) => {
+                          const snaps = all.filter((s) => s.instagram_url === u);
+                          const merged = snaps.length === 0 && igs.length === 1 ? legacy : snaps;
+                          return <IgGrowthBlock key={u} url={u} snaps={merged} />;
+                        })}
+                        {igs.length === 0 && legacy.length > 0 && (
+                          <IgGrowthBlock url={null} snaps={legacy} />
+                        )}
+                      </div>
+                    );
+                  })()}
 
 
                   {m.marketers.length > 0 && (
