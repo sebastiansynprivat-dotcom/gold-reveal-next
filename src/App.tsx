@@ -169,8 +169,11 @@ const App = () => (
               <Route path="/rechnung" element={<ProtectedRoute><Invoice /></ProtectedRoute>} />
               <Route path="/model/login" element={<ModelLogin />} />
               <Route path="/model" element={<ModelProtectedRoute><ModelDashboard /></ModelProtectedRoute>} />
-              <Route path="/fanvue/login" element={<FanvueLogin />} />
-              <Route path="/fanvue" element={<FanvueProtectedRoute><FanvueDashboard /></FanvueProtectedRoute>} />
+              <Route path="/socialmedia/login" element={<FanvueLogin />} />
+              <Route path="/socialmedia/admin" element={<FanvueProtectedRoute><FanvueDashboard /></FanvueProtectedRoute>} />
+              {/* Legacy /fanvue → /socialmedia redirects */}
+              <Route path="/fanvue/login" element={<Navigate to="/socialmedia/login" replace />} />
+              <Route path="/fanvue" element={<Navigate to="/socialmedia/admin" replace />} />
               <Route path="/bibliothek" element={<ProtectedRoute><Library /></ProtectedRoute>} />
               <Route path="/bibliothek/chat-breakdown-01" element={<ProtectedRoute><ChatBreakdown /></ProtectedRoute>} />
               <Route path="/bibliothek/coaching-basics" element={<ProtectedRoute><CoachingBasics /></ProtectedRoute>} />
