@@ -303,7 +303,7 @@ export default function SocialMediaDashboard() {
             { label: "Models gesamt", value: stats.total, icon: Users },
             { label: "Account eingerichtet", value: stats.setup, icon: CheckCircle2 },
             { label: "Mit Chatter", value: stats.chatters, icon: MessageCircle },
-            { label: "Social verlinkt", value: stats.social, icon: Instagram },
+            { label: "Chatter benötigt", value: stats.needed, icon: MessageCircle },
           ].map(({ label, value, icon: Icon }) => (
             <motion.div
               key={label}
