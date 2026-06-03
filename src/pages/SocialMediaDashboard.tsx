@@ -85,6 +85,7 @@ export default function SocialMediaDashboard() {
   const [snapshots, setSnapshots] = useState<Record<string, { followers: number; recorded_at: string; instagram_url: string | null }[]>>({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [archiveFilter, setArchiveFilter] = useState<"active" | "archived" | "all">("active");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<SocialMediaModel | null>(null);
   const [form, setForm] = useState<typeof emptyModel>(emptyModel);
