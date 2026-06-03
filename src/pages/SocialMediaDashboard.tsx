@@ -1161,6 +1161,80 @@ export default function SocialMediaDashboard() {
         </DialogContent>
       </Dialog>
 
+      {/* Chatter History Dialog */}
+      <Dialog open={!!historyOpenFor} onOpenChange={(o) => !o && setHistoryOpenFor(null)}>
+        <DialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:max-w-md max-h-[80vh] overflow-y-auto bg-card border-accent/30">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MessageCircle className="h-4 w-4 text-accent" />
+              Chatter Verlauf — {historyOpenFor?.name}
+            </DialogTitle>
+          </DialogHeader>
+          {(() => {
+            const hist = historyOpenFor ? (chatterHistory[historyOpenFor.id] ?? []) : [];
+            if (hist.length === 0) {
+              return <p className="text-sm text-muted-foreground py-6 text-center">Noch kein Chatter zugewiesen.</p>;
+            }
+            const fmt = (d: string) => new Date(d).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
+            const days = (a: string, b: string) =>
+              Math.max(1, Math.round((new Date(b).getTime() - new Date(a).getTime()) / 86400000));
+            return (
+              <div className="space-y-2 mt-2">
+                {hist.map((h) => {
+                  const isOpen = !h.ended_at;
+                  return (
+                    <div
+                      key={h.id}
+                      className={`rounded-xl border p-3 ${
+                        isOpen ? "border-emerald-500/40 bg-emerald-500/5" : "border-border/40 bg-card/30"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span
+                            className={`h-2 w-2 rounded-full shrink-0 ${
+                              isOpen ? "bg-emerald-400 shadow-[0_0_8px_hsl(140_70%_50%/0.8)]" : "bg-muted-foreground/40"
+                            }`}
+                          />
+                          <span className="font-semibold text-foreground truncate">{h.chatter_name}</span>
+                        </div>
+                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground shrink-0">
+                          {isOpen ? "Aktiv" : `${days(h.started_at, h.ended_at!)} Tage`}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+                        <Calendar className="h-3 w-3 text-accent/70" />
+                        <span>{fmt(h.started_at)}</span>
+                        <span className="opacity-50">→</span>
+                        <span>{h.ended_at ? fmt(h.ended_at) : "heute"}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+          {historyOpenFor?.chatter_name && (
+            <DialogFooter>
+              <Button
+                variant="outline"
+                className="border-accent/40 text-accent hover:bg-accent/10"
+                onClick={async () => {
+                  if (historyOpenFor) {
+                    await archiveChatter(historyOpenFor);
+                    setHistoryOpenFor(null);
+                  }
+                }}
+              >
+                <Archive className="h-4 w-4 mr-1.5" />
+                Aktuellen Chatter archivieren
+              </Button>
+            </DialogFooter>
+          )}
+        </DialogContent>
+      </Dialog>
+
+
       {/* AI Summary Dialog */}
       <Dialog open={summaryOpen} onOpenChange={setSummaryOpen}>
         <DialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:max-w-2xl max-h-[85vh] overflow-y-auto bg-card border-accent/30">
