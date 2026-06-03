@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Pencil, Trash2, LogOut, Instagram, Music2, Twitter, Globe, UserCheck, MessageCircle, CheckCircle2, Search, Users, ArrowLeft, TrendingUp, TrendingDown, Minus, Link2, X, Sparkles, Copy } from "lucide-react";
+import { Plus, Pencil, Trash2, LogOut, Instagram, Music2, Twitter, Globe, UserCheck, MessageCircle, CheckCircle2, Search, Users, ArrowLeft, TrendingUp, TrendingDown, Minus, Link2, X, Sparkles, Copy, KeyRound, RefreshCw } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ReactMarkdown from "react-markdown";
 import logo from "@/assets/logo.png";
@@ -91,6 +91,8 @@ export default function SocialMediaDashboard() {
   const [summaryOpen, setSummaryOpen] = useState(false);
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [summaryText, setSummaryText] = useState("");
+  const [logins, setLogins] = useState<Record<string, { email: string; password: string | null }>>({});
+  const [loginBusy, setLoginBusy] = useState<string | null>(null);
 
   const generateSummary = async () => {
     setSummaryOpen(true);
@@ -144,7 +146,50 @@ export default function SocialMediaDashboard() {
       (grouped[s.model_id] ||= []).push({ followers: s.followers, recorded_at: s.recorded_at });
     });
     setSnapshots(grouped);
+
+    // Load model logins
+    const { data: lg } = await supabase
+      .from("fanvue_model_users" as any)
+      .select("model_id, email, plaintext_password");
+    const loginMap: Record<string, { email: string; password: string | null }> = {};
+    ((lg || []) as any[]).forEach((r) => {
+      loginMap[r.model_id] = { email: r.email, password: r.plaintext_password };
+    });
+    setLogins(loginMap);
+
     setLoading(false);
+  };
+
+  const callLoginFn = async (modelId: string, action: "create" | "reset" | "delete") => {
+    setLoginBusy(modelId);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-fanvue-model-login", {
+        body: { model_id: modelId, action: action === "create" ? undefined : action },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      if (action === "delete") {
+        setLogins((prev) => {
+          const n = { ...prev };
+          delete n[modelId];
+          return n;
+        });
+        toast.success("Login gelöscht");
+      } else {
+        setLogins((prev) => ({ ...prev, [modelId]: { email: (data as any).email, password: (data as any).password } }));
+        toast.success(action === "create" ? "Login erstellt" : "Passwort zurückgesetzt");
+      }
+    } catch (e: any) {
+      toast.error("Fehler: " + (e?.message ?? "unbekannt"));
+    } finally {
+      setLoginBusy(null);
+    }
+  };
+
+  const copyCreds = (email: string, password: string | null) => {
+    const text = password ? `${email}\n${password}` : email;
+    navigator.clipboard.writeText(text);
+    toast.success("Zugangsdaten kopiert");
   };
 
   const saveSnapshot = async () => {
@@ -473,6 +518,80 @@ export default function SocialMediaDashboard() {
                       </div>
                     </div>
                   )}
+
+                  {/* Login section */}
+                  <div className="border-t border-border/30 pt-3 mt-3">
+                    <div className="flex items-center gap-1.5 mb-2">
+                      <KeyRound className="h-3 w-3 text-accent/70" />
+                      <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Login</span>
+                    </div>
+                    {logins[m.id] ? (
+                      <div className="rounded-lg border border-accent/20 bg-background/40 p-2.5 space-y-1.5">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[10px] uppercase tracking-wider text-muted-foreground">E-Mail</span>
+                          <button
+                            onClick={() => { navigator.clipboard.writeText(logins[m.id].email); toast.success("E-Mail kopiert"); }}
+                            className="text-xs text-foreground font-mono truncate hover:text-accent transition-colors"
+                            title="Kopieren"
+                          >
+                            {logins[m.id].email}
+                          </button>
+                        </div>
+                        {logins[m.id].password && (
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Passwort</span>
+                            <button
+                              onClick={() => { navigator.clipboard.writeText(logins[m.id].password!); toast.success("Passwort kopiert"); }}
+                              className="text-xs text-foreground font-mono truncate hover:text-accent transition-colors"
+                              title="Kopieren"
+                            >
+                              {logins[m.id].password}
+                            </button>
+                          </div>
+                        )}
+                        <div className="flex gap-1.5 pt-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 text-[10px] flex-1"
+                            onClick={() => copyCreds(logins[m.id].email, logins[m.id].password)}
+                          >
+                            <Copy className="h-3 w-3 mr-1" /> Kopieren
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 text-[10px] flex-1"
+                            disabled={loginBusy === m.id}
+                            onClick={() => callLoginFn(m.id, "reset")}
+                          >
+                            <RefreshCw className="h-3 w-3 mr-1" /> Reset
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 w-7 p-0 text-destructive"
+                            disabled={loginBusy === m.id}
+                            onClick={() => callLoginFn(m.id, "delete")}
+                            title="Login löschen"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="w-full h-8 text-xs border-accent/30 bg-accent/5 text-accent hover:bg-accent/15"
+                        disabled={loginBusy === m.id}
+                        onClick={() => callLoginFn(m.id, "create")}
+                      >
+                        <Plus className="h-3.5 w-3.5 mr-1" />
+                        {loginBusy === m.id ? "Erstelle…" : "Login generieren"}
+                      </Button>
+                    )}
+                  </div>
 
                   {m.notes && (
                     <p className="text-xs text-muted-foreground mt-3 border-t border-border/30 pt-3 line-clamp-2">{m.notes}</p>

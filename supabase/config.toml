@@ -53,3 +53,6 @@ verify_jwt = false
 
 [functions.translate-batch]
 verify_jwt = false
+
+[functions.create-fanvue-model-login]
+verify_jwt = false
