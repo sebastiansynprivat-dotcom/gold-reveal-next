@@ -2839,14 +2839,35 @@ export default function AdminDashboard() {
           (msgsByReq[m.request_id] ||= []).push(m);
         });
       }
+      const normalizeAgencyVal = (a: any) => {
+        const v = String(a || "").toLowerCase();
+        if (v === "simp") return "syn";
+        if (v === "shex" || v === "syn") return v;
+        return "";
+      };
+      // Per-chatter agency fallback derived from assigned models
+      const chatterAgencyByUser = new Map<string, string>();
+      for (const [uid, mids] of assignedModelsByUser.entries()) {
+        for (const mid of mids) {
+          const m = modelById.get(mid);
+          const ag = normalizeAgencyVal(m?.model_agency);
+          if (ag) { chatterAgencyByUser.set(uid, ag); break; }
+        }
+      }
       setModelRequests(
         data.map((r: any) => {
           const msgs = msgsByReq[r.id] || [];
           const ctx = [r.description, r.customer_name, ...msgs.map((m: any) => m.body)].filter(Boolean).join(" ");
+          const _model = findModel(r.model_name, ctx, r.user_id);
+          const _agency =
+            normalizeAgencyVal(_model?.model_agency) ||
+            chatterAgencyByUser.get(r.user_id) ||
+            "";
           return {
             ...r,
             _messages: msgs,
-            _model: findModel(r.model_name, ctx, r.user_id),
+            _model,
+            _agency,
           };
         }),
       );
