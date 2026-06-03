@@ -460,6 +460,70 @@ export type Database = {
         }
         Relationships: []
       }
+      content_drop_reads: {
+        Row: {
+          drop_id: string
+          read_at: string
+          user_id: string
+        }
+        Insert: {
+          drop_id: string
+          read_at?: string
+          user_id: string
+        }
+        Update: {
+          drop_id?: string
+          read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_drop_reads_drop_id_fkey"
+            columns: ["drop_id"]
+            isOneToOne: false
+            referencedRelation: "content_drops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_drops: {
+        Row: {
+          content_link: string
+          created_at: string
+          created_by: string | null
+          id: string
+          message: string
+          model_id: string
+          model_name: string
+        }
+        Insert: {
+          content_link: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          message?: string
+          model_id: string
+          model_name?: string
+        }
+        Update: {
+          content_link?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          message?: string
+          model_id?: string
+          model_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_drops_model_id_fkey"
+            columns: ["model_id"]
+            isOneToOne: false
+            referencedRelation: "models"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       credit_notes: {
         Row: {
           account_id: string | null

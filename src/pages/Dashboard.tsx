@@ -70,6 +70,7 @@ import FrageMemoDialog from "@/components/FrageMemoDialog";
 import ModelRequestDialog, { EditRequestData } from "@/components/ModelRequestDialog";
 import RevenueChart from "@/components/RevenueChart";
 import MonthSummaryWidget from "@/components/MonthSummaryWidget";
+import ContentDropsWidget from "@/components/ContentDropsWidget";
 import QuickActionBar from "@/components/QuickActionBar";
 import InspirationLibrary from "@/components/InspirationLibrary";
 import ThirtyDayChallenge from "@/components/ThirtyDayChallenge";
@@ -1074,6 +1075,9 @@ export default function Dashboard() {
 
         {/* 7-Day Revenue Chart */}
         <div data-tour="revenue-chart">{user && <RevenueChart userId={user.id} />}</div>
+
+        {/* Neue Content Drops vom Model */}
+        <ContentDropsWidget />
         {/* Anfrage an das Model */}
         <motion.section
           variants={sectionVariants}
