@@ -471,6 +471,28 @@ export default function SocialMediaDashboard() {
           </Button>
         </div>
 
+        {/* Archive Filter */}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground/70 font-medium mr-1">Anzeige:</span>
+          {([
+            { v: "active", l: `Aktiv (${activeModels.length})` },
+            { v: "archived", l: `Archiviert (${archivedCount})` },
+            { v: "all", l: `Alle (${models.length})` },
+          ] as const).map((o) => (
+            <button
+              key={o.v}
+              onClick={() => setArchiveFilter(o.v)}
+              className={`px-3 py-1 rounded-full border text-xs font-medium transition-all ${
+                archiveFilter === o.v
+                  ? "bg-accent/20 border-accent/60 text-accent shadow-[0_0_12px_hsl(var(--accent)/0.25)]"
+                  : "bg-card/40 border-border/50 text-muted-foreground hover:border-accent/40 hover:text-foreground"
+              }`}
+            >
+              {o.l}
+            </button>
+          ))}
+        </div>
+
         {/* Model Cards */}
         {loading ? (
           <div className="flex justify-center py-20">
