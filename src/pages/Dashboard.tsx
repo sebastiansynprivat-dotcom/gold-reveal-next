@@ -483,9 +483,16 @@ export default function Dashboard() {
   }, [monthlyRevenue]);
 
   const FORCED_ELITE_USER_IDS = new Set(["ad822168-efed-495f-b1da-84fdf75538f3"]);
-  let currentTier = getCurrentTier(monthlyRevenue);
-  let nextTier = getNextTier(monthlyRevenue);
-  if (user && FORCED_ELITE_USER_IDS.has(user.id) && currentTier.rate < 25) {
+  const CHAMPIONS_LEAGUE_USER_IDS = new Set(["170b30d0-c3a4-4272-ab57-302860e9e025"]); // Philip S
+  const isChampionsLeague = !!(user && CHAMPIONS_LEAGUE_USER_IDS.has(user.id));
+  let currentTier: { name: string; emoji: string; min: number; max: number; rate: number } =
+    getCurrentTier(monthlyRevenue) as any;
+  let nextTier: { name: string; emoji: string; min: number; max: number; rate: number } | null =
+    getNextTier(monthlyRevenue) as any;
+  if (isChampionsLeague) {
+    currentTier = { name: "Champions League", emoji: "🏆", min: 0, max: Infinity, rate: 30 };
+    nextTier = null;
+  } else if (user && FORCED_ELITE_USER_IDS.has(user.id) && currentTier.rate < 25) {
     const eliteIdx = BONUS_TIERS.findIndex((t) => t.name === "Elite");
     currentTier = BONUS_TIERS[eliteIdx];
     nextTier = BONUS_TIERS[eliteIdx + 1] ?? null;
