@@ -765,7 +765,9 @@ export type Database = {
           created_by: string | null
           id: string
           instagram_url: string
+          instagram_urls: Json
           is_active: boolean
+          linktree_url: string | null
           marketers: Json
           name: string
           notes: string
@@ -785,7 +787,9 @@ export type Database = {
           created_by?: string | null
           id?: string
           instagram_url?: string
+          instagram_urls?: Json
           is_active?: boolean
+          linktree_url?: string | null
           marketers?: Json
           name?: string
           notes?: string
@@ -805,7 +809,9 @@ export type Database = {
           created_by?: string | null
           id?: string
           instagram_url?: string
+          instagram_urls?: Json
           is_active?: boolean
+          linktree_url?: string | null
           marketers?: Json
           name?: string
           notes?: string
