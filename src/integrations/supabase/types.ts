@@ -756,6 +756,44 @@ export type Database = {
           },
         ]
       }
+      fanvue_model_users: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          model_id: string
+          plaintext_password: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          model_id: string
+          plaintext_password?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          model_id?: string
+          plaintext_password?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fanvue_model_users_model_id_fkey"
+            columns: ["model_id"]
+            isOneToOne: true
+            referencedRelation: "fanvue_models"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       fanvue_models: {
         Row: {
           account_setup: boolean
@@ -2297,6 +2335,7 @@ export type Database = {
         | "super_admin"
         | "sub_admin"
         | "fanvue_partner"
+        | "fanvue_model"
       platform: "new" | "maloum" | "4based" | "brezzels"
     }
     CompositeTypes: {
@@ -2449,6 +2488,7 @@ export const Constants = {
         "super_admin",
         "sub_admin",
         "fanvue_partner",
+        "fanvue_model",
       ],
       platform: ["new", "maloum", "4based", "brezzels"],
     },
