@@ -6287,11 +6287,18 @@ export default function AdminDashboard() {
                                                 );
                                                 return;
                                               }
+                                              const isModelEn = String(req._model?.model_language || req.model_language || "de").toLowerCase().startsWith("en");
+                                              const srcHeader = isModelEn
+                                                ? "Hey, here's a new request from the chatter – passing it on to you one-to-one 🙋🏼‍♂️:"
+                                                : "Hey, eine neue Anfrage des Chatters an dich – ich leite sie dir einmal eins zu eins weiter 🙋🏼‍♂️:";
+                                              const srcPriceLabel = isModelEn
+                                                ? "The price the customer is willing to pay:"
+                                                : "Der Preis, den der Kunde bereit wäre zu bezahlen:";
                                               const priceLine =
                                                 req.request_type === "individual" && req.price != null
-                                                  ? `\n\nDer Preis, den der Kunde bereit wäre zu bezahlen: ${req.price}€`
+                                                  ? `\n\n${srcPriceLabel} ${req.price}€`
                                                   : "";
-                                              const fullSource = `Hey, eine neue Anfrage des Chatters an dich – ich leite sie dir einmal eins zu eins weiter 🙋🏼‍♂️:\n\n${cleanDescription}${priceLine}`;
+                                              const fullSource = `${srcHeader}\n\n${cleanDescription}${priceLine}`;
                                               setModelRequests((prev) =>
                                                 prev.map((r) =>
                                                   r.id === req.id ? { ...r, _translating: target } : r,
