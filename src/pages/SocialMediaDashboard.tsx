@@ -253,7 +253,7 @@ export default function SocialMediaDashboard() {
     total: models.length,
     setup: models.filter((m) => m.account_setup).length,
     chatters: models.filter((m) => m.chatter_assigned).length,
-    social: models.filter((m) => m.social_linked).length,
+    needed: models.filter((m) => m.chatter_needed && !m.chatter_assigned).length,
   };
 
   return (
