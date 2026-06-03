@@ -2754,6 +2754,7 @@ export default function AdminDashboard() {
     // Build per-chatter assigned model_ids via account_assignments → accounts
     const chatterUserIds = Array.from(new Set((data || []).map((r: any) => r.user_id).filter(Boolean)));
     const assignedModelsByUser = new Map<string, Set<string>>();
+    const assignedAccountsByUser = new Map<string, Array<{ model_id: string | null; account_email: string | null; platform: string | null }>>();
     if (chatterUserIds.length > 0) {
       const { data: assignments } = await supabase
         .from("account_assignments")
