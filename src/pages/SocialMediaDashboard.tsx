@@ -69,6 +69,7 @@ const emptyModel: Omit<SocialMediaModel, "id" | "created_at"> = {
   twitter_url: "",
   other_social: "",
   marketers: [],
+  platform_logins: [],
   notes: "",
   status: "active",
   stage: "onboarding",
