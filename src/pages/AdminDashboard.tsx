@@ -2878,11 +2878,21 @@ export default function AdminDashboard() {
             normalizeAgencyVal(_model?.model_agency) ||
             chatterAgencyByUser.get(r.user_id) ||
             "";
+          const chatterAccounts = assignedAccountsByUser.get(r.user_id) || [];
+          // Pick the assigned account matching the resolved model (if any),
+          // otherwise fall back to the first assigned account so we can still
+          // show platform / email context for disambiguation.
+          const matchedAcc =
+            (_model && chatterAccounts.find((a) => a.model_id && a.model_id === String(_model.id))) ||
+            chatterAccounts[0] ||
+            null;
           return {
             ...r,
             _messages: msgs,
             _model,
             _agency,
+            _modelAccountEmail: matchedAcc?.account_email || null,
+            _modelAccountPlatform: matchedAcc?.platform || null,
           };
         }),
       );
