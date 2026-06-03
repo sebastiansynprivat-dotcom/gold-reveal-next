@@ -46,6 +46,7 @@ type SocialMediaModel = {
   twitter_url: string;
   other_social: string;
   marketers: Marketer[];
+  platform_logins: PlatformLogin[];
   notes: string;
   status: string;
   stage: ModelStage;
