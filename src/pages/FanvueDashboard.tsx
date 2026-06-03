@@ -341,14 +341,19 @@ export default function FanvueDashboard() {
                     <StatusRow icon={Instagram} label="Social Media" active={m.social_linked} />
                   </div>
 
-                  {(m.instagram_url || m.tiktok_url || m.twitter_url || m.other_social) && (
-                    <div className="flex gap-1.5 mb-3 flex-wrap">
-                      {m.instagram_url && <SocialLink href={m.instagram_url} icon={Instagram} />}
-                      {m.tiktok_url && <SocialLink href={m.tiktok_url} icon={Music2} />}
-                      {m.twitter_url && <SocialLink href={m.twitter_url} icon={Twitter} />}
-                      {m.other_social && <SocialLink href={m.other_social} icon={Globe} />}
-                    </div>
-                  )}
+                  {(() => {
+                    const igs = m.instagram_urls?.length ? m.instagram_urls : (m.instagram_url ? [m.instagram_url] : []);
+                    const hasAny = igs.length > 0 || m.linktree_url;
+                    if (!hasAny) return null;
+                    return (
+                      <div className="flex gap-1.5 mb-3 flex-wrap">
+                        {igs.filter(Boolean).map((u, i) => (
+                          <SocialLink key={i} href={u} icon={Instagram} />
+                        ))}
+                        {m.linktree_url && <SocialLink href={m.linktree_url} icon={Link2} />}
+                      </div>
+                    );
+                  })()}
 
                   <IgGrowthBlock
                     snaps={snapshots[m.id] || []}
