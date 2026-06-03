@@ -173,7 +173,7 @@ export default function FanvueDashboard() {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    navigate("/fanvue/login");
+    navigate("/socialmedia/login");
   };
 
   const addMarketer = () => setForm((f) => ({ ...f, marketers: [...f.marketers, { name: "", instagram: "" }] }));
@@ -211,7 +211,7 @@ export default function FanvueDashboard() {
           </div>
           <div className="min-w-0">
             <h1 className="text-base md:text-lg font-bold tracking-tight bg-gradient-to-r from-accent via-yellow-200 to-accent bg-clip-text text-transparent">
-              Fanvue Dashboard
+              Social Media Dashboard
             </h1>
             <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground/70 font-medium">Model Kartei</p>
           </div>

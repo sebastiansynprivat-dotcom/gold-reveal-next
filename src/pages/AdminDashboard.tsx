@@ -3761,9 +3761,9 @@ export default function AdminDashboard() {
     },
     {
       key: "fanvue" as const,
-      label: "Fanvue Dashboard",
+      label: "Social Media Dashboard",
       icon: Star,
-      onClick: () => { window.location.assign("/fanvue"); },
+      onClick: () => { window.location.assign("/socialmedia/admin"); },
     },
     {
       key: "deleted" as const,

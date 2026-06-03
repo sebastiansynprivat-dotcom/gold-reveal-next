@@ -2,7 +2,7 @@ import { useLocation } from "react-router-dom";
 import LanguageToggle from "./LanguageToggle";
 
 // Hidden on admin / model / fanvue areas (they have their own language model).
-const HIDDEN_PREFIXES = ["/admin", "/model", "/fanvue"];
+const HIDDEN_PREFIXES = ["/admin", "/model", "/fanvue", "/socialmedia"];
 
 export default function FloatingLanguageToggle() {
   const { pathname } = useLocation();
