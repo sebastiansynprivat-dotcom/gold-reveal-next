@@ -18,7 +18,7 @@ import logo from "@/assets/logo.png";
 import GoldParticles from "@/components/GoldParticles";
 import { useAdminRole } from "@/hooks/useAdminRole";
 
-type Marketer = { name: string; instagram: string };
+type Marketer = { name: string; instagram: string; tracking_link?: string; tracking_name?: string };
 
 export type ModelStage = "onboarding" | "warm_up" | "active" | "ready";
 
@@ -426,20 +426,39 @@ export default function SocialMediaDashboard() {
                         <UserCheck className="h-3 w-3 text-accent/70" />
                         <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Marketer ({m.marketers.length})</span>
                       </div>
-                      <div className="space-y-1">
+                      <div className="space-y-1.5">
                         {m.marketers.map((mk, i) => (
-                          <div key={i} className="flex items-center justify-between text-xs">
-                            <span className="text-foreground truncate">{mk.name || "—"}</span>
-                            {mk.instagram && (
-                              <a
-                                href={mk.instagram.startsWith("http") ? mk.instagram : `https://instagram.com/${mk.instagram.replace("@", "")}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-accent hover:underline flex items-center gap-1 shrink-0 ml-2"
-                              >
-                                <Instagram className="h-3 w-3" />
-                                <span className="truncate max-w-[100px]">{mk.instagram.replace(/^https?:\/\/(www\.)?instagram\.com\//, "@").replace(/\/$/, "")}</span>
-                              </a>
+                          <div key={i} className="flex flex-col gap-0.5 text-xs">
+                            <div className="flex items-center justify-between">
+                              <span className="text-foreground truncate">{mk.name || "—"}</span>
+                              {mk.instagram && (
+                                <a
+                                  href={mk.instagram.startsWith("http") ? mk.instagram : `https://instagram.com/${mk.instagram.replace("@", "")}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-accent hover:underline flex items-center gap-1 shrink-0 ml-2"
+                                >
+                                  <Instagram className="h-3 w-3" />
+                                  <span className="truncate max-w-[100px]">{mk.instagram.replace(/^https?:\/\/(www\.)?instagram\.com\//, "@").replace(/\/$/, "")}</span>
+                                </a>
+                              )}
+                            </div>
+                            {(mk.tracking_link || mk.tracking_name) && (
+                              <div className="flex items-center gap-1 text-[10px] text-muted-foreground/80">
+                                <Link2 className="h-2.5 w-2.5 shrink-0" />
+                                {mk.tracking_link ? (
+                                  <a
+                                    href={mk.tracking_link.startsWith("http") ? mk.tracking_link : `https://${mk.tracking_link}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-accent/80 hover:underline truncate max-w-[180px]"
+                                  >
+                                    {mk.tracking_name || mk.tracking_link}
+                                  </a>
+                                ) : (
+                                  <span className="truncate">{mk.tracking_name}</span>
+                                )}
+                              </div>
                             )}
                           </div>
                         ))}
@@ -562,25 +581,41 @@ export default function SocialMediaDashboard() {
               {form.marketers.length === 0 ? (
                 <p className="text-xs text-muted-foreground italic">Noch keine Marketer eingetragen</p>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   {form.marketers.map((mk, i) => (
-                    <div key={i} className="flex flex-col sm:flex-row gap-2 sm:items-center min-w-0">
-                      <Input
-                        placeholder="Name"
-                        value={mk.name}
-                        onChange={(e) => updateMarketer(i, "name", e.target.value)}
-                        className="text-sm min-w-0 flex-1"
-                      />
-                      <div className="flex items-center gap-2 min-w-0">
+                    <div key={i} className="rounded-lg border border-border/30 p-2.5 space-y-2 bg-background/30">
+                      <div className="flex flex-col sm:flex-row gap-2 sm:items-center min-w-0">
                         <Input
-                          placeholder="@instagram oder URL"
-                          value={mk.instagram}
-                          onChange={(e) => updateMarketer(i, "instagram", e.target.value)}
+                          placeholder="Name"
+                          value={mk.name}
+                          onChange={(e) => updateMarketer(i, "name", e.target.value)}
                           className="text-sm min-w-0 flex-1"
                         />
-                        <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive shrink-0" onClick={() => removeMarketer(i)}>
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Input
+                            placeholder="@instagram oder URL"
+                            value={mk.instagram}
+                            onChange={(e) => updateMarketer(i, "instagram", e.target.value)}
+                            className="text-sm min-w-0 flex-1"
+                          />
+                          <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive shrink-0" onClick={() => removeMarketer(i)}>
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <Input
+                          placeholder="Tracking Name"
+                          value={mk.tracking_name || ""}
+                          onChange={(e) => updateMarketer(i, "tracking_name", e.target.value)}
+                          className="text-sm"
+                        />
+                        <Input
+                          placeholder="Tracking Link"
+                          value={mk.tracking_link || ""}
+                          onChange={(e) => updateMarketer(i, "tracking_link", e.target.value)}
+                          className="text-sm"
+                        />
                       </div>
                     </div>
                   ))}
