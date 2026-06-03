@@ -182,6 +182,17 @@ export default function SocialMediaDashboard() {
     });
     setSnapshots(grouped);
 
+    // Load chatter assignment history
+    const { data: hist } = await supabase
+      .from("fanvue_model_chatter_assignments" as any)
+      .select("id, model_id, chatter_name, started_at, ended_at")
+      .order("started_at", { ascending: false });
+    const histMap: Record<string, { id: string; chatter_name: string; started_at: string; ended_at: string | null }[]> = {};
+    ((hist || []) as any[]).forEach((h) => {
+      (histMap[h.model_id] ||= []).push({ id: h.id, chatter_name: h.chatter_name, started_at: h.started_at, ended_at: h.ended_at });
+    });
+    setChatterHistory(histMap);
+
     // Load model logins
     const { data: lg } = await supabase
       .from("fanvue_model_users" as any)
