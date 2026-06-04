@@ -32,7 +32,7 @@ const Auth = () => {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [signUpSuccess, setSignUpSuccess] = useState(false);
-  const [showGroupHelp, setShowGroupHelp] = useState(false);
+  const [showGroupHelp, setShowGroupHelp] = useState(true);
   const [showTelegramHelp, setShowTelegramHelp] = useState(false);
   const [showGroupConfirm, setShowGroupConfirm] = useState(false);
   const [showTelegramConfirm, setShowTelegramConfirm] = useState(false);
