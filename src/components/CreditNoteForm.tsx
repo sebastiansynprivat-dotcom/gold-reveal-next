@@ -622,7 +622,8 @@ export default function CreditNoteForm({
           ].filter(p => p.rev > 0 && p.pct > 0)
         : [];
 
-      const fxRate = currency === invoiceCurrency ? 1 : (liveExchangeRate || 1);
+      // 1:1 conversion across currencies – no FX applied on invoice
+      const fxRate = 1;
 
       if (hasPlatformBreakdown) {
         platforms.forEach((p, i) => {
