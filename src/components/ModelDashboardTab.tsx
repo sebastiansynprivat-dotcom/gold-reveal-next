@@ -2064,8 +2064,10 @@ export default function ModelDashboardTab() {
                           const pct = cp.percentage > 0 ? cp.percentage : fallback;
                           return s + (cp.revenue || 0) * pct / 100;
                         }, 0);
+                        // 4Based revenue is fetched in USD — convert to model base currency
+                        const fbInBase = convertToBase(fb, "USD");
                         const calculated = Math.round(
-                          (fb * pctFb) / 100 + (ml * pctMl) / 100 + (br * pctBr) / 100 + customsTotal,
+                          (fbInBase * pctFb) / 100 + (ml * pctMl) / 100 + (br * pctBr) / 100 + customsTotal,
                         );
                         const lastDay = new Date(y, m, 0).getDate();
                         setBillingShare(calculated);
