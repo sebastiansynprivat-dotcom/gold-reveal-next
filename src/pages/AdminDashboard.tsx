@@ -6595,6 +6595,8 @@ export default function AdminDashboard() {
                                                       toast.error("Fehler beim Speichern");
                                                       return;
                                                     }
+                                                    markReqSeen(req);
+
                                                     const protectedStatuses = ["accepted", "in_progress", "completed", "rejected"];
                                                     const shouldChangeStatus = !req.status || !protectedStatuses.includes(req.status);
                                                     if (shouldChangeStatus) {
