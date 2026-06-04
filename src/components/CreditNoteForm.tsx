@@ -779,7 +779,24 @@ export default function CreditNoteForm({
           y += 4.5;
         }
       }
-      // Exchange-rate lines intentionally omitted (1:1 accounting between EUR/USD)
+      if (hasFxNote) {
+        doc.text(`Exchange Rate: 1 ${currency} = ${liveExchangeRate!.toFixed(4)} ${invoiceCurrency}`, m, y);
+        y += 4.5;
+      }
+      if (hasPlatformFx) {
+        for (const fx of platformFxRates!) {
+          if (fx.from === fx.to) continue;
+          doc.text(`Exchange Rate (${fx.platform}): 1 ${fx.from} = ${fx.rate.toFixed(4)} ${fx.to}`, m, y);
+          y += 4.5;
+        }
+      }
+      if (hasUsdNote) {
+        const netNum = parseFloat(netAmount.replace(",", ".")) || 0;
+        const eurStr = netNum.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const usdStr = usdNum.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        doc.text(`Exchange Rate: ${eurStr}\u20AC = ${usdStr}$`, m, y);
+        y += 4.5;
+      }
 
       if (paymentDate) {
         doc.setFontSize(8.5);
