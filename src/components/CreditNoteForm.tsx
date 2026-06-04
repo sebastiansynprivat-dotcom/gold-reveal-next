@@ -343,7 +343,7 @@ export default function CreditNoteForm({
     }
     const netInChatter = currentNet / oldRate;
     const converted = netInChatter * newRate;
-    setNetAmount(converted.toFixed(2));
+    setNetAmount((Math.ceil(converted * 100) / 100).toFixed(2));
   }, [invoiceCurrency, netAmount, currency]);
 
   // Auto-save remaining UI-only fields to localStorage (provider fields are persisted in DB)
