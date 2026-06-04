@@ -2248,7 +2248,7 @@ export default function ModelDashboardTab() {
                           </p>
                           {customPlatforms.map((cp) => {
                             const effectivePct = cp.percentage > 0 ? cp.percentage : fallback;
-                            const earn = Math.round((cp.revenue * effectivePct) / 100);
+                            const earn = (cp.revenue * effectivePct) / 100;
                             return (
                               <div key={cp.id} className="space-y-1.5 rounded-lg bg-secondary/20 p-2 border border-border/30">
                                 <div className="flex items-center gap-2">
@@ -2306,13 +2306,13 @@ export default function ModelDashboardTab() {
                                 </div>
                                 <div className="flex justify-between items-center text-[10px] text-muted-foreground tabular-nums">
                                   <span>
-                                    Umsatz: {(cp.revenue || 0).toLocaleString("de-DE")} {baseCurrency}
+                                    Umsatz: {(cp.revenue || 0).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {baseCurrency}
                                     {cp.percentage === 0 && fallback > 0 && (
                                       <span className="ml-1 text-accent/70">(Standard {fallback}%)</span>
                                     )}
                                   </span>
                                   <span className="text-accent/80">
-                                    → {earn.toLocaleString("de-DE")} {baseCurrency}
+                                    → {earn.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {baseCurrency}
                                   </span>
                                 </div>
                               </div>
