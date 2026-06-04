@@ -2195,7 +2195,12 @@ export default function ModelDashboardTab() {
                         const pct = (modelForm[r.pctField] as number) || 0;
                         const usingFallback = pct === 0;
                         const effective = usingFallback ? fallback : pct;
-                        const earn = Math.round((r.rev * effective) / 100);
+                        // 4Based revenue is in USD — convert to base for earnings
+                        const isFourbased = r.key === "fourbased";
+                        const sourceCur = isFourbased ? "USD" : baseCurrency;
+                        const revInBase = isFourbased ? convertToBase(r.rev, "USD") : r.rev;
+                        const earn = Math.round((revInBase * effective) / 100);
+                        const showConversion = isFourbased && sourceCur !== baseCurrency;
                         return (
                           <div key={r.key} className="space-y-1.5">
                             <div className="flex items-center justify-between gap-2">
@@ -2218,7 +2223,12 @@ export default function ModelDashboardTab() {
                             </div>
                             <div className="flex justify-between items-center pl-[4.5rem] text-[10px] text-muted-foreground tabular-nums">
                               <span>
-                                Umsatz: {r.rev.toLocaleString("de-DE")} {baseCurrency}
+                                Umsatz: {r.rev.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {sourceCur}
+                                {showConversion && (
+                                  <span className="ml-1 text-accent/70">
+                                    ≈ {revInBase.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {baseCurrency}
+                                  </span>
+                                )}
                                 {usingFallback && pct === 0 && fallback > 0 && (
                                   <span className="ml-1 text-accent/70">(Standard {fallback}%)</span>
                                 )}
