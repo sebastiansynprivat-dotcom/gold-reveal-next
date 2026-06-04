@@ -222,6 +222,15 @@ export default function CreditNoteForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [providerEntityId, providerEntityType]);
 
+  // If the address arrives later (async parent load) and the user hasn't typed
+  // anything yet, backfill it from the parent so the Stammdaten address shows up.
+  useEffect(() => {
+    if (initialProviderAddress && !providerAddress) {
+      setProviderAddressState(initialProviderAddress);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialProviderAddress]);
+
   // Auto-apply suggested amount when parent triggers calculation
   useEffect(() => {
     if (!autoApplyTrigger || suggestedAmount <= 0) return;
