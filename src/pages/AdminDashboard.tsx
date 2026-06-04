@@ -7729,64 +7729,25 @@ export default function AdminDashboard() {
                                               {/* Media */}
                                               <div className="space-y-1.5 pt-1 border-t border-border/30">
                                                 <p className="text-[11px] font-semibold text-foreground pt-2">Media:</p>
-                                                <div className="flex gap-2">
-                                                  <Input
-                                                    value={mediaVal}
-                                                    onChange={(e) =>
-                                                      setMediaDrafts((d) => ({ ...d, [acc.id]: e.target.value }))
-                                                    }
-                                                    placeholder="No Media Set"
-                                                    className="text-xs h-8 bg-background/40 border-border/40 flex-1"
-                                                  />
-                                                  <input
-                                                    id={`media-upload-${acc.id}`}
-                                                    type="file"
-                                                    accept="image/*,video/*"
-                                                    className="hidden"
-                                                    onChange={async (e) => {
-                                                      const file = e.target.files?.[0];
-                                                      e.target.value = "";
-                                                      if (!file) return;
-                                                      if (file.size > 20 * 1024 * 1024) {
-                                                        toast.error("Datei zu groß (max. 20 MB)");
-                                                        return;
-                                                      }
-                                                      const ext = file.name.split(".").pop() || "bin";
-                                                      const path = `${acc.id}/${Date.now()}.${ext}`;
-                                                      const t = toast.loading("Lade Media hoch…");
-                                                      const { error: upErr } = await supabase.storage
-                                                        .from("mass-dm-media")
-                                                        .upload(path, file, { upsert: true, contentType: file.type });
-                                                      if (upErr) {
-                                                        toast.error("Upload fehlgeschlagen: " + upErr.message, { id: t });
-                                                        return;
-                                                      }
-                                                      const { data: pub } = supabase.storage
-                                                        .from("mass-dm-media")
-                                                        .getPublicUrl(path);
-                                                      const url = pub.publicUrl;
-                                                      setMediaDrafts((d) => ({ ...d, [acc.id]: url }));
-                                                      await updateAccountField(acc.id, { media_id: url });
-                                                      toast.success("Media hochgeladen", { id: t });
-                                                    }}
-                                                  />
-                                                  <button
-                                                    type="button"
-                                                    onClick={() =>
-                                                      document.getElementById(`media-upload-${acc.id}`)?.click()
-                                                    }
-                                                    className="text-[10px] font-semibold px-2.5 py-1 h-8 rounded-md bg-blue-500/80 hover:bg-blue-500 text-white transition-colors cursor-pointer"
-                                                  >
-                                                    {savedMedia ? "Refresh Media" : "Set Media"}
-                                                  </button>
-                                                </div>
-                                                {savedMedia && /\.(png|jpe?g|webp|gif)$/i.test(savedMedia) && (
-                                                  <img
-                                                    src={savedMedia}
-                                                    alt="Mass DM Media"
-                                                    className="mt-2 max-h-32 rounded-md border border-border/40 object-cover"
-                                                  />
-                                                )}
+                                                {(() => {
+                                                  const m = (acc as any).media;
+                                                  const hasMedia =
+                                                    m != null &&
+                                                    !(typeof m === "string" && m.trim() === "") &&
+                                                    !(typeof m === "object" && !Array.isArray(m) && Object.keys(m).length === 0) &&
+                                                    !(Array.isArray(m) && m.length === 0);
+                                                  return hasMedia ? (
+                                                    <div className="flex items-center gap-2 text-[11px] font-semibold text-emerald-400">
+                                                      <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                                                      Media is set
+                                                    </div>
+                                                  ) : (
+                                                    <div className="flex items-center gap-2 text-[11px] font-semibold text-muted-foreground">
+                                                      <span className="h-2 w-2 rounded-full bg-muted-foreground/50" />
+                                                      No Media Set
+                                                    </div>
+                                                  );
+                                                })()}
                                               </div>
                                             </>
                                           );
