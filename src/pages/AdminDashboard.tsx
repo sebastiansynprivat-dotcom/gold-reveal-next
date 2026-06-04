@@ -7726,27 +7726,76 @@ export default function AdminDashboard() {
 
                                               {/* Media */}
                                               <div className="space-y-1.5 pt-1 border-t border-border/30">
-                                                <p className="text-[11px] font-semibold text-foreground pt-2">Media:</p>
+                                                <div className="flex items-center justify-between pt-2">
+                                                  <p className="text-[11px] font-semibold text-foreground">Media:</p>
+                                                  {(() => {
+                                                    const m = (acc as any).media;
+                                                    const hasMedia =
+                                                      m != null &&
+                                                      !(typeof m === "string" && m.trim() === "") &&
+                                                      !(typeof m === "object" && !Array.isArray(m) && Object.keys(m).length === 0) &&
+                                                      !(Array.isArray(m) && m.length === 0);
+                                                    return hasMedia ? (
+                                                      <div className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-400">
+                                                        <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                                                        Media is set
+                                                      </div>
+                                                    ) : (
+                                                      <div className="flex items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
+                                                        <span className="h-2 w-2 rounded-full bg-muted-foreground/50" />
+                                                        No Media Set
+                                                      </div>
+                                                    );
+                                                  })()}
+                                                </div>
                                                 {(() => {
-                                                  const m = (acc as any).media;
-                                                  const hasMedia =
-                                                    m != null &&
-                                                    !(typeof m === "string" && m.trim() === "") &&
-                                                    !(typeof m === "object" && !Array.isArray(m) && Object.keys(m).length === 0) &&
-                                                    !(Array.isArray(m) && m.length === 0);
-                                                  return hasMedia ? (
-                                                    <div className="flex items-center gap-2 text-[11px] font-semibold text-emerald-400">
-                                                      <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                                                      Media is set
-                                                    </div>
-                                                  ) : (
-                                                    <div className="flex items-center gap-2 text-[11px] font-semibold text-muted-foreground">
-                                                      <span className="h-2 w-2 rounded-full bg-muted-foreground/50" />
-                                                      No Media Set
+                                                  const savedMedia = (acc as any).media;
+                                                  const savedMediaStr =
+                                                    savedMedia == null
+                                                      ? ""
+                                                      : typeof savedMedia === "string"
+                                                        ? savedMedia
+                                                        : JSON.stringify(savedMedia, null, 2);
+                                                  const mediaVal = mediaDrafts[acc.id] ?? savedMediaStr;
+                                                  const mediaDirty = mediaVal !== savedMediaStr;
+                                                  return (
+                                                    <div className="flex gap-2">
+                                                      <Textarea
+                                                        value={mediaVal}
+                                                        onChange={(e) =>
+                                                          setMediaDrafts((d) => ({ ...d, [acc.id]: e.target.value }))
+                                                        }
+                                                        placeholder='{"mediaId":"...","type":"picture","width":960,"height":1280}'
+                                                        className="text-xs min-h-[60px] resize-none bg-background/40 border-border/40 flex-1 font-mono"
+                                                      />
+                                                      <button
+                                                        type="button"
+                                                        disabled={!mediaDirty}
+                                                        onClick={() => {
+                                                          const trimmed = mediaVal.trim();
+                                                          let value: unknown = null;
+                                                          if (trimmed !== "") {
+                                                            try {
+                                                              value = JSON.parse(trimmed);
+                                                            } catch {
+                                                              value = trimmed;
+                                                            }
+                                                          }
+                                                          updateAccountField(acc.id, { media: value } as any);
+                                                        }}
+                                                        className={`text-[10px] font-semibold px-3 py-1 h-fit rounded-md text-white ${
+                                                          mediaDirty
+                                                            ? "bg-emerald-500 hover:bg-emerald-600 cursor-pointer"
+                                                            : "bg-emerald-500/40 opacity-60 cursor-not-allowed"
+                                                        }`}
+                                                      >
+                                                        Set
+                                                      </button>
                                                     </div>
                                                   );
                                                 })()}
                                               </div>
+
                                             </>
                                           );
                                         })()}
