@@ -622,8 +622,14 @@ export default function CreditNoteForm({
           ].filter(p => p.rev > 0 && p.pct > 0)
         : [];
 
-      // 1:1 conversion across currencies – no FX applied on invoice
-      const fxRate = 1;
+      // 1:1 conversion only when invoicing in USD (platforms run in EUR but billed 1:1 in USD).
+      // For EUR (or any other) invoice currency keep live FX conversion.
+      const fxRate =
+        invoiceCurrency === "USD"
+          ? 1
+          : currency === invoiceCurrency
+          ? 1
+          : (liveExchangeRate || 1);
 
       if (hasPlatformBreakdown) {
         platforms.forEach((p, i) => {
