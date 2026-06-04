@@ -3497,11 +3497,19 @@ export default function AdminDashboard() {
   };
 
   const filtered = useMemo(() => {
-    let result = chatters.filter(
-      (c) =>
-        c.group_name?.toLowerCase().includes(search.toLowerCase()) ||
-        c.telegram_id?.toLowerCase().includes(search.toLowerCase()),
-    );
+    const q = search.toLowerCase();
+    let result = chatters.filter((c) => {
+      if (c.group_name?.toLowerCase().includes(q)) return true;
+      if (c.telegram_id?.toLowerCase().includes(q)) return true;
+      // Search through assigned accounts (model names, emails, platforms)
+      const accounts = c.assigned_accounts || [];
+      for (const a of accounts) {
+        if (a.model_id && modelNames[a.model_id]?.toLowerCase().includes(q)) return true;
+        if (a.account_email?.toLowerCase().includes(q)) return true;
+        if (a.platform?.toLowerCase().includes(q)) return true;
+      }
+      return false;
+    });
 
     // Platform filter (independent, combinable)
     if (platformFilters.size > 0) {
@@ -3576,6 +3584,7 @@ export default function AdminDashboard() {
     filterPush,
     filterPwa,
     pwaUsers,
+    modelNames,
   ]);
 
   const openGoalEditor = async (chatter: ChatterProfile) => {
@@ -5146,7 +5155,7 @@ export default function AdminDashboard() {
                       <Input
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Chatter suchen (Gruppe oder Telegram-ID)..."
+                        placeholder="Chatter suchen (Gruppe, Telegram-ID oder Model)..."
                         className="pl-9 text-sm border-transparent"
                       />
                     </div>
