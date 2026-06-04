@@ -3584,6 +3584,7 @@ export default function AdminDashboard() {
     filterPush,
     filterPwa,
     pwaUsers,
+    modelNames,
   ]);
 
   const openGoalEditor = async (chatter: ChatterProfile) => {
