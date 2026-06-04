@@ -7664,10 +7664,8 @@ export default function AdminDashboard() {
                                         {(() => {
                                           const savedMain = acc.main_message ?? "";
                                           const savedFollow = acc.follow_message ?? "";
-                                          const savedMedia = acc.media_id ?? "";
                                           const mainVal = mainDrafts[acc.id] ?? savedMain;
                                           const followVal = followDrafts[acc.id] ?? savedFollow;
-                                          const mediaVal = mediaDrafts[acc.id] ?? savedMedia;
                                           const mainDirty = mainVal !== savedMain;
                                           const followDirty = followVal !== savedFollow;
                                           return (
