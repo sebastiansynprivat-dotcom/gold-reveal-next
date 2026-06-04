@@ -584,7 +584,7 @@ export default function CreditNoteForm({
       doc.text(descLines[0] || description, m + 15, y);
       if (hasHourlyDetails) {
         doc.setTextColor(...muted);
-        doc.text(hourlyRate.toLocaleString("de-DE", { minimumFractionDigits: 2 }), rCol - 70, y, { align: "right" });
+        doc.text(hourlyRate.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), rCol - 70, y, { align: "right" });
         doc.text(hoursWorked.toLocaleString("de-DE", { minimumFractionDigits: 1 }), rCol - 35, y, { align: "right" });
       }
       doc.setTextColor(...white);
@@ -681,7 +681,7 @@ export default function CreditNoteForm({
       ? "VAT (0% – not subject to VAT):"
       : `VAT (${vatRate}%):`;
     doc.text(vatLabel, subtotalX - 15, y);
-    doc.text(`${vatAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} ${invoiceCurrency}`, rCol - 2, y, { align: "right" });
+    doc.text(`${vatAmount.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${invoiceCurrency}`, rCol - 2, y, { align: "right" });
     y += 5;
 
     // Total line
@@ -693,7 +693,7 @@ export default function CreditNoteForm({
     doc.setFontSize(11);
     doc.setTextColor(...gold);
     doc.text("Total:", subtotalX, y);
-    doc.text(`${grossAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} ${invoiceCurrency}`, rCol - 2, y, { align: "right" });
+    doc.text(`${grossAmount.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${invoiceCurrency}`, rCol - 2, y, { align: "right" });
 
 
 
@@ -1076,7 +1076,7 @@ export default function CreditNoteForm({
                   onClick={() => setNetAmount(suggestedConverted.toFixed(2))}
                   className="text-[10px] text-accent hover:underline"
                 >
-                  Vorschlag übernehmen: {suggestedConverted.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {invoiceCurrency}
+                  Vorschlag übernehmen: {suggestedConverted.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {invoiceCurrency}
                   {revenuePercentage > 0 && ` (${revenuePercentage}%)`}
                 </button>
               )}
@@ -1120,8 +1120,8 @@ export default function CreditNoteForm({
                   <div key={r.key} className="flex justify-between text-xs">
                     <span className="text-muted-foreground">{r.label} <span className="text-accent/70">({r.pct}%)</span></span>
                     <span className="font-mono text-foreground">
-                      {revConv.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {invoiceCurrency}
-                      <span className="text-muted-foreground ml-1.5">→ {payoutConv.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {invoiceCurrency}</span>
+                      {revConv.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {invoiceCurrency}
+                      <span className="text-muted-foreground ml-1.5">→ {payoutConv.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {invoiceCurrency}</span>
                     </span>
                   </div>
                 );
@@ -1134,15 +1134,15 @@ export default function CreditNoteForm({
         <div className="rounded-lg bg-secondary/30 border border-border/50 p-3 space-y-1.5">
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>Netto</span>
-            <span className="font-mono">{net.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {invoiceCurrency}</span>
+            <span className="font-mono">{net.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {invoiceCurrency}</span>
           </div>
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>MwSt. ({vatRate}%)</span>
-            <span className="font-mono">{vatAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {invoiceCurrency}</span>
+            <span className="font-mono">{vatAmount.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {invoiceCurrency}</span>
           </div>
           <div className="border-t border-border/30 pt-1.5 flex justify-between text-sm font-bold text-foreground">
             <span>Gesamt</span>
-            <span className="font-mono text-accent">{grossAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {invoiceCurrency}</span>
+            <span className="font-mono text-accent">{grossAmount.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {invoiceCurrency}</span>
           </div>
           {/* Invoice currency selector with auto-conversion */}
           <div className="border-t border-border/30 pt-2 mt-1 space-y-1.5">
