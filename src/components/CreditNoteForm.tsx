@@ -1076,7 +1076,7 @@ export default function CreditNoteForm({
                   onClick={() => setNetAmount(suggestedConverted.toFixed(2))}
                   className="text-[10px] text-accent hover:underline"
                 >
-                  Vorschlag übernehmen: {suggestedConverted.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {invoiceCurrency}
+                  Vorschlag übernehmen: {suggestedConverted.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {invoiceCurrency}
                   {revenuePercentage > 0 && ` (${revenuePercentage}%)`}
                 </button>
               )}
