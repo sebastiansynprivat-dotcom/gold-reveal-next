@@ -724,11 +724,10 @@ export default function CreditNoteForm({
 
     // ── Payment Information ──
     const isBank = modelPaymentMethod === "bank";
-    const hasFxNote = !!liveExchangeRate && currency !== invoiceCurrency;
-    const hasPlatformFx = platformFxRates && platformFxRates.length > 0;
-    const usdNum = parseFloat((usdEquivalent || "").replace(",", ".")) || 0;
-    const hasUsdNote = invoiceCurrency === "EUR" && usdNum > 0;
-    if (isBank || cryptoCoin || txHash || hasFxNote || hasPlatformFx || hasUsdNote) {
+    const hasFxNote = false;
+    const hasPlatformFx = false;
+    const hasUsdNote = false;
+    if (isBank || cryptoCoin || txHash) {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(7.5);
       doc.setTextColor(...goldLight);
