@@ -480,12 +480,21 @@ function ChatterOverviewTab({
     }
   }
 
-  // Apply search filter
+  // Apply search filter (matches chatter name OR account email/domain/platform)
   if (chatterSearch.trim()) {
     const q = chatterSearch.trim().toLowerCase();
     for (const key of Object.keys(grouped)) {
-      grouped[key].entries = grouped[key].entries.filter((e: any) => e.name?.toLowerCase().includes(q));
-      if (grouped[key].entries.length === 0) delete grouped[key];
+      const g = grouped[key];
+      const accountMatches =
+        g.account_email?.toLowerCase().includes(q) ||
+        g.account_domain?.toLowerCase().includes(q) ||
+        g.platform?.toLowerCase().includes(q);
+      if (accountMatches) {
+        // Keep all entries for this account if the account itself matches
+        continue;
+      }
+      g.entries = g.entries.filter((e: any) => e.name?.toLowerCase().includes(q));
+      if (g.entries.length === 0) delete grouped[key];
     }
   }
 
