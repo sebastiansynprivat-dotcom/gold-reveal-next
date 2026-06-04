@@ -1581,7 +1581,10 @@ export default function ModelDashboardTab() {
                       };
                       const revenueField = platformFieldMap[acc.platform] || "monthly_revenue";
 
-                      const accCurrency = acc.currency || modelForm.currency || "EUR";
+                      // 4Based fetched revenue is always USD; override display source currency
+                      const accCurrency = acc.platform === "4Based"
+                        ? "USD"
+                        : (acc.currency || modelForm.currency || "EUR");
                       const isCustomCur = !CURRENCIES.includes(accCurrency as any);
 
                       return (
