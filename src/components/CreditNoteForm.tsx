@@ -584,7 +584,7 @@ export default function CreditNoteForm({
       doc.text(descLines[0] || description, m + 15, y);
       if (hasHourlyDetails) {
         doc.setTextColor(...muted);
-        doc.text(hourlyRate.toLocaleString("de-DE", { minimumFractionDigits: 2 }), rCol - 70, y, { align: "right" });
+        doc.text(hourlyRate.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), rCol - 70, y, { align: "right" });
         doc.text(hoursWorked.toLocaleString("de-DE", { minimumFractionDigits: 1 }), rCol - 35, y, { align: "right" });
       }
       doc.setTextColor(...white);
@@ -681,7 +681,7 @@ export default function CreditNoteForm({
       ? "VAT (0% – not subject to VAT):"
       : `VAT (${vatRate}%):`;
     doc.text(vatLabel, subtotalX - 15, y);
-    doc.text(`${vatAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} ${invoiceCurrency}`, rCol - 2, y, { align: "right" });
+    doc.text(`${vatAmount.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${invoiceCurrency}`, rCol - 2, y, { align: "right" });
     y += 5;
 
     // Total line
@@ -693,7 +693,7 @@ export default function CreditNoteForm({
     doc.setFontSize(11);
     doc.setTextColor(...gold);
     doc.text("Total:", subtotalX, y);
-    doc.text(`${grossAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} ${invoiceCurrency}`, rCol - 2, y, { align: "right" });
+    doc.text(`${grossAmount.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${invoiceCurrency}`, rCol - 2, y, { align: "right" });
 
 
 
