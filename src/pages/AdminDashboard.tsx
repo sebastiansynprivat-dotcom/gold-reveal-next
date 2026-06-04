@@ -949,6 +949,31 @@ export default function AdminDashboard() {
   // Leave blank — fill in real endpoints later
   const MEDIA_STATS_URL = "";
   const MEDIA_RESET_URL = "";
+  const MEDIA_SET_URL = "";
+
+  const [mediaSetting, setMediaSetting] = useState<Record<string, boolean>>({});
+
+  const setAccountMedia = async (acc: AccountEntry) => {
+    if (!MEDIA_SET_URL) {
+      toast.error("Set Media endpoint nicht konfiguriert");
+      return;
+    }
+    setMediaSetting((p) => ({ ...p, [acc.id]: true }));
+    try {
+      const res = await fetch(MEDIA_SET_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: acc.id, platform: acc.platform, email: acc.account_email }),
+      });
+      if (!res.ok) throw new Error(String(res.status));
+      toast.success("Media gesetzt");
+    } catch {
+      toast.error("Setzen fehlgeschlagen");
+    } finally {
+      setMediaSetting((p) => ({ ...p, [acc.id]: false }));
+    }
+  };
+
 
   const fetchMediaStats = async (acc: AccountEntry) => {
     if (!MEDIA_STATS_URL) return;
