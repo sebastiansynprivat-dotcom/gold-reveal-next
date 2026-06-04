@@ -9781,16 +9781,14 @@ export default function AdminDashboard() {
       <PreChattersDialog
         open={preChattersOpen}
         onOpenChange={setPreChattersOpen}
-        freeAccounts={accounts
-          .filter((a) => !a.assigned_to)
-          .map((a) => ({
-            id: a.id,
-            platform: a.platform,
-            account_email: a.account_email,
-            assigned_to: a.assigned_to,
-            model_id: a.model_id ?? null,
-            model_name: a.model_id ? modelNames[a.model_id] ?? null : null,
-          }))}
+        freeAccounts={accounts.map((a) => ({
+          id: a.id,
+          platform: a.platform,
+          account_email: a.account_email,
+          assigned_to: a.assigned_to,
+          model_id: a.model_id ?? null,
+          model_name: a.model_id ? modelNames[a.model_id] ?? null : null,
+        }))}
       />
 
       {/* Chatter bearbeiten Dialog (Reassign + Daten) */}
