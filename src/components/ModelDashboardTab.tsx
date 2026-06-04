@@ -2248,9 +2248,11 @@ export default function ModelDashboardTab() {
                           </p>
                           {customPlatforms.map((cp) => {
                             const effectivePct = cp.percentage > 0 ? cp.percentage : fallback;
-                            const earn = (cp.revenue * effectivePct) / 100;
+                            const rev = Number(cp.revenue) || 0;
+                            const earn = (rev * effectivePct) / 100;
                             return (
-                              <div key={cp.id} className="space-y-1.5 rounded-lg bg-secondary/20 p-2 border border-border/30">
+                              <div key={cp.id} className="space-y-2 rounded-lg bg-secondary/20 p-2.5 border border-border/30">
+                                {/* Row 1: Name + delete */}
                                 <div className="flex items-center gap-2">
                                   <Input
                                     value={cp.name}
@@ -2259,21 +2261,8 @@ export default function ModelDashboardTab() {
                                         prev.map((p) => (p.id === cp.id ? { ...p, name: e.target.value } : p)),
                                       )
                                     }
-                                    placeholder="Plattform Name"
-                                    className="flex-1 h-7 text-xs bg-secondary/40 border-border/50"
-                                  />
-                                  <Input
-                                    type="number"
-                                    value={cp.revenue || ""}
-                                    onChange={(e) =>
-                                      setCustomPlatforms((prev) =>
-                                        prev.map((p) =>
-                                          p.id === cp.id ? { ...p, revenue: Number(e.target.value) || 0 } : p,
-                                        ),
-                                      )
-                                    }
-                                    placeholder="Umsatz"
-                                    className="w-24 h-7 text-xs bg-secondary/40 border-border/50 tabular-nums"
+                                    placeholder="Plattform-Name"
+                                    className="flex-1 h-8 text-xs bg-secondary/40 border-border/50"
                                   />
                                   <Button
                                     type="button"
@@ -2282,12 +2271,39 @@ export default function ModelDashboardTab() {
                                     onClick={() =>
                                       setCustomPlatforms((prev) => prev.filter((p) => p.id !== cp.id))
                                     }
-                                    className="h-7 w-7 text-destructive hover:bg-destructive/10 shrink-0"
+                                    className="h-8 w-8 text-destructive hover:bg-destructive/10 shrink-0"
                                   >
                                     <Trash2 className="h-3.5 w-3.5" />
                                   </Button>
                                 </div>
+                                {/* Row 2: Revenue with currency suffix */}
                                 <div className="flex items-center gap-2">
+                                  <span className="text-[10px] text-muted-foreground w-16 shrink-0">Umsatz</span>
+                                  <div className="relative flex-1">
+                                    <Input
+                                      type="text"
+                                      inputMode="decimal"
+                                      value={cp.revenue === 0 ? "" : String(cp.revenue)}
+                                      onChange={(e) => {
+                                        const raw = e.target.value.replace(",", ".").replace(/[^0-9.]/g, "");
+                                        const n = raw === "" ? 0 : Number(raw);
+                                        setCustomPlatforms((prev) =>
+                                          prev.map((p) =>
+                                            p.id === cp.id ? { ...p, revenue: isNaN(n) ? 0 : n } : p,
+                                          ),
+                                        );
+                                      }}
+                                      placeholder="0,00"
+                                      className="h-8 text-xs bg-secondary/40 border-border/50 tabular-nums pr-12"
+                                    />
+                                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-medium text-muted-foreground pointer-events-none">
+                                      {baseCurrency}
+                                    </span>
+                                  </div>
+                                </div>
+                                {/* Row 3: Percentage slider */}
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[10px] text-muted-foreground w-16 shrink-0">Prozent</span>
                                   <Slider
                                     value={[cp.percentage]}
                                     onValueChange={([v]) =>
@@ -2304,14 +2320,15 @@ export default function ModelDashboardTab() {
                                     {cp.percentage}%
                                   </span>
                                 </div>
-                                <div className="flex justify-between items-center text-[10px] text-muted-foreground tabular-nums">
-                                  <span>
-                                    Umsatz: {(cp.revenue || 0).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {baseCurrency}
+                                {/* Footer: Earnings */}
+                                <div className="flex justify-between items-center pt-1.5 border-t border-border/30 text-[10px] tabular-nums">
+                                  <span className="text-muted-foreground">
+                                    {rev.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {baseCurrency}
                                     {cp.percentage === 0 && fallback > 0 && (
                                       <span className="ml-1 text-accent/70">(Standard {fallback}%)</span>
                                     )}
                                   </span>
-                                  <span className="text-accent/80">
+                                  <span className="text-accent font-semibold">
                                     → {earn.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {baseCurrency}
                                   </span>
                                 </div>
