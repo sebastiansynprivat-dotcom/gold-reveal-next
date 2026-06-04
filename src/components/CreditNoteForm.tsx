@@ -646,7 +646,7 @@ export default function CreditNoteForm({
         doc.setFontSize(7.5);
         doc.setTextColor(...goldLight);
         doc.text("Total", m + 15, y);
-        doc.text(totalRevConv.toLocaleString("de-DE", { minimumFractionDigits: 2 }), rCol - 52, y, { align: "right" });
+        doc.text(totalRevConv.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), rCol - 52, y, { align: "right" });
         doc.setTextColor(...gold);
         doc.text(formattedNet, rCol - 2, y, { align: "right" });
         y += 7;
