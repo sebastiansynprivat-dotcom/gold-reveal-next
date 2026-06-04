@@ -1,43 +1,36 @@
-## 1. Migration: `accounts_revenue` table
+Findings from the current logs and code:
 
-Columns:
-- `id uuid pk default gen_random_uuid()`
-- `account_id uuid not null references accounts(id) on delete cascade`
-- `date date not null`
-- `platform text not null`
-- `total numeric not null default 0`
-- `amounts jsonb not null default '[]'::jsonb`  — array of `{purchase_id, amount}`
-- `created_at`, `updated_at timestamptz` (+ `update_updated_at` trigger)
-- `UNIQUE (account_id, date, platform)`
-- Index on `(account_id, date desc)`
+- The function is deployed and booting.
+- A direct test with a wrong `x-api-key` returns `401 Unauthorized`, so the endpoint itself is reachable.
+- The logs only show `booted` / `shutdown`; there are no `Handler error`, `Select error`, or `Upsert error` entries.
+- The current function does not log auth failures, validation failures, successful requests, payload size, or progress through the database loop. So if the caller uses the wrong header/key, sends invalid payload, or the function times out, the logs will not explain it.
 
-Grants:
-- `GRANT SELECT, INSERT, UPDATE, DELETE ON public.accounts_revenue TO authenticated;`
-- `GRANT ALL ON public.accounts_revenue TO service_role;`
+Most likely causes:
 
-Enable RLS, then policies:
-- **Super admin – full access** (ALL): `has_role(auth.uid(), 'super_admin')`
-- **Admins – view only** (SELECT): `is_admin()`
-- **Models – view their account** (SELECT): exists in `model_users mu join accounts a on a.model_id = mu.model_id` where `mu.user_id = auth.uid() AND a.id = accounts_revenue.account_id`
-- **Chatters – view assigned account** (SELECT): exists in `accounts a` where `a.id = accounts_revenue.account_id AND a.assigned_to = auth.uid()`
+1. The caller is not sending the secret as the exact `x-api-key` header, so the function returns `401` without logging anything.
+2. The payload has many unique `(account_id, date, platform)` groups and the function is doing one SELECT + one UPSERT per group, which can time out and appear like “no response”.
+3. The caller is not reading/displaying the response body, so a `401`/`400` response looks like no response on their side.
 
-## 2. Edge function `ingest-account-revenue`
+Implementation plan:
 
-Path: `supabase/functions/ingest-account-revenue/index.ts`. `verify_jwt = false` in `supabase/config.toml`.
+1. Add safe diagnostics to `supabase/functions/ingest-account-revenue/index.ts`
+   - Log request start with method and a generated request id.
+   - Log unauthorized attempts without printing the secret.
+   - Log payload row count and group count.
+   - Log validation failures with the field name.
+   - Log success summary: processed, skipped duplicates, groups.
 
-- Auth: header `x-api-key` must equal env `REVENUE_INGEST_API_KEY` (already configured).
-- CORS handled (OPTIONS + headers on every response).
-- Body: array (or single object) of `{ account_id: uuid, purchase_id: string, date: 'YYYY-MM-DD', platform: string, amount: number }`. Validate each.
-- Service role client.
-- Group incoming rows by `(account_id, date, platform)`.
-- For each group:
-  1. `SELECT total, amounts FROM accounts_revenue WHERE account_id=… AND date=… AND platform=…`
-  2. Build a `Set` of existing `purchase_id`s. Skip incoming entries whose `purchase_id` is already in DB or earlier in the same batch.
-  3. New `amounts` = existing array + new unique `{purchase_id, amount}` entries.
-  4. New `total` = existing total + sum of newly added amounts.
-  5. `upsert` row with `onConflict: 'account_id,date,platform'`.
-- Returns `{ success: true, processed, skipped_duplicates }`.
+2. Add timeout/performance protection
+   - Reject very large payloads with a clear `413`/`400` style error instead of hanging.
+   - Add timing logs around database reads and upserts.
 
-## 3. Config
+3. Optimize the database loop
+   - Fetch existing `accounts_revenue` rows for all incoming account/date/platform combinations in fewer queries instead of one query per group.
+   - Perform batched upserts instead of sequential upserts per group.
 
-Add `[functions.ingest-account-revenue] verify_jwt = false` to `supabase/config.toml`.
+4. Validate behavior after changes
+   - Test wrong API key returns `401` with a clear log.
+   - Test invalid payload returns `400` with a clear log.
+   - Test a valid-shaped payload path as far as possible and confirm logs show where it succeeds or fails.
+
+After this, the logs will tell us the exact reason instead of only showing boot/shutdown.
