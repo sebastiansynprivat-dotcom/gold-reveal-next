@@ -228,7 +228,7 @@ export default function CreditNoteForm({
     const fxRate = currency === invoiceCurrency ? 1 : (liveExchangeRate || 1);
     const converted = suggestedAmount * fxRate;
     if (converted > 0) {
-      setNetAmount((Math.ceil(converted * 100) / 100).toFixed(2));
+      setNetAmount(converted.toFixed(2));
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoApplyTrigger]);
