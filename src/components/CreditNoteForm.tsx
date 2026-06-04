@@ -767,6 +767,7 @@ export default function CreditNoteForm({
       }
       if (hasPlatformFx) {
         for (const fx of platformFxRates!) {
+          if (fx.from === fx.to) continue;
           doc.text(`Exchange Rate (${fx.platform}): 1 ${fx.from} = ${fx.rate.toFixed(4)} ${fx.to}`, m, y);
           y += 4.5;
         }
