@@ -87,20 +87,30 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
 
   const filteredAccounts = useMemo(() => {
     const q = accountSearch.trim().toLowerCase();
-    if (!q) return freeAccounts;
-    return freeAccounts.filter((a) => {
-      const username = a.model_id ? (modelUsernames[a.model_id] || "").toLowerCase() : "";
-      const modelName = (a.model_name || "").toLowerCase();
-      const email = (a.account_email || "").toLowerCase();
-      const platform = (a.platform || "").toLowerCase();
-      return (
-        username.includes(q) ||
-        modelName.includes(q) ||
-        email.includes(q) ||
-        platform.includes(q)
-      );
+    const base = q
+      ? freeAccounts.filter((a) => {
+          const username = a.model_id ? (modelUsernames[a.model_id] || "").toLowerCase() : "";
+          const modelName = (a.model_name || "").toLowerCase();
+          const email = (a.account_email || "").toLowerCase();
+          const platform = (a.platform || "").toLowerCase();
+          return (
+            username.includes(q) ||
+            modelName.includes(q) ||
+            email.includes(q) ||
+            platform.includes(q)
+          );
+        })
+      : freeAccounts;
+    // Free accounts first, then already-assigned ones
+    return [...base].sort((a, b) => {
+      const aFree = a.assigned_to ? 1 : 0;
+      const bFree = b.assigned_to ? 1 : 0;
+      return aFree - bFree;
     });
   }, [accountSearch, freeAccounts, modelUsernames]);
+
+  const freeCount = useMemo(() => freeAccounts.filter((a) => !a.assigned_to).length, [freeAccounts]);
+
 
   const add = async () => {
     if (!telegram.trim()) {
@@ -263,14 +273,18 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
                       filteredAccounts.map((a) => {
                         const selected = accountId === a.id;
                         const username = a.model_id ? modelUsernames[a.model_id] : null;
+                        const isAssigned = !!a.assigned_to;
                         return (
                           <button
                             key={a.id}
                             type="button"
-                            onClick={() => setAccountId(a.id)}
+                            disabled={isAssigned}
+                            onClick={() => !isAssigned && setAccountId(a.id)}
+                            title={isAssigned ? "Bereits einem Chatter zugewiesen" : undefined}
                             className={cn(
                               "w-full flex items-center gap-2.5 px-2.5 py-2 text-left transition-colors",
                               selected ? "bg-accent/10" : "hover:bg-secondary/40",
+                              isAssigned && "opacity-50 cursor-not-allowed hover:bg-transparent",
                             )}
                           >
                             <div className={cn(
@@ -301,6 +315,11 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
                                 <span className="truncate">{a.account_email}</span>
                               </span>
                             </div>
+                            {isAssigned && (
+                              <Badge className="text-[8px] px-1.5 py-0 h-4 shrink-0 bg-amber-500/15 text-amber-400 border-amber-500/30 uppercase tracking-wide">
+                                vergeben
+                              </Badge>
+                            )}
                           </button>
                         );
                       })
@@ -308,8 +327,9 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
                   </div>
                   <div className="flex items-center justify-between px-2.5 py-1.5 border-t border-border/30 bg-secondary/20">
                     <span className="text-[9px] uppercase tracking-wide text-muted-foreground">
-                      {accountSearch ? `${filteredAccounts.length} Treffer` : `${freeAccounts.length} freie Accounts`}
+                      {accountSearch ? `${filteredAccounts.length} Treffer` : `${freeCount} freie Accounts`}
                     </span>
+
                     {accountId && (
                       <button
                         type="button"
