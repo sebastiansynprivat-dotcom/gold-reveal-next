@@ -264,9 +264,7 @@ export default function CreditNoteForm({
     }
     return s;
   });
-  // Round UP to 2 decimals (aufrunden)
-  const ceilTo2 = (n: number) => (Math.ceil(n * 100) / 100).toFixed(2);
-  const [netAmount, setNetAmount] = useState(initialInvoiceNetAmount > 0 ? initialInvoiceNetAmount.toFixed(2) : suggestedAmount > 0 ? ceilTo2(suggestedAmount) : "");
+  const [netAmount, setNetAmount] = useState(initialInvoiceNetAmount > 0 ? initialInvoiceNetAmount.toFixed(2) : suggestedAmount > 0 ? suggestedAmount.toFixed(2) : "");
 
   // Payment
   const [cryptoNetwork, setCryptoNetwork] = useState(initialInvoiceCryptoNetwork || saved.cryptoNetwork || "TRC20");
