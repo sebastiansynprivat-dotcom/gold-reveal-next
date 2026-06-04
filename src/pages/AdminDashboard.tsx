@@ -5155,7 +5155,7 @@ export default function AdminDashboard() {
                       <Input
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Chatter suchen (Gruppe oder Telegram-ID)..."
+                        placeholder="Chatter suchen (Gruppe, Telegram-ID oder Model)..."
                         className="pl-9 text-sm border-transparent"
                       />
                     </div>
