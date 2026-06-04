@@ -2862,7 +2862,9 @@ export default function ModelDashboardTab() {
                   if (sourceTotals) {
                     for (const [name, rev] of Object.entries(sourceTotals)) {
                       const pct = pctMap[name] > 0 ? pctMap[name] : fallback;
-                      const r = Number(rev) || 0;
+                      const raw = Number(rev) || 0;
+                      // 4Based fetched values are always in USD — convert to base currency
+                      const r = name === "4Based" ? convertToBase(raw, "USD") : raw;
                       if (r > 0) agg[name] = { rev: r, pct };
                     }
                   }
