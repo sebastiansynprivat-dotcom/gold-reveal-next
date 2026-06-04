@@ -718,7 +718,8 @@ export default function ModelDashboardTab() {
       : null);
     let sum = 0;
     if (source) {
-      sum += (source.fourbased || 0) * pctFb / 100;
+      // 4Based revenue is in USD — convert to base currency
+      sum += convertToBase(source.fourbased || 0, "USD") * pctFb / 100;
       sum += (source.maloum || 0) * pctMl / 100;
       sum += (source.brezzels || 0) * pctBr / 100;
     }
@@ -727,7 +728,7 @@ export default function ModelDashboardTab() {
       sum += (cp.revenue || 0) * pct / 100;
     }
     return Math.round(sum);
-  }, [payoutRevenueForMonth, fetchedPayoutRevenue, customPlatforms, modelForm.revenue_percentage, modelForm.revenue_percentage_fourbased, modelForm.revenue_percentage_maloum, modelForm.revenue_percentage_brezzels]);
+  }, [payoutRevenueForMonth, fetchedPayoutRevenue, customPlatforms, modelForm.revenue_percentage, modelForm.revenue_percentage_fourbased, modelForm.revenue_percentage_maloum, modelForm.revenue_percentage_brezzels, convertToBase]);
 
   // ─── Create model ───
   const handleCreateModel = async () => {
