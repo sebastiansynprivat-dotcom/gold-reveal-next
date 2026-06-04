@@ -622,8 +622,14 @@ export default function CreditNoteForm({
           ].filter(p => p.rev > 0 && p.pct > 0)
         : [];
 
-      // 1:1 conversion across currencies – no FX applied on invoice
-      const fxRate = 1;
+      // 1:1 conversion only when invoicing in USD (platforms run in EUR but billed 1:1 in USD).
+      // For EUR (or any other) invoice currency keep live FX conversion.
+      const fxRate =
+        invoiceCurrency === "USD"
+          ? 1
+          : currency === invoiceCurrency
+          ? 1
+          : (liveExchangeRate || 1);
 
       if (hasPlatformBreakdown) {
         platforms.forEach((p, i) => {
@@ -724,10 +730,13 @@ export default function CreditNoteForm({
 
     // ── Payment Information ──
     const isBank = modelPaymentMethod === "bank";
-    const hasFxNote = false;
-    const hasPlatformFx = false;
-    const hasUsdNote = false;
-    if (isBank || cryptoCoin || txHash) {
+    // Suppress FX notes when invoicing in USD (we account 1:1). Keep them for other currencies.
+    const suppressFx = invoiceCurrency === "USD";
+    const hasFxNote = !suppressFx && !!liveExchangeRate && currency !== invoiceCurrency;
+    const hasPlatformFx = !suppressFx && !!platformFxRates && platformFxRates.length > 0;
+    const usdNum = parseFloat((usdEquivalent || "").replace(",", ".")) || 0;
+    const hasUsdNote = !suppressFx && invoiceCurrency === "EUR" && usdNum > 0;
+    if (isBank || cryptoCoin || txHash || hasFxNote || hasPlatformFx || hasUsdNote) {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(7.5);
       doc.setTextColor(...goldLight);
@@ -770,7 +779,24 @@ export default function CreditNoteForm({
           y += 4.5;
         }
       }
-      // Exchange-rate lines intentionally omitted (1:1 accounting between EUR/USD)
+      if (hasFxNote) {
+        doc.text(`Exchange Rate: 1 ${currency} = ${liveExchangeRate!.toFixed(4)} ${invoiceCurrency}`, m, y);
+        y += 4.5;
+      }
+      if (hasPlatformFx) {
+        for (const fx of platformFxRates!) {
+          if (fx.from === fx.to) continue;
+          doc.text(`Exchange Rate (${fx.platform}): 1 ${fx.from} = ${fx.rate.toFixed(4)} ${fx.to}`, m, y);
+          y += 4.5;
+        }
+      }
+      if (hasUsdNote) {
+        const netNum = parseFloat(netAmount.replace(",", ".")) || 0;
+        const eurStr = netNum.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const usdStr = usdNum.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        doc.text(`Exchange Rate: ${eurStr}\u20AC = ${usdStr}$`, m, y);
+        y += 4.5;
+      }
 
       if (paymentDate) {
         doc.setFontSize(8.5);
