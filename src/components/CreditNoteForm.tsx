@@ -228,7 +228,7 @@ export default function CreditNoteForm({
     const fxRate = currency === invoiceCurrency ? 1 : (liveExchangeRate || 1);
     const converted = suggestedAmount * fxRate;
     if (converted > 0) {
-      setNetAmount(converted.toFixed(2));
+      setNetAmount((Math.ceil(converted * 100) / 100).toFixed(2));
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoApplyTrigger]);
@@ -264,7 +264,9 @@ export default function CreditNoteForm({
     }
     return s;
   });
-  const [netAmount, setNetAmount] = useState(initialInvoiceNetAmount > 0 ? initialInvoiceNetAmount.toFixed(2) : suggestedAmount > 0 ? suggestedAmount.toFixed(2) : "");
+  // Round UP to 2 decimals (aufrunden)
+  const ceilTo2 = (n: number) => (Math.ceil(n * 100) / 100).toFixed(2);
+  const [netAmount, setNetAmount] = useState(initialInvoiceNetAmount > 0 ? initialInvoiceNetAmount.toFixed(2) : suggestedAmount > 0 ? ceilTo2(suggestedAmount) : "");
 
   // Payment
   const [cryptoNetwork, setCryptoNetwork] = useState(initialInvoiceCryptoNetwork || saved.cryptoNetwork || "TRC20");
@@ -287,7 +289,7 @@ export default function CreditNoteForm({
     const s = (initialInvoiceDescription || saved.description || "").trim();
     const legacy = ["Revenue share payout", "Revenue share", "Revenue share –", "Revenue share -"];
     setDescription(!s || legacy.some(l => s.toLowerCase().startsWith(l.toLowerCase())) ? defaultDescription : s);
-    setNetAmount(initialInvoiceNetAmount > 0 ? initialInvoiceNetAmount.toFixed(2) : suggestedAmount > 0 ? suggestedAmount.toFixed(2) : "");
+    setNetAmount(initialInvoiceNetAmount > 0 ? initialInvoiceNetAmount.toFixed(2) : suggestedAmount > 0 ? ceilTo2(suggestedAmount) : "");
     setServicePeriodStart(initialInvoiceServicePeriodStart || format(startOfMonth(lastMonth), "yyyy-MM-dd"));
     setServicePeriodEnd(initialInvoiceServicePeriodEnd || format(endOfMonth(lastMonth), "yyyy-MM-dd"));
     setCryptoNetwork(initialInvoiceCryptoNetwork || saved.cryptoNetwork || "TRC20");
@@ -341,7 +343,7 @@ export default function CreditNoteForm({
     }
     const netInChatter = currentNet / oldRate;
     const converted = netInChatter * newRate;
-    setNetAmount(converted.toFixed(2));
+    setNetAmount((Math.ceil(converted * 100) / 100).toFixed(2));
   }, [invoiceCurrency, netAmount, currency]);
 
   // Auto-save remaining UI-only fields to localStorage (provider fields are persisted in DB)
