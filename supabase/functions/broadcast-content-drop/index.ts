@@ -45,11 +45,17 @@ serve(async (req) => {
     const model_id = String(body?.model_id || "").trim();
     const content_link = String(body?.content_link || "").trim();
     const message = String(body?.message || "").trim();
-    if (!model_id || !content_link) {
-      return new Response(JSON.stringify({ error: "model_id and content_link required" }), {
+    if (!model_id) {
+      return new Response(JSON.stringify({ error: "model_id required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    if (!content_link && !message) {
+      return new Response(JSON.stringify({ error: "content_link or message required" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
 
     // 3. Load model name
     const { data: model } = await admin
