@@ -529,7 +529,7 @@ export type Database = {
       }
       content_drops: {
         Row: {
-          content_link: string
+          content_link: string | null
           created_at: string
           created_by: string | null
           id: string
@@ -538,7 +538,7 @@ export type Database = {
           model_name: string
         }
         Insert: {
-          content_link: string
+          content_link?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
@@ -547,7 +547,7 @@ export type Database = {
           model_name?: string
         }
         Update: {
-          content_link?: string
+          content_link?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
