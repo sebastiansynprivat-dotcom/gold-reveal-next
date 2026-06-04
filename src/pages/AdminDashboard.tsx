@@ -7761,7 +7761,18 @@ export default function AdminDashboard() {
                                                   const busy = !!mediaSetting[acc.id];
                                                   return (
                                                     <div className="flex items-center justify-between pt-2 gap-2">
-                                                      <p className="text-[11px] font-semibold text-foreground">Media:</p>
+                                                      <div className="flex items-center gap-2 min-w-0">
+                                                        <p className="text-[11px] font-semibold text-foreground">Media:</p>
+                                                        <span
+                                                          className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold ${
+                                                            hasMedia
+                                                              ? "border-primary/30 bg-primary/15 text-primary"
+                                                              : "border-border bg-muted/40 text-muted-foreground"
+                                                          }`}
+                                                        >
+                                                          {hasMedia ? "Media is set" : "No Media Set"}
+                                                        </span>
+                                                      </div>
                                                       <button
                                                         type="button"
                                                         disabled={busy}
