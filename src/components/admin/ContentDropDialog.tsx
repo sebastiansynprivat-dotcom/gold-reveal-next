@@ -350,7 +350,7 @@ export default function ContentDropDialog({ open, onOpenChange }: Props) {
               </p>
               <button
                 onClick={submit}
-                disabled={submitting || !selected || (!link.trim() && !message.trim())}
+                disabled={submitting || !selected || (!link.trim() && !message.trim()) || totalChatters === 0}
                 className="h-10 px-5 rounded-lg font-semibold text-sm flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-[0.97]"
                 style={{
                   background: "linear-gradient(135deg, hsl(43 56% 42%), hsl(43 76% 50%))",
