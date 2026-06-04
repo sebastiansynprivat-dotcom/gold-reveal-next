@@ -87,20 +87,30 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
 
   const filteredAccounts = useMemo(() => {
     const q = accountSearch.trim().toLowerCase();
-    if (!q) return freeAccounts;
-    return freeAccounts.filter((a) => {
-      const username = a.model_id ? (modelUsernames[a.model_id] || "").toLowerCase() : "";
-      const modelName = (a.model_name || "").toLowerCase();
-      const email = (a.account_email || "").toLowerCase();
-      const platform = (a.platform || "").toLowerCase();
-      return (
-        username.includes(q) ||
-        modelName.includes(q) ||
-        email.includes(q) ||
-        platform.includes(q)
-      );
+    const base = q
+      ? freeAccounts.filter((a) => {
+          const username = a.model_id ? (modelUsernames[a.model_id] || "").toLowerCase() : "";
+          const modelName = (a.model_name || "").toLowerCase();
+          const email = (a.account_email || "").toLowerCase();
+          const platform = (a.platform || "").toLowerCase();
+          return (
+            username.includes(q) ||
+            modelName.includes(q) ||
+            email.includes(q) ||
+            platform.includes(q)
+          );
+        })
+      : freeAccounts;
+    // Free accounts first, then already-assigned ones
+    return [...base].sort((a, b) => {
+      const aFree = a.assigned_to ? 1 : 0;
+      const bFree = b.assigned_to ? 1 : 0;
+      return aFree - bFree;
     });
   }, [accountSearch, freeAccounts, modelUsernames]);
+
+  const freeCount = useMemo(() => freeAccounts.filter((a) => !a.assigned_to).length, [freeAccounts]);
+
 
   const add = async () => {
     if (!telegram.trim()) {
