@@ -76,10 +76,11 @@ serve(async (req) => {
       .insert({
         model_id,
         model_name: modelDisplay,
-        content_link,
+        content_link: content_link || null,
         message,
         created_by: callerId,
       })
+
       .select("id")
       .single();
     if (dropErr) throw dropErr;
