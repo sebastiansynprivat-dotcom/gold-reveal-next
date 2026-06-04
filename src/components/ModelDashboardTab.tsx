@@ -2826,13 +2826,15 @@ export default function ModelDashboardTab() {
                   maloum: modelForm.revenue_percentage_maloum || 0,
                   brezzels: modelForm.revenue_percentage_brezzels || 0,
                 }}
-                platformFxRates={modelAccounts
-                  .map((a) => {
-                    const from = (a.currency || baseCurrency).trim();
-                    const rate = from === baseCurrency ? 1 : fxRates[`${from}->${baseCurrency}`];
-                    return rate ? { platform: a.platform, from, to: baseCurrency, rate } : null;
-                  })
-                  .filter((x): x is { platform: string; from: string; to: string; rate: number } => !!x)}
+                platformFxRates={Array.from(
+                  modelAccounts.reduce((map, a) => {
+                    const from = (getSourceCurrency(a) || baseCurrency).trim();
+                    if (!from || from === baseCurrency) return map;
+                    const rate = fxRates[`${from}->${baseCurrency}`];
+                    if (rate) map.set(`${a.platform}:${from}->${baseCurrency}`, { platform: a.platform, from, to: baseCurrency, rate });
+                    return map;
+                  }, new Map<string, { platform: string; from: string; to: string; rate: number }>()).values(),
+                )}
                 platformBreakdown={(() => {
                   const fallback = modelForm.revenue_percentage || 0;
                   const pctMap: Record<string, number> = {
