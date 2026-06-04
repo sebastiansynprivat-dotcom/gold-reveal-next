@@ -1120,8 +1120,8 @@ export default function CreditNoteForm({
                   <div key={r.key} className="flex justify-between text-xs">
                     <span className="text-muted-foreground">{r.label} <span className="text-accent/70">({r.pct}%)</span></span>
                     <span className="font-mono text-foreground">
-                      {revConv.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {invoiceCurrency}
-                      <span className="text-muted-foreground ml-1.5">→ {payoutConv.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {invoiceCurrency}</span>
+                      {revConv.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {invoiceCurrency}
+                      <span className="text-muted-foreground ml-1.5">→ {payoutConv.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {invoiceCurrency}</span>
                     </span>
                   </div>
                 );
@@ -1134,15 +1134,15 @@ export default function CreditNoteForm({
         <div className="rounded-lg bg-secondary/30 border border-border/50 p-3 space-y-1.5">
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>Netto</span>
-            <span className="font-mono">{net.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {invoiceCurrency}</span>
+            <span className="font-mono">{net.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {invoiceCurrency}</span>
           </div>
           <div className="flex justify-between text-xs text-muted-foreground">
             <span>MwSt. ({vatRate}%)</span>
-            <span className="font-mono">{vatAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {invoiceCurrency}</span>
+            <span className="font-mono">{vatAmount.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {invoiceCurrency}</span>
           </div>
           <div className="border-t border-border/30 pt-1.5 flex justify-between text-sm font-bold text-foreground">
             <span>Gesamt</span>
-            <span className="font-mono text-accent">{grossAmount.toLocaleString("de-DE", { minimumFractionDigits: 2 })} {invoiceCurrency}</span>
+            <span className="font-mono text-accent">{grossAmount.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {invoiceCurrency}</span>
           </div>
           {/* Invoice currency selector with auto-conversion */}
           <div className="border-t border-border/30 pt-2 mt-1 space-y-1.5">
