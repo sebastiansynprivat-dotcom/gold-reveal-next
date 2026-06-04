@@ -32,7 +32,7 @@ const Auth = () => {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [signUpSuccess, setSignUpSuccess] = useState(false);
-  const [showGroupHelp, setShowGroupHelp] = useState(false);
+  const [showGroupHelp, setShowGroupHelp] = useState(true);
   const [showTelegramHelp, setShowTelegramHelp] = useState(false);
   const [showGroupConfirm, setShowGroupConfirm] = useState(false);
   const [showTelegramConfirm, setShowTelegramConfirm] = useState(false);
@@ -385,13 +385,6 @@ const Auth = () => {
                     className={inputClass}
                   />
                 </div>
-                <button
-                  type="button"
-                  onClick={() => setShowGroupHelp((v) => !v)}
-                  className="mt-1.5 w-full text-center text-xs text-primary hover:text-primary/80 transition-colors underline underline-offset-2"
-                >
-                  {t("auth.help.groupName")}
-                </button>
                 {showGroupHelp && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
