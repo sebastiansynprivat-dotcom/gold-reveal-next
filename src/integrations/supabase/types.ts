@@ -65,7 +65,7 @@ export type Database = {
           id: string
           is_manual: boolean
           main_message: string
-          media_id: string
+          media: Json
           message: boolean
           model_active: boolean
           model_agency: string
@@ -90,7 +90,7 @@ export type Database = {
           id?: string
           is_manual?: boolean
           main_message?: string
-          media_id?: string
+          media: Json
           message?: boolean
           model_active?: boolean
           model_agency?: string
@@ -115,7 +115,7 @@ export type Database = {
           id?: string
           is_manual?: boolean
           main_message?: string
-          media_id?: string
+          media?: Json
           message?: boolean
           model_active?: boolean
           model_agency?: string
