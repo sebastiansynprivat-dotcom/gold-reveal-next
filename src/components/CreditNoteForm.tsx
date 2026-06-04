@@ -289,7 +289,7 @@ export default function CreditNoteForm({
     const s = (initialInvoiceDescription || saved.description || "").trim();
     const legacy = ["Revenue share payout", "Revenue share", "Revenue share –", "Revenue share -"];
     setDescription(!s || legacy.some(l => s.toLowerCase().startsWith(l.toLowerCase())) ? defaultDescription : s);
-    setNetAmount(initialInvoiceNetAmount > 0 ? initialInvoiceNetAmount.toFixed(2) : suggestedAmount > 0 ? suggestedAmount.toFixed(2) : "");
+    setNetAmount(initialInvoiceNetAmount > 0 ? initialInvoiceNetAmount.toFixed(2) : suggestedAmount > 0 ? ceilTo2(suggestedAmount) : "");
     setServicePeriodStart(initialInvoiceServicePeriodStart || format(startOfMonth(lastMonth), "yyyy-MM-dd"));
     setServicePeriodEnd(initialInvoiceServicePeriodEnd || format(endOfMonth(lastMonth), "yyyy-MM-dd"));
     setCryptoNetwork(initialInvoiceCryptoNetwork || saved.cryptoNetwork || "TRC20");
