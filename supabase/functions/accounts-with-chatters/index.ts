@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
       "message",
       "main_message",
       "follow_message",
-      "media_id",
+      "media",
       "assigned_to",
     ].join(",");
 
