@@ -5810,6 +5810,18 @@ export default function AdminDashboard() {
                             </span>
                           )}
                         </button>
+                        {unreadCount > 0 && (
+                          <button
+                            onClick={() => {
+                              modelRequests.forEach((r) => { if (isReqUnreadForMe(r)) markReqSeen(r); });
+                              toast.success("Alle als gelesen markiert");
+                            }}
+                            className="h-8 px-2.5 rounded-md text-[10px] font-semibold uppercase tracking-wide border bg-secondary/50 text-muted-foreground border-border/50 hover:text-foreground whitespace-nowrap"
+                            title="Alle neuen Chatter-Kommentare als gelesen markieren"
+                          >
+                            ✓ Alle gelesen
+                          </button>
+                        )}
                         <div className="relative min-w-0 flex-1 sm:flex-none">
                           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                           <Input
