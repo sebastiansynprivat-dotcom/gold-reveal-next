@@ -727,7 +727,7 @@ export default function ModelDashboardTab() {
       const pct = cp.percentage > 0 ? cp.percentage : fallback;
       sum += (cp.revenue || 0) * pct / 100;
     }
-    return Math.round(sum);
+    return Math.round(sum * 100) / 100;
   }, [payoutRevenueForMonth, fetchedPayoutRevenue, customPlatforms, modelForm.revenue_percentage, modelForm.revenue_percentage_fourbased, modelForm.revenue_percentage_maloum, modelForm.revenue_percentage_brezzels, convertToBase]);
 
   // ─── Create model ───
@@ -2066,9 +2066,8 @@ export default function ModelDashboardTab() {
                         }, 0);
                         // 4Based revenue is fetched in USD — convert to model base currency
                         const fbInBase = convertToBase(fb, "USD");
-                        const calculated = Math.round(
-                          (fbInBase * pctFb) / 100 + (ml * pctMl) / 100 + (br * pctBr) / 100 + customsTotal,
-                        );
+                        const calculatedRaw = (fbInBase * pctFb) / 100 + (ml * pctMl) / 100 + (br * pctBr) / 100 + customsTotal;
+                        const calculated = Math.round(calculatedRaw * 100) / 100;
                         const lastDay = new Date(y, m, 0).getDate();
                         setBillingShare(calculated);
                         setPayoutRevenueForMonth({ fourbased: fb, maloum: ml, brezzels: br });
@@ -2199,7 +2198,7 @@ export default function ModelDashboardTab() {
                         const isFourbased = r.key === "fourbased";
                         const sourceCur = isFourbased ? "USD" : baseCurrency;
                         const revInBase = isFourbased ? convertToBase(r.rev, "USD") : r.rev;
-                        const earn = Math.round((revInBase * effective) / 100);
+                        const earn = (revInBase * effective) / 100;
                         const showConversion = isFourbased && sourceCur !== baseCurrency;
                         return (
                           <div key={r.key} className="space-y-1.5">
@@ -2234,7 +2233,7 @@ export default function ModelDashboardTab() {
                                 )}
                               </span>
                               <span className="text-accent/80">
-                                → {earn.toLocaleString("de-DE")} {baseCurrency}
+                                → {earn.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {baseCurrency}
                               </span>
                             </div>
                           </div>
