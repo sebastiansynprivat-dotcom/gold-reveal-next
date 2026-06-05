@@ -618,8 +618,6 @@ export default function ModelDashboardTab() {
         const d = new Date(fetchYear, (fetchMonth - 1) + i, 1);
         pairs.push({ y: d.getFullYear(), m: d.getMonth() + 1 });
       }
-      const minY = pairs[0].y, minM = pairs[0].m;
-      const maxY = pairs[pairs.length - 1].y, maxM = pairs[pairs.length - 1].m;
       const { data, error } = await (supabase as any)
         .from("payout_revenue")
         .select("fourbased_revenue, maloum_revenue, brezzels_revenue, last_fetched_month, last_fetched_year")
