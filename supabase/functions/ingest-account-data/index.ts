@@ -193,7 +193,9 @@ Deno.serve(async (req) => {
         }
       }
 
-      if (newEntries.length === 0 && !metricsChanged) continue;
+      const hasMetrics = Object.keys(groupMetrics).length > 0;
+      // Upsert if new revenue entries OR any metrics provided (even if unchanged, to refresh updated_at)
+      if (newEntries.length === 0 && !hasMetrics) continue;
 
       const row: Record<string, unknown> = {
         account_id,
