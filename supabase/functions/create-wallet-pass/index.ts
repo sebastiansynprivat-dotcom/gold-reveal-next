@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { PASSNINJA_BASE, TEMPLATE_ID, passninjaHeaders, buildPassFields } from "../_shared/passninja-revenue.ts";
+import { PASSNINJA_BASE, TEMPLATE_ID, passninjaHeaders, buildPassFieldVariants } from "../_shared/passninja-revenue.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -41,19 +41,30 @@ Deno.serve(async (req) => {
       });
     }
 
-    const fields = await buildPassFields();
+    const variants = await buildPassFieldVariants();
+    let data: any = null;
+    let usedFields: Record<string, string> | null = null;
+    let lastError = "";
 
-    // Create pass at PassNinja
-    const res = await fetch(`${PASSNINJA_BASE}/passes`, {
-      method: "POST",
-      headers: passninjaHeaders(),
-      body: JSON.stringify({ passTemplate: TEMPLATE_ID, pass: fields }),
-    });
+    for (const variant of variants) {
+      const res = await fetch(`${PASSNINJA_BASE}/passes`, {
+        method: "POST",
+        headers: passninjaHeaders(),
+        body: JSON.stringify({ passTemplate: TEMPLATE_ID, pass: variant.fields }),
+      });
+      const text = await res.text();
+      if (res.ok) {
+        data = JSON.parse(text);
+        usedFields = variant.fields;
+        console.log("PassNinja create succeeded with mapping:", variant.name);
+        break;
+      }
+      lastError = `${res.status} ${text}`;
+      console.error("PassNinja create failed with mapping:", variant.name, lastError);
+    }
 
-    const text = await res.text();
-    if (!res.ok) {
-      console.error("PassNinja create failed:", res.status, text);
-      return new Response(JSON.stringify({ error: "PassNinja error", details: text }), {
+    if (!data || !usedFields) {
+      return new Response(JSON.stringify({ error: "PassNinja error", details: lastError }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -74,7 +85,7 @@ Deno.serve(async (req) => {
       user_id: user.id,
       serial_number: serial,
       pass_url: passUrl,
-      last_payload: fields,
+      last_payload: usedFields,
     });
 
     return new Response(JSON.stringify({ passUrl, serialNumber: serial }), {

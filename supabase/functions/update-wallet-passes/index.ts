@@ -1,6 +1,6 @@
 // Updates all wallet passes with current revenue. Called by cron + after each sale.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { PASSNINJA_BASE, TEMPLATE_ID, passninjaHeaders, buildPassFields } from "../_shared/passninja-revenue.ts";
+import { PASSNINJA_BASE, TEMPLATE_ID, passninjaHeaders, buildPassFieldVariants } from "../_shared/passninja-revenue.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
     );
 
     const { data: passes, error } = await supabase
-      .from("wallet_passes").select("id, serial_number, user_id");
+      .from("wallet_passes").select("id, serial_number, user_id, last_payload");
     if (error) throw error;
     if (!passes || passes.length === 0) {
       return new Response(JSON.stringify({ skipped: true, reason: "no passes" }), {
@@ -25,10 +25,13 @@ Deno.serve(async (req) => {
       });
     }
 
-    const fields = await buildPassFields();
+    const variants = await buildPassFieldVariants();
 
     const results = [];
     for (const p of passes) {
+      const previousKeys = Object.keys((p.last_payload || {}) as Record<string, unknown>);
+      const variant = variants.find((v) => previousKeys.every((key) => key in v.fields)) || variants[0];
+      const fields = variant.fields;
       try {
         const res = await fetch(`${PASSNINJA_BASE}/passes/${TEMPLATE_ID}/${p.serial_number}`, {
           method: "PUT",
