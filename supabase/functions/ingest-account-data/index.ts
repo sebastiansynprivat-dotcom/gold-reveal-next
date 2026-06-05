@@ -97,7 +97,7 @@ Deno.serve(async (req) => {
       }
 
       if (!hasRevenue && Object.keys(metrics).length === 0) {
-        return json({ error: `Row ${i}: must contain either revenue (purchase_id+amount) or at least one metric field` }, 400);
+        return json({ error: `Row ${i}: must contain at least one of: revenue (purchase_id+amount), ${METRIC_FIELDS.join(", ")}` }, 400);
       }
 
       validated.push({
