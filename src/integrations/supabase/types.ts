@@ -1692,6 +1692,7 @@ export type Database = {
           crypto_address: string | null
           currency: string
           drive_folder_id: string | null
+          fourbased_payout_configured: boolean
           group_id: string | null
           id: string
           invoice_crypto_coin: string
@@ -1742,6 +1743,7 @@ export type Database = {
           crypto_address?: string | null
           currency?: string
           drive_folder_id?: string | null
+          fourbased_payout_configured?: boolean
           group_id?: string | null
           id?: string
           invoice_crypto_coin?: string
@@ -1792,6 +1794,7 @@ export type Database = {
           crypto_address?: string | null
           currency?: string
           drive_folder_id?: string | null
+          fourbased_payout_configured?: boolean
           group_id?: string | null
           id?: string
           invoice_crypto_coin?: string
