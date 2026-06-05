@@ -2403,13 +2403,15 @@ export default function ModelDashboardTab() {
                           .toLocaleDateString("de-DE", { month: "short", year: "numeric" });
                         const isBilled = !!r.billed_at;
                         return (
-                          <div
+                          <button
+                            type="button"
                             key={r.id}
+                            onClick={() => setHistoryDetailRow(r)}
                             className={cn(
-                              "flex items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 border text-[11px]",
+                              "w-full flex items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 border text-[11px] transition-all hover:scale-[1.01] active:scale-[0.99] text-left",
                               isBilled
-                                ? "border-emerald-500/30 bg-emerald-500/[0.04]"
-                                : "border-border/40 bg-background/30",
+                                ? "border-emerald-500/30 bg-emerald-500/[0.04] hover:bg-emerald-500/[0.08]"
+                                : "border-border/40 bg-background/30 hover:bg-background/50",
                             )}
                           >
                             <div className="flex items-center gap-2 min-w-0">
@@ -2437,7 +2439,8 @@ export default function ModelDashboardTab() {
                                 </div>
                               )}
                             </div>
-                          </div>
+                          </button>
+
                         );
                       })}
                     </div>
