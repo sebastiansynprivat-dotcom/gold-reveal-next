@@ -886,13 +886,14 @@ export default function ModelHomeDashboard({
                             maloum: s.maloum_revenue || 0,
                             brezzels: s.brezzels_revenue || 0,
                           };
+                          const snapCurrency = s.billed_snapshot?.invoice_currency || modelCurrency;
                           const customs: any[] = s.billed_snapshot?.custom_platforms || [];
                           return (
                             <div key={i} className="rounded-md bg-background/40 border border-border/30 p-2.5 space-y-1.5">
                               <div className="flex justify-between items-center">
                                 <span className="text-xs font-semibold text-foreground">{monthLabel}</span>
                                 <span className="text-xs font-bold text-accent tabular-nums">
-                                  {fmtMoneyDec(Number(s.billed_amount || 0))}
+                                  {fmtMoneyDec(Number(s.billed_amount || 0), snapCurrency)}
                                 </span>
                               </div>
                               <div className="space-y-0.5 text-[10px]">
