@@ -617,35 +617,38 @@ export default function ModelDashboardTab() {
     return () => { cancelled = true; };
   }, [selectedModelId, modelAccounts, revenuePeriod]);
 
-  // ─── Query payout_revenue for the selected fetch month/year ───
+  // ─── Query payout_revenue for the selected fetch month/year (range-aware) ───
   useEffect(() => {
     if (!selectedModelId) {
       setFetchedPayoutRevenue(null);
       return;
     }
+    const fromY = fetchYear, fromM = fetchMonth;
+    const toY = rangeMode ? fetchYearTo : fetchYear;
+    const toM = rangeMode ? fetchMonthTo : fetchMonth;
+    const months = monthsInRange(fromY, fromM, toY, toM);
+
     (async () => {
-      const { data, error } = await (supabase as any)
-        .from("payout_revenue")
-        .select("fourbased_revenue, maloum_revenue, brezzels_revenue")
-        .eq("model_id", selectedModelId)
-        .eq("last_fetched_month", fetchMonth)
-        .eq("last_fetched_year", fetchYear)
-        .maybeSingle();
-      if (error) {
-        setFetchedPayoutRevenue(null);
-        return;
+      let agg = { fourbased: 0, maloum: 0, brezzels: 0 };
+      let any = false;
+      for (const { year, month } of months) {
+        const { data, error } = await (supabase as any)
+          .from("payout_revenue")
+          .select("fourbased_revenue, maloum_revenue, brezzels_revenue")
+          .eq("model_id", selectedModelId)
+          .eq("last_fetched_month", month)
+          .eq("last_fetched_year", year)
+          .maybeSingle();
+        if (!error && data) {
+          any = true;
+          agg.fourbased += Number((data as any).fourbased_revenue) || 0;
+          agg.maloum += Number((data as any).maloum_revenue) || 0;
+          agg.brezzels += Number((data as any).brezzels_revenue) || 0;
+        }
       }
-      if (data) {
-        setFetchedPayoutRevenue({
-          fourbased: Number((data as any).fourbased_revenue) ?? 0,
-          maloum: Number((data as any).maloum_revenue) ?? 0,
-          brezzels: Number((data as any).brezzels_revenue) ?? 0,
-        });
-      } else {
-        setFetchedPayoutRevenue(null);
-      }
+      setFetchedPayoutRevenue(any ? agg : null);
     })();
-  }, [selectedModelId, fetchMonth, fetchYear, fetchRevenueTick]);
+  }, [selectedModelId, fetchMonth, fetchYear, fetchMonthTo, fetchYearTo, rangeMode, fetchRevenueTick, monthsInRange]);
 
   // ─── Load selected model data into form ───
   useEffect(() => {
