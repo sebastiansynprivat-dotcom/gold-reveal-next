@@ -823,11 +823,11 @@ export default function ModelDashboardTab() {
     setModelForm((prev) => ({
       ...prev,
       invoice_net_amount: verdienst,
-      invoice_description: prev.invoice_description || "Creator revenue share for digital content",
-      invoice_currency: prev.invoice_currency || prev.currency || "EUR",
+      invoice_description: (prev as any).invoice_description || "Creator revenue share for digital content",
+      invoice_currency: (prev as any).invoice_currency || prev.currency || "EUR",
       invoice_service_period_start: periodStart,
       invoice_service_period_end: periodEnd,
-    }));
+    } as any));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchedPayoutRevenue, fetchMonth, fetchYear, fetchMonthTo, fetchYearTo, rangeMode, verdienst]);
 
