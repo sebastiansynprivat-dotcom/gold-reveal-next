@@ -63,3 +63,6 @@ verify_jwt = false
 [functions.ingest-account-data]
 verify_jwt = false
 
+[functions.update-account-metrics]
+verify_jwt = false
+
