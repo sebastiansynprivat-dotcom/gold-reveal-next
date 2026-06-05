@@ -2192,12 +2192,12 @@ export default function ModelDashboardTab() {
                   </div>
                 </div>
 
-                {/* Total revenue from all platform accounts */}
-                {totalRevenue > 0 && (
+                {/* Calculated share from payout_revenue (result of "Anteil berechnen") */}
+                {shareCalculated && billingShare > 0 && (
                   <div className="text-center py-3">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Gesamtumsatz</p>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Gesamtanteil</p>
                     <p className="text-4xl font-black text-gold-gradient tabular-nums">
-                      <AnimatedGoldValue value={totalRevenue} suffix={` ${modelForm.currency || "EUR"}`} />
+                      <AnimatedGoldValue value={billingShare} suffix={` ${modelForm.currency || "EUR"}`} />
                     </p>
                   </div>
                 )}
