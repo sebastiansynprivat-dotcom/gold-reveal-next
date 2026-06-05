@@ -1003,6 +1003,7 @@ export default function ModelDashboardTab() {
         revenue_percentage_fourbased: modelForm.revenue_percentage_fourbased || 0,
         revenue_percentage_maloum: modelForm.revenue_percentage_maloum || 0,
         revenue_percentage_brezzels: modelForm.revenue_percentage_brezzels || 0,
+        fourbased_payout_configured: !!modelForm.fourbased_payout_configured,
         crypto_address: modelForm.crypto_address,
         currency: modelForm.currency,
         notes: modelForm.notes,
