@@ -143,6 +143,7 @@ export default function CreditNoteForm({
   platformFxRates = [],
   platformBreakdown = [],
   autoApplyTrigger = 0,
+  onInvoiceCreated,
 }: CreditNoteFormProps) {
   // localStorage key for persisting provider (recipient) form fields
   const storageKey = `credit-note-form-${providerEntityType && providerEntityId ? `${providerEntityType}-${providerEntityId}` : accountId || chatterName || "default"}`;
