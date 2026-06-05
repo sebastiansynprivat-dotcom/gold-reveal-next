@@ -825,6 +825,115 @@ export default function ModelHomeDashboard({
           {copy.editProfile}
         </Button>
       </div>
+
+      {/* Invoice detail dialog */}
+      <Dialog open={!!detailInvoice} onOpenChange={(o) => !o && setDetailInvoice(null)}>
+        <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+          {detailInvoice && (() => {
+            const cn = detailInvoice;
+            const snaps = payoutSnapshots[cn.credit_note_number] || [];
+            return (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2 flex-wrap">
+                    <span>{cn.credit_note_number}</span>
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[10px] font-semibold">
+                      {lang === "en" ? "Billed" : "Abgerechnet"}
+                    </span>
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-3 text-sm">
+                  <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3 space-y-1.5">
+                    <div className="flex justify-between gap-2">
+                      <span className="text-muted-foreground text-xs">{copy.billedOn}</span>
+                      <span className="text-xs text-foreground">{fmtDate(cn.credit_note_date)}</span>
+                    </div>
+                    {cn.service_period_start && cn.service_period_end && (
+                      <div className="flex justify-between gap-2">
+                        <span className="text-muted-foreground text-xs">{copy.servicePeriod}</span>
+                        <span className="text-xs text-foreground">
+                          {fmtDate(cn.service_period_start)} – {fmtDate(cn.service_period_end)}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex justify-between gap-2 pt-1.5 mt-1.5 border-t border-emerald-500/20">
+                      <span className="text-muted-foreground text-xs">{copy.payout}</span>
+                      <span className="text-base font-bold text-accent tabular-nums">
+                        {fmtMoneyDec(Number(cn.net_amount || 0))}
+                      </span>
+                    </div>
+                  </div>
+
+                  {snaps.length > 0 && (
+                    <div className="rounded-lg border border-border/40 bg-secondary/20 p-3 space-y-2">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{copy.monthsCovered}</p>
+                      <div className="space-y-2">
+                        {snaps.map((s, i) => {
+                          const monthLabel = new Date(s.last_fetched_year, s.last_fetched_month - 1, 1)
+                            .toLocaleDateString(lang === "en" ? "en-US" : "de-DE", { month: "long", year: "numeric" });
+                          const pr = s.billed_snapshot?.platform_revenues || {
+                            fourbased: s.fourbased_revenue || 0,
+                            maloum: s.maloum_revenue || 0,
+                            brezzels: s.brezzels_revenue || 0,
+                          };
+                          const customs: any[] = s.billed_snapshot?.custom_platforms || [];
+                          return (
+                            <div key={i} className="rounded-md bg-background/40 border border-border/30 p-2.5 space-y-1.5">
+                              <div className="flex justify-between items-center">
+                                <span className="text-xs font-semibold text-foreground">{monthLabel}</span>
+                                <span className="text-xs font-bold text-accent tabular-nums">
+                                  {fmtMoneyDec(Number(s.billed_amount || 0))}
+                                </span>
+                              </div>
+                              <div className="space-y-0.5 text-[10px]">
+                                {Number(pr.fourbased || 0) > 0 && (
+                                  <div className="flex justify-between text-muted-foreground">
+                                    <span>4Based</span>
+                                    <span className="tabular-nums">{Number(pr.fourbased).toLocaleString(lang === "en" ? "en-US" : "de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD</span>
+                                  </div>
+                                )}
+                                {Number(pr.maloum || 0) > 0 && (
+                                  <div className="flex justify-between text-muted-foreground">
+                                    <span>Maloum</span>
+                                    <span className="tabular-nums">{fmtMoneyDec(Number(pr.maloum))}</span>
+                                  </div>
+                                )}
+                                {Number(pr.brezzels || 0) > 0 && (
+                                  <div className="flex justify-between text-muted-foreground">
+                                    <span>Brezzels</span>
+                                    <span className="tabular-nums">{fmtMoneyDec(Number(pr.brezzels))}</span>
+                                  </div>
+                                )}
+                                {customs.map((c, ci) => (
+                                  Number(c.revenue || 0) > 0 && (
+                                    <div key={ci} className="flex justify-between text-muted-foreground">
+                                      <span>{c.name}</span>
+                                      <span className="tabular-nums">{fmtMoneyDec(Number(c.revenue))}</span>
+                                    </div>
+                                  )
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  <Button
+                    onClick={() => downloadInvoicePdf(cn)}
+                    className="w-full gap-2 bg-accent hover:bg-accent/90 text-accent-foreground"
+                  >
+                    <Download className="h-4 w-4" />
+                    {copy.downloadPdf}
+                  </Button>
+                </div>
+              </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </motion.div>
+
   );
 }
