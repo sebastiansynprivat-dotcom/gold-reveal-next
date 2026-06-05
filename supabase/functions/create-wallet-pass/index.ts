@@ -69,7 +69,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    const data = JSON.parse(text);
     // PassNinja returns: { id, urls: { landing, download }, ... } – be defensive
     const passUrl = data?.urls?.landing || data?.urls?.download || data?.url || data?.landingUrl;
     const serial = data?.id || data?.serialNumber || data?.passId;
