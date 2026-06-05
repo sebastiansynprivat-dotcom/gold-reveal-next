@@ -2435,7 +2435,7 @@ export default function ModelDashboardTab() {
                             </div>
                             <div className="text-right shrink-0">
                               <div className="text-foreground font-bold tabular-nums">
-                                {(r.billed_amount ?? r.monthly_revenue ?? 0).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
+                                {(r.billed_amount ?? r.monthly_revenue ?? 0).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {(r.billed_snapshot as any)?.invoice_currency || modelForm.currency || "EUR"}
                               </div>
                               {isBilled && r.billed_at && (
                                 <div className="text-[9px] text-muted-foreground">
