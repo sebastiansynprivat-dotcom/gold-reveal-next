@@ -435,10 +435,17 @@ export default function ModelHomeDashboard({
     () => Object.values(lifetimeByAccount).reduce((s, v) => s + v, 0),
     [lifetimeByAccount],
   );
-  const fmtMoney = (v: number) =>
-    new Intl.NumberFormat(lang === "en" ? "en-US" : "de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(v);
-  const fmtMoneyDec = (v: number) =>
-    new Intl.NumberFormat(lang === "en" ? "en-US" : "de-DE", { style: "currency", currency: "EUR", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
+  const safeFmt = (v: number, opts: Intl.NumberFormatOptions, ccy?: string) => {
+    const locale = lang === "en" ? "en-US" : "de-DE";
+    const c = (ccy || modelCurrency || "EUR").toUpperCase();
+    try {
+      return new Intl.NumberFormat(locale, { style: "currency", currency: c, ...opts }).format(v);
+    } catch {
+      return `${new Intl.NumberFormat(locale, opts).format(v)} ${c}`;
+    }
+  };
+  const fmtMoney = (v: number, ccy?: string) => safeFmt(v, { maximumFractionDigits: 0 }, ccy);
+  const fmtMoneyDec = (v: number, ccy?: string) => safeFmt(v, { minimumFractionDigits: 2, maximumFractionDigits: 2 }, ccy);
   const fmtDate = (d: string | Date) =>
     new Date(d).toLocaleDateString(lang === "en" ? "en-US" : "de-DE", { day: "2-digit", month: "short", year: "numeric" });
 
