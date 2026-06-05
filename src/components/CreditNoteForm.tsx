@@ -94,6 +94,12 @@ interface CreditNoteFormProps {
   platformFxRates?: Array<{ platform: string; from: string; to: string; rate: number }>;
   platformBreakdown?: Array<{ name: string; rev: number; pct: number }>;
   autoApplyTrigger?: number;
+  onInvoiceCreated?: (info: {
+    creditNoteNumber: string;
+    netAmount: number;
+    servicePeriodStart: string | null;
+    servicePeriodEnd: string | null;
+  }) => void;
 }
 
 export default function CreditNoteForm({
