@@ -2415,6 +2415,36 @@ export type Database = {
         }
         Relationships: []
       }
+      wallet_passes: {
+        Row: {
+          created_at: string
+          id: string
+          last_payload: Json | null
+          pass_url: string
+          serial_number: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_payload?: Json | null
+          pass_url: string
+          serial_number: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_payload?: Json | null
+          pass_url?: string
+          serial_number?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
