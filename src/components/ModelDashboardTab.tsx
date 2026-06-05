@@ -483,13 +483,19 @@ export default function ModelDashboardTab() {
     month: number;
     year: number;
     monthly_revenue: number | null;
+    fourbased_revenue: number | null;
+    maloum_revenue: number | null;
+    brezzels_revenue: number | null;
     billed_at: string | null;
     billed_credit_note_number: string | null;
     billed_amount: number | null;
+    billed_snapshot: any | null;
     last_fetched_at: string | null;
   };
   const [billingHistory, setBillingHistory] = useState<BillingHistoryRow[]>([]);
   const [billingHistoryTick, setBillingHistoryTick] = useState(0);
+  const [historyDetailRow, setHistoryDetailRow] = useState<BillingHistoryRow | null>(null);
+
 
   // ─── Custom platforms (per-model, localStorage) ───
   type CustomPlatform = { id: string; name: string; revenue: number; percentage: number };
