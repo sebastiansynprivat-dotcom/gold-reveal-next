@@ -2509,14 +2509,31 @@ export default function ModelDashboardTab() {
                 </div>
 
                 {/* Calculated share from payout_revenue (result of "Anteil berechnen") */}
-                {shareCalculated && billingShare > 0 && (
-                  <div className="text-center py-3">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Payouts Gesamt</p>
-                    <p className="text-4xl font-black text-gold-gradient tabular-nums">
-                      <AnimatedGoldValue value={billingShare} suffix={` ${modelForm.currency || "EUR"}`} />
-                    </p>
-                  </div>
-                )}
+                {shareCalculated && billingShare > 0 && (() => {
+                  const src = payoutRevenueForMonth ?? { fourbased: 0, maloum: 0, brezzels: 0 };
+                  const grossTotal =
+                    convertToBase(src.fourbased || 0, "USD") +
+                    (src.maloum || 0) +
+                    (src.brezzels || 0) +
+                    customPlatforms.reduce((s, cp) => s + (cp.revenue || 0), 0);
+                  const cur = modelForm.currency || "EUR";
+                  return (
+                    <div className="text-center py-3 space-y-3">
+                      <div>
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Payouts Gesamt</p>
+                        <p className="text-4xl font-black text-gold-gradient tabular-nums">
+                          <AnimatedGoldValue value={grossTotal} suffix={` ${cur}`} />
+                        </p>
+                      </div>
+                      <div className="pt-2 border-t border-border/30">
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Net Payout (Model-Anteil)</p>
+                        <p className="text-2xl font-bold text-foreground tabular-nums">
+                          <AnimatedGoldValue value={billingShare} suffix={` ${cur}`} />
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Standard percentage slider (fallback) */}
                 <div className="space-y-3">
