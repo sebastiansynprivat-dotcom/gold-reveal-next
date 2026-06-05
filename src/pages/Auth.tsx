@@ -28,6 +28,7 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [groupName, setGroupName] = useState("");
+  const [name, setName] = useState("");
   const [telegramId, setTelegramId] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -186,6 +187,10 @@ const Auth = () => {
     setError("");
 
     if (isSignUp) {
+      if (!name.trim()) {
+        setError(t("auth.error.nameRequired") || "Bitte gib deinen Namen ein.");
+        return;
+      }
       if (!groupName.trim()) {
         setError(t("auth.error.groupRequired"));
         return;
@@ -218,7 +223,7 @@ const Auth = () => {
   const handleConfirmSignUp = async () => {
     setShowTelegramConfirm(false);
     setSubmitting(true);
-    const { error } = await signUp(email, password, { group_name: groupName.trim() });
+    const { error } = await signUp(email, password, { group_name: groupName.trim(), name: name.trim() });
     if (error) {
       setError(translateError(error.message, t));
     } else {
@@ -370,6 +375,23 @@ const Auth = () => {
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {isSignUp && (
+              <div>
+                <div className="input-gold-shimmer rounded-xl">
+                  <input
+                    type="text"
+                    name="name"
+                    id="signup-name"
+                    autoComplete="name"
+                    placeholder={t("auth.placeholder.name") || "Dein Name"}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+            )}
             {isSignUp && (
               <div>
                 <div className="input-gold-shimmer rounded-xl">

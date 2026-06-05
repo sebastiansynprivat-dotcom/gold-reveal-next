@@ -9,6 +9,7 @@ import {
   FileText,
   Clock,
   Users,
+  User,
   Pencil,
   ChevronDown,
   ChevronLeft,
@@ -236,6 +237,7 @@ export default function Dashboard() {
   const [groupName, setGroupName] = useState("");
   const [groupNameSaved, setGroupNameSaved] = useState(false);
   const [editingGroupName, setEditingGroupName] = useState(false);
+  const [userName, setUserName] = useState("");
 
   const [offer, setOffer] = useState("");
   const [assignedAccounts, setAssignedAccounts] = useState<
@@ -353,7 +355,7 @@ export default function Dashboard() {
     if (!user) return;
     supabase
       .from("profiles")
-      .select("telegram_id, group_name, offer")
+      .select("telegram_id, group_name, offer, name")
       .eq("user_id", user.id)
       .maybeSingle()
       .then(({ data }) => {
@@ -365,6 +367,7 @@ export default function Dashboard() {
           setGroupName(data.group_name);
           setGroupNameSaved(true);
         }
+        if ((data as any)?.name) setUserName((data as any).name);
         if (data?.offer) setOffer(data.offer);
         setTelegramLoading(false);
       });
@@ -608,6 +611,13 @@ export default function Dashboard() {
               <h1 className="text-base lg:text-lg font-bold text-foreground leading-tight">Chatter Dashboard</h1>
             </div>
             <div className="h-8 w-px bg-border shrink-0" />
+            <div className="flex items-center gap-1.5 shrink-0">
+              <User className="h-3.5 w-3.5 text-accent" />
+              <span className={`text-sm font-medium ${userName ? "text-foreground" : "text-muted-foreground"}`}>
+                {userName || "Name"}
+              </span>
+            </div>
+            <div className="h-8 w-px bg-border shrink-0" />
             <div className="flex items-center gap-2">
               {telegramSaved ? (
                 <>
@@ -777,6 +787,14 @@ export default function Dashboard() {
                 <Award className="h-3 w-3 mr-1" />
                 <TierLabel tier={currentTier} />
               </Badge>
+            </div>
+
+            {/* Row 1b: Name */}
+            <div className="flex items-center gap-1.5">
+              <User className="h-3.5 w-3.5 text-accent shrink-0" />
+              <span className={`text-xs font-medium truncate ${userName ? "text-foreground" : "text-muted-foreground"}`}>
+                {userName || "Name"}
+              </span>
             </div>
 
             {/* Row 2: Gruppenname */}
