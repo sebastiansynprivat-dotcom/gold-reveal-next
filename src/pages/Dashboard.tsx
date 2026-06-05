@@ -611,6 +611,13 @@ export default function Dashboard() {
               <h1 className="text-base lg:text-lg font-bold text-foreground leading-tight">Chatter Dashboard</h1>
             </div>
             <div className="h-8 w-px bg-border shrink-0" />
+            <div className="flex items-center gap-1.5 shrink-0">
+              <User className="h-3.5 w-3.5 text-accent" />
+              <span className={`text-sm font-medium ${userName ? "text-foreground" : "text-muted-foreground"}`}>
+                {userName || "Name"}
+              </span>
+            </div>
+            <div className="h-8 w-px bg-border shrink-0" />
             <div className="flex items-center gap-2">
               {telegramSaved ? (
                 <>
