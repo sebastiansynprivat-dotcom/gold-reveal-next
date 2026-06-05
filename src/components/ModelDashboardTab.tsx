@@ -546,6 +546,79 @@ export default function ModelDashboardTab() {
     setPlatformRevenues(platRevMap);
   }, []);
 
+  // ─── Period revenue from accounts_data.total ───
+  useEffect(() => {
+    if (!selectedModelId || modelAccounts.length === 0) return;
+    const accountIds = modelAccounts.map((a) => a.id);
+
+    const today = new Date();
+    const fmt = (d: Date) => {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${y}-${m}-${day}`;
+    };
+    let from: Date, to: Date;
+    const startOfDay = (d: Date) => { const x = new Date(d); x.setHours(0,0,0,0); return x; };
+    switch (revenuePeriod) {
+      case "today": from = startOfDay(today); to = startOfDay(today); break;
+      case "yesterday": {
+        const y = startOfDay(today); y.setDate(y.getDate() - 1);
+        from = y; to = y; break;
+      }
+      case "7d": {
+        to = startOfDay(today);
+        from = new Date(to); from.setDate(from.getDate() - 6);
+        break;
+      }
+      case "30d": {
+        to = startOfDay(today);
+        from = new Date(to); from.setDate(from.getDate() - 29);
+        break;
+      }
+      case "last_month": {
+        const first = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        const last = new Date(today.getFullYear(), today.getMonth(), 0);
+        from = first; to = last; break;
+      }
+      case "this_month":
+      default: {
+        from = new Date(today.getFullYear(), today.getMonth(), 1);
+        to = startOfDay(today);
+        break;
+      }
+    }
+
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await (supabase as any)
+        .from("accounts_data")
+        .select("account_id, total")
+        .in("account_id", accountIds)
+        .gte("date", fmt(from))
+        .lte("date", fmt(to));
+      if (cancelled) return;
+      if (error) { console.error("accounts_data load failed", error); return; }
+      const sums: Record<string, number> = {};
+      for (const id of accountIds) sums[id] = 0;
+      for (const r of (data || []) as Array<{ account_id: string; total: number | string }>) {
+        sums[r.account_id] = (sums[r.account_id] || 0) + Number(r.total || 0);
+      }
+      setDashboardRevenues(sums);
+      const platMap: Record<string, { fourbased: number; maloum: number; brezzels: number }> = {};
+      for (const acc of modelAccounts) {
+        const v = sums[acc.id] || 0;
+        platMap[acc.id] = {
+          fourbased: acc.platform === "4Based" ? v : 0,
+          maloum: acc.platform === "Maloum" ? v : 0,
+          brezzels: acc.platform === "Brezzels" ? v : 0,
+        };
+      }
+      setPlatformRevenues(platMap);
+    })();
+    return () => { cancelled = true; };
+  }, [selectedModelId, modelAccounts, revenuePeriod]);
+
   // ─── Query payout_revenue for the selected fetch month/year ───
   useEffect(() => {
     if (!selectedModelId) {
