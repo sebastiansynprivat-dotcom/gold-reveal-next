@@ -3162,23 +3162,62 @@ export default function ModelDashboardTab() {
                   }
                   if (pairs.length === 0) return;
                   const nowIso = new Date().toISOString();
-                  const share = pairs.length > 0 ? netAmount / pairs.length : netAmount;
-                  // Mark each covered payout_revenue row as billed
-                  await Promise.all(pairs.map(({ y, m }) =>
+                  const invoiceCurrency = (modelForm as any).invoice_currency || modelForm.currency || "EUR";
+                  // Fetch each affected payout row to build a per-row snapshot
+                  const rows = await Promise.all(pairs.map(({ y, m }) =>
                     (supabase as any)
+                      .from("payout_revenue")
+                      .select("fourbased_revenue, maloum_revenue, brezzels_revenue, monthly_revenue")
+                      .eq("model_id", selectedModelId)
+                      .eq("last_fetched_month", m)
+                      .eq("last_fetched_year", y)
+                      .maybeSingle()
+                      .then((res: any) => ({ y, m, row: res.data }))
+                  ));
+                  // Allocate share proportionally to monthly revenue; fallback to equal split
+                  const fallbackPct = modelForm.revenue_percentage || 0;
+                  const totalMonthly = rows.reduce((s, r) => s + Number(r.row?.monthly_revenue || 0), 0);
+                  await Promise.all(rows.map(({ y, m, row }) => {
+                    const monthly = Number(row?.monthly_revenue || 0);
+                    const share = totalMonthly > 0
+                      ? netAmount * (monthly / totalMonthly)
+                      : netAmount / pairs.length;
+                    const snapshot = {
+                      invoice_number: creditNoteNumber,
+                      invoice_net_amount: netAmount,
+                      invoice_currency: invoiceCurrency,
+                      billed_share_amount: Math.round(share * 100) / 100,
+                      service_period: { start: servicePeriodStart, end: servicePeriodEnd },
+                      platform_revenues: {
+                        fourbased: Number(row?.fourbased_revenue || 0),
+                        maloum: Number(row?.maloum_revenue || 0),
+                        brezzels: Number(row?.brezzels_revenue || 0),
+                      },
+                      percentages: {
+                        default: fallbackPct,
+                        fourbased: modelForm.revenue_percentage_fourbased || fallbackPct,
+                        maloum: modelForm.revenue_percentage_maloum || fallbackPct,
+                        brezzels: modelForm.revenue_percentage_brezzels || fallbackPct,
+                      },
+                      custom_platforms: customPlatforms,
+                      monthly_revenue_at_billing: monthly,
+                    };
+                    return (supabase as any)
                       .from("payout_revenue")
                       .update({
                         billed_at: nowIso,
                         billed_credit_note_number: creditNoteNumber,
                         billed_amount: Math.round(share * 100) / 100,
+                        billed_snapshot: snapshot,
                       })
                       .eq("model_id", selectedModelId)
                       .eq("last_fetched_month", m)
-                      .eq("last_fetched_year", y)
-                  ));
+                      .eq("last_fetched_year", y);
+                  }));
                   setBillingHistoryTick((t) => t + 1);
                   toast.success(`${pairs.length} Monat${pairs.length === 1 ? "" : "e"} als abgerechnet markiert`);
                 }}
+
                 suggestedAmount={verdienst}
                 providerName={selectedModel.name}
                 accountId={modelAccounts[0]?.id || ""}
