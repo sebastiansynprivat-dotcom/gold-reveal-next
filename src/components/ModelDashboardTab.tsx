@@ -623,9 +623,7 @@ export default function ModelDashboardTab() {
       const { data, error } = await (supabase as any)
         .from("payout_revenue")
         .select("fourbased_revenue, maloum_revenue, brezzels_revenue, last_fetched_month, last_fetched_year")
-        .eq("model_id", selectedModelId)
-        .or(`and(last_fetched_year.gt.${minY}),and(last_fetched_year.eq.${minY},last_fetched_month.gte.${minM})`)
-        .or(`and(last_fetched_year.lt.${maxY}),and(last_fetched_year.eq.${maxY},last_fetched_month.lte.${maxM})`);
+        .eq("model_id", selectedModelId);
       if (error || !data || (data as any[]).length === 0) {
         setFetchedPayoutRevenue(null);
         return;
