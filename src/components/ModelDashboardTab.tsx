@@ -2661,6 +2661,7 @@ export default function ModelDashboardTab() {
                                   if (e.key === "Enter") (e.target as HTMLInputElement).blur();
                                 }}
                               />
+                            </div>
                             {platErr && !isAuthErr && (
                               <div className="pl-[4.5rem] text-[10px] text-destructive/80">
                                 ⚠ {platErr.message}
