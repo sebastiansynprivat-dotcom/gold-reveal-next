@@ -770,12 +770,19 @@ export default function ModelDashboardTab() {
     return Object.entries(platformMap).map(([platform, data]) => ({ platform, ...data }));
   }, [selectedModelId, modelAccounts, platformRevenues, dashboardRevenues, convertToBase, baseCurrency, getSourceCurrency]);
 
+  // Gesamtumsatz = nur die gefetchen Payout-Werte (+ manuelle Custom-Plattformen),
+  // konvertiert in die Basis-Währung. Reflektiert ausschließlich die im Fetch-Bereich
+  // gewählten Monate.
   const totalRevenue = useMemo(() => {
-    return modelAccounts.reduce(
-      (sum, acc) => sum + convertToBase(dashboardRevenues[acc.id] || 0, getSourceCurrency(acc)),
-      0,
-    );
-  }, [modelAccounts, dashboardRevenues, convertToBase, getSourceCurrency]);
+    let sum = 0;
+    if (fetchedPayoutRevenue) {
+      sum += convertToBase(fetchedPayoutRevenue.fourbased || 0, "USD");
+      sum += fetchedPayoutRevenue.maloum || 0;
+      sum += fetchedPayoutRevenue.brezzels || 0;
+    }
+    for (const cp of customPlatforms) sum += cp.revenue || 0;
+    return Math.round(sum * 100) / 100;
+  }, [fetchedPayoutRevenue, customPlatforms, convertToBase]);
 
   const verdienst = useMemo(() => {
     const fallback = modelForm.revenue_percentage || 0;
