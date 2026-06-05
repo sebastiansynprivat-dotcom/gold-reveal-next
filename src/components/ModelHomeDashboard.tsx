@@ -26,6 +26,10 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Download } from "lucide-react";
+import { generateProviderInvoicePdf, downloadPdf } from "@/lib/providerInvoicePdf";
+
 
 type Period = "today" | "yesterday" | "last7" | "last30" | "month" | "lifetime";
 
@@ -82,7 +86,16 @@ const COPY = {
     netEarnings: "Deine Netto-Einnahmen",
     forecast: "Monatsprognose",
     forecastHint: "Hochrechnung basierend auf dem bisherigen Tagesdurchschnitt",
+    downloadPdf: "PDF herunterladen",
+    details: "Details ansehen",
+    monthsCovered: "Abgerechnete Monate",
+    platformRevenues: "Umsatz pro Plattform",
+    payout: "Payout",
+    invoiceNumber: "Rechnungs-Nr.",
+    billedOn: "Abgerechnet am",
+    servicePeriod: "Leistungszeitraum",
   },
+
   en: {
     welcome: "Welcome back",
     confirmed: "Confirmed",
@@ -117,8 +130,17 @@ const COPY = {
     netEarnings: "Your net earnings",
     forecast: "Month forecast",
     forecastHint: "Projection based on daily average so far",
+    downloadPdf: "Download PDF",
+    details: "View details",
+    monthsCovered: "Billed months",
+    platformRevenues: "Revenue per platform",
+    payout: "Payout",
+    invoiceNumber: "Invoice no.",
+    billedOn: "Billed on",
+    servicePeriod: "Service period",
   },
 };
+
 
 const PLATFORM_LABELS: Record<string, string> = {
   fourbased: "4Based",
@@ -179,6 +201,10 @@ export default function ModelHomeDashboard({
   const [monthRevenue, setMonthRevenue] = useState<number>(0);
   const [requests, setRequests] = useState<any[]>([]);
   const [creditNotes, setCreditNotes] = useState<any[]>([]);
+  const [payoutSnapshots, setPayoutSnapshots] = useState<Record<string, any[]>>({});
+  const [detailInvoice, setDetailInvoice] = useState<any | null>(null);
+  const [issuer, setIssuer] = useState<{ name: string; address: string; vat_id: string } | null>(null);
+
   const [loading, setLoading] = useState(true);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [shownPwd, setShownPwd] = useState<Record<string, boolean>>({});
@@ -293,19 +319,110 @@ export default function ModelHomeDashboard({
     })();
   }, [modelName]);
 
-  // Load past invoices (credit_notes) for any account belonging to this model
+  // Load past invoices (credit_notes) + linked payout_revenue snapshots
   useEffect(() => {
     (async () => {
-      if (accounts.length === 0) { setCreditNotes([]); return; }
+      if (accounts.length === 0) { setCreditNotes([]); setPayoutSnapshots({}); return; }
       const accountIds = accounts.map((a) => a.id);
-      const { data } = await (supabase.from("credit_notes") as any)
-        .select("id, credit_note_number, credit_note_date, service_period_start, service_period_end, net_amount, gross_amount, payment_date")
+      const { data: cn } = await (supabase.from("credit_notes") as any)
+        .select("id, credit_note_number, credit_note_date, service_period_start, service_period_end, net_amount, gross_amount, vat_rate, vat_amount, payment_date, description, provider_name, provider_address, provider_is_business, provider_vat_id, payment_method, crypto_coin, tx_hash")
         .in("account_id", accountIds)
         .order("credit_note_date", { ascending: false })
         .limit(20);
-      setCreditNotes(data || []);
+      const list = cn || [];
+      setCreditNotes(list);
+      // Fetch payout_revenue snapshots grouped by credit_note_number
+      const numbers = list.map((x: any) => x.credit_note_number).filter(Boolean);
+      if (numbers.length > 0) {
+        const { data: pr } = await (supabase.from("payout_revenue") as any)
+          .select("last_fetched_month, last_fetched_year, fourbased_revenue, maloum_revenue, brezzels_revenue, monthly_revenue, billed_at, billed_amount, billed_credit_note_number, billed_snapshot")
+          .eq("model_id", modelId)
+          .in("billed_credit_note_number", numbers);
+        const map: Record<string, any[]> = {};
+        for (const row of (pr || []) as any[]) {
+          const k = row.billed_credit_note_number;
+          if (!map[k]) map[k] = [];
+          map[k].push(row);
+        }
+        for (const k of Object.keys(map)) {
+          map[k].sort((a, b) => (b.last_fetched_year - a.last_fetched_year) || (b.last_fetched_month - a.last_fetched_month));
+        }
+        setPayoutSnapshots(map);
+      } else {
+        setPayoutSnapshots({});
+      }
     })();
-  }, [accounts]);
+  }, [accounts, modelId]);
+
+  // Load issuer settings (for PDF regeneration)
+  useEffect(() => {
+    (async () => {
+      const { data } = await (supabase.from("issuer_settings") as any)
+        .select("name, address, vat_id")
+        .limit(1)
+        .maybeSingle();
+      if (data) setIssuer({ name: data.name || "", address: data.address || "", vat_id: data.vat_id || "" });
+    })();
+  }, []);
+
+  const downloadInvoicePdf = (cn: any) => {
+    try {
+      const snaps = payoutSnapshots[cn.credit_note_number] || [];
+      // Build PDF lines from snapshot data; fallback to single summary line.
+      const lines: Array<{ name: string; gross: number; pct: number }> = [];
+      const currency = "EUR";
+      if (snaps.length > 0) {
+        for (const s of snaps) {
+          const label = new Date(s.last_fetched_year, s.last_fetched_month - 1, 1)
+            .toLocaleDateString("de-DE", { month: "short", year: "numeric" });
+          lines.push({
+            name: `Creator revenue share ${label}`,
+            gross: Number(s.billed_amount || 0),
+            pct: 100,
+          });
+        }
+      } else {
+        lines.push({
+          name: cn.description || "Creator revenue share",
+          gross: Number(cn.net_amount || 0),
+          pct: 100,
+        });
+      }
+      const doc = generateProviderInvoicePdf({
+        creditNoteNumber: cn.credit_note_number,
+        creditNoteDate: cn.credit_note_date,
+        servicePeriodStart: cn.service_period_start || cn.credit_note_date,
+        servicePeriodEnd: cn.service_period_end || cn.credit_note_date,
+        issuer: {
+          name: issuer?.name || "",
+          address: issuer?.address || "",
+          vatId: issuer?.vat_id || "",
+        },
+        provider: {
+          name: cn.provider_name || modelName,
+          address: cn.provider_address || "",
+          isBusiness: !!cn.provider_is_business,
+          vatId: cn.provider_vat_id || "",
+        },
+        description: cn.description || "Creator revenue share for digital content",
+        currency,
+        lines,
+        net: Number(cn.net_amount || 0),
+        payment: {
+          method: cn.payment_method || undefined,
+          txHash: cn.tx_hash || undefined,
+          paymentDate: cn.payment_date || undefined,
+        },
+      });
+      downloadPdf(doc, `ProviderInvoice_${String(cn.credit_note_number).replace(/\//g, "-")}.pdf`);
+    } catch (e) {
+      console.error(e);
+      toast.error(lang === "en" ? "Could not generate PDF" : "PDF konnte nicht erstellt werden");
+    }
+  };
+
+
+
 
   const total = useMemo(
     () => Object.values(revenueByAccount).reduce((s, v) => s + v, 0),
@@ -656,7 +773,11 @@ export default function ModelHomeDashboard({
                   key={cn.id}
                   className="glass-card-subtle rounded-lg p-3 flex items-center gap-3"
                 >
-                  <div className="flex-1 min-w-0">
+                  <button
+                    type="button"
+                    onClick={() => setDetailInvoice(cn)}
+                    className="flex-1 min-w-0 text-left hover:opacity-80 transition-opacity"
+                  >
                     <p className="text-xs font-semibold text-foreground truncate">
                       {cn.credit_note_number}
                     </p>
@@ -665,7 +786,7 @@ export default function ModelHomeDashboard({
                         ? `${fmtDate(cn.service_period_start)} — ${fmtDate(cn.service_period_end)}`
                         : fmtDate(cn.credit_note_date)}
                     </p>
-                  </div>
+                  </button>
                   <div className="text-right shrink-0">
                     <p className="text-sm font-bold text-accent tabular-nums">
                       {fmtMoneyDec(Number(cn.net_amount || 0))}
@@ -674,9 +795,19 @@ export default function ModelHomeDashboard({
                       {copy.net}
                     </p>
                   </div>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={(e) => { e.stopPropagation(); downloadInvoicePdf(cn); }}
+                    className="h-8 w-8 shrink-0 text-accent hover:text-accent hover:bg-accent/10"
+                    title={copy.downloadPdf}
+                  >
+                    <Download className="h-4 w-4" />
+                  </Button>
                 </div>
               ))}
             </div>
+
           )}
         </div>
       </section>
@@ -694,6 +825,115 @@ export default function ModelHomeDashboard({
           {copy.editProfile}
         </Button>
       </div>
+
+      {/* Invoice detail dialog */}
+      <Dialog open={!!detailInvoice} onOpenChange={(o) => !o && setDetailInvoice(null)}>
+        <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+          {detailInvoice && (() => {
+            const cn = detailInvoice;
+            const snaps = payoutSnapshots[cn.credit_note_number] || [];
+            return (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2 flex-wrap">
+                    <span>{cn.credit_note_number}</span>
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[10px] font-semibold">
+                      {lang === "en" ? "Billed" : "Abgerechnet"}
+                    </span>
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-3 text-sm">
+                  <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3 space-y-1.5">
+                    <div className="flex justify-between gap-2">
+                      <span className="text-muted-foreground text-xs">{copy.billedOn}</span>
+                      <span className="text-xs text-foreground">{fmtDate(cn.credit_note_date)}</span>
+                    </div>
+                    {cn.service_period_start && cn.service_period_end && (
+                      <div className="flex justify-between gap-2">
+                        <span className="text-muted-foreground text-xs">{copy.servicePeriod}</span>
+                        <span className="text-xs text-foreground">
+                          {fmtDate(cn.service_period_start)} – {fmtDate(cn.service_period_end)}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex justify-between gap-2 pt-1.5 mt-1.5 border-t border-emerald-500/20">
+                      <span className="text-muted-foreground text-xs">{copy.payout}</span>
+                      <span className="text-base font-bold text-accent tabular-nums">
+                        {fmtMoneyDec(Number(cn.net_amount || 0))}
+                      </span>
+                    </div>
+                  </div>
+
+                  {snaps.length > 0 && (
+                    <div className="rounded-lg border border-border/40 bg-secondary/20 p-3 space-y-2">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">{copy.monthsCovered}</p>
+                      <div className="space-y-2">
+                        {snaps.map((s, i) => {
+                          const monthLabel = new Date(s.last_fetched_year, s.last_fetched_month - 1, 1)
+                            .toLocaleDateString(lang === "en" ? "en-US" : "de-DE", { month: "long", year: "numeric" });
+                          const pr = s.billed_snapshot?.platform_revenues || {
+                            fourbased: s.fourbased_revenue || 0,
+                            maloum: s.maloum_revenue || 0,
+                            brezzels: s.brezzels_revenue || 0,
+                          };
+                          const customs: any[] = s.billed_snapshot?.custom_platforms || [];
+                          return (
+                            <div key={i} className="rounded-md bg-background/40 border border-border/30 p-2.5 space-y-1.5">
+                              <div className="flex justify-between items-center">
+                                <span className="text-xs font-semibold text-foreground">{monthLabel}</span>
+                                <span className="text-xs font-bold text-accent tabular-nums">
+                                  {fmtMoneyDec(Number(s.billed_amount || 0))}
+                                </span>
+                              </div>
+                              <div className="space-y-0.5 text-[10px]">
+                                {Number(pr.fourbased || 0) > 0 && (
+                                  <div className="flex justify-between text-muted-foreground">
+                                    <span>4Based</span>
+                                    <span className="tabular-nums">{Number(pr.fourbased).toLocaleString(lang === "en" ? "en-US" : "de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD</span>
+                                  </div>
+                                )}
+                                {Number(pr.maloum || 0) > 0 && (
+                                  <div className="flex justify-between text-muted-foreground">
+                                    <span>Maloum</span>
+                                    <span className="tabular-nums">{fmtMoneyDec(Number(pr.maloum))}</span>
+                                  </div>
+                                )}
+                                {Number(pr.brezzels || 0) > 0 && (
+                                  <div className="flex justify-between text-muted-foreground">
+                                    <span>Brezzels</span>
+                                    <span className="tabular-nums">{fmtMoneyDec(Number(pr.brezzels))}</span>
+                                  </div>
+                                )}
+                                {customs.map((c, ci) => (
+                                  Number(c.revenue || 0) > 0 && (
+                                    <div key={ci} className="flex justify-between text-muted-foreground">
+                                      <span>{c.name}</span>
+                                      <span className="tabular-nums">{fmtMoneyDec(Number(c.revenue))}</span>
+                                    </div>
+                                  )
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  <Button
+                    onClick={() => downloadInvoicePdf(cn)}
+                    className="w-full gap-2 bg-accent hover:bg-accent/90 text-accent-foreground"
+                  >
+                    <Download className="h-4 w-4" />
+                    {copy.downloadPdf}
+                  </Button>
+                </div>
+              </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </motion.div>
+
   );
 }
