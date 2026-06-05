@@ -1807,54 +1807,8 @@ export default function ModelDashboardTab() {
                               )}
                             </div>
                           </div>
-                          {/* Inline edit revenue + per-platform currency */}
-                          <div className="flex items-center gap-2">
-                            <div className="flex-1 input-gold-shimmer rounded-lg">
-                              <Input
-                                type="number"
-                                min={0}
-                                step="0.01"
-                                inputMode="decimal"
-                                placeholder="Umsatz eintragen (z.B. 1234.56)…"
-                                defaultValue={rev > 0 ? rev.toFixed(2) : ""}
-                                className="bg-secondary/40 border-transparent text-sm h-8 tabular-nums"
-                                onBlur={async (e) => {
-                                  if (!acc.model_id) {
-                                    toast.error("Account hat kein Model — Umsatz kann nicht gespeichert werden");
-                                    return;
-                                  }
-                                  const raw = e.target.value.replace(",", ".");
-                                  const newVal = Math.round((Number(raw) || 0) * 100) / 100;
-                                  if (newVal === rev) return;
-                                  // Read current row to recompute monthly_revenue across all platforms
-                                  const { data: existing } = await (supabase as any)
-                                    .from("model_dashboard")
-                                    .select("id, fourbased_revenue, maloum_revenue, brezzels_revenue")
-                                    .eq("model_id", acc.model_id)
-                                    .maybeSingle();
-                                  const fb = revenueField === "fourbased_revenue" ? newVal : Number(existing?.fourbased_revenue) || 0;
-                                  const ml = revenueField === "maloum_revenue" ? newVal : Number(existing?.maloum_revenue) || 0;
-                                  const br = revenueField === "brezzels_revenue" ? newVal : Number(existing?.brezzels_revenue) || 0;
-                                  const payload: Record<string, any> = {
-                                    model_id: acc.model_id,
-                                    fourbased_revenue: fb,
-                                    maloum_revenue: ml,
-                                    brezzels_revenue: br,
-                                    monthly_revenue: fb + ml + br,
-                                  };
-                                  if (existing) {
-                                    await (supabase as any).from("model_dashboard").update(payload).eq("model_id", acc.model_id);
-                                  } else {
-                                    await (supabase as any).from("model_dashboard").insert(payload);
-                                  }
-                                  toast.success(`${acc.platform} Umsatz aktualisiert ✅`);
-                                  if (selectedModelId) loadModelAccounts(selectedModelId);
-                                }}
-                                onKeyDown={(e) => {
-                                  if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-                                }}
-                              />
-                            </div>
+                          {/* Per-platform currency */}
+                          <div className="flex items-center justify-end gap-2">
                             <Select
                               value={isCustomCur ? "__custom__" : accCurrency}
                               onValueChange={async (v) => {
