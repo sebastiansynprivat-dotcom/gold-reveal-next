@@ -311,19 +311,41 @@ export default function ModelHomeDashboard({
     })();
   }, [modelName]);
 
-  // Load past invoices (credit_notes) for any account belonging to this model
+  // Load past invoices (credit_notes) + linked payout_revenue snapshots
   useEffect(() => {
     (async () => {
-      if (accounts.length === 0) { setCreditNotes([]); return; }
+      if (accounts.length === 0) { setCreditNotes([]); setPayoutSnapshots({}); return; }
       const accountIds = accounts.map((a) => a.id);
-      const { data } = await (supabase.from("credit_notes") as any)
-        .select("id, credit_note_number, credit_note_date, service_period_start, service_period_end, net_amount, gross_amount, payment_date")
+      const { data: cn } = await (supabase.from("credit_notes") as any)
+        .select("id, credit_note_number, credit_note_date, service_period_start, service_period_end, net_amount, gross_amount, vat_rate, vat_amount, payment_date, description, provider_name, provider_address, provider_is_business, provider_vat_id, payment_method, crypto_coin, tx_hash")
         .in("account_id", accountIds)
         .order("credit_note_date", { ascending: false })
         .limit(20);
-      setCreditNotes(data || []);
+      const list = cn || [];
+      setCreditNotes(list);
+      // Fetch payout_revenue snapshots grouped by credit_note_number
+      const numbers = list.map((x: any) => x.credit_note_number).filter(Boolean);
+      if (numbers.length > 0) {
+        const { data: pr } = await (supabase.from("payout_revenue") as any)
+          .select("last_fetched_month, last_fetched_year, fourbased_revenue, maloum_revenue, brezzels_revenue, monthly_revenue, billed_at, billed_amount, billed_credit_note_number, billed_snapshot")
+          .eq("model_id", modelId)
+          .in("billed_credit_note_number", numbers);
+        const map: Record<string, any[]> = {};
+        for (const row of (pr || []) as any[]) {
+          const k = row.billed_credit_note_number;
+          if (!map[k]) map[k] = [];
+          map[k].push(row);
+        }
+        for (const k of Object.keys(map)) {
+          map[k].sort((a, b) => (b.last_fetched_year - a.last_fetched_year) || (b.last_fetched_month - a.last_fetched_month));
+        }
+        setPayoutSnapshots(map);
+      } else {
+        setPayoutSnapshots({});
+      }
     })();
-  }, [accounts]);
+  }, [accounts, modelId]);
+
 
   const total = useMemo(
     () => Object.values(revenueByAccount).reduce((s, v) => s + v, 0),
