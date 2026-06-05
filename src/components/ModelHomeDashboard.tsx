@@ -210,16 +210,25 @@ export default function ModelHomeDashboard({
   const [shownPwd, setShownPwd] = useState<Record<string, boolean>>({});
   const [openCard, setOpenCard] = useState<Record<string, boolean>>({});
   const [commissionPct, setCommissionPct] = useState<number>(0);
+  const [modelCurrency, setModelCurrency] = useState<string>("EUR");
 
-  // Load model commission %
+  // Load model commission % + currency
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data } = await (supabase.from("model_dashboard") as any)
-        .select("revenue_percentage")
-        .eq("model_id", modelId)
-        .maybeSingle();
-      if (!cancelled) setCommissionPct(Number(data?.revenue_percentage || 0));
+      const [{ data: dash }, { data: mdl }] = await Promise.all([
+        (supabase.from("model_dashboard") as any)
+          .select("revenue_percentage")
+          .eq("model_id", modelId)
+          .maybeSingle(),
+        (supabase.from("models") as any)
+          .select("currency")
+          .eq("id", modelId)
+          .maybeSingle(),
+      ]);
+      if (cancelled) return;
+      setCommissionPct(Number(dash?.revenue_percentage || 0));
+      setModelCurrency((mdl?.currency as string) || "EUR");
     })();
     return () => { cancelled = true; };
   }, [modelId]);
