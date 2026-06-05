@@ -371,9 +371,12 @@ export default function ModelHomeDashboard({
   const downloadInvoicePdf = (cn: any) => {
     try {
       const snaps = payoutSnapshots[cn.credit_note_number] || [];
-      // Build PDF lines from snapshot data; fallback to single summary line.
       const lines: Array<{ name: string; gross: number; pct: number }> = [];
-      const currency = "EUR";
+      // Use invoice currency from snapshot if available, else model currency
+      const currency =
+        (snaps[0]?.billed_snapshot as any)?.invoice_currency ||
+        modelCurrency ||
+        "EUR";
       if (snaps.length > 0) {
         for (const s of snaps) {
           const label = new Date(s.last_fetched_year, s.last_fetched_month - 1, 1)
