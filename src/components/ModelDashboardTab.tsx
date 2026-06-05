@@ -199,7 +199,7 @@ const CURRENCIES = ["EUR", "USD", "GBP", "CHF", "AED"] as const;
 const PLATFORMS_FALLBACK = PLATFORM_DEFS.map((p) => p.label);
 const PLATFORM_DOMAINS: Record<string, string> = {
   "4Based": "4based.com",
-  Maloum: "malum.com",
+  Maloum: "maloum.com",
   Brezzels: "brezzels.com",
   
   Admireme: "admireme.com",
