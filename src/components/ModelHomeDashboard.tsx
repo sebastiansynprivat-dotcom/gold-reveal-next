@@ -126,8 +126,17 @@ const COPY = {
     netEarnings: "Your net earnings",
     forecast: "Month forecast",
     forecastHint: "Projection based on daily average so far",
+    downloadPdf: "Download PDF",
+    details: "View details",
+    monthsCovered: "Billed months",
+    platformRevenues: "Revenue per platform",
+    payout: "Payout",
+    invoiceNumber: "Invoice no.",
+    billedOn: "Billed on",
+    servicePeriod: "Service period",
   },
 };
+
 
 const PLATFORM_LABELS: Record<string, string> = {
   fourbased: "4Based",
