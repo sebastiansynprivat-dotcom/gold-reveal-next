@@ -209,7 +209,10 @@ Deno.serve(async (req) => {
       }
       upsertPayload.push(row);
       processed += newEntries.length;
-      if (metricsChanged) metrics_updated++;
+      if (hasMetrics) {
+        metrics_updated++;
+        console.log(`[${rid}] metrics upsert ${account_id} ${date} ${platform}:`, groupMetrics);
+      }
     }
 
     if (upsertPayload.length > 0) {
