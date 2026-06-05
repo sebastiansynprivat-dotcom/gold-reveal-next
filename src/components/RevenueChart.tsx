@@ -24,21 +24,18 @@ export default function RevenueChart({ userId }: RevenueChartProps) {
       const from = format(subDays(today, 6), "yyyy-MM-dd");
       const to = format(today, "yyyy-MM-dd");
 
-      const { data: rows } = await supabase
-        .from("daily_revenue")
-        .select("date, amount")
-        .eq("user_id", userId)
-        .gte("date", from)
-        .lte("date", to)
-        .order("date", { ascending: true });
+      const { data: rows } = await supabase.rpc("get_chatter_revenue_series", {
+        p_from: from,
+        p_to: to,
+      });
 
       const mapped: { day: string; amount: number }[] = [];
       for (let i = 6; i >= 0; i--) {
         const d = format(subDays(today, i), "yyyy-MM-dd");
-        const entry = rows?.find((r) => r.date === d);
+        const entry = (rows as { date: string; total: number | string }[] | null)?.find((r) => r.date === d);
         mapped.push({
           day: format(new Date(d), "EEE", { locale: dateLocale }),
-          amount: entry ? Number(entry.amount) : 0,
+          amount: entry ? Number(entry.total) : 0,
         });
       }
       setData(mapped);
@@ -46,6 +43,7 @@ export default function RevenueChart({ userId }: RevenueChartProps) {
     };
     load();
   }, [userId, dateLocale]);
+
 
   if (loading) {
     return (
