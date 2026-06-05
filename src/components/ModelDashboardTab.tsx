@@ -152,6 +152,7 @@ interface ModelRow {
   revenue_percentage_fourbased?: number;
   revenue_percentage_maloum?: number;
   revenue_percentage_brezzels?: number;
+  fourbased_payout_configured?: boolean;
   crypto_address: string;
   currency: string;
   contract_file_path: string;
@@ -1002,6 +1003,7 @@ export default function ModelDashboardTab() {
         revenue_percentage_fourbased: modelForm.revenue_percentage_fourbased || 0,
         revenue_percentage_maloum: modelForm.revenue_percentage_maloum || 0,
         revenue_percentage_brezzels: modelForm.revenue_percentage_brezzels || 0,
+        fourbased_payout_configured: !!modelForm.fourbased_payout_configured,
         crypto_address: modelForm.crypto_address,
         currency: modelForm.currency,
         notes: modelForm.notes,
@@ -2079,6 +2081,54 @@ export default function ModelDashboardTab() {
             {/* ── Revenue & Payout ── */}
             <Section icon={TrendingUp} title="Einnahmen & Anteil" delay={0.05}>
               <div className="space-y-4">
+                {/* ── 4Based Auszahlungen hinterlegt? (nur sichtbar wenn Model 4Based Account hat) ── */}
+                {modelAccounts.some((a) => a.platform === "4Based") && (
+                  <div
+                    className={cn(
+                      "rounded-xl border p-3 flex items-center justify-between gap-3 transition-colors",
+                      modelForm.fourbased_payout_configured
+                        ? "border-emerald-500/30 bg-emerald-500/[0.06]"
+                        : "border-amber-500/40 bg-amber-500/[0.06]"
+                    )}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <CheckCircle2
+                        className={cn(
+                          "h-4 w-4 shrink-0",
+                          modelForm.fourbased_payout_configured ? "text-emerald-400" : "text-amber-400/70"
+                        )}
+                      />
+                      <div className="min-w-0">
+                        <p className="text-xs font-semibold text-foreground">
+                          4Based Auszahlungen hinterlegt
+                        </p>
+                        <p className="text-[10px] text-muted-foreground truncate">
+                          {modelForm.fourbased_payout_configured
+                            ? "Auszahlungsdaten sind im 4Based Account konfiguriert."
+                            : "Noch nicht hinterlegt — bitte im 4Based Account prüfen."}
+                        </p>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={!!modelForm.fourbased_payout_configured}
+                      onCheckedChange={async (checked) => {
+                        if (!selectedModelId) return;
+                        const prev = !!modelForm.fourbased_payout_configured;
+                        setModelForm((f: any) => ({ ...f, fourbased_payout_configured: checked }));
+                        const { error } = await (supabase.from("models") as any)
+                          .update({ fourbased_payout_configured: checked })
+                          .eq("id", selectedModelId);
+                        if (error) {
+                          setModelForm((f: any) => ({ ...f, fourbased_payout_configured: prev }));
+                          toast.error("Konnte Status nicht speichern");
+                        } else {
+                          toast.success(checked ? "Als hinterlegt markiert" : "Als offen markiert");
+                        }
+                      }}
+                    />
+                  </div>
+                )}
+
                 {/* ── Umsatz abrufen (externes Backend) ── */}
                 <div className="rounded-xl border border-accent/30 bg-gradient-to-br from-accent/[0.06] to-accent/[0.02] p-3 space-y-2">
                   <div className="flex items-center justify-between">

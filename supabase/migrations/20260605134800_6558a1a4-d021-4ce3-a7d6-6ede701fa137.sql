@@ -1,0 +1,1 @@
+ALTER TABLE public.models ADD COLUMN IF NOT EXISTS fourbased_payout_configured boolean NOT NULL DEFAULT false;
