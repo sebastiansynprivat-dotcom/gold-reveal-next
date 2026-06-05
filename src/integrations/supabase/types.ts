@@ -1916,6 +1916,7 @@ export type Database = {
           billed_amount: number | null
           billed_at: string | null
           billed_credit_note_number: string | null
+          billed_snapshot: Json | null
           brezzels_revenue: number | null
           created_at: string
           fourbased_revenue: number | null
@@ -1933,6 +1934,7 @@ export type Database = {
           billed_amount?: number | null
           billed_at?: string | null
           billed_credit_note_number?: string | null
+          billed_snapshot?: Json | null
           brezzels_revenue?: number | null
           created_at?: string
           fourbased_revenue?: number | null
@@ -1950,6 +1952,7 @@ export type Database = {
           billed_amount?: number | null
           billed_at?: string | null
           billed_credit_note_number?: string | null
+          billed_snapshot?: Json | null
           brezzels_revenue?: number | null
           created_at?: string
           fourbased_revenue?: number | null
