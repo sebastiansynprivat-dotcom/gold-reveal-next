@@ -946,6 +946,12 @@ export default function CreditNoteForm({
       }
       setTimeout(() => URL.revokeObjectURL(url), 15000);
       setTxHash("");
+      onInvoiceCreated?.({
+        creditNoteNumber,
+        netAmount: net,
+        servicePeriodStart: servicePeriodStart || null,
+        servicePeriodEnd: servicePeriodEnd || null,
+      });
     } catch (err: any) {
       console.error(err);
       toast.error("Fehler: " + (err.message || "Unbekannter Fehler"));
