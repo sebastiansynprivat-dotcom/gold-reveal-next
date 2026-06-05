@@ -2606,6 +2606,61 @@ export default function ModelDashboardTab() {
                                 → {earn.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {baseCurrency}
                               </span>
                             </div>
+                            {/* Manual override for fetched payout revenue */}
+                            <div className="flex items-center gap-2 pl-[4.5rem]">
+                              <span className="text-[9px] uppercase tracking-wider text-muted-foreground/70 shrink-0">
+                                Manuell überschreiben:
+                              </span>
+                              <Input
+                                type="number"
+                                min={0}
+                                step="0.01"
+                                inputMode="decimal"
+                                placeholder={`${r.rev.toFixed(2)} ${sourceCur}`}
+                                defaultValue=""
+                                key={`${r.key}-${fetchMonth}-${fetchYear}-${r.rev}`}
+                                className="bg-secondary/40 border-transparent text-[11px] h-7 tabular-nums max-w-[140px]"
+                                onBlur={async (e) => {
+                                  if (!selectedModelId) return;
+                                  const raw = (e.target as HTMLInputElement).value.replace(",", ".").trim();
+                                  if (raw === "") return;
+                                  const newVal = Math.round((Number(raw) || 0) * 100) / 100;
+                                  if (newVal === r.rev) return;
+                                  const { data: existing } = await (supabase as any)
+                                    .from("payout_revenue")
+                                    .select("id, fourbased_revenue, maloum_revenue, brezzels_revenue")
+                                    .eq("model_id", selectedModelId)
+                                    .eq("last_fetched_month", fetchMonth)
+                                    .eq("last_fetched_year", fetchYear)
+                                    .maybeSingle();
+                                  const fb = r.key === "fourbased" ? newVal : Number(existing?.fourbased_revenue) || 0;
+                                  const ml = r.key === "maloum" ? newVal : Number(existing?.maloum_revenue) || 0;
+                                  const br = r.key === "brezzels" ? newVal : Number(existing?.brezzels_revenue) || 0;
+                                  const payload: Record<string, any> = {
+                                    model_id: selectedModelId,
+                                    last_fetched_month: fetchMonth,
+                                    last_fetched_year: fetchYear,
+                                    fourbased_revenue: fb,
+                                    maloum_revenue: ml,
+                                    brezzels_revenue: br,
+                                    monthly_revenue: fb + ml + br,
+                                    last_fetched_at: new Date().toISOString(),
+                                  };
+                                  const { error } = existing
+                                    ? await (supabase as any).from("payout_revenue").update(payload).eq("id", existing.id)
+                                    : await (supabase as any).from("payout_revenue").insert(payload);
+                                  if (error) {
+                                    toast.error("Override fehlgeschlagen: " + error.message);
+                                    return;
+                                  }
+                                  toast.success(`${r.label}: Umsatz manuell überschrieben ✅`);
+                                  (e.target as HTMLInputElement).value = "";
+                                  setFetchRevenueTick((t) => t + 1);
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                                }}
+                              />
                             {platErr && !isAuthErr && (
                               <div className="pl-[4.5rem] text-[10px] text-destructive/80">
                                 ⚠ {platErr.message}
