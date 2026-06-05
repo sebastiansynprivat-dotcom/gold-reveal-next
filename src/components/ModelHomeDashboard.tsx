@@ -781,7 +781,10 @@ export default function ModelHomeDashboard({
             </p>
           ) : (
             <div className="space-y-1.5">
-              {creditNotes.map((cn) => (
+              {creditNotes.map((cn) => {
+                const cnSnaps = payoutSnapshots[cn.credit_note_number] || [];
+                const cnCurrency = (cnSnaps[0]?.billed_snapshot as any)?.invoice_currency || modelCurrency;
+                return (
                 <div
                   key={cn.id}
                   className="glass-card-subtle rounded-lg p-3 flex items-center gap-3"
@@ -802,7 +805,7 @@ export default function ModelHomeDashboard({
                   </button>
                   <div className="text-right shrink-0">
                     <p className="text-sm font-bold text-accent tabular-nums">
-                      {fmtMoneyDec(Number(cn.net_amount || 0))}
+                      {fmtMoneyDec(Number(cn.net_amount || 0), cnCurrency)}
                     </p>
                     <p className="text-[9px] text-muted-foreground uppercase tracking-wider">
                       {copy.net}
