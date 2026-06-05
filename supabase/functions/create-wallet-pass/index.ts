@@ -44,10 +44,10 @@ Deno.serve(async (req) => {
     const fields = await buildPassFields();
 
     // Create pass at PassNinja
-    const res = await fetch(`${PASSNINJA_BASE}/passes/${TEMPLATE_ID}`, {
+    const res = await fetch(`${PASSNINJA_BASE}/passes`, {
       method: "POST",
       headers: passninjaHeaders(),
-      body: JSON.stringify({ pass: { passType: TEMPLATE_ID, ...fields } }),
+      body: JSON.stringify({ passTemplate: TEMPLATE_ID, pass: fields }),
     });
 
     const text = await res.text();
