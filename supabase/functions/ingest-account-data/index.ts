@@ -97,7 +97,7 @@ Deno.serve(async (req) => {
       }
 
       if (!hasRevenue && Object.keys(metrics).length === 0) {
-        return json({ error: `Row ${i}: must contain either revenue (purchase_id+amount) or at least one metric field` }, 400);
+        return json({ error: `Row ${i}: must contain at least one of: revenue (purchase_id+amount), ${METRIC_FIELDS.join(", ")}` }, 400);
       }
 
       validated.push({
@@ -193,7 +193,9 @@ Deno.serve(async (req) => {
         }
       }
 
-      if (newEntries.length === 0 && !metricsChanged) continue;
+      const hasMetrics = Object.keys(groupMetrics).length > 0;
+      // Upsert if new revenue entries OR any metrics provided (even if unchanged, to refresh updated_at)
+      if (newEntries.length === 0 && !hasMetrics) continue;
 
       const row: Record<string, unknown> = {
         account_id,
@@ -207,7 +209,10 @@ Deno.serve(async (req) => {
       }
       upsertPayload.push(row);
       processed += newEntries.length;
-      if (metricsChanged) metrics_updated++;
+      if (hasMetrics) {
+        metrics_updated++;
+        console.log(`[${rid}] metrics upsert ${account_id} ${date} ${platform}:`, groupMetrics);
+      }
     }
 
     if (upsertPayload.length > 0) {
