@@ -1,37 +1,42 @@
-## Extend `update-account` to upsert metrics into `accounts_data`
+## Goal
+Make the Earnings hero ("TOTAL REVENUE · This month") and the per-platform values inside that section pull live revenue from `accounts_data.total`, summed per `account_id` within the selected period pill (Today / Yesterday / 7d / 30d / Last month / This month).
 
-Add a new payload shape to the existing `update-account` edge function so it can write daily metrics into `accounts_data` alongside its current accounts-table updates. Existing shapes (legacy `{platform, account_email, updates}` and batch `[{account_id, updates...}]`) stay untouched.
+## Where
+`src/components/ModelDashboardTab.tsx` — the `Einnahmen` Section (currently sources `dashboardRevenues` from `model_dashboard.fourbased_revenue / maloum_revenue / brezzels_revenue`).
 
-### New accepted payload
+## Changes
 
-Single object or array of:
-```
-{
-  account_id: uuid,
-  date: "YYYY-MM-DD",
-  oldest_chat?: int,
-  unread_chats?: int,
-  mass_dms?: int
-}
-```
+1. **New loader: `loadAccountsDataRevenue(modelAccountIds, period)`**
+   - Compute date range for `revenuePeriod`:
+     - today → today
+     - yesterday → yesterday
+     - 7d → last 7 days (incl. today)
+     - 30d → last 30 days
+     - last_month → 1st–last day of previous month
+     - this_month → 1st of current month → today
+   - Query: `accounts_data` select `account_id, total` where `account_id in (...)` and `date between from and to`.
+   - Aggregate: sum `total` per `account_id` → `Record<accountId, number>`.
+   - Set into `dashboardRevenues` (replaces the model_dashboard-derived values).
+   - `platformRevenues` keeps its current shape (used elsewhere); fill it from the same per-account sums mapped to that account's platform bucket.
 
-A row is treated as a "metrics row" when it contains `date` plus at least one of `oldest_chat`, `unread_chats`, `mass_dms`. Mixed batches (some metrics rows, some accounts-update rows) are supported — each item is dispatched by shape.
+2. **Trigger**
+   - Call the new loader whenever `selectedModelId`, `modelAccounts`, or `revenuePeriod` changes.
+   - Remove (or keep but ignore for display) the `model_dashboard` revenue mapping that currently sets `dashboardRevenues` in `loadModelAccounts`. Still load `model_dashboard` for `last_fetched_at` info.
 
-### Logic
+3. **Display**
+   - `totalRevenue` useMemo already sums `dashboardRevenues` → automatically becomes accounts_data total once the source changes. No change needed.
+   - Per-platform card amount (`rev`) likewise reflects the period sum.
 
-1. Validate `account_id` (UUID) and `date` (`YYYY-MM-DD`); each metric, if present, must be an integer.
-2. Look up the account once to get its `platform` (required by `accounts_data` unique key `account_id+date+platform`). If the account doesn't exist, return `{error: "Account not found"}` for that item.
-3. Upsert into `accounts_data` keyed on `(account_id, date, platform)`:
-   - Only the provided metric fields are written (latest-wins overwrite).
-   - `total` / `amounts` are left untouched on existing rows; new rows get `total=0`, `amounts=[]`.
-4. Response includes per-item result with `account_id`, `date`, `metrics_updated: true/false`, and any error.
+4. **Editable input behavior**
+   - The inline "Umsatz eintragen…" input still writes to `model_dashboard` (unchanged) — that table stays the manual-entry store. Out of scope for this change.
 
-### Auth & conventions
+## Technical notes
+- Use a single batched query with `.in("account_id", ids)`.
+- Dates compared as ISO `YYYY-MM-DD` (column is `date`).
+- Guard against empty `modelAccounts` (skip query).
+- Currency conversion via existing `convertToBase` / `getSourceCurrency` already wraps the sum, so multi-currency models keep working.
 
-- Keeps existing `x-api-key` check against `ACCOUNTS_SECRET_KEY`.
-- Uses the same service-role client already created in the function.
-- No changes to `config.toml`, `ingest-account-data`, the database schema, or any frontend code.
-
-### Files
-
-- `supabase/functions/update-account/index.ts` — add detection + handler for the new metrics shape.
+## Out of scope
+- The inline save-to-`model_dashboard` flow.
+- The "Anteil berechnen" / payout_revenue logic.
+- Other Earnings sections outside the circled hero + platform list.
