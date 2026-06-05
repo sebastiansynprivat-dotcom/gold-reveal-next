@@ -444,37 +444,43 @@ export default function Dashboard() {
   const { playCoinSound, playLevelUpSound } = useSoundEffects();
   const prevTierRef = useRef<string | null>(null);
 
-  // Load revenue data
+  // Load revenue data from accounts_data (only currently assigned accounts)
   useEffect(() => {
     if (!user) return;
     const loadRevenue = async () => {
       const today = new Date().toISOString().slice(0, 10);
       const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
       const monthStart = today.slice(0, 8) + "01";
+      const yearStart = today.slice(0, 4) + "-01-01";
 
-      // Load all revenue entries
-      const { data } = await supabase
-        .from("daily_revenue")
-        .select("date, amount")
-        .eq("user_id", user.id)
-        .order("date", { ascending: false });
+      const { data, error } = await supabase.rpc("get_chatter_revenue_series", {
+        p_from: yearStart,
+        p_to: today,
+      });
+
+      if (error) {
+        console.error("get_chatter_revenue_series error", error);
+        return;
+      }
 
       if (data) {
-        const todayEntry = data.find((d) => d.date === today);
-        if (todayEntry) setUmsatz(Number(todayEntry.amount));
+        const rows = data as { date: string; total: number | string }[];
+        const todayEntry = rows.find((d) => d.date === today);
+        if (todayEntry) setUmsatz(Number(todayEntry.total));
 
-        const yesterdayEntry = data.find((d) => d.date === yesterday);
-        setYesterdayRevenue(yesterdayEntry ? Number(yesterdayEntry.amount) : 0);
+        const yesterdayEntry = rows.find((d) => d.date === yesterday);
+        setYesterdayRevenue(yesterdayEntry ? Number(yesterdayEntry.total) : 0);
 
-        const monthly = data.filter((d) => d.date >= monthStart).reduce((sum, d) => sum + Number(d.amount), 0);
+        const monthly = rows.filter((d) => d.date >= monthStart).reduce((sum, d) => sum + Number(d.total), 0);
         setMonthlyRevenue(monthly);
 
-        const total = data.reduce((sum, d) => sum + Number(d.amount), 0);
+        const total = rows.reduce((sum, d) => sum + Number(d.total), 0);
         setTotalRevenue(total);
       }
     };
     loadRevenue();
   }, [user]);
+
 
   // // Save revenue on change (debounced)
   // const saveRevenue = useCallback(async (amount: number) => {
