@@ -773,7 +773,11 @@ export default function ModelHomeDashboard({
                   key={cn.id}
                   className="glass-card-subtle rounded-lg p-3 flex items-center gap-3"
                 >
-                  <div className="flex-1 min-w-0">
+                  <button
+                    type="button"
+                    onClick={() => setDetailInvoice(cn)}
+                    className="flex-1 min-w-0 text-left hover:opacity-80 transition-opacity"
+                  >
                     <p className="text-xs font-semibold text-foreground truncate">
                       {cn.credit_note_number}
                     </p>
@@ -782,7 +786,7 @@ export default function ModelHomeDashboard({
                         ? `${fmtDate(cn.service_period_start)} — ${fmtDate(cn.service_period_end)}`
                         : fmtDate(cn.credit_note_date)}
                     </p>
-                  </div>
+                  </button>
                   <div className="text-right shrink-0">
                     <p className="text-sm font-bold text-accent tabular-nums">
                       {fmtMoneyDec(Number(cn.net_amount || 0))}
@@ -791,9 +795,19 @@ export default function ModelHomeDashboard({
                       {copy.net}
                     </p>
                   </div>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={(e) => { e.stopPropagation(); downloadInvoicePdf(cn); }}
+                    className="h-8 w-8 shrink-0 text-accent hover:text-accent hover:bg-accent/10"
+                    title={copy.downloadPdf}
+                  >
+                    <Download className="h-4 w-4" />
+                  </Button>
                 </div>
               ))}
             </div>
+
           )}
         </div>
       </section>
