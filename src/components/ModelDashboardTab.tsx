@@ -2511,7 +2511,7 @@ export default function ModelDashboardTab() {
                 {/* Calculated share from payout_revenue (result of "Anteil berechnen") */}
                 {shareCalculated && billingShare > 0 && (
                   <div className="text-center py-3">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Gesamtanteil</p>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">Payouts Gesamt</p>
                     <p className="text-4xl font-black text-gold-gradient tabular-nums">
                       <AnimatedGoldValue value={billingShare} suffix={` ${modelForm.currency || "EUR"}`} />
                     </p>
