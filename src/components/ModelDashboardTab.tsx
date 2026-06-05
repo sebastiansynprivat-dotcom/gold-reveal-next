@@ -828,6 +828,7 @@ export default function ModelDashboardTab() {
       invoice_service_period_start: periodStart,
       invoice_service_period_end: periodEnd,
     } as any));
+    setCalcTrigger((t) => t + 1);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetchedPayoutRevenue, fetchMonth, fetchYear, fetchMonthTo, fetchYearTo, rangeMode, verdienst]);
 
