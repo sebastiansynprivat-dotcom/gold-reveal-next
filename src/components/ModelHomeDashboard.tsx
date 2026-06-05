@@ -236,7 +236,7 @@ export default function ModelHomeDashboard({
     return () => { cancelled = true; };
   }, [modelId]);
 
-  // Load revenue for given period AND lifetime in parallel
+  // Load revenue from accounts_data (same source as admin "Einnahmen")
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -246,56 +246,49 @@ export default function ModelHomeDashboard({
         if (!cancelled) {
           setRevenueByAccount({});
           setLifetimeByAccount({});
+          setMonthRevenue(0);
           setLoading(false);
         }
         return;
       }
 
       const range = periodRange(period);
-      const { data: assigns } = await (supabase.from("account_assignments") as any)
-        .select("account_id, user_id")
+      const today = new Date();
+      const fmt = (d: Date) => d.toISOString().slice(0, 10);
+      const monthFrom = fmt(new Date(today.getFullYear(), today.getMonth(), 1));
+      const monthTo = fmt(today);
+
+      // Period query (lifetime when range is null)
+      let periodQ = (supabase.from("accounts_data") as any)
+        .select("account_id, total")
         .in("account_id", accountIds);
-      const userToAccount: Record<string, string> = {};
-      (assigns || []).forEach((a: any) => { userToAccount[a.user_id] = a.account_id; });
-      accounts.forEach((a) => { if (a.assigned_to) userToAccount[a.assigned_to] = a.id; });
+      if (range) periodQ = periodQ.gte("date", range.from).lte("date", range.to);
 
-      const userIds = Object.keys(userToAccount);
-      if (userIds.length === 0) {
-        if (!cancelled) {
-          setRevenueByAccount({});
-          setLifetimeByAccount({});
-          setLoading(false);
-        }
-        return;
-      }
+      const lifetimeQ = (supabase.from("accounts_data") as any)
+        .select("account_id, total")
+        .in("account_id", accountIds);
 
-      let q = (supabase.from("daily_revenue") as any).select("user_id, amount, date").in("user_id", userIds);
-      if (range) q = q.gte("date", range.from).lte("date", range.to);
-      const lifetimeQ = (supabase.from("daily_revenue") as any).select("user_id, amount").in("user_id", userIds);
-      const monthStart = new Date();
-      const monthFrom = new Date(monthStart.getFullYear(), monthStart.getMonth(), 1).toISOString().slice(0, 10);
-      const monthTo = monthStart.toISOString().slice(0, 10);
-      const monthQ = (supabase.from("daily_revenue") as any)
-        .select("amount")
-        .in("user_id", userIds)
+      const monthQ = (supabase.from("accounts_data") as any)
+        .select("total")
+        .in("account_id", accountIds)
         .gte("date", monthFrom)
         .lte("date", monthTo);
 
-      const [{ data: rev }, { data: lifetimeRev }, { data: monthRev }] = await Promise.all([q, lifetimeQ, monthQ]);
+      const [{ data: rev }, { data: lifetimeRev }, { data: monthRev }] = await Promise.all([
+        periodQ,
+        lifetimeQ,
+        monthQ,
+      ]);
 
       const byAccount: Record<string, number> = {};
       (rev || []).forEach((r: any) => {
-        const accId = userToAccount[r.user_id];
-        if (!accId) return;
-        byAccount[accId] = (byAccount[accId] || 0) + Number(r.amount || 0);
+        byAccount[r.account_id] = (byAccount[r.account_id] || 0) + Number(r.total || 0);
       });
       const lifetimeAcc: Record<string, number> = {};
       (lifetimeRev || []).forEach((r: any) => {
-        const accId = userToAccount[r.user_id];
-        if (!accId) return;
-        lifetimeAcc[accId] = (lifetimeAcc[accId] || 0) + Number(r.amount || 0);
+        lifetimeAcc[r.account_id] = (lifetimeAcc[r.account_id] || 0) + Number(r.total || 0);
       });
-      const monthSum = (monthRev || []).reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+      const monthSum = (monthRev || []).reduce((s: number, r: any) => s + Number(r.total || 0), 0);
 
       if (!cancelled) {
         setRevenueByAccount(byAccount);
@@ -306,6 +299,7 @@ export default function ModelHomeDashboard({
     })();
     return () => { cancelled = true; };
   }, [accounts, period]);
+
 
   // Load open content requests
   useEffect(() => {
