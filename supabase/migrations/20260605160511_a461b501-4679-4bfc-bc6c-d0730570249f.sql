@@ -1,0 +1,1 @@
+ALTER TABLE public.accounts ALTER COLUMN media SET DEFAULT '{}'::jsonb;

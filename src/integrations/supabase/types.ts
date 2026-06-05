@@ -90,7 +90,7 @@ export type Database = {
           id?: string
           is_manual?: boolean
           main_message?: string
-          media: Json
+          media?: Json
           message?: boolean
           model_active?: boolean
           model_agency?: string
