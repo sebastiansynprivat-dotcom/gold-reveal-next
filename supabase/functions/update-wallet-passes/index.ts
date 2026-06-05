@@ -17,7 +17,7 @@ Deno.serve(async (req) => {
     );
 
     const { data: passes, error } = await supabase
-      .from("wallet_passes").select("id, serial_number, user_id");
+      .from("wallet_passes").select("id, serial_number, user_id, last_payload");
     if (error) throw error;
     if (!passes || passes.length === 0) {
       return new Response(JSON.stringify({ skipped: true, reason: "no passes" }), {
@@ -25,10 +25,13 @@ Deno.serve(async (req) => {
       });
     }
 
-    const fields = (await buildPassFieldVariants())[0].fields;
+    const variants = await buildPassFieldVariants();
 
     const results = [];
     for (const p of passes) {
+      const previousKeys = Object.keys((p.last_payload || {}) as Record<string, unknown>);
+      const variant = variants.find((v) => previousKeys.every((key) => key in v.fields)) || variants[0];
+      const fields = variant.fields;
       try {
         const res = await fetch(`${PASSNINJA_BASE}/passes/${TEMPLATE_ID}/${p.serial_number}`, {
           method: "PUT",
