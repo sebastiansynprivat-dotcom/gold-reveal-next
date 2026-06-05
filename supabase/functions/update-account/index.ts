@@ -33,7 +33,7 @@ const ALLOWED = new Set([
 ]);
 
 const BATCH_FIELDS = ["post", "message", "main_message", "follow_message", "media"] as const;
-const METRIC_FIELDS = ["oldest_chat", "unread_chats", "mass_dms"] as const;
+const METRIC_FIELDS = ["oldest_chat", "unread_chats", "mass_dms", "followers", "subscribers"] as const;
 type MetricField = typeof METRIC_FIELDS[number];
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
