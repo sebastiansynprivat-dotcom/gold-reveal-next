@@ -2011,9 +2011,22 @@ export default function ModelDashboardTab() {
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                      {rangeMode ? "Zeitraum" : "Monat"}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setRangeMode((v) => !v)}
+                      className="text-[10px] uppercase tracking-wider text-accent hover:underline"
+                    >
+                      {rangeMode ? "Einzelner Monat" : "+ Zeitraum (mehrere Monate)"}
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {rangeMode && <span className="text-[10px] text-muted-foreground">Von</span>}
                     <Select value={String(fetchMonth)} onValueChange={(v) => setFetchMonth(Number(v))}>
-                      <SelectTrigger className="w-[130px] h-9 text-sm bg-secondary/40 border-border/40">
+                      <SelectTrigger className="w-[120px] h-9 text-sm bg-secondary/40 border-border/40">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -2023,7 +2036,7 @@ export default function ModelDashboardTab() {
                       </SelectContent>
                     </Select>
                     <Select value={String(fetchYear)} onValueChange={(v) => setFetchYear(Number(v))}>
-                      <SelectTrigger className="w-[100px] h-9 text-sm bg-secondary/40 border-border/40">
+                      <SelectTrigger className="w-[90px] h-9 text-sm bg-secondary/40 border-border/40">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -2032,58 +2045,87 @@ export default function ModelDashboardTab() {
                         ))}
                       </SelectContent>
                     </Select>
-                    <Button
-                      type="button"
-                      size="sm"
-                      disabled={fetchingRevenue || !selectedModelId}
-                      className="flex-1 h-9 px-3 bg-gradient-to-r from-accent/90 to-accent text-accent-foreground hover:from-accent hover:to-accent/90 shadow-sm"
-                      onClick={async () => {
-                        if (!selectedModelId) return;
-                        const sameMonth =
-                          lastFetchInfo.month === fetchMonth && lastFetchInfo.year === fetchYear;
-                        if (sameMonth && !confirmOverwrite) {
-                          if (!confirm(`Werte für ${String(fetchMonth).padStart(2,"0")}/${fetchYear} bereits vorhanden. Überschreiben?`)) return;
-                          setConfirmOverwrite(true);
-                        }
-                        setFetchingRevenue(true);
-                        try {
-                          const { data, error } = await supabase.functions.invoke("fetch-model-revenue", {
-                            body: { model_id: selectedModelId, month: fetchMonth, year: fetchYear },
-                          });
-                           if (error) throw new Error(error.message);
-                           if ((data as any)?.error) throw new Error((data as any).error);
-                           const errs = ((data as any)?.errors ?? []) as Array<{ platform?: string; accountId?: string; code?: string; message?: string }>;
-                           if (errs.length > 0) {
-                             toast.error(
-                               `Umsatz teilweise abgerufen — ${errs.length} Fehler`,
-                               {
-                                  description: errs
-                                    .map(e => `${e.platform ?? "?"}: ${e.message ?? "Unbekannter Fehler"}`)
-                                    .join("\n"),
-                                 duration: 10000,
-                                 style: { whiteSpace: "pre-line" },
-                               }
-                             );
-                           } else {
-                             toast.success(`Umsatz für ${String(fetchMonth).padStart(2,"0")}/${fetchYear} aktualisiert ✅`);
-                           }
-                           await loadModelAccounts(selectedModelId);
-                           setFetchRevenueTick(t => t + 1);
-                        } catch (err: any) {
-                          toast.error(err.message || "Umsatz konnte nicht abgerufen werden");
-                        } finally {
-                          setFetchingRevenue(false);
-                          setConfirmOverwrite(false);
-                        }
-                      }}
-                    >
-                      {fetchingRevenue ? (
-                        <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> Lädt…</>
-                      ) : (
-                        <><Download className="h-3.5 w-3.5 mr-1.5" /> Fetch Revenue</>
-                      )}
-                    </Button>
+                    {rangeMode && (
+                      <>
+                        <span className="text-[10px] text-muted-foreground">Bis</span>
+                        <Select value={String(fetchMonthTo)} onValueChange={(v) => setFetchMonthTo(Number(v))}>
+                          <SelectTrigger className="w-[120px] h-9 text-sm bg-secondary/40 border-border/40">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"].map((label, i) => (
+                              <SelectItem key={i+1} value={String(i+1)}>{label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Select value={String(fetchYearTo)} onValueChange={(v) => setFetchYearTo(Number(v))}>
+                          <SelectTrigger className="w-[90px] h-9 text-sm bg-secondary/40 border-border/40">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {[now.getFullYear() - 2, now.getFullYear() - 1, now.getFullYear(), now.getFullYear() + 1].map((y) => (
+                              <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </>
+                    )}
                   </div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={fetchingRevenue || !selectedModelId}
+                    className="w-full h-9 px-3 bg-gradient-to-r from-accent/90 to-accent text-accent-foreground hover:from-accent hover:to-accent/90 shadow-sm"
+                    onClick={async () => {
+                      if (!selectedModelId) return;
+                      const fromY = fetchYear, fromM = fetchMonth;
+                      const toY = rangeMode ? fetchYearTo : fetchYear;
+                      const toM = rangeMode ? fetchMonthTo : fetchMonth;
+                      const months = monthsInRange(fromY, fromM, toY, toM);
+                      if (months.length > 1) {
+                        if (!confirm(`Umsatz für ${months.length} Monate abrufen? Bestehende Werte werden überschrieben.`)) return;
+                      } else {
+                        const sameMonth = lastFetchInfo.month === fromM && lastFetchInfo.year === fromY;
+                        if (sameMonth && !confirm(`Werte für ${String(fromM).padStart(2,"0")}/${fromY} bereits vorhanden. Überschreiben?`)) return;
+                      }
+                      setFetchingRevenue(true);
+                      const allErrors: Array<{ platform?: string; message?: string }> = [];
+                      let ok = 0;
+                      try {
+                        for (const { year, month } of months) {
+                          const { data, error } = await supabase.functions.invoke("fetch-model-revenue", {
+                            body: { model_id: selectedModelId, month, year },
+                          });
+                          if (error) { allErrors.push({ platform: `${month}/${year}`, message: error.message }); continue; }
+                          if ((data as any)?.error) { allErrors.push({ platform: `${month}/${year}`, message: (data as any).error }); continue; }
+                          const errs = ((data as any)?.errors ?? []) as Array<{ platform?: string; message?: string }>;
+                          if (errs.length > 0) allErrors.push(...errs.map(e => ({ platform: `${month}/${year} ${e.platform ?? ""}`, message: e.message })));
+                          else ok++;
+                        }
+                        if (allErrors.length > 0) {
+                          toast.error(`Umsatz teilweise abgerufen — ${allErrors.length} Fehler`, {
+                            description: allErrors.map(e => `${e.platform ?? "?"}: ${e.message ?? "Unbekannter Fehler"}`).join("\n"),
+                            duration: 10000,
+                            style: { whiteSpace: "pre-line" },
+                          });
+                        } else {
+                          toast.success(`Umsatz für ${ok} Monat${ok === 1 ? "" : "e"} aktualisiert ✅`);
+                        }
+                        await loadModelAccounts(selectedModelId);
+                        setFetchRevenueTick(t => t + 1);
+                      } catch (err: any) {
+                        toast.error(err.message || "Umsatz konnte nicht abgerufen werden");
+                      } finally {
+                        setFetchingRevenue(false);
+                      }
+                    }}
+                  >
+                    {fetchingRevenue ? (
+                      <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> Lädt…</>
+                    ) : (
+                      <><Download className="h-3.5 w-3.5 mr-1.5" /> Fetch Revenue{rangeMode ? ` (${monthsInRange(fetchYear, fetchMonth, fetchYearTo, fetchMonthTo).length} Mon.)` : ""}</>
+                    )}
+                  </Button>
                   <div className="grid grid-cols-3 gap-2 pt-1 border-t border-accent/10">
                     {[
                       { label: "4Based", key: "fourbased" as const, color: "text-blue-400" },
