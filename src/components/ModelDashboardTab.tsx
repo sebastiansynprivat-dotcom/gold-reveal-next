@@ -452,9 +452,25 @@ export default function ModelDashboardTab() {
   const now = new Date();
   const [fetchMonth, setFetchMonth] = useState<number>(now.getMonth() + 1);
   const [fetchYear, setFetchYear] = useState<number>(now.getFullYear());
+  const [fetchMonthTo, setFetchMonthTo] = useState<number>(now.getMonth() + 1);
+  const [fetchYearTo, setFetchYearTo] = useState<number>(now.getFullYear());
+  const [rangeMode, setRangeMode] = useState<boolean>(false);
   const [fetchingRevenue, setFetchingRevenue] = useState(false);
-  const [confirmOverwrite, setConfirmOverwrite] = useState(false);
   const [lastFetchInfo, setLastFetchInfo] = useState<{ at: string | null; month: number | null; year: number | null }>({ at: null, month: null, year: null });
+
+  // Helper: enumerate months in [fromY-fromM .. toY-toM] inclusive
+  const monthsInRange = useCallback((fromY: number, fromM: number, toY: number, toM: number) => {
+    const result: { year: number; month: number }[] = [];
+    let y = fromY, m = fromM;
+    // Guard: if "to" is before "from", just use the single "from" month
+    if (toY < fromY || (toY === fromY && toM < fromM)) { toY = fromY; toM = fromM; }
+    while (y < toY || (y === toY && m <= toM)) {
+      result.push({ year: y, month: m });
+      m++;
+      if (m > 12) { m = 1; y++; }
+    }
+    return result;
+  }, []);
 
   // Per-platform revenue from payout_revenue for the selected fetch month/year
   const [fetchedPayoutRevenue, setFetchedPayoutRevenue] = useState<{
