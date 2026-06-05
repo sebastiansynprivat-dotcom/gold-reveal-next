@@ -1913,6 +1913,9 @@ export type Database = {
       }
       payout_revenue: {
         Row: {
+          billed_amount: number | null
+          billed_at: string | null
+          billed_credit_note_number: string | null
           brezzels_revenue: number | null
           created_at: string
           fourbased_revenue: number | null
@@ -1927,6 +1930,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          billed_amount?: number | null
+          billed_at?: string | null
+          billed_credit_note_number?: string | null
           brezzels_revenue?: number | null
           created_at?: string
           fourbased_revenue?: number | null
@@ -1941,6 +1947,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          billed_amount?: number | null
+          billed_at?: string | null
+          billed_credit_note_number?: string | null
           brezzels_revenue?: number | null
           created_at?: string
           fourbased_revenue?: number | null

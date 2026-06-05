@@ -463,10 +463,33 @@ export default function ModelDashboardTab() {
     brezzels: number | null;
   } | null>(null);
   const [fetchRevenueTick, setFetchRevenueTick] = useState(0);
-  // How many consecutive months to fetch / bill starting from (fetchMonth, fetchYear)
-  const [fetchMonthsCount, setFetchMonthsCount] = useState<number>(1);
   // Per-platform errors from the last fetch (e.g. password incorrect)
   const [fetchErrors, setFetchErrors] = useState<Record<string, { code?: string; message: string }>>({});
+  // Additional billing month panels (extra months the user wants to bill)
+  type ExtraBilling = {
+    uid: string;
+    month: number;
+    year: number;
+    fetching: boolean;
+    data: { fourbased: number | null; maloum: number | null; brezzels: number | null } | null;
+    billedAt: string | null;
+    billedNumber: string | null;
+    errors: Record<string, { code?: string; message: string }>;
+  };
+  const [extraBillings, setExtraBillings] = useState<ExtraBilling[]>([]);
+  // Billing history (payout_revenue rows for selected model)
+  type BillingHistoryRow = {
+    id: string;
+    month: number;
+    year: number;
+    monthly_revenue: number | null;
+    billed_at: string | null;
+    billed_credit_note_number: string | null;
+    billed_amount: number | null;
+    last_fetched_at: string | null;
+  };
+  const [billingHistory, setBillingHistory] = useState<BillingHistoryRow[]>([]);
+  const [billingHistoryTick, setBillingHistoryTick] = useState(0);
 
   // ─── Custom platforms (per-model, localStorage) ───
   type CustomPlatform = { id: string; name: string; revenue: number; percentage: number };
@@ -605,40 +628,83 @@ export default function ModelDashboardTab() {
     return () => { cancelled = true; };
   }, [selectedModelId, modelAccounts, revenuePeriod]);
 
-  // ─── Query payout_revenue summed across selected month range ───
+  // ─── Query payout_revenue for the main (fetchMonth, fetchYear) ───
   useEffect(() => {
     if (!selectedModelId) {
       setFetchedPayoutRevenue(null);
       return;
     }
     (async () => {
-      // Build list of (year, month) pairs for the range
-      const pairs: Array<{ y: number; m: number }> = [];
-      for (let i = 0; i < Math.max(1, fetchMonthsCount); i++) {
-        const d = new Date(fetchYear, (fetchMonth - 1) + i, 1);
-        pairs.push({ y: d.getFullYear(), m: d.getMonth() + 1 });
-      }
       const { data, error } = await (supabase as any)
         .from("payout_revenue")
-        .select("fourbased_revenue, maloum_revenue, brezzels_revenue, last_fetched_month, last_fetched_year")
-        .eq("model_id", selectedModelId);
-      if (error || !data || (data as any[]).length === 0) {
+        .select("fourbased_revenue, maloum_revenue, brezzels_revenue")
+        .eq("model_id", selectedModelId)
+        .eq("last_fetched_month", fetchMonth)
+        .eq("last_fetched_year", fetchYear)
+        .maybeSingle();
+      if (error || !data) {
         setFetchedPayoutRevenue(null);
         return;
       }
-      const set = new Set(pairs.map((p) => `${p.y}-${p.m}`));
-      let fb = 0, ml = 0, br = 0;
-      let any = false;
-      for (const r of data as any[]) {
-        if (!set.has(`${r.last_fetched_year}-${r.last_fetched_month}`)) continue;
-        any = true;
-        fb += Number(r.fourbased_revenue) || 0;
-        ml += Number(r.maloum_revenue) || 0;
-        br += Number(r.brezzels_revenue) || 0;
-      }
-      setFetchedPayoutRevenue(any ? { fourbased: fb, maloum: ml, brezzels: br } : null);
+      setFetchedPayoutRevenue({
+        fourbased: Number((data as any).fourbased_revenue) || 0,
+        maloum: Number((data as any).maloum_revenue) || 0,
+        brezzels: Number((data as any).brezzels_revenue) || 0,
+      });
     })();
-  }, [selectedModelId, fetchMonth, fetchYear, fetchMonthsCount, fetchRevenueTick]);
+  }, [selectedModelId, fetchMonth, fetchYear, fetchRevenueTick]);
+
+  // ─── Load billing history for selected model ───
+  useEffect(() => {
+    if (!selectedModelId) { setBillingHistory([]); return; }
+    (async () => {
+      const { data } = await (supabase as any)
+        .from("payout_revenue")
+        .select("id, last_fetched_month, last_fetched_year, monthly_revenue, billed_at, billed_credit_note_number, billed_amount, last_fetched_at")
+        .eq("model_id", selectedModelId)
+        .order("last_fetched_year", { ascending: false })
+        .order("last_fetched_month", { ascending: false });
+      setBillingHistory(((data as any[]) || []).map((r) => ({
+        id: r.id,
+        month: r.last_fetched_month,
+        year: r.last_fetched_year,
+        monthly_revenue: r.monthly_revenue,
+        billed_at: r.billed_at,
+        billed_credit_note_number: r.billed_credit_note_number,
+        billed_amount: r.billed_amount,
+        last_fetched_at: r.last_fetched_at,
+      })));
+    })();
+  }, [selectedModelId, fetchRevenueTick, billingHistoryTick]);
+
+  // ─── Sync extra billings with payout_revenue (refetch their values) ───
+  useEffect(() => {
+    if (!selectedModelId || extraBillings.length === 0) return;
+    (async () => {
+      const updated = await Promise.all(extraBillings.map(async (eb) => {
+        const { data } = await (supabase as any)
+          .from("payout_revenue")
+          .select("fourbased_revenue, maloum_revenue, brezzels_revenue, billed_at, billed_credit_note_number")
+          .eq("model_id", selectedModelId)
+          .eq("last_fetched_month", eb.month)
+          .eq("last_fetched_year", eb.year)
+          .maybeSingle();
+        if (!data) return eb;
+        return {
+          ...eb,
+          data: {
+            fourbased: Number((data as any).fourbased_revenue) || 0,
+            maloum: Number((data as any).maloum_revenue) || 0,
+            brezzels: Number((data as any).brezzels_revenue) || 0,
+          },
+          billedAt: (data as any).billed_at || null,
+          billedNumber: (data as any).billed_credit_note_number || null,
+        };
+      }));
+      setExtraBillings(updated);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedModelId, fetchRevenueTick, billingHistoryTick]);
 
 
 
@@ -770,7 +836,7 @@ export default function ModelDashboardTab() {
     setShareCalculated(true);
 
     const startD = new Date(fetchYear, fetchMonth - 1, 1);
-    const endD = new Date(fetchYear, fetchMonth - 1 + Math.max(1, fetchMonthsCount), 0);
+    const endD = new Date(fetchYear, fetchMonth, 0);
     const fmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
     setModelForm((prev: any) => ({
       ...prev,
@@ -780,7 +846,7 @@ export default function ModelDashboardTab() {
       invoice_service_period_start: fmt(startD),
       invoice_service_period_end: fmt(endD),
     }));
-  }, [fetchedPayoutRevenue, modelForm.revenue_percentage, modelForm.revenue_percentage_fourbased, modelForm.revenue_percentage_maloum, modelForm.revenue_percentage_brezzels, customPlatforms, convertToBase, fetchYear, fetchMonth, fetchMonthsCount]);
+  }, [fetchedPayoutRevenue, modelForm.revenue_percentage, modelForm.revenue_percentage_fourbased, modelForm.revenue_percentage_maloum, modelForm.revenue_percentage_brezzels, customPlatforms, convertToBase, fetchYear, fetchMonth]);
 
 
   // ─── Per-model platform revenue (for selected model) — converted to base currency ───
@@ -2038,16 +2104,6 @@ export default function ModelDashboardTab() {
                         ))}
                       </SelectContent>
                     </Select>
-                    <Select value={String(fetchMonthsCount)} onValueChange={(v) => setFetchMonthsCount(Number(v))}>
-                      <SelectTrigger className="w-[90px] h-9 text-sm bg-secondary/40 border-border/40" title="Anzahl Monate">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {[1,2,3,4,5,6,7,8,9,10,11,12].map((n) => (
-                          <SelectItem key={n} value={String(n)}>{n} {n === 1 ? "Monat" : "Monate"}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
                     <Button
                       type="button"
                       size="sm"
@@ -2055,14 +2111,7 @@ export default function ModelDashboardTab() {
                       className="flex-1 h-9 px-3 bg-gradient-to-r from-accent/90 to-accent text-accent-foreground hover:from-accent hover:to-accent/90 shadow-sm"
                       onClick={async () => {
                         if (!selectedModelId) return;
-                        const count = Math.max(1, fetchMonthsCount);
-                        // Build (year, month) pairs
-                        const pairs: Array<{ y: number; m: number }> = [];
-                        for (let i = 0; i < count; i++) {
-                          const d = new Date(fetchYear, (fetchMonth - 1) + i, 1);
-                          pairs.push({ y: d.getFullYear(), m: d.getMonth() + 1 });
-                        }
-                        if (!confirmOverwrite && count === 1) {
+                        if (!confirmOverwrite) {
                           const sameMonth =
                             lastFetchInfo.month === fetchMonth && lastFetchInfo.year === fetchYear;
                           if (sameMonth) {
@@ -2071,38 +2120,29 @@ export default function ModelDashboardTab() {
                           }
                         }
                         setFetchingRevenue(true);
-                        const allErrs: Array<{ platform?: string; accountId?: string; code?: string; message?: string }> = [];
-                        let succeeded = 0;
                         try {
-                          for (const { y, m } of pairs) {
-                            const { data, error } = await supabase.functions.invoke("fetch-model-revenue", {
-                              body: { model_id: selectedModelId, month: m, year: y },
-                            });
-                            if (error) { allErrs.push({ message: `${String(m).padStart(2,"0")}/${y}: ${error.message}` }); continue; }
-                            if ((data as any)?.error) { allErrs.push({ message: `${String(m).padStart(2,"0")}/${y}: ${(data as any).error}` }); continue; }
-                            const errs = ((data as any)?.errors ?? []) as Array<{ platform?: string; accountId?: string; code?: string; message?: string }>;
-                            for (const e of errs) allErrs.push({ ...e, message: `${String(m).padStart(2,"0")}/${y} · ${e.platform ?? "?"}: ${e.message ?? "Unbekannter Fehler"}` });
-                            succeeded++;
-                          }
-                          // Map latest errors per platform for inline UI
+                          const { data, error } = await supabase.functions.invoke("fetch-model-revenue", {
+                            body: { model_id: selectedModelId, month: fetchMonth, year: fetchYear },
+                          });
+                          if (error) throw error;
+                          if ((data as any)?.error) throw new Error((data as any).error);
+                          const errs = ((data as any)?.errors ?? []) as Array<{ platform?: string; accountId?: string; code?: string; message?: string }>;
                           const errMap: Record<string, { code?: string; message: string }> = {};
-                          for (const e of allErrs) {
-                            if (e.platform) errMap[e.platform] = { code: e.code, message: e.message };
+                          for (const e of errs) {
+                            if (e.platform) errMap[e.platform] = { code: e.code, message: e.message || "Unbekannter Fehler" };
                           }
                           setFetchErrors(errMap);
-                          if (allErrs.length > 0) {
-                            toast.error(
-                              `Umsatz teilweise abgerufen — ${allErrs.length} Fehler`,
-                              {
-                                description: allErrs.map(e => e.message).join("\n"),
-                                duration: 10000,
-                                style: { whiteSpace: "pre-line" },
-                              }
-                            );
+                          if (errs.length > 0) {
+                            toast.error(`Umsatz teilweise abgerufen — ${errs.length} Fehler`, {
+                              description: errs.map(e => `${e.platform ?? "?"}: ${e.message ?? "Unbekannter Fehler"}`).join("\n"),
+                              duration: 10000,
+                              style: { whiteSpace: "pre-line" },
+                            });
                           } else {
-                            toast.success(`Umsatz für ${count} Monat${count === 1 ? "" : "e"} aktualisiert ✅`);
+                            toast.success(`Umsatz für ${String(fetchMonth).padStart(2,"0")}/${fetchYear} aktualisiert ✅`);
                           }
                           await loadModelAccounts(selectedModelId);
+                          setLastFetchInfo({ at: new Date().toISOString(), month: fetchMonth, year: fetchYear });
                           setFetchRevenueTick(t => t + 1);
                         } catch (err: any) {
                           toast.error(err.message || "Umsatz konnte nicht abgerufen werden");
@@ -2149,12 +2189,9 @@ export default function ModelDashboardTab() {
                   const fbInBase = convertToBase(fb, "USD");
                   const totalPayouts = fbInBase + ml + br;
                   const startD = new Date(fetchYear, fetchMonth - 1, 1);
-                  const endD = new Date(fetchYear, fetchMonth - 1 + Math.max(1, fetchMonthsCount), 0);
                   const monthFmt = (d: Date) =>
                     d.toLocaleDateString("de-DE", { month: "short", year: "numeric" });
-                  const rangeLabel = fetchMonthsCount > 1
-                    ? `${monthFmt(startD)} – ${monthFmt(endD)}`
-                    : monthFmt(startD);
+                  const rangeLabel = monthFmt(startD);
                   return (
                     <div className="rounded-xl border border-accent/20 bg-accent/[0.03] p-3 space-y-2">
                       <div className="flex items-center justify-between">
@@ -2174,6 +2211,227 @@ export default function ModelDashboardTab() {
                   );
                 })()}
 
+                {/* ── Weitere Monate abrechnen ── */}
+                <div className="rounded-xl border border-border/40 bg-secondary/20 p-3 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                      Weitere Monate abrechnen
+                    </p>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 px-2 text-[11px] text-accent hover:text-accent hover:bg-accent/10"
+                      onClick={() => {
+                        const d = new Date();
+                        d.setMonth(d.getMonth() - (extraBillings.length + 1));
+                        setExtraBillings((prev) => [
+                          ...prev,
+                          {
+                            uid: crypto.randomUUID(),
+                            month: d.getMonth() + 1,
+                            year: d.getFullYear(),
+                            fetching: false,
+                            data: null,
+                            billedAt: null,
+                            billedNumber: null,
+                            errors: {},
+                          },
+                        ]);
+                      }}
+                    >
+                      + Monat hinzufügen
+                    </Button>
+                  </div>
+                  {extraBillings.length === 0 && (
+                    <p className="text-[11px] text-muted-foreground/70 italic">
+                      Klicke „+ Monat hinzufügen", um einen weiteren Monat abzurufen und abzurechnen.
+                    </p>
+                  )}
+                  {extraBillings.map((eb, idx) => {
+                    const total = eb.data
+                      ? convertToBase(eb.data.fourbased ?? 0, "USD") + (eb.data.maloum ?? 0) + (eb.data.brezzels ?? 0)
+                      : 0;
+                    const monthLabel = new Date(eb.year, eb.month - 1, 1)
+                      .toLocaleDateString("de-DE", { month: "short", year: "numeric" });
+                    return (
+                      <div key={eb.uid} className="rounded-lg border border-accent/20 bg-accent/[0.04] p-3 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] uppercase tracking-wider text-accent/90 font-semibold">
+                            {monthLabel}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            {eb.billedAt && (
+                              <span className="text-[9px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-semibold">
+                                Abgerechnet{eb.billedNumber ? ` · ${eb.billedNumber}` : ""}
+                              </span>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => setExtraBillings((prev) => prev.filter((x) => x.uid !== eb.uid))}
+                              className="text-muted-foreground hover:text-destructive text-[11px]"
+                            >
+                              Entfernen
+                            </button>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Select
+                            value={String(eb.month)}
+                            onValueChange={(v) => setExtraBillings((prev) => prev.map((x) => x.uid === eb.uid ? { ...x, month: Number(v), data: null, billedAt: null, billedNumber: null } : x))}
+                          >
+                            <SelectTrigger className="w-[130px] h-9 text-sm bg-secondary/40 border-border/40">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"].map((label, i) => (
+                                <SelectItem key={i+1} value={String(i+1)}>{label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Select
+                            value={String(eb.year)}
+                            onValueChange={(v) => setExtraBillings((prev) => prev.map((x) => x.uid === eb.uid ? { ...x, year: Number(v), data: null, billedAt: null, billedNumber: null } : x))}
+                          >
+                            <SelectTrigger className="w-[90px] h-9 text-sm bg-secondary/40 border-border/40">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {[now.getFullYear() - 2, now.getFullYear() - 1, now.getFullYear(), now.getFullYear() + 1].map((y) => (
+                                <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Button
+                            type="button"
+                            size="sm"
+                            disabled={eb.fetching || !selectedModelId}
+                            className="flex-1 h-9 px-3 bg-gradient-to-r from-accent/90 to-accent text-accent-foreground hover:from-accent hover:to-accent/90 shadow-sm"
+                            onClick={async () => {
+                              if (!selectedModelId) return;
+                              setExtraBillings((prev) => prev.map((x) => x.uid === eb.uid ? { ...x, fetching: true } : x));
+                              try {
+                                const { data, error } = await supabase.functions.invoke("fetch-model-revenue", {
+                                  body: { model_id: selectedModelId, month: eb.month, year: eb.year },
+                                });
+                                if (error) throw error;
+                                if ((data as any)?.error) throw new Error((data as any).error);
+                                const errs = ((data as any)?.errors ?? []) as Array<{ platform?: string; code?: string; message?: string }>;
+                                const errMap: Record<string, { code?: string; message: string }> = {};
+                                for (const e of errs) {
+                                  if (e.platform) errMap[e.platform] = { code: e.code, message: e.message || "Unbekannter Fehler" };
+                                }
+                                if (errs.length > 0) {
+                                  toast.error(`${monthLabel}: ${errs.length} Fehler`, {
+                                    description: errs.map(e => `${e.platform ?? "?"}: ${e.message ?? "Unbekannter Fehler"}`).join("\n"),
+                                    duration: 10000,
+                                    style: { whiteSpace: "pre-line" },
+                                  });
+                                } else {
+                                  toast.success(`Umsatz für ${monthLabel} gespeichert ✅`);
+                                }
+                                setExtraBillings((prev) => prev.map((x) => x.uid === eb.uid ? { ...x, errors: errMap } : x));
+                                setFetchRevenueTick((t) => t + 1);
+                              } catch (err: any) {
+                                toast.error(err.message || "Umsatz konnte nicht abgerufen werden");
+                              } finally {
+                                setExtraBillings((prev) => prev.map((x) => x.uid === eb.uid ? { ...x, fetching: false } : x));
+                              }
+                            }}
+                          >
+                            {eb.fetching ? (
+                              <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> Lädt…</>
+                            ) : (
+                              <><Download className="h-3.5 w-3.5 mr-1.5" /> Fetch</>
+                            )}
+                          </Button>
+                        </div>
+                        {eb.data && (
+                          <div className="grid grid-cols-3 gap-2 pt-1 border-t border-accent/10">
+                            {[
+                              { label: "4Based", key: "fourbased" as const, color: "text-blue-400" },
+                              { label: "Maloum", key: "maloum" as const, color: "text-purple-400" },
+                              { label: "Brezzels", key: "brezzels" as const, color: "text-orange-400" },
+                            ].map((p) => (
+                              <div key={p.key} className="text-center">
+                                <p className="text-[9px] uppercase tracking-wider text-muted-foreground">{p.label}</p>
+                                <p className={cn("text-sm font-bold tabular-nums", p.color)}>
+                                  {(eb.data?.[p.key] ?? 0).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {eb.data && (
+                          <div className="flex items-baseline justify-between pt-1 border-t border-accent/10">
+                            <span className="text-[10px] text-muted-foreground">Summe</span>
+                            <span className="text-sm font-bold text-gold-gradient tabular-nums">
+                              {total.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {baseCurrency}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* ── Abrechnungsverlauf ── */}
+                {billingHistory.length > 0 && (
+                  <div className="rounded-xl border border-border/40 bg-secondary/20 p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                        Abrechnungs-Verlauf
+                      </p>
+                      <span className="text-[9px] text-muted-foreground/70">
+                        {billingHistory.filter((r) => r.billed_at).length} / {billingHistory.length} abgerechnet
+                      </span>
+                    </div>
+                    <div className="space-y-1.5 max-h-[260px] overflow-y-auto">
+                      {billingHistory.map((r) => {
+                        const monthLabel = new Date(r.year, r.month - 1, 1)
+                          .toLocaleDateString("de-DE", { month: "short", year: "numeric" });
+                        const isBilled = !!r.billed_at;
+                        return (
+                          <div
+                            key={r.id}
+                            className={cn(
+                              "flex items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 border text-[11px]",
+                              isBilled
+                                ? "border-emerald-500/30 bg-emerald-500/[0.04]"
+                                : "border-border/40 bg-background/30",
+                            )}
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="font-semibold text-foreground tabular-nums">{monthLabel}</span>
+                              {isBilled ? (
+                                <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[9px] font-semibold">
+                                  Abgerechnet
+                                </span>
+                              ) : (
+                                <span className="px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[9px] font-semibold">
+                                  Offen
+                                </span>
+                              )}
+                              {r.billed_credit_note_number && (
+                                <span className="text-muted-foreground truncate">{r.billed_credit_note_number}</span>
+                              )}
+                            </div>
+                            <div className="text-right shrink-0">
+                              <div className="text-foreground font-bold tabular-nums">
+                                {(r.billed_amount ?? r.monthly_revenue ?? 0).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
+                              </div>
+                              {isBilled && r.billed_at && (
+                                <div className="text-[9px] text-muted-foreground">
+                                  {new Date(r.billed_at).toLocaleDateString("de-DE")}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
 
                 <div className="flex items-center justify-between gap-2 rounded-lg border border-accent/15 bg-accent/[0.02] px-3 py-2">
@@ -2880,6 +3138,36 @@ export default function ModelDashboardTab() {
               <CreditNoteForm
                 key={selectedModelId}
                 autoApplyTrigger={calcTrigger}
+                onInvoiceCreated={async ({ creditNoteNumber, netAmount, servicePeriodStart, servicePeriodEnd }) => {
+                  if (!selectedModelId || !servicePeriodStart || !servicePeriodEnd) return;
+                  // Compute all (year, month) pairs covered by the invoice service period
+                  const start = new Date(servicePeriodStart);
+                  const end = new Date(servicePeriodEnd);
+                  const pairs: Array<{ y: number; m: number }> = [];
+                  const cur = new Date(start.getFullYear(), start.getMonth(), 1);
+                  while (cur <= end) {
+                    pairs.push({ y: cur.getFullYear(), m: cur.getMonth() + 1 });
+                    cur.setMonth(cur.getMonth() + 1);
+                  }
+                  if (pairs.length === 0) return;
+                  const nowIso = new Date().toISOString();
+                  const share = pairs.length > 0 ? netAmount / pairs.length : netAmount;
+                  // Mark each covered payout_revenue row as billed
+                  await Promise.all(pairs.map(({ y, m }) =>
+                    (supabase as any)
+                      .from("payout_revenue")
+                      .update({
+                        billed_at: nowIso,
+                        billed_credit_note_number: creditNoteNumber,
+                        billed_amount: Math.round(share * 100) / 100,
+                      })
+                      .eq("model_id", selectedModelId)
+                      .eq("last_fetched_month", m)
+                      .eq("last_fetched_year", y)
+                  ));
+                  setBillingHistoryTick((t) => t + 1);
+                  toast.success(`${pairs.length} Monat${pairs.length === 1 ? "" : "e"} als abgerechnet markiert`);
+                }}
                 suggestedAmount={verdienst}
                 providerName={selectedModel.name}
                 accountId={modelAccounts[0]?.id || ""}

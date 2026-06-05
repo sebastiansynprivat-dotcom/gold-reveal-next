@@ -94,6 +94,12 @@ interface CreditNoteFormProps {
   platformFxRates?: Array<{ platform: string; from: string; to: string; rate: number }>;
   platformBreakdown?: Array<{ name: string; rev: number; pct: number }>;
   autoApplyTrigger?: number;
+  onInvoiceCreated?: (info: {
+    creditNoteNumber: string;
+    netAmount: number;
+    servicePeriodStart: string | null;
+    servicePeriodEnd: string | null;
+  }) => void;
 }
 
 export default function CreditNoteForm({
@@ -137,6 +143,7 @@ export default function CreditNoteForm({
   platformFxRates = [],
   platformBreakdown = [],
   autoApplyTrigger = 0,
+  onInvoiceCreated,
 }: CreditNoteFormProps) {
   // localStorage key for persisting provider (recipient) form fields
   const storageKey = `credit-note-form-${providerEntityType && providerEntityId ? `${providerEntityType}-${providerEntityId}` : accountId || chatterName || "default"}`;
@@ -939,6 +946,12 @@ export default function CreditNoteForm({
       }
       setTimeout(() => URL.revokeObjectURL(url), 15000);
       setTxHash("");
+      onInvoiceCreated?.({
+        creditNoteNumber,
+        netAmount: net,
+        servicePeriodStart: servicePeriodStart || null,
+        servicePeriodEnd: servicePeriodEnd || null,
+      });
     } catch (err: any) {
       console.error(err);
       toast.error("Fehler: " + (err.message || "Unbekannter Fehler"));
