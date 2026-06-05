@@ -1,6 +1,6 @@
 // Updates all wallet passes with current revenue. Called by cron + after each sale.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { PASSNINJA_BASE, TEMPLATE_ID, passninjaHeaders, buildPassFields } from "../_shared/passninja-revenue.ts";
+import { PASSNINJA_BASE, TEMPLATE_ID, passninjaHeaders, buildPassFieldVariants } from "../_shared/passninja-revenue.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,7 +25,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const fields = await buildPassFields();
+    const fields = (await buildPassFieldVariants())[0].fields;
 
     const results = [];
     for (const p of passes) {
