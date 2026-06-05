@@ -170,37 +170,34 @@ Deno.serve(async (req) => {
     const isBatchItem =
       !asArray && body && typeof body === "object" && typeof (body as any).account_id === "string";
 
-    // --- Metrics shape: items with date + at least one metric field -> accounts_data upsert ---
+    // Per-item dispatch: metrics-shape rows -> accounts_data; others -> accounts
     if (asArray || isBatchItem) {
       const allItems = asArray ?? [body];
       const metricsItems = allItems.filter((it: any) => isMetricsItem(it));
       const accountUpdateItems = allItems.filter((it: any) => !isMetricsItem(it));
 
-      if (metricsItems.length > 0 && accountUpdateItems.length === 0) {
+      let metricsResults: any[] = [];
+      let metricsUpdated = 0;
+      if (metricsItems.length > 0) {
         const { error, results } = await processMetricsItems(supabase, metricsItems);
         if (error) return json({ error, results }, 500);
-        const updated = results!.filter((r) => r.metrics_updated).length;
-        return json({ success: true, metrics_updated: updated, results });
+        metricsResults = results!;
+        metricsUpdated = metricsResults.filter((r) => r.metrics_updated).length;
+
+        if (accountUpdateItems.length === 0) {
+          return json({ success: true, metrics_updated: metricsUpdated, results: metricsResults });
+        }
       }
 
-      if (metricsItems.length > 0 && accountUpdateItems.length > 0) {
-        return json(
-          { error: "Mixed payload not supported: send metrics rows and account-update rows in separate requests" },
-          400,
-        );
-      }
-    }
-
-    if (asArray || isBatchItem) {
-      const items = (asArray ?? [body])
+      const items = accountUpdateItems
         .map((it: any) => extractBatchItem(it))
         .filter(
           (it): it is { account_id: string; updates: Record<string, unknown> } => it !== null,
         );
 
-      if (items.length === 0) {
+      if (items.length === 0 && metricsItems.length === 0) {
         return json(
-          { error: "No valid items (each needs account_id UUID + at least one allowed field)" },
+          { error: "No valid items (each needs account_id UUID + at least one allowed field, or date + metric field)" },
           400,
         );
       }
@@ -232,7 +229,12 @@ Deno.serve(async (req) => {
         }
       }
 
-      return json({ success: true, total_updated: totalUpdated, results });
+      return json({
+        success: true,
+        total_updated: totalUpdated,
+        results,
+        ...(metricsItems.length > 0 ? { metrics_updated: metricsUpdated, metrics_results: metricsResults } : {}),
+      });
     }
 
     // --- Legacy shape: { platform, account_email, updates } ---
