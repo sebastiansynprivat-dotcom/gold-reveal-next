@@ -2211,6 +2211,227 @@ export default function ModelDashboardTab() {
                   );
                 })()}
 
+                {/* ── Weitere Monate abrechnen ── */}
+                <div className="rounded-xl border border-border/40 bg-secondary/20 p-3 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                      Weitere Monate abrechnen
+                    </p>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 px-2 text-[11px] text-accent hover:text-accent hover:bg-accent/10"
+                      onClick={() => {
+                        const d = new Date();
+                        d.setMonth(d.getMonth() - (extraBillings.length + 1));
+                        setExtraBillings((prev) => [
+                          ...prev,
+                          {
+                            uid: crypto.randomUUID(),
+                            month: d.getMonth() + 1,
+                            year: d.getFullYear(),
+                            fetching: false,
+                            data: null,
+                            billedAt: null,
+                            billedNumber: null,
+                            errors: {},
+                          },
+                        ]);
+                      }}
+                    >
+                      + Monat hinzufügen
+                    </Button>
+                  </div>
+                  {extraBillings.length === 0 && (
+                    <p className="text-[11px] text-muted-foreground/70 italic">
+                      Klicke „+ Monat hinzufügen", um einen weiteren Monat abzurufen und abzurechnen.
+                    </p>
+                  )}
+                  {extraBillings.map((eb, idx) => {
+                    const total = eb.data
+                      ? convertToBase(eb.data.fourbased ?? 0, "USD") + (eb.data.maloum ?? 0) + (eb.data.brezzels ?? 0)
+                      : 0;
+                    const monthLabel = new Date(eb.year, eb.month - 1, 1)
+                      .toLocaleDateString("de-DE", { month: "short", year: "numeric" });
+                    return (
+                      <div key={eb.uid} className="rounded-lg border border-accent/20 bg-accent/[0.04] p-3 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] uppercase tracking-wider text-accent/90 font-semibold">
+                            {monthLabel}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            {eb.billedAt && (
+                              <span className="text-[9px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-semibold">
+                                Abgerechnet{eb.billedNumber ? ` · ${eb.billedNumber}` : ""}
+                              </span>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => setExtraBillings((prev) => prev.filter((x) => x.uid !== eb.uid))}
+                              className="text-muted-foreground hover:text-destructive text-[11px]"
+                            >
+                              Entfernen
+                            </button>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Select
+                            value={String(eb.month)}
+                            onValueChange={(v) => setExtraBillings((prev) => prev.map((x) => x.uid === eb.uid ? { ...x, month: Number(v), data: null, billedAt: null, billedNumber: null } : x))}
+                          >
+                            <SelectTrigger className="w-[130px] h-9 text-sm bg-secondary/40 border-border/40">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"].map((label, i) => (
+                                <SelectItem key={i+1} value={String(i+1)}>{label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Select
+                            value={String(eb.year)}
+                            onValueChange={(v) => setExtraBillings((prev) => prev.map((x) => x.uid === eb.uid ? { ...x, year: Number(v), data: null, billedAt: null, billedNumber: null } : x))}
+                          >
+                            <SelectTrigger className="w-[90px] h-9 text-sm bg-secondary/40 border-border/40">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {[now.getFullYear() - 2, now.getFullYear() - 1, now.getFullYear(), now.getFullYear() + 1].map((y) => (
+                                <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Button
+                            type="button"
+                            size="sm"
+                            disabled={eb.fetching || !selectedModelId}
+                            className="flex-1 h-9 px-3 bg-gradient-to-r from-accent/90 to-accent text-accent-foreground hover:from-accent hover:to-accent/90 shadow-sm"
+                            onClick={async () => {
+                              if (!selectedModelId) return;
+                              setExtraBillings((prev) => prev.map((x) => x.uid === eb.uid ? { ...x, fetching: true } : x));
+                              try {
+                                const { data, error } = await supabase.functions.invoke("fetch-model-revenue", {
+                                  body: { model_id: selectedModelId, month: eb.month, year: eb.year },
+                                });
+                                if (error) throw error;
+                                if ((data as any)?.error) throw new Error((data as any).error);
+                                const errs = ((data as any)?.errors ?? []) as Array<{ platform?: string; code?: string; message?: string }>;
+                                const errMap: Record<string, { code?: string; message: string }> = {};
+                                for (const e of errs) {
+                                  if (e.platform) errMap[e.platform] = { code: e.code, message: e.message || "Unbekannter Fehler" };
+                                }
+                                if (errs.length > 0) {
+                                  toast.error(`${monthLabel}: ${errs.length} Fehler`, {
+                                    description: errs.map(e => `${e.platform ?? "?"}: ${e.message ?? "Unbekannter Fehler"}`).join("\n"),
+                                    duration: 10000,
+                                    style: { whiteSpace: "pre-line" },
+                                  });
+                                } else {
+                                  toast.success(`Umsatz für ${monthLabel} gespeichert ✅`);
+                                }
+                                setExtraBillings((prev) => prev.map((x) => x.uid === eb.uid ? { ...x, errors: errMap } : x));
+                                setFetchRevenueTick((t) => t + 1);
+                              } catch (err: any) {
+                                toast.error(err.message || "Umsatz konnte nicht abgerufen werden");
+                              } finally {
+                                setExtraBillings((prev) => prev.map((x) => x.uid === eb.uid ? { ...x, fetching: false } : x));
+                              }
+                            }}
+                          >
+                            {eb.fetching ? (
+                              <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> Lädt…</>
+                            ) : (
+                              <><Download className="h-3.5 w-3.5 mr-1.5" /> Fetch</>
+                            )}
+                          </Button>
+                        </div>
+                        {eb.data && (
+                          <div className="grid grid-cols-3 gap-2 pt-1 border-t border-accent/10">
+                            {[
+                              { label: "4Based", key: "fourbased" as const, color: "text-blue-400" },
+                              { label: "Maloum", key: "maloum" as const, color: "text-purple-400" },
+                              { label: "Brezzels", key: "brezzels" as const, color: "text-orange-400" },
+                            ].map((p) => (
+                              <div key={p.key} className="text-center">
+                                <p className="text-[9px] uppercase tracking-wider text-muted-foreground">{p.label}</p>
+                                <p className={cn("text-sm font-bold tabular-nums", p.color)}>
+                                  {(eb.data?.[p.key] ?? 0).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {eb.data && (
+                          <div className="flex items-baseline justify-between pt-1 border-t border-accent/10">
+                            <span className="text-[10px] text-muted-foreground">Summe</span>
+                            <span className="text-sm font-bold text-gold-gradient tabular-nums">
+                              {total.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {baseCurrency}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* ── Abrechnungsverlauf ── */}
+                {billingHistory.length > 0 && (
+                  <div className="rounded-xl border border-border/40 bg-secondary/20 p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                        Abrechnungs-Verlauf
+                      </p>
+                      <span className="text-[9px] text-muted-foreground/70">
+                        {billingHistory.filter((r) => r.billed_at).length} / {billingHistory.length} abgerechnet
+                      </span>
+                    </div>
+                    <div className="space-y-1.5 max-h-[260px] overflow-y-auto">
+                      {billingHistory.map((r) => {
+                        const monthLabel = new Date(r.year, r.month - 1, 1)
+                          .toLocaleDateString("de-DE", { month: "short", year: "numeric" });
+                        const isBilled = !!r.billed_at;
+                        return (
+                          <div
+                            key={r.id}
+                            className={cn(
+                              "flex items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 border text-[11px]",
+                              isBilled
+                                ? "border-emerald-500/30 bg-emerald-500/[0.04]"
+                                : "border-border/40 bg-background/30",
+                            )}
+                          >
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="font-semibold text-foreground tabular-nums">{monthLabel}</span>
+                              {isBilled ? (
+                                <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[9px] font-semibold">
+                                  Abgerechnet
+                                </span>
+                              ) : (
+                                <span className="px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[9px] font-semibold">
+                                  Offen
+                                </span>
+                              )}
+                              {r.billed_credit_note_number && (
+                                <span className="text-muted-foreground truncate">{r.billed_credit_note_number}</span>
+                              )}
+                            </div>
+                            <div className="text-right shrink-0">
+                              <div className="text-foreground font-bold tabular-nums">
+                                {(r.billed_amount ?? r.monthly_revenue ?? 0).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €
+                              </div>
+                              {isBilled && r.billed_at && (
+                                <div className="text-[9px] text-muted-foreground">
+                                  {new Date(r.billed_at).toLocaleDateString("de-DE")}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
 
                 <div className="flex items-center justify-between gap-2 rounded-lg border border-accent/15 bg-accent/[0.02] px-3 py-2">
