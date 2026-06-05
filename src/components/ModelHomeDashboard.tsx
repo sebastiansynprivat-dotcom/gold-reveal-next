@@ -82,7 +82,16 @@ const COPY = {
     netEarnings: "Deine Netto-Einnahmen",
     forecast: "Monatsprognose",
     forecastHint: "Hochrechnung basierend auf dem bisherigen Tagesdurchschnitt",
+    downloadPdf: "PDF herunterladen",
+    details: "Details ansehen",
+    monthsCovered: "Abgerechnete Monate",
+    platformRevenues: "Umsatz pro Plattform",
+    payout: "Payout",
+    invoiceNumber: "Rechnungs-Nr.",
+    billedOn: "Abgerechnet am",
+    servicePeriod: "Leistungszeitraum",
   },
+
   en: {
     welcome: "Welcome back",
     confirmed: "Confirmed",
