@@ -628,40 +628,83 @@ export default function ModelDashboardTab() {
     return () => { cancelled = true; };
   }, [selectedModelId, modelAccounts, revenuePeriod]);
 
-  // ─── Query payout_revenue summed across selected month range ───
+  // ─── Query payout_revenue for the main (fetchMonth, fetchYear) ───
   useEffect(() => {
     if (!selectedModelId) {
       setFetchedPayoutRevenue(null);
       return;
     }
     (async () => {
-      // Build list of (year, month) pairs for the range
-      const pairs: Array<{ y: number; m: number }> = [];
-      for (let i = 0; i < Math.max(1, fetchMonthsCount); i++) {
-        const d = new Date(fetchYear, (fetchMonth - 1) + i, 1);
-        pairs.push({ y: d.getFullYear(), m: d.getMonth() + 1 });
-      }
       const { data, error } = await (supabase as any)
         .from("payout_revenue")
-        .select("fourbased_revenue, maloum_revenue, brezzels_revenue, last_fetched_month, last_fetched_year")
-        .eq("model_id", selectedModelId);
-      if (error || !data || (data as any[]).length === 0) {
+        .select("fourbased_revenue, maloum_revenue, brezzels_revenue")
+        .eq("model_id", selectedModelId)
+        .eq("last_fetched_month", fetchMonth)
+        .eq("last_fetched_year", fetchYear)
+        .maybeSingle();
+      if (error || !data) {
         setFetchedPayoutRevenue(null);
         return;
       }
-      const set = new Set(pairs.map((p) => `${p.y}-${p.m}`));
-      let fb = 0, ml = 0, br = 0;
-      let any = false;
-      for (const r of data as any[]) {
-        if (!set.has(`${r.last_fetched_year}-${r.last_fetched_month}`)) continue;
-        any = true;
-        fb += Number(r.fourbased_revenue) || 0;
-        ml += Number(r.maloum_revenue) || 0;
-        br += Number(r.brezzels_revenue) || 0;
-      }
-      setFetchedPayoutRevenue(any ? { fourbased: fb, maloum: ml, brezzels: br } : null);
+      setFetchedPayoutRevenue({
+        fourbased: Number((data as any).fourbased_revenue) || 0,
+        maloum: Number((data as any).maloum_revenue) || 0,
+        brezzels: Number((data as any).brezzels_revenue) || 0,
+      });
     })();
-  }, [selectedModelId, fetchMonth, fetchYear, fetchMonthsCount, fetchRevenueTick]);
+  }, [selectedModelId, fetchMonth, fetchYear, fetchRevenueTick]);
+
+  // ─── Load billing history for selected model ───
+  useEffect(() => {
+    if (!selectedModelId) { setBillingHistory([]); return; }
+    (async () => {
+      const { data } = await (supabase as any)
+        .from("payout_revenue")
+        .select("id, last_fetched_month, last_fetched_year, monthly_revenue, billed_at, billed_credit_note_number, billed_amount, last_fetched_at")
+        .eq("model_id", selectedModelId)
+        .order("last_fetched_year", { ascending: false })
+        .order("last_fetched_month", { ascending: false });
+      setBillingHistory(((data as any[]) || []).map((r) => ({
+        id: r.id,
+        month: r.last_fetched_month,
+        year: r.last_fetched_year,
+        monthly_revenue: r.monthly_revenue,
+        billed_at: r.billed_at,
+        billed_credit_note_number: r.billed_credit_note_number,
+        billed_amount: r.billed_amount,
+        last_fetched_at: r.last_fetched_at,
+      })));
+    })();
+  }, [selectedModelId, fetchRevenueTick, billingHistoryTick]);
+
+  // ─── Sync extra billings with payout_revenue (refetch their values) ───
+  useEffect(() => {
+    if (!selectedModelId || extraBillings.length === 0) return;
+    (async () => {
+      const updated = await Promise.all(extraBillings.map(async (eb) => {
+        const { data } = await (supabase as any)
+          .from("payout_revenue")
+          .select("fourbased_revenue, maloum_revenue, brezzels_revenue, billed_at, billed_credit_note_number")
+          .eq("model_id", selectedModelId)
+          .eq("last_fetched_month", eb.month)
+          .eq("last_fetched_year", eb.year)
+          .maybeSingle();
+        if (!data) return eb;
+        return {
+          ...eb,
+          data: {
+            fourbased: Number((data as any).fourbased_revenue) || 0,
+            maloum: Number((data as any).maloum_revenue) || 0,
+            brezzels: Number((data as any).brezzels_revenue) || 0,
+          },
+          billedAt: (data as any).billed_at || null,
+          billedNumber: (data as any).billed_credit_note_number || null,
+        };
+      }));
+      setExtraBillings(updated);
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedModelId, fetchRevenueTick, billingHistoryTick]);
 
 
 
