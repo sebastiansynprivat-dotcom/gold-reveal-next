@@ -604,133 +604,152 @@ export default function Dashboard() {
       {/* Header with Telegram + Umsatz inline */}
       <header className="header-gradient-border">
         <div className="container max-w-5xl mx-auto px-4 py-3 lg:px-8">
-          {/* Desktop: single row */}
-          <div className="hidden sm:flex items-center gap-3">
-            <img src={logo} alt="Logo" className="h-9 w-9 rounded-full shrink-0" />
-            <div className="shrink-0 flex items-center gap-2">
-              <h1 className="text-base lg:text-lg font-bold text-foreground leading-tight">Chatter Dashboard</h1>
+          {/* Desktop: clean pill-based meta header */}
+          <div className="hidden sm:flex items-center gap-4">
+            {/* Brand */}
+            <div className="flex items-center gap-2.5 shrink-0">
+              <img src={logo} alt="Logo" className="h-9 w-9 rounded-full" />
+              <h1 className="text-base lg:text-lg font-bold text-foreground leading-tight whitespace-nowrap">
+                Chatter Dashboard
+              </h1>
             </div>
-            <div className="h-8 w-px bg-border shrink-0" />
-            <div className="flex items-center gap-1.5 shrink-0">
-              <User className="h-3.5 w-3.5 text-accent" />
-              <span className={`text-sm font-medium ${userName ? "text-foreground" : "text-muted-foreground"}`}>
-                {userName || "Name"}
-              </span>
-            </div>
-            <div className="h-8 w-px bg-border shrink-0" />
-            <div className="flex items-center gap-2">
-              {telegramSaved ? (
-                <>
-                  <CheckCircle2 className="h-4 w-4 text-accent shrink-0" />
-                  <span className="text-sm text-foreground font-medium">{telegramId}</span>
-                  <Button
-                    onClick={() => setTelegramSaved(false)}
-                    variant="ghost"
-                    size="sm"
-                    className="text-[10px] text-accent h-6 px-2"
-                  >
-                    Ändern
-                  </Button>
-                </>
-              ) : (
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-1.5">
-                    <div className="input-gold-shimmer rounded-lg">
-                      <Input
-                        value={telegramId}
-                        onChange={(e) => setTelegramId(e.target.value)}
-                        placeholder="Deine Telegram ID"
-                        className="h-7 text-xs w-44 border-transparent"
-                      />
-                    </div>
-                    <Button
-                      onClick={saveTelegram}
-                      size="sm"
-                      disabled={!telegramId.trim()}
-                      className="h-7 text-xs px-2.5"
-                    >
-                      <Save className="h-3 w-3" />
-                    </Button>
-                  </div>
-                  <Dialog
-                    onOpenChange={(open) => {
-                      setVideoOpen(open);
-                      if (!open) setVideoLoaded(false);
-                    }}
-                  >
-                    <DialogTrigger asChild>
-                      <button className="flex items-center gap-1 text-[10px] text-accent hover:text-accent/80 transition-colors">
-                        <HelpCircle className="h-3 w-3" />
-                        Wo finde ich meine Telegram ID?
-                      </button>
-                    </DialogTrigger>
-                    <DialogContent className="glass-card border-border sm:max-w-lg">
-                      <DialogHeader>
-                        <DialogTitle className="text-foreground">Wo finde ich meine Telegram-ID?</DialogTitle>
-                        <DialogDescription className="text-muted-foreground text-xs">
-                          Schau dir das kurze Video an, um deine Telegram-ID zu finden.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="aspect-video w-full rounded-lg overflow-hidden bg-secondary relative">
-                        {!videoLoaded && (
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="h-8 w-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-                          </div>
-                        )}
-                        {videoOpen && (
-                          <iframe
-                            src="https://www.loom.com/embed/0582b0ea68b942728a535a98f990660b?autoplay=1"
-                            frameBorder="0"
-                            allowFullScreen
-                            allow="autoplay"
-                            className={`w-full h-full transition-opacity duration-300 ${videoLoaded ? "opacity-100" : "opacity-0"}`}
-                            title="Telegram ID finden"
-                            onLoad={() => setVideoLoaded(true)}
-                          />
-                        )}
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+
+            {/* Meta pills cluster */}
+            <div className="flex flex-1 items-center gap-2 min-w-0 max-w-3xl">
+              {/* Name pill (read-only) */}
+              <div className="relative flex-1 min-w-0 group">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-accent transition-colors" />
+                <div
+                  className={`w-full h-9 flex items-center pl-9 pr-3 rounded-full bg-secondary/60 border border-border text-sm truncate ${
+                    userName ? "text-foreground font-medium" : "text-muted-foreground"
+                  }`}
+                  title={userName || "Name"}
+                >
+                  {userName || (lang === "en" ? "Your Name" : "Dein Name")}
                 </div>
-              )}
-            </div>
-            <div className="h-8 w-px bg-border shrink-0" />
-            <div className="flex items-center gap-2">
-              <Users className="h-3.5 w-3.5 text-accent shrink-0" />
-              {groupNameSaved && !editingGroupName ? (
-                <>
-                  <span className="text-sm text-foreground font-medium">{groupName}</span>
-                  <Button
-                    onClick={() => setEditingGroupName(true)}
-                    variant="ghost"
-                    size="sm"
-                    className="text-[10px] text-accent h-6 px-2"
-                  >
-                    <Pencil className="h-3 w-3" />
-                  </Button>
-                </>
-              ) : (
-                <div className="flex items-center gap-1.5">
-                  <div className="input-gold-shimmer rounded-lg">
+              </div>
+
+              {/* Group name pill */}
+              <div className="relative flex-1 min-w-0 group">
+                <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-accent transition-colors z-10" />
+                {groupNameSaved && !editingGroupName ? (
+                  <div className="w-full h-9 flex items-center pl-9 pr-9 rounded-full bg-secondary/60 border border-border text-sm text-foreground font-medium truncate">
+                    <span className="truncate">{groupName}</span>
+                    <button
+                      onClick={() => setEditingGroupName(true)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full hover:bg-accent/10 text-accent transition-colors"
+                      aria-label="Edit group name"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <>
                     <Input
                       value={groupName}
                       onChange={(e) => setGroupName(e.target.value)}
-                      placeholder="Gruppenname"
-                      className="h-7 text-xs w-36 border-transparent"
+                      placeholder={lang === "en" ? "Group Name" : "Gruppenname"}
+                      className="w-full h-9 pl-9 pr-9 rounded-full bg-secondary/60 border-border text-sm"
                     />
+                    <button
+                      onClick={saveGroupName}
+                      disabled={!groupName.trim()}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full hover:bg-accent/10 text-accent disabled:opacity-40 transition-colors"
+                      aria-label="Save group name"
+                    >
+                      <Save className="h-3.5 w-3.5" />
+                    </button>
+                  </>
+                )}
+              </div>
+
+              {/* Telegram ID pill */}
+              <div className="relative flex-1 min-w-0 group">
+                <MessageSquare className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-accent transition-colors z-10" />
+                {telegramSaved ? (
+                  <div className="w-full h-9 flex items-center pl-9 pr-9 rounded-full bg-secondary/60 border border-border text-sm text-foreground font-medium truncate">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-accent shrink-0 mr-1.5" />
+                    <span className="truncate">{telegramId}</span>
+                    <button
+                      onClick={() => setTelegramSaved(false)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full hover:bg-accent/10 text-accent transition-colors"
+                      aria-label="Edit Telegram ID"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </button>
                   </div>
-                  <Button onClick={saveGroupName} size="sm" disabled={!groupName.trim()} className="h-7 text-xs px-2.5">
-                    <Save className="h-3 w-3" />
-                  </Button>
-                </div>
-              )}
+                ) : (
+                  <>
+                    <Input
+                      value={telegramId}
+                      onChange={(e) => setTelegramId(e.target.value)}
+                      placeholder={lang === "en" ? "Telegram ID" : "Telegram ID"}
+                      className="w-full h-9 pl-9 pr-16 rounded-full bg-secondary/60 border-border text-sm"
+                    />
+                    <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
+                      <Dialog
+                        onOpenChange={(open) => {
+                          setVideoOpen(open);
+                          if (!open) setVideoLoaded(false);
+                        }}
+                      >
+                        <DialogTrigger asChild>
+                          <button
+                            className="p-1.5 rounded-full hover:bg-accent/10 text-muted-foreground hover:text-accent transition-colors"
+                            aria-label="Where do I find my Telegram ID?"
+                            title={lang === "en" ? "Where do I find my Telegram ID?" : "Wo finde ich meine Telegram ID?"}
+                          >
+                            <HelpCircle className="h-3.5 w-3.5" />
+                          </button>
+                        </DialogTrigger>
+                        <DialogContent className="glass-card border-border sm:max-w-lg">
+                          <DialogHeader>
+                            <DialogTitle className="text-foreground">Wo finde ich meine Telegram-ID?</DialogTitle>
+                            <DialogDescription className="text-muted-foreground text-xs">
+                              Schau dir das kurze Video an, um deine Telegram-ID zu finden.
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="aspect-video w-full rounded-lg overflow-hidden bg-secondary relative">
+                            {!videoLoaded && (
+                              <div className="absolute inset-0 flex items-center justify-center">
+                                <div className="h-8 w-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+                              </div>
+                            )}
+                            {videoOpen && (
+                              <iframe
+                                src="https://www.loom.com/embed/0582b0ea68b942728a535a98f990660b?autoplay=1"
+                                frameBorder="0"
+                                allowFullScreen
+                                allow="autoplay"
+                                className={`w-full h-full transition-opacity duration-300 ${videoLoaded ? "opacity-100" : "opacity-0"}`}
+                                title="Telegram ID finden"
+                                onLoad={() => setVideoLoaded(true)}
+                              />
+                            )}
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                      <button
+                        onClick={saveTelegram}
+                        disabled={!telegramId.trim()}
+                        className="p-1.5 rounded-full hover:bg-accent/10 text-accent disabled:opacity-40 transition-colors"
+                        aria-label="Save Telegram ID"
+                      >
+                        <Save className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
-            <div className="ml-auto flex items-center gap-2">
-              <div className="flex items-center gap-1.5">
-                <Zap className="h-3.5 w-3.5 text-accent shrink-0" />
-                <div className="input-gold-shimmer rounded-lg">
-                  <span className="h-7 text-sm w-24 font-semibold border-transparent">Umsatz: €{umsatz || "0"}</span>
-                </div>
+
+            {/* Stats */}
+            <div className="flex items-center gap-3 shrink-0 pl-4 border-l border-border">
+              <div className="text-right">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold leading-none">
+                  {lang === "en" ? "Revenue" : "Umsatz"}
+                </p>
+                <p className="text-foreground font-semibold text-base leading-tight mt-0.5">€{umsatz || "0"}</p>
               </div>
               <Badge
                 className={
