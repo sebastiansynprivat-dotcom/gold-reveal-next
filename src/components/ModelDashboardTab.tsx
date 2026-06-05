@@ -840,15 +840,35 @@ export default function ModelDashboardTab() {
       const pct = cp.percentage > 0 ? cp.percentage : fallback;
       return s + (cp.revenue || 0) * pct / 100;
     }, 0);
-    const fbInBase = convertToBase(fb, "USD");
-    const calculatedRaw = (fbInBase * pctFb) / 100 + (ml * pctMl) / 100 + (br * pctBr) / 100 + customsTotal;
+    // Sum main month + all additional billing months that have data fetched
+    let fbTotal = fb;
+    let mlTotal = ml;
+    let brTotal = br;
+    for (const eb of extraBillings) {
+      if (!eb.data) continue;
+      fbTotal += eb.data.fourbased || 0;
+      mlTotal += eb.data.maloum || 0;
+      brTotal += eb.data.brezzels || 0;
+    }
+    const fbInBase = convertToBase(fbTotal, "USD");
+    const calculatedRaw = (fbInBase * pctFb) / 100 + (mlTotal * pctMl) / 100 + (brTotal * pctBr) / 100 + customsTotal;
     const calculated = Math.round(calculatedRaw * 100) / 100;
     setBillingShare(calculated);
-    setPayoutRevenueForMonth({ fourbased: fb, maloum: ml, brezzels: br });
+    setPayoutRevenueForMonth({ fourbased: fbTotal, maloum: mlTotal, brezzels: brTotal });
     setShareCalculated(true);
 
-    const startD = new Date(fetchYear, fetchMonth - 1, 1);
-    const endD = new Date(fetchYear, fetchMonth, 0);
+    // Service period spans from earliest to latest selected month (main + extras with data)
+    const allPairs = [
+      { y: fetchYear, m: fetchMonth },
+      ...extraBillings.filter((e) => e.data).map((e) => ({ y: e.year, m: e.month })),
+    ];
+    const keys = allPairs.map((p) => p.y * 12 + (p.m - 1));
+    const minKey = Math.min(...keys);
+    const maxKey = Math.max(...keys);
+    const minY = Math.floor(minKey / 12); const minM = (minKey % 12) + 1;
+    const maxY = Math.floor(maxKey / 12); const maxM = (maxKey % 12) + 1;
+    const startD = new Date(minY, minM - 1, 1);
+    const endD = new Date(maxY, maxM, 0);
     const fmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
     setModelForm((prev: any) => ({
       ...prev,
@@ -858,7 +878,7 @@ export default function ModelDashboardTab() {
       invoice_service_period_start: fmt(startD),
       invoice_service_period_end: fmt(endD),
     }));
-  }, [fetchedPayoutRevenue, modelForm.revenue_percentage, modelForm.revenue_percentage_fourbased, modelForm.revenue_percentage_maloum, modelForm.revenue_percentage_brezzels, customPlatforms, convertToBase, fetchYear, fetchMonth]);
+  }, [fetchedPayoutRevenue, extraBillings, modelForm.revenue_percentage, modelForm.revenue_percentage_fourbased, modelForm.revenue_percentage_maloum, modelForm.revenue_percentage_brezzels, customPlatforms, convertToBase, fetchYear, fetchMonth]);
 
 
   // ─── Per-model platform revenue (for selected model) — converted to base currency ───
