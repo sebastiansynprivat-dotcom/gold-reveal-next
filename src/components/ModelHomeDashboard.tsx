@@ -845,6 +845,7 @@ export default function ModelHomeDashboard({
           {detailInvoice && (() => {
             const cn = detailInvoice;
             const snaps = payoutSnapshots[cn.credit_note_number] || [];
+            const invoiceCurrency = (snaps[0]?.billed_snapshot as any)?.invoice_currency || modelCurrency;
             return (
               <>
                 <DialogHeader>
