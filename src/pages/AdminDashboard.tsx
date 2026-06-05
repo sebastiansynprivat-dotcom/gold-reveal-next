@@ -69,6 +69,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import AdminPushSettings from "@/components/admin/AdminPushSettings";
+import AdminWalletPass from "@/components/admin/AdminWalletPass";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
@@ -7882,7 +7883,10 @@ export default function AdminDashboard() {
               )}
 
               {activeTab === "push_settings" && (
-                <AdminPushSettings />
+                <div className="space-y-4">
+                  <AdminWalletPass />
+                  <AdminPushSettings />
+                </div>
               )}
 
               {activeTab === "notifications" && (
