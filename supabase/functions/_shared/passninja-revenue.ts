@@ -30,6 +30,42 @@ type RevenueSnapshot = {
   updated: string;
 };
 
+async function fetchRequiredPassKeys(): Promise<string[]> {
+  try {
+    const res = await fetch(`${PASSNINJA_BASE}/passtypes/keys/${encodeURIComponent(TEMPLATE_ID)}`, {
+      method: "GET",
+      headers: passninjaHeaders(),
+    });
+    const text = await res.text();
+    if (!res.ok) {
+      console.error("PassNinja required keys lookup failed:", res.status, text);
+      return [];
+    }
+    const data = JSON.parse(text);
+    return Array.isArray(data?.keys) ? data.keys.filter((key: unknown) => typeof key === "string") : [];
+  } catch (e) {
+    console.error("PassNinja required keys lookup error:", e);
+    return [];
+  }
+}
+
+function valueForKey(key: string, r: RevenueSnapshot): string {
+  const k = key.toLowerCase().replace(/[._-]/g, "");
+  if (k.includes("today") || k.includes("heute") || k.includes("daily")) return r.today;
+  if (k.includes("month") || k.includes("monat") || k.includes("level")) return r.month;
+  if (k.includes("maloum")) return r.maloum;
+  if (k.includes("brezzels")) return r.brezzels;
+  if (k.includes("4based") || k.includes("fourbased")) return r.fourbased;
+  if (k.includes("fansyme") || k.includes("fansy")) return r.fansyme;
+  if (k.includes("sales")) return r.salesToday;
+  if (k.includes("streak")) return "🔥";
+  if (k.includes("updated") || k.includes("date") || k.includes("time")) return r.updated;
+  if (k.includes("name")) return "SheX Dashboard";
+  if (k.includes("discount") || k.includes("subtitle") || k.includes("note")) return `Heute ${r.today} · Monat ${r.month}`;
+  if (k.includes("nfc")) return `shex:${r.month.replace(/\s/g, "")}`.slice(0, 64);
+  return `Heute ${r.today}`;
+}
+
 export async function buildRevenueSnapshot(): Promise<RevenueSnapshot> {
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
@@ -83,8 +119,11 @@ export async function buildRevenueSnapshot(): Promise<RevenueSnapshot> {
 export async function buildPassFieldVariants() {
   const r = await buildRevenueSnapshot();
   const subtitle = `Heute ${r.today} · Monat ${r.month}`;
+  const requiredKeys = await fetchRequiredPassKeys();
+  const requiredFields = Object.fromEntries(requiredKeys.map((key) => [key, valueForKey(key, r)]));
 
   return [
+    ...(requiredKeys.length ? [{ name: "passninja-required-keys", fields: requiredFields }] : []),
     {
       name: "shex-custom",
       fields: {
