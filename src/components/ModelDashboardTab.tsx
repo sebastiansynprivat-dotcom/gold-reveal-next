@@ -811,6 +811,26 @@ export default function ModelDashboardTab() {
     return Math.round(sum * 100) / 100;
   }, [payoutRevenueForMonth, fetchedPayoutRevenue, customPlatforms, modelForm.revenue_percentage, modelForm.revenue_percentage_fourbased, modelForm.revenue_percentage_maloum, modelForm.revenue_percentage_brezzels, convertToBase]);
 
+  // ─── Auto-fill Provider-Invoice Felder aus dem aktuell gewählten Fetch-Zeitraum ───
+  useEffect(() => {
+    if (!fetchedPayoutRevenue) return;
+    const fromY = fetchYear, fromM = fetchMonth;
+    const toY = rangeMode ? fetchYearTo : fetchYear;
+    const toM = rangeMode ? fetchMonthTo : fetchMonth;
+    const lastDay = new Date(toY, toM, 0).getDate();
+    const periodStart = `${fromY}-${String(fromM).padStart(2, "0")}-01`;
+    const periodEnd = `${toY}-${String(toM).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+    setModelForm((prev) => ({
+      ...prev,
+      invoice_net_amount: verdienst,
+      invoice_description: prev.invoice_description || "Creator revenue share for digital content",
+      invoice_currency: prev.invoice_currency || prev.currency || "EUR",
+      invoice_service_period_start: periodStart,
+      invoice_service_period_end: periodEnd,
+    }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchedPayoutRevenue, fetchMonth, fetchYear, fetchMonthTo, fetchYearTo, rangeMode, verdienst]);
+
   // ─── Create model ───
   const handleCreateModel = async () => {
     if (!newModel.name.trim()) {
