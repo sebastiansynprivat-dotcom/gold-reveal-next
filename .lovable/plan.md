@@ -1,15 +1,23 @@
-## Bug
-`loadModelAccounts` still maps `model_dashboard.{fourbased,maloum,brezzels}_revenue` into `dashboardRevenues` / `platformRevenues`. That call resolves after the new accounts_data effect and overwrites it with 0s, so the hero stays at 0,00 EUR even though `accounts_data` has rows.
+## Add "name" (real name) field to chatter signup, profiles table, and dashboard header
 
-## Fix
-In `src/components/ModelDashboardTab.tsx`, inside `loadModelAccounts` (lines ~511–546):
+### 1. Database
+Migration on `public.profiles`:
+- Add column `name text` (nullable).
 
-- Keep loading `model_dashboard` only for `last_fetched_at / month / year` (used by the "last fetched" UI).
-- **Stop** populating `revMap` / `platRevMap` from `model_dashboard`.
-- Remove the trailing `setDashboardRevenues(revMap)` and `setPlatformRevenues(platRevMap)` calls — those state values are now owned exclusively by the accounts_data effect.
+### 2. Signup form (`src/pages/Auth.tsx`)
+- Add new state `name` and a new input field at the top of the signup form (above the group name field), placeholder "Dein Name" / "Your name".
+- Validate it's non-empty on submit (same pattern as `groupName`).
+- Pass it through `signUp(email, password, { group_name, name })` so `handle_new_user_profile` trigger / metadata path stores it.
+- Add translation keys: `auth.placeholder.name`, `auth.error.nameRequired`.
 
-After this, `dashboardRevenues` is sourced solely from `accounts_data.total` for the active period, and the hero plus per-platform cards reflect real data.
+### 3. Persist into profiles
+Update the `handle_new_user_profile` trigger to also read `raw_user_meta_data->>'name'` into `profiles.name` (done in the same migration).
 
-## Out of scope
-- Editable per-platform input still writes to `model_dashboard` (unchanged).
-- "Anteil berechnen" / payout flow (unchanged).
+### 4. Dashboard header (`src/pages/Dashboard.tsx`)
+- Load `name` along with `telegram_id, group_name, offer` from profiles.
+- Add a new section in the header (between logo/title and Telegram block, with a `User` icon + divider) showing the name — placeholder text "Name" when empty. Read-only display, matches existing header styling.
+- Mobile variant: add the same compact row.
+
+### Out of scope
+- No edit-in-header UI for name (display only, placeholder when empty).
+- No changes to admin views, RLS, or downstream tables.

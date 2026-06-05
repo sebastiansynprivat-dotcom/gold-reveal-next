@@ -2094,6 +2094,7 @@ export type Database = {
           group_name: string
           id: string
           language: string
+          name: string | null
           offer: string | null
           pwa_installed: boolean
           telegram_id: string | null
@@ -2109,6 +2110,7 @@ export type Database = {
           group_name?: string
           id?: string
           language?: string
+          name?: string | null
           offer?: string | null
           pwa_installed?: boolean
           telegram_id?: string | null
@@ -2124,6 +2126,7 @@ export type Database = {
           group_name?: string
           id?: string
           language?: string
+          name?: string | null
           offer?: string | null
           pwa_installed?: boolean
           telegram_id?: string | null
