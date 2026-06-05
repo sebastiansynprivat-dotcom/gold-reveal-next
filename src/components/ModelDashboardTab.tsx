@@ -152,6 +152,7 @@ interface ModelRow {
   revenue_percentage_fourbased?: number;
   revenue_percentage_maloum?: number;
   revenue_percentage_brezzels?: number;
+  fourbased_payout_configured?: boolean;
   crypto_address: string;
   currency: string;
   contract_file_path: string;
