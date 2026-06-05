@@ -1,36 +1,37 @@
-## Plan: Rename `accounts_revenue` → `accounts_data`, add fields, rename + extend edge function
+## Extend `update-account` to upsert metrics into `accounts_data`
 
-### 1. Database migration
-- Rename table `public.accounts_revenue` → `public.accounts_data` (preserves rows, indexes, policies, unique constraint, FKs).
-- Add nullable columns:
-  - `followers` integer
-  - `subscribers` integer
-  - `oldest_chat` integer
-  - `unread_chats` integer
-  - `mass_dms` integer
-- Existing columns (`account_id`, `date`, `platform`, `total`, `amounts`) and the `(account_id, date, platform)` unique constraint stay untouched.
-- Re-assert GRANTs for `authenticated` and `service_role` on the renamed table.
+Add a new payload shape to the existing `update-account` edge function so it can write daily metrics into `accounts_data` alongside its current accounts-table updates. Existing shapes (legacy `{platform, account_email, updates}` and batch `[{account_id, updates...}]`) stay untouched.
 
-### 2. Edge function rename + extension
-- Create `supabase/functions/ingest-account-data/index.ts` (replaces `ingest-account-revenue`).
-- Delete the old `ingest-account-revenue` function.
-- Update `supabase/config.toml`: remove old entry, add `[functions.ingest-account-data]` with `verify_jwt = false`.
-- Keep existing auth (`REVENUE_INGEST_API_KEY`), CORS, batching, grouping by `(account_id, date, platform)`, dedupe-by-`purchase_id`, and response shape.
-- Extend payload schema — each row may include (all optional except the existing required ones):
-  - `purchase_id` + `amount` → revenue entry (existing behavior, still dedup'd)
-  - `followers`, `subscribers`, `oldest_chat`, `unread_chats`, `mass_dms` (all integers)
-- Validation:
-  - Revenue fields (`purchase_id`, `amount`) become optional; a row must contain either a revenue entry OR at least one metric field.
-  - Type-check each metric field when present (integer); reject invalid types with 400.
-- Upsert logic per `(account_id, date, platform)` group:
-  - Merge revenue as today (sum new amounts into `total`, append deduped entries to `amounts`).
-  - For metric fields: take the last non-null value seen in the batch for that group and overwrite the column (latest-wins). Null/omitted = leave existing value untouched.
-- Response stays `{ success, processed, skipped_duplicates, groups }` and adds `metrics_updated` count.
+### New accepted payload
 
-### 3. Frontend / codebase references
-- Search and replace `accounts_revenue` → `accounts_data` across the codebase (admin dashboard queries, hooks, types).
-- Search and replace any client invocations of `ingest-account-revenue` → `ingest-account-data` (if any exist in the frontend).
-- Supabase types regenerate automatically after the migration.
+Single object or array of:
+```
+{
+  account_id: uuid,
+  date: "YYYY-MM-DD",
+  oldest_chat?: int,
+  unread_chats?: int,
+  mass_dms?: int
+}
+```
 
-### Out of scope
-- No new admin UI for displaying followers / subscribers / oldest_chat / unread_chats / mass_dms — only the ingest path and storage.
+A row is treated as a "metrics row" when it contains `date` plus at least one of `oldest_chat`, `unread_chats`, `mass_dms`. Mixed batches (some metrics rows, some accounts-update rows) are supported — each item is dispatched by shape.
+
+### Logic
+
+1. Validate `account_id` (UUID) and `date` (`YYYY-MM-DD`); each metric, if present, must be an integer.
+2. Look up the account once to get its `platform` (required by `accounts_data` unique key `account_id+date+platform`). If the account doesn't exist, return `{error: "Account not found"}` for that item.
+3. Upsert into `accounts_data` keyed on `(account_id, date, platform)`:
+   - Only the provided metric fields are written (latest-wins overwrite).
+   - `total` / `amounts` are left untouched on existing rows; new rows get `total=0`, `amounts=[]`.
+4. Response includes per-item result with `account_id`, `date`, `metrics_updated: true/false`, and any error.
+
+### Auth & conventions
+
+- Keeps existing `x-api-key` check against `ACCOUNTS_SECRET_KEY`.
+- Uses the same service-role client already created in the function.
+- No changes to `config.toml`, `ingest-account-data`, the database schema, or any frontend code.
+
+### Files
+
+- `supabase/functions/update-account/index.ts` — add detection + handler for the new metrics shape.

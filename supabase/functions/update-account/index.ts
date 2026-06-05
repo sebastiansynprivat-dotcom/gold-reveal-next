@@ -33,7 +33,10 @@ const ALLOWED = new Set([
 ]);
 
 const BATCH_FIELDS = ["post", "message", "main_message", "follow_message", "media"] as const;
+const METRIC_FIELDS = ["oldest_chat", "unread_chats", "mass_dms"] as const;
+type MetricField = typeof METRIC_FIELDS[number];
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 function pickAllowed(updates: Record<string, unknown>) {
   const sanitized: Record<string, unknown> = {};
@@ -51,6 +54,99 @@ function extractBatchItem(raw: any) {
     if (k in raw) updates[k] = raw[k];
   }
   return { account_id: raw.account_id as string, updates };
+}
+
+function isMetricsItem(raw: any): boolean {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return false;
+  if (typeof raw.account_id !== "string" || !UUID_RE.test(raw.account_id)) return false;
+  if (typeof raw.date !== "string" || !DATE_RE.test(raw.date)) return false;
+  return METRIC_FIELDS.some((f) => raw[f] !== undefined && raw[f] !== null);
+}
+
+function extractMetricsItem(raw: any):
+  | { account_id: string; date: string; metrics: Partial<Record<MetricField, number>> }
+  | { error: string } {
+  const metrics: Partial<Record<MetricField, number>> = {};
+  for (const f of METRIC_FIELDS) {
+    const v = raw[f];
+    if (v === undefined || v === null) continue;
+    if (typeof v !== "number" || !Number.isFinite(v) || !Number.isInteger(v)) {
+      return { error: `${f} must be an integer` };
+    }
+    metrics[f] = v;
+  }
+  return { account_id: raw.account_id as string, date: raw.date as string, metrics };
+}
+
+async function processMetricsItems(supabase: any, items: any[]) {
+  const results: Array<{
+    account_id: string;
+    date: string;
+    metrics_updated: boolean;
+    error?: string;
+  }> = [];
+
+  const accountIds = Array.from(new Set(items.map((it) => it.account_id)));
+  const { data: accs, error: accErr } = await supabase
+    .from("accounts")
+    .select("id, platform")
+    .in("id", accountIds);
+  if (accErr) return { error: accErr.message, results };
+
+  const platformById = new Map<string, string>();
+  for (const a of (accs ?? []) as any[]) {
+    if (a.platform) platformById.set(a.id, a.platform);
+  }
+
+  for (const raw of items) {
+    const parsed = extractMetricsItem(raw);
+    if ("error" in parsed) {
+      results.push({ account_id: raw.account_id, date: raw.date, metrics_updated: false, error: parsed.error });
+      continue;
+    }
+    const platform = platformById.get(parsed.account_id);
+    if (!platform) {
+      results.push({
+        account_id: parsed.account_id,
+        date: parsed.date,
+        metrics_updated: false,
+        error: "Account not found or missing platform",
+      });
+      continue;
+    }
+
+    const { data: existing, error: selErr } = await supabase
+      .from("accounts_data")
+      .select("total, amounts")
+      .eq("account_id", parsed.account_id)
+      .eq("date", parsed.date)
+      .eq("platform", platform)
+      .maybeSingle();
+    if (selErr) {
+      results.push({ account_id: parsed.account_id, date: parsed.date, metrics_updated: false, error: selErr.message });
+      continue;
+    }
+
+    const row: Record<string, unknown> = {
+      account_id: parsed.account_id,
+      date: parsed.date,
+      platform,
+      total: existing?.total ?? 0,
+      amounts: existing?.amounts ?? [],
+      ...parsed.metrics,
+    };
+
+    const { error: upErr } = await supabase
+      .from("accounts_data")
+      .upsert(row, { onConflict: "account_id,date,platform" });
+    if (upErr) {
+      results.push({ account_id: parsed.account_id, date: parsed.date, metrics_updated: false, error: upErr.message });
+    } else {
+      results.push({ account_id: parsed.account_id, date: parsed.date, metrics_updated: true });
+    }
+  }
+
+  return { results };
 }
 
 Deno.serve(async (req) => {
@@ -73,6 +169,27 @@ Deno.serve(async (req) => {
     const asArray = Array.isArray(body) ? body : null;
     const isBatchItem =
       !asArray && body && typeof body === "object" && typeof (body as any).account_id === "string";
+
+    // --- Metrics shape: items with date + at least one metric field -> accounts_data upsert ---
+    if (asArray || isBatchItem) {
+      const allItems = asArray ?? [body];
+      const metricsItems = allItems.filter((it: any) => isMetricsItem(it));
+      const accountUpdateItems = allItems.filter((it: any) => !isMetricsItem(it));
+
+      if (metricsItems.length > 0 && accountUpdateItems.length === 0) {
+        const { error, results } = await processMetricsItems(supabase, metricsItems);
+        if (error) return json({ error, results }, 500);
+        const updated = results!.filter((r) => r.metrics_updated).length;
+        return json({ success: true, metrics_updated: updated, results });
+      }
+
+      if (metricsItems.length > 0 && accountUpdateItems.length > 0) {
+        return json(
+          { error: "Mixed payload not supported: send metrics rows and account-update rows in separate requests" },
+          400,
+        );
+      }
+    }
 
     if (asArray || isBatchItem) {
       const items = (asArray ?? [body])
