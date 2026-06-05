@@ -7,8 +7,8 @@ export const TEMPLATE_ID = "ptk_0x391";
 export function passninjaHeaders() {
   return {
     "Content-Type": "application/json",
-    "x-account-id": Deno.env.get("PASSNINJA_ACCOUNT_ID")!,
-    "x-api-key": Deno.env.get("PASSNINJA_API_KEY")!,
+    "X-ACCOUNT-ID": Deno.env.get("PASSNINJA_ACCOUNT_ID")!,
+    "X-API-KEY": Deno.env.get("PASSNINJA_API_KEY")!,
   };
 }
 
