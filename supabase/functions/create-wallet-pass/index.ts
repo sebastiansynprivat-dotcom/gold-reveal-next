@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
       const res = await fetch(`${PASSNINJA_BASE}/passes`, {
         method: "POST",
         headers: passninjaHeaders(),
-        body: JSON.stringify({ passTemplate: TEMPLATE_ID, pass: variant.fields }),
+        body: JSON.stringify({ passType: TEMPLATE_ID, pass: variant.fields }),
       });
       const text = await res.text();
       if (res.ok) {
@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
 
     // PassNinja returns: { id, urls: { landing, download }, ... } – be defensive
     const passUrl = data?.urls?.landing || data?.urls?.download || data?.url || data?.landingUrl;
-    const serial = data?.id || data?.serialNumber || data?.passId;
+    const serial = data?.serialNumber || data?.id || data?.passId;
 
     if (!passUrl || !serial) {
       console.error("Unexpected PassNinja response shape:", data);
