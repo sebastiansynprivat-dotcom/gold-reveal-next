@@ -463,6 +463,10 @@ export default function ModelDashboardTab() {
     brezzels: number | null;
   } | null>(null);
   const [fetchRevenueTick, setFetchRevenueTick] = useState(0);
+  // How many consecutive months to fetch / bill starting from (fetchMonth, fetchYear)
+  const [fetchMonthsCount, setFetchMonthsCount] = useState<number>(1);
+  // Per-platform errors from the last fetch (e.g. password incorrect)
+  const [fetchErrors, setFetchErrors] = useState<Record<string, { code?: string; message: string }>>({});
 
   // ─── Custom platforms (per-model, localStorage) ───
   type CustomPlatform = { id: string; name: string; revenue: number; percentage: number };
@@ -601,35 +605,43 @@ export default function ModelDashboardTab() {
     return () => { cancelled = true; };
   }, [selectedModelId, modelAccounts, revenuePeriod]);
 
-  // ─── Query payout_revenue for the selected fetch month/year ───
+  // ─── Query payout_revenue summed across selected month range ───
   useEffect(() => {
     if (!selectedModelId) {
       setFetchedPayoutRevenue(null);
       return;
     }
     (async () => {
+      // Build list of (year, month) pairs for the range
+      const pairs: Array<{ y: number; m: number }> = [];
+      for (let i = 0; i < Math.max(1, fetchMonthsCount); i++) {
+        const d = new Date(fetchYear, (fetchMonth - 1) + i, 1);
+        pairs.push({ y: d.getFullYear(), m: d.getMonth() + 1 });
+      }
       const { data, error } = await (supabase as any)
         .from("payout_revenue")
-        .select("fourbased_revenue, maloum_revenue, brezzels_revenue")
-        .eq("model_id", selectedModelId)
-        .eq("last_fetched_month", fetchMonth)
-        .eq("last_fetched_year", fetchYear)
-        .maybeSingle();
-      if (error) {
+        .select("fourbased_revenue, maloum_revenue, brezzels_revenue, last_fetched_month, last_fetched_year")
+        .eq("model_id", selectedModelId);
+      if (error || !data || (data as any[]).length === 0) {
         setFetchedPayoutRevenue(null);
         return;
       }
-      if (data) {
-        setFetchedPayoutRevenue({
-          fourbased: Number((data as any).fourbased_revenue) ?? 0,
-          maloum: Number((data as any).maloum_revenue) ?? 0,
-          brezzels: Number((data as any).brezzels_revenue) ?? 0,
-        });
-      } else {
-        setFetchedPayoutRevenue(null);
+      const set = new Set(pairs.map((p) => `${p.y}-${p.m}`));
+      let fb = 0, ml = 0, br = 0;
+      let any = false;
+      for (const r of data as any[]) {
+        if (!set.has(`${r.last_fetched_year}-${r.last_fetched_month}`)) continue;
+        any = true;
+        fb += Number(r.fourbased_revenue) || 0;
+        ml += Number(r.maloum_revenue) || 0;
+        br += Number(r.brezzels_revenue) || 0;
       }
+      setFetchedPayoutRevenue(any ? { fourbased: fb, maloum: ml, brezzels: br } : null);
     })();
-  }, [selectedModelId, fetchMonth, fetchYear, fetchRevenueTick]);
+  }, [selectedModelId, fetchMonth, fetchYear, fetchMonthsCount, fetchRevenueTick]);
+
+
+
 
   // ─── Load selected model data into form ───
   useEffect(() => {
@@ -730,6 +742,46 @@ export default function ModelDashboardTab() {
     },
     [fxRates, baseCurrency],
   );
+
+  // ─── Auto-compute "Gesamt Payouts" + billing share from fetched values ───
+  useEffect(() => {
+    if (!fetchedPayoutRevenue) {
+      setShareCalculated(false);
+      setBillingShare(0);
+      setPayoutRevenueForMonth(null);
+      return;
+    }
+    const fb = fetchedPayoutRevenue.fourbased ?? 0;
+    const ml = fetchedPayoutRevenue.maloum ?? 0;
+    const br = fetchedPayoutRevenue.brezzels ?? 0;
+    const fallback = modelForm.revenue_percentage || 0;
+    const pctFb = modelForm.revenue_percentage_fourbased || fallback;
+    const pctMl = modelForm.revenue_percentage_maloum || fallback;
+    const pctBr = modelForm.revenue_percentage_brezzels || fallback;
+    const customsTotal = customPlatforms.reduce((s, cp) => {
+      const pct = cp.percentage > 0 ? cp.percentage : fallback;
+      return s + (cp.revenue || 0) * pct / 100;
+    }, 0);
+    const fbInBase = convertToBase(fb, "USD");
+    const calculatedRaw = (fbInBase * pctFb) / 100 + (ml * pctMl) / 100 + (br * pctBr) / 100 + customsTotal;
+    const calculated = Math.round(calculatedRaw * 100) / 100;
+    setBillingShare(calculated);
+    setPayoutRevenueForMonth({ fourbased: fb, maloum: ml, brezzels: br });
+    setShareCalculated(true);
+
+    const startD = new Date(fetchYear, fetchMonth - 1, 1);
+    const endD = new Date(fetchYear, fetchMonth - 1 + Math.max(1, fetchMonthsCount), 0);
+    const fmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+    setModelForm((prev: any) => ({
+      ...prev,
+      invoice_net_amount: calculated,
+      invoice_description: prev.invoice_description || "Creator revenue share for digital content",
+      invoice_currency: prev.currency || "EUR",
+      invoice_service_period_start: fmt(startD),
+      invoice_service_period_end: fmt(endD),
+    }));
+  }, [fetchedPayoutRevenue, modelForm.revenue_percentage, modelForm.revenue_percentage_fourbased, modelForm.revenue_percentage_maloum, modelForm.revenue_percentage_brezzels, customPlatforms, convertToBase, fetchYear, fetchMonth, fetchMonthsCount]);
+
 
   // ─── Per-model platform revenue (for selected model) — converted to base currency ───
   const selectedModelPlatformRevenue = useMemo(() => {
@@ -1977,12 +2029,22 @@ export default function ModelDashboardTab() {
                       </SelectContent>
                     </Select>
                     <Select value={String(fetchYear)} onValueChange={(v) => setFetchYear(Number(v))}>
-                      <SelectTrigger className="w-[100px] h-9 text-sm bg-secondary/40 border-border/40">
+                      <SelectTrigger className="w-[90px] h-9 text-sm bg-secondary/40 border-border/40">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
                         {[now.getFullYear() - 2, now.getFullYear() - 1, now.getFullYear(), now.getFullYear() + 1].map((y) => (
                           <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select value={String(fetchMonthsCount)} onValueChange={(v) => setFetchMonthsCount(Number(v))}>
+                      <SelectTrigger className="w-[90px] h-9 text-sm bg-secondary/40 border-border/40" title="Anzahl Monate">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[1,2,3,4,5,6,7,8,9,10,11,12].map((n) => (
+                          <SelectItem key={n} value={String(n)}>{n} {n === 1 ? "Monat" : "Monate"}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -1993,36 +2055,55 @@ export default function ModelDashboardTab() {
                       className="flex-1 h-9 px-3 bg-gradient-to-r from-accent/90 to-accent text-accent-foreground hover:from-accent hover:to-accent/90 shadow-sm"
                       onClick={async () => {
                         if (!selectedModelId) return;
-                        const sameMonth =
-                          lastFetchInfo.month === fetchMonth && lastFetchInfo.year === fetchYear;
-                        if (sameMonth && !confirmOverwrite) {
-                          if (!confirm(`Werte für ${String(fetchMonth).padStart(2,"0")}/${fetchYear} bereits vorhanden. Überschreiben?`)) return;
-                          setConfirmOverwrite(true);
+                        const count = Math.max(1, fetchMonthsCount);
+                        // Build (year, month) pairs
+                        const pairs: Array<{ y: number; m: number }> = [];
+                        for (let i = 0; i < count; i++) {
+                          const d = new Date(fetchYear, (fetchMonth - 1) + i, 1);
+                          pairs.push({ y: d.getFullYear(), m: d.getMonth() + 1 });
+                        }
+                        if (!confirmOverwrite && count === 1) {
+                          const sameMonth =
+                            lastFetchInfo.month === fetchMonth && lastFetchInfo.year === fetchYear;
+                          if (sameMonth) {
+                            if (!confirm(`Werte für ${String(fetchMonth).padStart(2,"0")}/${fetchYear} bereits vorhanden. Überschreiben?`)) return;
+                            setConfirmOverwrite(true);
+                          }
                         }
                         setFetchingRevenue(true);
+                        const allErrs: Array<{ platform?: string; accountId?: string; code?: string; message?: string }> = [];
+                        let succeeded = 0;
                         try {
-                          const { data, error } = await supabase.functions.invoke("fetch-model-revenue", {
-                            body: { model_id: selectedModelId, month: fetchMonth, year: fetchYear },
-                          });
-                           if (error) throw new Error(error.message);
-                           if ((data as any)?.error) throw new Error((data as any).error);
-                           const errs = ((data as any)?.errors ?? []) as Array<{ platform?: string; accountId?: string; code?: string; message?: string }>;
-                           if (errs.length > 0) {
-                             toast.error(
-                               `Umsatz teilweise abgerufen — ${errs.length} Fehler`,
-                               {
-                                  description: errs
-                                    .map(e => `${e.platform ?? "?"}: ${e.message ?? "Unbekannter Fehler"}`)
-                                    .join("\n"),
-                                 duration: 10000,
-                                 style: { whiteSpace: "pre-line" },
-                               }
-                             );
-                           } else {
-                             toast.success(`Umsatz für ${String(fetchMonth).padStart(2,"0")}/${fetchYear} aktualisiert ✅`);
-                           }
-                           await loadModelAccounts(selectedModelId);
-                           setFetchRevenueTick(t => t + 1);
+                          for (const { y, m } of pairs) {
+                            const { data, error } = await supabase.functions.invoke("fetch-model-revenue", {
+                              body: { model_id: selectedModelId, month: m, year: y },
+                            });
+                            if (error) { allErrs.push({ message: `${String(m).padStart(2,"0")}/${y}: ${error.message}` }); continue; }
+                            if ((data as any)?.error) { allErrs.push({ message: `${String(m).padStart(2,"0")}/${y}: ${(data as any).error}` }); continue; }
+                            const errs = ((data as any)?.errors ?? []) as Array<{ platform?: string; accountId?: string; code?: string; message?: string }>;
+                            for (const e of errs) allErrs.push({ ...e, message: `${String(m).padStart(2,"0")}/${y} · ${e.platform ?? "?"}: ${e.message ?? "Unbekannter Fehler"}` });
+                            succeeded++;
+                          }
+                          // Map latest errors per platform for inline UI
+                          const errMap: Record<string, { code?: string; message: string }> = {};
+                          for (const e of allErrs) {
+                            if (e.platform) errMap[e.platform] = { code: e.code, message: e.message };
+                          }
+                          setFetchErrors(errMap);
+                          if (allErrs.length > 0) {
+                            toast.error(
+                              `Umsatz teilweise abgerufen — ${allErrs.length} Fehler`,
+                              {
+                                description: allErrs.map(e => e.message).join("\n"),
+                                duration: 10000,
+                                style: { whiteSpace: "pre-line" },
+                              }
+                            );
+                          } else {
+                            toast.success(`Umsatz für ${count} Monat${count === 1 ? "" : "e"} aktualisiert ✅`);
+                          }
+                          await loadModelAccounts(selectedModelId);
+                          setFetchRevenueTick(t => t + 1);
                         } catch (err: any) {
                           toast.error(err.message || "Umsatz konnte nicht abgerufen werden");
                         } finally {
@@ -2060,100 +2141,39 @@ export default function ModelDashboardTab() {
                   </div>
                 </div>
 
-                {/* Billing month + "Anteil berechnen" — basis for Provider Invoice */}
-                <div className="rounded-xl border border-accent/20 bg-accent/[0.03] p-3 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                      Abrechnungsmonat
-                    </p>
-                    <span className="text-[9px] text-muted-foreground/70">
-                      Basis für Provider Invoice
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="month"
-                      value={billingMonth}
-                      onChange={(e) => {
-                        setBillingMonth(e.target.value);
-                        setShareCalculated(false);
-                        setBillingShare(0);
-                        setPayoutRevenueForMonth(null);
-                      }}
-                      className="flex-1 h-9 text-sm bg-secondary/40 border-border/40"
-                    />
-                    <Button
-                      type="button"
-                      size="sm"
-                      className="h-9 px-3 bg-gradient-to-r from-accent/90 to-accent text-accent-foreground hover:from-accent hover:to-accent/90 shadow-sm"
-                      onClick={async () => {
-                        if (!selectedModelId) return;
-                        const [y, m] = billingMonth.split("-").map(Number);
-                        if (!y || !m) {
-                          toast.error("Bitte gültigen Abrechnungsmonat wählen");
-                          return;
-                        }
-                        const { data: payout, error: payoutErr } = await (supabase as any)
-                          .from("payout_revenue")
-                          .select("fourbased_revenue, maloum_revenue, brezzels_revenue")
-                          .eq("model_id", selectedModelId)
-                          .eq("last_fetched_year", y)
-                          .eq("last_fetched_month", m)
-                          .maybeSingle();
-                        if (payoutErr) {
-                          toast.error(payoutErr.message);
-                          return;
-                        }
-                        if (!payout) {
-                          toast.error(`Keine Umsätze in payout_revenue für ${String(m).padStart(2, "0")}/${y}`);
-                          return;
-                        }
-                        const fb = Number((payout as any).fourbased_revenue) || 0;
-                        const ml = Number((payout as any).maloum_revenue) || 0;
-                        const br = Number((payout as any).brezzels_revenue) || 0;
-                        const fallback = modelForm.revenue_percentage || 0;
-                        const pctFb = modelForm.revenue_percentage_fourbased || fallback;
-                        const pctMl = modelForm.revenue_percentage_maloum || fallback;
-                        const pctBr = modelForm.revenue_percentage_brezzels || fallback;
-                        const customsTotal = customPlatforms.reduce((s, cp) => {
-                          const pct = cp.percentage > 0 ? cp.percentage : fallback;
-                          return s + (cp.revenue || 0) * pct / 100;
-                        }, 0);
-                        // 4Based revenue is fetched in USD — convert to model base currency
-                        const fbInBase = convertToBase(fb, "USD");
-                        const calculatedRaw = (fbInBase * pctFb) / 100 + (ml * pctMl) / 100 + (br * pctBr) / 100 + customsTotal;
-                        const calculated = Math.round(calculatedRaw * 100) / 100;
-                        const lastDay = new Date(y, m, 0).getDate();
-                        setBillingShare(calculated);
-                        setPayoutRevenueForMonth({ fourbased: fb, maloum: ml, brezzels: br });
-                        setShareCalculated(true);
-                        setCalcTrigger((t) => t + 1);
-                        setModelForm((prev) => ({
-                          ...prev,
-                          invoice_net_amount: calculated,
-                          invoice_description: "Creator revenue share for digital content",
-                          invoice_currency: prev.currency || "EUR",
-                          invoice_service_period_start: `${billingMonth}-01`,
-                          invoice_service_period_end: `${billingMonth}-${String(lastDay).padStart(2, "0")}`,
-                        }));
-                        toast.success(
-                          `Anteil berechnet für ${String(m).padStart(2, "0")}/${y} · ${calculated.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${modelForm.currency || "EUR"}`,
-                        );
-                      }}
-                    >
-                      Anteil berechnen
-                    </Button>
-                  </div>
-                  {shareCalculated && (
-                    <div className="flex items-center justify-between pt-1 border-t border-accent/10">
-                      <span className="text-[10px] text-muted-foreground">Berechneter Anteil</span>
-                      <span className="text-sm font-bold text-gold-gradient tabular-nums">
-                        {billingShare.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{" "}
-                        {modelForm.currency || "EUR"}
-                      </span>
+                {/* Gesamt Payouts — auto-summed from fetched per-platform values */}
+                {fetchedPayoutRevenue && (() => {
+                  const fb = fetchedPayoutRevenue.fourbased ?? 0;
+                  const ml = fetchedPayoutRevenue.maloum ?? 0;
+                  const br = fetchedPayoutRevenue.brezzels ?? 0;
+                  const fbInBase = convertToBase(fb, "USD");
+                  const totalPayouts = fbInBase + ml + br;
+                  const startD = new Date(fetchYear, fetchMonth - 1, 1);
+                  const endD = new Date(fetchYear, fetchMonth - 1 + Math.max(1, fetchMonthsCount), 0);
+                  const monthFmt = (d: Date) =>
+                    d.toLocaleDateString("de-DE", { month: "short", year: "numeric" });
+                  const rangeLabel = fetchMonthsCount > 1
+                    ? `${monthFmt(startD)} – ${monthFmt(endD)}`
+                    : monthFmt(startD);
+                  return (
+                    <div className="rounded-xl border border-accent/20 bg-accent/[0.03] p-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                          Gesamt Payouts
+                        </p>
+                        <span className="text-[9px] text-muted-foreground/70">{rangeLabel}</span>
+                      </div>
+                      <div className="flex items-baseline justify-between pt-1 border-t border-accent/10">
+                        <span className="text-[10px] text-muted-foreground">Summe (in {baseCurrency})</span>
+                        <span className="text-xl font-bold text-gold-gradient tabular-nums">
+                          {totalPayouts.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{" "}
+                          {baseCurrency}
+                        </span>
+                      </div>
                     </div>
-                  )}
-                </div>
+                  );
+                })()}
+
 
 
                 <div className="flex items-center justify-between gap-2 rounded-lg border border-accent/15 bg-accent/[0.02] px-3 py-2">
@@ -2235,30 +2255,49 @@ export default function ModelDashboardTab() {
                       }
                     : null;
                   const totals = payoutRevenueForMonth ?? fetchedTotals ?? { fourbased: 0, maloum: 0, brezzels: 0 };
-                  const rows: Array<{ key: "fourbased" | "maloum" | "brezzels"; label: string; rev: number; pctField: keyof ModelRow }> = [
-                    { key: "fourbased", label: "4Based", rev: totals.fourbased, pctField: "revenue_percentage_fourbased" },
-                    { key: "maloum", label: "Maloum", rev: totals.maloum, pctField: "revenue_percentage_maloum" },
-                    { key: "brezzels", label: "Brezzels", rev: totals.brezzels, pctField: "revenue_percentage_brezzels" },
+                  const allRows: Array<{ key: "fourbased" | "maloum" | "brezzels"; label: string; platform: string; rev: number; pctField: keyof ModelRow }> = [
+                    { key: "fourbased", label: "4Based", platform: "4Based", rev: totals.fourbased, pctField: "revenue_percentage_fourbased" },
+                    { key: "maloum", label: "Maloum", platform: "Maloum", rev: totals.maloum, pctField: "revenue_percentage_maloum" },
+                    { key: "brezzels", label: "Brezzels", platform: "Brezzels", rev: totals.brezzels, pctField: "revenue_percentage_brezzels" },
                   ];
+                  // Only show platforms the model actually has configured
+                  const modelPlatformSet = new Set(modelAccounts.map((a) => a.platform));
+                  const rows = allRows.filter((r) => modelPlatformSet.has(r.platform));
                   return (
                     <div className="space-y-3 rounded-xl border border-accent/15 bg-accent/[0.02] p-3">
                       <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
                         Custom % pro Plattform
                       </p>
+                      {rows.length === 0 && (
+                        <p className="text-[11px] text-muted-foreground/70 italic">
+                          Keine Plattformen beim Model hinterlegt.
+                        </p>
+                      )}
                       {rows.map((r) => {
                         const pct = (modelForm[r.pctField] as number) || 0;
                         const usingFallback = pct === 0;
                         const effective = usingFallback ? fallback : pct;
-                        // 4Based revenue is in USD — convert to base for earnings
                         const isFourbased = r.key === "fourbased";
                         const sourceCur = isFourbased ? "USD" : baseCurrency;
                         const revInBase = isFourbased ? convertToBase(r.rev, "USD") : r.rev;
                         const earn = (revInBase * effective) / 100;
                         const showConversion = isFourbased && sourceCur !== baseCurrency;
+                        const platErr = fetchErrors[r.platform];
+                        const isAuthErr = !!platErr && /pass|auth|login|credential|401|403|invalid/i.test(`${platErr.code || ""} ${platErr.message || ""}`);
                         return (
                           <div key={r.key} className="space-y-1.5">
                             <div className="flex items-center justify-between gap-2">
-                              <span className="text-xs font-medium text-foreground w-16 shrink-0">{r.label}</span>
+                              <span className="text-xs font-medium text-foreground w-16 shrink-0 flex items-center gap-1.5">
+                                {r.label}
+                                {isAuthErr && (
+                                  <span
+                                    title={platErr.message}
+                                    className="inline-flex items-center rounded-full bg-destructive/15 text-destructive border border-destructive/30 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider"
+                                  >
+                                    Passwort falsch
+                                  </span>
+                                )}
+                              </span>
                               <div className="flex-1 flex items-center gap-2 min-w-0">
                                 <Slider
                                   value={[pct]}
@@ -2291,9 +2330,15 @@ export default function ModelDashboardTab() {
                                 → {earn.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {baseCurrency}
                               </span>
                             </div>
+                            {platErr && !isAuthErr && (
+                              <div className="pl-[4.5rem] text-[10px] text-destructive/80">
+                                ⚠ {platErr.message}
+                              </div>
+                            )}
                           </div>
                         );
                       })}
+
 
                       {/* Custom platforms */}
                       {customPlatforms.length > 0 && (
