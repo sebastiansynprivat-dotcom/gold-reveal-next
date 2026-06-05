@@ -135,15 +135,20 @@ export type Database = {
           },
         ]
       }
-      accounts_revenue: {
+      accounts_data: {
         Row: {
           account_id: string
           amounts: Json
           created_at: string
           date: string
+          followers: number | null
           id: string
+          mass_dms: number | null
+          oldest_chat: number | null
           platform: string
+          subscribers: number | null
           total: number
+          unread_chats: number | null
           updated_at: string
         }
         Insert: {
@@ -151,9 +156,14 @@ export type Database = {
           amounts?: Json
           created_at?: string
           date: string
+          followers?: number | null
           id?: string
+          mass_dms?: number | null
+          oldest_chat?: number | null
           platform: string
+          subscribers?: number | null
           total?: number
+          unread_chats?: number | null
           updated_at?: string
         }
         Update: {
@@ -161,9 +171,14 @@ export type Database = {
           amounts?: Json
           created_at?: string
           date?: string
+          followers?: number | null
           id?: string
+          mass_dms?: number | null
+          oldest_chat?: number | null
           platform?: string
+          subscribers?: number | null
           total?: number
+          unread_chats?: number | null
           updated_at?: string
         }
         Relationships: [
