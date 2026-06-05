@@ -354,6 +354,75 @@ export default function ModelHomeDashboard({
     })();
   }, [accounts, modelId]);
 
+  // Load issuer settings (for PDF regeneration)
+  useEffect(() => {
+    (async () => {
+      const { data } = await (supabase.from("issuer_settings") as any)
+        .select("name, address, vat_id")
+        .limit(1)
+        .maybeSingle();
+      if (data) setIssuer({ name: data.name || "", address: data.address || "", vat_id: data.vat_id || "" });
+    })();
+  }, []);
+
+  const downloadInvoicePdf = (cn: any) => {
+    try {
+      const snaps = payoutSnapshots[cn.credit_note_number] || [];
+      // Build PDF lines from snapshot data; fallback to single summary line.
+      const lines: Array<{ name: string; gross: number; pct: number }> = [];
+      const currency = "EUR";
+      if (snaps.length > 0) {
+        for (const s of snaps) {
+          const label = new Date(s.last_fetched_year, s.last_fetched_month - 1, 1)
+            .toLocaleDateString("de-DE", { month: "short", year: "numeric" });
+          lines.push({
+            name: `Creator revenue share ${label}`,
+            gross: Number(s.billed_amount || 0),
+            pct: 100,
+          });
+        }
+      } else {
+        lines.push({
+          name: cn.description || "Creator revenue share",
+          gross: Number(cn.net_amount || 0),
+          pct: 100,
+        });
+      }
+      const doc = generateProviderInvoicePdf({
+        creditNoteNumber: cn.credit_note_number,
+        creditNoteDate: cn.credit_note_date,
+        servicePeriodStart: cn.service_period_start || cn.credit_note_date,
+        servicePeriodEnd: cn.service_period_end || cn.credit_note_date,
+        issuer: {
+          name: issuer?.name || "",
+          address: issuer?.address || "",
+          vatId: issuer?.vat_id || "",
+        },
+        provider: {
+          name: cn.provider_name || modelName,
+          address: cn.provider_address || "",
+          isBusiness: !!cn.provider_is_business,
+          vatId: cn.provider_vat_id || "",
+        },
+        description: cn.description || "Creator revenue share for digital content",
+        currency,
+        lines,
+        net: Number(cn.net_amount || 0),
+        payment: {
+          method: cn.payment_method || undefined,
+          txHash: cn.tx_hash || undefined,
+          paymentDate: cn.payment_date || undefined,
+        },
+      });
+      downloadPdf(doc, `ProviderInvoice_${String(cn.credit_note_number).replace(/\//g, "-")}.pdf`);
+    } catch (e) {
+      console.error(e);
+      toast.error(lang === "en" ? "Could not generate PDF" : "PDF konnte nicht erstellt werden");
+    }
+  };
+
+
+
 
   const total = useMemo(
     () => Object.values(revenueByAccount).reduce((s, v) => s + v, 0),
