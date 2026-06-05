@@ -26,6 +26,10 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Download } from "lucide-react";
+import { generateProviderInvoicePdf, downloadPdf } from "@/lib/providerInvoicePdf";
+
 
 type Period = "today" | "yesterday" | "last7" | "last30" | "month" | "lifetime";
 
