@@ -605,35 +605,44 @@ export default function ModelDashboardTab() {
     return () => { cancelled = true; };
   }, [selectedModelId, modelAccounts, revenuePeriod]);
 
-  // ─── Query payout_revenue for the selected fetch month/year ───
+  // ─── Query payout_revenue summed across selected month range ───
   useEffect(() => {
     if (!selectedModelId) {
       setFetchedPayoutRevenue(null);
       return;
     }
     (async () => {
+      // Build list of (year, month) pairs for the range
+      const pairs: Array<{ y: number; m: number }> = [];
+      for (let i = 0; i < Math.max(1, fetchMonthsCount); i++) {
+        const d = new Date(fetchYear, (fetchMonth - 1) + i, 1);
+        pairs.push({ y: d.getFullYear(), m: d.getMonth() + 1 });
+      }
+      const minY = pairs[0].y, minM = pairs[0].m;
+      const maxY = pairs[pairs.length - 1].y, maxM = pairs[pairs.length - 1].m;
       const { data, error } = await (supabase as any)
         .from("payout_revenue")
-        .select("fourbased_revenue, maloum_revenue, brezzels_revenue")
+        .select("fourbased_revenue, maloum_revenue, brezzels_revenue, last_fetched_month, last_fetched_year")
         .eq("model_id", selectedModelId)
-        .eq("last_fetched_month", fetchMonth)
-        .eq("last_fetched_year", fetchYear)
-        .maybeSingle();
-      if (error) {
+        .or(`and(last_fetched_year.gt.${minY}),and(last_fetched_year.eq.${minY},last_fetched_month.gte.${minM})`)
+        .or(`and(last_fetched_year.lt.${maxY}),and(last_fetched_year.eq.${maxY},last_fetched_month.lte.${maxM})`);
+      if (error || !data || (data as any[]).length === 0) {
         setFetchedPayoutRevenue(null);
         return;
       }
-      if (data) {
-        setFetchedPayoutRevenue({
-          fourbased: Number((data as any).fourbased_revenue) ?? 0,
-          maloum: Number((data as any).maloum_revenue) ?? 0,
-          brezzels: Number((data as any).brezzels_revenue) ?? 0,
-        });
-      } else {
-        setFetchedPayoutRevenue(null);
+      const set = new Set(pairs.map((p) => `${p.y}-${p.m}`));
+      let fb = 0, ml = 0, br = 0;
+      let any = false;
+      for (const r of data as any[]) {
+        if (!set.has(`${r.last_fetched_year}-${r.last_fetched_month}`)) continue;
+        any = true;
+        fb += Number(r.fourbased_revenue) || 0;
+        ml += Number(r.maloum_revenue) || 0;
+        br += Number(r.brezzels_revenue) || 0;
       }
+      setFetchedPayoutRevenue(any ? { fourbased: fb, maloum: ml, brezzels: br } : null);
     })();
-  }, [selectedModelId, fetchMonth, fetchYear, fetchRevenueTick]);
+  }, [selectedModelId, fetchMonth, fetchYear, fetchMonthsCount, fetchRevenueTick]);
 
   // ─── Load selected model data into form ───
   useEffect(() => {
