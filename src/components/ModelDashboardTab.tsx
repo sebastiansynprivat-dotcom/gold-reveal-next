@@ -463,10 +463,33 @@ export default function ModelDashboardTab() {
     brezzels: number | null;
   } | null>(null);
   const [fetchRevenueTick, setFetchRevenueTick] = useState(0);
-  // How many consecutive months to fetch / bill starting from (fetchMonth, fetchYear)
-  const [fetchMonthsCount, setFetchMonthsCount] = useState<number>(1);
   // Per-platform errors from the last fetch (e.g. password incorrect)
   const [fetchErrors, setFetchErrors] = useState<Record<string, { code?: string; message: string }>>({});
+  // Additional billing month panels (extra months the user wants to bill)
+  type ExtraBilling = {
+    uid: string;
+    month: number;
+    year: number;
+    fetching: boolean;
+    data: { fourbased: number | null; maloum: number | null; brezzels: number | null } | null;
+    billedAt: string | null;
+    billedNumber: string | null;
+    errors: Record<string, { code?: string; message: string }>;
+  };
+  const [extraBillings, setExtraBillings] = useState<ExtraBilling[]>([]);
+  // Billing history (payout_revenue rows for selected model)
+  type BillingHistoryRow = {
+    id: string;
+    month: number;
+    year: number;
+    monthly_revenue: number | null;
+    billed_at: string | null;
+    billed_credit_note_number: string | null;
+    billed_amount: number | null;
+    last_fetched_at: string | null;
+  };
+  const [billingHistory, setBillingHistory] = useState<BillingHistoryRow[]>([]);
+  const [billingHistoryTick, setBillingHistoryTick] = useState(0);
 
   // ─── Custom platforms (per-model, localStorage) ───
   type CustomPlatform = { id: string; name: string; revenue: number; percentage: number };
