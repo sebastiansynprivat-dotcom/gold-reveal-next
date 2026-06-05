@@ -210,16 +210,25 @@ export default function ModelHomeDashboard({
   const [shownPwd, setShownPwd] = useState<Record<string, boolean>>({});
   const [openCard, setOpenCard] = useState<Record<string, boolean>>({});
   const [commissionPct, setCommissionPct] = useState<number>(0);
+  const [modelCurrency, setModelCurrency] = useState<string>("EUR");
 
-  // Load model commission %
+  // Load model commission % + currency
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data } = await (supabase.from("model_dashboard") as any)
-        .select("revenue_percentage")
-        .eq("model_id", modelId)
-        .maybeSingle();
-      if (!cancelled) setCommissionPct(Number(data?.revenue_percentage || 0));
+      const [{ data: dash }, { data: mdl }] = await Promise.all([
+        (supabase.from("model_dashboard") as any)
+          .select("revenue_percentage")
+          .eq("model_id", modelId)
+          .maybeSingle(),
+        (supabase.from("models") as any)
+          .select("currency")
+          .eq("id", modelId)
+          .maybeSingle(),
+      ]);
+      if (cancelled) return;
+      setCommissionPct(Number(dash?.revenue_percentage || 0));
+      setModelCurrency((mdl?.currency as string) || "EUR");
     })();
     return () => { cancelled = true; };
   }, [modelId]);
@@ -426,10 +435,17 @@ export default function ModelHomeDashboard({
     () => Object.values(lifetimeByAccount).reduce((s, v) => s + v, 0),
     [lifetimeByAccount],
   );
-  const fmtMoney = (v: number) =>
-    new Intl.NumberFormat(lang === "en" ? "en-US" : "de-DE", { style: "currency", currency: "EUR", maximumFractionDigits: 0 }).format(v);
-  const fmtMoneyDec = (v: number) =>
-    new Intl.NumberFormat(lang === "en" ? "en-US" : "de-DE", { style: "currency", currency: "EUR", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
+  const safeFmt = (v: number, opts: Intl.NumberFormatOptions, ccy?: string) => {
+    const locale = lang === "en" ? "en-US" : "de-DE";
+    const c = (ccy || modelCurrency || "EUR").toUpperCase();
+    try {
+      return new Intl.NumberFormat(locale, { style: "currency", currency: c, ...opts }).format(v);
+    } catch {
+      return `${new Intl.NumberFormat(locale, opts).format(v)} ${c}`;
+    }
+  };
+  const fmtMoney = (v: number, ccy?: string) => safeFmt(v, { maximumFractionDigits: 0 }, ccy);
+  const fmtMoneyDec = (v: number, ccy?: string) => safeFmt(v, { minimumFractionDigits: 2, maximumFractionDigits: 2 }, ccy);
   const fmtDate = (d: string | Date) =>
     new Date(d).toLocaleDateString(lang === "en" ? "en-US" : "de-DE", { day: "2-digit", month: "short", year: "numeric" });
 
@@ -870,13 +886,14 @@ export default function ModelHomeDashboard({
                             maloum: s.maloum_revenue || 0,
                             brezzels: s.brezzels_revenue || 0,
                           };
+                          const snapCurrency = s.billed_snapshot?.invoice_currency || modelCurrency;
                           const customs: any[] = s.billed_snapshot?.custom_platforms || [];
                           return (
                             <div key={i} className="rounded-md bg-background/40 border border-border/30 p-2.5 space-y-1.5">
                               <div className="flex justify-between items-center">
                                 <span className="text-xs font-semibold text-foreground">{monthLabel}</span>
                                 <span className="text-xs font-bold text-accent tabular-nums">
-                                  {fmtMoneyDec(Number(s.billed_amount || 0))}
+                                  {fmtMoneyDec(Number(s.billed_amount || 0), snapCurrency)}
                                 </span>
                               </div>
                               <div className="space-y-0.5 text-[10px]">
