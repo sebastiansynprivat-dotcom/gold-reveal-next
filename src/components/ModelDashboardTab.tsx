@@ -4085,28 +4085,46 @@ export default function ModelDashboardTab() {
                   <div className="rounded-lg border border-border/40 bg-secondary/20 p-3 space-y-2">
                     <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Umsatz pro Plattform</p>
                     <div className="space-y-1">
-                      <div className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">4Based {pcts.fourbased ? `(${pcts.fourbased}%)` : ""}</span>
-                        <span className="tabular-nums text-foreground">{fmt(platRev.fourbased)} USD</span>
-                      </div>
-                      <div className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">Maloum {pcts.maloum ? `(${pcts.maloum}%)` : ""}</span>
-                        <span className="tabular-nums text-foreground">{fmt(platRev.maloum)} EUR</span>
-                      </div>
-                      <div className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">Brezzels {pcts.brezzels ? `(${pcts.brezzels}%)` : ""}</span>
-                        <span className="tabular-nums text-foreground">{fmt(platRev.brezzels)} EUR</span>
-                      </div>
-                      {customs.map((c, i) => (
-                        <div key={i} className="flex justify-between text-xs">
-                          <span className="text-muted-foreground">{c.name} {c.percentage ? `(${c.percentage}%)` : ""}</span>
-                          <span className="tabular-nums text-foreground">{fmt(c.revenue)} {currency}</span>
-                        </div>
-                      ))}
-                      <div className="flex justify-between text-xs pt-1.5 mt-1.5 border-t border-border/40">
-                        <span className="text-muted-foreground">Gesamtumsatz Monat</span>
-                        <span className="tabular-nums font-semibold text-foreground">{fmt(r.monthly_revenue || 0)} {currency}</span>
-                      </div>
+                      {(() => {
+                        const defPct = pcts.default || 0;
+                        const pctFb = pcts.fourbased || defPct;
+                        const pctMa = pcts.maloum || defPct;
+                        const pctBr = pcts.brezzels || defPct;
+                        const gesamt =
+                          Number(platRev.fourbased || 0) +
+                          Number(platRev.maloum || 0) +
+                          Number(platRev.brezzels || 0) +
+                          customs.reduce((s, c) => s + Number(c.revenue || 0), 0);
+                        return (
+                          <>
+                            <div className="flex justify-between text-xs">
+                              <span className="text-muted-foreground">4Based {pctFb ? `(${pctFb}%)` : ""}</span>
+                              <span className="tabular-nums text-foreground">{fmt(platRev.fourbased)} USD</span>
+                            </div>
+                            <div className="flex justify-between text-xs">
+                              <span className="text-muted-foreground">Maloum {pctMa ? `(${pctMa}%)` : ""}</span>
+                              <span className="tabular-nums text-foreground">{fmt(platRev.maloum)} EUR</span>
+                            </div>
+                            <div className="flex justify-between text-xs">
+                              <span className="text-muted-foreground">Brezzels {pctBr ? `(${pctBr}%)` : ""}</span>
+                              <span className="tabular-nums text-foreground">{fmt(platRev.brezzels)} EUR</span>
+                            </div>
+                            {customs.map((c, i) => {
+                              const cp = c.percentage || defPct;
+                              return (
+                                <div key={i} className="flex justify-between text-xs">
+                                  <span className="text-muted-foreground">{c.name} {cp ? `(${cp}%)` : ""}</span>
+                                  <span className="tabular-nums text-foreground">{fmt(c.revenue)} {currency}</span>
+                                </div>
+                              );
+                            })}
+                            <div className="flex justify-between text-xs pt-1.5 mt-1.5 border-t border-border/40">
+                              <span className="text-muted-foreground">Gesamtumsatz Monat</span>
+                              <span className="tabular-nums font-semibold text-foreground">{fmt(gesamt)} {currency}</span>
+                            </div>
+                          </>
+                        );
+                      })()}
                     </div>
                   </div>
 

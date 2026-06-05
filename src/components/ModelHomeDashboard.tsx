@@ -371,9 +371,12 @@ export default function ModelHomeDashboard({
   const downloadInvoicePdf = (cn: any) => {
     try {
       const snaps = payoutSnapshots[cn.credit_note_number] || [];
-      // Build PDF lines from snapshot data; fallback to single summary line.
       const lines: Array<{ name: string; gross: number; pct: number }> = [];
-      const currency = "EUR";
+      // Use invoice currency from snapshot if available, else model currency
+      const currency =
+        (snaps[0]?.billed_snapshot as any)?.invoice_currency ||
+        modelCurrency ||
+        "EUR";
       if (snaps.length > 0) {
         for (const s of snaps) {
           const label = new Date(s.last_fetched_year, s.last_fetched_month - 1, 1)
@@ -778,7 +781,10 @@ export default function ModelHomeDashboard({
             </p>
           ) : (
             <div className="space-y-1.5">
-              {creditNotes.map((cn) => (
+              {creditNotes.map((cn) => {
+                const cnSnaps = payoutSnapshots[cn.credit_note_number] || [];
+                const cnCurrency = (cnSnaps[0]?.billed_snapshot as any)?.invoice_currency || modelCurrency;
+                return (
                 <div
                   key={cn.id}
                   className="glass-card-subtle rounded-lg p-3 flex items-center gap-3"
@@ -799,7 +805,7 @@ export default function ModelHomeDashboard({
                   </button>
                   <div className="text-right shrink-0">
                     <p className="text-sm font-bold text-accent tabular-nums">
-                      {fmtMoneyDec(Number(cn.net_amount || 0))}
+                      {fmtMoneyDec(Number(cn.net_amount || 0), cnCurrency)}
                     </p>
                     <p className="text-[9px] text-muted-foreground uppercase tracking-wider">
                       {copy.net}
@@ -815,7 +821,8 @@ export default function ModelHomeDashboard({
                     <Download className="h-4 w-4" />
                   </Button>
                 </div>
-              ))}
+                );
+              })}
             </div>
 
           )}
@@ -842,6 +849,7 @@ export default function ModelHomeDashboard({
           {detailInvoice && (() => {
             const cn = detailInvoice;
             const snaps = payoutSnapshots[cn.credit_note_number] || [];
+            const invoiceCurrency = (snaps[0]?.billed_snapshot as any)?.invoice_currency || modelCurrency;
             return (
               <>
                 <DialogHeader>
@@ -869,7 +877,7 @@ export default function ModelHomeDashboard({
                     <div className="flex justify-between gap-2 pt-1.5 mt-1.5 border-t border-emerald-500/20">
                       <span className="text-muted-foreground text-xs">{copy.payout}</span>
                       <span className="text-base font-bold text-accent tabular-nums">
-                        {fmtMoneyDec(Number(cn.net_amount || 0))}
+                        {fmtMoneyDec(Number(cn.net_amount || 0), invoiceCurrency)}
                       </span>
                     </div>
                   </div>
@@ -881,48 +889,67 @@ export default function ModelHomeDashboard({
                         {snaps.map((s, i) => {
                           const monthLabel = new Date(s.last_fetched_year, s.last_fetched_month - 1, 1)
                             .toLocaleDateString(lang === "en" ? "en-US" : "de-DE", { month: "long", year: "numeric" });
-                          const pr = s.billed_snapshot?.platform_revenues || {
+                          const snap = s.billed_snapshot || {};
+                          const pr = snap.platform_revenues || {
                             fourbased: s.fourbased_revenue || 0,
                             maloum: s.maloum_revenue || 0,
                             brezzels: s.brezzels_revenue || 0,
                           };
-                          const snapCurrency = s.billed_snapshot?.invoice_currency || modelCurrency;
-                          const customs: any[] = s.billed_snapshot?.custom_platforms || [];
+                          const pcts = snap.percentages || {};
+                          const defPct = pcts.default || 0;
+                          const pctFb = pcts.fourbased || defPct;
+                          const pctMa = pcts.maloum || defPct;
+                          const pctBr = pcts.brezzels || defPct;
+                          const snapCurrency = snap.invoice_currency || modelCurrency;
+                          const customs: any[] = snap.custom_platforms || [];
+                          const fmtN = (n: number) =>
+                            Number(n || 0).toLocaleString(lang === "en" ? "en-US" : "de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                          const gesamt =
+                            Number(pr.fourbased || 0) +
+                            Number(pr.maloum || 0) +
+                            Number(pr.brezzels || 0) +
+                            customs.reduce((sum, c) => sum + Number(c.revenue || 0), 0);
                           return (
-                            <div key={i} className="rounded-md bg-background/40 border border-border/30 p-2.5 space-y-1.5">
+                            <div key={i} className="rounded-md bg-background/40 border border-border/30 p-2.5 space-y-2">
                               <div className="flex justify-between items-center">
                                 <span className="text-xs font-semibold text-foreground">{monthLabel}</span>
                                 <span className="text-xs font-bold text-accent tabular-nums">
                                   {fmtMoneyDec(Number(s.billed_amount || 0), snapCurrency)}
                                 </span>
                               </div>
-                              <div className="space-y-0.5 text-[10px]">
+                              <div className="space-y-1 text-[10px]">
                                 {Number(pr.fourbased || 0) > 0 && (
                                   <div className="flex justify-between text-muted-foreground">
-                                    <span>4Based</span>
-                                    <span className="tabular-nums">{Number(pr.fourbased).toLocaleString(lang === "en" ? "en-US" : "de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD</span>
+                                    <span>4Based {pctFb ? `(${pctFb}%)` : ""}</span>
+                                    <span className="tabular-nums">{fmtN(pr.fourbased)} USD</span>
                                   </div>
                                 )}
                                 {Number(pr.maloum || 0) > 0 && (
                                   <div className="flex justify-between text-muted-foreground">
-                                    <span>Maloum</span>
-                                    <span className="tabular-nums">{fmtMoneyDec(Number(pr.maloum))}</span>
+                                    <span>Maloum {pctMa ? `(${pctMa}%)` : ""}</span>
+                                    <span className="tabular-nums">{fmtN(pr.maloum)} EUR</span>
                                   </div>
                                 )}
                                 {Number(pr.brezzels || 0) > 0 && (
                                   <div className="flex justify-between text-muted-foreground">
-                                    <span>Brezzels</span>
-                                    <span className="tabular-nums">{fmtMoneyDec(Number(pr.brezzels))}</span>
+                                    <span>Brezzels {pctBr ? `(${pctBr}%)` : ""}</span>
+                                    <span className="tabular-nums">{fmtN(pr.brezzels)} EUR</span>
                                   </div>
                                 )}
-                                {customs.map((c, ci) => (
-                                  Number(c.revenue || 0) > 0 && (
+                                {customs.map((c, ci) => {
+                                  if (!(Number(c.revenue || 0) > 0)) return null;
+                                  const cp = c.percentage || defPct;
+                                  return (
                                     <div key={ci} className="flex justify-between text-muted-foreground">
-                                      <span>{c.name}</span>
-                                      <span className="tabular-nums">{fmtMoneyDec(Number(c.revenue))}</span>
+                                      <span>{c.name} {cp ? `(${cp}%)` : ""}</span>
+                                      <span className="tabular-nums">{fmtN(c.revenue)} {snapCurrency}</span>
                                     </div>
-                                  )
-                                ))}
+                                  );
+                                })}
+                                <div className="flex justify-between pt-1 mt-1 border-t border-border/30 text-foreground">
+                                  <span className="text-muted-foreground">{lang === "en" ? "Total revenue" : "Gesamtumsatz Monat"}</span>
+                                  <span className="tabular-nums font-semibold">{fmtN(gesamt)} {snapCurrency}</span>
+                                </div>
                               </div>
                             </div>
                           );
