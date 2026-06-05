@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
         const res = await fetch(`${PASSNINJA_BASE}/passes/${TEMPLATE_ID}/${p.serial_number}`, {
           method: "PUT",
           headers: passninjaHeaders(),
-          body: JSON.stringify({ pass: { passType: TEMPLATE_ID, ...fields } }),
+          body: JSON.stringify({ pass: fields }),
         });
         const ok = res.ok;
         const body = await res.text();
