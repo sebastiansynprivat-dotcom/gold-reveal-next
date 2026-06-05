@@ -1,0 +1,1 @@
+ALTER TABLE public.payout_revenue ADD COLUMN IF NOT EXISTS billed_snapshot jsonb;

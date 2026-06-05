@@ -483,13 +483,19 @@ export default function ModelDashboardTab() {
     month: number;
     year: number;
     monthly_revenue: number | null;
+    fourbased_revenue: number | null;
+    maloum_revenue: number | null;
+    brezzels_revenue: number | null;
     billed_at: string | null;
     billed_credit_note_number: string | null;
     billed_amount: number | null;
+    billed_snapshot: any | null;
     last_fetched_at: string | null;
   };
   const [billingHistory, setBillingHistory] = useState<BillingHistoryRow[]>([]);
   const [billingHistoryTick, setBillingHistoryTick] = useState(0);
+  const [historyDetailRow, setHistoryDetailRow] = useState<BillingHistoryRow | null>(null);
+
 
   // ─── Custom platforms (per-model, localStorage) ───
   type CustomPlatform = { id: string; name: string; revenue: number; percentage: number };
@@ -660,7 +666,7 @@ export default function ModelDashboardTab() {
     (async () => {
       const { data } = await (supabase as any)
         .from("payout_revenue")
-        .select("id, last_fetched_month, last_fetched_year, monthly_revenue, billed_at, billed_credit_note_number, billed_amount, last_fetched_at")
+        .select("id, last_fetched_month, last_fetched_year, monthly_revenue, fourbased_revenue, maloum_revenue, brezzels_revenue, billed_at, billed_credit_note_number, billed_amount, billed_snapshot, last_fetched_at")
         .eq("model_id", selectedModelId)
         .order("last_fetched_year", { ascending: false })
         .order("last_fetched_month", { ascending: false });
@@ -669,11 +675,16 @@ export default function ModelDashboardTab() {
         month: r.last_fetched_month,
         year: r.last_fetched_year,
         monthly_revenue: r.monthly_revenue,
+        fourbased_revenue: r.fourbased_revenue,
+        maloum_revenue: r.maloum_revenue,
+        brezzels_revenue: r.brezzels_revenue,
         billed_at: r.billed_at,
         billed_credit_note_number: r.billed_credit_note_number,
         billed_amount: r.billed_amount,
+        billed_snapshot: r.billed_snapshot,
         last_fetched_at: r.last_fetched_at,
       })));
+
     })();
   }, [selectedModelId, fetchRevenueTick, billingHistoryTick]);
 
@@ -2392,13 +2403,15 @@ export default function ModelDashboardTab() {
                           .toLocaleDateString("de-DE", { month: "short", year: "numeric" });
                         const isBilled = !!r.billed_at;
                         return (
-                          <div
+                          <button
+                            type="button"
                             key={r.id}
+                            onClick={() => setHistoryDetailRow(r)}
                             className={cn(
-                              "flex items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 border text-[11px]",
+                              "w-full flex items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 border text-[11px] transition-all hover:scale-[1.01] active:scale-[0.99] text-left",
                               isBilled
-                                ? "border-emerald-500/30 bg-emerald-500/[0.04]"
-                                : "border-border/40 bg-background/30",
+                                ? "border-emerald-500/30 bg-emerald-500/[0.04] hover:bg-emerald-500/[0.08]"
+                                : "border-border/40 bg-background/30 hover:bg-background/50",
                             )}
                           >
                             <div className="flex items-center gap-2 min-w-0">
@@ -2426,7 +2439,8 @@ export default function ModelDashboardTab() {
                                 </div>
                               )}
                             </div>
-                          </div>
+                          </button>
+
                         );
                       })}
                     </div>
@@ -3151,23 +3165,62 @@ export default function ModelDashboardTab() {
                   }
                   if (pairs.length === 0) return;
                   const nowIso = new Date().toISOString();
-                  const share = pairs.length > 0 ? netAmount / pairs.length : netAmount;
-                  // Mark each covered payout_revenue row as billed
-                  await Promise.all(pairs.map(({ y, m }) =>
+                  const invoiceCurrency = (modelForm as any).invoice_currency || modelForm.currency || "EUR";
+                  // Fetch each affected payout row to build a per-row snapshot
+                  const rows = await Promise.all(pairs.map(({ y, m }) =>
                     (supabase as any)
+                      .from("payout_revenue")
+                      .select("fourbased_revenue, maloum_revenue, brezzels_revenue, monthly_revenue")
+                      .eq("model_id", selectedModelId)
+                      .eq("last_fetched_month", m)
+                      .eq("last_fetched_year", y)
+                      .maybeSingle()
+                      .then((res: any) => ({ y, m, row: res.data }))
+                  ));
+                  // Allocate share proportionally to monthly revenue; fallback to equal split
+                  const fallbackPct = modelForm.revenue_percentage || 0;
+                  const totalMonthly = rows.reduce((s, r) => s + Number(r.row?.monthly_revenue || 0), 0);
+                  await Promise.all(rows.map(({ y, m, row }) => {
+                    const monthly = Number(row?.monthly_revenue || 0);
+                    const share = totalMonthly > 0
+                      ? netAmount * (monthly / totalMonthly)
+                      : netAmount / pairs.length;
+                    const snapshot = {
+                      invoice_number: creditNoteNumber,
+                      invoice_net_amount: netAmount,
+                      invoice_currency: invoiceCurrency,
+                      billed_share_amount: Math.round(share * 100) / 100,
+                      service_period: { start: servicePeriodStart, end: servicePeriodEnd },
+                      platform_revenues: {
+                        fourbased: Number(row?.fourbased_revenue || 0),
+                        maloum: Number(row?.maloum_revenue || 0),
+                        brezzels: Number(row?.brezzels_revenue || 0),
+                      },
+                      percentages: {
+                        default: fallbackPct,
+                        fourbased: modelForm.revenue_percentage_fourbased || fallbackPct,
+                        maloum: modelForm.revenue_percentage_maloum || fallbackPct,
+                        brezzels: modelForm.revenue_percentage_brezzels || fallbackPct,
+                      },
+                      custom_platforms: customPlatforms,
+                      monthly_revenue_at_billing: monthly,
+                    };
+                    return (supabase as any)
                       .from("payout_revenue")
                       .update({
                         billed_at: nowIso,
                         billed_credit_note_number: creditNoteNumber,
                         billed_amount: Math.round(share * 100) / 100,
+                        billed_snapshot: snapshot,
                       })
                       .eq("model_id", selectedModelId)
                       .eq("last_fetched_month", m)
-                      .eq("last_fetched_year", y)
-                  ));
+                      .eq("last_fetched_year", y);
+                  }));
                   setBillingHistoryTick((t) => t + 1);
                   toast.success(`${pairs.length} Monat${pairs.length === 1 ? "" : "e"} als abgerechnet markiert`);
                 }}
+
                 suggestedAmount={verdienst}
                 providerName={selectedModel.name}
                 accountId={modelAccounts[0]?.id || ""}
@@ -3906,6 +3959,125 @@ export default function ModelDashboardTab() {
           loadModels();
         }}
       />
+
+      {/* ── Billing-Verlauf Detail Dialog ── */}
+      <Dialog open={!!historyDetailRow} onOpenChange={(o) => !o && setHistoryDetailRow(null)}>
+        <DialogContent className="max-w-md">
+          {historyDetailRow && (() => {
+            const r = historyDetailRow;
+            const snap = r.billed_snapshot || {};
+            const monthLabel = new Date(r.year, r.month - 1, 1)
+              .toLocaleDateString("de-DE", { month: "long", year: "numeric" });
+            const isBilled = !!r.billed_at;
+            const currency = snap.invoice_currency || modelForm.currency || "EUR";
+            const fmt = (n: number) => Number(n || 0).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            const platRev = snap.platform_revenues || {
+              fourbased: r.fourbased_revenue || 0,
+              maloum: r.maloum_revenue || 0,
+              brezzels: r.brezzels_revenue || 0,
+            };
+            const pcts = snap.percentages || {};
+            const customs: Array<{ name: string; revenue: number; percentage: number }> = snap.custom_platforms || [];
+            return (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    {monthLabel}
+                    {isBilled ? (
+                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[10px] font-semibold">
+                        Abgerechnet
+                      </span>
+                    ) : (
+                      <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[10px] font-semibold">
+                        Offen
+                      </span>
+                    )}
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="space-y-3 text-sm">
+                  {/* Invoice meta */}
+                  {isBilled && (
+                    <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/5 p-3 space-y-1.5">
+                      {r.billed_credit_note_number && (
+                        <div className="flex justify-between gap-2">
+                          <span className="text-muted-foreground text-xs">Provider Invoice</span>
+                          <span className="font-mono text-xs text-foreground">{r.billed_credit_note_number}</span>
+                        </div>
+                      )}
+                      {r.billed_at && (
+                        <div className="flex justify-between gap-2">
+                          <span className="text-muted-foreground text-xs">Abgerechnet am</span>
+                          <span className="text-xs text-foreground">{new Date(r.billed_at).toLocaleString("de-DE")}</span>
+                        </div>
+                      )}
+                      {snap.service_period?.start && snap.service_period?.end && (
+                        <div className="flex justify-between gap-2">
+                          <span className="text-muted-foreground text-xs">Leistungszeitraum</span>
+                          <span className="text-xs text-foreground">
+                            {new Date(snap.service_period.start).toLocaleDateString("de-DE")} – {new Date(snap.service_period.end).toLocaleDateString("de-DE")}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Platform revenues */}
+                  <div className="rounded-lg border border-border/40 bg-secondary/20 p-3 space-y-2">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Umsatz pro Plattform</p>
+                    <div className="space-y-1">
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">4Based {pcts.fourbased ? `(${pcts.fourbased}%)` : ""}</span>
+                        <span className="tabular-nums text-foreground">{fmt(platRev.fourbased)} USD</span>
+                      </div>
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">Maloum {pcts.maloum ? `(${pcts.maloum}%)` : ""}</span>
+                        <span className="tabular-nums text-foreground">{fmt(platRev.maloum)} EUR</span>
+                      </div>
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">Brezzels {pcts.brezzels ? `(${pcts.brezzels}%)` : ""}</span>
+                        <span className="tabular-nums text-foreground">{fmt(platRev.brezzels)} EUR</span>
+                      </div>
+                      {customs.map((c, i) => (
+                        <div key={i} className="flex justify-between text-xs">
+                          <span className="text-muted-foreground">{c.name} {c.percentage ? `(${c.percentage}%)` : ""}</span>
+                          <span className="tabular-nums text-foreground">{fmt(c.revenue)} {currency}</span>
+                        </div>
+                      ))}
+                      <div className="flex justify-between text-xs pt-1.5 mt-1.5 border-t border-border/40">
+                        <span className="text-muted-foreground">Gesamtumsatz Monat</span>
+                        <span className="tabular-nums font-semibold text-foreground">{fmt(r.monthly_revenue || 0)} {currency}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Payout */}
+                  <div className="rounded-lg border border-accent/30 bg-accent/[0.04] p-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Payout</span>
+                      <span className="text-lg font-bold text-accent tabular-nums">
+                        {fmt(r.billed_amount ?? snap.billed_share_amount ?? 0)} {currency}
+                      </span>
+                    </div>
+                    {snap.invoice_net_amount != null && (
+                      <div className="flex justify-between mt-1.5 pt-1.5 border-t border-accent/15 text-[10px] text-muted-foreground">
+                        <span>Invoice Net Total</span>
+                        <span className="tabular-nums">{fmt(snap.invoice_net_amount)} {currency}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {r.last_fetched_at && (
+                    <p className="text-[10px] text-muted-foreground text-center">
+                      Zuletzt abgerufen: {new Date(r.last_fetched_at).toLocaleString("de-DE")}
+                    </p>
+                  )}
+                </div>
+              </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
+
   );
 }
