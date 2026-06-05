@@ -9,6 +9,7 @@ import {
   FileText,
   Clock,
   Users,
+  User,
   Pencil,
   ChevronDown,
   ChevronLeft,
@@ -236,6 +237,7 @@ export default function Dashboard() {
   const [groupName, setGroupName] = useState("");
   const [groupNameSaved, setGroupNameSaved] = useState(false);
   const [editingGroupName, setEditingGroupName] = useState(false);
+  const [userName, setUserName] = useState("");
 
   const [offer, setOffer] = useState("");
   const [assignedAccounts, setAssignedAccounts] = useState<
@@ -353,7 +355,7 @@ export default function Dashboard() {
     if (!user) return;
     supabase
       .from("profiles")
-      .select("telegram_id, group_name, offer")
+      .select("telegram_id, group_name, offer, name")
       .eq("user_id", user.id)
       .maybeSingle()
       .then(({ data }) => {
@@ -365,6 +367,7 @@ export default function Dashboard() {
           setGroupName(data.group_name);
           setGroupNameSaved(true);
         }
+        if ((data as any)?.name) setUserName((data as any).name);
         if (data?.offer) setOffer(data.offer);
         setTelegramLoading(false);
       });
