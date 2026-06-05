@@ -452,9 +452,25 @@ export default function ModelDashboardTab() {
   const now = new Date();
   const [fetchMonth, setFetchMonth] = useState<number>(now.getMonth() + 1);
   const [fetchYear, setFetchYear] = useState<number>(now.getFullYear());
+  const [fetchMonthTo, setFetchMonthTo] = useState<number>(now.getMonth() + 1);
+  const [fetchYearTo, setFetchYearTo] = useState<number>(now.getFullYear());
+  const [rangeMode, setRangeMode] = useState<boolean>(false);
   const [fetchingRevenue, setFetchingRevenue] = useState(false);
-  const [confirmOverwrite, setConfirmOverwrite] = useState(false);
   const [lastFetchInfo, setLastFetchInfo] = useState<{ at: string | null; month: number | null; year: number | null }>({ at: null, month: null, year: null });
+
+  // Helper: enumerate months in [fromY-fromM .. toY-toM] inclusive
+  const monthsInRange = useCallback((fromY: number, fromM: number, toY: number, toM: number) => {
+    const result: { year: number; month: number }[] = [];
+    let y = fromY, m = fromM;
+    // Guard: if "to" is before "from", just use the single "from" month
+    if (toY < fromY || (toY === fromY && toM < fromM)) { toY = fromY; toM = fromM; }
+    while (y < toY || (y === toY && m <= toM)) {
+      result.push({ year: y, month: m });
+      m++;
+      if (m > 12) { m = 1; y++; }
+    }
+    return result;
+  }, []);
 
   // Per-platform revenue from payout_revenue for the selected fetch month/year
   const [fetchedPayoutRevenue, setFetchedPayoutRevenue] = useState<{
@@ -601,35 +617,38 @@ export default function ModelDashboardTab() {
     return () => { cancelled = true; };
   }, [selectedModelId, modelAccounts, revenuePeriod]);
 
-  // ─── Query payout_revenue for the selected fetch month/year ───
+  // ─── Query payout_revenue for the selected fetch month/year (range-aware) ───
   useEffect(() => {
     if (!selectedModelId) {
       setFetchedPayoutRevenue(null);
       return;
     }
+    const fromY = fetchYear, fromM = fetchMonth;
+    const toY = rangeMode ? fetchYearTo : fetchYear;
+    const toM = rangeMode ? fetchMonthTo : fetchMonth;
+    const months = monthsInRange(fromY, fromM, toY, toM);
+
     (async () => {
-      const { data, error } = await (supabase as any)
-        .from("payout_revenue")
-        .select("fourbased_revenue, maloum_revenue, brezzels_revenue")
-        .eq("model_id", selectedModelId)
-        .eq("last_fetched_month", fetchMonth)
-        .eq("last_fetched_year", fetchYear)
-        .maybeSingle();
-      if (error) {
-        setFetchedPayoutRevenue(null);
-        return;
+      let agg = { fourbased: 0, maloum: 0, brezzels: 0 };
+      let any = false;
+      for (const { year, month } of months) {
+        const { data, error } = await (supabase as any)
+          .from("payout_revenue")
+          .select("fourbased_revenue, maloum_revenue, brezzels_revenue")
+          .eq("model_id", selectedModelId)
+          .eq("last_fetched_month", month)
+          .eq("last_fetched_year", year)
+          .maybeSingle();
+        if (!error && data) {
+          any = true;
+          agg.fourbased += Number((data as any).fourbased_revenue) || 0;
+          agg.maloum += Number((data as any).maloum_revenue) || 0;
+          agg.brezzels += Number((data as any).brezzels_revenue) || 0;
+        }
       }
-      if (data) {
-        setFetchedPayoutRevenue({
-          fourbased: Number((data as any).fourbased_revenue) ?? 0,
-          maloum: Number((data as any).maloum_revenue) ?? 0,
-          brezzels: Number((data as any).brezzels_revenue) ?? 0,
-        });
-      } else {
-        setFetchedPayoutRevenue(null);
-      }
+      setFetchedPayoutRevenue(any ? agg : null);
     })();
-  }, [selectedModelId, fetchMonth, fetchYear, fetchRevenueTick]);
+  }, [selectedModelId, fetchMonth, fetchYear, fetchMonthTo, fetchYearTo, rangeMode, fetchRevenueTick, monthsInRange]);
 
   // ─── Load selected model data into form ───
   useEffect(() => {
@@ -751,12 +770,19 @@ export default function ModelDashboardTab() {
     return Object.entries(platformMap).map(([platform, data]) => ({ platform, ...data }));
   }, [selectedModelId, modelAccounts, platformRevenues, dashboardRevenues, convertToBase, baseCurrency, getSourceCurrency]);
 
+  // Gesamtumsatz = nur die gefetchen Payout-Werte (+ manuelle Custom-Plattformen),
+  // konvertiert in die Basis-Währung. Reflektiert ausschließlich die im Fetch-Bereich
+  // gewählten Monate.
   const totalRevenue = useMemo(() => {
-    return modelAccounts.reduce(
-      (sum, acc) => sum + convertToBase(dashboardRevenues[acc.id] || 0, getSourceCurrency(acc)),
-      0,
-    );
-  }, [modelAccounts, dashboardRevenues, convertToBase, getSourceCurrency]);
+    let sum = 0;
+    if (fetchedPayoutRevenue) {
+      sum += convertToBase(fetchedPayoutRevenue.fourbased || 0, "USD");
+      sum += fetchedPayoutRevenue.maloum || 0;
+      sum += fetchedPayoutRevenue.brezzels || 0;
+    }
+    for (const cp of customPlatforms) sum += cp.revenue || 0;
+    return Math.round(sum * 100) / 100;
+  }, [fetchedPayoutRevenue, customPlatforms, convertToBase]);
 
   const verdienst = useMemo(() => {
     const fallback = modelForm.revenue_percentage || 0;
@@ -784,6 +810,27 @@ export default function ModelDashboardTab() {
     }
     return Math.round(sum * 100) / 100;
   }, [payoutRevenueForMonth, fetchedPayoutRevenue, customPlatforms, modelForm.revenue_percentage, modelForm.revenue_percentage_fourbased, modelForm.revenue_percentage_maloum, modelForm.revenue_percentage_brezzels, convertToBase]);
+
+  // ─── Auto-fill Provider-Invoice Felder aus dem aktuell gewählten Fetch-Zeitraum ───
+  useEffect(() => {
+    if (!fetchedPayoutRevenue) return;
+    const fromY = fetchYear, fromM = fetchMonth;
+    const toY = rangeMode ? fetchYearTo : fetchYear;
+    const toM = rangeMode ? fetchMonthTo : fetchMonth;
+    const lastDay = new Date(toY, toM, 0).getDate();
+    const periodStart = `${fromY}-${String(fromM).padStart(2, "0")}-01`;
+    const periodEnd = `${toY}-${String(toM).padStart(2, "0")}-${String(lastDay).padStart(2, "0")}`;
+    setModelForm((prev) => ({
+      ...prev,
+      invoice_net_amount: verdienst,
+      invoice_description: (prev as any).invoice_description || "Creator revenue share for digital content",
+      invoice_currency: (prev as any).invoice_currency || prev.currency || "EUR",
+      invoice_service_period_start: periodStart,
+      invoice_service_period_end: periodEnd,
+    } as any));
+    setCalcTrigger((t) => t + 1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetchedPayoutRevenue, fetchMonth, fetchYear, fetchMonthTo, fetchYearTo, rangeMode, verdienst]);
 
   // ─── Create model ───
   const handleCreateModel = async () => {
@@ -1965,9 +2012,22 @@ export default function ModelDashboardTab() {
                       </span>
                     )}
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                      {rangeMode ? "Zeitraum" : "Monat"}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setRangeMode((v) => !v)}
+                      className="text-[10px] uppercase tracking-wider text-accent hover:underline"
+                    >
+                      {rangeMode ? "Einzelner Monat" : "+ Zeitraum (mehrere Monate)"}
+                    </button>
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {rangeMode && <span className="text-[10px] text-muted-foreground">Von</span>}
                     <Select value={String(fetchMonth)} onValueChange={(v) => setFetchMonth(Number(v))}>
-                      <SelectTrigger className="w-[130px] h-9 text-sm bg-secondary/40 border-border/40">
+                      <SelectTrigger className="w-[120px] h-9 text-sm bg-secondary/40 border-border/40">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -1977,7 +2037,7 @@ export default function ModelDashboardTab() {
                       </SelectContent>
                     </Select>
                     <Select value={String(fetchYear)} onValueChange={(v) => setFetchYear(Number(v))}>
-                      <SelectTrigger className="w-[100px] h-9 text-sm bg-secondary/40 border-border/40">
+                      <SelectTrigger className="w-[90px] h-9 text-sm bg-secondary/40 border-border/40">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -1986,58 +2046,87 @@ export default function ModelDashboardTab() {
                         ))}
                       </SelectContent>
                     </Select>
-                    <Button
-                      type="button"
-                      size="sm"
-                      disabled={fetchingRevenue || !selectedModelId}
-                      className="flex-1 h-9 px-3 bg-gradient-to-r from-accent/90 to-accent text-accent-foreground hover:from-accent hover:to-accent/90 shadow-sm"
-                      onClick={async () => {
-                        if (!selectedModelId) return;
-                        const sameMonth =
-                          lastFetchInfo.month === fetchMonth && lastFetchInfo.year === fetchYear;
-                        if (sameMonth && !confirmOverwrite) {
-                          if (!confirm(`Werte für ${String(fetchMonth).padStart(2,"0")}/${fetchYear} bereits vorhanden. Überschreiben?`)) return;
-                          setConfirmOverwrite(true);
-                        }
-                        setFetchingRevenue(true);
-                        try {
-                          const { data, error } = await supabase.functions.invoke("fetch-model-revenue", {
-                            body: { model_id: selectedModelId, month: fetchMonth, year: fetchYear },
-                          });
-                           if (error) throw new Error(error.message);
-                           if ((data as any)?.error) throw new Error((data as any).error);
-                           const errs = ((data as any)?.errors ?? []) as Array<{ platform?: string; accountId?: string; code?: string; message?: string }>;
-                           if (errs.length > 0) {
-                             toast.error(
-                               `Umsatz teilweise abgerufen — ${errs.length} Fehler`,
-                               {
-                                  description: errs
-                                    .map(e => `${e.platform ?? "?"}: ${e.message ?? "Unbekannter Fehler"}`)
-                                    .join("\n"),
-                                 duration: 10000,
-                                 style: { whiteSpace: "pre-line" },
-                               }
-                             );
-                           } else {
-                             toast.success(`Umsatz für ${String(fetchMonth).padStart(2,"0")}/${fetchYear} aktualisiert ✅`);
-                           }
-                           await loadModelAccounts(selectedModelId);
-                           setFetchRevenueTick(t => t + 1);
-                        } catch (err: any) {
-                          toast.error(err.message || "Umsatz konnte nicht abgerufen werden");
-                        } finally {
-                          setFetchingRevenue(false);
-                          setConfirmOverwrite(false);
-                        }
-                      }}
-                    >
-                      {fetchingRevenue ? (
-                        <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> Lädt…</>
-                      ) : (
-                        <><Download className="h-3.5 w-3.5 mr-1.5" /> Fetch Revenue</>
-                      )}
-                    </Button>
+                    {rangeMode && (
+                      <>
+                        <span className="text-[10px] text-muted-foreground">Bis</span>
+                        <Select value={String(fetchMonthTo)} onValueChange={(v) => setFetchMonthTo(Number(v))}>
+                          <SelectTrigger className="w-[120px] h-9 text-sm bg-secondary/40 border-border/40">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {["Januar","Februar","März","April","Mai","Juni","Juli","August","September","Oktober","November","Dezember"].map((label, i) => (
+                              <SelectItem key={i+1} value={String(i+1)}>{label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Select value={String(fetchYearTo)} onValueChange={(v) => setFetchYearTo(Number(v))}>
+                          <SelectTrigger className="w-[90px] h-9 text-sm bg-secondary/40 border-border/40">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {[now.getFullYear() - 2, now.getFullYear() - 1, now.getFullYear(), now.getFullYear() + 1].map((y) => (
+                              <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </>
+                    )}
                   </div>
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={fetchingRevenue || !selectedModelId}
+                    className="w-full h-9 px-3 bg-gradient-to-r from-accent/90 to-accent text-accent-foreground hover:from-accent hover:to-accent/90 shadow-sm"
+                    onClick={async () => {
+                      if (!selectedModelId) return;
+                      const fromY = fetchYear, fromM = fetchMonth;
+                      const toY = rangeMode ? fetchYearTo : fetchYear;
+                      const toM = rangeMode ? fetchMonthTo : fetchMonth;
+                      const months = monthsInRange(fromY, fromM, toY, toM);
+                      if (months.length > 1) {
+                        if (!confirm(`Umsatz für ${months.length} Monate abrufen? Bestehende Werte werden überschrieben.`)) return;
+                      } else {
+                        const sameMonth = lastFetchInfo.month === fromM && lastFetchInfo.year === fromY;
+                        if (sameMonth && !confirm(`Werte für ${String(fromM).padStart(2,"0")}/${fromY} bereits vorhanden. Überschreiben?`)) return;
+                      }
+                      setFetchingRevenue(true);
+                      const allErrors: Array<{ platform?: string; message?: string }> = [];
+                      let ok = 0;
+                      try {
+                        for (const { year, month } of months) {
+                          const { data, error } = await supabase.functions.invoke("fetch-model-revenue", {
+                            body: { model_id: selectedModelId, month, year },
+                          });
+                          if (error) { allErrors.push({ platform: `${month}/${year}`, message: error.message }); continue; }
+                          if ((data as any)?.error) { allErrors.push({ platform: `${month}/${year}`, message: (data as any).error }); continue; }
+                          const errs = ((data as any)?.errors ?? []) as Array<{ platform?: string; message?: string }>;
+                          if (errs.length > 0) allErrors.push(...errs.map(e => ({ platform: `${month}/${year} ${e.platform ?? ""}`, message: e.message })));
+                          else ok++;
+                        }
+                        if (allErrors.length > 0) {
+                          toast.error(`Umsatz teilweise abgerufen — ${allErrors.length} Fehler`, {
+                            description: allErrors.map(e => `${e.platform ?? "?"}: ${e.message ?? "Unbekannter Fehler"}`).join("\n"),
+                            duration: 10000,
+                            style: { whiteSpace: "pre-line" },
+                          });
+                        } else {
+                          toast.success(`Umsatz für ${ok} Monat${ok === 1 ? "" : "e"} aktualisiert ✅`);
+                        }
+                        await loadModelAccounts(selectedModelId);
+                        setFetchRevenueTick(t => t + 1);
+                      } catch (err: any) {
+                        toast.error(err.message || "Umsatz konnte nicht abgerufen werden");
+                      } finally {
+                        setFetchingRevenue(false);
+                      }
+                    }}
+                  >
+                    {fetchingRevenue ? (
+                      <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> Lädt…</>
+                    ) : (
+                      <><Download className="h-3.5 w-3.5 mr-1.5" /> Fetch Revenue{rangeMode ? ` (${monthsInRange(fetchYear, fetchMonth, fetchYearTo, fetchMonthTo).length} Mon.)` : ""}</>
+                    )}
+                  </Button>
                   <div className="grid grid-cols-3 gap-2 pt-1 border-t border-accent/10">
                     {[
                       { label: "4Based", key: "fourbased" as const, color: "text-blue-400" },
@@ -2060,100 +2149,6 @@ export default function ModelDashboardTab() {
                   </div>
                 </div>
 
-                {/* Billing month + "Anteil berechnen" — basis for Provider Invoice */}
-                <div className="rounded-xl border border-accent/20 bg-accent/[0.03] p-3 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                      Abrechnungsmonat
-                    </p>
-                    <span className="text-[9px] text-muted-foreground/70">
-                      Basis für Provider Invoice
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Input
-                      type="month"
-                      value={billingMonth}
-                      onChange={(e) => {
-                        setBillingMonth(e.target.value);
-                        setShareCalculated(false);
-                        setBillingShare(0);
-                        setPayoutRevenueForMonth(null);
-                      }}
-                      className="flex-1 h-9 text-sm bg-secondary/40 border-border/40"
-                    />
-                    <Button
-                      type="button"
-                      size="sm"
-                      className="h-9 px-3 bg-gradient-to-r from-accent/90 to-accent text-accent-foreground hover:from-accent hover:to-accent/90 shadow-sm"
-                      onClick={async () => {
-                        if (!selectedModelId) return;
-                        const [y, m] = billingMonth.split("-").map(Number);
-                        if (!y || !m) {
-                          toast.error("Bitte gültigen Abrechnungsmonat wählen");
-                          return;
-                        }
-                        const { data: payout, error: payoutErr } = await (supabase as any)
-                          .from("payout_revenue")
-                          .select("fourbased_revenue, maloum_revenue, brezzels_revenue")
-                          .eq("model_id", selectedModelId)
-                          .eq("last_fetched_year", y)
-                          .eq("last_fetched_month", m)
-                          .maybeSingle();
-                        if (payoutErr) {
-                          toast.error(payoutErr.message);
-                          return;
-                        }
-                        if (!payout) {
-                          toast.error(`Keine Umsätze in payout_revenue für ${String(m).padStart(2, "0")}/${y}`);
-                          return;
-                        }
-                        const fb = Number((payout as any).fourbased_revenue) || 0;
-                        const ml = Number((payout as any).maloum_revenue) || 0;
-                        const br = Number((payout as any).brezzels_revenue) || 0;
-                        const fallback = modelForm.revenue_percentage || 0;
-                        const pctFb = modelForm.revenue_percentage_fourbased || fallback;
-                        const pctMl = modelForm.revenue_percentage_maloum || fallback;
-                        const pctBr = modelForm.revenue_percentage_brezzels || fallback;
-                        const customsTotal = customPlatforms.reduce((s, cp) => {
-                          const pct = cp.percentage > 0 ? cp.percentage : fallback;
-                          return s + (cp.revenue || 0) * pct / 100;
-                        }, 0);
-                        // 4Based revenue is fetched in USD — convert to model base currency
-                        const fbInBase = convertToBase(fb, "USD");
-                        const calculatedRaw = (fbInBase * pctFb) / 100 + (ml * pctMl) / 100 + (br * pctBr) / 100 + customsTotal;
-                        const calculated = Math.round(calculatedRaw * 100) / 100;
-                        const lastDay = new Date(y, m, 0).getDate();
-                        setBillingShare(calculated);
-                        setPayoutRevenueForMonth({ fourbased: fb, maloum: ml, brezzels: br });
-                        setShareCalculated(true);
-                        setCalcTrigger((t) => t + 1);
-                        setModelForm((prev) => ({
-                          ...prev,
-                          invoice_net_amount: calculated,
-                          invoice_description: "Creator revenue share for digital content",
-                          invoice_currency: prev.currency || "EUR",
-                          invoice_service_period_start: `${billingMonth}-01`,
-                          invoice_service_period_end: `${billingMonth}-${String(lastDay).padStart(2, "0")}`,
-                        }));
-                        toast.success(
-                          `Anteil berechnet für ${String(m).padStart(2, "0")}/${y} · ${calculated.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${modelForm.currency || "EUR"}`,
-                        );
-                      }}
-                    >
-                      Anteil berechnen
-                    </Button>
-                  </div>
-                  {shareCalculated && (
-                    <div className="flex items-center justify-between pt-1 border-t border-accent/10">
-                      <span className="text-[10px] text-muted-foreground">Berechneter Anteil</span>
-                      <span className="text-sm font-bold text-gold-gradient tabular-nums">
-                        {billingShare.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{" "}
-                        {modelForm.currency || "EUR"}
-                      </span>
-                    </div>
-                  )}
-                </div>
 
 
                 <div className="flex items-center justify-between gap-2 rounded-lg border border-accent/15 bg-accent/[0.02] px-3 py-2">
