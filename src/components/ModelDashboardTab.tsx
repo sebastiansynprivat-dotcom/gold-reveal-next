@@ -515,25 +515,7 @@ export default function ModelDashboardTab() {
       .eq("model_id", modelId)
       .maybeSingle();
 
-    const revMap: Record<string, number> = {};
-    const platRevMap: Record<string, { fourbased: number; maloum: number; brezzels: number }> = {};
     if (dashRow) {
-      const fb = Number((dashRow as any).fourbased_revenue) || 0;
-      const ml = Number((dashRow as any).maloum_revenue) || 0;
-      const br = Number((dashRow as any).brezzels_revenue) || 0;
-      const platformValue: Record<string, number> = { "4Based": fb, Maloum: ml, Brezzels: br };
-      // Map platform revenue onto the first account per platform so totals don't double-count
-      const seenPlatform = new Set<string>();
-      for (const acc of accs) {
-        const val = seenPlatform.has(acc.platform) ? 0 : platformValue[acc.platform] || 0;
-        seenPlatform.add(acc.platform);
-        revMap[acc.id] = val;
-        platRevMap[acc.id] = {
-          fourbased: acc.platform === "4Based" ? val : 0,
-          maloum: acc.platform === "Maloum" ? val : 0,
-          brezzels: acc.platform === "Brezzels" ? val : 0,
-        };
-      }
       setLastFetchInfo({
         at: (dashRow as any).last_fetched_at || null,
         month: (dashRow as any).last_fetched_month || null,
@@ -542,8 +524,8 @@ export default function ModelDashboardTab() {
     } else {
       setLastFetchInfo({ at: null, month: null, year: null });
     }
-    setDashboardRevenues(revMap);
-    setPlatformRevenues(platRevMap);
+    // dashboardRevenues / platformRevenues are now sourced from accounts_data
+    // by the period-revenue effect below — do not seed from model_dashboard.
   }, []);
 
   // ─── Period revenue from accounts_data.total ───
