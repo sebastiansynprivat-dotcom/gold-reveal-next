@@ -19,7 +19,18 @@ function fmtEur(n: number): string {
   return Math.round(n).toLocaleString("de-DE") + " €";
 }
 
-export async function buildPassFields() {
+type RevenueSnapshot = {
+  today: string;
+  month: string;
+  maloum: string;
+  brezzels: string;
+  fourbased: string;
+  fansyme: string;
+  salesToday: string;
+  updated: string;
+};
+
+export async function buildRevenueSnapshot(): Promise<RevenueSnapshot> {
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -64,9 +75,45 @@ export async function buildPassFields() {
     brezzels: fmtEur(byPlatform["brezzels"] || 0),
     fourbased: fmtEur(byPlatform["4based"] || 0),
     fansyme: fmtEur(byPlatform["fansyme"] || 0),
-    sales_today: String(todayCount),
-    streak: "🔥",
+    salesToday: String(todayCount),
     updated,
-    note: "Live SheX Dashboard · Updates automatisch alle 5 Min",
   };
+}
+
+export async function buildPassFieldVariants() {
+  const r = await buildRevenueSnapshot();
+  const subtitle = `Heute ${r.today} · Monat ${r.month}`;
+
+  return [
+    {
+      name: "shex-custom",
+      fields: {
+        today: r.today,
+        month: r.month,
+        maloum: r.maloum,
+        brezzels: r.brezzels,
+        fourbased: r.fourbased,
+        fansyme: r.fansyme,
+        sales_today: r.salesToday,
+        streak: "🔥",
+        updated: r.updated,
+        note: "Live SheX Dashboard · Updates automatisch alle 5 Min",
+      },
+    },
+    {
+      name: "passninja-docs-default",
+      fields: {
+        "member.level": r.month,
+        discount: subtitle,
+        "member.name": "SheX Dashboard",
+      },
+    },
+    {
+      name: "passninja-sdk-default",
+      fields: {
+        memberName: "SheX Dashboard",
+        discount: subtitle,
+      },
+    },
+  ];
 }
