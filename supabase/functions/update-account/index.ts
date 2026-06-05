@@ -170,6 +170,27 @@ Deno.serve(async (req) => {
     const isBatchItem =
       !asArray && body && typeof body === "object" && typeof (body as any).account_id === "string";
 
+    // --- Metrics shape: items with date + at least one metric field -> accounts_data upsert ---
+    if (asArray || isBatchItem) {
+      const allItems = asArray ?? [body];
+      const metricsItems = allItems.filter((it: any) => isMetricsItem(it));
+      const accountUpdateItems = allItems.filter((it: any) => !isMetricsItem(it));
+
+      if (metricsItems.length > 0 && accountUpdateItems.length === 0) {
+        const { error, results } = await processMetricsItems(supabase, metricsItems);
+        if (error) return json({ error, results }, 500);
+        const updated = results!.filter((r) => r.metrics_updated).length;
+        return json({ success: true, metrics_updated: updated, results });
+      }
+
+      if (metricsItems.length > 0 && accountUpdateItems.length > 0) {
+        return json(
+          { error: "Mixed payload not supported: send metrics rows and account-update rows in separate requests" },
+          400,
+        );
+      }
+    }
+
     if (asArray || isBatchItem) {
       const items = (asArray ?? [body])
         .map((it: any) => extractBatchItem(it))
