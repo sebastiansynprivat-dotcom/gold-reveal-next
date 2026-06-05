@@ -2189,12 +2189,9 @@ export default function ModelDashboardTab() {
                   const fbInBase = convertToBase(fb, "USD");
                   const totalPayouts = fbInBase + ml + br;
                   const startD = new Date(fetchYear, fetchMonth - 1, 1);
-                  const endD = new Date(fetchYear, fetchMonth - 1 + Math.max(1, fetchMonthsCount), 0);
                   const monthFmt = (d: Date) =>
                     d.toLocaleDateString("de-DE", { month: "short", year: "numeric" });
-                  const rangeLabel = fetchMonthsCount > 1
-                    ? `${monthFmt(startD)} – ${monthFmt(endD)}`
-                    : monthFmt(startD);
+                  const rangeLabel = monthFmt(startD);
                   return (
                     <div className="rounded-xl border border-accent/20 bg-accent/[0.03] p-3 space-y-2">
                       <div className="flex items-center justify-between">
