@@ -2917,6 +2917,36 @@ export default function ModelDashboardTab() {
               <CreditNoteForm
                 key={selectedModelId}
                 autoApplyTrigger={calcTrigger}
+                onInvoiceCreated={async ({ creditNoteNumber, netAmount, servicePeriodStart, servicePeriodEnd }) => {
+                  if (!selectedModelId || !servicePeriodStart || !servicePeriodEnd) return;
+                  // Compute all (year, month) pairs covered by the invoice service period
+                  const start = new Date(servicePeriodStart);
+                  const end = new Date(servicePeriodEnd);
+                  const pairs: Array<{ y: number; m: number }> = [];
+                  const cur = new Date(start.getFullYear(), start.getMonth(), 1);
+                  while (cur <= end) {
+                    pairs.push({ y: cur.getFullYear(), m: cur.getMonth() + 1 });
+                    cur.setMonth(cur.getMonth() + 1);
+                  }
+                  if (pairs.length === 0) return;
+                  const nowIso = new Date().toISOString();
+                  const share = pairs.length > 0 ? netAmount / pairs.length : netAmount;
+                  // Mark each covered payout_revenue row as billed
+                  await Promise.all(pairs.map(({ y, m }) =>
+                    (supabase as any)
+                      .from("payout_revenue")
+                      .update({
+                        billed_at: nowIso,
+                        billed_credit_note_number: creditNoteNumber,
+                        billed_amount: Math.round(share * 100) / 100,
+                      })
+                      .eq("model_id", selectedModelId)
+                      .eq("last_fetched_month", m)
+                      .eq("last_fetched_year", y)
+                  ));
+                  setBillingHistoryTick((t) => t + 1);
+                  toast.success(`${pairs.length} Monat${pairs.length === 1 ? "" : "e"} als abgerechnet markiert`);
+                }}
                 suggestedAmount={verdienst}
                 providerName={selectedModel.name}
                 accountId={modelAccounts[0]?.id || ""}
