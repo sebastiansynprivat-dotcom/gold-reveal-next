@@ -1,36 +1,36 @@
-## Plan
+## Plan: Rename `accounts_revenue` → `accounts_data`, add fields, rename + extend edge function
 
-### 1. Database migration (DONE if approved on previous step — already applied)
-- Renamed `accounts.media_id` → `accounts.media`, type `jsonb`.
+### 1. Database migration
+- Rename table `public.accounts_revenue` → `public.accounts_data` (preserves rows, indexes, policies, unique constraint, FKs).
+- Add nullable columns:
+  - `followers` integer
+  - `subscribers` integer
+  - `oldest_chat` integer
+  - `unread_chats` integer
+  - `mass_dms` integer
+- Existing columns (`account_id`, `date`, `platform`, `total`, `amounts`) and the `(account_id, date, platform)` unique constraint stay untouched.
+- Re-assert GRANTs for `authenticated` and `service_role` on the renamed table.
 
-### 2. Edge function `update-account` — support BOTH payloads in parallel
+### 2. Edge function rename + extension
+- Create `supabase/functions/ingest-account-data/index.ts` (replaces `ingest-account-revenue`).
+- Delete the old `ingest-account-revenue` function.
+- Update `supabase/config.toml`: remove old entry, add `[functions.ingest-account-data]` with `verify_jwt = false`.
+- Keep existing auth (`REVENUE_INGEST_API_KEY`), CORS, batching, grouping by `(account_id, date, platform)`, dedupe-by-`purchase_id`, and response shape.
+- Extend payload schema — each row may include (all optional except the existing required ones):
+  - `purchase_id` + `amount` → revenue entry (existing behavior, still dedup'd)
+  - `followers`, `subscribers`, `oldest_chat`, `unread_chats`, `mass_dms` (all integers)
+- Validation:
+  - Revenue fields (`purchase_id`, `amount`) become optional; a row must contain either a revenue entry OR at least one metric field.
+  - Type-check each metric field when present (integer); reject invalid types with 400.
+- Upsert logic per `(account_id, date, platform)` group:
+  - Merge revenue as today (sum new amounts into `total`, append deduped entries to `amounts`).
+  - For metric fields: take the last non-null value seen in the batch for that group and overwrite the column (latest-wins). Null/omitted = leave existing value untouched.
+- Response stays `{ success, processed, skipped_duplicates, groups }` and adds `metrics_updated` count.
 
-Detect shape from the body:
+### 3. Frontend / codebase references
+- Search and replace `accounts_revenue` → `accounts_data` across the codebase (admin dashboard queries, hooks, types).
+- Search and replace any client invocations of `ingest-account-revenue` → `ingest-account-data` (if any exist in the frontend).
+- Supabase types regenerate automatically after the migration.
 
-**A. New batch shape** — body is an array, or an object containing `account_id`:
-```json
-[
-  {
-    "account_id": "881ec465-...",
-    "post": true,
-    "message": true,
-    "main_message": "...",
-    "follow_message": "...",
-    "media": { "mediaId": "...", "type": "picture", "width": 960, "height": 1280 }
-  }
-]
-```
-- For each item: validate `account_id` is a UUID, pick only allowed fields (`post`, `message`, `main_message`, `follow_message`, `media`), then `update accounts where id = account_id`.
-- Return `{ success, total_updated, results: [{ account_id, updated, error? }] }`.
-
-**B. Legacy shape** — body has `platform` + `account_email` + `updates`:
-- Behaviour unchanged. Still updates by `(platform, account_email)` with the existing `ALLOWED` whitelist.
-
-### 3. Allowed-fields whitelist
-Extend `ALLOWED` to also include: `post`, `message`, `main_message`, `follow_message`, `media`. Keeps legacy callers working and lets them push the new fields too.
-
-### Technical notes
-- Auth: same `x-api-key` check against `ACCOUNTS_SECRET_KEY`.
-- Uses service role client (RLS bypass), as today.
-- CORS unchanged.
-- No client code changes required.
+### Out of scope
+- No new admin UI for displaying followers / subscribers / oldest_chat / unread_chats / mass_dms — only the ingest path and storage.
