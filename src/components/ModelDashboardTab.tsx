@@ -836,7 +836,7 @@ export default function ModelDashboardTab() {
     setShareCalculated(true);
 
     const startD = new Date(fetchYear, fetchMonth - 1, 1);
-    const endD = new Date(fetchYear, fetchMonth - 1 + Math.max(1, fetchMonthsCount), 0);
+    const endD = new Date(fetchYear, fetchMonth, 0);
     const fmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
     setModelForm((prev: any) => ({
       ...prev,
@@ -846,7 +846,7 @@ export default function ModelDashboardTab() {
       invoice_service_period_start: fmt(startD),
       invoice_service_period_end: fmt(endD),
     }));
-  }, [fetchedPayoutRevenue, modelForm.revenue_percentage, modelForm.revenue_percentage_fourbased, modelForm.revenue_percentage_maloum, modelForm.revenue_percentage_brezzels, customPlatforms, convertToBase, fetchYear, fetchMonth, fetchMonthsCount]);
+  }, [fetchedPayoutRevenue, modelForm.revenue_percentage, modelForm.revenue_percentage_fourbased, modelForm.revenue_percentage_maloum, modelForm.revenue_percentage_brezzels, customPlatforms, convertToBase, fetchYear, fetchMonth]);
 
 
   // ─── Per-model platform revenue (for selected model) — converted to base currency ───
