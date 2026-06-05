@@ -821,7 +821,8 @@ export default function ModelHomeDashboard({
                     <Download className="h-4 w-4" />
                   </Button>
                 </div>
-              ))}
+                );
+              })}
             </div>
 
           )}
