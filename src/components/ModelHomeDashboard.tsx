@@ -884,48 +884,67 @@ export default function ModelHomeDashboard({
                         {snaps.map((s, i) => {
                           const monthLabel = new Date(s.last_fetched_year, s.last_fetched_month - 1, 1)
                             .toLocaleDateString(lang === "en" ? "en-US" : "de-DE", { month: "long", year: "numeric" });
-                          const pr = s.billed_snapshot?.platform_revenues || {
+                          const snap = s.billed_snapshot || {};
+                          const pr = snap.platform_revenues || {
                             fourbased: s.fourbased_revenue || 0,
                             maloum: s.maloum_revenue || 0,
                             brezzels: s.brezzels_revenue || 0,
                           };
-                          const snapCurrency = s.billed_snapshot?.invoice_currency || modelCurrency;
-                          const customs: any[] = s.billed_snapshot?.custom_platforms || [];
+                          const pcts = snap.percentages || {};
+                          const defPct = pcts.default || 0;
+                          const pctFb = pcts.fourbased || defPct;
+                          const pctMa = pcts.maloum || defPct;
+                          const pctBr = pcts.brezzels || defPct;
+                          const snapCurrency = snap.invoice_currency || modelCurrency;
+                          const customs: any[] = snap.custom_platforms || [];
+                          const fmtN = (n: number) =>
+                            Number(n || 0).toLocaleString(lang === "en" ? "en-US" : "de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                          const gesamt =
+                            Number(pr.fourbased || 0) +
+                            Number(pr.maloum || 0) +
+                            Number(pr.brezzels || 0) +
+                            customs.reduce((sum, c) => sum + Number(c.revenue || 0), 0);
                           return (
-                            <div key={i} className="rounded-md bg-background/40 border border-border/30 p-2.5 space-y-1.5">
+                            <div key={i} className="rounded-md bg-background/40 border border-border/30 p-2.5 space-y-2">
                               <div className="flex justify-between items-center">
                                 <span className="text-xs font-semibold text-foreground">{monthLabel}</span>
                                 <span className="text-xs font-bold text-accent tabular-nums">
                                   {fmtMoneyDec(Number(s.billed_amount || 0), snapCurrency)}
                                 </span>
                               </div>
-                              <div className="space-y-0.5 text-[10px]">
+                              <div className="space-y-1 text-[10px]">
                                 {Number(pr.fourbased || 0) > 0 && (
                                   <div className="flex justify-between text-muted-foreground">
-                                    <span>4Based</span>
-                                    <span className="tabular-nums">{Number(pr.fourbased).toLocaleString(lang === "en" ? "en-US" : "de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD</span>
+                                    <span>4Based {pctFb ? `(${pctFb}%)` : ""}</span>
+                                    <span className="tabular-nums">{fmtN(pr.fourbased)} USD</span>
                                   </div>
                                 )}
                                 {Number(pr.maloum || 0) > 0 && (
                                   <div className="flex justify-between text-muted-foreground">
-                                    <span>Maloum</span>
-                                    <span className="tabular-nums">{fmtMoneyDec(Number(pr.maloum))}</span>
+                                    <span>Maloum {pctMa ? `(${pctMa}%)` : ""}</span>
+                                    <span className="tabular-nums">{fmtN(pr.maloum)} EUR</span>
                                   </div>
                                 )}
                                 {Number(pr.brezzels || 0) > 0 && (
                                   <div className="flex justify-between text-muted-foreground">
-                                    <span>Brezzels</span>
-                                    <span className="tabular-nums">{fmtMoneyDec(Number(pr.brezzels))}</span>
+                                    <span>Brezzels {pctBr ? `(${pctBr}%)` : ""}</span>
+                                    <span className="tabular-nums">{fmtN(pr.brezzels)} EUR</span>
                                   </div>
                                 )}
-                                {customs.map((c, ci) => (
-                                  Number(c.revenue || 0) > 0 && (
+                                {customs.map((c, ci) => {
+                                  if (!(Number(c.revenue || 0) > 0)) return null;
+                                  const cp = c.percentage || defPct;
+                                  return (
                                     <div key={ci} className="flex justify-between text-muted-foreground">
-                                      <span>{c.name}</span>
-                                      <span className="tabular-nums">{fmtMoneyDec(Number(c.revenue))}</span>
+                                      <span>{c.name} {cp ? `(${cp}%)` : ""}</span>
+                                      <span className="tabular-nums">{fmtN(c.revenue)} {snapCurrency}</span>
                                     </div>
-                                  )
-                                ))}
+                                  );
+                                })}
+                                <div className="flex justify-between pt-1 mt-1 border-t border-border/30 text-foreground">
+                                  <span className="text-muted-foreground">{lang === "en" ? "Total revenue" : "Gesamtumsatz Monat"}</span>
+                                  <span className="tabular-nums font-semibold">{fmtN(gesamt)} {snapCurrency}</span>
+                                </div>
                               </div>
                             </div>
                           );
