@@ -463,6 +463,10 @@ export default function ModelDashboardTab() {
     brezzels: number | null;
   } | null>(null);
   const [fetchRevenueTick, setFetchRevenueTick] = useState(0);
+  // How many consecutive months to fetch / bill starting from (fetchMonth, fetchYear)
+  const [fetchMonthsCount, setFetchMonthsCount] = useState<number>(1);
+  // Per-platform errors from the last fetch (e.g. password incorrect)
+  const [fetchErrors, setFetchErrors] = useState<Record<string, { code?: string; message: string }>>({});
 
   // ─── Custom platforms (per-model, localStorage) ───
   type CustomPlatform = { id: string; name: string; revenue: number; percentage: number };
