@@ -2573,36 +2573,6 @@ export default function ModelDashboardTab() {
                                     Passwort falsch
                                   </span>
                                 )}
-                                {isFourbased && (
-                                  <button
-                                    type="button"
-                                    title={modelForm.fourbased_payout_configured ? "4Based Auszahlung hinterlegt — klicken zum Aufheben" : "4Based Auszahlung noch NICHT hinterlegt — klicken zum Markieren"}
-                                    onClick={async () => {
-                                      if (!selectedModelId) return;
-                                      const prev = !!modelForm.fourbased_payout_configured;
-                                      const next = !prev;
-                                      setModelForm((f: any) => ({ ...f, fourbased_payout_configured: next }));
-                                      const { error } = await (supabase.from("models") as any)
-                                        .update({ fourbased_payout_configured: next })
-                                        .eq("id", selectedModelId);
-                                      if (error) {
-                                        setModelForm((f: any) => ({ ...f, fourbased_payout_configured: prev }));
-                                        toast.error("Konnte Status nicht speichern");
-                                      } else {
-                                        toast.success(next ? "Auszahlung als hinterlegt markiert" : "Auszahlung als offen markiert");
-                                      }
-                                    }}
-                                    className={cn(
-                                      "inline-flex items-center gap-1 rounded-full border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider transition-colors shrink-0",
-                                      modelForm.fourbased_payout_configured
-                                        ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/25"
-                                        : "bg-amber-500/15 text-amber-400 border-amber-500/40 hover:bg-amber-500/25 animate-pulse"
-                                    )}
-                                  >
-                                    <CheckCircle2 className="h-2.5 w-2.5" />
-                                    {modelForm.fourbased_payout_configured ? "Payout ok" : "Payout?"}
-                                  </button>
-                                )}
                               </span>
                               <div className="flex-1 flex items-center gap-2 min-w-0">
                                 <Slider
