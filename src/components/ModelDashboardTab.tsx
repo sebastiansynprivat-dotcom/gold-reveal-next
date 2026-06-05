@@ -640,6 +640,48 @@ export default function ModelDashboardTab() {
     })();
   }, [selectedModelId, fetchMonth, fetchYear, fetchMonthsCount, fetchRevenueTick]);
 
+  // ─── Auto-compute "Gesamt Payouts" + billing share from fetched values ───
+  useEffect(() => {
+    if (!fetchedPayoutRevenue) {
+      setShareCalculated(false);
+      setBillingShare(0);
+      setPayoutRevenueForMonth(null);
+      return;
+    }
+    const fb = fetchedPayoutRevenue.fourbased ?? 0;
+    const ml = fetchedPayoutRevenue.maloum ?? 0;
+    const br = fetchedPayoutRevenue.brezzels ?? 0;
+    const fallback = modelForm.revenue_percentage || 0;
+    const pctFb = modelForm.revenue_percentage_fourbased || fallback;
+    const pctMl = modelForm.revenue_percentage_maloum || fallback;
+    const pctBr = modelForm.revenue_percentage_brezzels || fallback;
+    const customsTotal = customPlatforms.reduce((s, cp) => {
+      const pct = cp.percentage > 0 ? cp.percentage : fallback;
+      return s + (cp.revenue || 0) * pct / 100;
+    }, 0);
+    const fbInBase = convertToBase(fb, "USD");
+    const calculatedRaw = (fbInBase * pctFb) / 100 + (ml * pctMl) / 100 + (br * pctBr) / 100 + customsTotal;
+    const calculated = Math.round(calculatedRaw * 100) / 100;
+    setBillingShare(calculated);
+    setPayoutRevenueForMonth({ fourbased: fb, maloum: ml, brezzels: br });
+    setShareCalculated(true);
+
+    // Invoice service period spans the selected fetch range
+    const startD = new Date(fetchYear, fetchMonth - 1, 1);
+    const endD = new Date(fetchYear, fetchMonth - 1 + Math.max(1, fetchMonthsCount), 0);
+    const fmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+    setModelForm((prev) => ({
+      ...prev,
+      invoice_net_amount: calculated,
+      invoice_description: prev.invoice_description || "Creator revenue share for digital content",
+      invoice_currency: prev.currency || "EUR",
+      invoice_service_period_start: fmt(startD),
+      invoice_service_period_end: fmt(endD),
+    }));
+  }, [fetchedPayoutRevenue, modelForm.revenue_percentage, modelForm.revenue_percentage_fourbased, modelForm.revenue_percentage_maloum, modelForm.revenue_percentage_brezzels, customPlatforms, convertToBase, fetchYear, fetchMonth, fetchMonthsCount]);
+
+
+
   // ─── Load selected model data into form ───
   useEffect(() => {
     if (!selectedModelId) return;
