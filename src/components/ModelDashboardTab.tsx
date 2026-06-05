@@ -2104,16 +2104,6 @@ export default function ModelDashboardTab() {
                         ))}
                       </SelectContent>
                     </Select>
-                    <Select value={String(fetchMonthsCount)} onValueChange={(v) => setFetchMonthsCount(Number(v))}>
-                      <SelectTrigger className="w-[90px] h-9 text-sm bg-secondary/40 border-border/40" title="Anzahl Monate">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {[1,2,3,4,5,6,7,8,9,10,11,12].map((n) => (
-                          <SelectItem key={n} value={String(n)}>{n} {n === 1 ? "Monat" : "Monate"}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
                     <Button
                       type="button"
                       size="sm"
@@ -2121,14 +2111,7 @@ export default function ModelDashboardTab() {
                       className="flex-1 h-9 px-3 bg-gradient-to-r from-accent/90 to-accent text-accent-foreground hover:from-accent hover:to-accent/90 shadow-sm"
                       onClick={async () => {
                         if (!selectedModelId) return;
-                        const count = Math.max(1, fetchMonthsCount);
-                        // Build (year, month) pairs
-                        const pairs: Array<{ y: number; m: number }> = [];
-                        for (let i = 0; i < count; i++) {
-                          const d = new Date(fetchYear, (fetchMonth - 1) + i, 1);
-                          pairs.push({ y: d.getFullYear(), m: d.getMonth() + 1 });
-                        }
-                        if (!confirmOverwrite && count === 1) {
+                        if (!confirmOverwrite) {
                           const sameMonth =
                             lastFetchInfo.month === fetchMonth && lastFetchInfo.year === fetchYear;
                           if (sameMonth) {
@@ -2137,38 +2120,29 @@ export default function ModelDashboardTab() {
                           }
                         }
                         setFetchingRevenue(true);
-                        const allErrs: Array<{ platform?: string; accountId?: string; code?: string; message?: string }> = [];
-                        let succeeded = 0;
                         try {
-                          for (const { y, m } of pairs) {
-                            const { data, error } = await supabase.functions.invoke("fetch-model-revenue", {
-                              body: { model_id: selectedModelId, month: m, year: y },
-                            });
-                            if (error) { allErrs.push({ message: `${String(m).padStart(2,"0")}/${y}: ${error.message}` }); continue; }
-                            if ((data as any)?.error) { allErrs.push({ message: `${String(m).padStart(2,"0")}/${y}: ${(data as any).error}` }); continue; }
-                            const errs = ((data as any)?.errors ?? []) as Array<{ platform?: string; accountId?: string; code?: string; message?: string }>;
-                            for (const e of errs) allErrs.push({ ...e, message: `${String(m).padStart(2,"0")}/${y} · ${e.platform ?? "?"}: ${e.message ?? "Unbekannter Fehler"}` });
-                            succeeded++;
-                          }
-                          // Map latest errors per platform for inline UI
+                          const { data, error } = await supabase.functions.invoke("fetch-model-revenue", {
+                            body: { model_id: selectedModelId, month: fetchMonth, year: fetchYear },
+                          });
+                          if (error) throw error;
+                          if ((data as any)?.error) throw new Error((data as any).error);
+                          const errs = ((data as any)?.errors ?? []) as Array<{ platform?: string; accountId?: string; code?: string; message?: string }>;
                           const errMap: Record<string, { code?: string; message: string }> = {};
-                          for (const e of allErrs) {
-                            if (e.platform) errMap[e.platform] = { code: e.code, message: e.message };
+                          for (const e of errs) {
+                            if (e.platform) errMap[e.platform] = { code: e.code, message: e.message || "Unbekannter Fehler" };
                           }
                           setFetchErrors(errMap);
-                          if (allErrs.length > 0) {
-                            toast.error(
-                              `Umsatz teilweise abgerufen — ${allErrs.length} Fehler`,
-                              {
-                                description: allErrs.map(e => e.message).join("\n"),
-                                duration: 10000,
-                                style: { whiteSpace: "pre-line" },
-                              }
-                            );
+                          if (errs.length > 0) {
+                            toast.error(`Umsatz teilweise abgerufen — ${errs.length} Fehler`, {
+                              description: errs.map(e => `${e.platform ?? "?"}: ${e.message ?? "Unbekannter Fehler"}`).join("\n"),
+                              duration: 10000,
+                              style: { whiteSpace: "pre-line" },
+                            });
                           } else {
-                            toast.success(`Umsatz für ${count} Monat${count === 1 ? "" : "e"} aktualisiert ✅`);
+                            toast.success(`Umsatz für ${String(fetchMonth).padStart(2,"0")}/${fetchYear} aktualisiert ✅`);
                           }
                           await loadModelAccounts(selectedModelId);
+                          setLastFetchInfo({ at: new Date().toISOString(), month: fetchMonth, year: fetchYear });
                           setFetchRevenueTick(t => t + 1);
                         } catch (err: any) {
                           toast.error(err.message || "Umsatz konnte nicht abgerufen werden");
