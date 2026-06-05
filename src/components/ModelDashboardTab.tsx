@@ -2255,30 +2255,49 @@ export default function ModelDashboardTab() {
                       }
                     : null;
                   const totals = payoutRevenueForMonth ?? fetchedTotals ?? { fourbased: 0, maloum: 0, brezzels: 0 };
-                  const rows: Array<{ key: "fourbased" | "maloum" | "brezzels"; label: string; rev: number; pctField: keyof ModelRow }> = [
-                    { key: "fourbased", label: "4Based", rev: totals.fourbased, pctField: "revenue_percentage_fourbased" },
-                    { key: "maloum", label: "Maloum", rev: totals.maloum, pctField: "revenue_percentage_maloum" },
-                    { key: "brezzels", label: "Brezzels", rev: totals.brezzels, pctField: "revenue_percentage_brezzels" },
+                  const allRows: Array<{ key: "fourbased" | "maloum" | "brezzels"; label: string; platform: string; rev: number; pctField: keyof ModelRow }> = [
+                    { key: "fourbased", label: "4Based", platform: "4Based", rev: totals.fourbased, pctField: "revenue_percentage_fourbased" },
+                    { key: "maloum", label: "Maloum", platform: "Maloum", rev: totals.maloum, pctField: "revenue_percentage_maloum" },
+                    { key: "brezzels", label: "Brezzels", platform: "Brezzels", rev: totals.brezzels, pctField: "revenue_percentage_brezzels" },
                   ];
+                  // Only show platforms the model actually has configured
+                  const modelPlatformSet = new Set(modelAccounts.map((a) => a.platform));
+                  const rows = allRows.filter((r) => modelPlatformSet.has(r.platform));
                   return (
                     <div className="space-y-3 rounded-xl border border-accent/15 bg-accent/[0.02] p-3">
                       <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
                         Custom % pro Plattform
                       </p>
+                      {rows.length === 0 && (
+                        <p className="text-[11px] text-muted-foreground/70 italic">
+                          Keine Plattformen beim Model hinterlegt.
+                        </p>
+                      )}
                       {rows.map((r) => {
                         const pct = (modelForm[r.pctField] as number) || 0;
                         const usingFallback = pct === 0;
                         const effective = usingFallback ? fallback : pct;
-                        // 4Based revenue is in USD — convert to base for earnings
                         const isFourbased = r.key === "fourbased";
                         const sourceCur = isFourbased ? "USD" : baseCurrency;
                         const revInBase = isFourbased ? convertToBase(r.rev, "USD") : r.rev;
                         const earn = (revInBase * effective) / 100;
                         const showConversion = isFourbased && sourceCur !== baseCurrency;
+                        const platErr = fetchErrors[r.platform];
+                        const isAuthErr = !!platErr && /pass|auth|login|credential|401|403|invalid/i.test(`${platErr.code || ""} ${platErr.message || ""}`);
                         return (
                           <div key={r.key} className="space-y-1.5">
                             <div className="flex items-center justify-between gap-2">
-                              <span className="text-xs font-medium text-foreground w-16 shrink-0">{r.label}</span>
+                              <span className="text-xs font-medium text-foreground w-16 shrink-0 flex items-center gap-1.5">
+                                {r.label}
+                                {isAuthErr && (
+                                  <span
+                                    title={platErr.message}
+                                    className="inline-flex items-center rounded-full bg-destructive/15 text-destructive border border-destructive/30 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider"
+                                  >
+                                    Passwort falsch
+                                  </span>
+                                )}
+                              </span>
                               <div className="flex-1 flex items-center gap-2 min-w-0">
                                 <Slider
                                   value={[pct]}
@@ -2311,9 +2330,15 @@ export default function ModelDashboardTab() {
                                 → {earn.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {baseCurrency}
                               </span>
                             </div>
+                            {platErr && !isAuthErr && (
+                              <div className="pl-[4.5rem] text-[10px] text-destructive/80">
+                                ⚠ {platErr.message}
+                              </div>
+                            )}
                           </div>
                         );
                       })}
+
 
                       {/* Custom platforms */}
                       {customPlatforms.length > 0 && (
