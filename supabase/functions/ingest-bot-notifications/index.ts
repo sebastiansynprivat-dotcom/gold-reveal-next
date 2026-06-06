@@ -84,7 +84,11 @@ Deno.serve(async (req) => {
     if (clean.length) {
       const { error, count } = await admin
         .from("bot_notifications")
-        .insert(clean, { count: "exact" });
+        .upsert(clean, {
+          onConflict: "account_email,platform,type,message",
+          ignoreDuplicates: false,
+          count: "exact",
+        });
       if (error) {
         return new Response(JSON.stringify({ error: error.message, errors }), {
           status: 500,
