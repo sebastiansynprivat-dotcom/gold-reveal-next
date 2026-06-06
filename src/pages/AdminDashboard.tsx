@@ -958,6 +958,39 @@ export default function AdminDashboard() {
 
   const [mediaSetting, setMediaSetting] = useState<Record<string, boolean>>({});
 
+  const PING_URL = "https://api.shexadmin.ngrok.pro/checkliveness";
+  const [pingStatus, setPingStatus] = useState<Record<string, "idle" | "loading" | "ok" | "fail">>({});
+  const pingAccount = async (acc: AccountEntry) => {
+    setPingStatus((p) => ({ ...p, [acc.id]: "loading" }));
+    try {
+      const res = await fetch(PING_URL, {
+        method: "POST",
+        headers: mediaHeaders,
+        body: JSON.stringify({
+          id: acc.id,
+          platform: acc.platform,
+          email: acc.account_email,
+          password: (acc as any).account_password,
+        }),
+      });
+      if (!res.ok) {
+        toast.error(`Ping failed (${res.status})`);
+        setPingStatus((p) => ({ ...p, [acc.id]: "fail" }));
+        return;
+      }
+      const data = await res.json();
+      if (data?.success && data?.live) {
+        setPingStatus((p) => ({ ...p, [acc.id]: "ok" }));
+      } else {
+        toast.error(data?.reason || "Endpoint not live");
+        setPingStatus((p) => ({ ...p, [acc.id]: "fail" }));
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to ping");
+      setPingStatus((p) => ({ ...p, [acc.id]: "fail" }));
+    }
+  };
+
   const setAccountMedia = async (acc: AccountEntry) => {
     setMediaSetting((p) => ({ ...p, [acc.id]: true }));
     try {
