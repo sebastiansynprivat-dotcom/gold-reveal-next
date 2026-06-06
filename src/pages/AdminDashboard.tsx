@@ -947,7 +947,7 @@ export default function AdminDashboard() {
   const [mediaStats, setMediaStats] = useState<Record<string, { active: number; posted: number; failed: number; remaining: number }>>({});
   const [mediaResetting, setMediaResetting] = useState<Record<string, boolean>>({});
 
-  const MEDIA_STATS_URL = "https://api.shexadmin.ngrok.pro/postingData";
+  const MEDIA_STATS_URL = "https://api.shexadmin.ngrok.pro/postingdata";
   const MEDIA_RESET_URL = "https://api.shexadmin.ngrok.pro/resetpostingmedia";
   const MEDIA_SET_URL = "https://api.shexadmin.ngrok.pro/setmedia";
   const MEDIA_API_KEY = "|info@sharify.de+revenue+profaimusa@gmail.com|";
