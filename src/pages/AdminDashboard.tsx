@@ -995,7 +995,10 @@ export default function AdminDashboard() {
         headers: mediaHeaders,
         body: JSON.stringify({ id: acc.id, platform: acc.platform }),
       });
-      if (!res.ok) return;
+      if (!res.ok) {
+        toast.error(`Media stats failed for ${acc.platform} (${res.status})`);
+        return;
+      }
       const data = await res.json();
       setMediaStats((prev) => ({
         ...prev,
@@ -1006,8 +1009,8 @@ export default function AdminDashboard() {
           remaining: Number(data?.remaining ?? 0),
         },
       }));
-    } catch {
-      /* silent */
+    } catch (err: any) {
+      toast.error(`Media stats error: ${err?.message || "Unknown"}`);
     }
   };
 
