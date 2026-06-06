@@ -69,3 +69,6 @@ verify_jwt = false
 
 [functions.update-profile-names]
 verify_jwt = false
+
+[functions.ingest-bot-notifications]
+verify_jwt = false
