@@ -989,12 +989,11 @@ export default function AdminDashboard() {
 
 
   const fetchMediaStats = async (acc: AccountEntry) => {
-    if (!MEDIA_STATS_URL) return;
     try {
       const res = await fetch(MEDIA_STATS_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: acc.id, platform: acc.platform, email: acc.account_email }),
+        headers: mediaHeaders,
+        body: JSON.stringify({ id: acc.id, platform: acc.platform }),
       });
       if (!res.ok) return;
       const data = await res.json();
@@ -1002,37 +1001,39 @@ export default function AdminDashboard() {
         ...prev,
         [acc.id]: {
           active: Number(data?.active ?? 0),
-          posted: Number(data?.posted ?? 0),
+          posted: Number(data?.done ?? data?.posted ?? 0),
           failed: Number(data?.failed ?? 0),
           remaining: Number(data?.remaining ?? 0),
         },
       }));
     } catch {
-      /* noop until URL is configured */
+      /* silent */
     }
   };
 
   const resetMedia = async (acc: AccountEntry) => {
-    if (!MEDIA_RESET_URL) {
-      toast.error("Reset endpoint nicht konfiguriert");
-      return;
-    }
     setMediaResetting((p) => ({ ...p, [acc.id]: true }));
     try {
       const res = await fetch(MEDIA_RESET_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: acc.id, platform: acc.platform, email: acc.account_email }),
+        headers: mediaHeaders,
+        body: JSON.stringify({
+          id: acc.id,
+          platform: acc.platform,
+          email: acc.account_email,
+          password: (acc as any).account_password,
+        }),
       });
       if (!res.ok) throw new Error(String(res.status));
       const data = await res.json();
+      const stats = data?.stats ?? data ?? {};
       setMediaStats((prev) => ({
         ...prev,
         [acc.id]: {
-          active: Number(data?.active ?? 0),
-          posted: Number(data?.posted ?? 0),
-          failed: Number(data?.failed ?? 0),
-          remaining: Number(data?.remaining ?? 0),
+          active: Number(stats?.active ?? 0),
+          posted: Number(stats?.done ?? stats?.posted ?? 0),
+          failed: Number(stats?.failed ?? 0),
+          remaining: Number(stats?.remaining ?? 0),
         },
       }));
       toast.success("Media zurückgesetzt");
@@ -1042,6 +1043,7 @@ export default function AdminDashboard() {
       setMediaResetting((p) => ({ ...p, [acc.id]: false }));
     }
   };
+
 
   useEffect(() => {
     if (!expandedBot) return;
