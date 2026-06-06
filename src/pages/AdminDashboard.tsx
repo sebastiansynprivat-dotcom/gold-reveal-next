@@ -958,6 +958,39 @@ export default function AdminDashboard() {
 
   const [mediaSetting, setMediaSetting] = useState<Record<string, boolean>>({});
 
+  const PING_URL = "https://api.shexadmin.ngrok.pro/checkliveness";
+  const [pingStatus, setPingStatus] = useState<Record<string, "idle" | "loading" | "ok" | "fail">>({});
+  const pingAccount = async (acc: AccountEntry) => {
+    setPingStatus((p) => ({ ...p, [acc.id]: "loading" }));
+    try {
+      const res = await fetch(PING_URL, {
+        method: "POST",
+        headers: mediaHeaders,
+        body: JSON.stringify({
+          id: acc.id,
+          platform: acc.platform,
+          email: acc.account_email,
+          password: (acc as any).account_password,
+        }),
+      });
+      if (!res.ok) {
+        toast.error(`Ping failed (${res.status})`);
+        setPingStatus((p) => ({ ...p, [acc.id]: "fail" }));
+        return;
+      }
+      const data = await res.json();
+      if (data?.success && data?.live) {
+        setPingStatus((p) => ({ ...p, [acc.id]: "ok" }));
+      } else {
+        toast.error(data?.reason || "Endpoint not live");
+        setPingStatus((p) => ({ ...p, [acc.id]: "fail" }));
+      }
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to ping");
+      setPingStatus((p) => ({ ...p, [acc.id]: "fail" }));
+    }
+  };
+
   const setAccountMedia = async (acc: AccountEntry) => {
     setMediaSetting((p) => ({ ...p, [acc.id]: true }));
     try {
@@ -7556,13 +7589,13 @@ export default function AdminDashboard() {
                                 {isExpanded && (
                                   <div className="px-4 py-3 bg-secondary/10 border-t border-border/30 space-y-3 animate-in slide-in-from-top-1 fade-in duration-200">
                                     {/* Credentials copy row */}
-                                    <div className="grid grid-cols-2 gap-2">
+                                    <div className="flex items-stretch gap-2">
                                       <button
                                         onClick={() => {
                                           navigator.clipboard.writeText(acc.account_email);
                                           toast.success("E-Mail kopiert");
                                         }}
-                                        className="glass-card-subtle rounded-lg px-3 py-2 text-left hover:bg-accent/5 transition-colors group"
+                                        className="flex-1 glass-card-subtle rounded-lg px-3 py-2 text-left hover:bg-accent/5 transition-colors group"
                                       >
                                         <p className="text-[10px] text-muted-foreground mb-0.5">E-Mail</p>
                                         <div className="flex items-center gap-1.5">
@@ -7577,7 +7610,7 @@ export default function AdminDashboard() {
                                           navigator.clipboard.writeText(acc.account_password);
                                           toast.success("Passwort kopiert");
                                         }}
-                                        className="glass-card-subtle rounded-lg px-3 py-2 text-left hover:bg-accent/5 transition-colors group"
+                                        className="flex-1 glass-card-subtle rounded-lg px-3 py-2 text-left hover:bg-accent/5 transition-colors group"
                                       >
                                         <p className="text-[10px] text-muted-foreground mb-0.5">Passwort</p>
                                         <div className="flex items-center gap-1.5">
@@ -7587,7 +7620,40 @@ export default function AdminDashboard() {
                                           <Copy className="h-3 w-3 text-muted-foreground group-hover:text-accent shrink-0" />
                                         </div>
                                       </button>
+                                      {(() => {
+                                        const st = pingStatus[acc.id] || "idle";
+                                        const isLoading = st === "loading";
+                                        const cls =
+                                          st === "ok"
+                                            ? "bg-emerald-500/20 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/30"
+                                            : st === "fail"
+                                            ? "bg-destructive/20 border-destructive/40 text-destructive hover:bg-destructive/30"
+                                            : "border-border/40 text-muted-foreground hover:text-accent hover:border-accent/40";
+                                        return (
+                                          <button
+                                            onClick={() => pingAccount(acc)}
+                                            disabled={isLoading}
+                                            title="Check liveness"
+                                            className={cn(
+                                              "shrink-0 rounded-lg border px-3 flex flex-col items-center justify-center gap-0.5 transition-colors min-w-[64px]",
+                                              cls,
+                                            )}
+                                          >
+                                            {isLoading ? (
+                                              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                            ) : st === "ok" ? (
+                                              <CheckCircle2 className="h-3.5 w-3.5" />
+                                            ) : st === "fail" ? (
+                                              <XCircle className="h-3.5 w-3.5" />
+                                            ) : (
+                                              <Power className="h-3.5 w-3.5" />
+                                            )}
+                                            <span className="text-[10px] font-semibold">Ping</span>
+                                          </button>
+                                        );
+                                      })()}
                                     </div>
+
 
                                     {/* Posting Behavior (Placeholder — alle Plattformen) */}
                                     <div className="glass-card-subtle rounded-xl p-4 space-y-3 border border-border/40">
