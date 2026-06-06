@@ -947,26 +947,37 @@ export default function AdminDashboard() {
   const [mediaStats, setMediaStats] = useState<Record<string, { active: number; posted: number; failed: number; remaining: number }>>({});
   const [mediaResetting, setMediaResetting] = useState<Record<string, boolean>>({});
 
-  // Leave blank — fill in real endpoints later
-  const MEDIA_STATS_URL = "";
-  const MEDIA_RESET_URL = "";
-  const MEDIA_SET_URL = "";
+  const MEDIA_STATS_URL = "https://api.shexadmin.ngrok.pro/postingData";
+  const MEDIA_RESET_URL = "https://api.shexadmin.ngrok.pro/resetpostingmedia";
+  const MEDIA_SET_URL = "https://api.shexadmin.ngrok.pro/setmedia";
+  const MEDIA_API_KEY = "|info@sharify.de+revenue+profaimusa@gmail.com|";
+  const mediaHeaders = {
+    "Content-Type": "application/json",
+    "x-api-key": MEDIA_API_KEY,
+  };
 
   const [mediaSetting, setMediaSetting] = useState<Record<string, boolean>>({});
 
   const setAccountMedia = async (acc: AccountEntry) => {
-    if (!MEDIA_SET_URL) {
-      toast.error("Set Media endpoint nicht konfiguriert");
-      return;
-    }
     setMediaSetting((p) => ({ ...p, [acc.id]: true }));
     try {
       const res = await fetch(MEDIA_SET_URL, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: acc.id, platform: acc.platform, email: acc.account_email }),
+        headers: mediaHeaders,
+        body: JSON.stringify({
+          id: acc.id,
+          platform: acc.platform,
+          email: acc.account_email,
+          password: (acc as any).account_password,
+          type: "main",
+        }),
       });
       if (!res.ok) throw new Error(String(res.status));
+      const data = await res.json();
+      if (data?.media !== undefined) {
+        await supabase.from("accounts").update({ media: data.media }).eq("id", acc.id);
+        setAccounts((prev) => prev.map((a) => (a.id === acc.id ? { ...a, media: data.media } : a)));
+      }
       toast.success("Media gesetzt");
     } catch {
       toast.error("Setzen fehlgeschlagen");
@@ -974,6 +985,7 @@ export default function AdminDashboard() {
       setMediaSetting((p) => ({ ...p, [acc.id]: false }));
     }
   };
+
 
 
   const fetchMediaStats = async (acc: AccountEntry) => {

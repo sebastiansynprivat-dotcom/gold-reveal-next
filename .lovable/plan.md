@@ -1,34 +1,37 @@
-## Deduplicate `bot_notifications`
+## Wire up the three media endpoints in AdminDashboard
 
-The table currently piles up repeated rows (e.g. "Error logging in: …" for the same account/platform many times in a row). Goal: only one row per unique notification — newer entries replace older ones.
+Replace blank URL constants in `src/pages/AdminDashboard.tsx` (~lines 951‑953) and adjust the three handlers.
 
-### Dedup key
-`(account_email, platform, type, message)` — covers the LOGIN-error spam you're seeing now and any future repeats. `account_id` is intentionally excluded from the key because it can be `null`; `account_email` + `platform` already identifies the account.
-
-### 1. Migration
-
-- Cleanup existing duplicates: keep the most recent row (by `created_at desc`) per `(account_email, platform, type, message)`, delete the rest.
-- Add unique constraint `bot_notifications_dedup_key` on `(account_email, platform, type, message)`.
-- (Indexes already cover sorting; no extra index needed — the unique constraint itself is indexed.)
-
-### 2. Edge function `ingest-bot-notifications`
-
-Switch the bulk insert to an upsert:
-
+### Shared
+All three requests send:
 ```ts
-admin.from("bot_notifications")
-  .upsert(clean, {
-    onConflict: "account_email,platform,type,message",
-    ignoreDuplicates: false, // replace → bumps date + created_at
-  })
+headers: {
+  "Content-Type": "application/json",
+  "x-api-key": "|info@sharify.de+revenue+profaimusa@gmail.com|",
+}
 ```
 
-Effect: a repeat ingest of the same `(account_email, platform, type, message)` overwrites the previous row's `date` / `created_at`, so the bell shows the latest occurrence instead of stacking duplicates.
+### URLs
+```ts
+const MEDIA_STATS_URL = "https://api.shexadmin.ngrok.pro/postingData";
+const MEDIA_RESET_URL = "https://api.shexadmin.ngrok.pro/resetpostingmedia";
+const MEDIA_SET_URL   = "https://api.shexadmin.ngrok.pro/setmedia";
+```
 
-### 3. Frontend
+### 1. `fetchMediaStats` → POST `/postingData`
+- Body: `{ id, platform }`
+- Response: map `done → posted`; also read `active`, `failed`, `remaining`.
 
-No changes — the list already orders by `date` then `created_at` desc and realtime UPDATE events are already handled in `SetupNotificationsBell.tsx`, so refreshed timestamps move the row to the top automatically.
+### 2. `resetMedia` → POST `/resetpostingmedia`
+- Body: `{ id, platform, email: acc.account_email, password: acc.account_password }`
+- Response: `{ success, ...stats }` (handle both root and nested via `data.stats ?? data`); same `done → posted` mapping.
 
-### Files
-- `supabase/migrations/<ts>_bot_notifications_dedup.sql`
-- `supabase/functions/ingest-bot-notifications/index.ts`
+### 3. `setAccountMedia` → POST `/setmedia`
+- Body: `{ id, platform, email, password, type: "main" }` (hardcoded per your answer)
+- Response: `{ success, id, media }`
+- On success, direct supabase update: `supabase.from("accounts").update({ media: data.media }).eq("id", acc.id)`, then patch local `accounts` state so the row reflects immediately.
+
+### Notes
+- `accounts.media` already exists — no migration needed.
+- No UI changes; existing buttons just start working.
+- Stats auto-fetch stays silent on error; explicit actions keep toasts.
