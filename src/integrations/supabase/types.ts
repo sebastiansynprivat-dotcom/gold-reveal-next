@@ -363,6 +363,47 @@ export type Database = {
           },
         ]
       }
+      bot_notifications: {
+        Row: {
+          account_email: string | null
+          account_id: string | null
+          created_at: string
+          date: string
+          id: string
+          message: string
+          platform: string
+          type: string
+        }
+        Insert: {
+          account_email?: string | null
+          account_id?: string | null
+          created_at?: string
+          date?: string
+          id?: string
+          message: string
+          platform: string
+          type: string
+        }
+        Update: {
+          account_email?: string | null
+          account_id?: string | null
+          created_at?: string
+          date?: string
+          id?: string
+          message?: string
+          platform?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bot_notifications_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chatter_summaries: {
         Row: {
           created_at: string
