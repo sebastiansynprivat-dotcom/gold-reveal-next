@@ -96,6 +96,10 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
     setPlatform(null);
     setPrice("");
     setDescription("");
+    setAttachments([]);
+    setDraftRequestId(
+      typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
+    );
   };
 
   const handleClose = (v: boolean) => {
