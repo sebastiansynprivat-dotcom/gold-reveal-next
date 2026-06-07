@@ -138,6 +138,7 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
         price: requestType === "individual" ? parseFloat(price) : null,
         description: finalDescription,
         customer_name: requestType === "individual" ? customerName.trim() || null : null,
+        attachments: attachments as any,
         status: "pending",
         admin_comment: null,
       } as any).eq("id", editData.id);
@@ -148,8 +149,9 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
       }
       toast.success("Anfrage aktualisiert! ✅");
     } else {
-      // Insert new request
+      // Insert new request (with the draft id we used as the storage folder).
       const { error } = await supabase.from("model_requests").insert({
+        id: draftRequestId,
         user_id: user.id,
         model_name: modelName.trim(),
         request_type: requestType,
@@ -157,6 +159,7 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
         price: requestType === "individual" ? parseFloat(price) : null,
         description: finalDescription,
         customer_name: requestType === "individual" ? customerName.trim() || null : null,
+        attachments: attachments as any,
       } as any);
       setLoading(false);
       if (error) {
