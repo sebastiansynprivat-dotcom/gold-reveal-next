@@ -96,6 +96,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import ChatterStatsCard from "@/components/ChatterStatsCard";
+import AccountStatsRows from "@/components/admin/AccountStatsRows";
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 import ModelDashboardTab from "@/components/ModelDashboardTab";
 import ChatterDashboardTab from "@/components/ChatterDashboardTab";
@@ -5602,13 +5603,6 @@ export default function AdminDashboard() {
                                     /* Account cards – same format for 1 or many */
                                     <div className="space-y-3">
                                       {chatter.assigned_accounts!.map((acc) => {
-                                        const h = hashCodeAdmin(chatter.user_id + acc.id);
-                                        const yesterdayRev = 80 + (h % 200);
-                                        const weekRev = yesterdayRev * 5 + (h % 500);
-                                        const monthRev = Math.round(weekRev * 3.5 + (h % 2000));
-                                        const allTimeRev = Math.round(monthRev * 4.2 + (h % 8000));
-                                        const massDMs = 120 + (h % 380);
-                                        const openChats = 3 + (h % 18);
                                         const platformColor =
                                           (PLATFORM_COLORS as Record<string, string>)[acc.platform.toLowerCase()] ||
                                           "hsl(var(--accent))";
@@ -5672,44 +5666,8 @@ export default function AdminDashboard() {
                                               </button>
                                             </div>
 
-                                            {/* Stats */}
-                                            <div className="px-3.5 pb-3 pt-1 space-y-1.5">
-                                              {[
-                                                { label: "Gestern", value: `${yesterdayRev}€` },
-                                                { label: "Woche", value: `${weekRev.toLocaleString("de-DE")}€` },
-                                                { label: "Monat", value: `${monthRev.toLocaleString("de-DE")}€` },
-                                                { label: "All-Time", value: `${allTimeRev.toLocaleString("de-DE")}€` },
-                                              ].map((s) => (
-                                                <div key={s.label} className="flex items-center justify-between px-1">
-                                                  <span className="text-xs font-medium text-muted-foreground">
-                                                    {s.label}
-                                                  </span>
-                                                  <span className="text-sm font-bold text-foreground">{s.value}</span>
-                                                </div>
-                                              ))}
-                                              <div className="border-t border-border/50 pt-1.5 mt-1 space-y-1.5">
-                                                <div className="flex items-center justify-between px-1">
-                                                  <span className="text-xs font-medium text-muted-foreground">
-                                                    Mass-DMs
-                                                  </span>
-                                                  <span className="text-sm font-bold text-foreground">{massDMs}</span>
-                                                </div>
-                                                <div className="flex items-center justify-between px-1">
-                                                  <span className="text-xs font-medium text-muted-foreground">
-                                                    Offene Chats
-                                                  </span>
-                                                  <span className="text-sm font-bold text-foreground">{openChats}</span>
-                                                </div>
-                                                <div className="flex items-center justify-between px-1">
-                                                  <span className="text-xs font-medium text-muted-foreground">
-                                                    Ø Chats offen seit
-                                                  </span>
-                                                  <span className="text-sm font-bold text-foreground">
-                                                    {1 + (h % 5)}d
-                                                  </span>
-                                                </div>
-                                              </div>
-                                            </div>
+                                            {/* Real Stats from accounts_data */}
+                                            <AccountStatsRows accountId={acc.id} />
                                           </div>
                                         );
                                       })}
