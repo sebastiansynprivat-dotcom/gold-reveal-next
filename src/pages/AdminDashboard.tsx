@@ -6358,6 +6358,13 @@ export default function AdminDashboard() {
                                       );
                                     })()}
 
+                                    {Array.isArray((req as any).attachments) && (req as any).attachments.length > 0 && (
+                                      <div className="rounded-lg border border-border/40 bg-secondary/10 p-2 space-y-1">
+                                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Referenz vom Chatter</p>
+                                        <RequestMediaList attachments={(req as any).attachments} />
+                                      </div>
+                                    )}
+
                                     {/* Translation buttons */}
                                     <div className="flex gap-2 flex-wrap">
                                       {(["en", "de"] as const).map((target) => {
