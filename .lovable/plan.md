@@ -1,52 +1,25 @@
-## Ping Button next to Email/Password in Setup Account Row
+## Goal
+Earnings totals in **ModelDashboardTab** should include revenue from accounts that have been archived (deleted) for the selected model. Going forward only — past archived data is unrecoverable because the current `ON DELETE CASCADE` already wiped it.
 
-### Where
-`src/pages/AdminDashboard.tsx` — inside the expanded account row in the Setup tab, right of the email + password copy buttons (lines ~7559-7590).
+## Changes
 
-### State
-Add a per-account state map: `Record<string, "idle" | "loading" | "ok" | "fail">`. State persists indefinitely (no auto-reset). Clicking the button again re-runs the check from whatever state it is in.
+### 1. Database migration
+- Drop the cascade on `accounts_data.account_id → accounts.id` and replace it with `ON DELETE SET NULL` (or `NO ACTION`). The `accounts_data` rows survive the account deletion and stay queryable by their original `account_id` value.
+- Snapshot the link to the model directly on `accounts_data` so we can find historical rows even after the account row is gone:
+  - Add column `model_id uuid` (nullable, no FK or `ON DELETE SET NULL` to `models`).
+  - Backfill from `accounts.model_id` for existing rows.
+  - Add a `BEFORE INSERT` trigger that sets `NEW.model_id` from `accounts.model_id` if null.
+- Keep the existing `archive_deleted_record` trigger on `accounts` — the deleted account row is still archived to `deleted_records` as today.
 
-### UI
-- Add a single **Ping** button to the right of the password field, same row as email/password copy buttons.
-- States:
-  - **Idle** (`ok` / `fail` / `idle`): neutral outline, icon = `Activity` (or `Wifi` if unavailable, fallback `Target`/`Zap`)
-  - **Loading**: spinner (`Loader2 animate-spin`), disabled
-  - **OK** (`ok`): green background (`bg-emerald-500/20 border-emerald-500/40 text-emerald-400`), check icon (`CheckCircle2`)
-  - **Fail** (`fail`): red background (`bg-destructive/20 border-destructive/40 text-destructive`), X icon (`XCircle`)
-- On fail, also `toast.error(data.reason || "Endpoint not live")`.
-- On network/throw: `toast.error(err.message || "Failed to ping")`, state = `fail`.
+### 2. ModelDashboardTab earnings query
+In the "period revenue from `accounts_data.total`" effect:
+- Continue to seed `accountIds` from `modelAccounts` (active accounts).
+- Additionally pull archived account ids for the selected model from `deleted_records` (`entity_type = 'account'`, `data->>'model_id' = selectedModelId`) and union them into `accountIds`.
+- Query `accounts_data` by that combined id list as today, but also fall back to `model_id = selectedModelId` so rows whose account_id was nulled still sum in.
+- Per-platform breakdown (`platformRevenues`): for archived ids, read the platform from the archived snapshot (`deleted_records.data->>'platform'`) since `modelAccounts` no longer contains them.
 
-### Request
-```ts
-POST https://api.shexadmin.ngrok.pro/checkliveness
-headers: {
-  "Content-Type": "application/json",
-  "x-api-key": "|info@sharify.de+revenue+profaimusa@gmail.com|",
-}
-body: {
-  id: acc.id,
-  platform: acc.platform,
-  email: acc.account_email,
-  password: acc.account_password,
-}
-```
+No UI/visual changes — totals just become inclusive of archived accounts.
 
-### Response handling
-```ts
-interface PingResult {
-  success: boolean;
-  id: string;
-  live: boolean;
-  reason?: string;
-}
-```
-- `result.success && result.live` → state `ok`
-- Otherwise → state `fail`, toast reason
-
-### No changes needed
-- No DB schema changes.
-- No new components/files.
-- Reuses existing toast and copy patterns.
-
-### Note on CORS
-Same preflight issue as the other media endpoints. Server-side CORS config is still required for the browser request to succeed. No client workaround.
+## Out of scope
+- Backfilling lost history for accounts that were already archived before this migration.
+- Showing archived accounts as rows in the dashboard list (only their revenue is folded into the totals).
