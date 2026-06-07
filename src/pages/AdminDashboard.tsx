@@ -2537,8 +2537,10 @@ export default function AdminDashboard() {
     const { data, error } = await supabase
       .from("profiles")
       .select(
-        "user_id, group_name, telegram_id, created_at, account_email, account_password, account_domain, pwa_installed, language, ui_language",
+        "user_id, group_name, telegram_id, created_at, account_email, account_password, account_domain, pwa_installed, language, ui_language, pre_create",
       )
+      .or("pre_create.is.null,pre_create.eq.false")
+      .not("user_id", "is", null)
       .order("created_at", { ascending: false });
     if (error) {
       toast.error("Fehler beim Laden der Chatter");
