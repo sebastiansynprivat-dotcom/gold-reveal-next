@@ -1355,6 +1355,12 @@ export default function Dashboard() {
                               </div>
                             )}
                             <p className="text-[10px] text-muted-foreground line-clamp-2">{req.description}</p>
+                            {Array.isArray((req as any).attachments) && (req as any).attachments.length > 0 && (
+                              <div className="rounded-md border border-border/40 bg-secondary/10 p-2 space-y-1">
+                                <p className="text-[9px] text-muted-foreground uppercase tracking-wide">Referenz</p>
+                                <RequestMediaList attachments={(req as any).attachments} size="sm" />
+                              </div>
+                            )}
                             {/* Kommentarverlauf */}
                             {(() => {
                               const msgs = ((req as any)._messages || []) as Array<{
@@ -1362,6 +1368,7 @@ export default function Dashboard() {
                                 sender_role: string;
                                 body: string;
                                 created_at: string;
+                                attachments?: RequestAttachment[];
                               }>;
                               const hasLegacy =
                                 !!req.admin_comment && !msgs.some((m) => m.body === req.admin_comment);
