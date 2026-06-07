@@ -1468,8 +1468,8 @@ export default function Dashboard() {
                                         <p className="text-[11px] text-foreground leading-relaxed whitespace-pre-wrap">
                                           {m.body}
                                         </p>
-                                        {Array.isArray(m.attachments) && m.attachments.length > 0 && (
-                                          <RequestMediaList attachments={m.attachments} size="sm" />
+                                        {Array.isArray((m as any).attachments) && (m as any).attachments.length > 0 && (
+                                          <RequestMediaList attachments={(m as any).attachments} size="sm" />
                                         )}
                                       </div>
                                     </div>
