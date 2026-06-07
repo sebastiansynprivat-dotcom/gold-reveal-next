@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface Props {
   accountId: string;
+  userId: string;
 }
 
 interface Stats {
@@ -17,7 +18,7 @@ interface Stats {
 
 const fmt = (n: number) => n.toLocaleString("de-DE");
 
-export default function AccountStatsRows({ accountId }: Props) {
+export default function AccountStatsRows({ accountId, userId }: Props) {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -25,11 +26,41 @@ export default function AccountStatsRows({ accountId }: Props) {
     let cancelled = false;
     (async () => {
       setLoading(true);
+
+      // Fetch all assignment windows for this user+account (an account may be re-assigned multiple times)
+      const { data: assignments } = await supabase
+        .from("account_assignments")
+        .select("start_date,end_date")
+        .eq("account_id", accountId)
+        .eq("user_id", userId);
+
+      if (cancelled) return;
+
+      if (!assignments || assignments.length === 0) {
+        setStats({ yesterday: 0, week: 0, month: 0, allTime: 0, massDMs: null, openChats: null, oldestChat: null });
+        setLoading(false);
+        return;
+      }
+
       const today = new Date();
       const iso = (d: Date) => d.toISOString().slice(0, 10);
+      const todayISO = iso(today);
       const yesterday = new Date(today); yesterday.setDate(today.getDate() - 1);
       const weekStart = new Date(today); weekStart.setDate(today.getDate() - 6);
       const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+      const yISO = iso(yesterday);
+      const wISO = iso(weekStart);
+      const mISO = iso(monthStart);
+
+      // Helper: is `date` inside ANY assignment window (start..end|today inclusive)
+      const inAnyWindow = (date: string) => {
+        for (const a of assignments as any[]) {
+          const s = a.start_date;
+          const e = a.end_date || todayISO;
+          if (s && date >= s && date <= e) return true;
+        }
+        return false;
+      };
 
       const { data, error } = await supabase
         .from("accounts_data")
@@ -44,15 +75,12 @@ export default function AccountStatsRows({ accountId }: Props) {
         return;
       }
 
-      const yISO = iso(yesterday);
-      const wISO = iso(weekStart);
-      const mISO = iso(monthStart);
-
       let yesterdayRev = 0, weekRev = 0, monthRev = 0, allTime = 0;
       let massDMs = 0, openChats = 0, oldestChat = 0;
       let latestDate = "";
 
       for (const row of data as any[]) {
+        if (!inAnyWindow(row.date)) continue;
         const t = Number(row.total || 0);
         allTime += t;
         if (row.date >= mISO) monthRev += t;
@@ -78,7 +106,7 @@ export default function AccountStatsRows({ accountId }: Props) {
       setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, [accountId]);
+  }, [accountId, userId]);
 
   if (loading || !stats) {
     return (

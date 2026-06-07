@@ -5667,7 +5667,7 @@ export default function AdminDashboard() {
                                             </div>
 
                                             {/* Real Stats from accounts_data */}
-                                            <AccountStatsRows accountId={acc.id} />
+                                            <AccountStatsRows accountId={acc.id} userId={chatter.user_id} />
                                           </div>
                                         );
                                       })}
