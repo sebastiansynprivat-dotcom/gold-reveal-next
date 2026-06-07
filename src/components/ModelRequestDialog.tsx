@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUILanguage } from "@/hooks/useUILanguage";
+import RequestMediaPicker, { type RequestAttachment } from "./RequestMediaPicker";
 
 export interface EditRequestData {
   id: string;
@@ -19,6 +20,7 @@ export interface EditRequestData {
   price: number | null;
   description: string;
   customer_name?: string | null;
+  attachments?: RequestAttachment[];
 }
 
 interface ModelRequestDialogProps {
