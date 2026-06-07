@@ -69,6 +69,8 @@ import PushNotificationDialog from "@/components/PushNotificationDialog";
 import LootBoxReward from "@/components/LootBoxReward";
 import FrageMemoDialog from "@/components/FrageMemoDialog";
 import ModelRequestDialog, { EditRequestData } from "@/components/ModelRequestDialog";
+import RequestMediaPicker, { type RequestAttachment } from "@/components/RequestMediaPicker";
+import RequestMediaList from "@/components/RequestMediaList";
 import RevenueChart from "@/components/RevenueChart";
 import MonthSummaryWidget from "@/components/MonthSummaryWidget";
 import ContentDropsWidget from "@/components/ContentDropsWidget";
@@ -258,6 +260,7 @@ export default function Dashboard() {
   const [demoModelInactive, setDemoModelInactive] = useState(false);
   const [myRequests, setMyRequests] = useState<any[]>([]);
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
+  const [replyAttachments, setReplyAttachments] = useState<Record<string, RequestAttachment[]>>({});
   const [requestsOpen, setRequestsOpen] = useState(false);
   const [showArchivedRequests, setShowArchivedRequests] = useState(false);
   const [editRequest, setEditRequest] = useState<any>(null);
@@ -1352,6 +1355,12 @@ export default function Dashboard() {
                               </div>
                             )}
                             <p className="text-[10px] text-muted-foreground line-clamp-2">{req.description}</p>
+                            {Array.isArray((req as any).attachments) && (req as any).attachments.length > 0 && (
+                              <div className="rounded-md border border-border/40 bg-secondary/10 p-2 space-y-1">
+                                <p className="text-[9px] text-muted-foreground uppercase tracking-wide">Referenz</p>
+                                <RequestMediaList attachments={(req as any).attachments} size="sm" />
+                              </div>
+                            )}
                             {/* Kommentarverlauf */}
                             {(() => {
                               const msgs = ((req as any)._messages || []) as Array<{
@@ -1359,6 +1368,7 @@ export default function Dashboard() {
                                 sender_role: string;
                                 body: string;
                                 created_at: string;
+                                attachments?: RequestAttachment[];
                               }>;
                               const hasLegacy =
                                 !!req.admin_comment && !msgs.some((m) => m.body === req.admin_comment);
@@ -1376,17 +1386,19 @@ export default function Dashboard() {
                                 ...msgs,
                               ];
                               const draft = replyDrafts[req.id] ?? "";
+                              const draftAttachments = replyAttachments[req.id] ?? [];
                               const sendReply = async () => {
                                 const body = draft.trim();
-                                if (!body || !user) return;
+                                if ((!body && draftAttachments.length === 0) || !user) return;
                                 const { data: ins, error } = await supabase
                                   .from("model_request_messages")
                                   .insert({
                                     request_id: req.id,
                                     user_id: user.id,
                                     sender_role: "chatter",
-                                    body,
-                                  })
+                                    body: body || "(Medien angehängt)",
+                                    attachments: draftAttachments as any,
+                                  } as any)
                                   .select()
                                   .single();
                                 if (error) {
@@ -1401,6 +1413,7 @@ export default function Dashboard() {
                                   ),
                                 );
                                 setReplyDrafts((prev) => ({ ...prev, [req.id]: "" }));
+                                setReplyAttachments((prev) => ({ ...prev, [req.id]: [] }));
                                 // If request was archived/rejected/waiting_feedback, reopen it so admins see it again
                                 if (
                                   req.status === "archived" ||
@@ -1422,7 +1435,7 @@ export default function Dashboard() {
                                   body: {
                                     event: "new_request_comment",
                                     title: `💬 NEUER KOMMENTAR · ${req.model_name || "Anfrage"}`,
-                                    body: body.length > 120 ? body.slice(0, 117) + "..." : body,
+                                    body: body.length > 120 ? body.slice(0, 117) + "..." : (body || "📎 Medien"),
                                     url: "/admin",
                                     platform: _platform,
                                   },
@@ -1437,7 +1450,7 @@ export default function Dashboard() {
                                       className={`flex ${m.sender_role === "admin" ? "justify-start" : "justify-end"}`}
                                     >
                                       <div
-                                        className={`max-w-[85%] rounded-md px-2.5 py-1.5 ${
+                                        className={`max-w-[85%] rounded-md px-2.5 py-1.5 space-y-1 ${
                                           m.sender_role === "admin"
                                             ? "bg-accent/10 border border-accent/20"
                                             : "bg-secondary/40 border border-border/40"
@@ -1455,32 +1468,49 @@ export default function Dashboard() {
                                         <p className="text-[11px] text-foreground leading-relaxed whitespace-pre-wrap">
                                           {m.body}
                                         </p>
+                                        {Array.isArray((m as any).attachments) && (m as any).attachments.length > 0 && (
+                                          <RequestMediaList attachments={(m as any).attachments} size="sm" />
+                                        )}
                                       </div>
                                     </div>
                                   ))}
-                                  <div className="flex gap-1.5 pt-1">
-                                    <Textarea
-                                      placeholder={
-                                        allMsgs.length === 0
-                                          ? "Feedback oder Frage an Admin..."
-                                          : "Antwort an Admin..."
-                                      }
-                                      value={draft}
-                                      onChange={(e) =>
-                                        setReplyDrafts((prev) => ({ ...prev, [req.id]: e.target.value }))
-                                      }
-                                      rows={1}
-                                      className="text-[11px] bg-secondary/30 border-border/40 resize-none min-h-[32px] py-1.5"
-                                    />
-                                    {draft.trim() && (
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="h-8 px-2 text-[10px] shrink-0"
-                                        onClick={sendReply}
-                                      >
-                                        Senden
-                                      </Button>
+                                  <div className="space-y-1.5 pt-1">
+                                    <div className="flex gap-1.5">
+                                      <Textarea
+                                        placeholder={
+                                          allMsgs.length === 0
+                                            ? "Feedback oder Frage an Admin..."
+                                            : "Antwort an Admin..."
+                                        }
+                                        value={draft}
+                                        onChange={(e) =>
+                                          setReplyDrafts((prev) => ({ ...prev, [req.id]: e.target.value }))
+                                        }
+                                        rows={1}
+                                        className="text-[11px] bg-secondary/30 border-border/40 resize-none min-h-[32px] py-1.5"
+                                      />
+                                      {(draft.trim() || draftAttachments.length > 0) && (
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          className="h-8 px-2 text-[10px] shrink-0"
+                                          onClick={sendReply}
+                                        >
+                                          Senden
+                                        </Button>
+                                      )}
+                                    </div>
+                                    {user && (
+                                      <RequestMediaPicker
+                                        userId={user.id}
+                                        requestId={req.id}
+                                        value={draftAttachments}
+                                        onChange={(next) =>
+                                          setReplyAttachments((prev) => ({ ...prev, [req.id]: next }))
+                                        }
+                                        compact
+                                        max={4}
+                                      />
                                     )}
                                   </div>
                                 </div>
@@ -1545,6 +1575,7 @@ export default function Dashboard() {
                                     price: req.price,
                                     description: req.description,
                                     customer_name: (req as any).customer_name,
+                                    attachments: Array.isArray((req as any).attachments) ? (req as any).attachments : [],
                                   })
                                 }
                                 className="flex items-center gap-1.5 text-[10px] text-accent hover:text-accent/80 transition-colors mt-1 cursor-pointer"

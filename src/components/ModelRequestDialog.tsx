@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useUILanguage } from "@/hooks/useUILanguage";
+import RequestMediaPicker, { type RequestAttachment } from "./RequestMediaPicker";
 
 export interface EditRequestData {
   id: string;
@@ -19,6 +20,7 @@ export interface EditRequestData {
   price: number | null;
   description: string;
   customer_name?: string | null;
+  attachments?: RequestAttachment[];
 }
 
 interface ModelRequestDialogProps {
@@ -40,6 +42,11 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
   const [platform, setPlatform] = useState<string | null>(null);
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
+  const [attachments, setAttachments] = useState<RequestAttachment[]>([]);
+  // Stable id used both as the DB row id and as the storage folder for media.
+  const [draftRequestId, setDraftRequestId] = useState<string>(() =>
+    typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
+  );
   const [loading, setLoading] = useState(false);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
 
@@ -51,6 +58,8 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
       // modelLanguage comes from prop now
       setRequestType(editData.request_type);
       setPrice(editData.price != null ? String(editData.price) : "");
+      setAttachments(Array.isArray(editData.attachments) ? editData.attachments : []);
+      setDraftRequestId(editData.id);
       const platformMatch = editData.description.match(/^\[Plattform: ([^\]]+)\]\s*/);
       if (platformMatch) {
         setPlatform(platformMatch[1]);
@@ -87,6 +96,10 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
     setPlatform(null);
     setPrice("");
     setDescription("");
+    setAttachments([]);
+    setDraftRequestId(
+      typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
+    );
   };
 
   const handleClose = (v: boolean) => {
@@ -125,6 +138,7 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
         price: requestType === "individual" ? parseFloat(price) : null,
         description: finalDescription,
         customer_name: requestType === "individual" ? customerName.trim() || null : null,
+        attachments: attachments as any,
         status: "pending",
         admin_comment: null,
       } as any).eq("id", editData.id);
@@ -135,8 +149,9 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
       }
       toast.success("Anfrage aktualisiert! ✅");
     } else {
-      // Insert new request
+      // Insert new request (with the draft id we used as the storage folder).
       const { error } = await supabase.from("model_requests").insert({
+        id: draftRequestId,
         user_id: user.id,
         model_name: modelName.trim(),
         request_type: requestType,
@@ -144,6 +159,7 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
         price: requestType === "individual" ? parseFloat(price) : null,
         description: finalDescription,
         customer_name: requestType === "individual" ? customerName.trim() || null : null,
+        attachments: attachments as any,
       } as any);
       setLoading(false);
       if (error) {
@@ -332,6 +348,26 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
               />
             </div>
           </div>
+
+          {user && (
+            <div className="space-y-1.5">
+              <Label className="text-xs text-foreground">
+                {lang === "en" ? "Reference image / video (optional)" : "Referenzbild / Video (optional)"}
+              </Label>
+              <RequestMediaPicker
+                userId={user.id}
+                requestId={editData ? editData.id : draftRequestId}
+                value={attachments}
+                onChange={setAttachments}
+                helperText={
+                  lang === "en"
+                    ? "Attach a reference if it helps the model understand what you want. Not required."
+                    : "Häng optional eine Referenz an, damit dein Model genau weiß, was gemeint ist. Nicht verpflichtend."
+                }
+              />
+            </div>
+          )}
+
 
           <Button onClick={handleSubmit} disabled={loading} className="w-full">
             {loading

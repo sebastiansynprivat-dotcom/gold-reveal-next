@@ -1619,6 +1619,7 @@ export type Database = {
       }
       model_request_messages: {
         Row: {
+          attachments: Json
           body: string
           created_at: string
           id: string
@@ -1627,6 +1628,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          attachments?: Json
           body: string
           created_at?: string
           id?: string
@@ -1635,6 +1637,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          attachments?: Json
           body?: string
           created_at?: string
           id?: string
@@ -1655,6 +1658,7 @@ export type Database = {
       model_requests: {
         Row: {
           admin_comment: string | null
+          attachments: Json
           content_link: string | null
           created_at: string
           customer_name: string | null
@@ -1669,6 +1673,7 @@ export type Database = {
         }
         Insert: {
           admin_comment?: string | null
+          attachments?: Json
           content_link?: string | null
           created_at?: string
           customer_name?: string | null
@@ -1683,6 +1688,7 @@ export type Database = {
         }
         Update: {
           admin_comment?: string | null
+          attachments?: Json
           content_link?: string | null
           created_at?: string
           customer_name?: string | null

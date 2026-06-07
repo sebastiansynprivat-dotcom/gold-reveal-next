@@ -70,6 +70,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import AdminPushSettings from "@/components/admin/AdminPushSettings";
 import AdminWalletPass from "@/components/admin/AdminWalletPass";
+import RequestMediaPicker, { type RequestAttachment } from "@/components/RequestMediaPicker";
+import RequestMediaList from "@/components/RequestMediaList";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
@@ -6356,6 +6358,13 @@ export default function AdminDashboard() {
                                       );
                                     })()}
 
+                                    {Array.isArray((req as any).attachments) && (req as any).attachments.length > 0 && (
+                                      <div className="rounded-lg border border-border/40 bg-secondary/10 p-2 space-y-1">
+                                        <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Referenz vom Chatter</p>
+                                        <RequestMediaList attachments={(req as any).attachments} />
+                                      </div>
+                                    )}
+
                                     {/* Translation buttons */}
                                     <div className="flex gap-2 flex-wrap">
                                       {(["en", "de"] as const).map((target) => {
@@ -6574,6 +6583,11 @@ export default function AdminDashboard() {
                                                       <p className="text-xs text-foreground leading-relaxed whitespace-pre-wrap">
                                                         {m.body}
                                                       </p>
+                                                      {Array.isArray((m as any).attachments) && (m as any).attachments.length > 0 && (
+                                                        <div className="mt-1.5">
+                                                          <RequestMediaList attachments={(m as any).attachments} size="sm" />
+                                                        </div>
+                                                      )}
                                                       {reaction && (
                                                         <span className="absolute -bottom-2 -right-1 text-sm bg-card border border-accent/40 rounded-full h-6 w-6 flex items-center justify-center shadow-sm">
                                                           {reaction}
@@ -6643,22 +6657,40 @@ export default function AdminDashboard() {
                                                   autoFocus
                                                 />
                                               </div>
-                                              {req._localComment?.trim() && (
+                                              {user && (
+                                                <RequestMediaPicker
+                                                  userId={user.id}
+                                                  requestId={req.id}
+                                                  value={(req as any)._localAttachments ?? []}
+                                                  onChange={(next) =>
+                                                    setModelRequests((prev) =>
+                                                      prev.map((r) =>
+                                                        r.id === req.id ? { ...r, _localAttachments: next } : r,
+                                                      ),
+                                                    )
+                                                  }
+                                                  compact
+                                                  max={4}
+                                                />
+                                              )}
+                                              {(req._localComment?.trim() || ((req as any)._localAttachments?.length ?? 0) > 0) && (
                                                 <Button
                                                   size="sm"
                                                   variant="outline"
                                                   className="h-7 text-xs"
                                                   onClick={async () => {
                                                     const body = (req._localComment ?? "").trim();
-                                                    if (!body || !user) return;
+                                                    const atts = ((req as any)._localAttachments ?? []) as RequestAttachment[];
+                                                    if ((!body && atts.length === 0) || !user) return;
                                                     const { data: ins, error } = await supabase
                                                       .from("model_request_messages")
                                                       .insert({
                                                         request_id: req.id,
                                                         user_id: user.id,
                                                         sender_role: "admin",
-                                                        body,
-                                                      })
+                                                        body: body || "(Medien angehängt)",
+                                                        attachments: atts as any,
+                                                      } as any)
                                                       .select()
                                                       .single();
                                                     if (error) {
@@ -6687,6 +6719,7 @@ export default function AdminDashboard() {
                                                               _messages: [...(r._messages || []), ins],
                                                               _editingComment: false,
                                                               _localComment: undefined,
+                                                              _localAttachments: [],
                                                             }
                                                           : r,
                                                       ),
