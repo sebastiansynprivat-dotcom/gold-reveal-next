@@ -19,25 +19,34 @@ export type Database = {
           account_id: string
           assigned_at: string
           created_at: string
+          end_date: string | null
           id: string
+          profile_id: string | null
+          start_date: string
           unassigned_at: string | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           account_id: string
           assigned_at?: string
           created_at?: string
+          end_date?: string | null
           id?: string
+          profile_id?: string | null
+          start_date?: string
           unassigned_at?: string | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           account_id?: string
           assigned_at?: string
           created_at?: string
+          end_date?: string | null
           id?: string
+          profile_id?: string | null
+          start_date?: string
           unassigned_at?: string | null
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -45,6 +54,13 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "account_assignments_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -2115,42 +2131,6 @@ export type Database = {
         }
         Relationships: []
       }
-      pre_chatters: {
-        Row: {
-          claimed_at: string | null
-          claimed_user_id: string | null
-          created_at: string
-          created_by: string | null
-          id: string
-          language: string
-          name: string
-          preassigned_account_id: string | null
-          telegram_id: string
-        }
-        Insert: {
-          claimed_at?: string | null
-          claimed_user_id?: string | null
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          language?: string
-          name?: string
-          preassigned_account_id?: string | null
-          telegram_id: string
-        }
-        Update: {
-          claimed_at?: string | null
-          claimed_user_id?: string | null
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          language?: string
-          name?: string
-          preassigned_account_id?: string | null
-          telegram_id?: string
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           account_domain: string | null
@@ -2162,11 +2142,12 @@ export type Database = {
           language: string
           name: string | null
           offer: string | null
+          pre_create: boolean
           pwa_installed: boolean
           telegram_id: string | null
           ui_language: string
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           account_domain?: string | null
@@ -2178,11 +2159,12 @@ export type Database = {
           language?: string
           name?: string | null
           offer?: string | null
+          pre_create?: boolean
           pwa_installed?: boolean
           telegram_id?: string | null
           ui_language?: string
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           account_domain?: string | null
@@ -2194,11 +2176,12 @@ export type Database = {
           language?: string
           name?: string | null
           offer?: string | null
+          pre_create?: boolean
           pwa_installed?: boolean
           telegram_id?: string | null
           ui_language?: string
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
