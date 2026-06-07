@@ -144,6 +144,7 @@ export type Database = {
           followers: number | null
           id: string
           mass_dms: number | null
+          model_id: string | null
           oldest_chat: number | null
           platform: string
           subscribers: number | null
@@ -159,6 +160,7 @@ export type Database = {
           followers?: number | null
           id?: string
           mass_dms?: number | null
+          model_id?: string | null
           oldest_chat?: number | null
           platform: string
           subscribers?: number | null
@@ -174,6 +176,7 @@ export type Database = {
           followers?: number | null
           id?: string
           mass_dms?: number | null
+          model_id?: string | null
           oldest_chat?: number | null
           platform?: string
           subscribers?: number | null
@@ -183,10 +186,17 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "accounts_revenue_account_id_fkey"
+            foreignKeyName: "accounts_data_account_id_fkey"
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "accounts_data_model_id_fkey"
+            columns: ["model_id"]
+            isOneToOne: false
+            referencedRelation: "models"
             referencedColumns: ["id"]
           },
         ]
