@@ -69,6 +69,8 @@ import PushNotificationDialog from "@/components/PushNotificationDialog";
 import LootBoxReward from "@/components/LootBoxReward";
 import FrageMemoDialog from "@/components/FrageMemoDialog";
 import ModelRequestDialog, { EditRequestData } from "@/components/ModelRequestDialog";
+import RequestMediaPicker, { type RequestAttachment } from "@/components/RequestMediaPicker";
+import RequestMediaList from "@/components/RequestMediaList";
 import RevenueChart from "@/components/RevenueChart";
 import MonthSummaryWidget from "@/components/MonthSummaryWidget";
 import ContentDropsWidget from "@/components/ContentDropsWidget";
