@@ -349,6 +349,26 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
             </div>
           </div>
 
+          {user && (
+            <div className="space-y-1.5">
+              <Label className="text-xs text-foreground">
+                {lang === "en" ? "Reference image / video (optional)" : "Referenzbild / Video (optional)"}
+              </Label>
+              <RequestMediaPicker
+                userId={user.id}
+                requestId={editData ? editData.id : draftRequestId}
+                value={attachments}
+                onChange={setAttachments}
+                helperText={
+                  lang === "en"
+                    ? "Attach a reference if it helps the model understand what you want. Not required."
+                    : "Häng optional eine Referenz an, damit dein Model genau weiß, was gemeint ist. Nicht verpflichtend."
+                }
+              />
+            </div>
+          )}
+
+
           <Button onClick={handleSubmit} disabled={loading} className="w-full">
             {loading
               ? (editData ? "Wird aktualisiert..." : "Wird gesendet...")
