@@ -6583,6 +6583,11 @@ export default function AdminDashboard() {
                                                       <p className="text-xs text-foreground leading-relaxed whitespace-pre-wrap">
                                                         {m.body}
                                                       </p>
+                                                      {Array.isArray((m as any).attachments) && (m as any).attachments.length > 0 && (
+                                                        <div className="mt-1.5">
+                                                          <RequestMediaList attachments={(m as any).attachments} size="sm" />
+                                                        </div>
+                                                      )}
                                                       {reaction && (
                                                         <span className="absolute -bottom-2 -right-1 text-sm bg-card border border-accent/40 rounded-full h-6 w-6 flex items-center justify-center shadow-sm">
                                                           {reaction}
