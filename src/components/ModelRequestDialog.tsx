@@ -58,6 +58,8 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
       // modelLanguage comes from prop now
       setRequestType(editData.request_type);
       setPrice(editData.price != null ? String(editData.price) : "");
+      setAttachments(Array.isArray(editData.attachments) ? editData.attachments : []);
+      setDraftRequestId(editData.id);
       const platformMatch = editData.description.match(/^\[Plattform: ([^\]]+)\]\s*/);
       if (platformMatch) {
         setPlatform(platformMatch[1]);
