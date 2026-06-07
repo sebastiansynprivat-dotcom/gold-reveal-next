@@ -70,6 +70,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import AdminPushSettings from "@/components/admin/AdminPushSettings";
 import AdminWalletPass from "@/components/admin/AdminWalletPass";
+import RequestMediaPicker, { type RequestAttachment } from "@/components/RequestMediaPicker";
+import RequestMediaList from "@/components/RequestMediaList";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
