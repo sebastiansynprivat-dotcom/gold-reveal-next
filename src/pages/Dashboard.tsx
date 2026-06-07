@@ -260,6 +260,7 @@ export default function Dashboard() {
   const [demoModelInactive, setDemoModelInactive] = useState(false);
   const [myRequests, setMyRequests] = useState<any[]>([]);
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
+  const [replyAttachments, setReplyAttachments] = useState<Record<string, RequestAttachment[]>>({});
   const [requestsOpen, setRequestsOpen] = useState(false);
   const [showArchivedRequests, setShowArchivedRequests] = useState(false);
   const [editRequest, setEditRequest] = useState<any>(null);
