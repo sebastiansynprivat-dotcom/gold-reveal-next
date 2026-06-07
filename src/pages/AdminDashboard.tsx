@@ -6645,22 +6645,40 @@ export default function AdminDashboard() {
                                                   autoFocus
                                                 />
                                               </div>
-                                              {req._localComment?.trim() && (
+                                              {user && (
+                                                <RequestMediaPicker
+                                                  userId={user.id}
+                                                  requestId={req.id}
+                                                  value={(req as any)._localAttachments ?? []}
+                                                  onChange={(next) =>
+                                                    setModelRequests((prev) =>
+                                                      prev.map((r) =>
+                                                        r.id === req.id ? { ...r, _localAttachments: next } : r,
+                                                      ),
+                                                    )
+                                                  }
+                                                  compact
+                                                  max={4}
+                                                />
+                                              )}
+                                              {(req._localComment?.trim() || ((req as any)._localAttachments?.length ?? 0) > 0) && (
                                                 <Button
                                                   size="sm"
                                                   variant="outline"
                                                   className="h-7 text-xs"
                                                   onClick={async () => {
                                                     const body = (req._localComment ?? "").trim();
-                                                    if (!body || !user) return;
+                                                    const atts = ((req as any)._localAttachments ?? []) as RequestAttachment[];
+                                                    if ((!body && atts.length === 0) || !user) return;
                                                     const { data: ins, error } = await supabase
                                                       .from("model_request_messages")
                                                       .insert({
                                                         request_id: req.id,
                                                         user_id: user.id,
                                                         sender_role: "admin",
-                                                        body,
-                                                      })
+                                                        body: body || "(Medien angehängt)",
+                                                        attachments: atts as any,
+                                                      } as any)
                                                       .select()
                                                       .single();
                                                     if (error) {
@@ -6689,6 +6707,7 @@ export default function AdminDashboard() {
                                                               _messages: [...(r._messages || []), ins],
                                                               _editingComment: false,
                                                               _localComment: undefined,
+                                                              _localAttachments: [],
                                                             }
                                                           : r,
                                                       ),
