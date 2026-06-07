@@ -564,7 +564,7 @@ export default function ModelDashboardTab() {
 
   // ─── Period revenue from accounts_data.total ───
   useEffect(() => {
-    if (!selectedModelId || modelAccounts.length === 0) return;
+    if (!selectedModelId) return;
     const accountIds = modelAccounts.map((a) => a.id);
 
     const today = new Date();
@@ -607,18 +607,54 @@ export default function ModelDashboardTab() {
 
     let cancelled = false;
     (async () => {
-      const { data, error } = await (supabase as any)
+      // Pull archived accounts (entity_type='account') belonging to this model
+      const { data: archived } = await (supabase as any)
+        .from("deleted_records")
+        .select("original_id, platform, data")
+        .eq("entity_type", "account")
+        .eq("data->>model_id", selectedModelId);
+      const archivedList = (archived || []) as Array<{ original_id: string; platform: string | null; data: any }>;
+      const archivedIds = archivedList.map((r) => r.original_id).filter(Boolean);
+      const archivedPlatformById = new Map<string, string>();
+      for (const r of archivedList) {
+        const plat = r.platform || r.data?.platform || "";
+        if (r.original_id) archivedPlatformById.set(r.original_id, plat);
+      }
+
+      // Query accounts_data either by combined id list OR by model_id snapshot
+      // (covers rows whose account_id became null after deletion).
+      const combinedIds = Array.from(new Set([...accountIds, ...archivedIds]));
+      let query = (supabase as any)
         .from("accounts_data")
-        .select("account_id, total")
-        .in("account_id", accountIds)
+        .select("account_id, model_id, platform, total")
         .gte("date", fmt(from))
         .lte("date", fmt(to));
+      if (combinedIds.length > 0) {
+        query = query.or(`account_id.in.(${combinedIds.join(",")}),model_id.eq.${selectedModelId}`);
+      } else {
+        query = query.eq("model_id", selectedModelId);
+      }
+      const { data, error } = await query;
       if (cancelled) return;
       if (error) { console.error("accounts_data load failed", error); return; }
+
       const sums: Record<string, number> = {};
       for (const id of accountIds) sums[id] = 0;
-      for (const r of (data || []) as Array<{ account_id: string; total: number | string }>) {
-        sums[r.account_id] = (sums[r.account_id] || 0) + Number(r.total || 0);
+      // Aggregate platform totals (active accounts get per-id totals; archived
+      // contributions are merged by platform so they still appear in the breakdown).
+      let archivedFourbased = 0, archivedMaloum = 0, archivedBrezzels = 0;
+      for (const r of (data || []) as Array<{ account_id: string | null; model_id: string | null; platform: string | null; total: number | string }>) {
+        const amt = Number(r.total || 0);
+        if (r.account_id && sums[r.account_id] !== undefined) {
+          // Active account
+          sums[r.account_id] = (sums[r.account_id] || 0) + amt;
+        } else {
+          // Archived (or detached) row — bucket by platform snapshot
+          const plat = r.platform || (r.account_id ? archivedPlatformById.get(r.account_id) : "") || "";
+          if (plat === "4Based") archivedFourbased += amt;
+          else if (plat === "Maloum") archivedMaloum += amt;
+          else if (plat === "Brezzels") archivedBrezzels += amt;
+        }
       }
       setDashboardRevenues(sums);
       const platMap: Record<string, { fourbased: number; maloum: number; brezzels: number }> = {};
@@ -628,6 +664,13 @@ export default function ModelDashboardTab() {
           fourbased: acc.platform === "4Based" ? v : 0,
           maloum: acc.platform === "Maloum" ? v : 0,
           brezzels: acc.platform === "Brezzels" ? v : 0,
+        };
+      }
+      if (archivedFourbased || archivedMaloum || archivedBrezzels) {
+        platMap["__archived__"] = {
+          fourbased: archivedFourbased,
+          maloum: archivedMaloum,
+          brezzels: archivedBrezzels,
         };
       }
       setPlatformRevenues(platMap);
