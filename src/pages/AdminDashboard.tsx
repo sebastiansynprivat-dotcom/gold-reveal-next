@@ -6385,32 +6385,34 @@ export default function AdminDashboard() {
                                                 );
                                                 return;
                                               }
-                                              const isModelEn = String(req._model?.model_language || req.model_language || "de").toLowerCase().startsWith("en");
-                                              const srcHeader = isModelEn
+                                              // Localized wrappers per target language – assembled locally so they
+                                              // always appear in the target language, regardless of what the AI returns.
+                                              const targetHeader = target === "en"
                                                 ? "Hey, here's a new request from the chatter – passing it on to you one-to-one 🙋🏼‍♂️:"
                                                 : "Hey, eine neue Anfrage des Chatters an dich – ich leite sie dir einmal eins zu eins weiter 🙋🏼‍♂️:";
-                                              const srcPriceLabel = isModelEn
+                                              const targetPriceLabel = target === "en"
                                                 ? "The price the customer is willing to pay:"
                                                 : "Der Preis, den der Kunde bereit wäre zu bezahlen:";
-                                              const priceLine =
-                                                req.request_type === "individual" && req.price != null
-                                                  ? `\n\n${srcPriceLabel} ${req.price}€`
-                                                  : "";
-                                              const fullSource = `${srcHeader}\n\n${cleanDescription}${priceLine}`;
                                               setModelRequests((prev) =>
                                                 prev.map((r) =>
                                                   r.id === req.id ? { ...r, _translating: target } : r,
                                                 ),
                                               );
                                               try {
+                                                // Only translate the user-written description; wrappers are added in the target language.
                                                 const { data, error } = await supabase.functions.invoke(
                                                   "translate-text",
-                                                  { body: { text: fullSource, target } },
+                                                  { body: { text: cleanDescription, target } },
                                                 );
                                                 if (error || !data?.translation) {
                                                   toast.error(data?.error || "Übersetzung fehlgeschlagen");
                                                   return;
                                                 }
+                                                const priceLine =
+                                                  req.request_type === "individual" && req.price != null
+                                                    ? `\n\n${targetPriceLabel} ${req.price}€`
+                                                    : "";
+                                                const assembled = `${targetHeader}\n\n${data.translation}${priceLine}`;
                                                 setModelRequests((prev) =>
                                                   prev.map((r) =>
                                                     r.id === req.id
@@ -6418,7 +6420,7 @@ export default function AdminDashboard() {
                                                           ...r,
                                                           _translations: {
                                                             ...(r._translations || {}),
-                                                            [target]: data.translation,
+                                                            [target]: assembled,
                                                           },
                                                         }
                                                       : r,
