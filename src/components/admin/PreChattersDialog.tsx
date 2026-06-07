@@ -3,20 +3,37 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { UserPlus, Loader2, Trash2, CheckCircle2, Clock, Search, X, Check, AtSign, Mail } from "lucide-react";
+import { format } from "date-fns";
+import {
+  UserPlus,
+  Loader2,
+  Trash2,
+  Clock,
+  Search,
+  X,
+  Check,
+  AtSign,
+  Mail,
+  CalendarIcon,
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
-interface PreChatter {
+interface PreProfile {
   id: string;
-  name: string;
-  telegram_id: string;
+  name: string | null;
+  telegram_id: string | null;
   language: "de" | "en";
-  preassigned_account_id: string | null;
-  claimed_at: string | null;
-  claimed_user_id: string | null;
+  group_name: string;
   created_at: string;
+  assignments: {
+    id: string;
+    account_id: string;
+    start_date: string;
+  }[];
 }
 
 interface AccountOption {
@@ -35,31 +52,61 @@ interface Props {
 }
 
 export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: Props) {
-  const [list, setList] = useState<PreChatter[]>([]);
+  const [list, setList] = useState<PreProfile[]>([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const [groupName, setGroupName] = useState("");
   const [telegram, setTelegram] = useState("");
   const [language, setLanguage] = useState<"de" | "en">("de");
-  const [accountId, setAccountId] = useState<string>("");
+  const [accountIds, setAccountIds] = useState<string[]>([]);
   const [accountSearch, setAccountSearch] = useState("");
+  const [startDate, setStartDate] = useState<Date>(new Date());
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
 
-  // Map of model_id → username (fetched once when dialog opens)
   const [modelUsernames, setModelUsernames] = useState<Record<string, string>>({});
 
   const load = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from("pre_chatters" as any)
-      .select("*")
+    const { data: profs, error } = await supabase
+      .from("profiles")
+      .select("id, name, telegram_id, language, group_name, created_at, pre_create")
+      .eq("pre_create", true)
       .order("created_at", { ascending: false });
-    setLoading(false);
     if (error) {
+      setLoading(false);
       toast.error("Fehler beim Laden: " + error.message);
       return;
     }
-    setList((data as any[]) as PreChatter[]);
+    const ids = (profs || []).map((p: any) => p.id);
+    let assignmentsByProfile: Record<string, PreProfile["assignments"]> = {};
+    if (ids.length > 0) {
+      const { data: aas } = await supabase
+        .from("account_assignments")
+        .select("id, account_id, start_date, end_date, profile_id")
+        .in("profile_id", ids)
+        .is("end_date", null);
+      (aas || []).forEach((a: any) => {
+        if (!assignmentsByProfile[a.profile_id]) assignmentsByProfile[a.profile_id] = [];
+        assignmentsByProfile[a.profile_id].push({
+          id: a.id,
+          account_id: a.account_id,
+          start_date: a.start_date,
+        });
+      });
+    }
+    setList(
+      (profs || []).map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        telegram_id: p.telegram_id,
+        language: (p.language || "de") as "de" | "en",
+        group_name: p.group_name || "",
+        created_at: p.created_at,
+        assignments: assignmentsByProfile[p.id] || [],
+      })),
+    );
+    setLoading(false);
   };
 
   const loadModelUsernames = async () => {
@@ -101,7 +148,6 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
           );
         })
       : freeAccounts;
-    // Free accounts first, then already-assigned ones
     return [...base].sort((a, b) => {
       const aFree = a.assigned_to ? 1 : 0;
       const bFree = b.assigned_to ? 1 : 0;
@@ -111,6 +157,9 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
 
   const freeCount = useMemo(() => freeAccounts.filter((a) => !a.assigned_to).length, [freeAccounts]);
 
+  const toggleAccount = (id: string) => {
+    setAccountIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  };
 
   const add = async () => {
     if (!telegram.trim()) {
@@ -118,28 +167,58 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
       return;
     }
     setSaving(true);
-    const { error } = await supabase.from("pre_chatters" as any).insert({
-      name: groupName.trim(),
-      telegram_id: telegram.trim(),
-      language,
-      preassigned_account_id: accountId || null,
-    } as any);
-    setSaving(false);
-    if (error) {
-      toast.error("Fehler: " + error.message);
-      return;
+    try {
+      // 1) Create pre-create profile
+      const { data: prof, error: profErr } = await supabase
+        .from("profiles")
+        .insert({
+          user_id: null as any,
+          pre_create: true,
+          name: groupName.trim() || null,
+          group_name: groupName.trim() || "",
+          telegram_id: telegram.trim(),
+          language,
+        } as any)
+        .select("id")
+        .single();
+      if (profErr) throw profErr;
+
+      // 2) Create assignment rows
+      if (accountIds.length > 0) {
+        const startStr = format(startDate, "yyyy-MM-dd");
+        const rows = accountIds.map((aid) => ({
+          account_id: aid,
+          profile_id: (prof as any).id,
+          user_id: null,
+          start_date: startStr,
+          assigned_at: new Date().toISOString(),
+        }));
+        const { error: aaErr } = await supabase
+          .from("account_assignments")
+          .insert(rows as any);
+        if (aaErr) throw aaErr;
+      }
+
+      toast.success("Chatter vorgemerkt");
+      setGroupName("");
+      setTelegram("");
+      setAccountIds([]);
+      setAccountSearch("");
+      setLanguage("de");
+      setStartDate(new Date());
+      load();
+    } catch (e: any) {
+      toast.error("Fehler: " + e.message);
+    } finally {
+      setSaving(false);
     }
-    toast.success("Chatter vorgemerkt");
-    setGroupName("");
-    setTelegram("");
-    setAccountId("");
-    setAccountSearch("");
-    setLanguage("de");
-    load();
   };
 
   const remove = async (id: string) => {
-    const { error } = await supabase.from("pre_chatters" as any).delete().eq("id", id);
+    // Delete profile; trigger close_assignments_on_profile_archive will close assignments
+    // and we also want them gone — so delete assignments first to be safe.
+    await supabase.from("account_assignments").delete().eq("profile_id", id);
+    const { error } = await supabase.from("profiles").delete().eq("id", id);
     if (error) {
       toast.error("Fehler: " + error.message);
       return;
@@ -196,7 +275,7 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
                   className="h-8 text-xs bg-secondary/30 border-transparent"
                 />
               </div>
-              <div className="space-y-1 sm:col-span-2">
+              <div className="space-y-1">
                 <label className="text-[10px] text-muted-foreground uppercase tracking-wide">Sprache</label>
                 <div className="flex gap-1.5">
                   {(["de", "en"] as const).map((lang) => (
@@ -211,17 +290,45 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
                           : "bg-secondary/30 text-muted-foreground border-transparent hover:text-foreground",
                       )}
                     >
-                      {lang === "de" ? "🇩🇪 Deutsch" : "🇬🇧 Englisch"}
+                      {lang === "de" ? "🇩🇪 DE" : "🇬🇧 EN"}
                     </button>
                   ))}
                 </div>
               </div>
+              <div className="space-y-1">
+                <label className="text-[10px] text-muted-foreground uppercase tracking-wide">Startdatum</label>
+                <Popover open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="h-8 w-full justify-start text-xs font-normal bg-secondary/30 border-transparent"
+                    >
+                      <CalendarIcon className="h-3 w-3 mr-1.5" />
+                      {format(startDate, "dd.MM.yyyy")}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={startDate}
+                      onSelect={(d) => {
+                        if (d) setStartDate(d);
+                        setDatePickerOpen(false);
+                      }}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
               <div className="space-y-1.5 sm:col-span-2">
-                <label className="text-[10px] text-muted-foreground uppercase tracking-wide">
-                  Account vorzuweisen (optional)
+                <label className="text-[10px] text-muted-foreground uppercase tracking-wide flex items-center justify-between">
+                  <span>Accounts vorzuweisen (Mehrfachauswahl)</span>
+                  {accountIds.length > 0 && (
+                    <span className="text-accent normal-case">{accountIds.length} ausgewählt</span>
+                  )}
                 </label>
 
-                {/* Search field */}
                 <div className="relative group">
                   <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground group-focus-within:text-accent transition-colors" />
                   <Input
@@ -242,36 +349,15 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
                   )}
                 </div>
 
-                {/* Results list */}
                 <div className="rounded-lg border border-border/40 bg-background/40 overflow-hidden">
                   <div className="max-h-48 overflow-y-auto divide-y divide-border/20">
-                    {/* "no account" option */}
-                    <button
-                      type="button"
-                      onClick={() => setAccountId("")}
-                      className={cn(
-                        "w-full flex items-center gap-2 px-2.5 py-2 text-left transition-colors",
-                        accountId === ""
-                          ? "bg-accent/10 text-foreground"
-                          : "hover:bg-secondary/40 text-muted-foreground",
-                      )}
-                    >
-                      <div className={cn(
-                        "h-4 w-4 rounded-full border flex items-center justify-center shrink-0",
-                        accountId === "" ? "border-accent bg-accent" : "border-border/60",
-                      )}>
-                        {accountId === "" && <Check className="h-2.5 w-2.5 text-accent-foreground" />}
-                      </div>
-                      <span className="text-[11px] italic">— kein Account zuweisen —</span>
-                    </button>
-
                     {filteredAccounts.length === 0 ? (
                       <div className="px-3 py-6 text-center text-[11px] text-muted-foreground">
                         Keine Treffer
                       </div>
                     ) : (
                       filteredAccounts.map((a) => {
-                        const selected = accountId === a.id;
+                        const selected = accountIds.includes(a.id);
                         const username = a.model_id ? modelUsernames[a.model_id] : null;
                         const isAssigned = !!a.assigned_to;
                         return (
@@ -279,7 +365,7 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
                             key={a.id}
                             type="button"
                             disabled={isAssigned}
-                            onClick={() => !isAssigned && setAccountId(a.id)}
+                            onClick={() => !isAssigned && toggleAccount(a.id)}
                             title={isAssigned ? "Bereits einem Chatter zugewiesen" : undefined}
                             className={cn(
                               "w-full flex items-center gap-2.5 px-2.5 py-2 text-left transition-colors",
@@ -288,7 +374,7 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
                             )}
                           >
                             <div className={cn(
-                              "h-4 w-4 rounded-full border flex items-center justify-center shrink-0",
+                              "h-4 w-4 rounded border flex items-center justify-center shrink-0",
                               selected ? "border-accent bg-accent" : "border-border/60",
                             )}>
                               {selected && <Check className="h-2.5 w-2.5 text-accent-foreground" />}
@@ -329,14 +415,13 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
                     <span className="text-[9px] uppercase tracking-wide text-muted-foreground">
                       {accountSearch ? `${filteredAccounts.length} Treffer` : `${freeCount} freie Accounts`}
                     </span>
-
-                    {accountId && (
+                    {accountIds.length > 0 && (
                       <button
                         type="button"
-                        onClick={() => setAccountId("")}
+                        onClick={() => setAccountIds([])}
                         className="text-[9px] uppercase tracking-wide text-muted-foreground hover:text-foreground transition"
                       >
-                        Auswahl zurücksetzen
+                        Auswahl leeren
                       </button>
                     )}
                   </div>
@@ -370,43 +455,50 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
               <p className="text-[11px] text-muted-foreground text-center py-6">Keine Einträge</p>
             ) : (
               list.map((pc) => {
-                const acc = pc.preassigned_account_id
-                  ? freeAccounts.find((a) => a.id === pc.preassigned_account_id)
-                  : null;
+                const accs = pc.assignments
+                  .map((a) => freeAccounts.find((fa) => fa.id === a.account_id))
+                  .filter(Boolean) as AccountOption[];
                 return (
                   <div
                     key={pc.id}
-                    className="flex items-center justify-between p-3 rounded-xl glass-card-subtle"
+                    className="flex items-start justify-between p-3 rounded-xl glass-card-subtle gap-2"
                   >
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-1.5 mb-1 flex-wrap">
                         <Badge className="text-[9px] px-1.5 py-0 bg-accent/15 text-accent border-accent/20">
                           {pc.language === "en" ? "🇬🇧 EN" : "🇩🇪 DE"}
                         </Badge>
-                        {pc.claimed_at ? (
-                          <Badge className="text-[9px] px-1.5 py-0 bg-emerald-500/15 text-emerald-400 border-emerald-500/30">
-                            <CheckCircle2 className="h-2.5 w-2.5 mr-0.5" /> verknüpft
-                          </Badge>
-                        ) : (
-                          <Badge className="text-[9px] px-1.5 py-0 bg-amber-500/15 text-amber-400 border-amber-500/30">
-                            <Clock className="h-2.5 w-2.5 mr-0.5" /> wartet
-                          </Badge>
-                        )}
-                        {acc && (
-                          <Badge variant="secondary" className="text-[9px] px-1.5 py-0">
-                            {formatAccountLabel(acc)}
-                          </Badge>
-                        )}
+                        <Badge className="text-[9px] px-1.5 py-0 bg-amber-500/15 text-amber-400 border-amber-500/30">
+                          <Clock className="h-2.5 w-2.5 mr-0.5" /> wartet
+                        </Badge>
                       </div>
                       <p className="text-xs font-medium text-foreground truncate">
-                        {pc.name || "—"} · {pc.telegram_id}
+                        {pc.name || pc.group_name || "—"} · {pc.telegram_id}
                       </p>
+                      {accs.length > 0 && (
+                        <div className="mt-1.5 flex flex-wrap gap-1">
+                          {accs.map((a, i) => (
+                            <Badge
+                              key={a.id}
+                              variant="secondary"
+                              className="text-[9px] px-1.5 py-0"
+                            >
+                              {formatAccountLabel(a)}
+                              {pc.assignments[i]?.start_date && (
+                                <span className="ml-1 opacity-60">
+                                  · {format(new Date(pc.assignments[i].start_date), "dd.MM.yy")}
+                                </span>
+                              )}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
                     </div>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => remove(pc.id)}
-                      className="text-destructive/70 hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0 shrink-0 ml-2"
+                      className="text-destructive/70 hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0 shrink-0"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
