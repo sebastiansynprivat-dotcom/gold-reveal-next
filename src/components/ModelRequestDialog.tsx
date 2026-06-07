@@ -42,6 +42,11 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
   const [platform, setPlatform] = useState<string | null>(null);
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
+  const [attachments, setAttachments] = useState<RequestAttachment[]>([]);
+  // Stable id used both as the DB row id and as the storage folder for media.
+  const [draftRequestId, setDraftRequestId] = useState<string>(() =>
+    typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
+  );
   const [loading, setLoading] = useState(false);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
 
