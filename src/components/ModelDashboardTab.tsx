@@ -3756,6 +3756,18 @@ export default function ModelDashboardTab() {
                                 className="bg-secondary/40 border-border/50 text-xs h-8"
                               />
                             </div>
+                            <label className="flex items-center gap-2 pt-1 cursor-pointer">
+                              <Checkbox
+                                checked={!!entry.campaign}
+                                onCheckedChange={(v) =>
+                                  setCreateAccounts((prev) => ({
+                                    ...prev,
+                                    [platform]: { ...prev[platform], campaign: !!v },
+                                  }))
+                                }
+                              />
+                              <span className="text-[10px] text-muted-foreground">Campaign</span>
+                            </label>
                           </div>
                         </motion.div>
                       )}
