@@ -47,6 +47,7 @@ import {
   Mail,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import CreditNoteForm from "@/components/CreditNoteForm";
 import ModelGroupsPanel from "@/components/ModelGroupsPanel";
 import { fetchFxRate } from "@/lib/fx";
@@ -3886,9 +3887,21 @@ export default function ModelDashboardTab() {
                                   }))
                                 }
                                 placeholder="••••••••"
-                                className="bg-secondary/40 border-border/50 text-xs h-8"
-                              />
-                            </div>
+                              className="bg-secondary/40 border-border/50 text-xs h-8"
+                            />
+                          </div>
+                          <label className="flex items-center gap-2 pt-1 cursor-pointer">
+                            <Checkbox
+                              checked={!!entry.campaign}
+                              onCheckedChange={(v) =>
+                                setNewAccounts((prev) => ({
+                                  ...prev,
+                                  [platform]: { ...prev[platform], campaign: !!v },
+                                }))
+                              }
+                            />
+                            <span className="text-[10px] text-muted-foreground">Campaign</span>
+                          </label>
                           </div>
                           <div className="space-y-1">
                             <Label className="text-[10px] text-muted-foreground">Domain</Label>
