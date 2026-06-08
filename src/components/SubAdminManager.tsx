@@ -245,6 +245,36 @@ export default function SubAdminManager() {
             />
           </div>
 
+          {filteredAccounts.length > 0 && (
+            <div className="flex items-center gap-2 mb-2 px-1">
+              <Checkbox
+                id="select-all-filtered"
+                checked={
+                  filteredAccounts.every(acc => selectedAccountIds.has(acc.id))
+                    ? true
+                    : filteredAccounts.some(acc => selectedAccountIds.has(acc.id))
+                    ? "indeterminate"
+                    : false
+                }
+                onCheckedChange={() => {
+                  const allSelected = filteredAccounts.every(acc => selectedAccountIds.has(acc.id));
+                  setSelectedAccountIds(prev => {
+                    const next = new Set(prev);
+                    if (allSelected) {
+                      filteredAccounts.forEach(acc => next.delete(acc.id));
+                    } else {
+                      filteredAccounts.forEach(acc => next.add(acc.id));
+                    }
+                    return next;
+                  });
+                }}
+              />
+              <label htmlFor="select-all-filtered" className="text-xs text-muted-foreground cursor-pointer select-none">
+                Alle auswählen
+              </label>
+            </div>
+          )}
+
           <div className="flex-1 overflow-y-auto space-y-1 pr-1" style={{ maxHeight: "50vh" }}>
             {filteredAccounts.map(acc => {
               const isSelected = selectedAccountIds.has(acc.id);
