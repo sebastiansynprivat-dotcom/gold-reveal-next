@@ -213,12 +213,14 @@ export default function SubAdminManager() {
               </div>
 
               {sa.assignedAccounts.length > 0 && (
-                <div className="flex flex-wrap gap-1.5">
-                  {sa.assignedAccounts.map(acc => (
-                    <Badge key={acc.id} variant="secondary" className="text-[10px]">
-                      {acc.platform} · {acc.account_email}
-                    </Badge>
-                  ))}
+                <div className="max-h-32 overflow-y-auto pr-1">
+                  <div className="flex flex-wrap gap-1.5">
+                    {sa.assignedAccounts.map(acc => (
+                      <Badge key={acc.id} variant="secondary" className="text-[10px]">
+                        {acc.platform} · {acc.account_email}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
