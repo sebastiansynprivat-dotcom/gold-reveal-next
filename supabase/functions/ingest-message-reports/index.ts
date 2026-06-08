@@ -44,14 +44,62 @@ Deno.serve(async (req) => {
       validated.push({ account_id, date, main: mainN, follow: followN });
     }
 
+    // Aggregate duplicates within the incoming batch
+    const batchMap = new Map<string, { account_id: string; date: string; main: number; follow: number }>();
+    for (const v of validated) {
+      const key = `${v.account_id}|${v.date}`;
+      const cur = batchMap.get(key);
+      if (cur) {
+        cur.main += v.main;
+        cur.follow += v.follow;
+      } else {
+        batchMap.set(key, { ...v });
+      }
+    }
+    const aggregated = Array.from(batchMap.values());
+
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
+    // Fetch existing rows for these (account_id, date) pairs
+    const accountIds = Array.from(new Set(aggregated.map((r) => r.account_id)));
+    const dates = Array.from(new Set(aggregated.map((r) => r.date)));
+
+    const { data: existing, error: fetchError } = await supabase
+      .from("message_reports")
+      .select("account_id, date, main, follow")
+      .in("account_id", accountIds)
+      .in("date", dates);
+
+    if (fetchError) {
+      console.error("Fetch error:", fetchError);
+      return json({ error: fetchError.message }, 500);
+    }
+
+    const existingMap = new Map<string, { main: number; follow: number }>();
+    for (const e of existing ?? []) {
+      existingMap.set(`${e.account_id}|${e.date}`, {
+        main: Number(e.main) || 0,
+        follow: Number(e.follow) || 0,
+      });
+    }
+
+    // Sum incoming with existing
+    const toUpsert = aggregated.map((r) => {
+      const prev = existingMap.get(`${r.account_id}|${r.date}`) ?? { main: 0, follow: 0 };
+      return {
+        account_id: r.account_id,
+        date: r.date,
+        main: prev.main + r.main,
+        follow: prev.follow + r.follow,
+      };
+    });
+
     const { data, error } = await supabase
       .from("message_reports")
-      .upsert(validated, { onConflict: "account_id,date" })
+      .upsert(toUpsert, { onConflict: "account_id,date" })
       .select();
 
     if (error) {
