@@ -1,0 +1,1 @@
+ALTER TABLE public.accounts ADD COLUMN IF NOT EXISTS campaign boolean NOT NULL DEFAULT false;

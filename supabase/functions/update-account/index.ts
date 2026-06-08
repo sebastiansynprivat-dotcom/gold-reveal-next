@@ -30,9 +30,10 @@ const ALLOWED = new Set([
   "main_message",
   "follow_message",
   "media",
+  "campaign",
 ]);
 
-const BATCH_FIELDS = ["post", "message", "main_message", "follow_message", "media"] as const;
+const BATCH_FIELDS = ["post", "message", "main_message", "follow_message", "media", "campaign"] as const;
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function pickAllowed(updates: Record<string, unknown>) {

@@ -47,6 +47,7 @@ import {
   Mail,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import CreditNoteForm from "@/components/CreditNoteForm";
 import ModelGroupsPanel from "@/components/ModelGroupsPanel";
 import { fetchFxRate } from "@/lib/fx";
@@ -345,11 +346,11 @@ export default function ModelDashboardTab() {
     PLATFORMS.reduce(
       (acc, p) => ({
         ...acc,
-        [p]: { selected: false, account_email: "", account_password: "", account_domain: PLATFORM_DOMAINS[p] || "" },
+        [p]: { selected: false, account_email: "", account_password: "", account_domain: PLATFORM_DOMAINS[p] || "", campaign: false },
       }),
       {} as Record<
         string,
-        { selected: boolean; account_email: string; account_password: string; account_domain: string }
+        { selected: boolean; account_email: string; account_password: string; account_domain: string; campaign: boolean }
       >,
     );
 
@@ -1019,6 +1020,7 @@ export default function ModelDashboardTab() {
         account_email: entry.account_email,
         account_password: entry.account_password,
         account_domain: entry.account_domain,
+        campaign: !!entry.campaign,
         drive_folder_id: extractDriveFolderId(newModel.drive_folder_id),
         model_language: newModel.model_language,
         model_agency: newModel.model_agency,
@@ -1157,6 +1159,7 @@ export default function ModelDashboardTab() {
         account_email: entry.account_email,
         account_password: entry.account_password,
         account_domain: entry.account_domain,
+        campaign: !!entry.campaign,
         drive_folder_id: extractDriveFolderId(modelForm.drive_folder_id || ""),
         model_language: modelForm.model_language || "de",
         model_agency: modelForm.model_agency || "shex",
@@ -3754,6 +3757,18 @@ export default function ModelDashboardTab() {
                                 className="bg-secondary/40 border-border/50 text-xs h-8"
                               />
                             </div>
+                            <label className="flex items-center gap-2 pt-1 cursor-pointer">
+                              <Checkbox
+                                checked={!!entry.campaign}
+                                onCheckedChange={(v) =>
+                                  setCreateAccounts((prev) => ({
+                                    ...prev,
+                                    [platform]: { ...prev[platform], campaign: !!v },
+                                  }))
+                                }
+                              />
+                              <span className="text-[10px] text-muted-foreground">Campaign</span>
+                            </label>
                           </div>
                         </motion.div>
                       )}
@@ -3872,9 +3887,21 @@ export default function ModelDashboardTab() {
                                   }))
                                 }
                                 placeholder="••••••••"
-                                className="bg-secondary/40 border-border/50 text-xs h-8"
-                              />
-                            </div>
+                              className="bg-secondary/40 border-border/50 text-xs h-8"
+                            />
+                          </div>
+                          <label className="flex items-center gap-2 pt-1 cursor-pointer">
+                            <Checkbox
+                              checked={!!entry.campaign}
+                              onCheckedChange={(v) =>
+                                setNewAccounts((prev) => ({
+                                  ...prev,
+                                  [platform]: { ...prev[platform], campaign: !!v },
+                                }))
+                              }
+                            />
+                            <span className="text-[10px] text-muted-foreground">Campaign</span>
+                          </label>
                           </div>
                           <div className="space-y-1">
                             <Label className="text-[10px] text-muted-foreground">Domain</Label>
