@@ -72,6 +72,7 @@ export type Database = {
           account_password: string
           assigned_at: string | null
           assigned_to: string | null
+          campaign: boolean
           created_at: string
           created_by: string | null
           currency: string
@@ -97,6 +98,7 @@ export type Database = {
           account_password?: string
           assigned_at?: string | null
           assigned_to?: string | null
+          campaign?: boolean
           created_at?: string
           created_by?: string | null
           currency?: string
@@ -122,6 +124,7 @@ export type Database = {
           account_password?: string
           assigned_at?: string | null
           assigned_to?: string | null
+          campaign?: boolean
           created_at?: string
           created_by?: string | null
           currency?: string

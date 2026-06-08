@@ -1,16 +1,17 @@
-## Update `accounts-with-chatters` to include pre-create chatters
+## Add `campaign` boolean to accounts
 
-Currently the edge function only resolves assigned chatters via `account_assignments.user_id` → `profiles.user_id`. Pre-create profiles have no `user_id`, so their assignments are silently dropped from the export.
+### Database
+- Migration: `ALTER TABLE public.accounts ADD COLUMN campaign boolean NOT NULL DEFAULT false;`
 
-### Changes to `supabase/functions/accounts-with-chatters/index.ts`
+### Edge functions
+- `update-account/index.ts`: add `"campaign"` to the `ALLOWED` set so admins can toggle it via the update endpoint.
+- `accounts-with-chatters/index.ts`: add `"campaign"` to the `ACCOUNT_COLS` select list so it's returned in the export.
 
-1. **Expand assignment query** — select `account_id, user_id, profile_id` (currently only `user_id`).
-2. **Track both keys per account** — instead of a `Set<string>` of user_ids per account, store a `Set` of identifiers that can be either `user_id` or `profile_id` (tag them, e.g. `u:<uuid>` / `p:<uuid>`), so an open assignment with only `profile_id` is still captured.
-3. **Fetch profiles by both columns** — collect all `user_id`s and all `profile_id`s referenced, then run two queries:
-   - `profiles.select(...).in('user_id', [...])` (existing)
-   - `profiles.select(...).in('id', [...])` for pre-create profiles
-   Merge into a lookup keyed by the same tag used above.
-4. **Build `assigned_chatter`** — map each tagged id through the merged lookup; keep the existing shape (`user_id`, `telegram_id`, `language`, `offer`). For pre-create rows, `user_id` will be `null` (since the profile has none) — include the profile so downstream consumers see the chatter.
-5. **Keep `accounts.assigned_to` handling unchanged** (that column is always a real `user_id`).
+### Admin UI
+- **Add-account form** (in `AdminDashboard.tsx` account creation flow): add a Checkbox labeled "Campaign" that writes `campaign` on insert (defaults to false).
+- **Messaging behavior / Setup tab** (per-account messaging settings panel, same area where `post` / `message` / `main_message` / `follow_message` / `media` are toggled): add a Checkbox for `campaign` wired to the same update path used by the other booleans.
 
-No DB migration, no other files touched.
+### Out of scope
+- No chatter-facing UI changes.
+- No RLS changes (existing account policies already cover this column).
+- Types file regenerates automatically after the migration.
