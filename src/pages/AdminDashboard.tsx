@@ -7763,6 +7763,16 @@ export default function AdminDashboard() {
                                           </span>
                                         </div>
 
+                                        <div className="flex items-center gap-2">
+                                          <Switch
+                                            checked={!!(acc as any).campaign}
+                                            onCheckedChange={(v) => updateAccountField(acc.id, { campaign: v } as any)}
+                                          />
+                                          <span className={`text-[11px] font-semibold ${(acc as any).campaign ? "text-emerald-400" : "text-muted-foreground"}`}>
+                                            Campaign {(acc as any).campaign ? "ON" : "OFF"}
+                                          </span>
+                                        </div>
+
 
 
                                         {(() => {
