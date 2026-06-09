@@ -182,6 +182,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AutoTranslator />
+          <FloatingLanguageToggle />
           <Suspense fallback={<RouteFallback />}>
             <Routes>
               <Route path="/" element={<ProtectedRoute><Navigate to="/dashboard" replace /></ProtectedRoute>} />
