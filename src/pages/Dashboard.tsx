@@ -27,6 +27,8 @@ import {
   Check,
   RefreshCw,
   Trophy,
+  AlertTriangle,
+  VolumeX,
 } from "lucide-react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import {
@@ -1214,7 +1216,22 @@ export default function Dashboard() {
                 </Dialog>
               </>
             ) : (
-              <div className="px-4 py-4 lg:px-6 lg:py-5">
+              <div className="px-4 py-4 lg:px-6 lg:py-5 space-y-3">
+                {assignedAccounts.some((acc) => acc.model_language === "en") && (
+                  <div className="rounded-lg border border-amber-500/25 bg-amber-500/10 p-3 flex items-start gap-2.5">
+                    <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+                    <div className="min-w-0">
+                      <p className="text-xs font-medium text-amber-200">
+                        {lang === "en" ? "Authenticity note" : "Authentizitäts-Hinweis"}
+                      </p>
+                      <p className="text-[11px] text-amber-100/80 mt-0.5 leading-relaxed">
+                        {lang === "en"
+                          ? "This model does not create custom audio or video content with speech, as this would compromise authenticity. Please keep this in mind when submitting requests."
+                          : "Dieses Model erstellt keine Custom-Audios oder Videos mit Sprechen, da dies die Authentizität beeinträchtigen würde. Bitte berücksichtige dies bei deinen Anfragen."}
+                      </p>
+                    </div>
+                  </div>
+                )}
                 <ModelRequestDialog
                   onSubmitted={loadMyRequests}
                   editData={editRequest}
