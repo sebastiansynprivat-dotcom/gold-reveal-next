@@ -44,8 +44,9 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage:
   const { lang } = useUILanguage();
   const [open, setOpen] = useState(false);
   const [modelName, setModelName] = useState("");
+  const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
   const [customerName, setCustomerName] = useState("");
-  
+
   const [requestType, setRequestType] = useState<"individual" | "general">("general");
   const [platform, setPlatform] = useState<string | null>(null);
   const [price, setPrice] = useState("");
@@ -58,12 +59,22 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage:
   const [loading, setLoading] = useState(false);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
 
+  const hasModelList = !!availableModels && availableModels.length > 0;
+  const selectedModel = hasModelList
+    ? availableModels!.find((m) => m.id === selectedModelId) || null
+    : null;
+  const modelLanguage: "de" | "en" = selectedModel?.language || modelLanguageProp;
+  const effectivePlatforms = selectedModel
+    ? selectedModel.platforms
+    : availablePlatforms && availablePlatforms.length > 0
+      ? availablePlatforms
+      : [];
+
   // When editData changes, open dialog and pre-fill
   useEffect(() => {
     if (editData) {
       setModelName(editData.model_name);
       setCustomerName(editData.customer_name ?? "");
-      // modelLanguage comes from prop now
       setRequestType(editData.request_type);
       setPrice(editData.price != null ? String(editData.price) : "");
       setAttachments(Array.isArray(editData.attachments) ? editData.attachments : []);
@@ -76,8 +87,14 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage:
         setPlatform(null);
         setDescription(editData.description);
       }
+      // Try to match edit data to one of the available models
+      if (availableModels && availableModels.length > 0) {
+        const match = availableModels.find(
+          (m) => m.name.trim().toLowerCase() === editData.model_name.trim().toLowerCase(),
+        );
+        if (match) setSelectedModelId(match.id);
+      }
       setOpen(true);
-      // Focus description and place cursor at end after dialog opens
       setTimeout(() => {
         const el = descriptionRef.current;
         if (el) {
@@ -86,14 +103,37 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage:
         }
       }, 150);
     }
-  }, [editData]);
+  }, [editData, availableModels]);
 
-  // Auto-select platform when chatter is only assigned to one
+  // Auto-select the only model
   useEffect(() => {
-    if (!platform && availablePlatforms && availablePlatforms.length === 1) {
-      setPlatform(availablePlatforms[0]);
+    if (!selectedModelId && availableModels && availableModels.length === 1) {
+      const only = availableModels[0];
+      setSelectedModelId(only.id);
+      if (!modelName && only.name) setModelName(only.name);
     }
-  }, [availablePlatforms, platform, open]);
+  }, [availableModels, selectedModelId, modelName]);
+
+  // When user picks a model, pre-fill its name & reset platform if no longer valid
+  useEffect(() => {
+    if (selectedModel) {
+      if (!modelName || (availableModels || []).some((m) => m.name === modelName)) {
+        setModelName(selectedModel.name);
+      }
+      if (platform && !selectedModel.platforms.includes(platform)) {
+        setPlatform(null);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedModelId]);
+
+  // Auto-select platform when only one is available
+  useEffect(() => {
+    if (!platform && effectivePlatforms.length === 1) {
+      setPlatform(effectivePlatforms[0]);
+    }
+  }, [effectivePlatforms, platform, open]);
+
 
 
   const resetForm = () => {
