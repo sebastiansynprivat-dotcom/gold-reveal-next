@@ -1202,14 +1202,19 @@ export default function Dashboard() {
               const key = a.model_id || a.model_name || a.platform || a.id;
               if (!key) return;
               const existing = modelsMap.get(key);
+              const isActive = a.model_active !== false;
               if (existing) {
                 if (a.platform) existing.platforms.add(a.platform);
+                // A model counts as active if ANY of its assigned accounts is active
+                if (isActive) existing.active = true;
+                if (!existing.name && a.model_name) existing.name = a.model_name;
+                if (a.model_language) existing.language = a.model_language as "de" | "en";
               } else {
                 modelsMap.set(key, {
                   id: key,
                   name: a.model_name || "",
                   language: (a.model_language as "de" | "en") || "de",
-                  active: a.model_active !== false,
+                  active: isActive,
                   platforms: new Set(a.platform ? [a.platform] : []),
                 });
               }
