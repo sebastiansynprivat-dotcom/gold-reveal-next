@@ -5320,6 +5320,7 @@ export default function AdminDashboard() {
                           { key: "top_monat", label: "Top Monat", icon: DollarSign },
                           { key: "no_revenue_7d", label: "7d+ ohne Umsatz", icon: AlertTriangle },
                           { key: "new_2d", label: "Gestern gestartet", icon: UserPlus },
+                          { key: "no_accounts", label: "Ohne Accounts", icon: UserMinus },
                         ] as const
                       ).map(({ key, label, icon: Icon }) => (
                         <button
@@ -5398,10 +5399,12 @@ export default function AdminDashboard() {
                               ? "Alle Chatter haben Push aktiviert."
                               : chatterFilter === "open_2d"
                                 ? "Keine Chats länger als 3 Tage offen."
-                                : "Noch keine Chatter registriert."}
+                                : chatterFilter === "no_accounts"
+                                  ? "Alle Chatter haben mindestens einen Account."
+                                  : "Noch keine Chatter registriert."}
                       </div>
                     ) : (
-                      <div className="divide-y divide-border">
+                      <div className="divide-y divide-border max-h-[20rem] overflow-y-auto">
                         {filtered.map((chatter) => {
                           const cStats = loginStats[chatter.user_id];
                           const activeToday = (cStats?.today || 0) > 0;
