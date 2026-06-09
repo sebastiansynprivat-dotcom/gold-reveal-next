@@ -189,7 +189,8 @@ type ChatterFilter =
   | "no_telegram"
   | "no_push"
   | "no_revenue_7d"
-  | "new_2d";
+  | "new_2d"
+  | "no_accounts";
 
 // Reuse hash function from ChatterStatsCard for consistent fake stats
 const hashCodeAdmin = (s: string) => {
