@@ -137,9 +137,14 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage:
 
 
   const resetForm = () => {
-    setModelName("");
+    // Keep auto-selected model when there is only one assigned
+    if (!availableModels || availableModels.length !== 1) {
+      setSelectedModelId(null);
+      setModelName("");
+    } else {
+      setModelName(availableModels[0].name);
+    }
     setCustomerName("");
-    
     setRequestType("general");
     setPlatform(null);
     setPrice("");
