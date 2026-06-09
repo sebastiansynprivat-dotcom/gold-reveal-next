@@ -286,18 +286,49 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage:
         </DialogHeader>
 
         <div className="space-y-4 pt-2">
-          <div className="space-y-1.5">
-            <Label className="text-xs text-foreground">Model Name aus dem Profil *</Label>
-            <div className="input-gold-shimmer rounded-lg">
-              <Input
-                placeholder="z.B. Deborahsecret, Luisa.loves"
-                value={modelName}
-                onChange={(e) => setModelName(e.target.value)}
-                maxLength={100}
-                className="border-transparent"
-              />
+          {hasModelList && availableModels!.length > 1 ? (
+            <div className="space-y-2">
+              <Label className="text-xs text-foreground">
+                {lang === "en" ? "Which model is this request for? *" : "Für welches Model ist diese Anfrage? *"}
+              </Label>
+              <div className="grid gap-2 grid-cols-1">
+                {availableModels!.map((m) => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedModelId(m.id);
+                      setModelName(m.name);
+                    }}
+                    className={`flex items-center justify-between px-4 py-2.5 rounded-lg border text-xs font-semibold transition-all text-left ${
+                      selectedModelId === m.id
+                        ? "border-accent bg-accent/15 text-accent shadow-[0_0_16px_hsl(43_56%_52%/0.25)]"
+                        : "border-border/50 bg-secondary/20 text-muted-foreground hover:border-accent/40 hover:text-foreground"
+                    }`}
+                  >
+                    <span className="truncate">{m.name || "—"}</span>
+                    <span className="text-[10px] opacity-70 ml-2 shrink-0">
+                      {m.language === "en" ? "🇬🇧 EN" : "🇩🇪 DE"}
+                    </span>
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="space-y-1.5">
+              <Label className="text-xs text-foreground">Model Name aus dem Profil *</Label>
+              <div className="input-gold-shimmer rounded-lg">
+                <Input
+                  placeholder="z.B. Deborahsecret, Luisa.loves"
+                  value={modelName}
+                  onChange={(e) => setModelName(e.target.value)}
+                  maxLength={100}
+                  className="border-transparent"
+                  readOnly={hasModelList}
+                />
+              </div>
+            </div>
+          )}
 
           <div className="rounded-lg border border-border/50 bg-secondary/20 p-3">
             <p className="text-xs text-muted-foreground">
