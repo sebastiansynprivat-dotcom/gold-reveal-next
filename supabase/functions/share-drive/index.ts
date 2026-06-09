@@ -152,8 +152,15 @@ async function shareDriveFolder(folderId: string, email: string, accessToken: st
   );
 
   if (!res.ok) {
-    const err = await res.json();
-    throw new Error(`Drive API error [${res.status}]: ${JSON.stringify(err)}`);
+    const text = await res.text();
+    let detail = text;
+    try {
+      detail = JSON.stringify(JSON.parse(text));
+    } catch {
+      // Non-JSON response (e.g. HTML error page) — keep raw text, trimmed
+      detail = text.slice(0, 500);
+    }
+    throw new Error(`Drive API error [${res.status}]: ${detail}`);
   }
 }
 
