@@ -1299,11 +1299,12 @@ export default function Dashboard() {
                       availablePlatforms={Array.from(
                         new Set(activeModels.flatMap((m) => Array.from(m.platforms))),
                       )}
-                      availableModels={activeModels.map((m) => ({
+                      availableModels={allModels.map((m) => ({
                         id: m.id,
                         name: m.name,
                         language: m.language,
                         platforms: Array.from(m.platforms),
+                        active: m.active,
                       }))}
                     />
                   </div>
