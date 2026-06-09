@@ -1123,6 +1123,13 @@ export default function Dashboard() {
         {/* 7-Day Revenue Chart */}
         <div data-tour="revenue-chart">{user && <RevenueChart userId={user.id} />}</div>
 
+        {/* Revenue disclaimer */}
+        <p className="text-[10px] text-muted-foreground/60 text-center leading-relaxed px-2">
+          {lang === "en"
+            ? "* The numbers shown may differ from the actual values and are not necessarily 100% accurate. Please always verify them against the official platform statistics. These figures are for guidance only — final billing is based exclusively on the platform statistics."
+            : "* Die angezeigten Zahlen können von den tatsächlichen Werten abweichen und sind nicht zwingend zu 100 % korrekt. Bitte prüfe die Daten immer anhand der offiziellen Plattformstatistiken. Diese Angaben dienen ausschließlich zur Orientierung — die finale Abrechnung basiert einzig und allein auf den Statistiken der jeweiligen Plattformen."}
+        </p>
+
         {/* Neue Content Drops vom Model */}
         <ContentDropsWidget />
         {/* Anfrage an das Model */}
