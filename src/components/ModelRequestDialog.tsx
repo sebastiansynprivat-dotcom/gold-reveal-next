@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -28,6 +29,7 @@ export interface AvailableModel {
   name: string;
   language: "de" | "en";
   platforms: string[];
+  active?: boolean;
 }
 
 interface ModelRequestDialogProps {
@@ -105,10 +107,12 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage:
     }
   }, [editData, availableModels]);
 
-  // Auto-select the only model
+  // Auto-select when only one active model is available
   useEffect(() => {
-    if (!selectedModelId && availableModels && availableModels.length === 1) {
-      const only = availableModels[0];
+    if (selectedModelId || !availableModels) return;
+    const activeOnly = availableModels.filter((m) => m.active !== false);
+    if (activeOnly.length === 1) {
+      const only = activeOnly[0];
       setSelectedModelId(only.id);
       if (!modelName && only.name) setModelName(only.name);
     }
@@ -286,36 +290,59 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage:
         </DialogHeader>
 
         <div className="space-y-4 pt-2">
-          {hasModelList && availableModels!.length > 1 ? (
+          {hasModelList && (availableModels!.length > 1 || availableModels!.some((m) => m.active === false)) ? (
             <div className="space-y-2">
               <Label className="text-xs text-foreground">
                 {lang === "en" ? "Which model is this request for? *" : "Für welches Model ist diese Anfrage? *"}
               </Label>
-              <div className="grid gap-2 grid-cols-1">
-                {availableModels!.map((m) => (
-                  <button
-                    key={m.id}
-                    type="button"
-                    onClick={() => {
-                      setSelectedModelId(m.id);
-                      setModelName(m.name);
-                    }}
-                    className={`flex items-center justify-between px-4 py-2.5 rounded-lg border text-xs font-semibold transition-all text-left ${
-                      selectedModelId === m.id
-                        ? "border-accent bg-accent/15 text-accent shadow-[0_0_16px_hsl(43_56%_52%/0.25)]"
-                        : "border-border/50 bg-secondary/20 text-muted-foreground hover:border-accent/40 hover:text-foreground"
-                    }`}
-                  >
-                    <span className="truncate">{m.name || "—"}</span>
-                    <span className="text-[10px] opacity-70 ml-2 shrink-0">
-                      {m.language === "en" ? "🇬🇧 EN" : "🇩🇪 DE"}
-                    </span>
-                  </button>
-                ))}
-              </div>
+              <Select
+                value={selectedModelId || ""}
+                onValueChange={(val) => {
+                  const m = availableModels!.find((x) => x.id === val);
+                  if (!m || m.active === false) return;
+                  setSelectedModelId(m.id);
+                  setModelName(m.name);
+                }}
+              >
+                <SelectTrigger className="input-gold-shimmer border-transparent bg-secondary/20 text-foreground">
+                  <SelectValue placeholder={lang === "en" ? "Select a model…" : "Model auswählen…"} />
+                </SelectTrigger>
+                <SelectContent className="z-[100]">
+                  {availableModels!.map((m) => {
+                    const inactive = m.active === false;
+                    return (
+                      <SelectItem
+                        key={m.id}
+                        value={m.id}
+                        disabled={inactive}
+                        className={inactive ? "opacity-60" : ""}
+                      >
+                        <span className="flex items-center gap-2">
+                          <span className="font-medium">{m.name || "—"}</span>
+                          <span className="text-[10px] opacity-70">
+                            {m.language === "en" ? "🇬🇧 EN" : "🇩🇪 DE"}
+                          </span>
+                          <span
+                            className={`text-[10px] px-1.5 py-0.5 rounded ${
+                              inactive
+                                ? "bg-destructive/15 text-destructive"
+                                : "bg-emerald-500/15 text-emerald-400"
+                            }`}
+                          >
+                            {inactive
+                              ? lang === "en" ? "Inactive" : "Inaktiv"
+                              : lang === "en" ? "Active" : "Aktiv"}
+                          </span>
+                        </span>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
             </div>
           ) : (
             <div className="space-y-1.5">
+
               <Label className="text-xs text-foreground">Model Name aus dem Profil *</Label>
               <div className="input-gold-shimmer rounded-lg">
                 <Input
