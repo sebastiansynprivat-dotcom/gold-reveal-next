@@ -5314,13 +5314,13 @@ export default function AdminDashboard() {
                       {(
                         [
                           { key: "alle", label: "Alle", icon: Users },
+                          { key: "no_accounts", label: "Ohne Accounts", icon: UserMinus },
                           { key: "open_2d", label: "> 3 Tage offen", icon: MessageSquare },
                           { key: "top_tag", label: "Top Tag", icon: Star },
                           { key: "top_woche", label: "Top Woche", icon: TrendingUp },
                           { key: "top_monat", label: "Top Monat", icon: DollarSign },
                           { key: "no_revenue_7d", label: "7d+ ohne Umsatz", icon: AlertTriangle },
                           { key: "new_2d", label: "Gestern gestartet", icon: UserPlus },
-                          { key: "no_accounts", label: "Ohne Accounts", icon: UserMinus },
                         ] as const
                       ).map(({ key, label, icon: Icon }) => (
                         <button
