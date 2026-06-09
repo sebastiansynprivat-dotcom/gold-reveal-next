@@ -107,10 +107,12 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage:
     }
   }, [editData, availableModels]);
 
-  // Auto-select the only model
+  // Auto-select when only one active model is available
   useEffect(() => {
-    if (!selectedModelId && availableModels && availableModels.length === 1) {
-      const only = availableModels[0];
+    if (selectedModelId || !availableModels) return;
+    const activeOnly = availableModels.filter((m) => m.active !== false);
+    if (activeOnly.length === 1) {
+      const only = activeOnly[0];
       setSelectedModelId(only.id);
       if (!modelName && only.name) setModelName(only.name);
     }
