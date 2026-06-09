@@ -28,6 +28,7 @@ export interface AvailableModel {
   name: string;
   language: "de" | "en";
   platforms: string[];
+  active?: boolean;
 }
 
 interface ModelRequestDialogProps {
