@@ -50,13 +50,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "account_assignments_account_id_fkey"
-            columns: ["account_id"]
-            isOneToOne: false
-            referencedRelation: "accounts"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "account_assignments_profile_id_fkey"
             columns: ["profile_id"]
             isOneToOne: false
@@ -203,22 +196,7 @@ export type Database = {
           unread_chats?: number | null
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "accounts_data_account_id_fkey"
-            columns: ["account_id"]
-            isOneToOne: false
-            referencedRelation: "accounts"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "accounts_data_model_id_fkey"
-            columns: ["model_id"]
-            isOneToOne: false
-            referencedRelation: "models"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       admin_account_access: {
         Row: {
@@ -2664,6 +2642,14 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
       is_super_admin: { Args: never; Returns: boolean }
       next_credit_note_number: { Args: never; Returns: string }
+      purge_archived_account: {
+        Args: { p_original_id: string }
+        Returns: undefined
+      }
+      purge_archived_model: {
+        Args: { p_original_id: string }
+        Returns: undefined
+      }
       set_credit_note_seq: { Args: { new_val: number }; Returns: undefined }
       text_to_bytea: { Args: { data: string }; Returns: string }
       urlencode:
