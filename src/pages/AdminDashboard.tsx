@@ -3672,6 +3672,9 @@ export default function AdminDashboard() {
         result = result.filter((c) => new Date(c.created_at) >= twoDaysAgo);
         break;
       }
+      case "no_accounts":
+        result = result.filter((c) => !c.assigned_accounts || c.assigned_accounts.length === 0);
+        break;
     }
     return result;
   }, [
