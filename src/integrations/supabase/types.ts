@@ -2146,6 +2146,7 @@ export type Database = {
           account_email: string | null
           account_password: string | null
           created_at: string
+          end_date: string | null
           group_name: string
           id: string
           language: string
@@ -2153,6 +2154,7 @@ export type Database = {
           offer: string | null
           pre_create: boolean
           pwa_installed: boolean
+          start_date: string | null
           telegram_id: string | null
           ui_language: string
           updated_at: string
@@ -2163,6 +2165,7 @@ export type Database = {
           account_email?: string | null
           account_password?: string | null
           created_at?: string
+          end_date?: string | null
           group_name?: string
           id?: string
           language?: string
@@ -2170,6 +2173,7 @@ export type Database = {
           offer?: string | null
           pre_create?: boolean
           pwa_installed?: boolean
+          start_date?: string | null
           telegram_id?: string | null
           ui_language?: string
           updated_at?: string
@@ -2180,6 +2184,7 @@ export type Database = {
           account_email?: string | null
           account_password?: string | null
           created_at?: string
+          end_date?: string | null
           group_name?: string
           id?: string
           language?: string
@@ -2187,6 +2192,7 @@ export type Database = {
           offer?: string | null
           pre_create?: boolean
           pwa_installed?: boolean
+          start_date?: string | null
           telegram_id?: string | null
           ui_language?: string
           updated_at?: string
