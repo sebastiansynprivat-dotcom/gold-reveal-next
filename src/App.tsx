@@ -181,7 +181,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AutoTranslator />
-          <FloatingLanguageToggle />
+          {/* Language is auto-detected from browser / pre-set profile — no manual toggle. */}
           <Suspense fallback={<RouteFallback />}>
             <Routes>
               <Route path="/" element={<ProtectedRoute><Navigate to="/dashboard" replace /></ProtectedRoute>} />
