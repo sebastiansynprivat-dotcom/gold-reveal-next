@@ -265,7 +265,7 @@ Deno.serve(async (req) => {
     }
 
     const accessToken = await getAccessToken();
-    await shareDriveFolder(folder_id, targetEmail, accessToken);
+    await shareDriveFolder(cleanFolderId, targetEmail, accessToken);
 
     return new Response(
       JSON.stringify({ success: true, message: `Folder shared with ${targetEmail}` }),
