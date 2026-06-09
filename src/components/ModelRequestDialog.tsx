@@ -23,15 +23,23 @@ export interface EditRequestData {
   attachments?: RequestAttachment[];
 }
 
+export interface AvailableModel {
+  id: string;
+  name: string;
+  language: "de" | "en";
+  platforms: string[];
+}
+
 interface ModelRequestDialogProps {
   onSubmitted?: () => void;
   editData?: EditRequestData | null;
   onEditClear?: () => void;
   modelLanguage?: "de" | "en";
   availablePlatforms?: string[];
+  availableModels?: AvailableModel[];
 }
 
-const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage = "de", availablePlatforms }: ModelRequestDialogProps) => {
+const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage: modelLanguageProp = "de", availablePlatforms, availableModels }: ModelRequestDialogProps) => {
   const { user } = useAuth();
   const { lang } = useUILanguage();
   const [open, setOpen] = useState(false);
