@@ -5404,7 +5404,7 @@ export default function AdminDashboard() {
                                   : "Noch keine Chatter registriert."}
                       </div>
                     ) : (
-                      <div className="divide-y divide-border max-h-[20rem] overflow-y-auto">
+                      <div className="divide-y divide-border max-h-[40rem] overflow-y-auto">
                         {filtered.map((chatter) => {
                           const cStats = loginStats[chatter.user_id];
                           const activeToday = (cStats?.today || 0) > 0;
