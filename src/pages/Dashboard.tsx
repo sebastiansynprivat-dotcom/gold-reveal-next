@@ -378,7 +378,7 @@ export default function Dashboard() {
         setTelegramLoading(false);
       });
 
-    // Load all assigned accounts
+    // Load all assigned accounts (+ resolve model names for the request dialog)
     supabase
       .from("accounts")
       .select(
@@ -386,8 +386,22 @@ export default function Dashboard() {
       )
       .eq("assigned_to", user.id)
       .order("created_at", { ascending: true })
-      .then(({ data }) => {
-        setAssignedAccounts(data || []);
+      .then(async ({ data }) => {
+        const accounts = data || [];
+        const modelIds = Array.from(new Set(accounts.map((a: any) => a.model_id).filter(Boolean)));
+        const nameById: Record<string, string> = {};
+        if (modelIds.length > 0) {
+          const { data: models } = await supabase
+            .from("models")
+            .select("id, name")
+            .in("id", modelIds as string[]);
+          (models || []).forEach((m: any) => {
+            nameById[m.id] = m.name;
+          });
+        }
+        setAssignedAccounts(
+          accounts.map((a: any) => ({ ...a, model_name: a.model_id ? nameById[a.model_id] : undefined })),
+        );
       });
 
     // Check if first login
