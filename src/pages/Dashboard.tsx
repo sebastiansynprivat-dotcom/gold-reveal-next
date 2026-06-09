@@ -27,6 +27,8 @@ import {
   Check,
   RefreshCw,
   Trophy,
+  AlertTriangle,
+  VolumeX,
 } from "lucide-react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import {
