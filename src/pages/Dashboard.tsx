@@ -263,6 +263,7 @@ export default function Dashboard() {
   const [replyAttachments, setReplyAttachments] = useState<Record<string, RequestAttachment[]>>({});
   const [requestsOpen, setRequestsOpen] = useState(false);
   const [showArchivedRequests, setShowArchivedRequests] = useState(false);
+  const [expandedRequestIds, setExpandedRequestIds] = useState<Set<string>>(new Set());
   const [editRequest, setEditRequest] = useState<any>(null);
   const [seenRequestIds, setSeenRequestIds] = useState<Set<string>>(() => {
     try {
@@ -1320,6 +1321,11 @@ export default function Dashboard() {
                                     Kunde: {(req as any).customer_name}
                                   </span>
                                 )}
+                                {(req as any).price != null && (
+                                  <span className="text-[10px] font-semibold text-accent">
+                                    Vereinbarter Preis: {Number((req as any).price).toFixed(2)}€
+                                  </span>
+                                )}
                               </div>
                               {(() => {
                                 const statusStyles: Record<string, string> = {
@@ -1354,7 +1360,35 @@ export default function Dashboard() {
                                 Bitte antworte unten im Kommentarverlauf, damit die Anfrage richtig bearbeitet werden kann.
                               </div>
                             )}
-                            <p className="text-[10px] text-muted-foreground line-clamp-2">{req.description}</p>
+                            {(() => {
+                              const isExpanded = expandedRequestIds.has(req.id);
+                              const desc = String(req.description || "");
+                              const isLong = desc.length > 120 || desc.includes("\n");
+                              return (
+                                <div className="rounded-md border border-border/40 bg-secondary/10 px-2.5 py-2 space-y-1">
+                                  <p className="text-[9px] text-muted-foreground uppercase tracking-wide">Deine Anfrage</p>
+                                  <p className={`text-[11px] text-foreground/90 leading-relaxed whitespace-pre-wrap ${isExpanded ? "" : "line-clamp-2"}`}>
+                                    {desc}
+                                  </p>
+                                  {isLong && (
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setExpandedRequestIds((prev) => {
+                                          const next = new Set(prev);
+                                          if (next.has(req.id)) next.delete(req.id);
+                                          else next.add(req.id);
+                                          return next;
+                                        })
+                                      }
+                                      className="text-[10px] text-accent hover:underline"
+                                    >
+                                      {isExpanded ? "Weniger anzeigen" : "Mehr anzeigen"}
+                                    </button>
+                                  )}
+                                </div>
+                              );
+                            })()}
                             {Array.isArray((req as any).attachments) && (req as any).attachments.length > 0 && (
                               <div className="rounded-md border border-border/40 bg-secondary/10 p-2 space-y-1">
                                 <p className="text-[9px] text-muted-foreground uppercase tracking-wide">Referenz</p>
