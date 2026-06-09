@@ -263,6 +263,7 @@ export default function Dashboard() {
   const [replyAttachments, setReplyAttachments] = useState<Record<string, RequestAttachment[]>>({});
   const [requestsOpen, setRequestsOpen] = useState(false);
   const [showArchivedRequests, setShowArchivedRequests] = useState(false);
+  const [expandedRequestIds, setExpandedRequestIds] = useState<Set<string>>(new Set());
   const [editRequest, setEditRequest] = useState<any>(null);
   const [seenRequestIds, setSeenRequestIds] = useState<Set<string>>(() => {
     try {
