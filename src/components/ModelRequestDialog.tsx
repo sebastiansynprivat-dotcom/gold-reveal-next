@@ -357,8 +357,8 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage:
           </div>
 
           {(() => {
-            const platforms = (availablePlatforms && availablePlatforms.length > 0)
-              ? Array.from(new Set(availablePlatforms))
+            const platforms = effectivePlatforms.length > 0
+              ? Array.from(new Set(effectivePlatforms))
               : ["Maloum", "Brezzels"];
             return (
               <div className="space-y-2">
