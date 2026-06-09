@@ -256,6 +256,7 @@ export default function Dashboard() {
       model_language?: string;
       model_active?: boolean;
       model_id?: string | null;
+      model_name?: string;
     }[]
   >([]);
   const [modelInactiveInfoOpen, setModelInactiveInfoOpen] = useState(false);
