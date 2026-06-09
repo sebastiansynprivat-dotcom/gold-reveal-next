@@ -245,6 +245,25 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Normalize folder_id: accept full Drive URLs or raw IDs
+    const extractDriveId = (input: string): string => {
+      const s = String(input).trim();
+      const m =
+        s.match(/\/folders\/([a-zA-Z0-9_-]+)/) ||
+        s.match(/\/file\/d\/([a-zA-Z0-9_-]+)/) ||
+        s.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+      if (m) return m[1];
+      return s.replace(/[^a-zA-Z0-9_-]/g, "");
+    };
+    const cleanFolderId = extractDriveId(folder_id);
+
+    if (!/^[a-zA-Z0-9_-]{10,}$/.test(cleanFolderId)) {
+      return new Response(
+        JSON.stringify({ error: `Ungültige Drive-Folder-ID: "${folder_id}"` }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const accessToken = await getAccessToken();
     await shareDriveFolder(folder_id, targetEmail, accessToken);
 
