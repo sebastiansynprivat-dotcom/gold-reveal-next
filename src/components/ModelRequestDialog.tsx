@@ -165,6 +165,10 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage:
 
   const handleSubmit = async () => {
     if (!user) return;
+    if (hasModelList && !selectedModel) {
+      toast.error("Bitte wähle ein Model aus.");
+      return;
+    }
     if (!modelName.trim() || !description.trim()) {
       toast.error("Bitte fülle alle Pflichtfelder aus.");
       return;
