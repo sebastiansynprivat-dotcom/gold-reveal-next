@@ -83,12 +83,40 @@ export default function DeletedRecordsTab() {
   };
 
   const purge = async (row: DeletedRow) => {
-    if (!confirm("Endgültig aus Archiv löschen? Dies kann nicht rückgängig gemacht werden.")) return;
+    let confirmMsg = "Endgültig aus Archiv löschen? Dies kann nicht rückgängig gemacht werden.";
+
+    if (row.entity_type === "model") {
+      const { count: childCount } = await (supabase as any)
+        .from("deleted_records")
+        .select("id", { count: "exact", head: true })
+        .eq("entity_type", "account")
+        .filter("data->>model_id", "eq", row.original_id);
+      confirmMsg = `Model "${row.name || row.original_id}" endgültig löschen?\n\nDies löscht ${childCount ?? 0} archivierte Accounts inkl. aller Assignments und Revenue-Daten. Nicht rückgängig machbar.`;
+    } else if (row.entity_type === "account") {
+      confirmMsg = `Account "${row.email || row.original_id}" endgültig löschen?\n\nAlle Assignments und Revenue-Daten dieses Accounts werden gelöscht. Nicht rückgängig machbar.`;
+    }
+
+    if (!confirm(confirmMsg)) return;
     setBusyId(row.id);
-    const { error } = await (supabase as any).from("deleted_records").delete().eq("id", row.id);
-    if (error) toast.error(error.message);
-    else { toast.success("Aus Archiv entfernt"); load(); }
-    setBusyId(null);
+
+    try {
+      if (row.entity_type === "account") {
+        const { error } = await (supabase as any).rpc("purge_archived_account", { p_original_id: row.original_id });
+        if (error) throw error;
+      } else if (row.entity_type === "model") {
+        const { error } = await (supabase as any).rpc("purge_archived_model", { p_original_id: row.original_id });
+        if (error) throw error;
+      }
+
+      const { error } = await (supabase as any).from("deleted_records").delete().eq("id", row.id);
+      if (error) throw error;
+      toast.success("Aus Archiv entfernt");
+      load();
+    } catch (e: any) {
+      toast.error("Purge fehlgeschlagen: " + (e.message || String(e)));
+    } finally {
+      setBusyId(null);
+    }
   };
 
   const badgeColor = (t: string) =>
