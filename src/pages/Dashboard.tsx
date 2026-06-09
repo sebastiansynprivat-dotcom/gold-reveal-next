@@ -256,6 +256,7 @@ export default function Dashboard() {
       model_language?: string;
       model_active?: boolean;
       model_id?: string | null;
+      model_name?: string;
     }[]
   >([]);
   const [modelInactiveInfoOpen, setModelInactiveInfoOpen] = useState(false);
@@ -378,7 +379,7 @@ export default function Dashboard() {
         setTelegramLoading(false);
       });
 
-    // Load all assigned accounts
+    // Load all assigned accounts (+ resolve model names for the request dialog)
     supabase
       .from("accounts")
       .select(
@@ -386,8 +387,22 @@ export default function Dashboard() {
       )
       .eq("assigned_to", user.id)
       .order("created_at", { ascending: true })
-      .then(({ data }) => {
-        setAssignedAccounts(data || []);
+      .then(async ({ data }) => {
+        const accounts = data || [];
+        const modelIds = Array.from(new Set(accounts.map((a: any) => a.model_id).filter(Boolean)));
+        const nameById: Record<string, string> = {};
+        if (modelIds.length > 0) {
+          const { data: models } = await supabase
+            .from("models")
+            .select("id, name")
+            .in("id", modelIds as string[]);
+          (models || []).forEach((m: any) => {
+            nameById[m.id] = m.name;
+          });
+        }
+        setAssignedAccounts(
+          accounts.map((a: any) => ({ ...a, model_name: a.model_id ? nameById[a.model_id] : undefined })),
+        );
       });
 
     // Check if first login
@@ -1177,71 +1192,121 @@ export default function Dashboard() {
           </div>
 
           {/* Anfrage an das Model – oder Inaktiv-Hinweis */}
-          <div className="relative">
-            {demoModelInactive || assignedAccounts.some((acc) => acc.model_active === false) ? (
-              <>
-                <div className="flex items-center gap-3 px-4 py-4 lg:px-6 lg:py-5">
-                  <div className="h-10 w-10 rounded-full bg-destructive/15 flex items-center justify-center shrink-0">
-                    <MessageSquare className="h-5 w-5 text-destructive/70" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-muted-foreground">
-                      Dein Model kann momentan keine Anfragen entgegennehmen
-                    </p>
-                    <button
-                      onClick={() => setModelInactiveInfoOpen(true)}
-                      className="text-[11px] text-accent/70 hover:text-accent underline underline-offset-2 mt-0.5 transition-colors"
-                    >
-                      Wieso ist das so?
-                    </button>
-                  </div>
-                </div>
-                <Dialog open={modelInactiveInfoOpen} onOpenChange={setModelInactiveInfoOpen}>
-                  <DialogContent className="max-w-md">
-                    <DialogHeader>
-                      <DialogTitle className="text-foreground">Model momentan inaktiv</DialogTitle>
-                      <DialogDescription className="text-muted-foreground">
-                        Dein Model hat uns mitgeteilt, dass sie aktuell keine neuen Anfragen entgegennehmen kann. Das
-                        ist der letzte Stand, den wir haben.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="rounded-lg border border-accent/20 bg-accent/5 p-4">
-                      <p className="text-sm text-foreground">
-                        <strong>Trotzdem kann gutes Geld verdient werden!</strong> Es ist bereits genug Content auf
-                        dem Account vorhanden, mit dem du weiterarbeiten kannst. Nutze den vorhandenen Content, um
-                        Umsatz zu machen.
-                      </p>
+          {(() => {
+            // Group assigned accounts by model
+            const modelsMap = new Map<
+              string,
+              { id: string; name: string; language: "de" | "en"; active: boolean; platforms: Set<string> }
+            >();
+            assignedAccounts.forEach((a) => {
+              const key = a.model_id || a.model_name || a.platform || a.id;
+              if (!key) return;
+              const existing = modelsMap.get(key);
+              if (existing) {
+                if (a.platform) existing.platforms.add(a.platform);
+              } else {
+                modelsMap.set(key, {
+                  id: key,
+                  name: a.model_name || "",
+                  language: (a.model_language as "de" | "en") || "de",
+                  active: a.model_active !== false,
+                  platforms: new Set(a.platform ? [a.platform] : []),
+                });
+              }
+            });
+            const allModels = Array.from(modelsMap.values());
+            const activeModels = allModels.filter((m) => m.active);
+            const hasInactive = allModels.some((m) => !m.active);
+            const allInactive = allModels.length > 0 && activeModels.length === 0;
+            const showInactiveBlocker = demoModelInactive || allInactive;
+            const showEnglishWarning = activeModels.some((m) => m.language === "en");
+
+            return (
+              <div className="relative">
+                {showInactiveBlocker ? (
+                  <>
+                    <div className="flex items-center gap-3 px-4 py-4 lg:px-6 lg:py-5">
+                      <div className="h-10 w-10 rounded-full bg-destructive/15 flex items-center justify-center shrink-0">
+                        <MessageSquare className="h-5 w-5 text-destructive/70" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-muted-foreground">
+                          {allModels.length > 1
+                            ? "Deine Models können momentan keine Anfragen entgegennehmen"
+                            : "Dein Model kann momentan keine Anfragen entgegennehmen"}
+                        </p>
+                        <button
+                          onClick={() => setModelInactiveInfoOpen(true)}
+                          className="text-[11px] text-accent/70 hover:text-accent underline underline-offset-2 mt-0.5 transition-colors"
+                        >
+                          Wieso ist das so?
+                        </button>
+                      </div>
                     </div>
-                  </DialogContent>
-                </Dialog>
-              </>
-            ) : (
-              <div className="px-4 py-4 lg:px-6 lg:py-5 space-y-3">
-                {assignedAccounts.some((acc) => acc.model_language === "en") && (
-                  <div className="rounded-lg border border-amber-500/25 bg-amber-500/10 p-3 flex items-start gap-2.5">
-                    <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
-                    <div className="min-w-0">
-                      <p className="text-xs font-medium text-amber-200">
-                        {lang === "en" ? "Authenticity note" : "Authentizitäts-Hinweis"}
-                      </p>
-                      <p className="text-[11px] text-amber-100/80 mt-0.5 leading-relaxed">
+                    <Dialog open={modelInactiveInfoOpen} onOpenChange={setModelInactiveInfoOpen}>
+                      <DialogContent className="max-w-md">
+                        <DialogHeader>
+                          <DialogTitle className="text-foreground">Model momentan inaktiv</DialogTitle>
+                          <DialogDescription className="text-muted-foreground">
+                            Dein Model hat uns mitgeteilt, dass sie aktuell keine neuen Anfragen entgegennehmen kann. Das
+                            ist der letzte Stand, den wir haben.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="rounded-lg border border-accent/20 bg-accent/5 p-4">
+                          <p className="text-sm text-foreground">
+                            <strong>Trotzdem kann gutes Geld verdient werden!</strong> Es ist bereits genug Content auf
+                            dem Account vorhanden, mit dem du weiterarbeiten kannst. Nutze den vorhandenen Content, um
+                            Umsatz zu machen.
+                          </p>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </>
+                ) : (
+                  <div className="px-4 py-4 lg:px-6 lg:py-5 space-y-3">
+                    {hasInactive && (
+                      <div className="rounded-lg border border-muted-foreground/20 bg-muted/30 p-3 text-[11px] text-muted-foreground leading-relaxed">
                         {lang === "en"
-                          ? "This model does not create custom audio or video content with speech, as this would compromise authenticity. Please keep this in mind when submitting requests."
-                          : "Dieses Model erstellt keine Custom-Audios oder Videos mit Sprechen, da dies die Authentizität beeinträchtigen würde. Bitte berücksichtige dies bei deinen Anfragen."}
-                      </p>
-                    </div>
+                          ? "One of your assigned models is currently not accepting requests. You can still submit requests for your active models below."
+                          : "Eines deiner Models nimmt aktuell keine Anfragen entgegen. Für deine aktiven Models kannst du unten weiterhin Anfragen stellen."}
+                      </div>
+                    )}
+                    {showEnglishWarning && (
+                      <div className="rounded-lg border border-amber-500/25 bg-amber-500/10 p-3 flex items-start gap-2.5">
+                        <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+                        <div className="min-w-0">
+                          <p className="text-xs font-medium text-amber-200">
+                            {lang === "en" ? "Authenticity note" : "Authentizitäts-Hinweis"}
+                          </p>
+                          <p className="text-[11px] text-amber-100/80 mt-0.5 leading-relaxed">
+                            {lang === "en"
+                              ? "English-speaking models do not create custom audio or video content with speech, as this would compromise authenticity. Please keep this in mind when submitting requests."
+                              : "Englischsprachige Models erstellen keine Custom-Audios oder Videos mit Sprechen, da dies die Authentizität beeinträchtigen würde. Bitte berücksichtige dies bei deinen Anfragen."}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    <ModelRequestDialog
+                      onSubmitted={loadMyRequests}
+                      editData={editRequest}
+                      onEditClear={() => setEditRequest(null)}
+                      modelLanguage={activeModels[0]?.language || "de"}
+                      availablePlatforms={Array.from(
+                        new Set(activeModels.flatMap((m) => Array.from(m.platforms))),
+                      )}
+                      availableModels={activeModels.map((m) => ({
+                        id: m.id,
+                        name: m.name,
+                        language: m.language,
+                        platforms: Array.from(m.platforms),
+                      }))}
+                    />
                   </div>
                 )}
-                <ModelRequestDialog
-                  onSubmitted={loadMyRequests}
-                  editData={editRequest}
-                  onEditClear={() => setEditRequest(null)}
-                  modelLanguage={assignedAccounts.length > 0 ? (assignedAccounts[0] as any).model_language || "de" : "de"}
-                  availablePlatforms={Array.from(new Set(assignedAccounts.map((a) => a.platform).filter(Boolean)))}
-                />
               </div>
-            )}
-          </div>
+            );
+          })()}
+
 
           {/* Bisherige Anfragen – einklappbar */}
           {myRequests.length > 0 &&

@@ -23,21 +23,30 @@ export interface EditRequestData {
   attachments?: RequestAttachment[];
 }
 
+export interface AvailableModel {
+  id: string;
+  name: string;
+  language: "de" | "en";
+  platforms: string[];
+}
+
 interface ModelRequestDialogProps {
   onSubmitted?: () => void;
   editData?: EditRequestData | null;
   onEditClear?: () => void;
   modelLanguage?: "de" | "en";
   availablePlatforms?: string[];
+  availableModels?: AvailableModel[];
 }
 
-const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage = "de", availablePlatforms }: ModelRequestDialogProps) => {
+const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage: modelLanguageProp = "de", availablePlatforms, availableModels }: ModelRequestDialogProps) => {
   const { user } = useAuth();
   const { lang } = useUILanguage();
   const [open, setOpen] = useState(false);
   const [modelName, setModelName] = useState("");
+  const [selectedModelId, setSelectedModelId] = useState<string | null>(null);
   const [customerName, setCustomerName] = useState("");
-  
+
   const [requestType, setRequestType] = useState<"individual" | "general">("general");
   const [platform, setPlatform] = useState<string | null>(null);
   const [price, setPrice] = useState("");
@@ -50,12 +59,22 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
   const [loading, setLoading] = useState(false);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
 
+  const hasModelList = !!availableModels && availableModels.length > 0;
+  const selectedModel = hasModelList
+    ? availableModels!.find((m) => m.id === selectedModelId) || null
+    : null;
+  const modelLanguage: "de" | "en" = selectedModel?.language || modelLanguageProp;
+  const effectivePlatforms = selectedModel
+    ? selectedModel.platforms
+    : availablePlatforms && availablePlatforms.length > 0
+      ? availablePlatforms
+      : [];
+
   // When editData changes, open dialog and pre-fill
   useEffect(() => {
     if (editData) {
       setModelName(editData.model_name);
       setCustomerName(editData.customer_name ?? "");
-      // modelLanguage comes from prop now
       setRequestType(editData.request_type);
       setPrice(editData.price != null ? String(editData.price) : "");
       setAttachments(Array.isArray(editData.attachments) ? editData.attachments : []);
@@ -68,8 +87,14 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
         setPlatform(null);
         setDescription(editData.description);
       }
+      // Try to match edit data to one of the available models
+      if (availableModels && availableModels.length > 0) {
+        const match = availableModels.find(
+          (m) => m.name.trim().toLowerCase() === editData.model_name.trim().toLowerCase(),
+        );
+        if (match) setSelectedModelId(match.id);
+      }
       setOpen(true);
-      // Focus description and place cursor at end after dialog opens
       setTimeout(() => {
         const el = descriptionRef.current;
         if (el) {
@@ -78,20 +103,48 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
         }
       }, 150);
     }
-  }, [editData]);
+  }, [editData, availableModels]);
 
-  // Auto-select platform when chatter is only assigned to one
+  // Auto-select the only model
   useEffect(() => {
-    if (!platform && availablePlatforms && availablePlatforms.length === 1) {
-      setPlatform(availablePlatforms[0]);
+    if (!selectedModelId && availableModels && availableModels.length === 1) {
+      const only = availableModels[0];
+      setSelectedModelId(only.id);
+      if (!modelName && only.name) setModelName(only.name);
     }
-  }, [availablePlatforms, platform, open]);
+  }, [availableModels, selectedModelId, modelName]);
+
+  // When user picks a model, pre-fill its name & reset platform if no longer valid
+  useEffect(() => {
+    if (selectedModel) {
+      if (!modelName || (availableModels || []).some((m) => m.name === modelName)) {
+        setModelName(selectedModel.name);
+      }
+      if (platform && !selectedModel.platforms.includes(platform)) {
+        setPlatform(null);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedModelId]);
+
+  // Auto-select platform when only one is available
+  useEffect(() => {
+    if (!platform && effectivePlatforms.length === 1) {
+      setPlatform(effectivePlatforms[0]);
+    }
+  }, [effectivePlatforms, platform, open]);
+
 
 
   const resetForm = () => {
-    setModelName("");
+    // Keep auto-selected model when there is only one assigned
+    if (!availableModels || availableModels.length !== 1) {
+      setSelectedModelId(null);
+      setModelName("");
+    } else {
+      setModelName(availableModels[0].name);
+    }
     setCustomerName("");
-    
     setRequestType("general");
     setPlatform(null);
     setPrice("");
@@ -112,6 +165,10 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
 
   const handleSubmit = async () => {
     if (!user) return;
+    if (hasModelList && !selectedModel) {
+      toast.error("Bitte wähle ein Model aus.");
+      return;
+    }
     if (!modelName.trim() || !description.trim()) {
       toast.error("Bitte fülle alle Pflichtfelder aus.");
       return;
@@ -229,18 +286,49 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
         </DialogHeader>
 
         <div className="space-y-4 pt-2">
-          <div className="space-y-1.5">
-            <Label className="text-xs text-foreground">Model Name aus dem Profil *</Label>
-            <div className="input-gold-shimmer rounded-lg">
-              <Input
-                placeholder="z.B. Deborahsecret, Luisa.loves"
-                value={modelName}
-                onChange={(e) => setModelName(e.target.value)}
-                maxLength={100}
-                className="border-transparent"
-              />
+          {hasModelList && availableModels!.length > 1 ? (
+            <div className="space-y-2">
+              <Label className="text-xs text-foreground">
+                {lang === "en" ? "Which model is this request for? *" : "Für welches Model ist diese Anfrage? *"}
+              </Label>
+              <div className="grid gap-2 grid-cols-1">
+                {availableModels!.map((m) => (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedModelId(m.id);
+                      setModelName(m.name);
+                    }}
+                    className={`flex items-center justify-between px-4 py-2.5 rounded-lg border text-xs font-semibold transition-all text-left ${
+                      selectedModelId === m.id
+                        ? "border-accent bg-accent/15 text-accent shadow-[0_0_16px_hsl(43_56%_52%/0.25)]"
+                        : "border-border/50 bg-secondary/20 text-muted-foreground hover:border-accent/40 hover:text-foreground"
+                    }`}
+                  >
+                    <span className="truncate">{m.name || "—"}</span>
+                    <span className="text-[10px] opacity-70 ml-2 shrink-0">
+                      {m.language === "en" ? "🇬🇧 EN" : "🇩🇪 DE"}
+                    </span>
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="space-y-1.5">
+              <Label className="text-xs text-foreground">Model Name aus dem Profil *</Label>
+              <div className="input-gold-shimmer rounded-lg">
+                <Input
+                  placeholder="z.B. Deborahsecret, Luisa.loves"
+                  value={modelName}
+                  onChange={(e) => setModelName(e.target.value)}
+                  maxLength={100}
+                  className="border-transparent"
+                  readOnly={hasModelList}
+                />
+              </div>
+            </div>
+          )}
 
           <div className="rounded-lg border border-border/50 bg-secondary/20 p-3">
             <p className="text-xs text-muted-foreground">
@@ -269,8 +357,8 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage 
           </div>
 
           {(() => {
-            const platforms = (availablePlatforms && availablePlatforms.length > 0)
-              ? Array.from(new Set(availablePlatforms))
+            const platforms = effectivePlatforms.length > 0
+              ? Array.from(new Set(effectivePlatforms))
               : ["Maloum", "Brezzels"];
             return (
               <div className="space-y-2">
