@@ -816,6 +816,16 @@ export default function AdminDashboard() {
   const [editName, setEditName] = useState("");
   const [editTelegram, setEditTelegram] = useState("");
   const [editLanguage, setEditLanguage] = useState<"de" | "en">("de");
+  // Initialize edit fields whenever a new target is selected. Relying on the
+  // Dialog's onOpenChange is unsafe because Radix only fires it on user-driven
+  // changes — when the dialog opens via state, the fields would stay empty and
+  // saving would wipe group_name/telegram_id.
+  useEffect(() => {
+    if (!reassignTarget) return;
+    setEditName(reassignTarget.group_name || "");
+    setEditTelegram(reassignTarget.telegram_id || "");
+    setEditLanguage((((reassignTarget as any).ui_language || (reassignTarget as any).language || "de") as "de" | "en"));
+  }, [reassignTarget?.user_id]);
   const [savingChatter, setSavingChatter] = useState(false);
   const [preChattersOpen, setPreChattersOpen] = useState(false);
   const [deletingPool, setDeletingPool] = useState(false);
