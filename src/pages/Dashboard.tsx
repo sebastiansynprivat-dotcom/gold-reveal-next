@@ -1321,6 +1321,11 @@ export default function Dashboard() {
                                     Kunde: {(req as any).customer_name}
                                   </span>
                                 )}
+                                {(req as any).price != null && (
+                                  <span className="text-[10px] font-semibold text-accent">
+                                    Vereinbarter Preis: {Number((req as any).price).toFixed(2)}€
+                                  </span>
+                                )}
                               </div>
                               {(() => {
                                 const statusStyles: Record<string, string> = {
