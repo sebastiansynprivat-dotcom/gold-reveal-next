@@ -383,15 +383,22 @@ export default function ModelHomeDashboard({
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const [{ data: perModel }, { data: mdl }] = await Promise.all([
+      const [{ data: perModel }, { data: mdl }, { data: billed }] = await Promise.all([
         (supabase.from("payout_revenue") as any)
           .select("last_fetched_month, last_fetched_year, billing_in_progress, billed_at")
           .eq("model_id", modelId)
           .eq("billing_in_progress", true)
           .is("billed_at", null),
         (supabase.from("models") as any).select("model_agency").eq("id", modelId).maybeSingle(),
+        (supabase.from("payout_revenue") as any)
+          .select("last_fetched_month, last_fetched_year, billed_at")
+          .eq("model_id", modelId)
+          .not("billed_at", "is", null),
       ]);
       if (cancelled) return;
+      const billedSet = new Set(
+        ((billed || []) as any[]).map((r) => `${Number(r.last_fetched_month)}-${Number(r.last_fetched_year)}`),
+      );
       const rows = ((perModel || []) as any[]).map((r) => ({
         month: Number(r.last_fetched_month),
         year: Number(r.last_fetched_year),
@@ -406,7 +413,10 @@ export default function ModelHomeDashboard({
           const now = new Date();
           const m = Number((g as any).month) || now.getMonth() + 1;
           const y = Number((g as any).year) || now.getFullYear();
-          if (!rows.some((r) => r.month === m && r.year === y)) rows.push({ month: m, year: y });
+          // If this model has already been billed for that month, do NOT show the agency-wide hint.
+          if (!billedSet.has(`${m}-${y}`) && !rows.some((r) => r.month === m && r.year === y)) {
+            rows.push({ month: m, year: y });
+          }
         }
       }
       if (!cancelled) setInProgressMonths(rows);
