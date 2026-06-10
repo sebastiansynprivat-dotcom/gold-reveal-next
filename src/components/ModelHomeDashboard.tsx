@@ -120,7 +120,7 @@ const COPY = {
     hidePwd: "Hide",
     billing: "Payouts",
     nextPayout: "Next payout",
-    nextPayoutValue: "Within the first 10 days",
+    nextPayoutValue: "Within the first 10 days of each month",
     lifetime: "Lifetime revenue",
     pastInvoices: "Past invoices",
     noInvoices: "No invoices yet.",
