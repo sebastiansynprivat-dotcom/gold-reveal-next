@@ -12,7 +12,7 @@ interface Props {
 
 const SECTIONS: Record<"de" | "en", { title: string; icon: any; fields: { key: string; label: string }[] }[]> = {
   de: [
-    { title: "Allgemein", icon: User, fields: [{ key: "name", label: "Name" }, { key: "age", label: "Alter & Geburtstag" }, { key: "city", label: "Stadt" }, { key: "place_of_birth", label: "Geburtsort" }, { key: "occupation", label: "Beruf" }, { key: "work", label: "Arbeit" }, { key: "education", label: "Ausbildung" }, { key: "languages", label: "Sprachen" }] },
+    { title: "Allgemein", icon: User, fields: [{ key: "name", label: "Name" }, { key: "age", label: "Alter & Geburtstag" }, { key: "city", label: "Stadt" }, { key: "place_of_birth", label: "Geburtsort" }, { key: "occupation", label: "Beruf" }] },
     { title: "Aussehen", icon: Camera, fields: [{ key: "height", label: "Größe" }, { key: "weight", label: "Gewicht" }, { key: "natural_hair", label: "Natürliche Haarfarbe" }, { key: "bra_size", label: "BH-Größe" }, { key: "shoe_size", label: "Schuhgröße" }, { key: "special_marks", label: "Besondere Merkmale" }] },
     { title: "Persönliches", icon: Heart, fields: [{ key: "hobbies", label: "Hobbys" }, { key: "favorite_color", label: "Lieblingsfarbe" }, { key: "favorite_movie", label: "Lieblingsfilm" }, { key: "favorite_food", label: "Lieblingsessen" }, { key: "favorite_music", label: "Lieblingsmusik" }, { key: "dream", label: "Traum" }] },
     { title: "Content", icon: AlertTriangle, fields: [{ key: "content_preferences", label: "Vorlieben" }, { key: "no_gos", label: "No-Gos" }, { key: "additional_info", label: "Zusatzinfos" }] },
