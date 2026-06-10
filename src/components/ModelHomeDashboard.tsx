@@ -373,6 +373,24 @@ export default function ModelHomeDashboard({
     })();
   }, []);
 
+  // Load in-progress payout months (admin marked them as "in Arbeit")
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await (supabase.from("payout_revenue") as any)
+        .select("last_fetched_month, last_fetched_year, billing_in_progress, billed_at")
+        .eq("model_id", modelId)
+        .eq("billing_in_progress", true)
+        .is("billed_at", null);
+      if (cancelled) return;
+      const rows = (data || []) as any[];
+      setInProgressMonths(
+        rows.map((r) => ({ month: Number(r.last_fetched_month), year: Number(r.last_fetched_year) }))
+      );
+    })();
+    return () => { cancelled = true; };
+  }, [modelId]);
+
   const downloadInvoicePdf = (cn: any) => {
     try {
       const snaps = payoutSnapshots[cn.credit_note_number] || [];
