@@ -401,6 +401,7 @@ export default function ModelHomeDashboard({
       const lines: Array<{ name: string; gross: number; pct: number }> = [];
       // Use invoice currency from snapshot if available, else model currency
       const currency =
+        forceCurrency ||
         (snaps[0]?.billed_snapshot as any)?.invoice_currency ||
         modelCurrency ||
         "EUR";
