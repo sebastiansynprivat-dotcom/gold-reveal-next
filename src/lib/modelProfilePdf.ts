@@ -70,7 +70,7 @@ const LABELS: Record<Lang, Record<string, string>> = {
 
 const PERSONAL_KEYS: (keyof ModelProfileData)[] = [
   "name","age","city","place_of_birth","favorite_color","favorite_movie","favorite_food",
-  "favorite_music","occupation","hobbies","dream","work","education","languages",
+  "favorite_music","occupation","hobbies","dream",
   "special_marks","natural_hair","shoe_size","bra_size","height","weight",
 ];
 
