@@ -208,6 +208,7 @@ export default function ModelHomeDashboard({
   const [payoutSnapshots, setPayoutSnapshots] = useState<Record<string, any[]>>({});
   const [detailInvoice, setDetailInvoice] = useState<any | null>(null);
   const [issuer, setIssuer] = useState<{ name: string; address: string; vat_id: string } | null>(null);
+  const [inProgressMonths, setInProgressMonths] = useState<Array<{ month: number; year: number }>>([]);
 
   const [loading, setLoading] = useState(true);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
