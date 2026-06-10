@@ -941,11 +941,15 @@ export default function ModelDashboardTab() {
   // ─── Filter models ───
   const filteredModels = useMemo(() => {
     let list = models;
+    if (agencyFilter !== "all") {
+      list = list.filter((m) => String((m as any).model_agency || "shex").toLowerCase() === agencyFilter);
+    }
     if (showDuplicatesOnly) list = list.filter((m) => duplicateModelIds.has(m.id));
     if (!searchQuery) return list;
     const q = searchQuery.toLowerCase();
     return list.filter((m) => m.name.toLowerCase().includes(q) || (m.username || "").toLowerCase().includes(q));
-  }, [models, searchQuery, showDuplicatesOnly, duplicateModelIds]);
+  }, [models, searchQuery, showDuplicatesOnly, duplicateModelIds, agencyFilter]);
+
 
 
   // ─── Live FX rates: any per-account currency → model base currency ───
