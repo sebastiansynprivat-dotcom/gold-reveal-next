@@ -126,7 +126,7 @@ export default function ModelDashboard() {
           className="absolute bottom-0 right-10 h-[280px] w-[280px] rounded-full blur-3xl opacity-50"
           style={{ background: "radial-gradient(circle, hsl(28 80% 60% / 0.16), transparent 70%)" }}
         />
-      </name>
+      </div>
       <header className="header-gradient-border">
         <div className="container max-w-5xl mx-auto px-4 py-3">
           <div className="flex items-center gap-3">
