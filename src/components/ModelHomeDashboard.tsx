@@ -227,13 +227,15 @@ export default function ModelHomeDashboard({
           .eq("model_id", modelId)
           .maybeSingle(),
         (supabase.from("models") as any)
-          .select("currency")
+          .select("currency, model_agency")
           .eq("id", modelId)
           .maybeSingle(),
       ]);
       if (cancelled) return;
       setCommissionPct(Number(dash?.revenue_percentage || 0));
-      setModelCurrency((mdl?.currency as string) || "EUR");
+      const isSyn = String((mdl as any)?.model_agency || "").toLowerCase() === "syn";
+      // SYN agency = international models → force USD display
+      setModelCurrency(isSyn ? "USD" : ((mdl?.currency as string) || "EUR"));
     })();
     return () => { cancelled = true; };
   }, [modelId]);
