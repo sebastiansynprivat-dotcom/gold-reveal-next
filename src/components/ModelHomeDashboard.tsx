@@ -966,7 +966,7 @@ export default function ModelHomeDashboard({
                           const pctFb = pcts.fourbased || defPct;
                           const pctMa = pcts.maloum || defPct;
                           const pctBr = pcts.brezzels || defPct;
-                          const snapCurrency = snap.invoice_currency || modelCurrency;
+                          const snapCurrency = forceCurrency || snap.invoice_currency || modelCurrency;
                           const customs: any[] = snap.custom_platforms || [];
                           const fmtN = (n: number) =>
                             Number(n || 0).toLocaleString(lang === "en" ? "en-US" : "de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
