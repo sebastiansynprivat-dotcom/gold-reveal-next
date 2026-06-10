@@ -1753,9 +1753,7 @@ export default function ModelDashboardTab() {
                       ? "draft"
                       : "empty";
                 const username = selectedModel?.username?.trim() || "";
-                const personalizedUrl = username
-                  ? `${window.location.origin}/m/${username}`
-                  : "";
+
 
                 const confirmProfile = async () => {
                   if (!profile || !selectedModelId) return;
@@ -1813,40 +1811,6 @@ export default function ModelDashboardTab() {
                       </Badge>
                     </div>
 
-                    {/* Personalized URL */}
-                    {personalizedUrl ? (
-                      <div className="flex items-center gap-1.5 px-2.5 py-2 rounded-md bg-background/40 border border-border/30">
-                        <Link2 className="h-3.5 w-3.5 text-accent shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[9px] uppercase tracking-wider text-muted-foreground">Persönliche Login-URL</p>
-                          <p className="text-xs font-mono text-foreground truncate">{personalizedUrl}</p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            navigator.clipboard.writeText(personalizedUrl);
-                            toast.success("Link kopiert");
-                          }}
-                          className="shrink-0 text-muted-foreground hover:text-accent"
-                          title="Link kopieren"
-                        >
-                          <Copy className="h-3.5 w-3.5" />
-                        </button>
-                        <a
-                          href={personalizedUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="shrink-0 text-muted-foreground hover:text-accent"
-                          title="Link öffnen"
-                        >
-                          <Globe className="h-3.5 w-3.5" />
-                        </a>
-                      </div>
-                    ) : (
-                      <p className="text-[11px] text-amber-400/80 italic">
-                        Kein Username gesetzt — bitte oben in den Stammdaten ergänzen, damit die persönliche URL generiert werden kann.
-                      </p>
-                    )}
 
                     {/* Filled preview */}
                     {isFilled && (profile?.name || profile?.age || profile?.city) && (
