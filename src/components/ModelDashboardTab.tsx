@@ -1293,6 +1293,7 @@ export default function ModelDashboardTab() {
     else {
       toast.success("Account gelöscht");
       if (selectedModelId) await loadModelAccounts(selectedModelId);
+      await loadAllAccountsIndex();
     }
   };
   // ─── Start editing account ───
@@ -1308,6 +1309,15 @@ export default function ModelDashboardTab() {
   // ─── Save edited account ───
   const saveEditAccount = async () => {
     if (!editingAccountId) return;
+    // ── Duplicate-prevention: block edit if email collides with another model on the same platform ──
+    const editingAcc = modelAccounts.find((a) => a.id === editingAccountId);
+    if (editingAcc && editAccountData.account_email.trim()) {
+      const conflict = findEmailConflict(editingAcc.platform, editAccountData.account_email, selectedModelId);
+      if (conflict) {
+        toast.error(`${editingAcc.platform}: "${editAccountData.account_email}" wird bereits von Model "${conflict}" verwendet.`);
+        return;
+      }
+    }
     const { error } = await supabase
       .from("accounts")
       .update({
@@ -1321,8 +1331,10 @@ export default function ModelDashboardTab() {
       toast.success("Account aktualisiert ✅");
       setEditingAccountId(null);
       if (selectedModelId) await loadModelAccounts(selectedModelId);
+      await loadAllAccountsIndex();
     }
   };
+
 
   // ─── Model login (one per model, all platforms) ───
   const callLoginEndpoint = async (modelId: string, action?: "reset" | "delete") => {
