@@ -565,17 +565,12 @@ export default function ModelHomeDashboard({
               </motion.span>
             </h1>
           </div>
-          <div
-            className={cn(
-              "shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] uppercase tracking-wider",
-              profileConfirmed
-                ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
-                : "bg-amber-500/15 text-amber-400 border-amber-500/30",
-            )}
-          >
-            {profileConfirmed ? <CheckCircle2 className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
-            {profileConfirmed ? copy.confirmed : copy.pending}
-          </div>
+          {profileConfirmed && (
+            <div className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] uppercase tracking-wider bg-emerald-500/15 text-emerald-400 border-emerald-500/30">
+              <CheckCircle2 className="h-3 w-3" />
+              {copy.confirmed}
+            </div>
+          )}
         </div>
       </div>
 
