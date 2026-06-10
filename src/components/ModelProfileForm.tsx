@@ -208,7 +208,7 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
 
   const handleSave = async (submit = false) => {
     setSaving(true);
-    const payload: any = { ...profile };
+    const payload: any = { ...profile, source_language: lang };
     // submitted_at is set when the model explicitly submits OR when an admin saves on their behalf
     if (submit || autoSubmitOnSave) {
       payload.submitted_at = (profile as any).submitted_at || new Date().toISOString();

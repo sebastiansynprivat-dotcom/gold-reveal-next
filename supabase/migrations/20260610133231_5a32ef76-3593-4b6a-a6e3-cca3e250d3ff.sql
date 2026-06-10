@@ -1,0 +1,1 @@
+ALTER TABLE public.model_profiles ADD COLUMN IF NOT EXISTS source_language text NOT NULL DEFAULT 'de';

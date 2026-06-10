@@ -1524,6 +1524,7 @@ export type Database = {
           occupation: string | null
           place_of_birth: string | null
           shoe_size: string | null
+          source_language: string
           special_marks: string | null
           submitted_at: string | null
           updated_at: string
@@ -1557,6 +1558,7 @@ export type Database = {
           occupation?: string | null
           place_of_birth?: string | null
           shoe_size?: string | null
+          source_language?: string
           special_marks?: string | null
           submitted_at?: string | null
           updated_at?: string
@@ -1590,6 +1592,7 @@ export type Database = {
           occupation?: string | null
           place_of_birth?: string | null
           shoe_size?: string | null
+          source_language?: string
           special_marks?: string | null
           submitted_at?: string | null
           updated_at?: string
