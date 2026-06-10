@@ -4121,7 +4121,7 @@ export default function AdminDashboard() {
 
               <nav className="relative flex flex-col gap-1 p-3 overflow-y-auto h-[calc(100vh-92px)]">
                 {tabItems
-                  .filter((t) => t.key !== "kiprompt" && t.key !== "gdrive" && t.key !== "admin_mgmt")
+                  .filter((t) => t.key !== "kiprompt" && t.key !== "gdrive" && t.key !== "admin_mgmt" && t.key !== "push_settings")
                   .map(({ key, label, icon: Icon, onClick }) => {
                     const active = activeTab === key;
                     const isSettingsGroup = key === "settings";
