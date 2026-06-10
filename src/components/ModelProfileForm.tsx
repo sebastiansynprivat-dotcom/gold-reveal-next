@@ -206,6 +206,19 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
     !(profile.city || "").trim()
   );
 
+  // For the in-dashboard hint: list of empty personal fields + empty content/no-gos
+  const incompleteFields = (() => {
+    if (locked) return [] as string[];
+    const missing: string[] = [];
+    for (const f of PERSONAL_FIELDS[lang]) {
+      if (!String(profile[f.key] || "").trim()) missing.push(f.label);
+    }
+    if (!String(profile.content_preferences || "").trim()) {
+      missing.push(lang === "en" ? "Content preferences" : "Content-Präferenzen");
+    }
+    return missing;
+  })();
+
   const handleSave = async (submit = false) => {
     setSaving(true);
     const payload: any = { ...profile, source_language: lang };
@@ -279,6 +292,43 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
           <p className="text-sm text-muted-foreground">{copy.intro}</p>
         </div>
       </div>
+
+      {/* Incomplete profile hint */}
+      {incompleteFields.length > 0 && (
+        <div className="glass-card rounded-xl p-4 border-l-2 border-amber-400/70 flex items-start gap-3">
+          <div className="h-9 w-9 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0">
+            <AlertTriangle className="h-4 w-4 text-amber-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-foreground">
+              {lang === "en"
+                ? `${incompleteFields.length} field${incompleteFields.length === 1 ? "" : "s"} still empty`
+                : `${incompleteFields.length} ${incompleteFields.length === 1 ? "Angabe fehlt" : "Angaben fehlen"} noch`}
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {lang === "en"
+                ? "Please complete your profile — the more details we have, the more authentic and personal the chatters can write for you, which directly improves your results."
+                : "Bitte ergänze deinen Steckbrief — je mehr Details wir haben, desto authentischer und persönlicher können die Chatter für dich schreiben. Das sorgt direkt für bessere Ergebnisse."}
+            </p>
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {incompleteFields.slice(0, 8).map((label) => (
+                <span
+                  key={label}
+                  className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-200 border border-amber-400/30"
+                >
+                  {label}
+                </span>
+              ))}
+              {incompleteFields.length > 8 && (
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-200/80 border border-amber-400/30">
+                  +{incompleteFields.length - 8}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
 
       {/* Locked banner */}
       {locked && (

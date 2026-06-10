@@ -27,7 +27,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Download } from "lucide-react";
+import { Download, Trash2 } from "lucide-react";
 import { generateProviderInvoicePdf, downloadPdf } from "@/lib/providerInvoicePdf";
 import ModelFaqSection from "@/components/ModelFaqSection";
 import ContentImpactCalculator from "@/components/ContentImpactCalculator";
@@ -190,6 +190,8 @@ interface Props {
   profileConfirmed: boolean;
   onEditProfile: () => void;
   language?: "de" | "en";
+  /** When true (Admin Preview), invoices get a delete button. */
+  isAdminPreview?: boolean;
 }
 
 export default function ModelHomeDashboard({
@@ -198,6 +200,7 @@ export default function ModelHomeDashboard({
   profileConfirmed,
   onEditProfile,
   language = "de",
+  isAdminPreview = false,
 }: Props) {
   const lang = language === "en" ? "en" : "de";
   const copy = COPY[lang];
@@ -491,6 +494,43 @@ export default function ModelHomeDashboard({
     }
   };
 
+  const deleteInvoice = async (cn: any) => {
+    const label = cn.credit_note_number || "";
+    const confirmMsg = lang === "en"
+      ? `Delete invoice ${label}? This cannot be undone.`
+      : `Abrechnung ${label} wirklich löschen? Das kann nicht rückgängig gemacht werden.`;
+    if (!window.confirm(confirmMsg)) return;
+    try {
+      // Unlink any payout_revenue snapshots so the months become billable again
+      if (cn.credit_note_number) {
+        await (supabase.from("payout_revenue") as any)
+          .update({
+            billed_at: null,
+            billed_amount: null,
+            billed_credit_note_number: null,
+            billed_snapshot: null,
+            billing_in_progress: false,
+          })
+          .eq("model_id", modelId)
+          .eq("billed_credit_note_number", cn.credit_note_number);
+      }
+      const { error } = await (supabase.from("credit_notes") as any).delete().eq("id", cn.id);
+      if (error) throw error;
+      setCreditNotes((prev) => prev.filter((x) => x.id !== cn.id));
+      setPayoutSnapshots((prev) => {
+        const next = { ...prev };
+        if (cn.credit_note_number) delete next[cn.credit_note_number];
+        return next;
+      });
+      toast.success(lang === "en" ? "Invoice deleted" : "Abrechnung gelöscht");
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e?.message || (lang === "en" ? "Delete failed" : "Löschen fehlgeschlagen"));
+    }
+  };
+
+
+
 
 
 
@@ -562,17 +602,12 @@ export default function ModelHomeDashboard({
               </motion.span>
             </h1>
           </div>
-          <div
-            className={cn(
-              "shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] uppercase tracking-wider",
-              profileConfirmed
-                ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
-                : "bg-amber-500/15 text-amber-400 border-amber-500/30",
-            )}
-          >
-            {profileConfirmed ? <CheckCircle2 className="h-3 w-3" /> : <Clock className="h-3 w-3" />}
-            {profileConfirmed ? copy.confirmed : copy.pending}
-          </div>
+          {profileConfirmed && (
+            <div className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] uppercase tracking-wider bg-emerald-500/15 text-emerald-400 border-emerald-500/30">
+              <CheckCircle2 className="h-3 w-3" />
+              {copy.confirmed}
+            </div>
+          )}
         </div>
       </div>
 
@@ -946,6 +981,17 @@ export default function ModelHomeDashboard({
                   >
                     <Download className="h-4 w-4" />
                   </Button>
+                  {isAdminPreview && (
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      onClick={(e) => { e.stopPropagation(); deleteInvoice(cn); }}
+                      className="h-8 w-8 shrink-0 text-red-400 hover:text-red-300 hover:bg-red-500/10"
+                      title={lang === "en" ? "Delete invoice (admin)" : "Abrechnung löschen (Admin)"}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
                 );
               })}
