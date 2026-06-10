@@ -379,22 +379,41 @@ export default function ModelHomeDashboard({
   }, []);
 
   // Load in-progress payout months (admin marked them as "in Arbeit")
+  // Also checks the global per-agency flag (e.g. SYN-wide billing in progress).
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data } = await (supabase.from("payout_revenue") as any)
-        .select("last_fetched_month, last_fetched_year, billing_in_progress, billed_at")
-        .eq("model_id", modelId)
-        .eq("billing_in_progress", true)
-        .is("billed_at", null);
+      const [{ data: perModel }, { data: mdl }] = await Promise.all([
+        (supabase.from("payout_revenue") as any)
+          .select("last_fetched_month, last_fetched_year, billing_in_progress, billed_at")
+          .eq("model_id", modelId)
+          .eq("billing_in_progress", true)
+          .is("billed_at", null),
+        (supabase.from("models") as any).select("model_agency").eq("id", modelId).maybeSingle(),
+      ]);
       if (cancelled) return;
-      const rows = (data || []) as any[];
-      setInProgressMonths(
-        rows.map((r) => ({ month: Number(r.last_fetched_month), year: Number(r.last_fetched_year) }))
-      );
+      const rows = ((perModel || []) as any[]).map((r) => ({
+        month: Number(r.last_fetched_month),
+        year: Number(r.last_fetched_year),
+      }));
+      const agency = String((mdl as any)?.model_agency || "").toLowerCase();
+      if (agency) {
+        const { data: g } = await (supabase.from("agency_billing_status") as any)
+          .select("in_progress, month, year")
+          .eq("agency", agency)
+          .maybeSingle();
+        if (g && (g as any).in_progress) {
+          const now = new Date();
+          const m = Number((g as any).month) || now.getMonth() + 1;
+          const y = Number((g as any).year) || now.getFullYear();
+          if (!rows.some((r) => r.month === m && r.year === y)) rows.push({ month: m, year: y });
+        }
+      }
+      if (!cancelled) setInProgressMonths(rows);
     })();
     return () => { cancelled = true; };
   }, [modelId]);
+
 
   const downloadInvoicePdf = (cn: any) => {
     try {

@@ -301,6 +301,41 @@ export default function ModelDashboardTab() {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [showDuplicatesOnly, setShowDuplicatesOnly] = useState(false);
+  const [agencyFilter, setAgencyFilter] = useState<"all" | "shex" | "syn">("all");
+  const [agencyBilling, setAgencyBilling] = useState<Record<string, boolean>>({ shex: false, syn: false });
+
+  // Load global per-agency billing-in-progress flags
+  useEffect(() => {
+    (async () => {
+      const { data } = await (supabase.from("agency_billing_status") as any)
+        .select("agency, in_progress");
+      if (data) {
+        const map: Record<string, boolean> = { shex: false, syn: false };
+        (data as any[]).forEach((r) => { map[String(r.agency).toLowerCase()] = !!r.in_progress; });
+        setAgencyBilling(map);
+      }
+    })();
+  }, []);
+
+  const toggleAgencyBilling = useCallback(async (agency: "shex" | "syn") => {
+    const next = !agencyBilling[agency];
+    const now = new Date();
+    const { data: u } = await supabase.auth.getUser();
+    const { error } = await (supabase.from("agency_billing_status") as any).upsert({
+      agency,
+      in_progress: next,
+      month: next ? now.getMonth() + 1 : null,
+      year: next ? now.getFullYear() : null,
+      updated_at: new Date().toISOString(),
+      updated_by: u?.user?.id ?? null,
+    }, { onConflict: "agency" });
+    if (error) { toast.error("Konnte Status nicht ändern"); return; }
+    setAgencyBilling((p) => ({ ...p, [agency]: next }));
+    toast.success(next
+      ? `Abrechnung für alle ${agency.toUpperCase()}-Models als "in Arbeit" markiert`
+      : `${agency.toUpperCase()}-Abrechnungs-Status zurückgesetzt`);
+  }, [agencyBilling]);
+
   // Flat index of every account in the system to detect duplicates (same platform + same email across multiple models)
   const [allAccountsIndex, setAllAccountsIndex] = useState<Array<{ model_id: string; platform: string; account_email: string }>>([]);
   const [migratingLogins, setMigratingLogins] = useState(false);
@@ -906,11 +941,15 @@ export default function ModelDashboardTab() {
   // ─── Filter models ───
   const filteredModels = useMemo(() => {
     let list = models;
+    if (agencyFilter !== "all") {
+      list = list.filter((m) => String((m as any).model_agency || "shex").toLowerCase() === agencyFilter);
+    }
     if (showDuplicatesOnly) list = list.filter((m) => duplicateModelIds.has(m.id));
     if (!searchQuery) return list;
     const q = searchQuery.toLowerCase();
     return list.filter((m) => m.name.toLowerCase().includes(q) || (m.username || "").toLowerCase().includes(q));
-  }, [models, searchQuery, showDuplicatesOnly, duplicateModelIds]);
+  }, [models, searchQuery, showDuplicatesOnly, duplicateModelIds, agencyFilter]);
+
 
 
   // ─── Live FX rates: any per-account currency → model base currency ───
@@ -1529,6 +1568,53 @@ export default function ModelDashboardTab() {
             )}
           </Button>
         </div>
+        {/* Agency filter + global per-agency billing toggle */}
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <div className="inline-flex rounded-lg border border-border bg-secondary/40 p-0.5">
+            {(["all", "shex", "syn"] as const).map((a) => (
+              <button
+                key={a}
+                type="button"
+                onClick={() => setAgencyFilter(a)}
+                className={cn(
+                  "px-2.5 py-1 rounded-md text-[11px] font-semibold uppercase tracking-wider transition-colors",
+                  agencyFilter === a
+                    ? "bg-accent text-accent-foreground"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {a === "all" ? "Alle" : a === "shex" ? "sheX" : "SYN"}
+              </button>
+            ))}
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => toggleAgencyBilling("syn")}
+            className={cn(
+              "h-8 gap-1.5 text-[11px]",
+              agencyBilling.syn && "border-amber-500/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20",
+            )}
+            title="Markiert für ALLE SYN-Models, dass die Abrechnung gerade in Arbeit ist. Wird im Model-Dashboard sichtbar."
+          >
+            {agencyBilling.syn ? "✓ SYN-Abrechnung in Arbeit" : "SYN-Abrechnung in Arbeit"}
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => toggleAgencyBilling("shex")}
+            className={cn(
+              "h-8 gap-1.5 text-[11px]",
+              agencyBilling.shex && "border-amber-500/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20",
+            )}
+            title="Markiert für ALLE sheX-Models, dass die Abrechnung gerade in Arbeit ist."
+          >
+            {agencyBilling.shex ? "✓ sheX-Abrechnung in Arbeit" : "sheX-Abrechnung in Arbeit"}
+          </Button>
+        </div>
+
         {showDuplicatesOnly && duplicateGroups.size > 0 && (
           <div className="mt-2 glass-card rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-[11px] text-amber-200/90 space-y-1">
             <div className="font-semibold text-amber-300 flex items-center gap-1.5">
