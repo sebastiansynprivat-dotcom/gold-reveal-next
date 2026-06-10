@@ -1069,6 +1069,15 @@ export default function ModelDashboardTab() {
       toast.error("Name ist erforderlich");
       return;
     }
+    // ── Duplicate-prevention: block creation if any selected platform+email already exists on another model ──
+    const selectedForCheck = Object.entries(createAccounts).filter(([, v]) => v.selected && v.account_email.trim());
+    for (const [platform, entry] of selectedForCheck) {
+      const conflict = findEmailConflict(platform, entry.account_email);
+      if (conflict) {
+        toast.error(`${platform}: "${entry.account_email}" wird bereits von Model "${conflict}" verwendet. Bitte eine andere E-Mail nutzen.`);
+        return;
+      }
+    }
     setCreating(true);
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user?.id;
