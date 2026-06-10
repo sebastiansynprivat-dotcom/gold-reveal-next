@@ -18,7 +18,7 @@ const SECTIONS: Record<"de" | "en", { title: string; icon: any; fields: { key: s
     { title: "Content", icon: AlertTriangle, fields: [{ key: "content_preferences", label: "Vorlieben" }, { key: "no_gos", label: "No-Gos" }, { key: "additional_info", label: "Zusatzinfos" }] },
   ],
   en: [
-    { title: "General", icon: User, fields: [{ key: "name", label: "Name" }, { key: "age", label: "Age & birthday" }, { key: "city", label: "City" }, { key: "place_of_birth", label: "Place of birth" }, { key: "occupation", label: "Occupation" }, { key: "work", label: "Work" }, { key: "education", label: "Education" }, { key: "languages", label: "Languages" }] },
+    { title: "General", icon: User, fields: [{ key: "name", label: "Name" }, { key: "age", label: "Age & birthday" }, { key: "city", label: "City" }, { key: "place_of_birth", label: "Place of birth" }, { key: "occupation", label: "Occupation" }] },
     { title: "Appearance", icon: Camera, fields: [{ key: "height", label: "Height" }, { key: "weight", label: "Weight" }, { key: "natural_hair", label: "Natural hair color" }, { key: "bra_size", label: "Bra size" }, { key: "shoe_size", label: "Shoe size" }, { key: "special_marks", label: "Special marks" }] },
     { title: "Personal", icon: Heart, fields: [{ key: "hobbies", label: "Hobbies" }, { key: "favorite_color", label: "Favorite color" }, { key: "favorite_movie", label: "Favorite movie" }, { key: "favorite_food", label: "Favorite food" }, { key: "favorite_music", label: "Favorite music" }, { key: "dream", label: "Dream" }] },
     { title: "Content", icon: AlertTriangle, fields: [{ key: "content_preferences", label: "Preferences" }, { key: "no_gos", label: "No-gos" }, { key: "additional_info", label: "Additional info" }] },
