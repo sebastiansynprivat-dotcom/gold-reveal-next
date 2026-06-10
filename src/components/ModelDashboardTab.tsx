@@ -544,6 +544,20 @@ export default function ModelDashboardTab() {
     const accs = ((data as any as AccountRow[]) || []);
     setModelAccounts(accs);
 
+    // Load profile data for assigned chatters
+    const assignedIds = Array.from(new Set(accs.map((a) => a.assigned_to).filter(Boolean) as string[]));
+    if (assignedIds.length > 0) {
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("user_id, group_name, telegram_id, account_email")
+        .in("user_id", assignedIds);
+      const map: Record<string, any> = {};
+      (profs || []).forEach((p: any) => { map[p.user_id] = p; });
+      setAssignedChatters(map);
+    } else {
+      setAssignedChatters({});
+    }
+
     // Load the single model_dashboard row for this model (one row per model_id)
     const { data: dashRow } = await (supabase as any)
       .from("model_dashboard")
