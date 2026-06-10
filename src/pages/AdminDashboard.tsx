@@ -4125,7 +4125,7 @@ export default function AdminDashboard() {
                   .map(({ key, label, icon: Icon, onClick }) => {
                     const active = activeTab === key;
                     const isSettingsGroup = key === "settings";
-                    const groupActive = isSettingsGroup && ["kiprompt", "gdrive", "admin_mgmt"].includes(activeTab);
+                    const groupActive = isSettingsGroup && ["kiprompt", "gdrive", "admin_mgmt", "push_settings"].includes(activeTab);
                     const expanded = isSettingsGroup && (settingsExpanded || groupActive);
                     return (
                       <React.Fragment key={key}>
