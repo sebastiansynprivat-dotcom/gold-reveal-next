@@ -183,6 +183,7 @@ export const dict: Dict = {
   "auth.success.back": { de: "Zurück zur Anmeldung", en: "Back to sign in" },
   "auth.error.groupRequired": { de: "Bitte gib deinen Gruppennamen ein.", en: "Please enter your group name." },
   "auth.error.tgInvalid": { de: "Bitte gib eine gültige Telegram-ID ein (nur Zahlen, mindestens 5 Stellen).", en: "Please enter a valid Telegram ID (numbers only, at least 5 digits)." },
+  "auth.error.tgTaken": { de: "Diese Telegram-ID ist bereits registriert. Bitte melde dich stattdessen an.", en: "This Telegram ID is already registered. Please sign in instead." },
   "auth.error.invalidCreds": { de: "E-Mail oder Passwort ist falsch.", en: "Email or password is incorrect." },
   "auth.error.notConfirmed": { de: "Bitte bestätige zuerst deine E-Mail.", en: "Please confirm your email first." },
   "auth.error.alreadyRegistered": { de: "Diese E-Mail ist bereits registriert.", en: "This email is already registered." },
