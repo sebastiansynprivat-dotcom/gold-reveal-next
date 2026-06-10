@@ -62,6 +62,7 @@ import {
   MessageCircle,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import AdminModelReplyApprovals from "@/components/AdminModelReplyApprovals";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -3066,7 +3067,40 @@ export default function AdminDashboard() {
   const updateRequestStatus = async (id: string, status: string) => {
     // Optimistic update so the new status is visible immediately
     setModelRequests((prev) => prev.map((r) => (r.id === id ? { ...r, status } : r)));
-    const { error } = await supabase.from("model_requests").update({ status }).eq("id", id);
+
+    // When forwarding to the model, also populate the model-side fields
+    let extraUpdate: Record<string, any> = {};
+    let forwardedModelUserId: string | null = null;
+    if (status === "accepted") {
+      const req = modelRequests.find((r) => r.id === id);
+      if (req?.model_name) {
+        // Resolve model_id from model_name → models.id (only when not already set)
+        if (!(req as any).model_id) {
+          const { data: m } = await supabase
+            .from("models")
+            .select("id")
+            .eq("name", req.model_name)
+            .maybeSingle();
+          if (m?.id) {
+            extraUpdate.model_id = m.id;
+            extraUpdate.forwarded_to_model_at = new Date().toISOString();
+            extraUpdate.model_status = "open";
+            // Lookup the model's auth user_id for push
+            const { data: mu } = await supabase
+              .from("model_users")
+              .select("user_id")
+              .eq("model_id", m.id)
+              .maybeSingle();
+            if (mu?.user_id) forwardedModelUserId = mu.user_id;
+          }
+        }
+      }
+    }
+
+    const { error } = await supabase
+      .from("model_requests")
+      .update({ status, ...extraUpdate })
+      .eq("id", id);
     if (error) {
       toast.error("Fehler beim Aktualisieren");
       loadModelRequests();
@@ -3116,7 +3150,35 @@ export default function AdminDashboard() {
         } catch {}
       })();
     }
+
+    // Additional push to the MODEL when the request was just forwarded
+    if (forwardedModelUserId) {
+      (async () => {
+        try {
+          const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+          const session = await supabase.auth.getSession();
+          fetch(`https://${projectId}.supabase.co/functions/v1/send-notification`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+              Authorization: `Bearer ${session.data.session?.access_token}`,
+            },
+            body: JSON.stringify({
+              title: "✨ Neue Custom-Anfrage",
+              body: "Du hast eine neue Anfrage im Dashboard. Schau jetzt rein!",
+              title_en: "✨ New custom request",
+              body_en: "You have a new request in your dashboard. Check it out!",
+              target_user_id: forwardedModelUserId,
+            }),
+          }).catch(() => {});
+        } catch {}
+      })();
+      // Refresh local state so model_id appears immediately
+      loadModelRequests();
+    }
   };
+
 
   const loadBotMessages = async () => {
     const { data } = await supabase
@@ -5882,6 +5944,8 @@ export default function AdminDashboard() {
 
               {activeTab === "anfragen" && (
                 <div className="space-y-4">
+                  <AdminModelReplyApprovals />
+
                   {/* Request Stats Overview */}
                   <div className="grid grid-cols-2 sm:grid-cols-6 gap-3">
                     {(

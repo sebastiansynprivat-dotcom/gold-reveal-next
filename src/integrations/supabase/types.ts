@@ -1630,6 +1630,8 @@ export type Database = {
       }
       model_request_messages: {
         Row: {
+          approved_by_admin: string | null
+          approved_by_admin_at: string | null
           attachments: Json
           body: string
           created_at: string
@@ -1637,8 +1639,11 @@ export type Database = {
           request_id: string
           sender_role: string
           user_id: string
+          visible_to_chatter: boolean
         }
         Insert: {
+          approved_by_admin?: string | null
+          approved_by_admin_at?: string | null
           attachments?: Json
           body: string
           created_at?: string
@@ -1646,8 +1651,11 @@ export type Database = {
           request_id: string
           sender_role: string
           user_id: string
+          visible_to_chatter?: boolean
         }
         Update: {
+          approved_by_admin?: string | null
+          approved_by_admin_at?: string | null
           attachments?: Json
           body?: string
           created_at?: string
@@ -1655,6 +1663,7 @@ export type Database = {
           request_id?: string
           sender_role?: string
           user_id?: string
+          visible_to_chatter?: boolean
         }
         Relationships: [
           {
@@ -1674,9 +1683,13 @@ export type Database = {
           created_at: string
           customer_name: string | null
           description: string
+          forwarded_to_model_at: string | null
           id: string
+          model_completed_at: string | null
+          model_id: string | null
           model_language: string
           model_name: string
+          model_status: string | null
           price: number | null
           request_type: string
           status: string
@@ -1689,9 +1702,13 @@ export type Database = {
           created_at?: string
           customer_name?: string | null
           description: string
+          forwarded_to_model_at?: string | null
           id?: string
+          model_completed_at?: string | null
+          model_id?: string | null
           model_language?: string
           model_name: string
+          model_status?: string | null
           price?: number | null
           request_type?: string
           status?: string
@@ -1704,15 +1721,27 @@ export type Database = {
           created_at?: string
           customer_name?: string | null
           description?: string
+          forwarded_to_model_at?: string | null
           id?: string
+          model_completed_at?: string | null
+          model_id?: string | null
           model_language?: string
           model_name?: string
+          model_status?: string | null
           price?: number | null
           request_type?: string
           status?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "model_requests_model_id_fkey"
+            columns: ["model_id"]
+            isOneToOne: false
+            referencedRelation: "models"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       model_users: {
         Row: {
@@ -2515,6 +2544,7 @@ export type Database = {
         Args: { p_account_id: string; p_user_id: string }
         Returns: boolean
       }
+      current_model_id: { Args: never; Returns: string }
       get_chatter_revenue_series: {
         Args: { p_from: string; p_to: string }
         Returns: {
