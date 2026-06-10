@@ -1,71 +1,38 @@
-## Recap
+## Goal
+After assigning an account to a chatter, update the affected row in-place instead of reloading the whole "Alle Chatter" + accounts lists (which causes a visible flash/scroll reset and slowdown).
 
-"Archive" = existing soft-delete to `deleted_records` (real DELETE on live table, snapshotted by `archive_deleted_record`). "Delete/purge" = Trash button in `DeletedRecordsTab` that removes the archive entry permanently.
+## Changes
 
-Goal: cascade archive + purge correctly across model → account → assignment / accounts_data, without losing assignment or revenue history at archive time.
+### 1. `src/components/admin/AssignAccountToChatterButton.tsx`
+- Change the `onAssigned` prop signature from `() => void` to `(chatterId: string) => void`.
+- Pass the assigned chatter's `user_id` when calling `onAssigned(selected.user_id)`.
 
----
+### 2. `src/pages/AdminDashboard.tsx` (line 9504)
+Replace the `onAssigned` handler with an optimistic in-place update — no `loadAccounts()` / `loadChatters()` calls:
 
-## Archiving a model
+```ts
+onAssigned={(chatterId) => {
+  const nowIso = new Date().toISOString();
+  // patch the single account row
+  setAccounts((prev) =>
+    prev.map((a) =>
+      a.id === acc.id ? { ...a, assigned_to: chatterId, assigned_at: nowIso } : a,
+    ),
+  );
+  // patch the chatter's assigned_accounts so the row reflects the new account immediately
+  setChatters((prev) =>
+    prev.map((c) =>
+      c.user_id === chatterId
+        ? { ...c, assigned_accounts: [...(c.assigned_accounts || []), { ...acc, assigned_to: chatterId, assigned_at: nowIso }] }
+        : c,
+    ),
+  );
+}}
+```
 
-Existing `cascade_delete_model_accounts` trigger stays (deletes child accounts → each one archives itself).
-
-New BEFORE DELETE trigger `pre_archive_model_close_assignments` on `models`: for every child account of the model, close open `account_assignments` (`end_date IS NULL`) → set `end_date = current_date`, `unassigned_at = now()`. `account_id` is left untouched. `accounts.assigned_to` / `assigned_at` are NOT modified. `accounts_data` untouched.
-
-## Archiving an account
-
-New BEFORE DELETE trigger `pre_archive_account_close_assignments` on `accounts`: close open `account_assignments` for this account (same as above). `account_id` untouched. `accounts_data` untouched. `accounts.assigned_to` / `assigned_at` not modified (the account row itself is about to be archived anyway).
-
-## Drop the three foreign keys
-
-Required so child rows keep their archived id after the parent row is gone:
-- `account_assignments_account_id_fkey` (currently `ON DELETE CASCADE`) → drop. `account_id` becomes plain `uuid`.
-- `accounts_data_account_id_fkey` → drop.
-- `accounts_data_model_id_fkey` → drop.
-
-No replacement constraint. Cleanup is handled by triggers + purge RPCs.
-
-## Purging an archived account (Trash in `DeletedRecordsTab` on an `account` row)
-
-New SECURITY DEFINER RPC `purge_archived_account(p_original_id uuid)`, gated by `is_admin()`:
-- `DELETE FROM account_assignments WHERE account_id = p_original_id;` (open + historical)
-- `DELETE FROM accounts_data WHERE account_id = p_original_id;`
-- Profiles untouched.
-Then `DeletedRecordsTab.purge` deletes the `deleted_records` row.
-
-## Purging an archived model (Trash on a `model` row)
-
-New SECURITY DEFINER RPC `purge_archived_model(p_original_id uuid)`, gated by `is_admin()`:
-- Find every archived account in `deleted_records` whose snapshot has `data->>'model_id' = p_original_id`.
-- For each child account `original_id`: run the same two deletes (`account_assignments`, `accounts_data`) and delete the child's `deleted_records` row.
-- Also `DELETE FROM accounts_data WHERE model_id = p_original_id` to catch model-level rows with no account link.
-- Profiles untouched.
-Then `DeletedRecordsTab.purge` deletes the model's own `deleted_records` row.
-
-## UI changes (`DeletedRecordsTab`)
-
-`purge(row)`:
-- `entity_type === 'account'` → call `purge_archived_account(row.original_id)` then delete the archive row.
-- `entity_type === 'model'` → call `purge_archived_model(row.original_id)` (it handles child archive rows too).
-- `entity_type === 'profile'` → unchanged.
-- Model purge confirm dialog: list how many archived child accounts + assignment rows + accounts_data rows will be wiped (pre-count via two `select count` queries).
-
-## Restore behavior
-
-Unchanged. Restoring an archived account re-inserts the row with its original id; because `account_id` was never modified on assignments / accounts_data, history reconnects automatically.
-
----
-
-## Technical details
-
-- All new triggers and RPCs: `SECURITY DEFINER`, `SET search_path = public`. RPCs check `is_admin()`.
-- Existing `cascade_delete_model_accounts`, `archive_deleted_record`, `track_account_assignment` triggers stay.
-- Trigger firing order on `models`: `a_pre_archive_model_close_assignments` BEFORE DELETE runs before `b_cascade_delete_model_accounts` (alphabetical). On `accounts`: `a_pre_archive_account_close_assignments` runs before `b_archive_deleted_record`.
-- `track_account_assignment` on `accounts` UPDATE is not triggered because we don't touch `assigned_to`.
-- No table-shape changes → no client type regen needed for columns; types regen will reflect the dropped FKs in relationship metadata only.
+This keeps the Alle Chatter list mounted (no spinner / `setLoading(true)` from `loadChatters`), preserves scroll position, and the assigned row updates silently.
 
 ## Out of scope
-
-- No new columns.
-- No changes to `profiles` archive flow.
-- No edge function changes.
+- No backend/RLS changes.
+- No changes to other call sites of `loadAccounts` / `loadChatters`.
+- No styling changes.
