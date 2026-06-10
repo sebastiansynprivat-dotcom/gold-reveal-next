@@ -32,6 +32,7 @@ import { generateProviderInvoicePdf, downloadPdf } from "@/lib/providerInvoicePd
 import ModelFaqSection from "@/components/ModelFaqSection";
 import ContentImpactCalculator from "@/components/ContentImpactCalculator";
 import ModelOnboardingTour from "@/components/ModelOnboardingTour";
+import ModelRequestsSection from "@/components/ModelRequestsSection";
 import { Sparkles } from "lucide-react";
 
 
