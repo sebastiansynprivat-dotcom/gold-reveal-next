@@ -4011,32 +4011,82 @@ export default function AdminDashboard() {
             <ChevronLeft className={cn("h-3.5 w-3.5 transition-transform", sidebarCollapsed && "rotate-180")} />
           </button>
           <nav className="flex flex-col gap-0.5 p-3 h-full overflow-y-auto">
-            {tabItems.map(({ key, label, icon: Icon, onClick }) => (
-              <button
-                key={key}
-                onClick={onClick}
-                title={sidebarCollapsed ? label : undefined}
-                className={cn(
-                  "relative flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-medium transition-all duration-200 text-left w-full",
-                  sidebarCollapsed && "justify-center px-2",
-                  activeTab === key
-                    ? "text-accent-foreground"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary/40",
-                )}
-              >
-                {activeTab === key && (
-                  <motion.div
-                    layoutId="activeTabSidebar"
-                    className="absolute inset-0 bg-accent rounded-lg shadow-md shadow-accent/20"
-                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                  />
-                )}
-                <span className={cn("relative z-10 flex items-center gap-2.5", sidebarCollapsed && "gap-0")}>
-                  <Icon className="h-3.5 w-3.5 shrink-0" />
-                  {!sidebarCollapsed && label}
-                </span>
-              </button>
-            ))}
+            {tabItems
+              .filter((t) => t.key !== "kiprompt" && t.key !== "gdrive" && t.key !== "admin_mgmt")
+              .map(({ key, label, icon: Icon, onClick }) => {
+                const isSettingsGroup = key === "settings";
+                const groupActive = isSettingsGroup && ["kiprompt", "gdrive", "admin_mgmt"].includes(activeTab);
+                const expanded = isSettingsGroup && (settingsExpanded || groupActive);
+                return (
+                  <React.Fragment key={key}>
+                    <button
+                      onClick={() => {
+                        if (isSettingsGroup) setSettingsExpanded((v) => !v);
+                        onClick();
+                      }}
+                      title={sidebarCollapsed ? label : undefined}
+                      className={cn(
+                        "relative flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-xs font-medium transition-all duration-200 text-left w-full",
+                        sidebarCollapsed && "justify-center px-2",
+                        activeTab === key || groupActive
+                          ? "text-accent-foreground"
+                          : "text-muted-foreground hover:text-foreground hover:bg-secondary/40",
+                      )}
+                    >
+                      {(activeTab === key || groupActive) && (
+                        <motion.div
+                          layoutId="activeTabSidebar"
+                          className="absolute inset-0 bg-accent rounded-lg shadow-md shadow-accent/20"
+                          transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                        />
+                      )}
+                      <span className={cn("relative z-10 flex items-center gap-2.5 w-full", sidebarCollapsed && "gap-0")}>
+                        <Icon className="h-3.5 w-3.5 shrink-0" />
+                        {!sidebarCollapsed && (
+                          <>
+                            <span className="flex-1">{label}</span>
+                            {isSettingsGroup && (
+                              <ChevronRight className={cn("h-3 w-3 transition-transform", expanded && "rotate-90")} />
+                            )}
+                          </>
+                        )}
+                      </span>
+                    </button>
+                    {isSettingsGroup && expanded && !sidebarCollapsed && (
+                      <div className="flex flex-col gap-0.5 pl-6 pr-1 pb-1">
+                        {[
+                          { k: "kiprompt", l: "KI Prompt", i: Brain, c: () => { setActiveTab("kiprompt"); if (!kiPromptLoaded) loadKiPrompt(); } },
+                          { k: "gdrive", l: "Google Drive", i: ExternalLink, c: () => setActiveTab("gdrive") },
+                          { k: "admin_mgmt", l: "Admin-Verwaltung", i: Shield, c: () => { setActiveTab("admin_mgmt"); void loadAdmins(); } },
+                        ].map(({ k, l, i: SubIcon, c }) => (
+                          <button
+                            key={k}
+                            onClick={c}
+                            className={cn(
+                              "relative flex items-center gap-2 px-2 py-1.5 rounded-md text-[11px] font-medium transition-all duration-200 text-left w-full",
+                              activeTab === k
+                                ? "text-accent-foreground"
+                                : "text-muted-foreground hover:text-foreground hover:bg-secondary/40",
+                            )}
+                          >
+                            {activeTab === k && (
+                              <motion.div
+                                layoutId="activeTabSidebarSub"
+                                className="absolute inset-0 bg-accent/80 rounded-md"
+                                transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                              />
+                            )}
+                            <span className="relative z-10 flex items-center gap-2">
+                              <SubIcon className="h-3 w-3 shrink-0" />
+                              {l}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </React.Fragment>
+                );
+              })}
           </nav>
         </aside>
         {/* Spacer to reserve space for fixed sidebar on desktop */}
