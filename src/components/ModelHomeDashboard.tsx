@@ -140,6 +140,8 @@ const COPY = {
     invoiceNumber: "Invoice no.",
     billedOn: "Billed on",
     servicePeriod: "Service period",
+    inProgress: "Payout in progress",
+    inProgressHint: "is being prepared",
   },
 };
 
