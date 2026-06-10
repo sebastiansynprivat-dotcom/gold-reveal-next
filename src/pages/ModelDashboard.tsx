@@ -111,7 +111,22 @@ export default function ModelDashboard() {
   };
 
   return (
-    <div className="min-h-screen pb-24">
+    <div className="min-h-screen pb-24 model-feminine-shell relative">
+      {/* Soft feminine blush halos layered above the gold body bg */}
+      <div className="pointer-events-none fixed inset-0 -z-0 overflow-hidden">
+        <div
+          className="absolute -top-32 -right-24 h-[420px] w-[420px] rounded-full blur-3xl opacity-70"
+          style={{ background: "radial-gradient(circle, hsl(340 80% 72% / 0.18), transparent 70%)" }}
+        />
+        <div
+          className="absolute top-1/3 -left-32 h-[360px] w-[360px] rounded-full blur-3xl opacity-60"
+          style={{ background: "radial-gradient(circle, hsl(320 70% 75% / 0.14), transparent 70%)" }}
+        />
+        <div
+          className="absolute bottom-0 right-10 h-[280px] w-[280px] rounded-full blur-3xl opacity-50"
+          style={{ background: "radial-gradient(circle, hsl(28 80% 60% / 0.16), transparent 70%)" }}
+        />
+      </div>
       <header className="header-gradient-border">
         <div className="container max-w-5xl mx-auto px-4 py-3">
           <div className="flex items-center gap-3">
