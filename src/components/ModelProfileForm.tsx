@@ -206,6 +206,19 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
     !(profile.city || "").trim()
   );
 
+  // For the in-dashboard hint: list of empty personal fields + empty content/no-gos
+  const incompleteFields = (() => {
+    if (locked) return [] as string[];
+    const missing: string[] = [];
+    for (const f of PERSONAL_FIELDS[lang]) {
+      if (!String(profile[f.key] || "").trim()) missing.push(f.label);
+    }
+    if (!String(profile.content_preferences || "").trim()) {
+      missing.push(lang === "en" ? "Content preferences" : "Content-Präferenzen");
+    }
+    return missing;
+  })();
+
   const handleSave = async (submit = false) => {
     setSaving(true);
     const payload: any = { ...profile, source_language: lang };
