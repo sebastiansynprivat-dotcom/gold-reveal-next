@@ -216,6 +216,7 @@ export default function ModelHomeDashboard({
   const [openCard, setOpenCard] = useState<Record<string, boolean>>({});
   const [commissionPct, setCommissionPct] = useState<number>(0);
   const [modelCurrency, setModelCurrency] = useState<string>("EUR");
+  const [forceCurrency, setForceCurrency] = useState<string | null>(null);
 
   // Load model commission % + currency
   useEffect(() => {
