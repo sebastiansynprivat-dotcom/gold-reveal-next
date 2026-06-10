@@ -196,6 +196,7 @@ interface ChatterProfile {
 }
 
 import { PLATFORMS as PLATFORM_DEFS, usePlatforms } from "@/lib/platforms";
+import SteckbriefImporter from "@/components/admin/SteckbriefImporter";
 
 const CURRENCIES = ["EUR", "USD", "GBP", "CHF", "AED"] as const;
 const PLATFORMS_FALLBACK = PLATFORM_DEFS.map((p) => p.label);
