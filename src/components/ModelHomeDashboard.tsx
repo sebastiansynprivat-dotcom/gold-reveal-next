@@ -216,6 +216,7 @@ export default function ModelHomeDashboard({
   const [openCard, setOpenCard] = useState<Record<string, boolean>>({});
   const [commissionPct, setCommissionPct] = useState<number>(0);
   const [modelCurrency, setModelCurrency] = useState<string>("EUR");
+  const [forceCurrency, setForceCurrency] = useState<string | null>(null);
 
   // Load model commission % + currency
   useEffect(() => {
@@ -227,13 +228,16 @@ export default function ModelHomeDashboard({
           .eq("model_id", modelId)
           .maybeSingle(),
         (supabase.from("models") as any)
-          .select("currency")
+          .select("currency, model_agency")
           .eq("id", modelId)
           .maybeSingle(),
       ]);
       if (cancelled) return;
       setCommissionPct(Number(dash?.revenue_percentage || 0));
-      setModelCurrency((mdl?.currency as string) || "EUR");
+      const isSyn = String((mdl as any)?.model_agency || "").toLowerCase() === "syn";
+      // SYN agency = international models → force USD display
+      setForceCurrency(isSyn ? "USD" : null);
+      setModelCurrency(isSyn ? "USD" : ((mdl?.currency as string) || "EUR"));
     })();
     return () => { cancelled = true; };
   }, [modelId]);
@@ -397,6 +401,7 @@ export default function ModelHomeDashboard({
       const lines: Array<{ name: string; gross: number; pct: number }> = [];
       // Use invoice currency from snapshot if available, else model currency
       const currency =
+        forceCurrency ||
         (snaps[0]?.billed_snapshot as any)?.invoice_currency ||
         modelCurrency ||
         "EUR";
@@ -844,7 +849,7 @@ export default function ModelHomeDashboard({
             <div className="space-y-1.5">
               {creditNotes.map((cn) => {
                 const cnSnaps = payoutSnapshots[cn.credit_note_number] || [];
-                const cnCurrency = (cnSnaps[0]?.billed_snapshot as any)?.invoice_currency || modelCurrency;
+                const cnCurrency = forceCurrency || (cnSnaps[0]?.billed_snapshot as any)?.invoice_currency || modelCurrency;
                 return (
                 <div
                   key={cn.id}
@@ -910,7 +915,7 @@ export default function ModelHomeDashboard({
           {detailInvoice && (() => {
             const cn = detailInvoice;
             const snaps = payoutSnapshots[cn.credit_note_number] || [];
-            const invoiceCurrency = (snaps[0]?.billed_snapshot as any)?.invoice_currency || modelCurrency;
+            const invoiceCurrency = forceCurrency || (snaps[0]?.billed_snapshot as any)?.invoice_currency || modelCurrency;
             return (
               <>
                 <DialogHeader>
@@ -961,7 +966,7 @@ export default function ModelHomeDashboard({
                           const pctFb = pcts.fourbased || defPct;
                           const pctMa = pcts.maloum || defPct;
                           const pctBr = pcts.brezzels || defPct;
-                          const snapCurrency = snap.invoice_currency || modelCurrency;
+                          const snapCurrency = forceCurrency || snap.invoice_currency || modelCurrency;
                           const customs: any[] = snap.custom_platforms || [];
                           const fmtN = (n: number) =>
                             Number(n || 0).toLocaleString(lang === "en" ? "en-US" : "de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
