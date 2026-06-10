@@ -102,7 +102,7 @@ export default function SubAdminDetailView({ subAdminId, subAdminEmail, accounts
             {subAdminChatters.length === 0 ? (
               <p className="text-xs text-muted-foreground">Keine Chatter zugewiesen</p>
             ) : (
-              <div className="space-y-1.5">
+              <div className="max-h-96 overflow-y-auto space-y-1.5 pr-1">
                 {subAdminChatters.map((c) => (
                   <div
                     key={c.user_id}
