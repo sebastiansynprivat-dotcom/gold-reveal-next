@@ -494,6 +494,43 @@ export default function ModelHomeDashboard({
     }
   };
 
+  const deleteInvoice = async (cn: any) => {
+    const label = cn.credit_note_number || "";
+    const confirmMsg = lang === "en"
+      ? `Delete invoice ${label}? This cannot be undone.`
+      : `Abrechnung ${label} wirklich löschen? Das kann nicht rückgängig gemacht werden.`;
+    if (!window.confirm(confirmMsg)) return;
+    try {
+      // Unlink any payout_revenue snapshots so the months become billable again
+      if (cn.credit_note_number) {
+        await (supabase.from("payout_revenue") as any)
+          .update({
+            billed_at: null,
+            billed_amount: null,
+            billed_credit_note_number: null,
+            billed_snapshot: null,
+            billing_in_progress: false,
+          })
+          .eq("model_id", modelId)
+          .eq("billed_credit_note_number", cn.credit_note_number);
+      }
+      const { error } = await (supabase.from("credit_notes") as any).delete().eq("id", cn.id);
+      if (error) throw error;
+      setCreditNotes((prev) => prev.filter((x) => x.id !== cn.id));
+      setPayoutSnapshots((prev) => {
+        const next = { ...prev };
+        if (cn.credit_note_number) delete next[cn.credit_note_number];
+        return next;
+      });
+      toast.success(lang === "en" ? "Invoice deleted" : "Abrechnung gelöscht");
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e?.message || (lang === "en" ? "Delete failed" : "Löschen fehlgeschlagen"));
+    }
+  };
+
+
+
 
 
 
