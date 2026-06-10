@@ -3831,12 +3831,6 @@ export default function AdminDashboard() {
       },
     },
     {
-      key: "push_settings" as const,
-      label: "Push-Benachrichtigungen",
-      icon: Bell,
-      onClick: () => setActiveTab("push_settings"),
-    },
-    {
       key: "kiprompt" as const,
       label: "KI Prompt",
       icon: Brain,
@@ -4012,10 +4006,10 @@ export default function AdminDashboard() {
           </button>
           <nav className="flex flex-col gap-0.5 p-3 h-full overflow-y-auto">
             {tabItems
-              .filter((t) => sidebarCollapsed || (t.key !== "kiprompt" && t.key !== "gdrive" && t.key !== "admin_mgmt"))
+              .filter((t) => sidebarCollapsed || (t.key !== "kiprompt" && t.key !== "gdrive" && t.key !== "admin_mgmt" && t.key !== "push_settings"))
               .map(({ key, label, icon: Icon, onClick }) => {
                 const isSettingsGroup = !sidebarCollapsed && key === "settings";
-                const groupActive = isSettingsGroup && ["kiprompt", "gdrive", "admin_mgmt"].includes(activeTab);
+                const groupActive = isSettingsGroup && ["kiprompt", "gdrive", "admin_mgmt", "push_settings"].includes(activeTab);
                 const expanded = isSettingsGroup && (settingsExpanded || groupActive);
                 return (
                   <React.Fragment key={key}>
@@ -4058,6 +4052,7 @@ export default function AdminDashboard() {
                           { k: "kiprompt", l: "KI Prompt", i: Brain, c: () => { setActiveTab("kiprompt"); if (!kiPromptLoaded) loadKiPrompt(); } },
                           { k: "gdrive", l: "Google Drive", i: ExternalLink, c: () => setActiveTab("gdrive") },
                           { k: "admin_mgmt", l: "Admin-Verwaltung", i: Shield, c: () => { setActiveTab("admin_mgmt"); void loadAdmins(); } },
+                          { k: "push_settings", l: "Push-Benachrichtigungen", i: Bell, c: () => setActiveTab("push_settings") },
                         ].map(({ k, l, i: SubIcon, c }) => (
                           <button
                             key={k}
@@ -4126,11 +4121,11 @@ export default function AdminDashboard() {
 
               <nav className="relative flex flex-col gap-1 p-3 overflow-y-auto h-[calc(100vh-92px)]">
                 {tabItems
-                  .filter((t) => t.key !== "kiprompt" && t.key !== "gdrive" && t.key !== "admin_mgmt")
+                  .filter((t) => t.key !== "kiprompt" && t.key !== "gdrive" && t.key !== "admin_mgmt" && t.key !== "push_settings")
                   .map(({ key, label, icon: Icon, onClick }) => {
                     const active = activeTab === key;
                     const isSettingsGroup = key === "settings";
-                    const groupActive = isSettingsGroup && ["kiprompt", "gdrive", "admin_mgmt"].includes(activeTab);
+                    const groupActive = isSettingsGroup && ["kiprompt", "gdrive", "admin_mgmt", "push_settings"].includes(activeTab);
                     const expanded = isSettingsGroup && (settingsExpanded || groupActive);
                     return (
                       <React.Fragment key={key}>
@@ -4169,6 +4164,7 @@ export default function AdminDashboard() {
                               { k: "kiprompt", l: "KI Prompt", i: Brain, c: () => { setActiveTab("kiprompt"); if (!kiPromptLoaded) loadKiPrompt(); setMobileNavOpen(false); } },
                               { k: "gdrive", l: "Google Drive", i: ExternalLink, c: () => { setActiveTab("gdrive"); setMobileNavOpen(false); } },
                               { k: "admin_mgmt", l: "Admin-Verwaltung", i: Shield, c: () => { setActiveTab("admin_mgmt"); void loadAdmins(); setMobileNavOpen(false); } },
+                              { k: "push_settings", l: "Push-Benachrichtigungen", i: Bell, c: () => { setActiveTab("push_settings"); setMobileNavOpen(false); } },
                             ].map(({ k, l, i: SubIcon, c }) => {
                               const subActive = activeTab === k;
                               return (
