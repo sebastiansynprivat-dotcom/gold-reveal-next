@@ -76,7 +76,7 @@ const COPY = {
     hidePwd: "Verbergen",
     billing: "Abrechnungen",
     nextPayout: "Nächste Abrechnung",
-    nextPayoutValue: "Innerhalb der ersten 10 Tage",
+    nextPayoutValue: "Innerhalb der ersten 10 Tage jeden Monats",
     lifetime: "Gesamtumsatz",
     pastInvoices: "Vergangene Abrechnungen",
     noInvoices: "Noch keine Abrechnungen.",
