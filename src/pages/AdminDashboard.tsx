@@ -4052,6 +4052,7 @@ export default function AdminDashboard() {
                           { k: "kiprompt", l: "KI Prompt", i: Brain, c: () => { setActiveTab("kiprompt"); if (!kiPromptLoaded) loadKiPrompt(); } },
                           { k: "gdrive", l: "Google Drive", i: ExternalLink, c: () => setActiveTab("gdrive") },
                           { k: "admin_mgmt", l: "Admin-Verwaltung", i: Shield, c: () => { setActiveTab("admin_mgmt"); void loadAdmins(); } },
+                          { k: "push_settings", l: "Push-Benachrichtigungen", i: Bell, c: () => setActiveTab("push_settings") },
                         ].map(({ k, l, i: SubIcon, c }) => (
                           <button
                             key={k}
