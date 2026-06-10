@@ -45,6 +45,7 @@ import {
   ShieldCheck,
   Clock,
   Mail,
+  AlertTriangle,
 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -298,6 +299,9 @@ export default function ModelDashboardTab() {
   const [selectedModelId, setSelectedModelId] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [showDuplicatesOnly, setShowDuplicatesOnly] = useState(false);
+  // Flat index of every account in the system to detect duplicates (same platform + same email across multiple models)
+  const [allAccountsIndex, setAllAccountsIndex] = useState<Array<{ model_id: string; platform: string; account_email: string }>>([]);
   const [migratingLogins, setMigratingLogins] = useState(false);
 
   // Read ?model=<id> from URL once on mount to pre-select model card (used when returning from /admin/model/:id/view)
@@ -531,6 +535,68 @@ export default function ModelDashboardTab() {
   useEffect(() => {
     loadModels();
   }, [loadModels]);
+
+  // ─── Load flat index of every account → used for duplicate detection across models ───
+  const loadAllAccountsIndex = useCallback(async () => {
+    const { data } = await supabase
+      .from("accounts")
+      .select("model_id, platform, account_email" as any);
+    const rows = ((data as any[]) || [])
+      .filter((r) => r.model_id && r.platform && r.account_email)
+      .map((r) => ({
+        model_id: r.model_id as string,
+        platform: (r.platform as string).trim(),
+        account_email: (r.account_email as string).trim().toLowerCase(),
+      }));
+    setAllAccountsIndex(rows);
+  }, []);
+
+  useEffect(() => {
+    loadAllAccountsIndex();
+  }, [loadAllAccountsIndex]);
+
+  // Build duplicate map: key = platform|email → set of model_ids that share this account
+  const duplicateGroups = useMemo(() => {
+    const map = new Map<string, Set<string>>();
+    for (const r of allAccountsIndex) {
+      const key = `${r.platform}|${r.account_email}`;
+      if (!map.has(key)) map.set(key, new Set());
+      map.get(key)!.add(r.model_id);
+    }
+    // Keep only groups that span more than one model
+    const dupes = new Map<string, { platform: string; email: string; modelIds: string[] }>();
+    for (const [key, ids] of map.entries()) {
+      if (ids.size > 1) {
+        const [platform, email] = key.split("|");
+        dupes.set(key, { platform, email, modelIds: Array.from(ids) });
+      }
+    }
+    return dupes;
+  }, [allAccountsIndex]);
+
+  const duplicateModelIds = useMemo(() => {
+    const s = new Set<string>();
+    for (const g of duplicateGroups.values()) g.modelIds.forEach((id) => s.add(id));
+    return s;
+  }, [duplicateGroups]);
+
+  // Returns the conflicting model name (other than `excludeModelId`) for a given platform+email, or null
+  const findEmailConflict = useCallback(
+    (platform: string, email: string, excludeModelId?: string | null): string | null => {
+      const e = email.trim().toLowerCase();
+      const p = platform.trim();
+      if (!e || !p) return null;
+      const conflict = allAccountsIndex.find(
+        (r) => r.platform === p && r.account_email === e && r.model_id !== excludeModelId,
+      );
+      if (!conflict) return null;
+      const m = models.find((mm) => mm.id === conflict.model_id);
+      return m?.name || m?.username || conflict.model_id.slice(0, 8);
+    },
+    [allAccountsIndex, models],
+  );
+
+
 
   // ─── Load accounts for selected model ───
   const loadModelAccounts = useCallback(async (modelId: string) => {
@@ -836,10 +902,13 @@ export default function ModelDashboardTab() {
 
   // ─── Filter models ───
   const filteredModels = useMemo(() => {
-    if (!searchQuery) return models;
+    let list = models;
+    if (showDuplicatesOnly) list = list.filter((m) => duplicateModelIds.has(m.id));
+    if (!searchQuery) return list;
     const q = searchQuery.toLowerCase();
-    return models.filter((m) => m.name.toLowerCase().includes(q) || (m.username || "").toLowerCase().includes(q));
-  }, [models, searchQuery]);
+    return list.filter((m) => m.name.toLowerCase().includes(q) || (m.username || "").toLowerCase().includes(q));
+  }, [models, searchQuery, showDuplicatesOnly, duplicateModelIds]);
+
 
   // ─── Live FX rates: any per-account currency → model base currency ───
   const baseCurrency = modelForm.currency || "EUR";
@@ -1000,6 +1069,15 @@ export default function ModelDashboardTab() {
       toast.error("Name ist erforderlich");
       return;
     }
+    // ── Duplicate-prevention: block creation if any selected platform+email already exists on another model ──
+    const selectedForCheck = Object.entries(createAccounts).filter(([, v]) => v.selected && v.account_email.trim());
+    for (const [platform, entry] of selectedForCheck) {
+      const conflict = findEmailConflict(platform, entry.account_email);
+      if (conflict) {
+        toast.error(`${platform}: "${entry.account_email}" wird bereits von Model "${conflict}" verwendet. Bitte eine andere E-Mail nutzen.`);
+        return;
+      }
+    }
     setCreating(true);
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user?.id;
@@ -1064,6 +1142,7 @@ export default function ModelDashboardTab() {
     setCreateAccounts(emptyAccountEntries());
     setCreateDialogOpen(false);
     await loadModels();
+    await loadAllAccountsIndex();
     if (modelData?.id) {
       setSelectedModelId(modelData.id);
     }
@@ -1165,6 +1244,15 @@ export default function ModelDashboardTab() {
       toast.error("Wähle mindestens eine Plattform");
       return;
     }
+    // ── Duplicate-prevention: block if any selected platform+email already belongs to another model ──
+    for (const [platform, entry] of selected) {
+      if (!entry.account_email.trim()) continue;
+      const conflict = findEmailConflict(platform, entry.account_email, selectedModelId);
+      if (conflict) {
+        toast.error(`${platform}: "${entry.account_email}" wird bereits von Model "${conflict}" verwendet.`);
+        return;
+      }
+    }
     setAddingAccount(true);
     const { data: userData } = await supabase.auth.getUser();
     let errors = 0;
@@ -1192,9 +1280,11 @@ export default function ModelDashboardTab() {
       setNewAccounts(emptyAccountEntries());
       setAddAccountOpen(false);
       await loadModelAccounts(selectedModelId);
+      await loadAllAccountsIndex();
     }
     setAddingAccount(false);
   };
+
 
   // ─── Delete platform account ───
   const deleteAccount = async (accountId: string) => {
@@ -1203,6 +1293,7 @@ export default function ModelDashboardTab() {
     else {
       toast.success("Account gelöscht");
       if (selectedModelId) await loadModelAccounts(selectedModelId);
+      await loadAllAccountsIndex();
     }
   };
   // ─── Start editing account ───
@@ -1218,6 +1309,15 @@ export default function ModelDashboardTab() {
   // ─── Save edited account ───
   const saveEditAccount = async () => {
     if (!editingAccountId) return;
+    // ── Duplicate-prevention: block edit if email collides with another model on the same platform ──
+    const editingAcc = modelAccounts.find((a) => a.id === editingAccountId);
+    if (editingAcc && editAccountData.account_email.trim()) {
+      const conflict = findEmailConflict(editingAcc.platform, editAccountData.account_email, selectedModelId);
+      if (conflict) {
+        toast.error(`${editingAcc.platform}: "${editAccountData.account_email}" wird bereits von Model "${conflict}" verwendet.`);
+        return;
+      }
+    }
     const { error } = await supabase
       .from("accounts")
       .update({
@@ -1231,8 +1331,10 @@ export default function ModelDashboardTab() {
       toast.success("Account aktualisiert ✅");
       setEditingAccountId(null);
       if (selectedModelId) await loadModelAccounts(selectedModelId);
+      await loadAllAccountsIndex();
     }
   };
+
 
   // ─── Model login (one per model, all platforms) ───
   const callLoginEndpoint = async (modelId: string, action?: "reset" | "delete") => {
@@ -1383,20 +1485,73 @@ export default function ModelDashboardTab() {
         </div>
       </motion.div>
 
-      {/* ── Search ── */}
+      {/* ── Search + Duplikate-Filter ── */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-          <div className="input-gold-shimmer rounded-lg">
-            <Input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Model suchen…"
-              className="pl-9 bg-secondary/50 border-transparent text-sm h-9"
-            />
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1 min-w-0">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+            <div className="input-gold-shimmer rounded-lg">
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Model suchen…"
+                className="pl-9 bg-secondary/50 border-transparent text-sm h-9"
+              />
+            </div>
           </div>
+          <Button
+            type="button"
+            variant={showDuplicatesOnly ? "default" : "outline"}
+            size="sm"
+            onClick={() => setShowDuplicatesOnly((v) => !v)}
+            className={cn(
+              "h-9 gap-1.5 shrink-0 text-xs",
+              showDuplicatesOnly
+                ? "bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30"
+                : duplicateModelIds.size > 0
+                  ? "border-amber-500/40 text-amber-300 hover:bg-amber-500/10"
+                  : "",
+            )}
+            title="Models anzeigen, die eine E-Mail+Plattform mit einem anderen Model teilen"
+          >
+            <AlertTriangle className="h-3.5 w-3.5" />
+            Duplikate
+            {duplicateModelIds.size > 0 && (
+              <Badge
+                variant="outline"
+                className="ml-1 h-4 px-1.5 text-[10px] border-amber-500/40 text-amber-300 tabular-nums"
+              >
+                {duplicateModelIds.size}
+              </Badge>
+            )}
+          </Button>
         </div>
+        {showDuplicatesOnly && duplicateGroups.size > 0 && (
+          <div className="mt-2 glass-card rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-[11px] text-amber-200/90 space-y-1">
+            <div className="font-semibold text-amber-300 flex items-center gap-1.5">
+              <AlertTriangle className="h-3 w-3" />
+              {duplicateGroups.size} doppelte Account{duplicateGroups.size > 1 ? "s" : ""} gefunden
+            </div>
+            <div className="text-[10px] text-amber-200/70 leading-relaxed">
+              Diese Models teilen sich dieselbe Plattform-E-Mail. Bitte konsolidieren oder doppelte Models löschen.
+            </div>
+            <div className="max-h-32 overflow-y-auto space-y-1 mt-1 pr-1">
+              {Array.from(duplicateGroups.values()).map((g) => {
+                const names = g.modelIds
+                  .map((id) => models.find((m) => m.id === id)?.name || id.slice(0, 6))
+                  .join(" · ");
+                return (
+                  <div key={`${g.platform}|${g.email}`} className="font-mono text-[10px] text-amber-100/80 truncate">
+                    <span className="text-amber-300">[{g.platform}]</span> {g.email}
+                    <span className="text-amber-200/60"> → {names}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </motion.div>
+
 
       {/* ── Model-Liste ── */}
       <motion.section
@@ -1478,6 +1633,15 @@ export default function ModelDashboardTab() {
                             </span>
                           );
                         })()}
+                        {duplicateModelIds.has(model.id) && (
+                          <span
+                            className="inline-flex items-center gap-0.5 text-[9px] px-1.5 py-[1px] rounded border border-amber-500/40 text-amber-300 bg-amber-500/10 shrink-0"
+                            title="Dieses Model teilt eine Plattform-E-Mail mit einem anderen Model"
+                          >
+                            <AlertTriangle className="h-2.5 w-2.5" />
+                            Duplikat
+                          </span>
+                        )}
                       </div>
                       {model.address && <p className="text-[10px] text-muted-foreground truncate">{model.address}</p>}
                     </div>
