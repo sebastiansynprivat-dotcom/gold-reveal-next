@@ -4006,7 +4006,7 @@ export default function AdminDashboard() {
           </button>
           <nav className="flex flex-col gap-0.5 p-3 h-full overflow-y-auto">
             {tabItems
-              .filter((t) => sidebarCollapsed || (t.key !== "kiprompt" && t.key !== "gdrive" && t.key !== "admin_mgmt"))
+              .filter((t) => sidebarCollapsed || (t.key !== "kiprompt" && t.key !== "gdrive" && t.key !== "admin_mgmt" && t.key !== "push_settings"))
               .map(({ key, label, icon: Icon, onClick }) => {
                 const isSettingsGroup = !sidebarCollapsed && key === "settings";
                 const groupActive = isSettingsGroup && ["kiprompt", "gdrive", "admin_mgmt"].includes(activeTab);
