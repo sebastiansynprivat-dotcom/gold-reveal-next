@@ -109,7 +109,7 @@ export default function SubAdminDetailView({ subAdminId, subAdminEmail, accounts
                     className="flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary/30 border border-border/50"
                   >
                     <span className="text-xs font-medium text-foreground truncate flex-1">
-                      {c.group_name || c.account_email || c.user_id.slice(0, 8)}
+                      {c.group_name || c.account_email || c.user_id}
                     </span>
                     {c.assigned_accounts
                       ?.filter((acc) => assignedIds.has(acc.id))
