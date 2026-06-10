@@ -5,9 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Save, Check, User, Camera, AlertTriangle, Info, Lock, Send, ShieldCheck } from "lucide-react";
+import { Save, Check, User, Camera, AlertTriangle, Info, Lock, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 interface Props {
   modelId: string;
