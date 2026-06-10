@@ -582,7 +582,7 @@ export default function ModelHomeDashboard({
       {/* Hero / Welcome */}
       {(() => {
         const hour = new Date().getHours();
-        const isEN = uiLanguage === "en";
+        const isEN = lang === "en";
         const greet =
           hour < 11
             ? (isEN ? "Good morning" : "Guten Morgen")
