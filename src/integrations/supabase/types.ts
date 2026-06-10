@@ -2674,6 +2674,10 @@ export type Database = {
       increment_route_counter: { Args: never; Returns: number }
       is_admin: { Args: never; Returns: boolean }
       is_super_admin: { Args: never; Returns: boolean }
+      is_telegram_id_taken: {
+        Args: { p_telegram_id: string }
+        Returns: boolean
+      }
       next_credit_note_number: { Args: never; Returns: string }
       purge_archived_account: {
         Args: { p_original_id: string }
