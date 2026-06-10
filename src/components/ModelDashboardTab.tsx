@@ -1634,9 +1634,9 @@ export default function ModelDashboardTab() {
               "h-8 gap-1.5 text-[11px]",
               agencyBilling.syn && "border-amber-500/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20",
             )}
-            title="Markiert für ALLE SYN-Models, dass die Abrechnung gerade in Arbeit ist. Wird im Model-Dashboard sichtbar."
+            title="Beim Aktivieren: Push an alle SYN-Models + Hinweis im Model-Dashboard. Beim Deaktivieren: Hinweis entfernen (alle durch)."
           >
-            {agencyBilling.syn ? "✓ SYN-Abrechnung in Arbeit" : "SYN-Abrechnung in Arbeit"}
+            {agencyBilling.syn ? "✓ SYN läuft – als abgeschlossen markieren" : "SYN-Abrechnung starten"}
           </Button>
           <Button
             type="button"
@@ -1647,9 +1647,9 @@ export default function ModelDashboardTab() {
               "h-8 gap-1.5 text-[11px]",
               agencyBilling.shex && "border-amber-500/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20",
             )}
-            title="Markiert für ALLE sheX-Models, dass die Abrechnung gerade in Arbeit ist."
+            title="Beim Aktivieren: Push an alle sheX-Models + Hinweis im Model-Dashboard. Beim Deaktivieren: Hinweis entfernen (alle durch)."
           >
-            {agencyBilling.shex ? "✓ sheX-Abrechnung in Arbeit" : "sheX-Abrechnung in Arbeit"}
+            {agencyBilling.shex ? "✓ sheX läuft – als abgeschlossen markieren" : "sheX-Abrechnung starten"}
           </Button>
         </div>
 
