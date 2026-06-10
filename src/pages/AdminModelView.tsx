@@ -255,6 +255,7 @@ export default function AdminModelView() {
             profileConfirmed={!!confirmedAt}
             language={modelLanguage}
             onEditProfile={() => setMode("edit")}
+            isAdminPreview
           />
         )}
       </div>
