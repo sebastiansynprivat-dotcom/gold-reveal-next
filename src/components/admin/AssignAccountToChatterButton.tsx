@@ -27,7 +27,7 @@ interface Account {
 interface Props {
   account: Account;
   chatters: ChatterLite[];
-  onAssigned: () => void;
+  onAssigned: (info: { chatter: ChatterLite; assignedAt: string }) => void;
 }
 
 export default function AssignAccountToChatterButton({ account, chatters, onAssigned }: Props) {
