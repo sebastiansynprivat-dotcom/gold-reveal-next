@@ -27,7 +27,7 @@ interface Account {
 interface Props {
   account: Account;
   chatters: ChatterLite[];
-  onAssigned: () => void;
+  onAssigned: (chatterId: string) => void;
 }
 
 export default function AssignAccountToChatterButton({ account, chatters, onAssigned }: Props) {
@@ -104,7 +104,7 @@ export default function AssignAccountToChatterButton({ account, chatters, onAssi
       );
       setOpen(false);
       reset();
-      onAssigned();
+      onAssigned(selected.user_id);
     } catch (err: any) {
       toast.error("Zuweisung fehlgeschlagen: " + err.message);
     } finally {
