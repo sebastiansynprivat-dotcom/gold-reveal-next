@@ -1974,6 +1974,7 @@ export type Database = {
           billed_at: string | null
           billed_credit_note_number: string | null
           billed_snapshot: Json | null
+          billing_in_progress: boolean
           brezzels_revenue: number | null
           created_at: string
           fourbased_revenue: number | null
@@ -1992,6 +1993,7 @@ export type Database = {
           billed_at?: string | null
           billed_credit_note_number?: string | null
           billed_snapshot?: Json | null
+          billing_in_progress?: boolean
           brezzels_revenue?: number | null
           created_at?: string
           fourbased_revenue?: number | null
@@ -2010,6 +2012,7 @@ export type Database = {
           billed_at?: string | null
           billed_credit_note_number?: string | null
           billed_snapshot?: Json | null
+          billing_in_progress?: boolean
           brezzels_revenue?: number | null
           created_at?: string
           fourbased_revenue?: number | null
