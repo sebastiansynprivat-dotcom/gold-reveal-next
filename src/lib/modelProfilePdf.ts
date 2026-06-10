@@ -57,7 +57,7 @@ const LABELS: Record<Lang, Record<string, string>> = {
     name: "Name", age: "Age & Birthday", city: "City", place_of_birth: "Place of birth",
     favorite_color: "Favorite color", favorite_movie: "Favorite movie", favorite_food: "Favorite food",
     favorite_music: "Favorite music", occupation: "Occupation", hobbies: "Hobbies", dream: "Dream",
-    work: "Work", education: "Education", languages: "Languages", special_marks: "Special marks",
+    special_marks: "Special marks",
     natural_hair: "Natural hair", shoe_size: "Shoe size", bra_size: "Bra size",
     height: "Height", weight: "Weight",
     content_preferences: "What content do you prefer doing?",
