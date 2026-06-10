@@ -1142,6 +1142,7 @@ export default function ModelDashboardTab() {
     setCreateAccounts(emptyAccountEntries());
     setCreateDialogOpen(false);
     await loadModels();
+    await loadAllAccountsIndex();
     if (modelData?.id) {
       setSelectedModelId(modelData.id);
     }
