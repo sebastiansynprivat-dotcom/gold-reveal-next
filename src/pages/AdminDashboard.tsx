@@ -5944,6 +5944,8 @@ export default function AdminDashboard() {
 
               {activeTab === "anfragen" && (
                 <div className="space-y-4">
+                  <AdminModelReplyApprovals />
+
                   {/* Request Stats Overview */}
                   <div className="grid grid-cols-2 sm:grid-cols-6 gap-3">
                     {(
