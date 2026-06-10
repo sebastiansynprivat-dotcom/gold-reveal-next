@@ -133,7 +133,8 @@ export default function ModelProfileViewDialog({ open, onOpenChange, modelId, la
   }, [profile, needsTranslation, sourceLang, lang]);
 
   const isEmpty = profile && sections.every((s) => s.fields.every((f) => !profile[f.key]));
-  const isPending = !!profile && !isEmpty && !profile?.confirmed_at;
+  // No pending state: chatters always see the approved snapshot. If profile is null → not approved yet.
+  const isPending = !profile && !!rawProfile;
 
   const getValue = (key: string): string => {
     const raw = (profile as any)?.[key];
