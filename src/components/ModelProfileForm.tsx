@@ -40,9 +40,6 @@ type ProfileRow = {
   occupation: string | null;
   hobbies: string | null;
   dream: string | null;
-  work: string | null;
-  education: string | null;
-  languages: string | null;
   special_marks: string | null;
   natural_hair: string | null;
   shoe_size: string | null;
@@ -67,9 +64,6 @@ const PERSONAL_FIELDS: Record<"de" | "en", { key: keyof ProfileRow; label: strin
     { key: "occupation", label: "Beruf" },
     { key: "hobbies", label: "Hobbys" },
     { key: "dream", label: "Traum" },
-    { key: "work", label: "Arbeit" },
-    { key: "education", label: "Ausbildung" },
-    { key: "languages", label: "Sprachen" },
     { key: "special_marks", label: "Besondere Merkmale" },
     { key: "natural_hair", label: "Natürliche Haarfarbe" },
     { key: "shoe_size", label: "Schuhgröße" },
@@ -89,9 +83,6 @@ const PERSONAL_FIELDS: Record<"de" | "en", { key: keyof ProfileRow; label: strin
     { key: "occupation", label: "Occupation" },
     { key: "hobbies", label: "Hobbies" },
     { key: "dream", label: "Dream" },
-    { key: "work", label: "Work" },
-    { key: "education", label: "Education" },
-    { key: "languages", label: "Languages" },
     { key: "special_marks", label: "Special marks" },
     { key: "natural_hair", label: "Natural hair" },
     { key: "shoe_size", label: "Shoe size" },
@@ -179,7 +170,7 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
     account_name: defaultAccountName ?? "",
     name: "", age: "", city: "", place_of_birth: "",
     favorite_color: "", favorite_movie: "", favorite_food: "", favorite_music: "",
-    occupation: "", hobbies: "", dream: "", work: "", education: "", languages: "",
+    occupation: "", hobbies: "", dream: "",
     special_marks: "", natural_hair: "", shoe_size: "", bra_size: "", height: "", weight: "",
     content_preferences: "", no_gos: "", additional_info: "",
   };

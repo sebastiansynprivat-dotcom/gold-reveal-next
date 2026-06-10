@@ -1741,10 +1741,10 @@ export default function ModelDashboardTab() {
                 const profile = modelProfile;
                 const filledFields = profile
                   ? Object.entries(profile).filter(([k, v]) =>
-                      ["name","age","city","place_of_birth","favorite_color","favorite_movie","favorite_food","favorite_music","occupation","hobbies","dream","work","education","languages","special_marks","natural_hair","shoe_size","bra_size","height","weight","content_preferences","no_gos","additional_info"].includes(k) && (v as string)?.trim?.()
+                      ["name","age","city","place_of_birth","favorite_color","favorite_movie","favorite_food","favorite_music","occupation","hobbies","dream","special_marks","natural_hair","shoe_size","bra_size","height","weight","content_preferences","no_gos","additional_info"].includes(k) && (v as string)?.trim?.()
                     ).length
                   : 0;
-                const totalFields = 23;
+                const totalFields = 20;
                 const isFilled = filledFields > 0;
                 const submittedAt = (profile as any)?.submitted_at as string | null | undefined;
                 const confirmedAt = (profile as any)?.confirmed_at as string | null | undefined;

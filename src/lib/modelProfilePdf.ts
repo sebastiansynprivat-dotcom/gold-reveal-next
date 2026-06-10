@@ -14,9 +14,6 @@ export interface ModelProfileData {
   occupation?: string | null;
   hobbies?: string | null;
   dream?: string | null;
-  work?: string | null;
-  education?: string | null;
-  languages?: string | null;
   special_marks?: string | null;
   natural_hair?: string | null;
   shoe_size?: string | null;
@@ -41,7 +38,7 @@ const LABELS: Record<Lang, Record<string, string>> = {
     name: "Name", age: "Alter & Geburtstag", city: "Stadt", place_of_birth: "Geburtsort",
     favorite_color: "Lieblingsfarbe", favorite_movie: "Lieblingsfilm", favorite_food: "Lieblingsessen",
     favorite_music: "Lieblingsmusik", occupation: "Beruf", hobbies: "Hobbys", dream: "Traum",
-    work: "Arbeit", education: "Bildung", languages: "Sprachen", special_marks: "Besondere Merkmale",
+    special_marks: "Besondere Merkmale",
     natural_hair: "Natürliche Haarfarbe", shoe_size: "Schuhgröße", bra_size: "BH-Größe",
     height: "Größe", weight: "Gewicht",
     content_preferences: "Welchen Content möchtest du erstellen?",
@@ -60,7 +57,7 @@ const LABELS: Record<Lang, Record<string, string>> = {
     name: "Name", age: "Age & Birthday", city: "City", place_of_birth: "Place of birth",
     favorite_color: "Favorite color", favorite_movie: "Favorite movie", favorite_food: "Favorite food",
     favorite_music: "Favorite music", occupation: "Occupation", hobbies: "Hobbies", dream: "Dream",
-    work: "Work", education: "Education", languages: "Languages", special_marks: "Special marks",
+    special_marks: "Special marks",
     natural_hair: "Natural hair", shoe_size: "Shoe size", bra_size: "Bra size",
     height: "Height", weight: "Weight",
     content_preferences: "What content do you prefer doing?",
@@ -73,7 +70,7 @@ const LABELS: Record<Lang, Record<string, string>> = {
 
 const PERSONAL_KEYS: (keyof ModelProfileData)[] = [
   "name","age","city","place_of_birth","favorite_color","favorite_movie","favorite_food",
-  "favorite_music","occupation","hobbies","dream","work","education","languages",
+  "favorite_music","occupation","hobbies","dream",
   "special_marks","natural_hair","shoe_size","bra_size","height","weight",
 ];
 
