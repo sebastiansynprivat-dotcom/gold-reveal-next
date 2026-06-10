@@ -888,6 +888,13 @@ export default function AdminDashboard() {
   useEffect(() => {
     localStorage.setItem("admin_sidebar_collapsed", sidebarCollapsed ? "1" : "0");
   }, [sidebarCollapsed]);
+  const [settingsExpanded, setSettingsExpanded] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("admin_settings_expanded") === "1";
+  });
+  useEffect(() => {
+    localStorage.setItem("admin_settings_expanded", settingsExpanded ? "1" : "0");
+  }, [settingsExpanded]);
   const [settingsIssuer, setSettingsIssuer] = useState({ name: "", address: "", vat_id: "", kvk: "" });
   const [settingsIssuerId, setSettingsIssuerId] = useState<string | null>(null);
   const [settingsIssuerLoaded, setSettingsIssuerLoaded] = useState(false);
