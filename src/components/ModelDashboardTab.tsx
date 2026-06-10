@@ -1885,14 +1885,19 @@ export default function ModelDashboardTab() {
                 const confirmProfile = async () => {
                   if (!profile || !selectedModelId) return;
                   const { data: u } = await supabase.auth.getUser();
+                  const snapshot: any = { ...(profile as any) };
+                  delete snapshot.approved_snapshot;
+                  delete snapshot.confirmed_at;
+                  delete snapshot.confirmed_by;
+                  const nowIso = new Date().toISOString();
                   const { error } = await (supabase.from("model_profiles" as any) as any)
-                    .update({ confirmed_at: new Date().toISOString(), confirmed_by: u?.user?.id })
+                    .update({ confirmed_at: nowIso, confirmed_by: u?.user?.id, approved_snapshot: snapshot })
                     .eq("model_id", selectedModelId);
                   if (error) {
                     toast.error("Bestätigung fehlgeschlagen");
                     return;
                   }
-                  setModelProfile({ ...(profile as any), confirmed_at: new Date().toISOString(), confirmed_by: u?.user?.id } as any);
+                  setModelProfile({ ...(profile as any), confirmed_at: nowIso, confirmed_by: u?.user?.id, approved_snapshot: snapshot } as any);
                   toast.success("Steckbrief bestätigt — jetzt im Chatter-Dashboard sichtbar");
                 };
 

@@ -1528,6 +1528,7 @@ export type Database = {
           account_name: string | null
           additional_info: string | null
           age: string | null
+          approved_snapshot: Json | null
           bra_size: string | null
           city: string | null
           confirmed_at: string | null
@@ -1544,6 +1545,7 @@ export type Database = {
           hobbies: string | null
           id: string
           languages: string | null
+          last_change_at: string | null
           model_id: string
           name: string | null
           natural_hair: string | null
@@ -1562,6 +1564,7 @@ export type Database = {
           account_name?: string | null
           additional_info?: string | null
           age?: string | null
+          approved_snapshot?: Json | null
           bra_size?: string | null
           city?: string | null
           confirmed_at?: string | null
@@ -1578,6 +1581,7 @@ export type Database = {
           hobbies?: string | null
           id?: string
           languages?: string | null
+          last_change_at?: string | null
           model_id: string
           name?: string | null
           natural_hair?: string | null
@@ -1596,6 +1600,7 @@ export type Database = {
           account_name?: string | null
           additional_info?: string | null
           age?: string | null
+          approved_snapshot?: Json | null
           bra_size?: string | null
           city?: string | null
           confirmed_at?: string | null
@@ -1612,6 +1617,7 @@ export type Database = {
           hobbies?: string | null
           id?: string
           languages?: string | null
+          last_change_at?: string | null
           model_id?: string
           name?: string | null
           natural_hair?: string | null
