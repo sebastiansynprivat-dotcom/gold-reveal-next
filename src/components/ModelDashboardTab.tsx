@@ -793,7 +793,7 @@ export default function ModelDashboardTab() {
     (async () => {
       const { data } = await (supabase as any)
         .from("payout_revenue")
-        .select("id, last_fetched_month, last_fetched_year, monthly_revenue, fourbased_revenue, maloum_revenue, brezzels_revenue, billed_at, billed_credit_note_number, billed_amount, billed_snapshot, last_fetched_at")
+        .select("id, last_fetched_month, last_fetched_year, monthly_revenue, fourbased_revenue, maloum_revenue, brezzels_revenue, billed_at, billed_credit_note_number, billed_amount, billed_snapshot, last_fetched_at, billing_in_progress")
         .eq("model_id", selectedModelId)
         .order("last_fetched_year", { ascending: false })
         .order("last_fetched_month", { ascending: false });
@@ -810,6 +810,7 @@ export default function ModelDashboardTab() {
         billed_amount: r.billed_amount,
         billed_snapshot: r.billed_snapshot,
         last_fetched_at: r.last_fetched_at,
+        billing_in_progress: r.billing_in_progress,
       })));
 
     })();
