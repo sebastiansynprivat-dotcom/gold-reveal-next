@@ -94,6 +94,8 @@ const COPY = {
     invoiceNumber: "Rechnungs-Nr.",
     billedOn: "Abgerechnet am",
     servicePeriod: "Leistungszeitraum",
+    inProgress: "Abrechnung in Arbeit",
+    inProgressHint: "wird gerade vorbereitet",
   },
 
   en: {
