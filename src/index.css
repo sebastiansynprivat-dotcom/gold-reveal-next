@@ -126,6 +126,37 @@
     );
   }
 
+  /* ───── Feminine accents (scoped to /model dashboard via .model-feminine-shell) ───── */
+  .model-feminine-shell .glass-card { border-radius: 1.25rem; }
+  .text-rose-gold-gradient {
+    background-image: linear-gradient(
+      100deg,
+      hsl(43 80% 70%) 0%,
+      hsl(35 75% 60%) 35%,
+      hsl(340 70% 75%) 70%,
+      hsl(320 65% 78%) 100%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .feminine-eyebrow {
+    font-family: ui-serif, Georgia, "Times New Roman", serif;
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    color: hsl(340 40% 78% / 0.85);
+  }
+  .feminine-divider {
+    height: 1px;
+    background: linear-gradient(90deg,
+      transparent,
+      hsl(43 70% 60% / 0.35) 30%,
+      hsl(340 70% 75% / 0.4) 50%,
+      hsl(43 70% 60% / 0.35) 70%,
+      transparent);
+  }
+
   /* Make sure app content paints above the vignette. */
   #root {
     position: relative;
