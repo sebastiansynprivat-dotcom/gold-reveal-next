@@ -3831,12 +3831,6 @@ export default function AdminDashboard() {
       },
     },
     {
-      key: "push_settings" as const,
-      label: "Push-Benachrichtigungen",
-      icon: Bell,
-      onClick: () => setActiveTab("push_settings"),
-    },
-    {
       key: "kiprompt" as const,
       label: "KI Prompt",
       icon: Brain,
