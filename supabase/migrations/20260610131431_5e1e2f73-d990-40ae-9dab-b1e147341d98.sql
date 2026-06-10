@@ -1,0 +1,1 @@
+ALTER TABLE public.payout_revenue ADD COLUMN IF NOT EXISTS billing_in_progress boolean NOT NULL DEFAULT false;

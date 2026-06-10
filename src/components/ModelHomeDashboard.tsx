@@ -76,7 +76,7 @@ const COPY = {
     hidePwd: "Verbergen",
     billing: "Abrechnungen",
     nextPayout: "Nächste Abrechnung",
-    nextPayoutValue: "Innerhalb der ersten 10 Tage",
+    nextPayoutValue: "Innerhalb der ersten 10 Tage jeden Monats",
     lifetime: "Gesamtumsatz",
     pastInvoices: "Vergangene Abrechnungen",
     noInvoices: "Noch keine Abrechnungen.",
@@ -94,6 +94,8 @@ const COPY = {
     invoiceNumber: "Rechnungs-Nr.",
     billedOn: "Abgerechnet am",
     servicePeriod: "Leistungszeitraum",
+    inProgress: "Abrechnung in Arbeit",
+    inProgressHint: "wird gerade vorbereitet",
   },
 
   en: {
@@ -120,7 +122,7 @@ const COPY = {
     hidePwd: "Hide",
     billing: "Payouts",
     nextPayout: "Next payout",
-    nextPayoutValue: "Within the first 10 days",
+    nextPayoutValue: "Within the first 10 days of each month",
     lifetime: "Lifetime revenue",
     pastInvoices: "Past invoices",
     noInvoices: "No invoices yet.",
@@ -138,6 +140,8 @@ const COPY = {
     invoiceNumber: "Invoice no.",
     billedOn: "Billed on",
     servicePeriod: "Service period",
+    inProgress: "Payout in progress",
+    inProgressHint: "is being prepared",
   },
 };
 
@@ -204,6 +208,7 @@ export default function ModelHomeDashboard({
   const [payoutSnapshots, setPayoutSnapshots] = useState<Record<string, any[]>>({});
   const [detailInvoice, setDetailInvoice] = useState<any | null>(null);
   const [issuer, setIssuer] = useState<{ name: string; address: string; vat_id: string } | null>(null);
+  const [inProgressMonths, setInProgressMonths] = useState<Array<{ month: number; year: number }>>([]);
 
   const [loading, setLoading] = useState(true);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -367,6 +372,24 @@ export default function ModelHomeDashboard({
       if (data) setIssuer({ name: data.name || "", address: data.address || "", vat_id: data.vat_id || "" });
     })();
   }, []);
+
+  // Load in-progress payout months (admin marked them as "in Arbeit")
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data } = await (supabase.from("payout_revenue") as any)
+        .select("last_fetched_month, last_fetched_year, billing_in_progress, billed_at")
+        .eq("model_id", modelId)
+        .eq("billing_in_progress", true)
+        .is("billed_at", null);
+      if (cancelled) return;
+      const rows = (data || []) as any[];
+      setInProgressMonths(
+        rows.map((r) => ({ month: Number(r.last_fetched_month), year: Number(r.last_fetched_year) }))
+      );
+    })();
+    return () => { cancelled = true; };
+  }, [modelId]);
 
   const downloadInvoicePdf = (cn: any) => {
     try {
@@ -771,6 +794,37 @@ export default function ModelHomeDashboard({
           <FileText className="h-4 w-4 text-accent" />
           <h2 className="text-base font-bold text-foreground">{copy.billing}</h2>
         </div>
+
+        {inProgressMonths.length > 0 && (
+          <div className="relative rounded-xl border border-amber-400/40 bg-amber-500/10 p-4 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-amber-400/10 to-amber-500/5 animate-pulse" />
+            <div className="relative flex items-start gap-3">
+              <Clock className="h-5 w-5 text-amber-300 shrink-0 mt-0.5 animate-pulse" />
+              <div className="flex-1 min-w-0 space-y-1">
+                <p className="text-[10px] uppercase tracking-wider text-amber-300/90 font-semibold">{copy.inProgress}</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {inProgressMonths
+                    .sort((a, b) => (b.year - a.year) || (b.month - a.month))
+                    .map((m) => {
+                      const label = new Date(m.year, m.month - 1, 1).toLocaleDateString(
+                        lang === "en" ? "en-US" : "de-DE",
+                        { month: "long", year: "numeric" }
+                      );
+                      return (
+                        <span
+                          key={`${m.year}-${m.month}`}
+                          className="px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-100 text-xs font-semibold"
+                        >
+                          {label}
+                        </span>
+                      );
+                    })}
+                </div>
+                <p className="text-[11px] text-amber-200/70">{copy.inProgressHint}</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className="glass-card-subtle rounded-xl p-4 flex items-center gap-3">
           <CalendarClock className="h-5 w-5 text-accent shrink-0" />
