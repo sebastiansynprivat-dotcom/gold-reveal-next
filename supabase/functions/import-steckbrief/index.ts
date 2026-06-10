@@ -220,17 +220,31 @@ async function aiExtractProfile(rawText: string): Promise<Record<string, string>
 
   const schemaDescription = PROFILE_FIELDS.map((f) => `  - ${f}`).join("\n");
 
-  const systemPrompt = `Du extrahierst Steckbrief-Daten eines Female-Creator-Models aus einem Word-Dokument.
+  const systemPrompt = `Du extrahierst Steckbrief-Daten eines Female-Creator-Models aus einem Word-Dokument (SheX "Biographie"-Vorlage).
 Liefere AUSSCHLIESSLICH ein gültiges JSON-Objekt mit folgenden Keys (alle Werte als String, leerer String wenn unbekannt):
 ${schemaDescription}
 
+Feld-Mapping (SheX Biographie-Tabelle → JSON-Key):
+- "Name" → name
+- "Age" → age  (falls "birthday" zusätzlich vorhanden ist, kombiniere als "25 — 07.03.01")
+- "height" → height
+- "cup size" / "BH" → bra_size
+- "city" → city
+- "work" → work UND occupation (gleicher Wert)
+- "Hobbies" → hobbies (Komma-getrennt)
+- "Origin" → place_of_birth (Land/Ort) und languages (Sprachen, Komma-getrennt) — Origin enthält oft beides
+- "What content do you prefer doing" → content_preferences
+- "No Go's" / "No Gos" → no_gos
+- "Account name on 4based" → additional_info ("4based Account: <Wert>")
+- natürliche Haarfarbe → natural_hair
+- Lieblingsfarbe/-film/-essen/-musik → favorite_color / favorite_movie / favorite_food / favorite_music
+- Schuhgröße → shoe_size, Gewicht → weight, Ausbildung → education, besondere Merkmale → special_marks, Traum → dream
+
 Regeln:
 - Behalte die Sprache der Quelle bei.
-- Erfinde NICHTS dazu. Wenn ein Feld nicht im Text steht: leerer String.
-- "age" kann Alter und/oder Geburtstag enthalten (z.B. "24 — 15.03.2001").
-- "hobbies", "languages", "content_preferences", "no_gos" als Komma-getrennte Liste falls mehrere.
-- "natural_hair" = natürliche Haarfarbe.
-- Listen / Tabellen aus dem Dokument bitte zusammenführen.
+- Erfinde NICHTS. Wenn ein Feld nicht im Dokument steht: leerer String.
+- Bei mehreren Werten in einer Zelle: Komma-getrennt.
+- Listen / Tabellen-Zellen sauber zusammenführen, keine Spaltentitel als Werte übernehmen.
 - Keine Markdown-Codeblöcke, kein Kommentar — nur das reine JSON.`;
 
   const userPrompt = `Hier ist der extrahierte Text des Steckbriefs:\n\n"""\n${rawText.slice(0, 30000)}\n"""`;
