@@ -795,6 +795,37 @@ export default function ModelHomeDashboard({
           <h2 className="text-base font-bold text-foreground">{copy.billing}</h2>
         </div>
 
+        {inProgressMonths.length > 0 && (
+          <div className="relative rounded-xl border border-amber-400/40 bg-amber-500/10 p-4 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-amber-400/10 to-amber-500/5 animate-pulse" />
+            <div className="relative flex items-start gap-3">
+              <Clock className="h-5 w-5 text-amber-300 shrink-0 mt-0.5 animate-pulse" />
+              <div className="flex-1 min-w-0 space-y-1">
+                <p className="text-[10px] uppercase tracking-wider text-amber-300/90 font-semibold">{copy.inProgress}</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {inProgressMonths
+                    .sort((a, b) => (b.year - a.year) || (b.month - a.month))
+                    .map((m) => {
+                      const label = new Date(m.year, m.month - 1, 1).toLocaleDateString(
+                        lang === "en" ? "en-US" : "de-DE",
+                        { month: "long", year: "numeric" }
+                      );
+                      return (
+                        <span
+                          key={`${m.year}-${m.month}`}
+                          className="px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-100 text-xs font-semibold"
+                        >
+                          {label}
+                        </span>
+                      );
+                    })}
+                </div>
+                <p className="text-[11px] text-amber-200/70">{copy.inProgressHint}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="glass-card-subtle rounded-xl p-4 flex items-center gap-3">
           <CalendarClock className="h-5 w-5 text-accent shrink-0" />
           <div className="flex-1 min-w-0">
