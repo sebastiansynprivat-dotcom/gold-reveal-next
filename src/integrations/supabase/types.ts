@@ -296,6 +296,33 @@ export type Database = {
         }
         Relationships: []
       }
+      agency_billing_status: {
+        Row: {
+          agency: string
+          in_progress: boolean
+          month: number | null
+          updated_at: string
+          updated_by: string | null
+          year: number | null
+        }
+        Insert: {
+          agency: string
+          in_progress?: boolean
+          month?: number | null
+          updated_at?: string
+          updated_by?: string | null
+          year?: number | null
+        }
+        Update: {
+          agency?: string
+          in_progress?: boolean
+          month?: number | null
+          updated_at?: string
+          updated_by?: string | null
+          year?: number | null
+        }
+        Relationships: []
+      }
       ai_prompts: {
         Row: {
           id: string
