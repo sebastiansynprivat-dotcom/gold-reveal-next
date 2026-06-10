@@ -1244,6 +1244,15 @@ export default function ModelDashboardTab() {
       toast.error("Wähle mindestens eine Plattform");
       return;
     }
+    // ── Duplicate-prevention: block if any selected platform+email already belongs to another model ──
+    for (const [platform, entry] of selected) {
+      if (!entry.account_email.trim()) continue;
+      const conflict = findEmailConflict(platform, entry.account_email, selectedModelId);
+      if (conflict) {
+        toast.error(`${platform}: "${entry.account_email}" wird bereits von Model "${conflict}" verwendet.`);
+        return;
+      }
+    }
     setAddingAccount(true);
     const { data: userData } = await supabase.auth.getUser();
     let errors = 0;
@@ -1271,9 +1280,11 @@ export default function ModelDashboardTab() {
       setNewAccounts(emptyAccountEntries());
       setAddAccountOpen(false);
       await loadModelAccounts(selectedModelId);
+      await loadAllAccountsIndex();
     }
     setAddingAccount(false);
   };
+
 
   // ─── Delete platform account ───
   const deleteAccount = async (accountId: string) => {
