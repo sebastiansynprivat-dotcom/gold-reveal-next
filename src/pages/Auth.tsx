@@ -216,9 +216,6 @@ const Auth = () => {
       pendingSubmitRef.current = e;
       setShowGroupConfirm(true);
       return;
-      pendingSubmitRef.current = e;
-      setShowGroupConfirm(true);
-      return;
     }
 
     setSubmitting(true);
