@@ -3093,7 +3093,9 @@ export default function ModelDashboardTab() {
                     <p className="text-xs text-muted-foreground mb-3">Noch keine Plattform-Accounts verknüpft.</p>
                   </div>
                 ) : (
-                  <Accordion type="multiple" className="space-y-2">
+                  <>
+                    <p className="text-[10px] text-muted-foreground">ausklappen um aktuelle Login Informationen zu sehen</p>
+                    <Accordion type="multiple" className="space-y-2">
                     {Object.entries(accountsByPlatform).map(([platform, accs]) => (
                       <AccordionItem
                         key={platform}
@@ -3289,6 +3291,7 @@ export default function ModelDashboardTab() {
                       </AccordionItem>
                     ))}
                   </Accordion>
+                  </>
                 )}
 
                 {/* Add more accounts button – only if platforms available */}
