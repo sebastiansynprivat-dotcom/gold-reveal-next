@@ -337,9 +337,12 @@ export default function ModelHomeDashboard({
     (async () => {
       if (accounts.length === 0) { setCreditNotes([]); setPayoutSnapshots({}); return; }
       const accountIds = accounts.map((a) => a.id);
+      // HISTORY CUTOFF: First real billing happened April 2026. Everything before is hidden (test data).
+      const HISTORY_CUTOFF = "2026-04-01";
       const { data: cn } = await (supabase.from("credit_notes") as any)
         .select("id, credit_note_number, credit_note_date, service_period_start, service_period_end, net_amount, gross_amount, vat_rate, vat_amount, payment_date, description, provider_name, provider_address, provider_is_business, provider_vat_id, payment_method, crypto_coin, tx_hash")
         .in("account_id", accountIds)
+        .gte("credit_note_date", HISTORY_CUTOFF)
         .order("credit_note_date", { ascending: false })
         .limit(20);
       const list = cn || [];
