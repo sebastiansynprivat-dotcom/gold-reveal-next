@@ -331,9 +331,47 @@ export default function ModelDashboardTab() {
     }, { onConflict: "agency" });
     if (error) { toast.error("Konnte Status nicht ändern"); return; }
     setAgencyBilling((p) => ({ ...p, [agency]: next }));
-    toast.success(next
-      ? `Abrechnung für alle ${agency.toUpperCase()}-Models als "in Arbeit" markiert`
-      : `${agency.toUpperCase()}-Abrechnungs-Status zurückgesetzt`);
+
+    if (next) {
+      // Send push notification to every model user of that agency
+      try {
+        const { data: agencyModels } = await (supabase.from("models") as any)
+          .select("id")
+          .ilike("model_agency", agency);
+        const modelIds = (agencyModels || []).map((m: any) => m.id);
+        if (modelIds.length > 0) {
+          const { data: mu } = await (supabase.from("model_users") as any)
+            .select("user_id, model_id")
+            .in("model_id", modelIds);
+          const userIds = Array.from(new Set(((mu || []) as any[]).map((r) => r.user_id).filter(Boolean)));
+          const monthLabel = now.toLocaleDateString("de-DE", { month: "long", year: "numeric" });
+          const monthLabelEn = now.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+          await Promise.all(
+            userIds.map((uid) =>
+              supabase.functions.invoke("send-notification", {
+                body: {
+                  title: "💸 Abrechnung wird vorbereitet",
+                  body: `Deine Abrechnung für ${monthLabel} ist gerade in Bearbeitung.`,
+                  title_en: "💸 Payout in progress",
+                  body_en: `Your payout for ${monthLabelEn} is being processed.`,
+                  target_user_id: uid,
+                },
+              }),
+            ),
+          );
+          toast.success(
+            `Abrechnung für ${agency.toUpperCase()} aktiv · Push an ${userIds.length} Model${userIds.length === 1 ? "" : "s"} gesendet`,
+          );
+        } else {
+          toast.success(`Abrechnung für ${agency.toUpperCase()}-Models als "in Arbeit" markiert`);
+        }
+      } catch (e) {
+        console.error("agency billing push error", e);
+        toast.success(`Abrechnung für ${agency.toUpperCase()} aktiv (Push fehlgeschlagen)`);
+      }
+    } else {
+      toast.success(`${agency.toUpperCase()}-Abrechnung als abgeschlossen markiert · Hinweis entfernt`);
+    }
   }, [agencyBilling]);
 
   // Flat index of every account in the system to detect duplicates (same platform + same email across multiple models)
