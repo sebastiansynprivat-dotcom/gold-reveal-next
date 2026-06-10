@@ -106,6 +106,7 @@ import DeletedRecordsTab from "@/components/admin/DeletedRecordsTab";
 import ContentDropDialog from "@/components/admin/ContentDropDialog";
 import GoldParticles from "@/components/GoldParticles";
 import SubAdminManager from "@/components/SubAdminManager";
+import SubAdminDetailView from "@/components/admin/SubAdminDetailView";
 import { useAdminRole } from "@/hooks/useAdminRole";
 
 import { DeferredChart, ChartSkeleton } from "@/components/admin/DeferredChart";
