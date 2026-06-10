@@ -642,7 +642,7 @@ export default function ModelHomeDashboard({
                   initial={{ opacity: 0, y: -4 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5 }}
-                  className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground"
+                  className="feminine-eyebrow text-[12px] tracking-[0.18em]"
                 >
                   {copy.welcome}
                 </motion.p>
@@ -653,7 +653,7 @@ export default function ModelHomeDashboard({
                       initial={{ opacity: 0, y: 16, filter: "blur(8px)" }}
                       animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                       transition={{ duration: 0.7, delay: 0.25 + i * 0.18, ease: [0.22, 1, 0.36, 1] }}
-                      className={i === greetingWords.length - 1 ? "text-gold-gradient-shimmer" : "text-foreground/90"}
+                      className={i === greetingWords.length - 1 ? "text-rose-gold-gradient" : "text-foreground/90"}
                     >
                       {w}
                     </motion.span>
