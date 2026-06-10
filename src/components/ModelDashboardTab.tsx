@@ -3291,6 +3291,7 @@ export default function ModelDashboardTab() {
                       </AccordionItem>
                     ))}
                   </Accordion>
+                  </>
                 )}
 
                 {/* Add more accounts button – only if platforms available */}
