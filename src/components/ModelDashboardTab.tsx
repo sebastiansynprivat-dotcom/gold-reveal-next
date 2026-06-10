@@ -2617,16 +2617,34 @@ export default function ModelDashboardTab() {
                         const monthLabel = new Date(r.year, r.month - 1, 1)
                           .toLocaleDateString("de-DE", { month: "short", year: "numeric" });
                         const isBilled = !!r.billed_at;
+                        const inProgress = !isBilled && !!r.billing_in_progress;
+                        const toggleInProgress = async (e: React.MouseEvent) => {
+                          e.stopPropagation();
+                          const newVal = !inProgress;
+                          const { error } = await (supabase as any)
+                            .from("payout_revenue")
+                            .update({ billing_in_progress: newVal })
+                            .eq("id", r.id);
+                          if (error) {
+                            toast.error("Konnte Status nicht ändern");
+                            return;
+                          }
+                          setBillingHistory((prev) =>
+                            prev.map((x) => (x.id === r.id ? { ...x, billing_in_progress: newVal } : x))
+                          );
+                          toast.success(newVal ? "Abrechnung als 'in Arbeit' markiert" : "Status zurückgesetzt");
+                        };
                         return (
-                          <button
-                            type="button"
+                          <div
                             key={r.id}
                             onClick={() => setHistoryDetailRow(r)}
                             className={cn(
-                              "w-full flex items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 border text-[11px] transition-all hover:scale-[1.01] active:scale-[0.99] text-left",
+                              "w-full flex items-center justify-between gap-2 rounded-lg px-2.5 py-1.5 border text-[11px] transition-all hover:scale-[1.01] active:scale-[0.99] text-left cursor-pointer",
                               isBilled
                                 ? "border-emerald-500/30 bg-emerald-500/[0.04] hover:bg-emerald-500/[0.08]"
-                                : "border-border/40 bg-background/30 hover:bg-background/50",
+                                : inProgress
+                                  ? "border-amber-400/50 bg-amber-500/[0.08] hover:bg-amber-500/[0.12]"
+                                  : "border-border/40 bg-background/30 hover:bg-background/50",
                             )}
                           >
                             <div className="flex items-center gap-2 min-w-0">
@@ -2634,6 +2652,10 @@ export default function ModelDashboardTab() {
                               {isBilled ? (
                                 <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[9px] font-semibold">
                                   Abgerechnet
+                                </span>
+                              ) : inProgress ? (
+                                <span className="px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/40 text-[9px] font-semibold">
+                                  In Arbeit
                                 </span>
                               ) : (
                                 <span className="px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[9px] font-semibold">
@@ -2644,18 +2666,34 @@ export default function ModelDashboardTab() {
                                 <span className="text-muted-foreground truncate">{r.billed_credit_note_number}</span>
                               )}
                             </div>
-                            <div className="text-right shrink-0">
-                              <div className="text-foreground font-bold tabular-nums">
-                                {(r.billed_amount ?? r.monthly_revenue ?? 0).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {(r.billed_snapshot as any)?.invoice_currency || modelForm.currency || "EUR"}
-                              </div>
-                              {isBilled && r.billed_at && (
-                                <div className="text-[9px] text-muted-foreground">
-                                  {new Date(r.billed_at).toLocaleDateString("de-DE")}
-                                </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              {!isBilled && (
+                                <button
+                                  type="button"
+                                  onClick={toggleInProgress}
+                                  className={cn(
+                                    "px-2 py-0.5 rounded-md border text-[9px] font-semibold transition-colors",
+                                    inProgress
+                                      ? "border-amber-400/50 bg-amber-500/15 text-amber-200 hover:bg-amber-500/25"
+                                      : "border-border/40 bg-background/40 text-muted-foreground hover:bg-background/60 hover:text-foreground",
+                                  )}
+                                  title={inProgress ? "Markierung 'in Arbeit' entfernen" : "Als 'in Arbeit' markieren"}
+                                >
+                                  {inProgress ? "✓ in Arbeit" : "in Arbeit"}
+                                </button>
                               )}
+                              <div className="text-right">
+                                <div className="text-foreground font-bold tabular-nums">
+                                  {(r.billed_amount ?? r.monthly_revenue ?? 0).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {(r.billed_snapshot as any)?.invoice_currency || modelForm.currency || "EUR"}
+                                </div>
+                                {isBilled && r.billed_at && (
+                                  <div className="text-[9px] text-muted-foreground">
+                                    {new Date(r.billed_at).toLocaleDateString("de-DE")}
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          </button>
-
+                          </div>
                         );
                       })}
                     </div>
