@@ -849,7 +849,7 @@ export default function ModelHomeDashboard({
             <div className="space-y-1.5">
               {creditNotes.map((cn) => {
                 const cnSnaps = payoutSnapshots[cn.credit_note_number] || [];
-                const cnCurrency = (cnSnaps[0]?.billed_snapshot as any)?.invoice_currency || modelCurrency;
+                const cnCurrency = forceCurrency || (cnSnaps[0]?.billed_snapshot as any)?.invoice_currency || modelCurrency;
                 return (
                 <div
                   key={cn.id}
