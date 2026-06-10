@@ -410,6 +410,10 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     const payload: Record<string, unknown> = { ...fields, model_id: modelId };
+    // Auto-mark as submitted so the admin view shows "Prüfung läuft" instead of "Steckbrief leer"
+    if (!(existing as any)?.submitted_at) {
+      payload.submitted_at = new Date().toISOString();
+    }
     let writeError: unknown = null;
     if (existing?.id) {
       const { error } = await admin
