@@ -1600,6 +1600,15 @@ export default function ModelDashboardTab() {
                             </span>
                           );
                         })()}
+                        {duplicateModelIds.has(model.id) && (
+                          <span
+                            className="inline-flex items-center gap-0.5 text-[9px] px-1.5 py-[1px] rounded border border-amber-500/40 text-amber-300 bg-amber-500/10 shrink-0"
+                            title="Dieses Model teilt eine Plattform-E-Mail mit einem anderen Model"
+                          >
+                            <AlertTriangle className="h-2.5 w-2.5" />
+                            Duplikat
+                          </span>
+                        )}
                       </div>
                       {model.address && <p className="text-[10px] text-muted-foreground truncate">{model.address}</p>}
                     </div>
