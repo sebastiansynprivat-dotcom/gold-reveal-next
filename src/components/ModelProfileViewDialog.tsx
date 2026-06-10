@@ -155,13 +155,13 @@ export default function ModelProfileViewDialog({ open, onOpenChange, modelId, la
           <div className="flex justify-center py-10">
             <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
           </div>
-        ) : !profile || isEmpty ? (
-          <div className="rounded-lg border border-border/40 bg-secondary/20 p-6 text-center text-sm text-muted-foreground">
-            {copy.empty}
-          </div>
         ) : isPending ? (
           <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-6 text-center text-sm text-amber-400/90">
             {copy.pending}
+          </div>
+        ) : !profile || isEmpty ? (
+          <div className="rounded-lg border border-border/40 bg-secondary/20 p-6 text-center text-sm text-muted-foreground">
+            {copy.empty}
           </div>
         ) : (
           <div className="space-y-5">
