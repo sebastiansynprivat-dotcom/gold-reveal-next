@@ -536,6 +536,68 @@ export default function ModelDashboardTab() {
     loadModels();
   }, [loadModels]);
 
+  // ─── Load flat index of every account → used for duplicate detection across models ───
+  const loadAllAccountsIndex = useCallback(async () => {
+    const { data } = await supabase
+      .from("accounts")
+      .select("model_id, platform, account_email" as any);
+    const rows = ((data as any[]) || [])
+      .filter((r) => r.model_id && r.platform && r.account_email)
+      .map((r) => ({
+        model_id: r.model_id as string,
+        platform: (r.platform as string).trim(),
+        account_email: (r.account_email as string).trim().toLowerCase(),
+      }));
+    setAllAccountsIndex(rows);
+  }, []);
+
+  useEffect(() => {
+    loadAllAccountsIndex();
+  }, [loadAllAccountsIndex]);
+
+  // Build duplicate map: key = platform|email → set of model_ids that share this account
+  const duplicateGroups = useMemo(() => {
+    const map = new Map<string, Set<string>>();
+    for (const r of allAccountsIndex) {
+      const key = `${r.platform}|${r.account_email}`;
+      if (!map.has(key)) map.set(key, new Set());
+      map.get(key)!.add(r.model_id);
+    }
+    // Keep only groups that span more than one model
+    const dupes = new Map<string, { platform: string; email: string; modelIds: string[] }>();
+    for (const [key, ids] of map.entries()) {
+      if (ids.size > 1) {
+        const [platform, email] = key.split("|");
+        dupes.set(key, { platform, email, modelIds: Array.from(ids) });
+      }
+    }
+    return dupes;
+  }, [allAccountsIndex]);
+
+  const duplicateModelIds = useMemo(() => {
+    const s = new Set<string>();
+    for (const g of duplicateGroups.values()) g.modelIds.forEach((id) => s.add(id));
+    return s;
+  }, [duplicateGroups]);
+
+  // Returns the conflicting model name (other than `excludeModelId`) for a given platform+email, or null
+  const findEmailConflict = useCallback(
+    (platform: string, email: string, excludeModelId?: string | null): string | null => {
+      const e = email.trim().toLowerCase();
+      const p = platform.trim();
+      if (!e || !p) return null;
+      const conflict = allAccountsIndex.find(
+        (r) => r.platform === p && r.account_email === e && r.model_id !== excludeModelId,
+      );
+      if (!conflict) return null;
+      const m = models.find((mm) => mm.id === conflict.model_id);
+      return m?.name || m?.username || conflict.model_id.slice(0, 8);
+    },
+    [allAccountsIndex, models],
+  );
+
+
+
   // ─── Load accounts for selected model ───
   const loadModelAccounts = useCallback(async (modelId: string) => {
     const { data } = await supabase
