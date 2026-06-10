@@ -340,6 +340,7 @@ export default function ModelDashboardTab() {
 
   // Accounts for selected model
   const [modelAccounts, setModelAccounts] = useState<AccountRow[]>([]);
+  const [assignedChatters, setAssignedChatters] = useState<Record<string, { group_name?: string | null; telegram_id?: string | null; account_email?: string | null }>>({});
 
   // Shared account entry factory (simplified: only email/password/domain per platform)
   const emptyAccountEntries = () =>
@@ -542,6 +543,20 @@ export default function ModelDashboardTab() {
       .order("platform");
     const accs = ((data as any as AccountRow[]) || []);
     setModelAccounts(accs);
+
+    // Load profile data for assigned chatters
+    const assignedIds = Array.from(new Set(accs.map((a) => a.assigned_to).filter(Boolean) as string[]));
+    if (assignedIds.length > 0) {
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("user_id, group_name, telegram_id, account_email")
+        .in("user_id", assignedIds);
+      const map: Record<string, any> = {};
+      (profs || []).forEach((p: any) => { map[p.user_id] = p; });
+      setAssignedChatters(map);
+    } else {
+      setAssignedChatters({});
+    }
 
     // Load the single model_dashboard row for this model (one row per model_id)
     const { data: dashRow } = await (supabase as any)
@@ -3109,16 +3124,29 @@ export default function ModelDashboardTab() {
                                       <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">
                                         Zugewiesener Chatter
                                       </p>
-                                      {acc.assigned_to ? (
-                                        <div className="flex items-center gap-2">
-                                          <div className="h-5 w-5 rounded-full bg-accent/15 flex items-center justify-center">
-                                            <User className="h-3 w-3 text-accent" />
+                                      {acc.assigned_to ? (() => {
+                                        const prof = assignedChatters[acc.assigned_to];
+                                        const label =
+                                          prof?.group_name ||
+                                          prof?.telegram_id ||
+                                          prof?.account_email ||
+                                          "Unbekannt";
+                                        return (
+                                          <div className="flex items-center gap-2">
+                                            <div className="h-5 w-5 rounded-full bg-accent/15 flex items-center justify-center shrink-0">
+                                              <User className="h-3 w-3 text-accent" />
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                              <p className="text-xs text-foreground font-medium truncate">
+                                                {label}
+                                              </p>
+                                              <p className="text-[10px] text-muted-foreground/60 font-mono truncate">
+                                                ID: {acc.assigned_to.slice(0, 8)}…
+                                              </p>
+                                            </div>
                                           </div>
-                                          <span className="text-xs text-foreground font-mono">
-                                            {acc.assigned_to.slice(0, 8)}…
-                                          </span>
-                                        </div>
-                                      ) : (
+                                        );
+                                      })() : (
                                         <p className="text-[10px] text-muted-foreground/60 italic">
                                           Kein Chatter zugewiesen
                                         </p>
