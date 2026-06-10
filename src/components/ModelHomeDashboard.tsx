@@ -190,6 +190,8 @@ interface Props {
   profileConfirmed: boolean;
   onEditProfile: () => void;
   language?: "de" | "en";
+  /** When true (Admin Preview), invoices get a delete button. */
+  isAdminPreview?: boolean;
 }
 
 export default function ModelHomeDashboard({
@@ -198,6 +200,7 @@ export default function ModelHomeDashboard({
   profileConfirmed,
   onEditProfile,
   language = "de",
+  isAdminPreview = false,
 }: Props) {
   const lang = language === "en" ? "en" : "de";
   const copy = COPY[lang];
