@@ -498,6 +498,7 @@ export default function ModelDashboardTab() {
     billed_amount: number | null;
     billed_snapshot: any | null;
     last_fetched_at: string | null;
+    billing_in_progress?: boolean | null;
   };
   const [billingHistory, setBillingHistory] = useState<BillingHistoryRow[]>([]);
   const [billingHistoryTick, setBillingHistoryTick] = useState(0);
