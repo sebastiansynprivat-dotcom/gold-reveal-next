@@ -299,6 +299,9 @@ export default function ModelDashboardTab() {
   const [selectedModelId, setSelectedModelId] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
+  const [showDuplicatesOnly, setShowDuplicatesOnly] = useState(false);
+  // Flat index of every account in the system to detect duplicates (same platform + same email across multiple models)
+  const [allAccountsIndex, setAllAccountsIndex] = useState<Array<{ model_id: string; platform: string; account_email: string }>>([]);
   const [migratingLogins, setMigratingLogins] = useState(false);
 
   // Read ?model=<id> from URL once on mount to pre-select model card (used when returning from /admin/model/:id/view)
