@@ -200,8 +200,22 @@ const Auth = () => {
         setError(t("auth.error.tgInvalid"));
         return;
       }
+      setSubmitting(true);
+      const { data: taken, error: checkErr } = await supabase.rpc("is_telegram_id_taken", { p_telegram_id: cleanedTgId });
+      setSubmitting(false);
+      if (checkErr) {
+        setError(checkErr.message);
+        return;
+      }
+      if (taken === true) {
+        setError(t("auth.error.tgTaken"));
+        return;
+      }
       localStorage.setItem("pending_telegram_id", cleanedTgId);
       // Show confirmation popup first
+      pendingSubmitRef.current = e;
+      setShowGroupConfirm(true);
+      return;
       pendingSubmitRef.current = e;
       setShowGroupConfirm(true);
       return;
