@@ -301,6 +301,41 @@ export default function ModelDashboardTab() {
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [showDuplicatesOnly, setShowDuplicatesOnly] = useState(false);
+  const [agencyFilter, setAgencyFilter] = useState<"all" | "shex" | "syn">("all");
+  const [agencyBilling, setAgencyBilling] = useState<Record<string, boolean>>({ shex: false, syn: false });
+
+  // Load global per-agency billing-in-progress flags
+  useEffect(() => {
+    (async () => {
+      const { data } = await (supabase.from("agency_billing_status") as any)
+        .select("agency, in_progress");
+      if (data) {
+        const map: Record<string, boolean> = { shex: false, syn: false };
+        (data as any[]).forEach((r) => { map[String(r.agency).toLowerCase()] = !!r.in_progress; });
+        setAgencyBilling(map);
+      }
+    })();
+  }, []);
+
+  const toggleAgencyBilling = useCallback(async (agency: "shex" | "syn") => {
+    const next = !agencyBilling[agency];
+    const now = new Date();
+    const { data: u } = await supabase.auth.getUser();
+    const { error } = await (supabase.from("agency_billing_status") as any).upsert({
+      agency,
+      in_progress: next,
+      month: next ? now.getMonth() + 1 : null,
+      year: next ? now.getFullYear() : null,
+      updated_at: new Date().toISOString(),
+      updated_by: u?.user?.id ?? null,
+    }, { onConflict: "agency" });
+    if (error) { toast.error("Konnte Status nicht ändern"); return; }
+    setAgencyBilling((p) => ({ ...p, [agency]: next }));
+    toast.success(next
+      ? `Abrechnung für alle ${agency.toUpperCase()}-Models als "in Arbeit" markiert`
+      : `${agency.toUpperCase()}-Abrechnungs-Status zurückgesetzt`);
+  }, [agencyBilling]);
+
   // Flat index of every account in the system to detect duplicates (same platform + same email across multiple models)
   const [allAccountsIndex, setAllAccountsIndex] = useState<Array<{ model_id: string; platform: string; account_email: string }>>([]);
   const [migratingLogins, setMigratingLogins] = useState(false);
