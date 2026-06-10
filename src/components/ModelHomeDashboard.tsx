@@ -27,7 +27,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Download } from "lucide-react";
+import { Download, Trash2 } from "lucide-react";
 import { generateProviderInvoicePdf, downloadPdf } from "@/lib/providerInvoicePdf";
 import ModelFaqSection from "@/components/ModelFaqSection";
 import ContentImpactCalculator from "@/components/ContentImpactCalculator";
