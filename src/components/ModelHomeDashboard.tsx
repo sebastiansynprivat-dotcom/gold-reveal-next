@@ -580,36 +580,108 @@ export default function ModelHomeDashboard({
       className="space-y-5"
     >
       {/* Hero / Welcome */}
-      <div
-        data-tour="welcome"
-        className="glass-card rounded-2xl p-5 relative overflow-hidden card-inner-glow card-top-line"
-      >
-        {/* Soft golden aurora */}
-        <div className="pointer-events-none absolute -top-20 -left-10 h-56 w-56 rounded-full bg-accent/15 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-16 -right-10 h-40 w-40 rounded-full bg-accent/10 blur-3xl" />
+      {(() => {
+        const hour = new Date().getHours();
+        const isEN = uiLanguage === "en";
+        const greet =
+          hour < 11
+            ? (isEN ? "Good morning" : "Guten Morgen")
+            : hour < 18
+              ? (isEN ? "Hello" : "Hallo")
+              : (isEN ? "Good evening" : "Guten Abend");
+        const firstName = (modelName || "").split(/[\s,]+/)[0] || modelName;
+        const greetingWords = [`${greet},`, firstName];
+        return (
+          <div
+            data-tour="welcome"
+            className="glass-card rounded-2xl p-5 relative overflow-hidden card-inner-glow card-top-line"
+          >
+            {/* Feminine aurora: gold + rose blush */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.6 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 1.2, ease: "easeOut" }}
+              className="pointer-events-none absolute -top-24 -left-12 h-60 w-60 rounded-full bg-accent/20 blur-3xl"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.6 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 1.4, delay: 0.15, ease: "easeOut" }}
+              className="pointer-events-none absolute -bottom-20 -right-10 h-48 w-48 rounded-full blur-3xl"
+              style={{ background: "radial-gradient(circle, hsl(340 80% 70% / 0.22), transparent 70%)" }}
+            />
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 1.6, delay: 0.4 }}
+              className="pointer-events-none absolute top-1/2 left-1/3 h-32 w-32 -translate-y-1/2 rounded-full blur-3xl"
+              style={{ background: "radial-gradient(circle, hsl(320 70% 75% / 0.14), transparent 70%)" }}
+            />
 
-        <div className="relative flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-xs uppercase tracking-wider text-muted-foreground">{copy.welcome}</p>
-            <h1 className="text-2xl font-bold text-gold-gradient-shimmer leading-tight inline-flex items-center gap-2">
-              {modelName}
-              <motion.span
-                initial={{ scale: 0, rotate: -30, opacity: 0 }}
-                animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                transition={{ delay: 0.5, type: "spring", stiffness: 240, damping: 14 }}
+            {/* Floating sparkles */}
+            {[
+              { top: "12%", left: "62%", delay: 0.2, size: 10 },
+              { top: "70%", left: "28%", delay: 0.8, size: 8 },
+              { top: "30%", left: "88%", delay: 1.2, size: 9 },
+            ].map((s, i) => (
+              <motion.div
+                key={i}
+                className="pointer-events-none absolute"
+                style={{ top: s.top, left: s.left }}
+                initial={{ opacity: 0, scale: 0, y: 6 }}
+                animate={{ opacity: [0, 1, 0.6, 1], scale: [0, 1, 0.9, 1], y: [6, 0, -2, 0] }}
+                transition={{ duration: 3.2, delay: s.delay, repeat: Infinity, repeatType: "reverse" }}
               >
-                <Sparkles className="h-4 w-4 text-accent drop-shadow-[0_0_6px_hsl(43_56%_52%/0.7)]" />
-              </motion.span>
-            </h1>
-          </div>
-          {profileConfirmed && (
-            <div className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] uppercase tracking-wider bg-emerald-500/15 text-emerald-400 border-emerald-500/30">
-              <CheckCircle2 className="h-3 w-3" />
-              {copy.confirmed}
+                <Sparkles className="text-accent/70 drop-shadow-[0_0_6px_hsl(43_56%_52%/0.6)]" style={{ width: s.size, height: s.size }} />
+              </motion.div>
+            ))}
+
+            <div className="relative flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <motion.p
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                  className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground"
+                >
+                  {copy.welcome}
+                </motion.p>
+                <h1 className="text-2xl font-bold leading-tight inline-flex items-center gap-2 flex-wrap mt-1">
+                  {greetingWords.map((w, i) => (
+                    <motion.span
+                      key={i}
+                      initial={{ opacity: 0, y: 16, filter: "blur(8px)" }}
+                      animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+                      transition={{ duration: 0.7, delay: 0.25 + i * 0.18, ease: [0.22, 1, 0.36, 1] }}
+                      className={i === greetingWords.length - 1 ? "text-gold-gradient-shimmer" : "text-foreground/90"}
+                    >
+                      {w}
+                    </motion.span>
+                  ))}
+                  <motion.span
+                    initial={{ scale: 0, rotate: -30, opacity: 0 }}
+                    animate={{ scale: [0, 1.3, 1], rotate: 0, opacity: 1 }}
+                    transition={{ delay: 0.85, duration: 0.8, ease: "easeOut" }}
+                  >
+                    <Sparkles className="h-5 w-5 text-accent drop-shadow-[0_0_10px_hsl(43_56%_52%/0.85)]" />
+                  </motion.span>
+                </h1>
+              </div>
+              {profileConfirmed && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.6, type: "spring", stiffness: 240, damping: 16 }}
+                  className="shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[10px] uppercase tracking-wider bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+                >
+                  <CheckCircle2 className="h-3 w-3" />
+                  {copy.confirmed}
+                </motion.div>
+              )}
             </div>
-          )}
-        </div>
-      </div>
+          </div>
+        );
+      })()}
 
       {/* Revenue */}
       <section data-tour="revenue" className="glass-card rounded-2xl p-5 space-y-4 card-inner-glow">
