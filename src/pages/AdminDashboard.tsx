@@ -4164,6 +4164,7 @@ export default function AdminDashboard() {
                               { k: "kiprompt", l: "KI Prompt", i: Brain, c: () => { setActiveTab("kiprompt"); if (!kiPromptLoaded) loadKiPrompt(); setMobileNavOpen(false); } },
                               { k: "gdrive", l: "Google Drive", i: ExternalLink, c: () => { setActiveTab("gdrive"); setMobileNavOpen(false); } },
                               { k: "admin_mgmt", l: "Admin-Verwaltung", i: Shield, c: () => { setActiveTab("admin_mgmt"); void loadAdmins(); setMobileNavOpen(false); } },
+                              { k: "push_settings", l: "Push-Benachrichtigungen", i: Bell, c: () => { setActiveTab("push_settings"); setMobileNavOpen(false); } },
                             ].map(({ k, l, i: SubIcon, c }) => {
                               const subActive = activeTab === k;
                               return (
