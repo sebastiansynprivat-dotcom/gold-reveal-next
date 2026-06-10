@@ -62,6 +62,7 @@ import {
   MessageCircle,
 } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import AdminModelReplyApprovals from "@/components/AdminModelReplyApprovals";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
