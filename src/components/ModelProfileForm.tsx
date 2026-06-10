@@ -153,10 +153,9 @@ const COPY = {
   },
 };
 
-export default function ModelProfileForm({ modelId, defaultAccountName, isInitialSubmission = false, onSubmitted, language = "de", autoSubmitOnSave = false, lockedReason, modelName }: Props) {
+export default function ModelProfileForm({ modelId, defaultAccountName, isInitialSubmission = false, onSubmitted, language = "de", autoSubmitOnSave = false, lockedReason: _lockedReason, modelName: _modelName }: Props) {
   const lang = language === "en" ? "en" : "de";
   const copy = COPY[lang];
-  const locked = !!lockedReason;
   const empty: ProfileRow = {
     model_id: modelId,
     account_name: defaultAccountName ?? "",
@@ -167,12 +166,12 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
     content_preferences: "", no_gos: "", additional_info: "",
   };
   const [profile, setProfile] = useState<ProfileRow>(empty);
+  const [confirmedAt, setConfirmedAt] = useState<string | null>(null);
+  const [lastChangeAt, setLastChangeAt] = useState<string | null>(null);
+  const [hasApprovedSnapshot, setHasApprovedSnapshot] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<number | null>(null);
-  const [reqOpen, setReqOpen] = useState(false);
-  const [reqText, setReqText] = useState("");
-  const [reqSending, setReqSending] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -183,7 +182,12 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
         .eq("model_id", modelId)
         .maybeSingle();
       if (cancelled) return;
-      if (data) setProfile({ ...empty, ...data } as ProfileRow);
+      if (data) {
+        setProfile({ ...empty, ...data } as ProfileRow);
+        setConfirmedAt((data as any).confirmed_at || null);
+        setLastChangeAt((data as any).last_change_at || null);
+        setHasApprovedSnapshot(!!(data as any).approved_snapshot);
+      }
       setLoading(false);
     })();
     return () => { cancelled = true; };
@@ -198,9 +202,7 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
     !(profile.city || "").trim()
   );
 
-  // For the in-dashboard hint: list of empty personal fields + empty content/no-gos
   const incompleteFields = (() => {
-    if (locked) return [] as string[];
     const missing: string[] = [];
     for (const f of PERSONAL_FIELDS[lang]) {
       if (!String(profile[f.key] || "").trim()) missing.push(f.label);
@@ -211,12 +213,28 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
     return missing;
   })();
 
+  // States: approved (confirmed & no newer change) / pending (newer change since approval) / draft / empty
+  const pendingReapproval =
+    hasApprovedSnapshot &&
+    (!confirmedAt || (lastChangeAt && confirmedAt && new Date(lastChangeAt) > new Date(confirmedAt)));
+  const isApproved = !!confirmedAt && !pendingReapproval;
+
   const handleSave = async (submit = false) => {
     setSaving(true);
-    const payload: any = { ...profile, source_language: lang };
-    // submitted_at is set when the model explicitly submits OR when an admin saves on their behalf
+    const nowIso = new Date().toISOString();
+    const payload: any = {
+      ...profile,
+      source_language: lang,
+      last_change_at: nowIso,
+    };
     if (submit || autoSubmitOnSave) {
-      payload.submitted_at = (profile as any).submitted_at || new Date().toISOString();
+      payload.submitted_at = (profile as any).submitted_at || nowIso;
+    }
+    // If model edits an already-approved profile, clear confirmation so admin re-approves
+    if (!autoSubmitOnSave && (confirmedAt || hasApprovedSnapshot)) {
+      payload.confirmed_at = null;
+      payload.confirmed_by = null;
+      if (!payload.submitted_at) payload.submitted_at = nowIso;
     }
     const { error } = await supabase
       .from("model_profiles")
@@ -226,37 +244,20 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
       toast.error(copy.saveError);
       return;
     }
+    if (payload.confirmed_at === null) setConfirmedAt(null);
+    setLastChangeAt(nowIso);
     setSavedAt(Date.now());
     if (submit) {
       toast.success(copy.submittedToast);
+      onSubmitted?.();
+    } else if (hasApprovedSnapshot && !autoSubmitOnSave) {
+      toast.success(copy.changeSubmitted);
       onSubmitted?.();
     } else {
       toast.success(copy.savedToast);
       if (autoSubmitOnSave) onSubmitted?.();
     }
     setTimeout(() => setSavedAt(null), 2500);
-  };
-
-  const submitChangeRequest = async () => {
-    if (!reqText.trim()) return;
-    setReqSending(true);
-    const { data: u } = await supabase.auth.getUser();
-    const { error } = await (supabase.from("model_requests") as any).insert({
-      user_id: u?.user?.id,
-      model_name: modelName || "—",
-      model_language: lang,
-      request_type: "profile_change",
-      description: reqText.trim(),
-      status: "pending",
-    });
-    setReqSending(false);
-    if (error) {
-      toast.error(copy.requestError);
-      return;
-    }
-    toast.success(copy.requestSent);
-    setReqOpen(false);
-    setReqText("");
   };
 
   if (loading) {
@@ -285,8 +286,32 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
         </div>
       </div>
 
+      {/* Approval status banner */}
+      {isApproved && (
+        <div className="glass-card rounded-xl p-4 border-l-2 border-emerald-500/60 flex items-start gap-3">
+          <div className="h-9 w-9 rounded-lg bg-emerald-500/15 flex items-center justify-center shrink-0">
+            <ShieldCheck className="h-4 w-4 text-emerald-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-foreground">{copy.confirmedTitle}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{copy.confirmedBody}</p>
+          </div>
+        </div>
+      )}
+      {pendingReapproval && (
+        <div className="glass-card rounded-xl p-4 border-l-2 border-amber-400/60 flex items-start gap-3">
+          <div className="h-9 w-9 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0">
+            <Lock className="h-4 w-4 text-amber-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-foreground">{copy.pendingTitle}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{copy.pendingBody}</p>
+          </div>
+        </div>
+      )}
+
       {/* Incomplete profile hint */}
-      {incompleteFields.length > 0 && (
+      {incompleteFields.length > 0 && !isApproved && !pendingReapproval && (
         <div className="glass-card rounded-xl p-4 border-l-2 border-amber-400/70 flex items-start gap-3">
           <div className="h-9 w-9 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0">
             <AlertTriangle className="h-4 w-4 text-amber-400" />
@@ -321,30 +346,6 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
         </div>
       )}
 
-
-      {/* Locked banner */}
-      {locked && (
-        <div className="glass-card rounded-xl p-4 border-l-2 border-emerald-500/60 flex items-start gap-3">
-          <div className="h-9 w-9 rounded-lg bg-emerald-500/15 flex items-center justify-center shrink-0">
-            <ShieldCheck className="h-4 w-4 text-emerald-400" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-foreground flex items-center gap-1.5">
-              <Lock className="h-3.5 w-3.5" /> {copy.lockedTitle}
-            </p>
-            <p className="text-xs text-muted-foreground mt-0.5">{copy.lockedBody}</p>
-          </div>
-          <Button
-            size="sm"
-            onClick={() => setReqOpen(true)}
-            className="shrink-0 h-8 text-xs gap-1.5 bg-accent/90 hover:bg-accent text-accent-foreground"
-          >
-            <Send className="h-3 w-3" />
-            {copy.requestChange}
-          </Button>
-        </div>
-      )}
-
       {/* Personal Info */}
       <section className="glass-card rounded-xl p-5 space-y-4">
         <div className="flex items-center gap-2">
@@ -358,9 +359,7 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
               <Input
                 value={(profile[f.key] as string) ?? ""}
                 onChange={(e) => set(f.key, e.target.value)}
-                readOnly={locked}
-                disabled={locked}
-                className="bg-background/50 disabled:opacity-80 disabled:cursor-default"
+                className="bg-background/50"
               />
               {f.hint && <p className="text-[10px] text-muted-foreground">{f.hint}</p>}
             </div>
@@ -378,9 +377,7 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
         <Textarea
           value={profile.content_preferences ?? ""}
           onChange={(e) => set("content_preferences", e.target.value)}
-          readOnly={locked}
-          disabled={locked}
-          className="bg-background/50 min-h-[100px] disabled:opacity-80"
+          className="bg-background/50 min-h-[100px]"
           placeholder={copy.contentPlaceholder}
         />
       </section>
@@ -395,9 +392,7 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
         <Textarea
           value={profile.no_gos ?? ""}
           onChange={(e) => set("no_gos", e.target.value)}
-          readOnly={locked}
-          disabled={locked}
-          className="bg-background/50 min-h-[120px] disabled:opacity-80"
+          className="bg-background/50 min-h-[120px]"
           placeholder={copy.noGosPlaceholder}
         />
       </section>
@@ -412,77 +407,47 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
         <Textarea
           value={profile.additional_info ?? ""}
           onChange={(e) => set("additional_info", e.target.value)}
-          readOnly={locked}
-          disabled={locked}
-          className="bg-background/50 min-h-[100px] disabled:opacity-80"
+          className="bg-background/50 min-h-[100px]"
         />
       </section>
 
-      {/* Save / Submit — hidden in locked mode */}
-      {!locked && (
-        <div className="sticky bottom-4 flex flex-col sm:flex-row gap-2 sm:justify-end">
-          {isInitialSubmission ? (
-            <>
-              <Button
-                variant="outline"
-                onClick={() => handleSave(false)}
-                disabled={saving}
-                size="lg"
-                className="border-accent/30 text-accent hover:bg-accent/10"
-              >
-                <Save className="h-4 w-4 mr-2" />
-                {copy.saveDraft}
-              </Button>
-              <Button
-                onClick={() => handleSave(true)}
-                disabled={saving || requiredMissing}
-                size="lg"
-                className="bg-gradient-to-r from-accent to-accent/80 text-accent-foreground font-semibold shadow-[0_0_20px_-4px_hsl(var(--accent)/0.6)] hover:scale-[1.03] transition-transform"
-                title={requiredMissing ? copy.missingTitle : ""}
-              >
-                <Check className="h-4 w-4 mr-2" />
-                {saving ? copy.submitting : copy.submit}
-              </Button>
-            </>
-          ) : (
+      {/* Save / Submit */}
+      <div className="sticky bottom-4 flex flex-col sm:flex-row gap-2 sm:justify-end">
+        {isInitialSubmission ? (
+          <>
             <Button
+              variant="outline"
               onClick={() => handleSave(false)}
               disabled={saving}
               size="lg"
-              className="bg-gradient-to-r from-accent to-accent/80 text-accent-foreground font-semibold shadow-[0_0_20px_-4px_hsl(var(--accent)/0.6)] hover:scale-[1.03] transition-transform"
+              className="border-accent/30 text-accent hover:bg-accent/10"
             >
-              {savedAt ? <Check className="h-4 w-4 mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-              {saving ? copy.saving : savedAt ? copy.saved : copy.save}
+              <Save className="h-4 w-4 mr-2" />
+              {copy.saveDraft}
             </Button>
-          )}
-        </div>
-      )}
-
-      {/* Request change dialog */}
-      <Dialog open={reqOpen} onOpenChange={setReqOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{copy.requestDialogTitle}</DialogTitle>
-            <DialogDescription>{copy.requestDialogDesc}</DialogDescription>
-          </DialogHeader>
-          <Textarea
-            value={reqText}
-            onChange={(e) => setReqText(e.target.value)}
-            placeholder={copy.requestPlaceholder}
-            className="min-h-[120px]"
-          />
-          <DialogFooter>
             <Button
-              onClick={submitChangeRequest}
-              disabled={reqSending || !reqText.trim()}
-              className="bg-accent text-accent-foreground"
+              onClick={() => handleSave(true)}
+              disabled={saving || requiredMissing}
+              size="lg"
+              className="bg-gradient-to-r from-accent to-accent/80 text-accent-foreground font-semibold shadow-[0_0_20px_-4px_hsl(var(--accent)/0.6)] hover:scale-[1.03] transition-transform"
+              title={requiredMissing ? copy.missingTitle : ""}
             >
-              <Send className="h-4 w-4 mr-2" />
-              {reqSending ? copy.requestSending : copy.requestSubmit}
+              <Check className="h-4 w-4 mr-2" />
+              {saving ? copy.submitting : copy.submit}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </>
+        ) : (
+          <Button
+            onClick={() => handleSave(false)}
+            disabled={saving}
+            size="lg"
+            className="bg-gradient-to-r from-accent to-accent/80 text-accent-foreground font-semibold shadow-[0_0_20px_-4px_hsl(var(--accent)/0.6)] hover:scale-[1.03] transition-transform"
+          >
+            {savedAt ? <Check className="h-4 w-4 mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+            {saving ? copy.saving : savedAt ? copy.saved : (hasApprovedSnapshot && !autoSubmitOnSave ? copy.saveChange : copy.save)}
+          </Button>
+        )}
+      </div>
     </motion.div>
   );
 }
