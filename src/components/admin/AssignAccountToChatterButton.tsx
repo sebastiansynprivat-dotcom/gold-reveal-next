@@ -27,7 +27,7 @@ interface Account {
 interface Props {
   account: Account;
   chatters: ChatterLite[];
-  onAssigned: () => void;
+  onAssigned: (info: { chatter: ChatterLite; assignedAt: string }) => void;
 }
 
 export default function AssignAccountToChatterButton({ account, chatters, onAssigned }: Props) {
@@ -60,11 +60,12 @@ export default function AssignAccountToChatterButton({ account, chatters, onAssi
     setBusy(true);
     try {
       const startStr = format(startDate, "yyyy-MM-dd");
+      const assignedAt = new Date().toISOString();
 
       // 1) Set account.assigned_to (triggers track_account_assignment with current_date)
       const { error: accErr } = await supabase
         .from("accounts")
-        .update({ assigned_to: selected.user_id, assigned_at: new Date().toISOString() })
+        .update({ assigned_to: selected.user_id, assigned_at: assignedAt })
         .eq("id", account.id);
       if (accErr) throw accErr;
 
@@ -102,9 +103,10 @@ export default function AssignAccountToChatterButton({ account, chatters, onAssi
       toast.success(
         `Account zugewiesen an ${selected.group_name || selected.telegram_id || "Chatter"} · ab ${format(startDate, "dd.MM.yyyy")}`,
       );
+      const assignedChatter = selected;
       setOpen(false);
       reset();
-      onAssigned();
+      onAssigned({ chatter: assignedChatter, assignedAt });
     } catch (err: any) {
       toast.error("Zuweisung fehlgeschlagen: " + err.message);
     } finally {

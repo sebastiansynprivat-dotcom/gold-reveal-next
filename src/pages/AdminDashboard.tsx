@@ -9501,9 +9501,14 @@ export default function AdminDashboard() {
                             <AssignAccountToChatterButton
                               account={acc as any}
                               chatters={chatters as any}
-                              onAssigned={() => {
-                                loadAccounts();
-                                loadChatters();
+                              onAssigned={({ chatter, assignedAt }) => {
+                                setAccounts((prev) =>
+                                  prev.map((a) =>
+                                    a.id === acc.id
+                                      ? { ...a, assigned_to: chatter.user_id, assigned_at: assignedAt }
+                                      : a,
+                                  ),
+                                );
                               }}
                             />
                           )}
