@@ -1038,6 +1038,8 @@ export default function ModelHomeDashboard({
           })()}
         </DialogContent>
       </Dialog>
+
+      <ModelFaqSection language={lang} />
     </motion.div>
 
   );
