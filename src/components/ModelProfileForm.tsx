@@ -40,9 +40,6 @@ type ProfileRow = {
   occupation: string | null;
   hobbies: string | null;
   dream: string | null;
-  work: string | null;
-  education: string | null;
-  languages: string | null;
   special_marks: string | null;
   natural_hair: string | null;
   shoe_size: string | null;
