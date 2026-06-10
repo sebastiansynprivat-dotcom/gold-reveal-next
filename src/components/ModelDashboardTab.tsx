@@ -1452,20 +1452,73 @@ export default function ModelDashboardTab() {
         </div>
       </motion.div>
 
-      {/* ── Search ── */}
+      {/* ── Search + Duplikate-Filter ── */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-          <div className="input-gold-shimmer rounded-lg">
-            <Input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Model suchen…"
-              className="pl-9 bg-secondary/50 border-transparent text-sm h-9"
-            />
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1 min-w-0">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+            <div className="input-gold-shimmer rounded-lg">
+              <Input
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Model suchen…"
+                className="pl-9 bg-secondary/50 border-transparent text-sm h-9"
+              />
+            </div>
           </div>
+          <Button
+            type="button"
+            variant={showDuplicatesOnly ? "default" : "outline"}
+            size="sm"
+            onClick={() => setShowDuplicatesOnly((v) => !v)}
+            className={cn(
+              "h-9 gap-1.5 shrink-0 text-xs",
+              showDuplicatesOnly
+                ? "bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30"
+                : duplicateModelIds.size > 0
+                  ? "border-amber-500/40 text-amber-300 hover:bg-amber-500/10"
+                  : "",
+            )}
+            title="Models anzeigen, die eine E-Mail+Plattform mit einem anderen Model teilen"
+          >
+            <AlertTriangle className="h-3.5 w-3.5" />
+            Duplikate
+            {duplicateModelIds.size > 0 && (
+              <Badge
+                variant="outline"
+                className="ml-1 h-4 px-1.5 text-[10px] border-amber-500/40 text-amber-300 tabular-nums"
+              >
+                {duplicateModelIds.size}
+              </Badge>
+            )}
+          </Button>
         </div>
+        {showDuplicatesOnly && duplicateGroups.size > 0 && (
+          <div className="mt-2 glass-card rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-[11px] text-amber-200/90 space-y-1">
+            <div className="font-semibold text-amber-300 flex items-center gap-1.5">
+              <AlertTriangle className="h-3 w-3" />
+              {duplicateGroups.size} doppelte Account{duplicateGroups.size > 1 ? "s" : ""} gefunden
+            </div>
+            <div className="text-[10px] text-amber-200/70 leading-relaxed">
+              Diese Models teilen sich dieselbe Plattform-E-Mail. Bitte konsolidieren oder doppelte Models löschen.
+            </div>
+            <div className="max-h-32 overflow-y-auto space-y-1 mt-1 pr-1">
+              {Array.from(duplicateGroups.values()).map((g) => {
+                const names = g.modelIds
+                  .map((id) => models.find((m) => m.id === id)?.name || id.slice(0, 6))
+                  .join(" · ");
+                return (
+                  <div key={`${g.platform}|${g.email}`} className="font-mono text-[10px] text-amber-100/80 truncate">
+                    <span className="text-amber-300">[{g.platform}]</span> {g.email}
+                    <span className="text-amber-200/60"> → {names}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </motion.div>
+
 
       {/* ── Model-Liste ── */}
       <motion.section
