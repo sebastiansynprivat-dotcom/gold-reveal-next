@@ -405,7 +405,7 @@ Deno.serve(async (req) => {
     // Upsert into model_profiles — caller chose "overwrite all"
     const { data: existing } = await admin
       .from("model_profiles")
-      .select("id")
+      .select("id, submitted_at")
       .eq("model_id", modelId)
       .maybeSingle();
 
