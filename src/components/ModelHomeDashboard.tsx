@@ -30,6 +30,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Download } from "lucide-react";
 import { generateProviderInvoicePdf, downloadPdf } from "@/lib/providerInvoicePdf";
 import ModelFaqSection from "@/components/ModelFaqSection";
+import ContentImpactCalculator from "@/components/ContentImpactCalculator";
+import ModelOnboardingTour from "@/components/ModelOnboardingTour";
+import { Sparkles } from "lucide-react";
 
 
 type Period = "today" | "yesterday" | "last7" | "last30" | "month" | "lifetime";
@@ -537,11 +540,27 @@ export default function ModelHomeDashboard({
       className="space-y-5"
     >
       {/* Hero / Welcome */}
-      <div className="glass-card rounded-2xl p-5 relative overflow-hidden card-inner-glow card-top-line">
-        <div className="flex items-start justify-between gap-3">
+      <div
+        data-tour="welcome"
+        className="glass-card rounded-2xl p-5 relative overflow-hidden card-inner-glow card-top-line"
+      >
+        {/* Soft golden aurora */}
+        <div className="pointer-events-none absolute -top-20 -left-10 h-56 w-56 rounded-full bg-accent/15 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-16 -right-10 h-40 w-40 rounded-full bg-accent/10 blur-3xl" />
+
+        <div className="relative flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="text-xs uppercase tracking-wider text-muted-foreground">{copy.welcome}</p>
-            <h1 className="text-2xl font-bold text-gold-gradient-shimmer leading-tight">{modelName}</h1>
+            <h1 className="text-2xl font-bold text-gold-gradient-shimmer leading-tight inline-flex items-center gap-2">
+              {modelName}
+              <motion.span
+                initial={{ scale: 0, rotate: -30, opacity: 0 }}
+                animate={{ scale: 1, rotate: 0, opacity: 1 }}
+                transition={{ delay: 0.5, type: "spring", stiffness: 240, damping: 14 }}
+              >
+                <Sparkles className="h-4 w-4 text-accent drop-shadow-[0_0_6px_hsl(43_56%_52%/0.7)]" />
+              </motion.span>
+            </h1>
           </div>
           <div
             className={cn(
@@ -558,7 +577,7 @@ export default function ModelHomeDashboard({
       </div>
 
       {/* Revenue */}
-      <section className="glass-card rounded-2xl p-5 space-y-4 card-inner-glow">
+      <section data-tour="revenue" className="glass-card rounded-2xl p-5 space-y-4 card-inner-glow">
         <div className="flex items-center gap-2">
           <TrendingUp className="h-4 w-4 text-accent" />
           <h2 className="text-base font-bold text-foreground">{copy.revenue}</h2>
@@ -637,8 +656,16 @@ export default function ModelHomeDashboard({
       </section>
 
 
+      {/* Content Impact Calculator */}
+      <ContentImpactCalculator
+        projectedMonth={projectedMonth}
+        commissionPct={commissionPct}
+        currency={forceCurrency || modelCurrency}
+        language={lang}
+      />
+
       {/* Content Requests */}
-      <section className="glass-card rounded-2xl p-5 space-y-3 card-inner-glow">
+      <section data-tour="requests" className="glass-card rounded-2xl p-5 space-y-3 card-inner-glow">
         <div className="flex items-center gap-2">
           <MessageSquare className="h-4 w-4 text-accent" />
           <h2 className="text-base font-bold text-foreground">{copy.requests}</h2>
@@ -692,7 +719,7 @@ export default function ModelHomeDashboard({
       </section>
 
       {/* Platforms — expandable cards with credentials */}
-      <section className="glass-card rounded-2xl p-5 space-y-4 card-inner-glow">
+      <section data-tour="platforms" className="glass-card rounded-2xl p-5 space-y-4 card-inner-glow">
         <div className="flex items-center gap-2">
           <Layers className="h-4 w-4 text-accent" />
           <h2 className="text-base font-bold text-foreground">{copy.platforms}</h2>
@@ -827,7 +854,7 @@ export default function ModelHomeDashboard({
       </section>
 
       {/* Billing / Invoices */}
-      <section className="glass-card rounded-2xl p-5 space-y-3 card-inner-glow">
+      <section data-tour="billing" className="glass-card rounded-2xl p-5 space-y-3 card-inner-glow">
         <div className="flex items-center gap-2">
           <FileText className="h-4 w-4 text-accent" />
           <h2 className="text-base font-bold text-foreground">{copy.billing}</h2>
@@ -1072,6 +1099,9 @@ export default function ModelHomeDashboard({
       </Dialog>
 
       <ModelFaqSection language={lang} />
+
+      {/* First-time onboarding tour */}
+      <ModelOnboardingTour language={lang} />
     </motion.div>
 
   );
