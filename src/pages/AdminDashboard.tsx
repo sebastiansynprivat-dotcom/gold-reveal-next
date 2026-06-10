@@ -4125,33 +4125,76 @@ export default function AdminDashboard() {
               </SheetHeader>
 
               <nav className="relative flex flex-col gap-1 p-3 overflow-y-auto h-[calc(100vh-92px)]">
-                {tabItems.map(({ key, label, icon: Icon, onClick }) => {
-                  const active = activeTab === key;
-                  return (
-                    <button
-                      key={key}
-                      onClick={() => {
-                        onClick();
-                        setMobileNavOpen(false);
-                      }}
-                      className={cn(
-                        "group relative flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium transition-all text-left w-full overflow-hidden",
-                        active
-                          ? "text-accent-foreground bg-gradient-to-r from-accent to-yellow-500 shadow-[0_8px_24px_-6px_hsl(var(--accent)/0.5),inset_0_1px_0_hsl(0_0%_100%/0.2)]"
-                          : "text-muted-foreground hover:text-foreground border border-transparent hover:border-accent/20 hover:bg-accent/[0.04]",
-                      )}
-                    >
-                      {active && (
-                        <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-full bg-yellow-100/80 shadow-[0_0_12px_hsl(var(--accent))]" aria-hidden="true" />
-                      )}
-                      <Icon className={cn("h-4 w-4 shrink-0 transition-transform group-hover:scale-110", active && "drop-shadow-[0_0_6px_hsl(0_0%_100%/0.5)]")} />
-                      <span className="tracking-wide">{label}</span>
-                      {active && (
-                        <span className="ml-auto h-1.5 w-1.5 rounded-full bg-background/80" aria-hidden="true" />
-                      )}
-                    </button>
-                  );
-                })}
+                {tabItems
+                  .filter((t) => t.key !== "kiprompt" && t.key !== "gdrive" && t.key !== "admin_mgmt")
+                  .map(({ key, label, icon: Icon, onClick }) => {
+                    const active = activeTab === key;
+                    const isSettingsGroup = key === "settings";
+                    const groupActive = isSettingsGroup && ["kiprompt", "gdrive", "admin_mgmt"].includes(activeTab);
+                    const expanded = isSettingsGroup && (settingsExpanded || groupActive);
+                    return (
+                      <React.Fragment key={key}>
+                        <button
+                          onClick={() => {
+                            if (isSettingsGroup) {
+                              setSettingsExpanded((v) => !v);
+                              onClick();
+                            } else {
+                              onClick();
+                              setMobileNavOpen(false);
+                            }
+                          }}
+                          className={cn(
+                            "group relative flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium transition-all text-left w-full overflow-hidden",
+                            active || groupActive
+                              ? "text-accent-foreground bg-gradient-to-r from-accent to-yellow-500 shadow-[0_8px_24px_-6px_hsl(var(--accent)/0.5),inset_0_1px_0_hsl(0_0%_100%/0.2)]"
+                              : "text-muted-foreground hover:text-foreground border border-transparent hover:border-accent/20 hover:bg-accent/[0.04]",
+                          )}
+                        >
+                          {(active || groupActive) && (
+                            <span className="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1 rounded-r-full bg-yellow-100/80 shadow-[0_0_12px_hsl(var(--accent))]" aria-hidden="true" />
+                          )}
+                          <Icon className={cn("h-4 w-4 shrink-0 transition-transform group-hover:scale-110", (active || groupActive) && "drop-shadow-[0_0_6px_hsl(0_0%_100%/0.5)]")} />
+                          <span className="tracking-wide flex-1">{label}</span>
+                          {isSettingsGroup && (
+                            <ChevronRight className={cn("h-4 w-4 transition-transform", expanded && "rotate-90")} />
+                          )}
+                          {(active || groupActive) && !isSettingsGroup && (
+                            <span className="ml-auto h-1.5 w-1.5 rounded-full bg-background/80" aria-hidden="true" />
+                          )}
+                        </button>
+                        {isSettingsGroup && expanded && (
+                          <div className="flex flex-col gap-1 pl-5 pr-2 pb-1">
+                            {[
+                              { k: "kiprompt", l: "KI Prompt", i: Brain, c: () => { setActiveTab("kiprompt"); if (!kiPromptLoaded) loadKiPrompt(); setMobileNavOpen(false); } },
+                              { k: "gdrive", l: "Google Drive", i: ExternalLink, c: () => { setActiveTab("gdrive"); setMobileNavOpen(false); } },
+                              { k: "admin_mgmt", l: "Admin-Verwaltung", i: Shield, c: () => { setActiveTab("admin_mgmt"); void loadAdmins(); setMobileNavOpen(false); } },
+                            ].map(({ k, l, i: SubIcon, c }) => {
+                              const subActive = activeTab === k;
+                              return (
+                                <button
+                                  key={k}
+                                  onClick={c}
+                                  className={cn(
+                                    "group relative flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all text-left w-full overflow-hidden",
+                                    subActive
+                                      ? "text-accent-foreground bg-gradient-to-r from-accent/80 to-yellow-500/80"
+                                      : "text-muted-foreground hover:text-foreground hover:bg-accent/[0.04]",
+                                  )}
+                                >
+                                  {subActive && (
+                                    <span className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-0.5 rounded-r-full bg-yellow-100/80" aria-hidden="true" />
+                                  )}
+                                  <SubIcon className={cn("h-3.5 w-3.5 shrink-0", subActive && "drop-shadow-[0_0_4px_hsl(0_0%_100%/0.5)]")} />
+                                  <span>{l}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </React.Fragment>
+                    );
+                  })}
               </nav>
             </SheetContent>
           </Sheet>
