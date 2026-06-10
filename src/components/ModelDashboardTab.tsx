@@ -340,6 +340,7 @@ export default function ModelDashboardTab() {
 
   // Accounts for selected model
   const [modelAccounts, setModelAccounts] = useState<AccountRow[]>([]);
+  const [assignedChatters, setAssignedChatters] = useState<Record<string, { group_name?: string | null; telegram_id?: string | null; account_email?: string | null }>>({});
 
   // Shared account entry factory (simplified: only email/password/domain per platform)
   const emptyAccountEntries = () =>
