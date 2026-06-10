@@ -4009,7 +4009,7 @@ export default function AdminDashboard() {
               .filter((t) => sidebarCollapsed || (t.key !== "kiprompt" && t.key !== "gdrive" && t.key !== "admin_mgmt" && t.key !== "push_settings"))
               .map(({ key, label, icon: Icon, onClick }) => {
                 const isSettingsGroup = !sidebarCollapsed && key === "settings";
-                const groupActive = isSettingsGroup && ["kiprompt", "gdrive", "admin_mgmt"].includes(activeTab);
+                const groupActive = isSettingsGroup && ["kiprompt", "gdrive", "admin_mgmt", "push_settings"].includes(activeTab);
                 const expanded = isSettingsGroup && (settingsExpanded || groupActive);
                 return (
                   <React.Fragment key={key}>
