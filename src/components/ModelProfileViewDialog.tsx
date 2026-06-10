@@ -58,7 +58,7 @@ export default function ModelProfileViewDialog({ open, onOpenChange, modelId, la
   const lang: "de" | "en" = language ?? (uiLang === "en" ? "en" : "de");
   const sections = SECTIONS[lang];
   const copy = COPY[lang];
-  const [profile, setProfile] = useState<Record<string, any> | null>(null);
+  const [rawProfile, setRawProfile] = useState<Record<string, any> | null>(null);
   const [loading, setLoading] = useState(false);
   const [translating, setTranslating] = useState(false);
   const [translated, setTranslated] = useState<Record<string, string> | null>(null);
@@ -73,10 +73,20 @@ export default function ModelProfileViewDialog({ open, onOpenChange, modelId, la
       .eq("model_id", modelId)
       .maybeSingle()
       .then(({ data }) => {
-        setProfile(data);
+        setRawProfile(data);
         setLoading(false);
       });
   }, [open, modelId]);
+
+  // Chatters only ever see the approved snapshot. Live edits stay hidden until admin re-approves.
+  const profile: Record<string, any> | null = useMemo(() => {
+    if (!rawProfile) return null;
+    const snap = (rawProfile as any).approved_snapshot;
+    if (snap && typeof snap === "object") return snap as Record<string, any>;
+    // Backwards-compat: legacy rows without snapshot but already confirmed
+    if ((rawProfile as any).confirmed_at) return rawProfile;
+    return null;
+  }, [rawProfile]);
 
   const sourceLang: "de" | "en" = useMemo(() => {
     const s = String((profile as any)?.source_language || "de").toLowerCase();
@@ -85,7 +95,6 @@ export default function ModelProfileViewDialog({ open, onOpenChange, modelId, la
 
   const needsTranslation = !!profile && sourceLang !== lang;
 
-  // Translate text values (not field labels — those come from the static SECTIONS map)
   useEffect(() => {
     if (!profile || !needsTranslation) {
       setTranslated(null);
