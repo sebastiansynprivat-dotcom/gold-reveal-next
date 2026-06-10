@@ -196,6 +196,7 @@ interface ChatterProfile {
 }
 
 import { PLATFORMS as PLATFORM_DEFS, usePlatforms } from "@/lib/platforms";
+import SteckbriefImporter from "@/components/admin/SteckbriefImporter";
 
 const CURRENCIES = ["EUR", "USD", "GBP", "CHF", "AED"] as const;
 const PLATFORMS_FALLBACK = PLATFORM_DEFS.map((p) => p.label);
@@ -1812,6 +1813,24 @@ export default function ModelDashboardTab() {
                         {filledFields}/{totalFields} Felder
                       </Badge>
                     </div>
+
+                    {/* Auto-Import from Drive / .docx upload */}
+                    {selectedModelId && (
+                      <SteckbriefImporter
+                        modelId={selectedModelId}
+                        hasDriveFolder={!!(modelForm.drive_folder_id && modelForm.drive_folder_id.trim())}
+                        onImported={async () => {
+                          // Reload profile after import (overwrite mode)
+                          const { data } = await supabase
+                            .from("model_profiles" as any)
+                            .select("*")
+                            .eq("model_id", selectedModelId)
+                            .maybeSingle();
+                          setModelProfile((data as any) || null);
+                          setFilledProfileIds((prev) => new Set([...prev, selectedModelId]));
+                        }}
+                      />
+                    )}
 
 
                     {/* Filled preview */}
