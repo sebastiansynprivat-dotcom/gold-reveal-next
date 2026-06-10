@@ -1568,6 +1568,53 @@ export default function ModelDashboardTab() {
             )}
           </Button>
         </div>
+        {/* Agency filter + global per-agency billing toggle */}
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <div className="inline-flex rounded-lg border border-border bg-secondary/40 p-0.5">
+            {(["all", "shex", "syn"] as const).map((a) => (
+              <button
+                key={a}
+                type="button"
+                onClick={() => setAgencyFilter(a)}
+                className={cn(
+                  "px-2.5 py-1 rounded-md text-[11px] font-semibold uppercase tracking-wider transition-colors",
+                  agencyFilter === a
+                    ? "bg-accent text-accent-foreground"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {a === "all" ? "Alle" : a === "shex" ? "sheX" : "SYN"}
+              </button>
+            ))}
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => toggleAgencyBilling("syn")}
+            className={cn(
+              "h-8 gap-1.5 text-[11px]",
+              agencyBilling.syn && "border-amber-500/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20",
+            )}
+            title="Markiert für ALLE SYN-Models, dass die Abrechnung gerade in Arbeit ist. Wird im Model-Dashboard sichtbar."
+          >
+            {agencyBilling.syn ? "✓ SYN-Abrechnung in Arbeit" : "SYN-Abrechnung in Arbeit"}
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => toggleAgencyBilling("shex")}
+            className={cn(
+              "h-8 gap-1.5 text-[11px]",
+              agencyBilling.shex && "border-amber-500/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20",
+            )}
+            title="Markiert für ALLE sheX-Models, dass die Abrechnung gerade in Arbeit ist."
+          >
+            {agencyBilling.shex ? "✓ sheX-Abrechnung in Arbeit" : "sheX-Abrechnung in Arbeit"}
+          </Button>
+        </div>
+
         {showDuplicatesOnly && duplicateGroups.size > 0 && (
           <div className="mt-2 glass-card rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-[11px] text-amber-200/90 space-y-1">
             <div className="font-semibold text-amber-300 flex items-center gap-1.5">
