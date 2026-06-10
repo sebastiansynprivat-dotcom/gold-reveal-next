@@ -29,6 +29,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Download } from "lucide-react";
 import { generateProviderInvoicePdf, downloadPdf } from "@/lib/providerInvoicePdf";
+import ModelFaqSection from "@/components/ModelFaqSection";
 
 
 type Period = "today" | "yesterday" | "last7" | "last30" | "month" | "lifetime";
@@ -1037,6 +1038,8 @@ export default function ModelHomeDashboard({
           })()}
         </DialogContent>
       </Dialog>
+
+      <ModelFaqSection language={lang} />
     </motion.div>
 
   );
