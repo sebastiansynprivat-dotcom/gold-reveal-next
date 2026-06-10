@@ -50,8 +50,21 @@ export default function AdminModelView() {
     if (!modelId) return;
     setBusy(true);
     const { data: u } = await supabase.auth.getUser();
+    // Read current live profile and freeze it as approved snapshot for chatters
+    const { data: live } = await (supabase.from("model_profiles" as any) as any)
+      .select("*").eq("model_id", modelId).maybeSingle();
+    const snapshot = live ? { ...(live as any) } : null;
+    if (snapshot) {
+      delete snapshot.approved_snapshot;
+      delete snapshot.confirmed_at;
+      delete snapshot.confirmed_by;
+    }
     const { error } = await (supabase.from("model_profiles" as any) as any)
-      .update({ confirmed_at: new Date().toISOString(), confirmed_by: u?.user?.id })
+      .update({
+        confirmed_at: new Date().toISOString(),
+        confirmed_by: u?.user?.id,
+        approved_snapshot: snapshot,
+      })
       .eq("model_id", modelId);
     setBusy(false);
     if (error) {
