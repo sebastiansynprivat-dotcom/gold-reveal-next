@@ -1074,18 +1074,6 @@ export default function ModelHomeDashboard({
       </section>
 
 
-      {/* Edit Profile small option */}
-      <div className="flex justify-center pt-2">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onEditProfile}
-          className="text-xs text-muted-foreground hover:text-accent gap-1.5"
-        >
-          <Pencil className="h-3 w-3" />
-          {copy.editProfile}
-        </Button>
-      </div>
 
       {/* Invoice detail dialog */}
       <Dialog open={!!detailInvoice} onOpenChange={(o) => !o && setDetailInvoice(null)}>
