@@ -208,6 +208,9 @@ interface LoginStats {
 
 interface ChatterProfile {
   user_id: string;
+  id: string;
+  rowKey: string;
+  pre_create?: boolean;
   group_name: string;
   telegram_id: string;
   created_at: string;
@@ -766,18 +769,24 @@ export default function AdminDashboard() {
 
   // Fetch real chatter stats whenever the chatter list changes
   useEffect(() => {
-    const ids = chatters.map((c) => c.user_id).filter(Boolean);
-    if (ids.length === 0) {
+    const userIds = chatters.map((c) => c.user_id).filter(Boolean);
+    const profileIds = chatters.filter((c) => !c.user_id && c.id).map((c) => c.id);
+    if (userIds.length === 0 && profileIds.length === 0) {
       setChatterRealStats({});
       return;
     }
     let cancelled = false;
     (async () => {
-      const { data, error } = await supabase.rpc("get_chatter_real_stats", { p_user_ids: ids });
+      const { data, error } = await supabase.rpc("get_chatter_real_stats", {
+        p_user_ids: userIds,
+        p_profile_ids: profileIds,
+      });
       if (cancelled || error || !data) return;
       const map: Record<string, RealStats> = {};
       for (const r of data as any[]) {
-        map[r.user_id] = {
+        const key = r.user_id || r.profile_id;
+        if (!key) continue;
+        map[key] = {
           today: Number(r.today || 0),
           week: Number(r.week || 0),
           month: Number(r.month || 0),
@@ -2583,10 +2592,8 @@ export default function AdminDashboard() {
     const { data, error } = await supabase
       .from("profiles")
       .select(
-        "user_id, group_name, telegram_id, created_at, account_email, account_password, account_domain, pwa_installed, language, ui_language, pre_create",
+        "id, user_id, group_name, telegram_id, created_at, account_email, account_password, account_domain, pwa_installed, language, ui_language, pre_create",
       )
-      .or("pre_create.is.null,pre_create.eq.false")
-      .not("user_id", "is", null)
       .order("created_at", { ascending: false });
     if (error) {
       toast.error("Fehler beim Laden der Chatter");
@@ -2597,6 +2604,27 @@ export default function AdminDashboard() {
     const { data: allAccounts } = await supabase.from("accounts").select("*").order("created_at", { ascending: true });
     const accs = ((allAccounts as any[]) || []) as AccountEntry[];
     setAccounts(accs);
+
+    // Fetch open assignments so pre-create profiles can show their assigned accounts
+    const { data: openAssignments } = await supabase
+      .from("account_assignments")
+      .select("account_id, user_id, profile_id")
+      .is("end_date", null);
+    const assignmentsByProfile = new Map<string, string[]>();
+    const assignmentsByUser = new Map<string, string[]>();
+    ((openAssignments as any[]) || []).forEach((a) => {
+      if (a.profile_id) {
+        const arr = assignmentsByProfile.get(a.profile_id) || [];
+        arr.push(a.account_id);
+        assignmentsByProfile.set(a.profile_id, arr);
+      }
+      if (a.user_id) {
+        const arr = assignmentsByUser.get(a.user_id) || [];
+        arr.push(a.account_id);
+        assignmentsByUser.set(a.user_id, arr);
+      }
+    });
+    const accountById = new Map(accs.map((a) => [a.id, a]));
 
     // Ensure modelNames map is populated for the chatter list
     const modelIds = [...new Set(accs.map((a) => a.model_id).filter(Boolean))] as string[];
@@ -2609,14 +2637,34 @@ export default function AdminDashboard() {
       setModelNames((prev) => ({ ...prev, ...nameMap }));
     }
 
-    const enriched = (data || []).map((c) => ({
-      ...c,
-      group_name: cleanDisplayName(c.group_name || ""),
-      assigned_accounts: accs.filter((a) => a.assigned_to === c.user_id),
-    }));
+    const enriched: ChatterProfile[] = (data || []).map((c: any) => {
+      const isPre = !!c.pre_create;
+      const userId: string = c.user_id || "";
+      const profileId: string = c.id;
+      const accountIds = new Set<string>();
+      if (userId) {
+        accs.filter((a) => a.assigned_to === userId).forEach((a) => accountIds.add(a.id));
+        (assignmentsByUser.get(userId) || []).forEach((id) => accountIds.add(id));
+      }
+      (assignmentsByProfile.get(profileId) || []).forEach((id) => accountIds.add(id));
+      const assigned = Array.from(accountIds)
+        .map((id) => accountById.get(id))
+        .filter(Boolean) as AccountEntry[];
+      return {
+        ...c,
+        user_id: userId,
+        id: profileId,
+        rowKey: userId || profileId,
+        pre_create: isPre,
+        group_name: cleanDisplayName(c.group_name || ""),
+        assigned_accounts: assigned,
+      };
+    });
     setChatters(enriched);
     // Track PWA installed users
-    const pwaSet = new Set((data || []).filter((c: any) => c.pwa_installed).map((c: any) => c.user_id));
+    const pwaSet = new Set(
+      (data || []).filter((c: any) => c.pwa_installed && c.user_id).map((c: any) => c.user_id as string),
+    );
     setPwaUsers(pwaSet);
     setLoading(false);
   };
@@ -3735,21 +3783,21 @@ export default function AdminDashboard() {
         result = result.filter((c) => !pushUsers.has(c.user_id));
         break;
       case "open_2d":
-        result = result.filter((c) => (chatterRealStats[c.user_id]?.avg_open_days ?? 0) >= 3);
+        result = result.filter((c) => (chatterRealStats[c.rowKey]?.avg_open_days ?? 0) >= 3);
         break;
       case "top_tag":
         result = [...result].sort(
-          (a, b) => (chatterRealStats[b.user_id]?.today ?? 0) - (chatterRealStats[a.user_id]?.today ?? 0),
+          (a, b) => (chatterRealStats[b.rowKey]?.today ?? 0) - (chatterRealStats[a.rowKey]?.today ?? 0),
         );
         break;
       case "top_woche":
         result = [...result].sort(
-          (a, b) => (chatterRealStats[b.user_id]?.week ?? 0) - (chatterRealStats[a.user_id]?.week ?? 0),
+          (a, b) => (chatterRealStats[b.rowKey]?.week ?? 0) - (chatterRealStats[a.rowKey]?.week ?? 0),
         );
         break;
       case "top_monat":
         result = [...result].sort(
-          (a, b) => (chatterRealStats[b.user_id]?.month ?? 0) - (chatterRealStats[a.user_id]?.month ?? 0),
+          (a, b) => (chatterRealStats[b.rowKey]?.month ?? 0) - (chatterRealStats[a.rowKey]?.month ?? 0),
         );
         break;
       case "no_revenue_7d": {
@@ -5590,26 +5638,27 @@ export default function AdminDashboard() {
                     ) : (
                       <div className="divide-y divide-border max-h-[40rem] overflow-y-auto">
                         {filtered.map((chatter) => {
-                          const cStats = loginStats[chatter.user_id];
+                          const rowKey = chatter.rowKey;
+                          const cStats = chatter.user_id ? loginStats[chatter.user_id] : undefined;
                           const activeToday = (cStats?.today || 0) > 0;
-                          const realStats = chatterRealStats[chatter.user_id];
+                          const realStats = chatterRealStats[rowKey];
                           const chatsOverdue = (realStats?.avg_open_days ?? 0) > 3;
                           return (
                             <div
-                              key={chatter.user_id}
+                              key={rowKey}
                               className={chatsOverdue ? "bg-destructive/10 border-l-4 border-destructive" : ""}
                             >
                               <div
                                 className="px-4 py-3 flex flex-col gap-2 hover:bg-secondary/30 transition-colors cursor-pointer"
                                 onClick={() =>
-                                  setExpandedChatter(expandedChatter === chatter.user_id ? null : chatter.user_id)
+                                  setExpandedChatter(expandedChatter === rowKey ? null : rowKey)
                                 }
                               >
                                 {/* Row 1: Avatar + Name + Badge */}
                                 <div className="flex items-center gap-3">
                                   <Checkbox
-                                    checked={checkedChatters.has(chatter.user_id)}
-                                    onCheckedChange={() => toggleChatterCheck(chatter.user_id)}
+                                    checked={checkedChatters.has(rowKey)}
+                                    onCheckedChange={() => toggleChatterCheck(rowKey)}
                                     onClick={(e) => e.stopPropagation()}
                                     className="shrink-0 border-border data-[state=checked]:bg-accent data-[state=checked]:border-accent"
                                   />
@@ -5633,6 +5682,11 @@ export default function AdminDashboard() {
                                         <span className="text-[13px] leading-none">🇬🇧</span>
                                       ) : (
                                         <span className="text-[13px] leading-none">🇩🇪</span>
+                                      )}
+                                      {chatter.pre_create && (
+                                        <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30 font-semibold">
+                                          Pre-Create
+                                        </span>
                                       )}
                                     </p>
                                     <p className="text-[10px] text-muted-foreground">
@@ -5800,7 +5854,7 @@ export default function AdminDashboard() {
                                   </Button>
                                 </div>
                               </div>
-                              {expandedChatter === chatter.user_id && (
+                              {expandedChatter === chatter.rowKey && (
                                 <div className="px-4 pb-4 animate-in fade-in duration-200">
                                   {(chatter.assigned_accounts?.length || 0) >= 1 ? (
                                     /* Account cards – same format for 1 or many */
@@ -5877,7 +5931,7 @@ export default function AdminDashboard() {
                                     </div>
                                   ) : (
                                     /* No accounts: just stats */
-                                    <ChatterStatsCard userId={chatter.user_id} name={chatter.group_name || "Chatter"} stats={chatterRealStats[chatter.user_id]} />
+                                    <ChatterStatsCard userId={chatter.user_id || chatter.id} name={chatter.group_name || "Chatter"} stats={chatterRealStats[chatter.rowKey]} />
                                   )}
                                 </div>
                               )}
