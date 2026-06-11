@@ -598,11 +598,16 @@ export default function SocialMediaDashboard() {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  className={`rounded-2xl border bg-card/40 backdrop-blur-sm p-5 relative overflow-hidden transition-all group ${
+                  className={`rounded-2xl border bg-card/40 backdrop-blur-sm p-5 relative overflow-hidden transition-all group cursor-pointer ${
                     m.archived_at
                       ? "border-muted/30 opacity-70 hover:opacity-100 hover:border-muted/60"
                       : "border-accent/15 hover:border-accent/40"
                   }`}
+                  onClick={(e) => {
+                    const t = e.target as HTMLElement;
+                    if (t.closest('button, a, input, textarea, select, [role="dialog"], [data-no-card-click]')) return;
+                    openEdit(m);
+                  }}
                 >
                   <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
 
