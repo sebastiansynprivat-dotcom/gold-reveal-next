@@ -320,10 +320,11 @@ export default function Dashboard() {
       )
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "model_request_messages", filter: `user_id=eq.${user.id}` },
+        { event: "*", schema: "public", table: "model_request_messages" },
         () => loadMyRequests(),
       )
       .subscribe();
+
     return () => {
       supabase.removeChannel(channel);
     };
@@ -1527,9 +1528,11 @@ export default function Dashboard() {
                                     sender_role: "chatter",
                                     body: body || "(Medien angehängt)",
                                     attachments: draftAttachments as any,
+                                    visible_to_chatter: true,
                                   } as any)
                                   .select()
                                   .single();
+
                                 if (error) {
                                   toast.error("Fehler beim Senden");
                                   return;
