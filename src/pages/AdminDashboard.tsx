@@ -769,18 +769,24 @@ export default function AdminDashboard() {
 
   // Fetch real chatter stats whenever the chatter list changes
   useEffect(() => {
-    const ids = chatters.map((c) => c.user_id).filter(Boolean);
-    if (ids.length === 0) {
+    const userIds = chatters.map((c) => c.user_id).filter(Boolean);
+    const profileIds = chatters.filter((c) => !c.user_id && c.id).map((c) => c.id);
+    if (userIds.length === 0 && profileIds.length === 0) {
       setChatterRealStats({});
       return;
     }
     let cancelled = false;
     (async () => {
-      const { data, error } = await supabase.rpc("get_chatter_real_stats", { p_user_ids: ids });
+      const { data, error } = await supabase.rpc("get_chatter_real_stats", {
+        p_user_ids: userIds,
+        p_profile_ids: profileIds,
+      });
       if (cancelled || error || !data) return;
       const map: Record<string, RealStats> = {};
       for (const r of data as any[]) {
-        map[r.user_id] = {
+        const key = r.user_id || r.profile_id;
+        if (!key) continue;
+        map[key] = {
           today: Number(r.today || 0),
           week: Number(r.week || 0),
           month: Number(r.month || 0),
