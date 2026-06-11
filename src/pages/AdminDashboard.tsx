@@ -5854,7 +5854,7 @@ export default function AdminDashboard() {
                                   </Button>
                                 </div>
                               </div>
-                              {expandedChatter === chatter.user_id && (
+                              {expandedChatter === chatter.rowKey && (
                                 <div className="px-4 pb-4 animate-in fade-in duration-200">
                                   {(chatter.assigned_accounts?.length || 0) >= 1 ? (
                                     /* Account cards – same format for 1 or many */
