@@ -166,7 +166,7 @@ export default function SocialMediaMarketers() {
       <main className="relative z-10 max-w-5xl mx-auto px-4 md:px-6 py-6 space-y-6">
         <div className="flex justify-end">
           <Button onClick={() => setCreateOpen(true)} className="bg-accent text-accent-foreground hover:bg-accent/90">
-            <UserPlus className="h-4 w-4 mr-1.5" /> Marketer anlegen
+            <UserPlus className="h-4 w-4 mr-1.5" /> Marketer einladen
           </Button>
         </div>
 
