@@ -175,6 +175,34 @@ const SocialMediaModelProtectedRoute = ({ children }: { children: React.ReactNod
   return <>{children}</>;
 };
 
+const MarketerProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, loading } = useAuth();
+  const [hasAccess, setHasAccess] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    import("@/integrations/supabase/client").then(({ supabase }) => {
+      supabase.from("user_roles").select("role").eq("user_id", user.id)
+        .eq("role", "socialmedia_marketer")
+        .maybeSingle()
+        .then(({ data }) => setHasAccess(!!data));
+    });
+  }, [user]);
+
+  if (loading || (user && hasAccess === null)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) return <Navigate to="/marketer/login" replace />;
+  if (hasAccess === false) return <Navigate to="/marketer/login" replace />;
+
+  return <>{children}</>;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
