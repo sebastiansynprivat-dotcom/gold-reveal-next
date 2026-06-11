@@ -2586,10 +2586,8 @@ export default function AdminDashboard() {
     const { data, error } = await supabase
       .from("profiles")
       .select(
-        "user_id, group_name, telegram_id, created_at, account_email, account_password, account_domain, pwa_installed, language, ui_language, pre_create",
+        "id, user_id, group_name, telegram_id, created_at, account_email, account_password, account_domain, pwa_installed, language, ui_language, pre_create",
       )
-      .or("pre_create.is.null,pre_create.eq.false")
-      .not("user_id", "is", null)
       .order("created_at", { ascending: false });
     if (error) {
       toast.error("Fehler beim Laden der Chatter");
@@ -2600,6 +2598,27 @@ export default function AdminDashboard() {
     const { data: allAccounts } = await supabase.from("accounts").select("*").order("created_at", { ascending: true });
     const accs = ((allAccounts as any[]) || []) as AccountEntry[];
     setAccounts(accs);
+
+    // Fetch open assignments so pre-create profiles can show their assigned accounts
+    const { data: openAssignments } = await supabase
+      .from("account_assignments")
+      .select("account_id, user_id, profile_id")
+      .is("end_date", null);
+    const assignmentsByProfile = new Map<string, string[]>();
+    const assignmentsByUser = new Map<string, string[]>();
+    ((openAssignments as any[]) || []).forEach((a) => {
+      if (a.profile_id) {
+        const arr = assignmentsByProfile.get(a.profile_id) || [];
+        arr.push(a.account_id);
+        assignmentsByProfile.set(a.profile_id, arr);
+      }
+      if (a.user_id) {
+        const arr = assignmentsByUser.get(a.user_id) || [];
+        arr.push(a.account_id);
+        assignmentsByUser.set(a.user_id, arr);
+      }
+    });
+    const accountById = new Map(accs.map((a) => [a.id, a]));
 
     // Ensure modelNames map is populated for the chatter list
     const modelIds = [...new Set(accs.map((a) => a.model_id).filter(Boolean))] as string[];
@@ -2612,14 +2631,34 @@ export default function AdminDashboard() {
       setModelNames((prev) => ({ ...prev, ...nameMap }));
     }
 
-    const enriched = (data || []).map((c) => ({
-      ...c,
-      group_name: cleanDisplayName(c.group_name || ""),
-      assigned_accounts: accs.filter((a) => a.assigned_to === c.user_id),
-    }));
+    const enriched: ChatterProfile[] = (data || []).map((c: any) => {
+      const isPre = !!c.pre_create;
+      const userId: string = c.user_id || "";
+      const profileId: string = c.id;
+      const accountIds = new Set<string>();
+      if (userId) {
+        accs.filter((a) => a.assigned_to === userId).forEach((a) => accountIds.add(a.id));
+        (assignmentsByUser.get(userId) || []).forEach((id) => accountIds.add(id));
+      }
+      (assignmentsByProfile.get(profileId) || []).forEach((id) => accountIds.add(id));
+      const assigned = Array.from(accountIds)
+        .map((id) => accountById.get(id))
+        .filter(Boolean) as AccountEntry[];
+      return {
+        ...c,
+        user_id: userId,
+        id: profileId,
+        rowKey: userId || profileId,
+        pre_create: isPre,
+        group_name: cleanDisplayName(c.group_name || ""),
+        assigned_accounts: assigned,
+      };
+    });
     setChatters(enriched);
     // Track PWA installed users
-    const pwaSet = new Set((data || []).filter((c: any) => c.pwa_installed).map((c: any) => c.user_id));
+    const pwaSet = new Set(
+      (data || []).filter((c: any) => c.pwa_installed && c.user_id).map((c: any) => c.user_id as string),
+    );
     setPwaUsers(pwaSet);
     setLoading(false);
   };
