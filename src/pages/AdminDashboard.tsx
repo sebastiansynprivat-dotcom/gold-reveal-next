@@ -5638,26 +5638,27 @@ export default function AdminDashboard() {
                     ) : (
                       <div className="divide-y divide-border max-h-[40rem] overflow-y-auto">
                         {filtered.map((chatter) => {
-                          const cStats = loginStats[chatter.user_id];
+                          const rowKey = chatter.rowKey;
+                          const cStats = chatter.user_id ? loginStats[chatter.user_id] : undefined;
                           const activeToday = (cStats?.today || 0) > 0;
-                          const realStats = chatterRealStats[chatter.user_id];
+                          const realStats = chatterRealStats[rowKey];
                           const chatsOverdue = (realStats?.avg_open_days ?? 0) > 3;
                           return (
                             <div
-                              key={chatter.user_id}
+                              key={rowKey}
                               className={chatsOverdue ? "bg-destructive/10 border-l-4 border-destructive" : ""}
                             >
                               <div
                                 className="px-4 py-3 flex flex-col gap-2 hover:bg-secondary/30 transition-colors cursor-pointer"
                                 onClick={() =>
-                                  setExpandedChatter(expandedChatter === chatter.user_id ? null : chatter.user_id)
+                                  setExpandedChatter(expandedChatter === rowKey ? null : rowKey)
                                 }
                               >
                                 {/* Row 1: Avatar + Name + Badge */}
                                 <div className="flex items-center gap-3">
                                   <Checkbox
-                                    checked={checkedChatters.has(chatter.user_id)}
-                                    onCheckedChange={() => toggleChatterCheck(chatter.user_id)}
+                                    checked={checkedChatters.has(rowKey)}
+                                    onCheckedChange={() => toggleChatterCheck(rowKey)}
                                     onClick={(e) => e.stopPropagation()}
                                     className="shrink-0 border-border data-[state=checked]:bg-accent data-[state=checked]:border-accent"
                                   />
