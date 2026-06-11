@@ -79,15 +79,29 @@ Deno.serve(async (req) => {
     });
   }
 
+  // Optional body: { model_id?: string } to scrape a single model immediately.
+  let onlyModelId: string | null = null;
+  if (req.method === "POST") {
+    try {
+      const body = await req.json().catch(() => ({}));
+      if (body && typeof body.model_id === "string") onlyModelId = body.model_id;
+    } catch { /* ignore */ }
+  }
+
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
   );
 
-  const { data: models, error } = await supabase
+  let query = supabase
     .from("fanvue_models")
-    .select("id, name, instagram_url, instagram_urls, is_active")
-    .eq("is_active", true);
+    .select("id, name, instagram_url, instagram_urls, is_active");
+  if (onlyModelId) {
+    query = query.eq("id", onlyModelId);
+  } else {
+    query = query.eq("is_active", true);
+  }
+  const { data: models, error } = await query;
 
   if (error) {
     return new Response(JSON.stringify({ error: error.message }), {
@@ -95,6 +109,7 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
+
 
   // Build (model_id, normalized_url, handle) triples
   type Target = { model_id: string; name: string; url: string; handle: string };
