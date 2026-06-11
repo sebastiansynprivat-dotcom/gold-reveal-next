@@ -2552,7 +2552,7 @@ export type Database = {
       }
       current_model_id: { Args: never; Returns: string }
       get_chatter_real_stats: {
-        Args: { p_user_ids: string[] }
+        Args: { p_profile_ids?: string[]; p_user_ids: string[] }
         Returns: {
           all_time: number
           avg_open_days: number
@@ -2561,6 +2561,7 @@ export type Database = {
           open_chats: number
           prev_month: number
           prev_week: number
+          profile_id: string
           sparkline: Json
           today: number
           user_id: string
