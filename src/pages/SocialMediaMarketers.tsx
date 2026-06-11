@@ -66,28 +66,28 @@ export default function SocialMediaMarketers() {
   }, [assignments]);
 
   const handleCreate = async () => {
-    if (!email.trim() || password.length < 8) {
-      toast.error("E-Mail und Passwort (min. 8 Zeichen) erforderlich.");
+    if (!email.trim()) {
+      toast.error("E-Mail ist erforderlich.");
       return;
     }
     setSubmitting(true);
     try {
-      const { data, error } = await supabase.functions.invoke("create-marketer-login", {
+      const { data, error } = await supabase.functions.invoke("invite-marketer", {
         body: {
           email: email.trim(),
-          password,
           name: name.trim(),
           model_ids: Array.from(selectedModels),
+          redirect_to: `${window.location.origin}/marketer/setup-password`,
         },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
-      toast.success("Marketer erstellt");
+      toast.success("Einladung versendet — der Marketer erhält eine E-Mail.");
       setCreateOpen(false);
       setEmail(""); setPassword(""); setName(""); setSelectedModels(new Set());
       load();
     } catch (e: any) {
-      toast.error(e.message || "Fehler beim Erstellen");
+      toast.error(e.message || "Einladung fehlgeschlagen");
     } finally {
       setSubmitting(false);
     }
