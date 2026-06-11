@@ -761,6 +761,7 @@ export default function AdminDashboard() {
   const { isSuperAdmin } = useAdminRole();
   const registryPlatforms = usePlatforms();
   const [chatters, setChatters] = useState<ChatterProfile[]>([]);
+  const [chatterRealStats, setChatterRealStats] = useState<Record<string, RealStats>>({});
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [pushTarget, setPushTarget] = useState<ChatterProfile | null>(null);
