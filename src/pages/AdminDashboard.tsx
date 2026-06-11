@@ -5266,6 +5266,15 @@ export default function AdminDashboard() {
                           onClickA={() => setFilterPwa((p) => toggleFilter(p, true))}
                           onClickB={() => setFilterPwa((p) => toggleFilter(p, false))}
                         />
+                        <DualCard
+                          labelA="Zugewiesen"
+                          valueA={assignedYes}
+                          labelB="Unzugewiesen"
+                          valueB={assignedNo}
+                          filterState={filterAssigned}
+                          onClickA={() => setFilterAssigned((p) => toggleFilter(p, true))}
+                          onClickB={() => setFilterAssigned((p) => toggleFilter(p, false))}
+                        />
                       </div>
                     );
                   })()}
