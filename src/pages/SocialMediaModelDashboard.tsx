@@ -7,12 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { LogOut, Film, Image as ImageIcon, Clapperboard, CheckCircle2, Circle, CalendarDays, Sparkles } from "lucide-react";
+import { LogOut, CheckCircle2, Circle, CalendarDays, Sparkles, Link as LinkIcon, ExternalLink } from "lucide-react";
 import logo from "@/assets/logo.png";
 import GoldParticles from "@/components/GoldParticles";
 
-type ItemType = "reel" | "post" | "story";
-type ContentItem = { type: ItemType; title: string; notes?: string };
+// New shape: { title, reference_url, notes }. Legacy may have `type`/title-as-URL.
+type ContentItem = { title?: string; reference_url?: string; notes?: string; type?: string };
 
 type PlanRow = {
   assignment_id: string;
