@@ -4,7 +4,7 @@ import { useUILanguage } from "@/hooks/useUILanguage";
 import { startAutoTranslate, stopAutoTranslate } from "@/lib/autoTranslate";
 
 // Model and Social Media dashboards have their own explicit language handling.
-const SKIP_PREFIXES = ["/model", "/socialmedia"];
+const SKIP_PREFIXES = ["/model", "/socialmedia", "/marketer"];
 
 const AutoTranslator = () => {
   const { lang } = useUILanguage();
