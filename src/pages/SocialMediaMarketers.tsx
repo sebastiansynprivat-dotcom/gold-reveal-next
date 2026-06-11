@@ -48,7 +48,12 @@ export default function SocialMediaMarketers() {
       ...((roleRows || []) as any[]).map(r => r.user_id),
       ...((a || []) as any[]).map(r => r.marketer_user_id),
     ]));
-    setMarketers(ids.map(id => ({ user_id: id })));
+    const { data: profs } = ids.length
+      ? await supabase.from("admin_profiles").select("user_id, display_name").in("user_id", ids)
+      : { data: [] as any[] };
+    const nameById = new Map<string, string>();
+    ((profs || []) as any[]).forEach((p) => nameById.set(p.user_id, p.display_name || ""));
+    setMarketers(ids.map(id => ({ user_id: id, name: nameById.get(id) || "" })));
     setLoading(false);
   };
 
@@ -189,7 +194,7 @@ export default function SocialMediaMarketers() {
                     <div className="min-w-0">
                       <h3 className="font-bold text-foreground truncate flex items-center gap-2">
                         <Mail className="h-3.5 w-3.5 text-accent/70" />
-                        <span className="font-mono text-xs truncate">{m.user_id.slice(0, 8)}…</span>
+                        <span className="truncate">{m.name || `Marketer ${m.user_id.slice(0, 6)}…`}</span>
                       </h3>
                       <p className="text-xs text-muted-foreground mt-0.5">{asgs.length} Model{asgs.length === 1 ? "" : "s"} zugewiesen</p>
                     </div>

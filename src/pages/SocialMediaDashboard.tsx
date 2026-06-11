@@ -101,6 +101,7 @@ export default function SocialMediaDashboard() {
   const [logins, setLogins] = useState<Record<string, { email: string; password: string | null }>>({});
   const [loginBusy, setLoginBusy] = useState<string | null>(null);
   const [scraping, setScraping] = useState(false);
+  const [marketerOptions, setMarketerOptions] = useState<{ user_id: string; name: string }[]>([]);
 
   const runScrape = async () => {
     setScraping(true);
@@ -202,6 +203,27 @@ export default function SocialMediaDashboard() {
       loginMap[r.model_id] = { email: r.email, password: r.plaintext_password };
     });
     setLogins(loginMap);
+
+    // Load all marketers (users with role socialmedia_marketer) + display names
+    const { data: roleRows } = await supabase
+      .from("user_roles")
+      .select("user_id")
+      .eq("role", "socialmedia_marketer");
+    const marketerIds = Array.from(new Set(((roleRows || []) as any[]).map((r) => r.user_id)));
+    let mOpts: { user_id: string; name: string }[] = [];
+    if (marketerIds.length) {
+      const { data: profs } = await supabase
+        .from("admin_profiles")
+        .select("user_id, display_name")
+        .in("user_id", marketerIds);
+      const byId = new Map<string, string>();
+      ((profs || []) as any[]).forEach((p) => byId.set(p.user_id, p.display_name || ""));
+      mOpts = marketerIds.map((id) => ({
+        user_id: id,
+        name: byId.get(id) || `Marketer ${id.slice(0, 6)}`,
+      })).sort((a, b) => a.name.localeCompare(b.name));
+    }
+    setMarketerOptions(mOpts);
 
     setLoading(false);
   };
@@ -1037,12 +1059,42 @@ export default function SocialMediaDashboard() {
                   {form.marketers.map((mk, i) => (
                     <div key={i} className="rounded-lg border border-border/30 p-2.5 space-y-2 bg-background/30">
                       <div className="flex flex-col sm:flex-row gap-2 sm:items-center min-w-0">
-                        <Input
-                          placeholder="Name"
-                          value={mk.name}
-                          onChange={(e) => updateMarketer(i, "name", e.target.value)}
-                          className="text-sm min-w-0 flex-1"
-                        />
+                        {(() => {
+                          const isKnown = marketerOptions.some((mo) => mo.name === mk.name);
+                          const useDropdown = marketerOptions.length > 0 && (isKnown || !mk.name);
+                          if (useDropdown) {
+                            return (
+                              <Select
+                                value={isKnown ? mk.name : "__custom__"}
+                                onValueChange={(v) => {
+                                  if (v === "__custom__") {
+                                    updateMarketer(i, "name", " ");
+                                  } else {
+                                    updateMarketer(i, "name", v);
+                                  }
+                                }}
+                              >
+                                <SelectTrigger className="text-sm min-w-0 flex-1 h-9">
+                                  <SelectValue placeholder="Marketer wählen…" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {marketerOptions.map((mo) => (
+                                    <SelectItem key={mo.user_id} value={mo.name}>{mo.name}</SelectItem>
+                                  ))}
+                                  <SelectItem value="__custom__">+ Anderer (Freitext)</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            );
+                          }
+                          return (
+                            <Input
+                              placeholder="Name"
+                              value={mk.name}
+                              onChange={(e) => updateMarketer(i, "name", e.target.value)}
+                              className="text-sm min-w-0 flex-1"
+                            />
+                          );
+                        })()}
                         <div className="flex items-center gap-2 min-w-0">
                           <Input
                             placeholder="@instagram oder URL"

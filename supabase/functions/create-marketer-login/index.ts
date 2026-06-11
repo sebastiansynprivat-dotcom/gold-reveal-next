@@ -80,6 +80,12 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Persist display name for dropdown lookups
+    await admin.from("admin_profiles").upsert({
+      user_id: userId,
+      display_name: (name && String(name).trim()) || String(email).trim(),
+    }, { onConflict: "user_id" });
+
     if (Array.isArray(model_ids) && model_ids.length) {
       const rows = model_ids.map((mid: string) => ({
         marketer_user_id: userId,
