@@ -5559,8 +5559,8 @@ export default function AdminDashboard() {
                         {filtered.map((chatter) => {
                           const cStats = loginStats[chatter.user_id];
                           const activeToday = (cStats?.today || 0) > 0;
-                          const fakeStats = getChatterFakeStats(chatter.user_id);
-                          const chatsOverdue = fakeStats.avgOpenDays > 3;
+                          const realStats = chatterRealStats[chatter.user_id];
+                          const chatsOverdue = (realStats?.avg_open_days ?? 0) > 3;
                           return (
                             <div
                               key={chatter.user_id}
