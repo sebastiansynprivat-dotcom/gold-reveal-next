@@ -208,6 +208,9 @@ interface LoginStats {
 
 interface ChatterProfile {
   user_id: string;
+  id: string;
+  rowKey: string;
+  pre_create?: boolean;
   group_name: string;
   telegram_id: string;
   created_at: string;
