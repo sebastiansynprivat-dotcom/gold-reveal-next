@@ -204,6 +204,27 @@ export default function SocialMediaDashboard() {
     });
     setLogins(loginMap);
 
+    // Load all marketers (users with role socialmedia_marketer) + display names
+    const { data: roleRows } = await supabase
+      .from("user_roles")
+      .select("user_id")
+      .eq("role", "socialmedia_marketer");
+    const marketerIds = Array.from(new Set(((roleRows || []) as any[]).map((r) => r.user_id)));
+    let mOpts: { user_id: string; name: string }[] = [];
+    if (marketerIds.length) {
+      const { data: profs } = await supabase
+        .from("admin_profiles")
+        .select("user_id, display_name")
+        .in("user_id", marketerIds);
+      const byId = new Map<string, string>();
+      ((profs || []) as any[]).forEach((p) => byId.set(p.user_id, p.display_name || ""));
+      mOpts = marketerIds.map((id) => ({
+        user_id: id,
+        name: byId.get(id) || `Marketer ${id.slice(0, 6)}`,
+      })).sort((a, b) => a.name.localeCompare(b.name));
+    }
+    setMarketerOptions(mOpts);
+
     setLoading(false);
   };
 
