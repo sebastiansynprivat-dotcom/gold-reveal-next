@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { HelpCircle, ChevronDown } from "lucide-react";
+import { HelpCircle, ChevronDown, Sparkles } from "lucide-react";
 import {
   Collapsible,
   CollapsibleContent,
@@ -67,51 +67,130 @@ const TITLE: Record<"de" | "en", string> = {
   en: "Frequently Asked Questions",
 };
 
-interface Props {
-  language?: "de" | "en";
-}
+const SUBTITLE: Record<"de" | "en", string> = {
+  de: "Tippe auf eine Frage, um die Antwort zu sehen",
+  en: "Tap a question to reveal the answer",
+};
 
-export default function ModelFaqSection({ language = "de" }: Props) {
+export default function ModelFaqSection({ language = "de" }: { language?: "de" | "en" }) {
   const lang = language === "en" ? "en" : "de";
   const [openId, setOpenId] = useState<string | null>(null);
   const items = FAQ_DATA[lang];
 
   return (
-    <section className="glass-card rounded-2xl p-5 space-y-4 card-inner-glow">
-      <div className="flex items-center gap-2">
-        <HelpCircle className="h-4 w-4 text-accent" />
-        <h2 className="text-base font-bold text-foreground">{TITLE[lang]}</h2>
+    <section
+      className="relative overflow-hidden rounded-2xl p-5 space-y-4 card-inner-glow"
+      style={{
+        background:
+          "linear-gradient(135deg, hsl(var(--card) / 0.85), hsl(var(--card) / 0.5))",
+        border: "1px solid hsl(45 70% 55% / 0.2)",
+        boxShadow:
+          "0 0 0 1px hsl(45 70% 55% / 0.06) inset, 0 8px 32px -12px hsl(45 70% 50% / 0.25)",
+      }}
+    >
+      {/* Decorative gold glow */}
+      <div
+        className="pointer-events-none absolute -top-20 -right-16 h-48 w-48 rounded-full blur-3xl opacity-40"
+        style={{ background: "radial-gradient(circle, hsl(45 90% 60% / 0.5), transparent 70%)" }}
+      />
+      <div
+        className="pointer-events-none absolute -bottom-24 -left-20 h-56 w-56 rounded-full blur-3xl opacity-30"
+        style={{ background: "radial-gradient(circle, hsl(38 80% 55% / 0.4), transparent 70%)" }}
+      />
+
+      <div className="relative flex items-start gap-3">
+        <div
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+          style={{
+            background: "linear-gradient(135deg, hsl(45 90% 60% / 0.25), hsl(38 80% 50% / 0.1))",
+            border: "1px solid hsl(45 80% 60% / 0.35)",
+            boxShadow: "0 0 16px hsl(45 90% 55% / 0.25)",
+          }}
+        >
+          <HelpCircle className="h-5 w-5 text-accent" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <h2 className="text-base font-bold text-foreground flex items-center gap-1.5">
+            {TITLE[lang]}
+            <Sparkles className="h-3.5 w-3.5 text-accent/70" />
+          </h2>
+          <p className="text-[11px] text-muted-foreground mt-0.5">{SUBTITLE[lang]}</p>
+        </div>
       </div>
-      <div className="space-y-2">
+
+      <div className="relative space-y-2.5">
         {items.map((item, i) => {
           const id = `${lang}-${i}`;
           const isOpen = openId === id;
           return (
-            <Collapsible key={id} open={isOpen} onOpenChange={(open) => setOpenId(open ? id : null)}>
-              <CollapsibleTrigger asChild>
-                <button
-                  type="button"
-                  className={cn(
-                    "w-full flex items-center justify-between gap-3 rounded-lg border px-4 py-3 text-left text-sm font-medium transition-all",
-                    isOpen
-                      ? "border-accent/40 bg-accent/10 text-foreground"
-                      : "border-border/30 bg-secondary/20 text-muted-foreground hover:text-foreground hover:border-accent/20",
-                  )}
-                >
-                  <span className="flex-1">{item.q}</span>
-                  <ChevronDown
-                    className={cn(
-                      "h-4 w-4 shrink-0 transition-transform duration-200",
-                      isOpen && "rotate-180",
-                    )}
-                  />
-                </button>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="overflow-hidden text-sm data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
-                <div className="px-4 pb-3 pt-1 text-muted-foreground leading-relaxed">
-                  {item.a}
-                </div>
-              </CollapsibleContent>
+            <Collapsible key={id} open={isOpen} onOpenChange={(o) => setOpenId(o ? id : null)}>
+              <div
+                className={cn(
+                  "group rounded-xl overflow-hidden transition-all duration-300",
+                  isOpen && "shadow-[0_0_28px_-8px_hsl(45_90%_55%/0.35)]",
+                )}
+                style={{
+                  background: isOpen
+                    ? "linear-gradient(135deg, hsl(45 70% 50% / 0.12), hsl(38 60% 40% / 0.06))"
+                    : "linear-gradient(135deg, hsl(var(--secondary) / 0.4), hsl(var(--secondary) / 0.2))",
+                  border: isOpen
+                    ? "1px solid hsl(45 85% 60% / 0.45)"
+                    : "1px solid hsl(var(--border) / 0.35)",
+                }}
+              >
+                <CollapsibleTrigger asChild>
+                  <button
+                    type="button"
+                    className="w-full flex items-center gap-3 px-4 py-3.5 text-left transition-colors"
+                  >
+                    <div
+                      className={cn(
+                        "flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold tabular-nums transition-all duration-300",
+                        isOpen ? "text-background" : "text-accent/80",
+                      )}
+                      style={{
+                        background: isOpen
+                          ? "linear-gradient(135deg, hsl(45 90% 65%), hsl(38 85% 50%))"
+                          : "hsl(45 60% 50% / 0.12)",
+                        border: isOpen
+                          ? "1px solid hsl(45 90% 70%)"
+                          : "1px solid hsl(45 60% 50% / 0.25)",
+                        boxShadow: isOpen
+                          ? "0 0 14px hsl(45 90% 60% / 0.55)"
+                          : "none",
+                      }}
+                    >
+                      {String(i + 1).padStart(2, "0")}
+                    </div>
+                    <span
+                      className={cn(
+                        "flex-1 text-sm font-medium transition-colors",
+                        isOpen ? "text-foreground" : "text-muted-foreground group-hover:text-foreground",
+                      )}
+                    >
+                      {item.q}
+                    </span>
+                    <ChevronDown
+                      className={cn(
+                        "h-4 w-4 shrink-0 transition-all duration-300",
+                        isOpen ? "rotate-180 text-accent" : "text-muted-foreground",
+                      )}
+                    />
+                  </button>
+                </CollapsibleTrigger>
+                <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
+                  <div
+                    className="mx-4 mb-4 mt-1 rounded-lg px-4 py-3.5 text-sm leading-relaxed text-foreground/85"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, hsl(45 50% 40% / 0.08), hsl(0 0% 100% / 0.02))",
+                      borderLeft: "2px solid hsl(45 90% 60% / 0.7)",
+                    }}
+                  >
+                    {item.a}
+                  </div>
+                </CollapsibleContent>
+              </div>
             </Collapsible>
           );
         })}

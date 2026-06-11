@@ -18,17 +18,31 @@ export default function ModelDashboard() {
   );
   const [submittedAt, setSubmittedAt] = useState<string | null>(null);
   const [confirmedAt, setConfirmedAt] = useState<string | null>(null);
+  const [profileHasContent, setProfileHasContent] = useState(false);
   const [loading, setLoading] = useState(true);
   const [editingProfile, setEditingProfile] = useState(false);
 
+
   const loadProfileMeta = useCallback(async (mid: string) => {
     const { data } = await (supabase.from("model_profiles") as any)
-      .select("submitted_at, confirmed_at")
+      .select("submitted_at, confirmed_at, name, age, city, occupation, hobbies, additional_info")
       .eq("model_id", mid)
       .maybeSingle();
     setSubmittedAt(data?.submitted_at || null);
     setConfirmedAt(data?.confirmed_at || null);
+    const hasContent = !!(
+      data && (
+        (data.name && String(data.name).trim()) ||
+        (data.age && String(data.age).trim()) ||
+        (data.city && String(data.city).trim()) ||
+        (data.occupation && String(data.occupation).trim()) ||
+        (data.hobbies && String(data.hobbies).trim()) ||
+        (data.additional_info && String(data.additional_info).trim())
+      )
+    );
+    setProfileHasContent(hasContent);
   }, []);
+
 
   useEffect(() => {
     if (!user) return;
@@ -88,7 +102,10 @@ export default function ModelDashboard() {
 
   // Show form only when user explicitly chooses to edit. Skipping is allowed,
   // but a persistent reminder banner appears on the dashboard until submitted.
-  const needsInitialSubmission = !!modelId && !submittedAt;
+  // Treat as filled if submitted, confirmed, or profile already has any substantive content
+  // (e.g. admin imported from Word/Drive).
+  const needsInitialSubmission = !!modelId && !submittedAt && !confirmedAt && !profileHasContent;
+
   const showForm = editingProfile;
   const copy = modelLanguage === "en" ? {
     profile: "Profile",
