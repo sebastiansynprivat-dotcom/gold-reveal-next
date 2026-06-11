@@ -5151,6 +5151,8 @@ export default function AdminDashboard() {
                     const pushNo = chatters.length - pushYes;
                     const pwaYes = pwaUsers.size;
                     const pwaNo = chatters.length - pwaYes;
+                    const assignedYes = chatters.filter((c) => (c.assigned_accounts?.length ?? 0) > 0).length;
+                    const assignedNo = chatters.length - assignedYes;
 
                     const freeAccounts = accounts.filter((a) => !a.assigned_to).length;
 
