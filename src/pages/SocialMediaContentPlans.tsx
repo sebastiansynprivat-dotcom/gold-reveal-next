@@ -376,44 +376,44 @@ export default function SocialMediaContentPlans() {
                           <Badge variant="outline" className="border-accent/40 text-accent text-[10px]">Tag {d}</Badge>
                           <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Woche {weekIdx}</span>
                         </div>
-                        <div className="flex gap-1">
-                          {ITEM_TYPES.map((t) => (
-                            <Button key={t.value} size="sm" variant="ghost" className="h-7 px-2 text-xs" onClick={() => addItem(d, t.value)}>
-                              <t.icon className="h-3 w-3 mr-1" /> {t.label}
-                            </Button>
-                          ))}
-                        </div>
+                        <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-accent" onClick={() => addItem(d)}>
+                          <Plus className="h-3 w-3 mr-1" /> Inhalt
+                        </Button>
                       </div>
                       {items.length === 0 ? (
-                        <p className="text-[11px] text-muted-foreground/60 italic">Keine Inhalte – nutze Reel/Post/Story oben.</p>
+                        <p className="text-[11px] text-muted-foreground/60 italic">Keine Inhalte – füge Titel, Referenz-Link und Notiz hinzu.</p>
                       ) : (
                         <div className="space-y-2">
-                          {items.map((it, idx) => {
-                            const t = ITEM_TYPES.find((x) => x.value === it.type)!;
-                            return (
-                              <div key={idx} className={`rounded-lg border px-2 py-1.5 flex items-start gap-2 ${t.color}`}>
-                                <t.icon className="h-3.5 w-3.5 mt-1.5 shrink-0" />
-                                <div className="flex-1 space-y-1">
-                                  <Input
-                                    type="url"
-                                    value={it.title}
-                                    onChange={(e) => updateItem(d, idx, { title: e.target.value })}
-                                    placeholder={`${t.label} Link (z.B. Reel/Reference URL)`}
-                                    className="h-7 text-xs bg-background/40"
-                                  />
-                                  <Input
-                                    value={it.notes || ""}
-                                    onChange={(e) => updateItem(d, idx, { notes: e.target.value })}
-                                    placeholder="Beschreibung (optional)"
-                                    className="h-7 text-xs bg-background/40"
-                                  />
-                                </div>
-                                <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" onClick={() => removeItem(d, idx)}>
-                                  <X className="h-3 w-3" />
-                                </Button>
+                          {items.map((it, idx) => (
+                            <div key={idx} className="rounded-lg border border-accent/20 bg-accent/5 px-2 py-1.5 flex items-start gap-2">
+                              <LinkIcon className="h-3.5 w-3.5 mt-1.5 shrink-0 text-accent" />
+                              <div className="flex-1 space-y-1">
+                                <Input
+                                  value={it.title}
+                                  onChange={(e) => updateItem(d, idx, { title: e.target.value })}
+                                  placeholder="Titel / Thema"
+                                  className="h-7 text-xs bg-background/40"
+                                />
+                                <Input
+                                  type="url"
+                                  value={it.reference_url || ""}
+                                  onChange={(e) => updateItem(d, idx, { reference_url: e.target.value })}
+                                  placeholder="Referenz-Video URL (z.B. TikTok/Reel-Link)"
+                                  className="h-7 text-xs bg-background/40"
+                                />
+                                <Textarea
+                                  value={it.notes || ""}
+                                  onChange={(e) => updateItem(d, idx, { notes: e.target.value })}
+                                  placeholder="Notiz / Anweisung (optional)"
+                                  rows={2}
+                                  className="text-xs bg-background/40 min-h-[44px]"
+                                />
                               </div>
-                            );
-                          })}
+                              <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" onClick={() => removeItem(d, idx)}>
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          ))}
                         </div>
                       )}
                     </div>
