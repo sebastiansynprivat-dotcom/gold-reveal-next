@@ -27,11 +27,21 @@ export default function MarketerDashboard() {
   const [loading, setLoading] = useState(true);
   const [models, setModels] = useState<ModelRow[]>([]);
   const [snapshotsByModel, setSnapshotsByModel] = useState<Record<string, Snapshot[]>>({});
+  const [marketerName, setMarketerName] = useState<string>("");
 
   useEffect(() => {
     (async () => {
       if (!user) return;
       setLoading(true);
+
+      // Load own display name to match marketer entries on models
+      const { data: prof } = await supabase
+        .from("admin_profiles")
+        .select("display_name")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      setMarketerName(((prof as any)?.display_name || "").trim());
+
       const { data: asg } = await supabase
         .from("marketer_model_assignments")
         .select("model_id")
@@ -42,12 +52,12 @@ export default function MarketerDashboard() {
       }
       const { data: mdls } = await supabase
         .from("fanvue_models")
-        .select("id,name,username")
+        .select("id,name,username,marketers")
         .in("id", ids);
       const since = daysAgo(60).toISOString();
       const { data: snaps } = await supabase
         .from("fanvue_instagram_snapshots")
-        .select("model_id,followers,recorded_at")
+        .select("model_id,followers,recorded_at,instagram_url")
         .in("model_id", ids)
         .gte("recorded_at", since)
         .order("recorded_at", { ascending: true });
