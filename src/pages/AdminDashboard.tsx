@@ -3888,6 +3888,11 @@ export default function AdminDashboard() {
     } else if (filterPwa === false) {
       result = result.filter((c) => !pwaUsers.has(c.user_id));
     }
+    if (filterAssigned === true) {
+      result = result.filter((c) => (c.assigned_accounts?.length ?? 0) > 0);
+    } else if (filterAssigned === false) {
+      result = result.filter((c) => !c.assigned_accounts || c.assigned_accounts.length === 0);
+    }
 
     switch (chatterFilter) {
       case "no_telegram":
