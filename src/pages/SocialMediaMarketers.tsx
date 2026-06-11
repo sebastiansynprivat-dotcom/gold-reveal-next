@@ -66,28 +66,28 @@ export default function SocialMediaMarketers() {
   }, [assignments]);
 
   const handleCreate = async () => {
-    if (!email.trim() || password.length < 8) {
-      toast.error("E-Mail und Passwort (min. 8 Zeichen) erforderlich.");
+    if (!email.trim()) {
+      toast.error("E-Mail ist erforderlich.");
       return;
     }
     setSubmitting(true);
     try {
-      const { data, error } = await supabase.functions.invoke("create-marketer-login", {
+      const { data, error } = await supabase.functions.invoke("invite-marketer", {
         body: {
           email: email.trim(),
-          password,
           name: name.trim(),
           model_ids: Array.from(selectedModels),
+          redirect_to: `${window.location.origin}/marketer/setup-password`,
         },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
-      toast.success("Marketer erstellt");
+      toast.success("Einladung versendet — der Marketer erhält eine E-Mail.");
       setCreateOpen(false);
       setEmail(""); setPassword(""); setName(""); setSelectedModels(new Set());
       load();
     } catch (e: any) {
-      toast.error(e.message || "Fehler beim Erstellen");
+      toast.error(e.message || "Einladung fehlgeschlagen");
     } finally {
       setSubmitting(false);
     }
@@ -166,7 +166,7 @@ export default function SocialMediaMarketers() {
       <main className="relative z-10 max-w-5xl mx-auto px-4 md:px-6 py-6 space-y-6">
         <div className="flex justify-end">
           <Button onClick={() => setCreateOpen(true)} className="bg-accent text-accent-foreground hover:bg-accent/90">
-            <UserPlus className="h-4 w-4 mr-1.5" /> Marketer anlegen
+            <UserPlus className="h-4 w-4 mr-1.5" /> Marketer einladen
           </Button>
         </div>
 
@@ -231,20 +231,19 @@ export default function SocialMediaMarketers() {
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="max-w-md bg-card/95 backdrop-blur-xl border-accent/30">
           <DialogHeader>
-            <DialogTitle className="text-accent">Marketer anlegen</DialogTitle>
+            <DialogTitle className="text-accent">Marketer einladen</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
+            <p className="text-xs text-muted-foreground -mt-1">
+              Der Marketer erhält per E-Mail einen Einladungslink und legt sein Passwort beim ersten Login selbst fest.
+            </p>
             <div>
-              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Name (optional)</Label>
+              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Name</Label>
               <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Max Mustermann" />
             </div>
             <div>
               <Label className="text-xs uppercase tracking-wider text-muted-foreground">E-Mail</Label>
               <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="marketer@example.com" />
-            </div>
-            <div>
-              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Passwort (min. 8)</Label>
-              <Input type="text" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Sicheres Passwort" />
             </div>
             <div>
               <Label className="text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">Models zuweisen (optional)</Label>
@@ -276,7 +275,7 @@ export default function SocialMediaMarketers() {
           <DialogFooter>
             <Button variant="ghost" onClick={() => setCreateOpen(false)}>Abbrechen</Button>
             <Button onClick={handleCreate} disabled={submitting} className="bg-accent text-accent-foreground hover:bg-accent/90">
-              {submitting ? "Erstelle..." : "Anlegen"}
+              {submitting ? "Versende…" : "Einladung senden"}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -38,6 +38,7 @@ const CoachingBasics = lazy(() => import("./pages/CoachingBasics"));
 const SalesScripts = lazy(() => import("./pages/SalesScripts"));
 const Library = lazy(() => import("./pages/Library"));
 const MarketerLogin = lazy(() => import("./pages/MarketerLogin"));
+const MarketerSetupPassword = lazy(() => import("./pages/MarketerSetupPassword"));
 const MarketerDashboard = lazy(() => import("./pages/MarketerDashboard"));
 const SocialMediaMarketers = lazy(() => import("./pages/SocialMediaMarketers"));
 
@@ -246,6 +247,7 @@ const App = () => (
               <Route path="/bibliothek/coaching-basics" element={<ProtectedRoute><CoachingBasics /></ProtectedRoute>} />
               <Route path="/bibliothek/verkaufs-skripte" element={<ProtectedRoute><SalesScripts /></ProtectedRoute>} />
               <Route path="/marketer/login" element={<MarketerLogin />} />
+              <Route path="/marketer/setup-password" element={<MarketerSetupPassword />} />
               <Route path="/marketer" element={<MarketerProtectedRoute><MarketerDashboard /></MarketerProtectedRoute>} />
 
 
