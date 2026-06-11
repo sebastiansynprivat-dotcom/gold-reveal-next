@@ -33,11 +33,6 @@ type StatusRow = {
   note: string;
 };
 
-const ITEM_TYPES: Record<ItemType, { label: string; icon: any; color: string }> = {
-  reel: { label: "Reel", icon: Film, color: "bg-pink-500/15 text-pink-300 border-pink-500/30" },
-  post: { label: "Post", icon: ImageIcon, color: "bg-blue-500/15 text-blue-300 border-blue-500/30" },
-  story: { label: "Story", icon: Clapperboard, color: "bg-amber-500/15 text-amber-300 border-amber-500/30" },
-};
 
 const WEEKDAYS_DE = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
