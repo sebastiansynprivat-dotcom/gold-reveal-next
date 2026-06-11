@@ -18,29 +18,35 @@ export default function ModelDashboard() {
   );
   const [submittedAt, setSubmittedAt] = useState<string | null>(null);
   const [confirmedAt, setConfirmedAt] = useState<string | null>(null);
-  const [profileHasContent, setProfileHasContent] = useState(false);
+  const [profileFilled, setProfileFilled] = useState(0);
+  const [profileTotal, setProfileTotal] = useState(20);
   const [loading, setLoading] = useState(true);
   const [editingProfile, setEditingProfile] = useState(false);
 
+  // All fields shown to the model in the profile form
+  const PROFILE_FIELDS = [
+    "name", "age", "city", "place_of_birth",
+    "favorite_color", "favorite_movie", "favorite_food", "favorite_music",
+    "occupation", "hobbies", "dream", "special_marks",
+    "natural_hair", "shoe_size", "bra_size", "height", "weight",
+    "content_preferences", "no_gos", "additional_info",
+  ] as const;
 
   const loadProfileMeta = useCallback(async (mid: string) => {
     const { data } = await (supabase.from("model_profiles") as any)
-      .select("submitted_at, confirmed_at, name, age, city, occupation, hobbies, additional_info")
+      .select("*")
       .eq("model_id", mid)
       .maybeSingle();
     setSubmittedAt(data?.submitted_at || null);
     setConfirmedAt(data?.confirmed_at || null);
-    const hasContent = !!(
-      data && (
-        (data.name && String(data.name).trim()) ||
-        (data.age && String(data.age).trim()) ||
-        (data.city && String(data.city).trim()) ||
-        (data.occupation && String(data.occupation).trim()) ||
-        (data.hobbies && String(data.hobbies).trim()) ||
-        (data.additional_info && String(data.additional_info).trim())
-      )
-    );
-    setProfileHasContent(hasContent);
+    let filled = 0;
+    if (data) {
+      for (const k of PROFILE_FIELDS) {
+        if (String((data as any)[k] || "").trim()) filled++;
+      }
+    }
+    setProfileFilled(filled);
+    setProfileTotal(PROFILE_FIELDS.length);
   }, []);
 
 
@@ -100,11 +106,10 @@ export default function ModelDashboard() {
     );
   }
 
-  // Show form only when user explicitly chooses to edit. Skipping is allowed,
-  // but a persistent reminder banner appears on the dashboard until submitted.
-  // Treat as filled if submitted, confirmed, or profile already has any substantive content
-  // (e.g. admin imported from Word/Drive).
-  const needsInitialSubmission = !!modelId && !submittedAt && !confirmedAt && !profileHasContent;
+  // Field-based progress (covers manual + admin-imported data automatically).
+  const profileComplete = profileFilled >= profileTotal;
+  // Show "fill out" form on first entry only if the profile is essentially empty.
+  const needsInitialSubmission = !!modelId && !submittedAt && !confirmedAt && profileFilled < 3;
 
   const showForm = editingProfile;
   const copy = modelLanguage === "en" ? {
@@ -112,19 +117,29 @@ export default function ModelDashboard() {
     dashboard: "Model Dashboard",
     back: "Back",
     notLinked: "Your model profile is not linked yet. Please contact the team.",
-    fillTitle: "Please fill out your profile",
-    fillBody: "You can skip this for now, but please complete your profile so the team can work with you properly.",
-    fillCta: "Fill profile now",
-    skip: "Skip for now",
+    progressTitleEmpty: "Let's set up your profile",
+    progressTitlePartial: "Your profile is taking shape",
+    progressTitleDone: "All set — your profile is complete ✨",
+    progressBodyEmpty: "Fill it out so the team can chat authentically as you — every detail you add boosts revenue.",
+    progressBodyPartial: (f: number, t: number, m: number) =>
+      `${f} of ${t} fields filled — ${m} still missing. Completing them helps the chatters represent you better and boosts your revenue.`,
+    progressBodyDone: "Nothing left to do here. You can update details anytime.",
+    fillCta: "Complete profile",
+    editCta: "Edit profile",
   } : {
     profile: "Steckbrief",
     dashboard: "Model Dashboard",
     back: "Zurück",
     notLinked: "Dein Model-Profil ist noch nicht verknüpft. Bitte melde dich beim Team.",
-    fillTitle: "Bitte fülle deinen Steckbrief aus",
-    fillBody: "Du kannst das vorerst überspringen — bitte fülle ihn aber bald aus, damit das Team optimal mit dir arbeiten kann.",
-    fillCta: "Jetzt ausfüllen",
-    skip: "Später",
+    progressTitleEmpty: "Lass uns deinen Steckbrief einrichten",
+    progressTitlePartial: "Dein Steckbrief wächst",
+    progressTitleDone: "Alles abgeschlossen — dein Steckbrief ist komplett ✨",
+    progressBodyEmpty: "Fülle ihn aus, damit das Team authentisch in deinem Namen chatten kann — jedes Detail boostet deinen Umsatz.",
+    progressBodyPartial: (f: number, t: number, m: number) =>
+      `${f} von ${t} Feldern ausgefüllt — ${m} fehlen noch. Wenn du sie ergänzt, können die Chatter dich besser repräsentieren und dein Umsatz steigt.`,
+    progressBodyDone: "Hier ist nichts mehr zu tun. Du kannst Details jederzeit anpassen.",
+    fillCta: "Jetzt vervollständigen",
+    editCta: "Steckbrief bearbeiten",
   };
 
   return (
@@ -201,25 +216,59 @@ export default function ModelDashboard() {
           </>
         ) : (
           <>
-            {needsInitialSubmission && (
-              <div className="glass-card rounded-xl p-4 mb-4 border-l-2 border-amber-500/60 flex items-start gap-3">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-foreground font-semibold">
-                    {copy.fillTitle}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {copy.fillBody}
-                  </p>
-                </div>
-                <Button
-                  size="sm"
-                  onClick={() => setEditingProfile(true)}
-                  className="shrink-0"
+            {modelId && (() => {
+              const pct = profileTotal ? Math.round((profileFilled / profileTotal) * 100) : 0;
+              const missing = Math.max(0, profileTotal - profileFilled);
+              const title = profileComplete
+                ? copy.progressTitleDone
+                : profileFilled === 0
+                  ? copy.progressTitleEmpty
+                  : copy.progressTitlePartial;
+              const body = profileComplete
+                ? copy.progressBodyDone
+                : profileFilled === 0
+                  ? copy.progressBodyEmpty
+                  : copy.progressBodyPartial(profileFilled, profileTotal, missing);
+
+              return (
+                <div
+                  className={`glass-card rounded-2xl p-4 mb-4 border-l-2 ${
+                    profileComplete ? "border-emerald-500/60" : "border-amber-500/60"
+                  }`}
                 >
-                  {copy.fillCta}
-                </Button>
-              </div>
-            )}
+                  <div className="flex items-start gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-foreground font-semibold">{title}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{body}</p>
+                    </div>
+                    {!profileComplete && (
+                      <Button
+                        size="sm"
+                        onClick={() => setEditingProfile(true)}
+                        className="shrink-0"
+                      >
+                        {profileFilled === 0 ? copy.fillCta : copy.editCta}
+                      </Button>
+                    )}
+                  </div>
+
+                  {!profileComplete && (
+                    <div className="mt-3">
+                      <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-1.5 tabular-nums">
+                        <span>{profileFilled} / {profileTotal}</span>
+                        <span>{pct}%</span>
+                      </div>
+                      <div className="h-1.5 w-full rounded-full bg-secondary/40 overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-accent/70 to-accent transition-all duration-700"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
             <ModelHomeDashboard
               modelId={modelId}
               modelName={modelName || accountName}

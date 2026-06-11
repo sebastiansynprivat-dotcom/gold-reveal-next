@@ -188,15 +188,7 @@ export default function AdminModelView() {
             <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider px-2 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
               <ShieldCheck className="h-3 w-3" /> Bestätigt
             </span>
-          ) : submittedAt ? (
-            <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider px-2 py-1 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">
-              Prüfung läuft
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider px-2 py-1 rounded-full bg-red-500/15 text-red-400 border border-red-500/30">
-              Steckbrief leer
-            </span>
-          )}
+          ) : null}
 
           <Button
             size="sm"
