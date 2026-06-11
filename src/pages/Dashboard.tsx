@@ -758,109 +758,22 @@ export default function Dashboard() {
               </span>
             </div>
 
-            {/* Row 2: Gruppenname */}
+            {/* Row 2: Gruppenname (read-only) */}
             <div className="flex items-center gap-2">
               <Users className="h-3.5 w-3.5 text-accent shrink-0" />
-              {groupNameSaved && !editingGroupName ? (
-                <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                  <span className="text-xs text-foreground font-medium truncate">{groupName}</span>
-                  <Button
-                    onClick={() => setEditingGroupName(true)}
-                    variant="ghost"
-                    size="sm"
-                    className="text-[10px] text-accent h-5 px-1.5"
-                  >
-                    <Pencil className="h-3 w-3" />
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-1 flex-1 min-w-0">
-                  <div className="input-gold-shimmer rounded-lg flex-1 min-w-0">
-                    <Input
-                      value={groupName}
-                      onChange={(e) => setGroupName(e.target.value)}
-                      placeholder={lang === "en" ? "Enter group name" : "Gruppenname eingeben"}
-                      className="h-7 text-xs w-full border-transparent"
-                    />
-                  </div>
-                  <Button onClick={saveGroupName} size="sm" disabled={!groupName.trim()} className="h-7 text-xs px-2">
-                    <Save className="h-3 w-3" />
-                  </Button>
-                </div>
-              )}
+              <span className={`text-xs font-medium truncate flex-1 min-w-0 ${groupName ? "text-foreground" : "text-muted-foreground"}`}>
+                {groupName || (lang === "en" ? "Group Name" : "Gruppenname")}
+              </span>
             </div>
 
-            {/* Row 3: Telegram + Umsatz side by side */}
+            {/* Row 3: Telegram + Umsatz side by side (read-only) */}
             <div className="flex items-center gap-2">
-              {telegramSaved ? (
-                <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-accent shrink-0" />
-                  <span className="text-xs text-foreground font-medium truncate">{telegramId}</span>
-                  <Button
-                    onClick={() => setTelegramSaved(false)}
-                    variant="ghost"
-                    size="sm"
-                    className="text-[10px] text-accent h-5 px-1.5"
-                  >
-                    Ändern
-                  </Button>
-                </div>
-              ) : (
-                <div className="flex-1 min-w-0 space-y-0.5">
-                  <div className="flex items-center gap-1">
-                    <div className="input-gold-shimmer rounded-lg flex-1 min-w-0">
-                      <Input
-                        value={telegramId}
-                        onChange={(e) => setTelegramId(e.target.value)}
-                        placeholder="Telegram ID"
-                        className="h-7 text-xs w-full border-transparent"
-                      />
-                    </div>
-                    <Button onClick={saveTelegram} size="sm" disabled={!telegramId.trim()} className="h-7 text-xs px-2">
-                      <Save className="h-3 w-3" />
-                    </Button>
-                  </div>
-                  <Dialog
-                    onOpenChange={(open) => {
-                      setVideoOpen(open);
-                      if (!open) setVideoLoaded(false);
-                    }}
-                  >
-                    <DialogTrigger asChild>
-                      <button className="flex items-center gap-1 text-[10px] text-accent hover:text-accent/80 transition-colors">
-                        <HelpCircle className="h-3 w-3" />
-                        Wo finde ich meine ID?
-                      </button>
-                    </DialogTrigger>
-                    <DialogContent className="glass-card border-border max-w-[calc(100vw-2rem)]">
-                      <DialogHeader>
-                        <DialogTitle className="text-foreground text-sm">Wo finde ich meine Telegram-ID?</DialogTitle>
-                        <DialogDescription className="text-muted-foreground text-xs">
-                          Schau dir das kurze Video an.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="aspect-video w-full rounded-lg overflow-hidden bg-secondary relative">
-                        {!videoLoaded && (
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="h-8 w-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-                          </div>
-                        )}
-                        {videoOpen && (
-                          <iframe
-                            src="https://www.loom.com/embed/0582b0ea68b942728a535a98f990660b?autoplay=1"
-                            frameBorder="0"
-                            allowFullScreen
-                            allow="autoplay"
-                            className={`w-full h-full transition-opacity duration-300 ${videoLoaded ? "opacity-100" : "opacity-0"}`}
-                            title="Telegram ID finden"
-                            onLoad={() => setVideoLoaded(true)}
-                          />
-                        )}
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                </div>
-              )}
+              <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                {telegramId && <CheckCircle2 className="h-3.5 w-3.5 text-accent shrink-0" />}
+                <span className={`text-xs font-medium truncate ${telegramId ? "text-foreground" : "text-muted-foreground"}`}>
+                  {telegramId || "Telegram ID"}
+                </span>
+              </div>
               <div className="shrink-0 flex items-center gap-1" data-tour="revenue-input">
                 <Zap className="h-3 w-3 text-accent" />
                 <div className="input-gold-shimmer rounded-lg">
