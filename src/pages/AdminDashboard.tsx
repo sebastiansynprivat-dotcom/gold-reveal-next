@@ -194,21 +194,11 @@ type ChatterFilter =
   | "new_2d"
   | "no_accounts";
 
-// Reuse hash function from ChatterStatsCard for consistent fake stats
-const hashCodeAdmin = (s: string) => {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
-  return Math.abs(h);
+const EMPTY_REAL_STATS = {
+  today: 0, week: 0, month: 0, all_time: 0, prev_week: 0, prev_month: 0,
+  mass_dms: 0, open_chats: 0, avg_open_days: 0, sparkline: [] as { week_start: string; total: number }[],
 };
-
-const getChatterFakeStats = (userId: string) => {
-  const h = hashCodeAdmin(userId);
-  const today = 80 + (h % 200);
-  const week = today * 5 + (h % 500);
-  const month = week * 3.5 + (h % 2000);
-  const avgOpenDays = 1 + (h % 5);
-  return { today, week: Math.round(week), month: Math.round(month), avgOpenDays };
-};
+type RealStats = typeof EMPTY_REAL_STATS;
 
 interface LoginStats {
   today: number;
