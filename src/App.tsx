@@ -37,6 +37,8 @@ const ChatBreakdown = lazy(() => import("./pages/ChatBreakdown"));
 const CoachingBasics = lazy(() => import("./pages/CoachingBasics"));
 const SalesScripts = lazy(() => import("./pages/SalesScripts"));
 const Library = lazy(() => import("./pages/Library"));
+const MarketerLogin = lazy(() => import("./pages/MarketerLogin"));
+const MarketerDashboard = lazy(() => import("./pages/MarketerDashboard"));
 
 import AutoTranslator from "@/components/AutoTranslator";
 
