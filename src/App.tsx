@@ -247,6 +247,7 @@ const App = () => (
               <Route path="/bibliothek/coaching-basics" element={<ProtectedRoute><CoachingBasics /></ProtectedRoute>} />
               <Route path="/bibliothek/verkaufs-skripte" element={<ProtectedRoute><SalesScripts /></ProtectedRoute>} />
               <Route path="/marketer/login" element={<MarketerLogin />} />
+              <Route path="/marketer/setup-password" element={<MarketerSetupPassword />} />
               <Route path="/marketer" element={<MarketerProtectedRoute><MarketerDashboard /></MarketerProtectedRoute>} />
 
 
