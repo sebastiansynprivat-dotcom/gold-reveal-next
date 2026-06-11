@@ -18,29 +18,35 @@ export default function ModelDashboard() {
   );
   const [submittedAt, setSubmittedAt] = useState<string | null>(null);
   const [confirmedAt, setConfirmedAt] = useState<string | null>(null);
-  const [profileHasContent, setProfileHasContent] = useState(false);
+  const [profileFilled, setProfileFilled] = useState(0);
+  const [profileTotal, setProfileTotal] = useState(20);
   const [loading, setLoading] = useState(true);
   const [editingProfile, setEditingProfile] = useState(false);
 
+  // All fields shown to the model in the profile form
+  const PROFILE_FIELDS = [
+    "name", "age", "city", "place_of_birth",
+    "favorite_color", "favorite_movie", "favorite_food", "favorite_music",
+    "occupation", "hobbies", "dream", "special_marks",
+    "natural_hair", "shoe_size", "bra_size", "height", "weight",
+    "content_preferences", "no_gos", "additional_info",
+  ] as const;
 
   const loadProfileMeta = useCallback(async (mid: string) => {
     const { data } = await (supabase.from("model_profiles") as any)
-      .select("submitted_at, confirmed_at, name, age, city, occupation, hobbies, additional_info")
+      .select("*")
       .eq("model_id", mid)
       .maybeSingle();
     setSubmittedAt(data?.submitted_at || null);
     setConfirmedAt(data?.confirmed_at || null);
-    const hasContent = !!(
-      data && (
-        (data.name && String(data.name).trim()) ||
-        (data.age && String(data.age).trim()) ||
-        (data.city && String(data.city).trim()) ||
-        (data.occupation && String(data.occupation).trim()) ||
-        (data.hobbies && String(data.hobbies).trim()) ||
-        (data.additional_info && String(data.additional_info).trim())
-      )
-    );
-    setProfileHasContent(hasContent);
+    let filled = 0;
+    if (data) {
+      for (const k of PROFILE_FIELDS) {
+        if (String((data as any)[k] || "").trim()) filled++;
+      }
+    }
+    setProfileFilled(filled);
+    setProfileTotal(PROFILE_FIELDS.length);
   }, []);
 
 
