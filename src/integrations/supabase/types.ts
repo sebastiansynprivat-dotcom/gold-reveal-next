@@ -2154,6 +2154,7 @@ export type Database = {
       }
       platforms: {
         Row: {
+          auto_synced: boolean
           color: string
           created_at: string
           created_by: string | null
@@ -2165,6 +2166,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          auto_synced?: boolean
           color?: string
           created_at?: string
           created_by?: string | null
@@ -2176,6 +2178,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          auto_synced?: boolean
           color?: string
           created_at?: string
           created_by?: string | null
