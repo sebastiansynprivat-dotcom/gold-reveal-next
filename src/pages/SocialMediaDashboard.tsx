@@ -101,6 +101,7 @@ export default function SocialMediaDashboard() {
   const [logins, setLogins] = useState<Record<string, { email: string; password: string | null }>>({});
   const [loginBusy, setLoginBusy] = useState<string | null>(null);
   const [scraping, setScraping] = useState(false);
+  const [marketerOptions, setMarketerOptions] = useState<{ user_id: string; name: string }[]>([]);
 
   const runScrape = async () => {
     setScraping(true);
