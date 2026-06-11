@@ -102,7 +102,10 @@ export default function ModelDashboard() {
 
   // Show form only when user explicitly chooses to edit. Skipping is allowed,
   // but a persistent reminder banner appears on the dashboard until submitted.
-  const needsInitialSubmission = !!modelId && !submittedAt;
+  // Treat as filled if submitted, confirmed, or profile already has any substantive content
+  // (e.g. admin imported from Word/Drive).
+  const needsInitialSubmission = !!modelId && !submittedAt && !confirmedAt && !profileHasContent;
+
   const showForm = editingProfile;
   const copy = modelLanguage === "en" ? {
     profile: "Profile",
