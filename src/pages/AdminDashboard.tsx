@@ -5683,6 +5683,11 @@ export default function AdminDashboard() {
                                       ) : (
                                         <span className="text-[13px] leading-none">🇩🇪</span>
                                       )}
+                                      {chatter.pre_create && (
+                                        <span className="text-[9px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30 font-semibold">
+                                          Pre-Create
+                                        </span>
+                                      )}
                                     </p>
                                     <p className="text-[10px] text-muted-foreground">
                                       Telegram: {chatter.telegram_id || "—"} · Seit{" "}
