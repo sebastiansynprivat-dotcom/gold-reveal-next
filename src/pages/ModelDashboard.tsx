@@ -216,25 +216,59 @@ export default function ModelDashboard() {
           </>
         ) : (
           <>
-            {needsInitialSubmission && (
-              <div className="glass-card rounded-xl p-4 mb-4 border-l-2 border-amber-500/60 flex items-start gap-3">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-foreground font-semibold">
-                    {copy.fillTitle}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {copy.fillBody}
-                  </p>
-                </div>
-                <Button
-                  size="sm"
-                  onClick={() => setEditingProfile(true)}
-                  className="shrink-0"
+            {modelId && (() => {
+              const pct = profileTotal ? Math.round((profileFilled / profileTotal) * 100) : 0;
+              const missing = Math.max(0, profileTotal - profileFilled);
+              const title = profileComplete
+                ? copy.progressTitleDone
+                : profileFilled === 0
+                  ? copy.progressTitleEmpty
+                  : copy.progressTitlePartial;
+              const body = profileComplete
+                ? copy.progressBodyDone
+                : profileFilled === 0
+                  ? copy.progressBodyEmpty
+                  : copy.progressBodyPartial(profileFilled, profileTotal, missing);
+
+              return (
+                <div
+                  className={`glass-card rounded-2xl p-4 mb-4 border-l-2 ${
+                    profileComplete ? "border-emerald-500/60" : "border-amber-500/60"
+                  }`}
                 >
-                  {copy.fillCta}
-                </Button>
-              </div>
-            )}
+                  <div className="flex items-start gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-foreground font-semibold">{title}</p>
+                      <p className="text-xs text-muted-foreground mt-1">{body}</p>
+                    </div>
+                    {!profileComplete && (
+                      <Button
+                        size="sm"
+                        onClick={() => setEditingProfile(true)}
+                        className="shrink-0"
+                      >
+                        {profileFilled === 0 ? copy.fillCta : copy.editCta}
+                      </Button>
+                    )}
+                  </div>
+
+                  {!profileComplete && (
+                    <div className="mt-3">
+                      <div className="flex items-center justify-between text-[11px] text-muted-foreground mb-1.5 tabular-nums">
+                        <span>{profileFilled} / {profileTotal}</span>
+                        <span>{pct}%</span>
+                      </div>
+                      <div className="h-1.5 w-full rounded-full bg-secondary/40 overflow-hidden">
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-accent/70 to-accent transition-all duration-700"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
             <ModelHomeDashboard
               modelId={modelId}
               modelName={modelName || accountName}
