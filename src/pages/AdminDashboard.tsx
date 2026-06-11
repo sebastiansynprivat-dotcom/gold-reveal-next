@@ -3507,54 +3507,131 @@ export default function AdminDashboard() {
     setDeleting(false);
   };
 
+  // --- Optimistic state patch helpers (avoid full loadChatters refetch) ---
+  const patchAccountLocal = (accountId: string, patch: Partial<AccountEntry>) => {
+    setAccounts((prev) => prev.map((a) => (a.id === accountId ? { ...a, ...patch } : a)));
+  };
+
+  const addAccountToChatterLocal = (rowKey: string, account: AccountEntry, mirrorCreds: boolean) => {
+    setChatters((prev) =>
+      prev.map((c) => {
+        // Remove from any other chatter that previously had it
+        let next = c;
+        if (c.rowKey !== rowKey && c.assigned_accounts?.some((a) => a.id === account.id)) {
+          next = { ...c, assigned_accounts: c.assigned_accounts!.filter((a) => a.id !== account.id) };
+        }
+        if (next.rowKey === rowKey) {
+          const existing = next.assigned_accounts || [];
+          const without = existing.filter((a) => a.id !== account.id);
+          next = {
+            ...next,
+            assigned_accounts: [...without, account],
+            ...(mirrorCreds
+              ? {
+                  account_email: account.account_email,
+                  account_password: account.account_password,
+                  account_domain: account.account_domain,
+                }
+              : {}),
+          };
+        }
+        return next;
+      }),
+    );
+  };
+
+  const removeAccountFromChatterLocal = (rowKey: string, accountIds: string[]) => {
+    const idSet = new Set(accountIds);
+    setChatters((prev) =>
+      prev.map((c) => {
+        if (c.rowKey !== rowKey) return c;
+        const remaining = (c.assigned_accounts || []).filter((a) => !idSet.has(a.id));
+        const first = remaining[0];
+        return {
+          ...c,
+          assigned_accounts: remaining,
+          account_email: first?.account_email || undefined,
+          account_password: first?.account_password || undefined,
+          account_domain: first?.account_domain || undefined,
+        };
+      }),
+    );
+  };
+
   const removeAccount = async (accountId?: string) => {
     if (!reassignTarget) return;
+    const target = reassignTarget;
+    const isPre = !target.user_id;
     setReassigning(true);
     try {
+      // Determine affected account IDs upfront for optimistic patch
+      let affectedIds: string[] = [];
       if (accountId) {
-        // Revoke Drive access for specific account
-        await revokeDriveAccess([accountId], reassignTarget.user_id);
-        // Remove specific account
-        await supabase.from("accounts").update({ assigned_to: null, assigned_at: null }).eq("id", accountId);
+        affectedIds = [accountId];
       } else {
-        // Revoke Drive for all accounts
-        const { data: userAccs } = await supabase
-          .from("accounts")
-          .select("id, drive_folder_id")
-          .eq("assigned_to", reassignTarget.user_id);
-        if (userAccs?.some((a) => a.drive_folder_id)) {
-          await revokeDriveAccess(
-            userAccs.filter((a) => a.drive_folder_id).map((a) => a.id),
-            reassignTarget.user_id,
-          );
-        }
-        // Remove all accounts (legacy)
-        await supabase
-          .from("accounts")
-          .update({ assigned_to: null, assigned_at: null })
-          .eq("assigned_to", reassignTarget.user_id);
+        affectedIds = (target.assigned_accounts || []).map((a) => a.id);
       }
 
-      // Sync profile with remaining accounts
-      const { data: remaining } = await supabase
-        .from("accounts")
-        .select("account_email, account_password, account_domain")
-        .eq("assigned_to", reassignTarget.user_id)
-        .limit(1)
-        .maybeSingle();
+      if (isPre) {
+        // Pre-create: close open account_assignments rows by profile_id
+        let q = supabase
+          .from("account_assignments")
+          .update({ end_date: new Date().toISOString().slice(0, 10), unassigned_at: new Date().toISOString() })
+          .eq("profile_id", target.id)
+          .is("end_date", null);
+        if (accountId) q = q.eq("account_id", accountId);
+        const { error } = await q;
+        if (error) throw error;
+      } else {
+        if (accountId) {
+          await revokeDriveAccess([accountId], target.user_id);
+          const { error } = await supabase
+            .from("accounts")
+            .update({ assigned_to: null, assigned_at: null })
+            .eq("id", accountId);
+          if (error) throw error;
+        } else {
+          const { data: userAccs } = await supabase
+            .from("accounts")
+            .select("id, drive_folder_id")
+            .eq("assigned_to", target.user_id);
+          if (userAccs?.some((a) => a.drive_folder_id)) {
+            await revokeDriveAccess(
+              userAccs.filter((a) => a.drive_folder_id).map((a) => a.id),
+              target.user_id,
+            );
+          }
+          const { error } = await supabase
+            .from("accounts")
+            .update({ assigned_to: null, assigned_at: null })
+            .eq("assigned_to", target.user_id);
+          if (error) throw error;
+        }
 
-      await supabase
-        .from("profiles")
-        .update({
-          account_email: remaining?.account_email || null,
-          account_password: remaining?.account_password || null,
-          account_domain: remaining?.account_domain || null,
-        })
-        .eq("user_id", reassignTarget.user_id);
+        // Sync profile credential mirror with remaining accounts
+        const { data: remaining } = await supabase
+          .from("accounts")
+          .select("account_email, account_password, account_domain")
+          .eq("assigned_to", target.user_id)
+          .limit(1)
+          .maybeSingle();
+
+        await supabase
+          .from("profiles")
+          .update({
+            account_email: remaining?.account_email || null,
+            account_password: remaining?.account_password || null,
+            account_domain: remaining?.account_domain || null,
+          })
+          .eq("user_id", target.user_id);
+      }
+
+      // Optimistic local patch
+      affectedIds.forEach((id) => patchAccountLocal(id, { assigned_to: null, assigned_at: null }));
+      removeAccountFromChatterLocal(target.rowKey, affectedIds);
 
       toast.success(`Account entfernt`);
       setReassignTarget(null);
-      loadChatters();
     } catch (err: any) {
       toast.error("Fehler: " + err.message);
     }
@@ -3563,108 +3640,144 @@ export default function AdminDashboard() {
 
   const reassignAccount = async (newAccountId: string) => {
     if (!reassignTarget) return;
+    const target = reassignTarget;
+    const isPre = !target.user_id;
     setReassigning(true);
     try {
-      // Get the new account's platform
       const newAccInfo = accounts.find((a) => a.id === newAccountId);
       if (!newAccInfo) throw new Error("Account nicht gefunden");
 
-      // No longer replace existing accounts on same platform - allow multiple
+      let updatedAccount: AccountEntry = newAccInfo;
+      const nowIso = new Date().toISOString();
 
-      // Assign new account
-      const { data: newAcc } = await supabase
-        .from("accounts")
-        .update({ assigned_to: reassignTarget.user_id, assigned_at: new Date().toISOString() })
-        .eq("id", newAccountId)
-        .select()
-        .single();
-
-      if (newAcc) {
-        // Update profile with first assigned account's data (for backward compat)
+      if (isPre) {
+        // Pre-create path: write directly to account_assignments via profile_id
+        // 1) Close any open assignment on this account
+        const today = nowIso.slice(0, 10);
         await supabase
-          .from("profiles")
-          .update({
-            account_email: newAcc.account_email,
-            account_password: newAcc.account_password,
-            account_domain: newAcc.account_domain,
-          })
-          .eq("user_id", reassignTarget.user_id);
+          .from("account_assignments")
+          .update({ end_date: today, unassigned_at: nowIso })
+          .eq("account_id", newAccountId)
+          .is("end_date", null);
 
-        // Auto-share Google Drive folder if drive_folder_id is set
-        if (newAcc.drive_folder_id) {
-          try {
-            const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-            const session = await supabase.auth.getSession();
-            await fetch(`https://${projectId}.supabase.co/functions/v1/share-drive`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-                Authorization: `Bearer ${session.data.session?.access_token}`,
-              },
-              body: JSON.stringify({
-                folder_id: newAcc.drive_folder_id,
-                user_id: reassignTarget.user_id,
-              }),
-            });
-            console.log("Drive folder shared for", reassignTarget.user_id);
-          } catch (driveErr) {
-            console.error("Drive share failed:", driveErr);
-          }
+        // 2) Free up accounts.assigned_to if it was set to someone else
+        if (newAccInfo.assigned_to) {
+          await supabase
+            .from("accounts")
+            .update({ assigned_to: null, assigned_at: null })
+            .eq("id", newAccountId);
         }
 
-        // Auto-send push notification if user has push enabled
-        if (pushUsers.has(reassignTarget.user_id)) {
-          try {
-            // Fetch template from DB
-            let tplTitle = "Gute Nachrichten 🥳";
-            let tplBody = "Dir wurde ein neuer Account zugewiesen! Schau jetzt in dein Dashboard.";
-            const { data: tpl } = await supabase
-              .from("notification_templates")
-              .select("title, body")
-              .eq("template_key", "account_assigned")
-              .maybeSingle();
-            if (tpl) {
-              tplTitle = tpl.title;
-              tplBody = tpl.body;
-            }
+        // 3) Open new assignment row for the pre-create profile
+        const { error: insErr } = await supabase.from("account_assignments").insert({
+          account_id: newAccountId,
+          profile_id: target.id,
+          user_id: null,
+          start_date: today,
+          assigned_at: nowIso,
+        });
+        if (insErr) throw insErr;
 
-            const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-            const session = await supabase.auth.getSession();
-            await fetch(`https://${projectId}.supabase.co/functions/v1/send-notification`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-                Authorization: `Bearer ${session.data.session?.access_token}`,
-              },
-              body: JSON.stringify({
-                title: tplTitle,
-                body: tplBody,
-                target_user_id: reassignTarget.user_id,
-              }),
+        updatedAccount = { ...newAccInfo, assigned_to: null, assigned_at: null };
+      } else {
+        // Real user path
+        const { data: newAcc, error: updErr } = await supabase
+          .from("accounts")
+          .update({ assigned_to: target.user_id, assigned_at: nowIso })
+          .eq("id", newAccountId)
+          .select()
+          .single();
+        if (updErr) throw updErr;
+
+        if (newAcc) {
+          updatedAccount = { ...newAccInfo, ...(newAcc as any) };
+
+          // Mirror credentials to profile (best-effort)
+          await supabase
+            .from("profiles")
+            .update({
+              account_email: newAcc.account_email,
+              account_password: newAcc.account_password,
+              account_domain: newAcc.account_domain,
+            })
+            .eq("user_id", target.user_id);
+
+          // Drive share (best-effort)
+          if (newAcc.drive_folder_id) {
+            try {
+              const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+              const session = await supabase.auth.getSession();
+              await fetch(`https://${projectId}.supabase.co/functions/v1/share-drive`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+                  Authorization: `Bearer ${session.data.session?.access_token}`,
+                },
+                body: JSON.stringify({ folder_id: newAcc.drive_folder_id, user_id: target.user_id }),
+              });
+            } catch (driveErr) {
+              console.error("Drive share failed:", driveErr);
+            }
+          }
+
+          // Push notification (best-effort)
+          if (pushUsers.has(target.user_id)) {
+            try {
+              let tplTitle = "Gute Nachrichten 🥳";
+              let tplBody = "Dir wurde ein neuer Account zugewiesen! Schau jetzt in dein Dashboard.";
+              const { data: tpl } = await supabase
+                .from("notification_templates")
+                .select("title, body")
+                .eq("template_key", "account_assigned")
+                .maybeSingle();
+              if (tpl) {
+                tplTitle = tpl.title;
+                tplBody = tpl.body;
+              }
+              const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+              const session = await supabase.auth.getSession();
+              await fetch(`https://${projectId}.supabase.co/functions/v1/send-notification`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+                  Authorization: `Bearer ${session.data.session?.access_token}`,
+                },
+                body: JSON.stringify({ title: tplTitle, body: tplBody, target_user_id: target.user_id }),
+              });
+            } catch {
+              /* silent */
+            }
+          }
+
+          // Schedule 24h follow-up (best-effort)
+          try {
+            const sendAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+            await supabase.from("pending_notifications" as any).insert({
+              user_id: target.user_id,
+              template_key: "account_followup",
+              send_at: sendAt,
             });
           } catch {
-            // silently ignore push errors
+            /* silent */
           }
-        }
-
-        // Schedule follow-up push notification for 1 day later
-        try {
-          const sendAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
-          await supabase.from("pending_notifications" as any).insert({
-            user_id: reassignTarget.user_id,
-            template_key: "account_followup",
-            send_at: sendAt,
-          });
-        } catch {
-          // silently ignore
         }
       }
 
-      toast.success(`Account für ${reassignTarget.group_name || "Chatter"} zugewiesen!`);
+      // Optimistic local patch
+      patchAccountLocal(newAccountId, {
+        assigned_to: updatedAccount.assigned_to,
+        assigned_at: updatedAccount.assigned_at,
+      });
+      addAccountToChatterLocal(target.rowKey, updatedAccount, !isPre);
+
+      if (isPre) {
+        toast.success(`Pre-Create — Account vorgemerkt. Push/Drive folgen nach Anmeldung.`);
+      } else {
+        toast.success(`Account für ${target.group_name || "Chatter"} zugewiesen!`);
+      }
       setReassignTarget(null);
-      loadChatters();
     } catch (err: any) {
       toast.error("Fehler: " + err.message);
     }
