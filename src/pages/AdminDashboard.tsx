@@ -3702,19 +3702,21 @@ export default function AdminDashboard() {
         result = result.filter((c) => !pushUsers.has(c.user_id));
         break;
       case "open_2d":
-        result = result.filter((c) => getChatterFakeStats(c.user_id).avgOpenDays >= 3);
+        result = result.filter((c) => (chatterRealStats[c.user_id]?.avg_open_days ?? 0) >= 3);
         break;
       case "top_tag":
         result = [...result].sort(
-          (a, b) => getChatterFakeStats(b.user_id).today - getChatterFakeStats(a.user_id).today,
+          (a, b) => (chatterRealStats[b.user_id]?.today ?? 0) - (chatterRealStats[a.user_id]?.today ?? 0),
         );
         break;
       case "top_woche":
-        result = [...result].sort((a, b) => getChatterFakeStats(b.user_id).week - getChatterFakeStats(a.user_id).week);
+        result = [...result].sort(
+          (a, b) => (chatterRealStats[b.user_id]?.week ?? 0) - (chatterRealStats[a.user_id]?.week ?? 0),
+        );
         break;
       case "top_monat":
         result = [...result].sort(
-          (a, b) => getChatterFakeStats(b.user_id).month - getChatterFakeStats(a.user_id).month,
+          (a, b) => (chatterRealStats[b.user_id]?.month ?? 0) - (chatterRealStats[a.user_id]?.month ?? 0),
         );
         break;
       case "no_revenue_7d": {
