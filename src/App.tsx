@@ -243,6 +243,9 @@ const App = () => (
               <Route path="/bibliothek/chat-breakdown-01" element={<ProtectedRoute><ChatBreakdown /></ProtectedRoute>} />
               <Route path="/bibliothek/coaching-basics" element={<ProtectedRoute><CoachingBasics /></ProtectedRoute>} />
               <Route path="/bibliothek/verkaufs-skripte" element={<ProtectedRoute><SalesScripts /></ProtectedRoute>} />
+              <Route path="/marketer/login" element={<MarketerLogin />} />
+              <Route path="/marketer" element={<MarketerProtectedRoute><MarketerDashboard /></MarketerProtectedRoute>} />
+
 
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
