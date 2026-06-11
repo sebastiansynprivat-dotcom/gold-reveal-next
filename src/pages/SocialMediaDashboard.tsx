@@ -288,11 +288,20 @@ export default function SocialMediaDashboard() {
     }
     setSaving(true);
     const payload: any = { ...form, created_by: user?.id };
-    let res;
+    let res: any;
+    let savedId: string | null = null;
+    const prevUrls = new Set<string>(
+      editing ? ((editing.instagram_urls?.length ? editing.instagram_urls : (editing.instagram_url ? [editing.instagram_url] : [])).map((u) => u.trim()).filter(Boolean)) : []
+    );
+    const newUrls = (form.instagram_urls || []).map((u) => u.trim()).filter(Boolean);
+    const hasNewIg = newUrls.some((u) => !prevUrls.has(u));
+
     if (editing) {
       res = await supabase.from("fanvue_models" as any).update(payload).eq("id", editing.id);
+      savedId = editing.id;
     } else {
-      res = await supabase.from("fanvue_models" as any).insert(payload);
+      res = await supabase.from("fanvue_models" as any).insert(payload).select("id").single();
+      savedId = res.data?.id ?? null;
     }
     setSaving(false);
     if (res.error) {
@@ -302,7 +311,19 @@ export default function SocialMediaDashboard() {
     toast.success(editing ? "Model aktualisiert" : "Model angelegt");
     setDialogOpen(false);
     load();
+
+    // Trigger immediate Instagram scrape if there are new IG URLs (fire & forget)
+    if (savedId && newUrls.length > 0 && (!editing || hasNewIg)) {
+      toast.info("Instagram-Follower werden gescrapt…");
+      supabase.functions
+        .invoke("scrape-instagram-followers", { body: { model_id: savedId } })
+        .then(({ error }) => {
+          if (error) toast.error("Initial-Scrape fehlgeschlagen: " + error.message);
+          else { toast.success("Initial-Scrape abgeschlossen"); load(); }
+        });
+    }
   };
+
 
   const handleDelete = async () => {
     if (!deleteId) return;
