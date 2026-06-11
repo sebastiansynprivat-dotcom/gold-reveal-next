@@ -194,21 +194,11 @@ type ChatterFilter =
   | "new_2d"
   | "no_accounts";
 
-// Reuse hash function from ChatterStatsCard for consistent fake stats
-const hashCodeAdmin = (s: string) => {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
-  return Math.abs(h);
+const EMPTY_REAL_STATS = {
+  today: 0, week: 0, month: 0, all_time: 0, prev_week: 0, prev_month: 0,
+  mass_dms: 0, open_chats: 0, avg_open_days: 0, sparkline: [] as { week_start: string; total: number }[],
 };
-
-const getChatterFakeStats = (userId: string) => {
-  const h = hashCodeAdmin(userId);
-  const today = 80 + (h % 200);
-  const week = today * 5 + (h % 500);
-  const month = week * 3.5 + (h % 2000);
-  const avgOpenDays = 1 + (h % 5);
-  return { today, week: Math.round(week), month: Math.round(month), avgOpenDays };
-};
+type RealStats = typeof EMPTY_REAL_STATS;
 
 interface LoginStats {
   today: number;
@@ -771,7 +761,40 @@ export default function AdminDashboard() {
   const { isSuperAdmin } = useAdminRole();
   const registryPlatforms = usePlatforms();
   const [chatters, setChatters] = useState<ChatterProfile[]>([]);
+  const [chatterRealStats, setChatterRealStats] = useState<Record<string, RealStats>>({});
   const [loading, setLoading] = useState(true);
+
+  // Fetch real chatter stats whenever the chatter list changes
+  useEffect(() => {
+    const ids = chatters.map((c) => c.user_id).filter(Boolean);
+    if (ids.length === 0) {
+      setChatterRealStats({});
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase.rpc("get_chatter_real_stats", { p_user_ids: ids });
+      if (cancelled || error || !data) return;
+      const map: Record<string, RealStats> = {};
+      for (const r of data as any[]) {
+        map[r.user_id] = {
+          today: Number(r.today || 0),
+          week: Number(r.week || 0),
+          month: Number(r.month || 0),
+          all_time: Number(r.all_time || 0),
+          prev_week: Number(r.prev_week || 0),
+          prev_month: Number(r.prev_month || 0),
+          mass_dms: Number(r.mass_dms || 0),
+          open_chats: Number(r.open_chats || 0),
+          avg_open_days: Number(r.avg_open_days || 0),
+          sparkline: Array.isArray(r.sparkline) ? r.sparkline : [],
+        };
+      }
+      setChatterRealStats(map);
+    })();
+    return () => { cancelled = true; };
+  }, [chatters]);
+
   const [search, setSearch] = useState("");
   const [pushTarget, setPushTarget] = useState<ChatterProfile | null>(null);
   const [pushTitle, setPushTitle] = useState("");
@@ -3712,19 +3735,21 @@ export default function AdminDashboard() {
         result = result.filter((c) => !pushUsers.has(c.user_id));
         break;
       case "open_2d":
-        result = result.filter((c) => getChatterFakeStats(c.user_id).avgOpenDays >= 3);
+        result = result.filter((c) => (chatterRealStats[c.user_id]?.avg_open_days ?? 0) >= 3);
         break;
       case "top_tag":
         result = [...result].sort(
-          (a, b) => getChatterFakeStats(b.user_id).today - getChatterFakeStats(a.user_id).today,
+          (a, b) => (chatterRealStats[b.user_id]?.today ?? 0) - (chatterRealStats[a.user_id]?.today ?? 0),
         );
         break;
       case "top_woche":
-        result = [...result].sort((a, b) => getChatterFakeStats(b.user_id).week - getChatterFakeStats(a.user_id).week);
+        result = [...result].sort(
+          (a, b) => (chatterRealStats[b.user_id]?.week ?? 0) - (chatterRealStats[a.user_id]?.week ?? 0),
+        );
         break;
       case "top_monat":
         result = [...result].sort(
-          (a, b) => getChatterFakeStats(b.user_id).month - getChatterFakeStats(a.user_id).month,
+          (a, b) => (chatterRealStats[b.user_id]?.month ?? 0) - (chatterRealStats[a.user_id]?.month ?? 0),
         );
         break;
       case "no_revenue_7d": {
@@ -5567,8 +5592,8 @@ export default function AdminDashboard() {
                         {filtered.map((chatter) => {
                           const cStats = loginStats[chatter.user_id];
                           const activeToday = (cStats?.today || 0) > 0;
-                          const fakeStats = getChatterFakeStats(chatter.user_id);
-                          const chatsOverdue = fakeStats.avgOpenDays > 3;
+                          const realStats = chatterRealStats[chatter.user_id];
+                          const chatsOverdue = (realStats?.avg_open_days ?? 0) > 3;
                           return (
                             <div
                               key={chatter.user_id}
@@ -5852,7 +5877,7 @@ export default function AdminDashboard() {
                                     </div>
                                   ) : (
                                     /* No accounts: just stats */
-                                    <ChatterStatsCard userId={chatter.user_id} name={chatter.group_name || "Chatter"} />
+                                    <ChatterStatsCard userId={chatter.user_id} name={chatter.group_name || "Chatter"} stats={chatterRealStats[chatter.user_id]} />
                                   )}
                                 </div>
                               )}

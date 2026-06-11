@@ -1,63 +1,92 @@
-import { useMemo } from "react";
-import { TrendingUp, TrendingDown, MessageSquare, Inbox, Clock, DollarSign } from "lucide-react";
+import { useEffect, useState } from "react";
+import { TrendingUp, TrendingDown, MessageSquare, Inbox, Clock } from "lucide-react";
 import { LineChart, Line, ResponsiveContainer } from "recharts";
+import { supabase } from "@/integrations/supabase/client";
 
-// Generate fake weekly data for sparkline (last 8 weeks)
-const generateSparkline = (seed: number) => {
-  const data = [];
-  let val = 400 + (seed % 300);
-  for (let i = 0; i < 8; i++) {
-    val += Math.floor(Math.random() * 200 - 60 + i * 15);
-    data.push({ v: Math.max(100, val) });
-  }
-  return data;
-};
-
-// Deterministic-ish fake stats based on user_id hash
-const hashCode = (s: string) => {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
-  return Math.abs(h);
-};
+export interface RealChatterStats {
+  today: number;
+  week: number;
+  month: number;
+  all_time: number;
+  prev_week: number;
+  prev_month: number;
+  mass_dms: number;
+  open_chats: number;
+  avg_open_days: number;
+  sparkline: { week_start: string; total: number }[];
+}
 
 interface Props {
   userId: string;
   name: string;
+  stats?: RealChatterStats | null;
 }
 
-export default function ChatterStatsCard({ userId, name }: Props) {
-  const stats = useMemo(() => {
-    const h = hashCode(userId);
-    const today = 80 + (h % 200);
-    const week = today * 5 + (h % 500);
-    const month = week * 3.5 + (h % 2000);
-    const allTime = month * 4 + (h % 10000);
+const fmt = (n: number) => Math.round(n).toLocaleString("de-DE");
 
-    const prevWeek = week * (0.75 + (h % 30) / 100);
-    const prevMonth = month * (0.7 + (h % 40) / 100);
+export default function ChatterStatsCard({ userId, stats: statsProp }: Props) {
+  const [stats, setStats] = useState<RealChatterStats | null>(statsProp ?? null);
+  const [loading, setLoading] = useState(!statsProp);
 
-    const weekChange = ((week - prevWeek) / prevWeek) * 100;
-    const monthChange = ((month - prevMonth) / prevMonth) * 100;
+  useEffect(() => {
+    if (statsProp) {
+      setStats(statsProp);
+      setLoading(false);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      const { data, error } = await supabase.rpc("get_chatter_real_stats", { p_user_ids: [userId] });
+      if (cancelled) return;
+      if (error || !data || data.length === 0) {
+        setStats({
+          today: 0, week: 0, month: 0, all_time: 0, prev_week: 0, prev_month: 0,
+          mass_dms: 0, open_chats: 0, avg_open_days: 0, sparkline: [],
+        });
+      } else {
+        const r: any = data[0];
+        setStats({
+          today: Number(r.today || 0),
+          week: Number(r.week || 0),
+          month: Number(r.month || 0),
+          all_time: Number(r.all_time || 0),
+          prev_week: Number(r.prev_week || 0),
+          prev_month: Number(r.prev_month || 0),
+          mass_dms: Number(r.mass_dms || 0),
+          open_chats: Number(r.open_chats || 0),
+          avg_open_days: Number(r.avg_open_days || 0),
+          sparkline: Array.isArray(r.sparkline) ? r.sparkline : [],
+        });
+      }
+      setLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [userId, statsProp]);
 
-    const massDMs = 120 + (h % 380);
-    const openChats = 3 + (h % 18);
-    const avgOpenDays = 1 + (h % 5);
+  if (loading || !stats) {
+    return (
+      <div className="px-4 pb-4 space-y-3 animate-pulse">
+        <div className="grid grid-cols-3 gap-2">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-12 bg-muted/30 rounded-lg" />
+          ))}
+        </div>
+        <div className="h-16 bg-muted/30 rounded-lg" />
+        <div className="h-12 bg-muted/30 rounded-lg" />
+      </div>
+    );
+  }
 
-    return {
-      today: Math.round(today),
-      week: Math.round(week),
-      month: Math.round(month),
-      allTime: Math.round(allTime),
-      weekChange: Math.round(weekChange * 10) / 10,
-      monthChange: Math.round(monthChange * 10) / 10,
-      massDMs,
-      openChats,
-      avgOpenDays,
-      sparkline: generateSparkline(h),
-    };
-  }, [userId]);
+  const weekChange = stats.prev_week > 0
+    ? Math.round(((stats.week - stats.prev_week) / stats.prev_week) * 1000) / 10
+    : 0;
+  const monthChange = stats.prev_month > 0
+    ? Math.round(((stats.month - stats.prev_month) / stats.prev_month) * 1000) / 10
+    : 0;
 
-  const fmt = (n: number) => n.toLocaleString("de-DE");
+  const sparkData = (stats.sparkline.length ? stats.sparkline : Array.from({ length: 8 }, () => ({ total: 0 })))
+    .map((s: any) => ({ v: Number(s.total || 0) }));
 
   return (
     <div className="px-4 pb-4 space-y-3 animate-in fade-in duration-200">
@@ -77,31 +106,31 @@ export default function ChatterStatsCard({ userId, name }: Props) {
         </div>
       </div>
 
-      {/* Trends + Sparkline */}
+      {/* Trends */}
       <div className="grid grid-cols-2 gap-2">
         <div className="glass-card-subtle rounded-lg p-2.5">
           <p className="text-[9px] text-muted-foreground mb-1">vs. Vorwoche</p>
           <div className="flex items-center gap-1">
-            {stats.weekChange >= 0 ? (
+            {weekChange >= 0 ? (
               <TrendingUp className="h-3.5 w-3.5 text-emerald-400" />
             ) : (
               <TrendingDown className="h-3.5 w-3.5 text-red-400" />
             )}
-            <span className={`text-sm font-bold ${stats.weekChange >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-              {stats.weekChange >= 0 ? "+" : ""}{stats.weekChange}%
+            <span className={`text-sm font-bold ${weekChange >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+              {weekChange >= 0 ? "+" : ""}{weekChange}%
             </span>
           </div>
         </div>
         <div className="glass-card-subtle rounded-lg p-2.5">
           <p className="text-[9px] text-muted-foreground mb-1">vs. Vormonat</p>
           <div className="flex items-center gap-1">
-            {stats.monthChange >= 0 ? (
+            {monthChange >= 0 ? (
               <TrendingUp className="h-3.5 w-3.5 text-emerald-400" />
             ) : (
               <TrendingDown className="h-3.5 w-3.5 text-red-400" />
             )}
-            <span className={`text-sm font-bold ${stats.monthChange >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-              {stats.monthChange >= 0 ? "+" : ""}{stats.monthChange}%
+            <span className={`text-sm font-bold ${monthChange >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+              {monthChange >= 0 ? "+" : ""}{monthChange}%
             </span>
           </div>
         </div>
@@ -112,7 +141,7 @@ export default function ChatterStatsCard({ userId, name }: Props) {
         <p className="text-[9px] text-muted-foreground mb-1">Einnahmen-Trend (8 Wochen)</p>
         <div className="h-12">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={stats.sparkline}>
+            <LineChart data={sparkData}>
               <Line
                 type="monotone"
                 dataKey="v"
@@ -129,17 +158,17 @@ export default function ChatterStatsCard({ userId, name }: Props) {
       <div className="grid grid-cols-3 gap-2">
         <div className="glass-card-subtle rounded-lg p-2.5 text-center">
           <MessageSquare className="h-3.5 w-3.5 text-accent mx-auto mb-1" />
-          <p className="text-sm font-bold text-foreground">{stats.massDMs}</p>
+          <p className="text-sm font-bold text-foreground">{stats.mass_dms}</p>
           <p className="text-[8px] text-muted-foreground">Mass-DMs</p>
         </div>
         <div className="glass-card-subtle rounded-lg p-2.5 text-center">
           <Inbox className="h-3.5 w-3.5 text-amber-400 mx-auto mb-1" />
-          <p className="text-sm font-bold text-foreground">{stats.openChats}</p>
+          <p className="text-sm font-bold text-foreground">{stats.open_chats}</p>
           <p className="text-[8px] text-muted-foreground">Offene Chats</p>
         </div>
         <div className="glass-card-subtle rounded-lg p-2.5 text-center">
           <Clock className="h-3.5 w-3.5 text-muted-foreground mx-auto mb-1" />
-          <p className="text-sm font-bold text-foreground">{stats.avgOpenDays}d</p>
+          <p className="text-sm font-bold text-foreground">{Math.round(stats.avg_open_days)}d</p>
           <p className="text-[8px] text-muted-foreground">Ø offen seit</p>
         </div>
       </div>
@@ -147,7 +176,7 @@ export default function ChatterStatsCard({ userId, name }: Props) {
       {/* All-time Revenue */}
       <div className="gold-gradient-border-animated pulse-glow rounded-lg p-3 text-center">
         <p className="text-[9px] text-muted-foreground mb-0.5">Einnahmen All-Time</p>
-        <p className="text-lg font-bold text-gold-gradient">{fmt(stats.allTime)}€</p>
+        <p className="text-lg font-bold text-gold-gradient">{fmt(stats.all_time)}€</p>
       </div>
     </div>
   );
