@@ -7,12 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { LogOut, Film, Image as ImageIcon, Clapperboard, CheckCircle2, Circle, CalendarDays, Sparkles } from "lucide-react";
+import { LogOut, CheckCircle2, Circle, CalendarDays, Sparkles, Link as LinkIcon, ExternalLink } from "lucide-react";
 import logo from "@/assets/logo.png";
 import GoldParticles from "@/components/GoldParticles";
 
-type ItemType = "reel" | "post" | "story";
-type ContentItem = { type: ItemType; title: string; notes?: string };
+// New shape: { title, reference_url, notes }. Legacy may have `type`/title-as-URL.
+type ContentItem = { title?: string; reference_url?: string; notes?: string; type?: string };
 
 type PlanRow = {
   assignment_id: string;
@@ -33,11 +33,6 @@ type StatusRow = {
   note: string;
 };
 
-const ITEM_TYPES: Record<ItemType, { label: string; icon: any; color: string }> = {
-  reel: { label: "Reel", icon: Film, color: "bg-pink-500/15 text-pink-300 border-pink-500/30" },
-  post: { label: "Post", icon: ImageIcon, color: "bg-blue-500/15 text-blue-300 border-blue-500/30" },
-  story: { label: "Story", icon: Clapperboard, color: "bg-amber-500/15 text-amber-300 border-amber-500/30" },
-};
 
 const WEEKDAYS_DE = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
@@ -304,13 +299,15 @@ export default function SocialMediaModelDashboard() {
                           ) : (
                             <div className="space-y-2">
                               {items.map((it, idx) => {
-                                const t = ITEM_TYPES[it.type];
-                                const Icon = t.icon;
                                 const k = statusKey(pr.assignment_id, d, idx);
                                 const st = statuses[k];
                                 const done = !!st?.done;
+                                // Backwards compat: legacy items stored URL in `title`
+                                const legacyUrl = it.title && /^https?:\/\//i.test(it.title) ? it.title : "";
+                                const refUrl = it.reference_url || legacyUrl;
+                                const displayTitle = legacyUrl ? "" : (it.title || "");
                                 return (
-                                  <div key={idx} className={`rounded-lg border p-2.5 ${done ? "border-emerald-500/40 bg-emerald-500/5" : t.color}`}>
+                                  <div key={idx} className={`rounded-lg border p-2.5 ${done ? "border-emerald-500/40 bg-emerald-500/5" : "border-accent/20 bg-accent/5"}`}>
                                     <div className="flex items-start gap-2">
                                       <button
                                         onClick={() => toggleDone(pr.assignment_id, d, idx)}
@@ -323,27 +320,25 @@ export default function SocialMediaModelDashboard() {
                                           <Circle className="h-5 w-5 text-muted-foreground hover:text-accent transition-colors" />
                                         )}
                                       </button>
-                                      <Icon className="h-3.5 w-3.5 mt-1 shrink-0" />
+                                      <LinkIcon className="h-3.5 w-3.5 mt-1 shrink-0 text-accent" />
                                       <div className="flex-1 min-w-0 space-y-1.5">
-                                        <div className={`text-sm font-medium ${done ? "line-through text-muted-foreground" : "text-foreground"}`}>
-                                          <span className="text-[10px] uppercase tracking-wider mr-2 opacity-70">{t.label}</span>
-                                          {it.title ? (
-                                            /^https?:\/\//i.test(it.title) ? (
-                                              <a
-                                                href={it.title}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-accent underline break-all"
-                                              >
-                                                {it.title}
-                                              </a>
-                                            ) : (
-                                              <span className="break-all">{it.title}</span>
-                                            )
-                                          ) : (
-                                            <span className="italic text-muted-foreground">Kein Link</span>
-                                          )}
-                                        </div>
+                                        {displayTitle && (
+                                          <div className={`text-sm font-semibold ${done ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                                            {displayTitle}
+                                          </div>
+                                        )}
+                                        {refUrl ? (
+                                          <a
+                                            href={refUrl}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="inline-flex items-center gap-1.5 text-xs text-accent hover:underline break-all"
+                                          >
+                                            <ExternalLink className="h-3 w-3 shrink-0" /> Referenz ansehen
+                                          </a>
+                                        ) : (
+                                          !displayTitle && <span className="text-xs italic text-muted-foreground">Kein Inhalt</span>
+                                        )}
                                         {it.notes && <div className="text-[11px] text-muted-foreground whitespace-pre-wrap">{it.notes}</div>}
                                         <Input
                                           placeholder="Upload-Link (Drive, Notion, ...)"

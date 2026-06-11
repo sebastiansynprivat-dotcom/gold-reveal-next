@@ -37,6 +37,9 @@ const ChatBreakdown = lazy(() => import("./pages/ChatBreakdown"));
 const CoachingBasics = lazy(() => import("./pages/CoachingBasics"));
 const SalesScripts = lazy(() => import("./pages/SalesScripts"));
 const Library = lazy(() => import("./pages/Library"));
+const MarketerLogin = lazy(() => import("./pages/MarketerLogin"));
+const MarketerDashboard = lazy(() => import("./pages/MarketerDashboard"));
+const SocialMediaMarketers = lazy(() => import("./pages/SocialMediaMarketers"));
 
 import AutoTranslator from "@/components/AutoTranslator";
 
@@ -173,6 +176,34 @@ const SocialMediaModelProtectedRoute = ({ children }: { children: React.ReactNod
   return <>{children}</>;
 };
 
+const MarketerProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, loading } = useAuth();
+  const [hasAccess, setHasAccess] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    import("@/integrations/supabase/client").then(({ supabase }) => {
+      supabase.from("user_roles").select("role").eq("user_id", user.id)
+        .eq("role", "socialmedia_marketer")
+        .maybeSingle()
+        .then(({ data }) => setHasAccess(!!data));
+    });
+  }, [user]);
+
+  if (loading || (user && hasAccess === null)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) return <Navigate to="/marketer/login" replace />;
+  if (hasAccess === false) return <Navigate to="/marketer/login" replace />;
+
+  return <>{children}</>;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
@@ -205,6 +236,7 @@ const App = () => (
               <Route path="/socialmedia/register" element={<SocialMediaRegister />} />
               <Route path="/socialmedia/admin" element={<SocialMediaProtectedRoute><SocialMediaDashboard /></SocialMediaProtectedRoute>} />
               <Route path="/socialmedia/admin/plans" element={<SocialMediaProtectedRoute><SocialMediaContentPlans /></SocialMediaProtectedRoute>} />
+              <Route path="/socialmedia/admin/marketers" element={<SocialMediaProtectedRoute><SocialMediaMarketers /></SocialMediaProtectedRoute>} />
               <Route path="/socialmedia/model" element={<SocialMediaModelProtectedRoute><SocialMediaModelDashboard /></SocialMediaModelProtectedRoute>} />
               {/* Legacy /fanvue → /socialmedia redirects */}
               <Route path="/fanvue/login" element={<Navigate to="/socialmedia/login" replace />} />
@@ -213,6 +245,9 @@ const App = () => (
               <Route path="/bibliothek/chat-breakdown-01" element={<ProtectedRoute><ChatBreakdown /></ProtectedRoute>} />
               <Route path="/bibliothek/coaching-basics" element={<ProtectedRoute><CoachingBasics /></ProtectedRoute>} />
               <Route path="/bibliothek/verkaufs-skripte" element={<ProtectedRoute><SalesScripts /></ProtectedRoute>} />
+              <Route path="/marketer/login" element={<MarketerLogin />} />
+              <Route path="/marketer" element={<MarketerProtectedRoute><MarketerDashboard /></MarketerProtectedRoute>} />
+
 
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />

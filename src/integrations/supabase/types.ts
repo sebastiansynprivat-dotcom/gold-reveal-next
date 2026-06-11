@@ -1320,6 +1320,38 @@ export type Database = {
         }
         Relationships: []
       }
+      marketer_model_assignments: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          id: string
+          marketer_user_id: string
+          model_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          id?: string
+          marketer_user_id: string
+          model_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          id?: string
+          marketer_user_id?: string
+          model_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketer_model_assignments_model_id_fkey"
+            columns: ["model_id"]
+            isOneToOne: false
+            referencedRelation: "fanvue_models"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       message_reports: {
         Row: {
           account_id: string
@@ -2731,6 +2763,10 @@ export type Database = {
         Args: { p_telegram_id: string }
         Returns: boolean
       }
+      marketer_can_access_model: {
+        Args: { _model_id: string; _user_id: string }
+        Returns: boolean
+      }
       next_credit_note_number: { Args: never; Returns: string }
       purge_archived_account: {
         Args: { p_original_id: string }
@@ -2767,6 +2803,7 @@ export type Database = {
         | "sub_admin"
         | "fanvue_partner"
         | "fanvue_model"
+        | "socialmedia_marketer"
       platform: "new" | "maloum" | "4based" | "brezzels"
     }
     CompositeTypes: {
@@ -2920,6 +2957,7 @@ export const Constants = {
         "sub_admin",
         "fanvue_partner",
         "fanvue_model",
+        "socialmedia_marketer",
       ],
       platform: ["new", "maloum", "4based", "brezzels"],
     },
