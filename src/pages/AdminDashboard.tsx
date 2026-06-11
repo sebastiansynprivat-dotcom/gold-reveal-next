@@ -184,31 +184,12 @@ interface ComparePeriodResult {
 }
 type ChatterFilter =
   | "alle"
-  | "open_2d"
-  | "top_tag"
-  | "top_woche"
-  | "top_monat"
   | "no_telegram"
   | "no_push"
   | "no_revenue_7d"
   | "new_2d"
   | "no_accounts";
 
-// Reuse hash function from ChatterStatsCard for consistent fake stats
-const hashCodeAdmin = (s: string) => {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0;
-  return Math.abs(h);
-};
-
-const getChatterFakeStats = (userId: string) => {
-  const h = hashCodeAdmin(userId);
-  const today = 80 + (h % 200);
-  const week = today * 5 + (h % 500);
-  const month = week * 3.5 + (h % 2000);
-  const avgOpenDays = 1 + (h % 5);
-  return { today, week: Math.round(week), month: Math.round(month), avgOpenDays };
-};
 
 interface LoginStats {
   today: number;
@@ -3710,22 +3691,6 @@ export default function AdminDashboard() {
       case "no_push":
         result = result.filter((c) => !pushUsers.has(c.user_id));
         break;
-      case "open_2d":
-        result = result.filter((c) => getChatterFakeStats(c.user_id).avgOpenDays >= 3);
-        break;
-      case "top_tag":
-        result = [...result].sort(
-          (a, b) => getChatterFakeStats(b.user_id).today - getChatterFakeStats(a.user_id).today,
-        );
-        break;
-      case "top_woche":
-        result = [...result].sort((a, b) => getChatterFakeStats(b.user_id).week - getChatterFakeStats(a.user_id).week);
-        break;
-      case "top_monat":
-        result = [...result].sort(
-          (a, b) => getChatterFakeStats(b.user_id).month - getChatterFakeStats(a.user_id).month,
-        );
-        break;
       case "no_revenue_7d": {
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
@@ -5473,10 +5438,6 @@ export default function AdminDashboard() {
                         [
                           { key: "alle", label: "Alle", icon: Users },
                           { key: "no_accounts", label: "Ohne Accounts", icon: UserMinus },
-                          { key: "open_2d", label: "> 3 Tage offen", icon: MessageSquare },
-                          { key: "top_tag", label: "Top Tag", icon: Star },
-                          { key: "top_woche", label: "Top Woche", icon: TrendingUp },
-                          { key: "top_monat", label: "Top Monat", icon: DollarSign },
                           { key: "no_revenue_7d", label: "7d+ ohne Umsatz", icon: AlertTriangle },
                           { key: "new_2d", label: "Gestern gestartet", icon: UserPlus },
                         ] as const
