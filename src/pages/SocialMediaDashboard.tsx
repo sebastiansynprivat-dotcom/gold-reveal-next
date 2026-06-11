@@ -1059,12 +1059,42 @@ export default function SocialMediaDashboard() {
                   {form.marketers.map((mk, i) => (
                     <div key={i} className="rounded-lg border border-border/30 p-2.5 space-y-2 bg-background/30">
                       <div className="flex flex-col sm:flex-row gap-2 sm:items-center min-w-0">
-                        <Input
-                          placeholder="Name"
-                          value={mk.name}
-                          onChange={(e) => updateMarketer(i, "name", e.target.value)}
-                          className="text-sm min-w-0 flex-1"
-                        />
+                        {(() => {
+                          const isKnown = marketerOptions.some((mo) => mo.name === mk.name);
+                          const useDropdown = marketerOptions.length > 0 && (isKnown || !mk.name);
+                          if (useDropdown) {
+                            return (
+                              <Select
+                                value={isKnown ? mk.name : "__custom__"}
+                                onValueChange={(v) => {
+                                  if (v === "__custom__") {
+                                    updateMarketer(i, "name", " ");
+                                  } else {
+                                    updateMarketer(i, "name", v);
+                                  }
+                                }}
+                              >
+                                <SelectTrigger className="text-sm min-w-0 flex-1 h-9">
+                                  <SelectValue placeholder="Marketer wählen…" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {marketerOptions.map((mo) => (
+                                    <SelectItem key={mo.user_id} value={mo.name}>{mo.name}</SelectItem>
+                                  ))}
+                                  <SelectItem value="__custom__">+ Anderer (Freitext)</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            );
+                          }
+                          return (
+                            <Input
+                              placeholder="Name"
+                              value={mk.name}
+                              onChange={(e) => updateMarketer(i, "name", e.target.value)}
+                              className="text-sm min-w-0 flex-1"
+                            />
+                          );
+                        })()}
                         <div className="flex items-center gap-2 min-w-0">
                           <Input
                             placeholder="@instagram oder URL"
