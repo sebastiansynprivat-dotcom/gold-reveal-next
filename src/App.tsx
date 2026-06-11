@@ -39,6 +39,7 @@ const SalesScripts = lazy(() => import("./pages/SalesScripts"));
 const Library = lazy(() => import("./pages/Library"));
 const MarketerLogin = lazy(() => import("./pages/MarketerLogin"));
 const MarketerDashboard = lazy(() => import("./pages/MarketerDashboard"));
+const SocialMediaMarketers = lazy(() => import("./pages/SocialMediaMarketers"));
 
 import AutoTranslator from "@/components/AutoTranslator";
 
