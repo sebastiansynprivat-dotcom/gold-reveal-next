@@ -763,6 +763,38 @@ export default function AdminDashboard() {
   const [chatters, setChatters] = useState<ChatterProfile[]>([]);
   const [chatterRealStats, setChatterRealStats] = useState<Record<string, RealStats>>({});
   const [loading, setLoading] = useState(true);
+
+  // Fetch real chatter stats whenever the chatter list changes
+  useEffect(() => {
+    const ids = chatters.map((c) => c.user_id).filter(Boolean);
+    if (ids.length === 0) {
+      setChatterRealStats({});
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase.rpc("get_chatter_real_stats", { p_user_ids: ids });
+      if (cancelled || error || !data) return;
+      const map: Record<string, RealStats> = {};
+      for (const r of data as any[]) {
+        map[r.user_id] = {
+          today: Number(r.today || 0),
+          week: Number(r.week || 0),
+          month: Number(r.month || 0),
+          all_time: Number(r.all_time || 0),
+          prev_week: Number(r.prev_week || 0),
+          prev_month: Number(r.prev_month || 0),
+          mass_dms: Number(r.mass_dms || 0),
+          open_chats: Number(r.open_chats || 0),
+          avg_open_days: Number(r.avg_open_days || 0),
+          sparkline: Array.isArray(r.sparkline) ? r.sparkline : [],
+        };
+      }
+      setChatterRealStats(map);
+    })();
+    return () => { cancelled = true; };
+  }, [chatters]);
+
   const [search, setSearch] = useState("");
   const [pushTarget, setPushTarget] = useState<ChatterProfile | null>(null);
   const [pushTitle, setPushTitle] = useState("");
