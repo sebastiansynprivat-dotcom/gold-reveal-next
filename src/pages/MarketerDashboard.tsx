@@ -11,8 +11,9 @@ import { ResponsiveContainer, AreaChart, Area, XAxis, Tooltip } from "recharts";
 import logo from "@/assets/logo.png";
 import GoldParticles from "@/components/GoldParticles";
 
-type ModelRow = { id: string; name: string; username: string };
-type Snapshot = { model_id: string; followers: number; recorded_at: string };
+type Marketer = { name?: string; instagram?: string; tracking_link?: string; tracking_name?: string };
+type ModelRow = { id: string; name: string; username: string; marketers?: Marketer[] | null };
+type Snapshot = { model_id: string; followers: number; recorded_at: string; instagram_url?: string | null };
 
 function daysAgo(n: number) {
   const d = new Date();
@@ -26,11 +27,21 @@ export default function MarketerDashboard() {
   const [loading, setLoading] = useState(true);
   const [models, setModels] = useState<ModelRow[]>([]);
   const [snapshotsByModel, setSnapshotsByModel] = useState<Record<string, Snapshot[]>>({});
+  const [marketerName, setMarketerName] = useState<string>("");
 
   useEffect(() => {
     (async () => {
       if (!user) return;
       setLoading(true);
+
+      // Load own display name to match marketer entries on models
+      const { data: prof } = await supabase
+        .from("admin_profiles")
+        .select("display_name")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      setMarketerName(((prof as any)?.display_name || "").trim());
+
       const { data: asg } = await supabase
         .from("marketer_model_assignments")
         .select("model_id")
@@ -41,12 +52,12 @@ export default function MarketerDashboard() {
       }
       const { data: mdls } = await supabase
         .from("fanvue_models")
-        .select("id,name,username")
+        .select("id,name,username,marketers")
         .in("id", ids);
       const since = daysAgo(60).toISOString();
       const { data: snaps } = await supabase
         .from("fanvue_instagram_snapshots")
-        .select("model_id,followers,recorded_at")
+        .select("model_id,followers,recorded_at,instagram_url")
         .in("model_id", ids)
         .gte("recorded_at", since)
         .order("recorded_at", { ascending: true });
@@ -197,6 +208,29 @@ export default function MarketerDashboard() {
                       </div>
                       <Instagram className="h-4 w-4 text-accent/70 shrink-0" />
                     </div>
+                    {(() => {
+                      const norm = (s?: string | null) => (s || "").trim().toLowerCase();
+                      const mine = (m.marketers || []).filter(
+                        (mk) => marketerName && norm(mk.name) === norm(marketerName) && mk.instagram
+                      );
+                      if (mine.length === 0) return null;
+                      return (
+                        <div className="mb-3 flex flex-wrap gap-1.5">
+                          {mine.map((mk, i) => {
+                            const raw = mk.instagram!.trim();
+                            const href = raw.startsWith("http") ? raw : `https://instagram.com/${raw.replace(/^@/, "")}`;
+                            const label = raw.replace(/^https?:\/\/(www\.)?instagram\.com\//, "@").replace(/\/$/, "");
+                            return (
+                              <a key={i} href={href} target="_blank" rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-accent/30 bg-accent/10 text-accent text-[10px] hover:bg-accent/20 transition-colors max-w-full">
+                                <Instagram className="h-2.5 w-2.5 shrink-0" />
+                                <span className="truncate">{label}</span>
+                              </a>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
                     {metrics ? (
                       <>
                         <div className="flex items-baseline gap-2 mb-2">
