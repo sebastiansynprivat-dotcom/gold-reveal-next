@@ -5516,9 +5516,7 @@ export default function AdminDashboard() {
                             ? "Nichts weiter zu sehen."
                             : chatterFilter === "no_push"
                               ? "Alle Chatter haben Push aktiviert."
-                              : chatterFilter === "open_2d"
-                                ? "Keine Chats länger als 3 Tage offen."
-                                : chatterFilter === "no_accounts"
+                               : chatterFilter === "no_accounts"
                                   ? "Alle Chatter haben mindestens einen Account."
                                   : "Noch keine Chatter registriert."}
                       </div>
@@ -5527,12 +5525,9 @@ export default function AdminDashboard() {
                         {filtered.map((chatter) => {
                           const cStats = loginStats[chatter.user_id];
                           const activeToday = (cStats?.today || 0) > 0;
-                          const fakeStats = getChatterFakeStats(chatter.user_id);
-                          const chatsOverdue = fakeStats.avgOpenDays > 3;
                           return (
                             <div
                               key={chatter.user_id}
-                              className={chatsOverdue ? "bg-destructive/10 border-l-4 border-destructive" : ""}
                             >
                               <div
                                 className="px-4 py-3 flex flex-col gap-2 hover:bg-secondary/30 transition-colors cursor-pointer"
