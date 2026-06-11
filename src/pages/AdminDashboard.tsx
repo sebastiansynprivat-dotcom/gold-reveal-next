@@ -5844,7 +5844,7 @@ export default function AdminDashboard() {
                                     </div>
                                   ) : (
                                     /* No accounts: just stats */
-                                    <ChatterStatsCard userId={chatter.user_id} name={chatter.group_name || "Chatter"} />
+                                    <ChatterStatsCard userId={chatter.user_id} name={chatter.group_name || "Chatter"} stats={chatterRealStats[chatter.user_id]} />
                                   )}
                                 </div>
                               )}
