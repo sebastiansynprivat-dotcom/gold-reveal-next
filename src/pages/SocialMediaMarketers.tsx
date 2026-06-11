@@ -231,20 +231,19 @@ export default function SocialMediaMarketers() {
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="max-w-md bg-card/95 backdrop-blur-xl border-accent/30">
           <DialogHeader>
-            <DialogTitle className="text-accent">Marketer anlegen</DialogTitle>
+            <DialogTitle className="text-accent">Marketer einladen</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
+            <p className="text-xs text-muted-foreground -mt-1">
+              Der Marketer erhält per E-Mail einen Einladungslink und legt sein Passwort beim ersten Login selbst fest.
+            </p>
             <div>
-              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Name (optional)</Label>
+              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Name</Label>
               <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Max Mustermann" />
             </div>
             <div>
               <Label className="text-xs uppercase tracking-wider text-muted-foreground">E-Mail</Label>
               <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="marketer@example.com" />
-            </div>
-            <div>
-              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Passwort (min. 8)</Label>
-              <Input type="text" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Sicheres Passwort" />
             </div>
             <div>
               <Label className="text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">Models zuweisen (optional)</Label>
@@ -276,7 +275,7 @@ export default function SocialMediaMarketers() {
           <DialogFooter>
             <Button variant="ghost" onClick={() => setCreateOpen(false)}>Abbrechen</Button>
             <Button onClick={handleCreate} disabled={submitting} className="bg-accent text-accent-foreground hover:bg-accent/90">
-              {submitting ? "Erstelle..." : "Anlegen"}
+              {submitting ? "Versende…" : "Einladung senden"}
             </Button>
           </DialogFooter>
         </DialogContent>
