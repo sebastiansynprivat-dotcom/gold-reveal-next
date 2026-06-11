@@ -106,11 +106,10 @@ export default function ModelDashboard() {
     );
   }
 
-  // Show form only when user explicitly chooses to edit. Skipping is allowed,
-  // but a persistent reminder banner appears on the dashboard until submitted.
-  // Treat as filled if submitted, confirmed, or profile already has any substantive content
-  // (e.g. admin imported from Word/Drive).
-  const needsInitialSubmission = !!modelId && !submittedAt && !confirmedAt && !profileHasContent;
+  // Field-based progress (covers manual + admin-imported data automatically).
+  const profileComplete = profileFilled >= profileTotal;
+  // Show "fill out" form on first entry only if the profile is essentially empty.
+  const needsInitialSubmission = !!modelId && !submittedAt && !confirmedAt && profileFilled < 3;
 
   const showForm = editingProfile;
   const copy = modelLanguage === "en" ? {
@@ -118,19 +117,29 @@ export default function ModelDashboard() {
     dashboard: "Model Dashboard",
     back: "Back",
     notLinked: "Your model profile is not linked yet. Please contact the team.",
-    fillTitle: "Please fill out your profile",
-    fillBody: "You can skip this for now, but please complete your profile so the team can work with you properly.",
-    fillCta: "Fill profile now",
-    skip: "Skip for now",
+    progressTitleEmpty: "Let's set up your profile",
+    progressTitlePartial: "Your profile is taking shape",
+    progressTitleDone: "All set — your profile is complete ✨",
+    progressBodyEmpty: "Fill it out so the team can chat authentically as you — every detail you add boosts revenue.",
+    progressBodyPartial: (f: number, t: number, m: number) =>
+      `${f} of ${t} fields filled — ${m} still missing. Completing them helps the chatters represent you better and boosts your revenue.`,
+    progressBodyDone: "Nothing left to do here. You can update details anytime.",
+    fillCta: "Complete profile",
+    editCta: "Edit profile",
   } : {
     profile: "Steckbrief",
     dashboard: "Model Dashboard",
     back: "Zurück",
     notLinked: "Dein Model-Profil ist noch nicht verknüpft. Bitte melde dich beim Team.",
-    fillTitle: "Bitte fülle deinen Steckbrief aus",
-    fillBody: "Du kannst das vorerst überspringen — bitte fülle ihn aber bald aus, damit das Team optimal mit dir arbeiten kann.",
-    fillCta: "Jetzt ausfüllen",
-    skip: "Später",
+    progressTitleEmpty: "Lass uns deinen Steckbrief einrichten",
+    progressTitlePartial: "Dein Steckbrief wächst",
+    progressTitleDone: "Alles abgeschlossen — dein Steckbrief ist komplett ✨",
+    progressBodyEmpty: "Fülle ihn aus, damit das Team authentisch in deinem Namen chatten kann — jedes Detail boostet deinen Umsatz.",
+    progressBodyPartial: (f: number, t: number, m: number) =>
+      `${f} von ${t} Feldern ausgefüllt — ${m} fehlen noch. Wenn du sie ergänzt, können die Chatter dich besser repräsentieren und dein Umsatz steigt.`,
+    progressBodyDone: "Hier ist nichts mehr zu tun. Du kannst Details jederzeit anpassen.",
+    fillCta: "Jetzt vervollständigen",
+    editCta: "Steckbrief bearbeiten",
   };
 
   return (
