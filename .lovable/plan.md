@@ -1,48 +1,49 @@
 ## Goal
-Remove the fake/hash-based chatter stats and replace them with real numbers derived from the chatter's full assignment history (open + closed). If a chatter has no assignments at all, every stat reads `0`.
-
-## Data sources
-
-- `account_assignments(user_id, profile_id, account_id, start_date, end_date)` — full assignment history. Open windows have `end_date IS NULL`. `user_id` can be null for pre-created profiles, so always match by **either** `user_id = <chatter user_id>` **or** `profile_id = <chatter profile id>` (resolved from `profiles` for the given `user_id`).
-- `accounts_data(account_id, date, total, mass_dms, unread_chats, oldest_chat)` — per-day account metrics.
-
-A chatter's revenue on a given day = sum of `accounts_data.total` for every account where `date` falls inside one of that chatter's assignment windows (`start_date` … `end_date` or today if open).
-
-This mirrors the existing `AccountStatsRows.tsx` logic and the `get_chatter_revenue_series` RPC, just expanded to allow `profile_id` matching and not scoped to `auth.uid()`.
+Include pre-create profiles in the admin chatters list with full stats and assigned-account expansion, while gracefully degrading for things that need a real user account (push, login activity, PWA).
 
 ## Backend
 
-Add one admin-only RPC `get_chatter_real_stats(p_user_ids uuid[])` returning one row per chatter:
+Extend `public.get_chatter_real_stats` to accept profile ids as well, since pre-create rows have no `user_id`:
 
-```
-user_id, today, week, month, all_time,
-prev_week, prev_month,
-mass_dms, open_chats, avg_open_days,
-sparkline jsonb  -- [{week_start, total}, …] last 8 weeks
+```sql
+get_chatter_real_stats(p_user_ids uuid[], p_profile_ids uuid[] DEFAULT '{}')
 ```
 
-- Resolve each chatter's `profile_id` from `public.profiles`, then join `account_assignments` on `aa.user_id = p_user_id OR aa.profile_id = profiles.id` so pre-create assignments still count.
-- Revenue buckets: `today` (today only), `week` (last 7 days), `month` (current calendar month), `all_time` (since first assignment). `prev_week` / `prev_month` for the % deltas.
-- `mass_dms`, `open_chats`, `avg_open_days`: latest `accounts_data` row per **currently open** assignment (`end_date IS NULL`); sum `mass_dms` and `unread_chats`, average `oldest_chat`.
-- Sparkline: 8 weekly sums (oldest → newest).
-- Chatter with zero matching assignments (no open, no closed) → all zeros, sparkline of 8 zeros.
-- `SECURITY DEFINER`, gated by `public.is_admin()`. Granted to `authenticated`.
+- Build `targets` from `p_user_ids` (resolving `profile_id` via `profiles`) **plus** `p_profile_ids` (resolving `user_id` if any).
+- Return one row per input id, keyed by `user_id` when present, otherwise by `profile_id`. Add a `profile_id` column to the output so the frontend can map back unambiguously.
+- Existing match logic (`aa.user_id = uid OR aa.profile_id = pid`) already covers pre-create assignments.
 
-## Frontend
+## Frontend (`src/pages/AdminDashboard.tsx`)
 
-1. **`src/components/ChatterStatsCard.tsx`** — drop `hashCode` / `generateSparkline` / `useMemo`. Either fetch the new RPC for the single id, or accept a precomputed `stats` prop from the parent. Skeleton while loading; same layout, colors, labels.
+1. **`loadChatters`**
+   - Drop `.or("pre_create.is.null,pre_create.eq.false")` and `.not("user_id","is",null)`.
+   - Also select `id` from `profiles` (always need it now).
+   - Fetch all open `account_assignments` once (`account_id, user_id, profile_id` where `end_date IS NULL`) to resolve accounts for pre-create rows.
+   - `assigned_accounts` resolution:
+     - real users: `accounts.assigned_to === user_id` (unchanged), plus any account whose open assignment matches `user_id`.
+     - pre-create: accounts whose open assignment has `profile_id === profile.id`.
 
-2. **`src/pages/AdminDashboard.tsx`**
-   - Delete `hashCodeAdmin` and `getChatterFakeStats` (lines ~197-211).
-   - Add `chatterRealStats: Record<user_id, Stats>` state, hydrated once via the batched RPC with all visible chatter `user_id`s (refresh when the list changes).
-   - Replace the four `getChatterFakeStats(...)` call sites in the sort/filter block (lines 3715-3728) and the `chatsOverdue` red-row check (lines 5570-5571) with lookups into `chatterRealStats`, defaulting to zeros while loading.
-   - Pass each chatter's stats row into `ChatterStatsCard` so the expanded card doesn't refetch.
+2. **`ChatterProfile` type / row key**
+   - Add `id: string` (profile id) and `pre_create?: boolean`.
+   - Use `user_id ?? profile.id` as the React `key` and as the row identifier in `expandedChatter`, `checkedChatters`, etc. Stored once as a derived `rowKey` per chatter so existing maps keep working.
 
-No visual changes beyond removing the fake numbers — same revenue row, trends, sparkline, activity stats, all-time card.
+3. **Real-stats fetch**
+   - Split visible chatters into `userIds` and `profileIds`, call the RPC once with both arrays, then key the resulting map by `rowKey`.
+   - `ChatterStatsCard` continues to read from this map via the `stats` prop.
+
+4. **Pre-create row UX**
+   - Add a small "Pre-Create" badge next to the name.
+   - Disable push button, hide the "active today" pulse, treat PWA/push tri-state filters as "not installed" / "no push" (consistent with reality).
+   - Login stats / `loginStats[user_id]` lookups guarded by `if (user_id)`.
+
+5. **Filters/sorts**
+   - `top_*`, `open_2d` sorts already key off `chatterRealStats[user_id]`; switch to `rowKey` so pre-create rows participate.
+   - `no_telegram` works as-is.
+
+No visual redesign — same list, same expansion, just one extra badge and a couple of disabled controls for pre-create rows.
 
 ## Edge cases
 
-- Chatter with zero assignments (no `user_id` or `profile_id` match) → all zeros, flat sparkline, no red highlight.
-- Chatter only with closed assignments → historical revenue counted; `mass_dms` / `open_chats` / `avg_open_days` are `0` (open-assignment-only).
-- Pre-create profile that later gets `user_id` populated → `claim_pre_chatter` already rewrites `account_assignments.user_id`, so future queries match by `user_id`; the `OR profile_id` branch covers anything still unclaimed.
-- Sort/filter actions (`top_tag`, `top_woche`, `top_monat`, `open_2d`) operate on real numbers; not-yet-loaded chatters sort as `0`.
+- Pre-create profile with zero assignments → still listed, all stats 0, no badge highlight.
+- Pre-create profile that gets claimed mid-session → next `loadChatters` shows it as a normal row (the trigger already deletes the pre-create row).
+- Duplicate `telegram_id` between a real user and a pre-create row should not happen (claim trigger merges them), but the `rowKey` would still keep them distinct in the list if it ever did.
