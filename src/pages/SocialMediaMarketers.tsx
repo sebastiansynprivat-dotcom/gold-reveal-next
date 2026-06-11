@@ -48,7 +48,12 @@ export default function SocialMediaMarketers() {
       ...((roleRows || []) as any[]).map(r => r.user_id),
       ...((a || []) as any[]).map(r => r.marketer_user_id),
     ]));
-    setMarketers(ids.map(id => ({ user_id: id })));
+    const { data: profs } = ids.length
+      ? await supabase.from("admin_profiles").select("user_id, display_name").in("user_id", ids)
+      : { data: [] as any[] };
+    const nameById = new Map<string, string>();
+    ((profs || []) as any[]).forEach((p) => nameById.set(p.user_id, p.display_name || ""));
+    setMarketers(ids.map(id => ({ user_id: id, name: nameById.get(id) || "" })));
     setLoading(false);
   };
 
