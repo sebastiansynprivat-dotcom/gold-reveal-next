@@ -2551,6 +2551,22 @@ export type Database = {
         Returns: boolean
       }
       current_model_id: { Args: never; Returns: string }
+      get_chatter_real_stats: {
+        Args: { p_user_ids: string[] }
+        Returns: {
+          all_time: number
+          avg_open_days: number
+          mass_dms: number
+          month: number
+          open_chats: number
+          prev_month: number
+          prev_week: number
+          sparkline: Json
+          today: number
+          user_id: string
+          week: number
+        }[]
+      }
       get_chatter_revenue_series: {
         Args: { p_from: string; p_to: string }
         Returns: {
