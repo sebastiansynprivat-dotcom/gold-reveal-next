@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Trash2, Loader2, GripVertical, Power, PowerOff } from "lucide-react";
+import { Plus, Trash2, Loader2, GripVertical, Power, PowerOff, Zap, ZapOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,8 +23,10 @@ interface PlatformRow {
   label: string;
   color: string;
   is_active: boolean;
+  auto_synced: boolean;
   sort_order: number;
 }
+
 
 const DEFAULT_COLORS = [
   "#d4af37", "#3b82f6", "#22d3ee", "#ec4899", "#0ea5e9",
@@ -242,6 +244,22 @@ export default function PlatformsManager() {
                   <Button
                     size="icon"
                     variant="ghost"
+                    onClick={() => updateField(row, { auto_synced: !row.auto_synced } as any).then(load)}
+                    title={
+                      row.auto_synced
+                        ? "Einnahmen werden automatisch synchronisiert"
+                        : "Einnahmen NICHT in Übersicht enthalten — manueller Login nötig"
+                    }
+                  >
+                    {row.auto_synced ? (
+                      <Zap className="h-4 w-4 text-amber-400" />
+                    ) : (
+                      <ZapOff className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
                     onClick={() => toggleActive(row)}
                     title={row.is_active ? "Deaktivieren" : "Aktivieren"}
                   >
@@ -251,6 +269,7 @@ export default function PlatformsManager() {
                       <PowerOff className="h-4 w-4 text-muted-foreground" />
                     )}
                   </Button>
+
                   <Button
                     size="icon"
                     variant="ghost"
