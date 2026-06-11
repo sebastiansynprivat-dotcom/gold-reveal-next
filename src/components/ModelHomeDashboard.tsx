@@ -790,6 +790,32 @@ export default function ModelHomeDashboard({
           <span className="ml-auto text-[10px] text-muted-foreground">{accounts.length} {copy.active}</span>
         </div>
 
+        {(() => {
+          const unsyncedLabels = Array.from(new Set(
+            accounts
+              .map((a) => {
+                const key = String(a.platform || "").toLowerCase();
+                const p = platformsList.find((pp) => pp.key === key);
+                return p && p.autoSynced === false ? p.label : null;
+              })
+              .filter(Boolean) as string[]
+          ));
+          if (unsyncedLabels.length === 0) return null;
+          const list = unsyncedLabels.join(", ");
+          return (
+            <div className="flex items-start gap-2 rounded-xl border border-amber-500/30 bg-amber-500/5 p-3">
+              <Info className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+              <p className="text-[11px] leading-relaxed text-amber-200/90">
+                {lang === "en"
+                  ? <>The earnings from <span className="font-semibold text-amber-100">{list}</span> are <span className="font-semibold">not</span> included in this overview. Please log in to the platform directly to view them.</>
+                  : <>Die Einnahmen von <span className="font-semibold text-amber-100">{list}</span> sind <span className="font-semibold">nicht</span> in dieser Übersicht enthalten. Bitte logge dich direkt auf der Plattform ein, um sie einzusehen.</>}
+              </p>
+            </div>
+          );
+        })()}
+
+
+
         {accounts.length === 0 ? (
           <p className="text-xs text-muted-foreground text-center py-6">
             {copy.noPlatforms}
