@@ -990,6 +990,7 @@ export default function AdminDashboard() {
   const [filterTelegram, setFilterTelegram] = useState<boolean | null>(null);
   const [filterPush, setFilterPush] = useState<boolean | null>(null);
   const [filterPwa, setFilterPwa] = useState<boolean | null>(null);
+  const [filterAssigned, setFilterAssigned] = useState<boolean | null>(null);
   const [botMessages, setBotMessages] = useState<
     Record<string, { message: string; followUp: string; isActive: boolean; saving: boolean }>
   >({});
@@ -3887,6 +3888,11 @@ export default function AdminDashboard() {
     } else if (filterPwa === false) {
       result = result.filter((c) => !pwaUsers.has(c.user_id));
     }
+    if (filterAssigned === true) {
+      result = result.filter((c) => (c.assigned_accounts?.length ?? 0) > 0);
+    } else if (filterAssigned === false) {
+      result = result.filter((c) => !c.assigned_accounts || c.assigned_accounts.length === 0);
+    }
 
     switch (chatterFilter) {
       case "no_telegram":
@@ -3943,6 +3949,7 @@ export default function AdminDashboard() {
     filterTelegram,
     filterPush,
     filterPwa,
+    filterAssigned,
     pwaUsers,
     modelNames,
   ]);
@@ -5144,6 +5151,8 @@ export default function AdminDashboard() {
                     const pushNo = chatters.length - pushYes;
                     const pwaYes = pwaUsers.size;
                     const pwaNo = chatters.length - pwaYes;
+                    const assignedYes = chatters.filter((c) => (c.assigned_accounts?.length ?? 0) > 0).length;
+                    const assignedNo = chatters.length - assignedYes;
 
                     const freeAccounts = accounts.filter((a) => !a.assigned_to).length;
 
@@ -5213,7 +5222,7 @@ export default function AdminDashboard() {
                       current === target ? null : target;
 
                     return (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                         {/* Chatter gesamt – simple card, vertically centered to match dual cards */}
                         <div className="glass-card-subtle rounded-xl p-4 flex flex-col items-center justify-center">
                           <p className="text-[9px] text-muted-foreground mb-1 tracking-wide uppercase">
@@ -5256,6 +5265,15 @@ export default function AdminDashboard() {
                           filterState={filterPwa}
                           onClickA={() => setFilterPwa((p) => toggleFilter(p, true))}
                           onClickB={() => setFilterPwa((p) => toggleFilter(p, false))}
+                        />
+                        <DualCard
+                          labelA="Zugewiesen"
+                          valueA={assignedYes}
+                          labelB="Unzugewiesen"
+                          valueB={assignedNo}
+                          filterState={filterAssigned}
+                          onClickA={() => setFilterAssigned((p) => toggleFilter(p, true))}
+                          onClickB={() => setFilterAssigned((p) => toggleFilter(p, false))}
                         />
                       </div>
                     );
