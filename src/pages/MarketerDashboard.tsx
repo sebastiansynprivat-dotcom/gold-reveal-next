@@ -208,6 +208,29 @@ export default function MarketerDashboard() {
                       </div>
                       <Instagram className="h-4 w-4 text-accent/70 shrink-0" />
                     </div>
+                    {(() => {
+                      const norm = (s?: string | null) => (s || "").trim().toLowerCase();
+                      const mine = (m.marketers || []).filter(
+                        (mk) => marketerName && norm(mk.name) === norm(marketerName) && mk.instagram
+                      );
+                      if (mine.length === 0) return null;
+                      return (
+                        <div className="mb-3 flex flex-wrap gap-1.5">
+                          {mine.map((mk, i) => {
+                            const raw = mk.instagram!.trim();
+                            const href = raw.startsWith("http") ? raw : `https://instagram.com/${raw.replace(/^@/, "")}`;
+                            const label = raw.replace(/^https?:\/\/(www\.)?instagram\.com\//, "@").replace(/\/$/, "");
+                            return (
+                              <a key={i} href={href} target="_blank" rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-accent/30 bg-accent/10 text-accent text-[10px] hover:bg-accent/20 transition-colors max-w-full">
+                                <Instagram className="h-2.5 w-2.5 shrink-0" />
+                                <span className="truncate">{label}</span>
+                              </a>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
                     {metrics ? (
                       <>
                         <div className="flex items-baseline gap-2 mb-2">
