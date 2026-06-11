@@ -720,6 +720,14 @@ export default function SocialMediaDashboard() {
                   })()}
 
                   {(() => {
+                    const normIg = (u: string | null | undefined) => {
+                      if (!u) return "";
+                      let s = u.trim().toLowerCase();
+                      s = s.replace(/^https?:\/\//, "").replace(/^www\./, "");
+                      s = s.replace(/^instagram\.[a-z.]+\//, "").replace(/^@/, "");
+                      s = s.split(/[?#]/)[0];
+                      return s.replace(/\/+$/, "");
+                    };
                     const igs = (m.instagram_urls?.length ? m.instagram_urls : (m.instagram_url ? [m.instagram_url] : []))
                       .map((u) => u?.trim()).filter(Boolean);
                     const all = snapshots[m.id] || [];
@@ -739,8 +747,9 @@ export default function SocialMediaDashboard() {
                           <p className="text-[11px] text-muted-foreground/70 italic">Noch keine Instagram-Links hinterlegt</p>
                         )}
                         {igs.map((u) => {
-                          const snaps = all.filter((s) => s.instagram_url === u);
-                          const merged = snaps.length === 0 && igs.length === 1 ? legacy : snaps;
+                          const key = normIg(u);
+                          const snaps = all.filter((s) => normIg(s.instagram_url) === key);
+                          const merged = snaps.length === 0 && igs.length === 1 ? [...legacy] : snaps;
                           return <IgGrowthBlock key={u} url={u} snaps={merged} />;
                         })}
                         {igs.length === 0 && legacy.length > 0 && (
