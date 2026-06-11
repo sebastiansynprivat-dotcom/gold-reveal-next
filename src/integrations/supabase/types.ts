@@ -2767,6 +2767,7 @@ export type Database = {
         | "sub_admin"
         | "fanvue_partner"
         | "fanvue_model"
+        | "socialmedia_marketer"
       platform: "new" | "maloum" | "4based" | "brezzels"
     }
     CompositeTypes: {
@@ -2920,6 +2921,7 @@ export const Constants = {
         "sub_admin",
         "fanvue_partner",
         "fanvue_model",
+        "socialmedia_marketer",
       ],
       platform: ["new", "maloum", "4based", "brezzels"],
     },
