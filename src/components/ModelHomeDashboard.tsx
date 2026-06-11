@@ -209,6 +209,8 @@ export default function ModelHomeDashboard({
   const copy = COPY[lang];
   const periodLabels = lang === "en" ? PERIOD_LABELS_EN : PERIOD_LABELS;
   const [period, setPeriod] = useState<Period>("month");
+  const platformsList = usePlatforms();
+
   const [accounts, setAccounts] = useState<any[]>([]);
   const [revenueByAccount, setRevenueByAccount] = useState<Record<string, number>>({});
   const [lifetimeByAccount, setLifetimeByAccount] = useState<Record<string, number>>({});
