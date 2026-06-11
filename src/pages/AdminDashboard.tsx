@@ -990,6 +990,7 @@ export default function AdminDashboard() {
   const [filterTelegram, setFilterTelegram] = useState<boolean | null>(null);
   const [filterPush, setFilterPush] = useState<boolean | null>(null);
   const [filterPwa, setFilterPwa] = useState<boolean | null>(null);
+  const [filterAssigned, setFilterAssigned] = useState<boolean | null>(null);
   const [botMessages, setBotMessages] = useState<
     Record<string, { message: string; followUp: string; isActive: boolean; saving: boolean }>
   >({});
