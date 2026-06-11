@@ -3949,6 +3949,7 @@ export default function AdminDashboard() {
     filterTelegram,
     filterPush,
     filterPwa,
+    filterAssigned,
     pwaUsers,
     modelNames,
   ]);
