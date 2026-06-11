@@ -38,6 +38,7 @@ const CoachingBasics = lazy(() => import("./pages/CoachingBasics"));
 const SalesScripts = lazy(() => import("./pages/SalesScripts"));
 const Library = lazy(() => import("./pages/Library"));
 const MarketerLogin = lazy(() => import("./pages/MarketerLogin"));
+const MarketerSetupPassword = lazy(() => import("./pages/MarketerSetupPassword"));
 const MarketerDashboard = lazy(() => import("./pages/MarketerDashboard"));
 const SocialMediaMarketers = lazy(() => import("./pages/SocialMediaMarketers"));
 
