@@ -11,23 +11,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Plus, Trash2, Film, Image as ImageIcon, Clapperboard, Users, CalendarDays, Pencil, X, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Users, CalendarDays, Pencil, X, CheckCircle2, Link as LinkIcon } from "lucide-react";
 import logo from "@/assets/logo.png";
 import GoldParticles from "@/components/GoldParticles";
 
-type ItemType = "reel" | "post" | "story";
-type ContentItem = { type: ItemType; title: string; notes?: string };
+// Item shape: { title, reference_url, notes }. Legacy items may carry `type` — ignored on render.
+type ContentItem = { title: string; reference_url?: string; notes?: string; type?: string };
 type DayMap = Record<number, ContentItem[]>;
 
 type Plan = { id: string; title: string; description: string; created_at: string };
 type Model = { id: string; name: string; username: string };
 type Assignment = { id: string; plan_id: string; model_id: string; start_date: string };
-
-const ITEM_TYPES: { value: ItemType; label: string; icon: any; color: string }[] = [
-  { value: "reel", label: "Reel", icon: Film, color: "bg-pink-500/15 text-pink-300 border-pink-500/30" },
-  { value: "post", label: "Post", icon: ImageIcon, color: "bg-blue-500/15 text-blue-300 border-blue-500/30" },
-  { value: "story", label: "Story", icon: Clapperboard, color: "bg-amber-500/15 text-amber-300 border-amber-500/30" },
-];
 
 const DAYS = 30;
 
