@@ -657,117 +657,31 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Group name pill */}
+              {/* Group name pill (read-only) */}
               <div className="relative flex-1 min-w-0 group">
-                <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-accent transition-colors z-10" />
-                {groupNameSaved && !editingGroupName ? (
-                  <div className="w-full h-9 flex items-center pl-9 pr-9 rounded-full bg-secondary/60 border border-border text-sm text-foreground font-medium truncate">
-                    <span className="truncate">{groupName}</span>
-                    <button
-                      onClick={() => setEditingGroupName(true)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full hover:bg-accent/10 text-accent transition-colors"
-                      aria-label="Edit group name"
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <Input
-                      value={groupName}
-                      onChange={(e) => setGroupName(e.target.value)}
-                      placeholder={lang === "en" ? "Group Name" : "Gruppenname"}
-                      className="w-full h-9 pl-9 pr-9 rounded-full bg-secondary/60 border-border text-sm"
-                    />
-                    <button
-                      onClick={saveGroupName}
-                      disabled={!groupName.trim()}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full hover:bg-accent/10 text-accent disabled:opacity-40 transition-colors"
-                      aria-label="Save group name"
-                    >
-                      <Save className="h-3.5 w-3.5" />
-                    </button>
-                  </>
-                )}
+                <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
+                <div
+                  className={`w-full h-9 flex items-center pl-9 pr-3 rounded-full bg-secondary/60 border border-border text-sm truncate ${
+                    groupName ? "text-foreground font-medium" : "text-muted-foreground"
+                  }`}
+                  title={groupName || (lang === "en" ? "Group Name" : "Gruppenname")}
+                >
+                  <span className="truncate">{groupName || (lang === "en" ? "Group Name" : "Gruppenname")}</span>
+                </div>
               </div>
 
-              {/* Telegram ID pill */}
+              {/* Telegram ID pill (read-only) */}
               <div className="relative flex-1 min-w-0 group">
-                <MessageSquare className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-accent transition-colors z-10" />
-                {telegramSaved ? (
-                  <div className="w-full h-9 flex items-center pl-9 pr-9 rounded-full bg-secondary/60 border border-border text-sm text-foreground font-medium truncate">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-accent shrink-0 mr-1.5" />
-                    <span className="truncate">{telegramId}</span>
-                    <button
-                      onClick={() => setTelegramSaved(false)}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-full hover:bg-accent/10 text-accent transition-colors"
-                      aria-label="Edit Telegram ID"
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                ) : (
-                  <>
-                    <Input
-                      value={telegramId}
-                      onChange={(e) => setTelegramId(e.target.value)}
-                      placeholder={lang === "en" ? "Telegram ID" : "Telegram ID"}
-                      className="w-full h-9 pl-9 pr-16 rounded-full bg-secondary/60 border-border text-sm"
-                    />
-                    <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
-                      <Dialog
-                        onOpenChange={(open) => {
-                          setVideoOpen(open);
-                          if (!open) setVideoLoaded(false);
-                        }}
-                      >
-                        <DialogTrigger asChild>
-                          <button
-                            className="p-1.5 rounded-full hover:bg-accent/10 text-muted-foreground hover:text-accent transition-colors"
-                            aria-label="Where do I find my Telegram ID?"
-                            title={lang === "en" ? "Where do I find my Telegram ID?" : "Wo finde ich meine Telegram ID?"}
-                          >
-                            <HelpCircle className="h-3.5 w-3.5" />
-                          </button>
-                        </DialogTrigger>
-                        <DialogContent className="glass-card border-border sm:max-w-lg">
-                          <DialogHeader>
-                            <DialogTitle className="text-foreground">Wo finde ich meine Telegram-ID?</DialogTitle>
-                            <DialogDescription className="text-muted-foreground text-xs">
-                              Schau dir das kurze Video an, um deine Telegram-ID zu finden.
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="aspect-video w-full rounded-lg overflow-hidden bg-secondary relative">
-                            {!videoLoaded && (
-                              <div className="absolute inset-0 flex items-center justify-center">
-                                <div className="h-8 w-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-                              </div>
-                            )}
-                            {videoOpen && (
-                              <iframe
-                                src="https://www.loom.com/embed/0582b0ea68b942728a535a98f990660b?autoplay=1"
-                                frameBorder="0"
-                                allowFullScreen
-                                allow="autoplay"
-                                className={`w-full h-full transition-opacity duration-300 ${videoLoaded ? "opacity-100" : "opacity-0"}`}
-                                title="Telegram ID finden"
-                                onLoad={() => setVideoLoaded(true)}
-                              />
-                            )}
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                      <button
-                        onClick={saveTelegram}
-                        disabled={!telegramId.trim()}
-                        className="p-1.5 rounded-full hover:bg-accent/10 text-accent disabled:opacity-40 transition-colors"
-                        aria-label="Save Telegram ID"
-                      >
-                        <Save className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  </>
-                )}
+                <MessageSquare className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
+                <div
+                  className={`w-full h-9 flex items-center pl-9 pr-3 rounded-full bg-secondary/60 border border-border text-sm truncate ${
+                    telegramId ? "text-foreground font-medium" : "text-muted-foreground"
+                  }`}
+                  title={telegramId || "Telegram ID"}
+                >
+                  {telegramId && <CheckCircle2 className="h-3.5 w-3.5 text-accent shrink-0 mr-1.5" />}
+                  <span className="truncate">{telegramId || "Telegram ID"}</span>
+                </div>
               </div>
             </div>
 
