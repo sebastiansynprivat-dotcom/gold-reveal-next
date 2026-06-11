@@ -33,7 +33,9 @@ import ModelFaqSection from "@/components/ModelFaqSection";
 import ContentImpactCalculator from "@/components/ContentImpactCalculator";
 import ModelOnboardingTour from "@/components/ModelOnboardingTour";
 import ModelRequestsSection from "@/components/ModelRequestsSection";
-import { Sparkles } from "lucide-react";
+import { Sparkles, Info } from "lucide-react";
+import { usePlatforms } from "@/lib/platforms";
+
 
 
 type Period = "today" | "yesterday" | "last7" | "last30" | "month" | "lifetime";
