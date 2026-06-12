@@ -95,7 +95,7 @@ Deno.serve(async (req) => {
     if (allUserIds.size > 0) {
       const { data: profiles, error: pErr } = await supabase
         .from("profiles")
-        .select("id, user_id, telegram_id, language, offer")
+        .select("id, user_id, telegram_id, language, offer, start_date, group_name, name")
         .in("user_id", Array.from(allUserIds));
       if (pErr) return json({ error: pErr.message }, 500);
       for (const p of profiles ?? []) {
@@ -106,7 +106,7 @@ Deno.serve(async (req) => {
     if (allProfileIds.size > 0) {
       const { data: profiles, error: pErr } = await supabase
         .from("profiles")
-        .select("id, user_id, telegram_id, language, offer")
+        .select("id, user_id, telegram_id, language, offer, start_date, group_name, name")
         .in("id", Array.from(allProfileIds));
       if (pErr) return json({ error: pErr.message }, 500);
       for (const p of profiles ?? []) {
@@ -124,6 +124,9 @@ Deno.serve(async (req) => {
           telegram_id: p.telegram_id ?? null,
           language: p.language ?? null,
           offer: p.offer ?? null,
+          start_date: p.start_date ?? null,
+          group_name: p.group_name ?? null,
+          name: p.name ?? null,
         }));
       return { ...a, assigned_chatter };
     });
