@@ -1,20 +1,32 @@
-## Goal
-Disable editing of **Group Name** and **Telegram ID** for signed-in chatters. Show both fields as read-only display-only pills.
+## Ziel
+Die Edge Function `update-profile-names` soll neben `name` auch ein optionales Feld `start_date` akzeptieren und beim Matching-Update in `profiles` mitsetzen.
 
-## Changes
+## Aktueller Zustand
+Die Function erwartet Payloads mit `telegram_id` + `name`, matched Profile per normalisierter Telegram-ID und updated nur das `name` Feld. Das `profiles`-Schema enthält bereits eine `start_date` Spalte.
 
-### `src/pages/Dashboard.tsx`
-- **Desktop header pills** (around line 660–770): Replace the editable Input + Save button + Pencil toggle with a static display pill that only shows the saved value.
-- **Mobile info rows** (around line 840–920): Same — replace the editable Input + Save/Ändern toggle with static text display.
-- Remove or simplify the conditional `editingGroupName` / `telegramSaved` edit-mode branches; keep the saved-value branch as the only path.
-- The help dialog for "Wo finde ich meine Telegram-ID?" can remain as a read-only helper.
+## Änderungen
 
-## UI After Change
-- Group Name: a rounded pill showing the saved group name, no pencil icon, no input field.
-- Telegram ID: a rounded pill showing the saved Telegram ID with the green checkmark, no "Ändern" button, no input field.
-- If the value is empty, show a muted placeholder (e.g. "—") instead of an input.
+### 1. Schema-Erweiterung
+Erweitere das Item-Schema um ein optionales `start_date`:
+- `telegram_id`: string (required)
+- `name`: string (required)
+- `start_date`: string (optional, ISO-Date-Format)
 
-## Technical Notes
-- Keep `useState` variables for the loaded values so the display still populates from Supabase on mount.
-- Remove `saveGroupName`, `saveTelegram`, `editingGroupName`, `groupNameSaved`, `telegramSaved` state/setters that are only used for edit UX (or simplify to just track whether a value was loaded).
-- Keep `groupName` usage in the billing/referral section intact.
+### 2. Update-Logik
+Baue das Update-Objekt dynamisch:
+- `name` wird immer gesetzt (wie bisher)
+- `start_date` wird nur gesetzt, wenn es im Payload vorhanden und nicht leer ist
+
+```
+const updatePayload: Record<string, unknown> = { name: item.name };
+if (item.start_date) updatePayload.start_date = item.start_date;
+```
+
+### 3. Rückgabewert
+Ergebnisobjekt bleibt gleich (`telegram_id`, `updated`, optional `error`). Kein Breaking Change für bestehende Aufrufer, die nur `name` senden.
+
+## Technische Details
+- Sprache/Runtime: Deno (Edge Function)
+- Datei: `supabase/functions/update-profile-names/index.ts`
+- Auth: Unverändert (`x-api-key` gegen `ACCOUNTS_SECRET_KEY`)
+- Keine Schema-/Migrations-Änderung nötig (`start_date` existiert bereits in `profiles`)
