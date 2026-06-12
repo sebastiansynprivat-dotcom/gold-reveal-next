@@ -173,6 +173,18 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage:
       toast.error("Bitte wähle ein Model aus.");
       return;
     }
+    // Block requests for inactive models (covers both the select path and
+    // the auto-filled single-model fallback).
+    const targetModel = selectedModel
+      || (hasModelList && availableModels!.length === 1 ? availableModels![0] : null);
+    if (targetModel && targetModel.active === false) {
+      toast.error(
+        lang === "en"
+          ? "This model is currently inactive — requests are paused."
+          : "Dieses Model ist aktuell inaktiv — Anfragen sind pausiert.",
+      );
+      return;
+    }
     if (!modelName.trim() || !description.trim()) {
       toast.error("Bitte fülle alle Pflichtfelder aus.");
       return;
