@@ -85,9 +85,12 @@ Deno.serve(async (req) => {
         continue;
       }
 
+      const updatePayload: Record<string, unknown> = { name: item.name };
+      if (item.start_date) updatePayload.start_date = item.start_date;
+
       const { data: updated, error: upErr } = await supabase
         .from("profiles")
-        .update({ name: item.name })
+        .update(updatePayload)
         .in("id", ids)
         .select("id");
 
