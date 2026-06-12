@@ -33,18 +33,25 @@ Deno.serve(async (req) => {
     const rawItems = Array.isArray(body) ? body : [body];
     if (rawItems.length === 0) return json({ error: "Empty payload" }, 400);
 
-    type Item = { telegram_id: string; name: string };
+    type Item = { telegram_id: string; name: string; start_date?: string };
     const items: Item[] = [];
     for (const r of rawItems) {
       if (!r || typeof r !== "object") return json({ error: "Each item must be an object" }, 400);
-      const { telegram_id, name } = r as Record<string, unknown>;
+      const { telegram_id, name, start_date } = r as Record<string, unknown>;
       if (typeof telegram_id !== "string" || !telegram_id.trim()) {
         return json({ error: "telegram_id must be a non-empty string" }, 400);
       }
       if (typeof name !== "string" || !name.trim()) {
         return json({ error: "name must be a non-empty string" }, 400);
       }
-      items.push({ telegram_id: telegram_id.trim(), name: name.trim() });
+      const item: Item = { telegram_id: telegram_id.trim(), name: name.trim() };
+      if (start_date !== undefined && start_date !== null && start_date !== "") {
+        if (typeof start_date !== "string" || !/^\d{4}-\d{2}-\d{2}/.test(start_date.trim())) {
+          return json({ error: "start_date must be an ISO date string (YYYY-MM-DD)" }, 400);
+        }
+        item.start_date = start_date.trim();
+      }
+      items.push(item);
     }
 
     const supabase = createClient(
