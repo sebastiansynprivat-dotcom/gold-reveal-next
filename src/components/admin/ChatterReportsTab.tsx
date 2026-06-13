@@ -473,9 +473,17 @@ export default function ChatterReportsTab({ chatters }: Props) {
               <Calendar mode="single" selected={date} onSelect={(d) => d && setDate(d)} initialFocus className={cn("p-3 pointer-events-auto")} />
             </PopoverContent>
           </Popover>
-          <Button onClick={downloadCSV} variant="outline" className="bg-card/60 border-[hsl(var(--gold))]/40 backdrop-blur-xl text-[hsl(var(--gold))] hover:text-[hsl(var(--gold))] hover:bg-[hsl(var(--gold))]/10">
-            <Download className="mr-2 h-4 w-4" /> Download Report
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="bg-card/60 border-[hsl(var(--gold))]/40 backdrop-blur-xl text-[hsl(var(--gold))] hover:text-[hsl(var(--gold))] hover:bg-[hsl(var(--gold))]/10">
+                <Download className="mr-2 h-4 w-4" /> Download Report <ChevronDown className="ml-2 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-card/95 backdrop-blur-xl border-[hsl(var(--gold))]/30">
+              <DropdownMenuItem onClick={() => downloadReport("xlsx")}>Download as XLSX</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => downloadReport("csv")}>Download as CSV</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
