@@ -60,7 +60,9 @@ import {
   Download,
   Pencil,
   MessageCircle,
+  FileBarChart,
 } from "lucide-react";
+import ChatterReportsTab from "@/components/admin/ChatterReportsTab";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import AdminModelReplyApprovals from "@/components/AdminModelReplyApprovals";
 import { Button } from "@/components/ui/button";
