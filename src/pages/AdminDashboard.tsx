@@ -4057,6 +4057,7 @@ export default function AdminDashboard() {
   const allTabItems = [
     { key: "einnahmen" as const, label: "Einnahmen", icon: TrendingUp, onClick: () => { setActiveTab("einnahmen"); setTimeFilter("heute"); } },
     { key: "chatter" as const, label: "Chatter", icon: Users, onClick: () => setActiveTab("chatter") },
+    { key: "reports" as const, label: "Reports", icon: FileBarChart, onClick: () => setActiveTab("reports") },
     {
       key: "anfragen" as const,
       label: "Anfragen",
