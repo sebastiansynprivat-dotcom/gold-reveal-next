@@ -125,6 +125,16 @@ export default function MonthlyStreakTracker({ dailyRevenue }: { dailyRevenue: n
   const [streak, setStreak] = useState<StreakData>(loadStreak);
   const [showDialog, setShowDialog] = useState(false);
   const [demoMode, setDemoMode] = useState(false);
+  const [dailyGoal, setDailyGoal] = useState<number>(0);
+
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase.from("profiles").select("daily_goal").eq("user_id", user.id).maybeSingle();
+      setDailyGoal(Number(data?.daily_goal || 0));
+    })();
+  }, []);
 
   const today = getToday();
   const displayStreak = demoMode ? buildDemoStreak() : streak;
