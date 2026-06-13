@@ -252,7 +252,7 @@ export default function ChatterReportsTab({ chatters }: Props) {
           day, week, month, prev_week, prev_month, all_time,
           mass_dms, unread, oldest, streak,
           goal: goalMap.get(c.user_id) || 0,
-          start_date: c.start_date ?? null,
+          start_date: startMap.get(c.user_id) ?? c.start_date ?? null,
           daily, weekly, monthly,
           platforms,
         };
