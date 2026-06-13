@@ -374,26 +374,58 @@ export default function ChatterReportsTab({ chatters }: Props) {
     return base.filter((r) => r.name.toLowerCase().includes(q));
   }, [rows, search, activePlatform]);
 
-  const downloadCSV = () => {
-    const headers = ["Name", "Day (€)", "Week (€)", "Month (€)", "Week Δ%", "Month Δ%", "Goal (€)", "Streak (days)", "MassDM Sent", "Chats Unread", "Oldest Unread (days)", "Start Date", "Revenue All Time (€)"];
-    const lines = [headers.join(",")];
-    for (const r of filtered) {
-      const wDelta = r.prev_week > 0 ? ((r.week - r.prev_week) / r.prev_week) * 100 : 0;
-      const mDelta = r.prev_month > 0 ? ((r.month - r.prev_month) / r.prev_month) * 100 : 0;
-      lines.push([
-        `"${r.name}"`, fmt(r.day), fmt(r.week), fmt(r.month),
-        wDelta.toFixed(1), mDelta.toFixed(1),
-        fmt(r.goal), r.streak, r.mass_dms, r.unread, r.oldest,
-        r.start_date ?? "", fmt(r.all_time),
-      ].join(","));
+  const buildReport = () => {
+    const headers = [
+      "Date", "Name", "Telegram ID", "Models",
+      "Yesterday", "Goal", "Streak",
+      "Last Week Revenue", "Last Month Revenue", "All Time Revenue",
+      "Mass DM", "Unread Chats", "Oldest Chat",
+    ];
+    const dateStr = format(subDays(new Date(), 1), "yyyy-MM-dd");
+    const rowsOut: (string | number)[][] = filtered.map((r) => [
+      dateStr,
+      r.name,
+      r.telegram_id ?? "",
+      (r.models ?? []).join(", "),
+      r.day,
+      r.goal,
+      r.streak,
+      r.week,
+      r.month,
+      r.all_time,
+      r.mass_dms,
+      r.unread,
+      r.oldest,
+    ]);
+    return { headers, rows: rowsOut, dateStr };
+  };
+
+  const downloadReport = (fmtKind: "xlsx" | "csv") => {
+    const { headers, rows: rowsOut, dateStr } = buildReport();
+    const platformName = activePlatform || "All";
+    const safePlatform = platformName.replace(/\s+/g, "_");
+    const filename = `${safePlatform}_Chatter_Report_${dateStr}.${fmtKind}`;
+
+    if (fmtKind === "xlsx") {
+      const ws = XLSX.utils.aoa_to_sheet([headers, ...rowsOut]);
+      ws["!cols"] = headers.map((h) => ({ wch: Math.max(12, h.length + 2) }));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, platformName.slice(0, 31));
+      XLSX.writeFile(wb, filename);
+    } else {
+      const esc = (v: string | number) => {
+        const s = String(v ?? "");
+        return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+      };
+      const lines = [headers.map(esc).join(",")];
+      for (const r of rowsOut) lines.push(r.map(esc).join(","));
+      const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
     }
-    const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    const safePlatform = (activePlatform || "all").toLowerCase().replace(/\s+/g, "-");
-    a.href = url; a.download = `chatter-report-${safePlatform}-${iso(date)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
   };
 
   const DeltaChip = ({ curr, prev, label }: { curr: number; prev: number; label: string }) => {
