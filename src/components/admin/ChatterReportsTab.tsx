@@ -322,6 +322,15 @@ export default function ChatterReportsTab({ chatters }: Props) {
             c.start_date ??
             (c.created_at ? String(c.created_at).slice(0, 10) : null);
 
+          const modelsSet = new Set<string>();
+          for (const a of asgs) {
+            const mid = modelIdByAccount.get(a.account_id);
+            if (mid) {
+              const name = modelNameById.get(mid);
+              if (name) modelsSet.add(name);
+            }
+          }
+
           out.push({
             key: `${c.id ?? uid}__${platform}`,
             user_id: uid,
@@ -333,6 +342,7 @@ export default function ChatterReportsTab({ chatters }: Props) {
             start_date: fallbackStart,
             daily, weekly, monthly,
             platform,
+            models: Array.from(modelsSet),
           });
         }
       }
