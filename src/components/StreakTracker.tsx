@@ -103,7 +103,7 @@ export default function StreakTracker({ dailyRevenue }: { dailyRevenue: number }
   const streakComplete = consecutiveDays >= STREAK_GOAL;
 
   useEffect(() => {
-    if (dailyRevenue >= DAILY_TARGET && !streak.dates.includes(today)) {
+    if (dailyGoal > 0 && dailyRevenue >= dailyGoal && !streak.dates.includes(today)) {
       const updated = { ...streak, dates: [...streak.dates, today], lastCheckedDate: today };
       setStreak(updated);
       saveStreak(updated);
