@@ -1,82 +1,105 @@
-## Goal
+## Correction
 
-Replace the single CSV download in `src/components/admin/ChatterReportsTab.tsx` with a **format picker (CSV or XLSX)**, both producing the exact strict format below. File name follows `Platform_Chatter_Report_YYYY-MM-DD.<ext>`.
+You are right. The current table logic is wrong for what this report is supposed to show.
 
-## Final headers (in order, no `(€)` anywhere, no Notes)
-
-1. Date
-2. Name
-3. Telegram ID
-4. Models
-5. Yesterday
-6. Goal
-7. Streak
-8. Last Week Revenue
-9. Last Month Revenue
-10. All Time Revenue
-11. Mass DM
-12. Unread Chats
-13. Oldest Chat
-
-## Field sources
-
-| Column | Source |
-|--------|--------|
-| Date | `yesterday = addDays(new Date(), -1)` → `YYYY-MM-DD` (same value in every row) |
-| Name | `row.name` |
-| Telegram ID | `row.telegram_id` |
-| Models | Comma-separated model names from accounts assigned to this chatter on the active platform |
-| Yesterday | `row.day` (revenue on the selected report date) |
-| Goal | `profiles.daily_goal` (already in `row.goal`) |
-| Streak | `row.streak` |
-| Last Week Revenue | `row.week` |
-| Last Month Revenue | `row.month` |
-| All Time Revenue | `row.all_time` |
-| Mass DM | `row.mass_dms` (sum of latest `accounts_data.mass_dms` per assigned account) |
-| Unread Chats | `row.unread` (sum of latest `accounts_data.unread_chats`) |
-| Oldest Chat | `row.oldest` (max of latest `accounts_data.oldest_chat`, days) |
-
-## Scope per export
-
-- One row per chatter on the **currently active platform tab** (matches the on-screen `filtered` set).
-- Sheet name (XLSX) = the platform.
-- File name: `${Platform}_Chatter_Report_${yyyy-mm-dd}.${ext}` (platform kept readable, spaces → `_`).
-
-## Data additions
-
-`Models` requires a small fetch extension:
-
-1. Add `model_id` to the existing `accounts` select.
-2. Batch-fetch `models(id, name)` for distinct `model_id`s.
-3. Build `modelByAccount: Map<accountId, modelName>`.
-4. While building each row, collect distinct model names for that platform's assignments → `row.models: string[]`.
-
-## UI change — format picker
-
-Replace the single "Download Report" button with a **dropdown menu** (existing `@/components/ui/dropdown-menu`):
+Right now the UI calculates:
 
 ```text
-[ ⬇ Download Report ▾ ]
-   ├─ Download as XLSX
-   └─ Download as CSV
+D = selected day
+W = rolling/current 7-day window ending on selected day
+M = current calendar month-to-date
 ```
 
-- Trigger keeps the current gold outline style and Download icon.
-- Selecting an option calls `downloadReport("xlsx")` or `downloadReport("csv")`.
+But based on your report requirement, it should calculate:
 
-## Generation
+```text
+D = yesterday / selected report day
+W = previous completed week
+M = previous completed month
+All Time = all revenue inside assignment windows
+```
 
-- Add dependency: `xlsx` (SheetJS).
-- One shared `buildRows()` returns `{ headers, rows }` (numbers stay numeric, strings stay strings).
-- `downloadReport("csv")` → join with commas, quote strings containing `,` / `"` / `\n`, `Blob` + `URL.createObjectURL`.
-- `downloadReport("xlsx")` → `XLSX.utils.aoa_to_sheet([headers, ...rows])`, set column widths, `book_append_sheet(wb, ws, platform)`, `XLSX.writeFile(wb, filename)`.
+So for Ifeanyi Odo, if his 4Based assignment started only 4 days ago:
 
-## Out of scope
+```text
+W = 0
+M = 0
+All Time = revenue from assignment start until report date
+```
 
-No changes to the on-screen table, streak logic, goal editing, or any other tab.
+## Plan
 
-## Technical notes
+Update `src/components/admin/ChatterReportsTab.tsx` only.
 
-- Yesterday is computed at click time so the export is always relative to "now", independent of the table's date picker.
-- `xlsx` adds ~400KB gzipped; acceptable for an admin-only tab. Loaded with a normal top-level import.
-- If `model_id` is null on an account, that account contributes no entry to `Models` (deduped, joined with `", "`).
+### 1. Fix period definitions
+
+Replace the current rolling/current-period buckets with completed periods:
+
+```text
+Selected/report date: yesterday or the date picker value
+Last Week: the completed 7-day period before the current/report week
+Last Month: the completed calendar month before the report month
+All Time: every revenue row that falls inside the chatter's assignment window
+```
+
+Example if report date is `2026-06-13`:
+
+```text
+D = 2026-06-13 or yesterday depending on context
+W = 2026-06-01 → 2026-06-07, if using Monday-Sunday completed week
+M = 2026-05-01 → 2026-05-31
+All Time = assignment start → report date
+```
+
+Because Ifeanyi started on `2026-06-09`, both W and M become `0`.
+
+### 2. Make all revenue numbers assignment-bounded
+
+For each chatter/platform row:
+
+- Load assignments for that chatter.
+- Load account revenue rows for the relevant accounts.
+- Count a revenue row only if:
+
+```text
+account_id matches the assignment account
+AND revenue date is between assignment.start_date and assignment.end_date/report date
+```
+
+No revenue before assignment start should ever appear in D, W, M, or All Time.
+
+### 3. Remove the inconsistent batching issue
+
+Replace the current split fetch:
+
+```text
+recent 160 days fetch
+older all-time fetch
+```
+
+with one paginated fetch using `.range()` so no rows are silently capped at 1000.
+
+Then calculate D, W, M, and All Time from the same dataset.
+
+### 4. Keep report/download format unchanged
+
+No change to headers or file format:
+
+```text
+Date, Name, Telegram ID, Models, Yesterday, Goal, Streak,
+Last Week Revenue, Last Month Revenue, All Time Revenue,
+Mass DM, Unread Chats, Oldest Chat
+```
+
+Only the values behind `Last Week Revenue`, `Last Month Revenue`, and `All Time Revenue` change.
+
+### 5. Add a guard for impossible math
+
+Add a dev-only sanity check:
+
+```text
+if Last Week > All Time or Last Month > All Time:
+  warn with chatter name, platform, assignment window, and values
+```
+
+This prevents this exact mistake from coming back.
