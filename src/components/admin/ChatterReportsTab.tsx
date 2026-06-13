@@ -5,6 +5,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -42,6 +43,7 @@ interface Row {
   daily: { date: string; total: number }[];
   weekly: Bucket[];
   monthly: Bucket[];
+  platforms: string[];
 }
 
 const fmt = (n: number) => Math.round(n).toLocaleString("de-DE");
@@ -78,6 +80,17 @@ export default function ChatterReportsTab({ chatters }: Props) {
         .in("user_id", userIds);
 
       const accountIds = Array.from(new Set((assignments ?? []).map((a: any) => a.account_id)));
+
+      // Accounts → platform map
+      const platformByAccount = new Map<string, string>();
+      for (let i = 0; i < accountIds.length; i += 100) {
+        const slice = accountIds.slice(i, i + 100);
+        const { data: accs } = await supabase
+          .from("accounts")
+          .select("id,platform")
+          .in("id", slice);
+        (accs ?? []).forEach((a: any) => platformByAccount.set(a.id, a.platform || "Unknown"));
+      }
 
       // Accounts data up to selected date, last ~160 days
       let allData: any[] = [];
@@ -138,6 +151,7 @@ export default function ChatterReportsTab({ chatters }: Props) {
 
       const out: Row[] = chatters.map((c) => {
         const asgs = asgByUser.get(c.user_id) ?? [];
+        const platforms = Array.from(new Set(asgs.map((a: any) => platformByAccount.get(a.account_id)).filter(Boolean) as string[]));
         const inWindow = (d: string) => {
           for (const a of asgs) {
             const s = a.start_date;
@@ -232,6 +246,7 @@ export default function ChatterReportsTab({ chatters }: Props) {
           goal: goalMap.get(c.user_id) || 0,
           start_date: c.start_date ?? null,
           daily, weekly, monthly,
+          platforms,
         };
       });
 
@@ -241,11 +256,29 @@ export default function ChatterReportsTab({ chatters }: Props) {
     return () => { cancelled = true; };
   }, [chatters, date]);
 
+  const platformList = useMemo(() => {
+    const set = new Set<string>();
+    rows.forEach((r) => r.platforms.forEach((p) => set.add(p)));
+    const list = Array.from(set).sort();
+    return list.length ? list : ["All"];
+  }, [rows]);
+
+  const [activePlatform, setActivePlatform] = useState<string>("");
+  useEffect(() => {
+    if (platformList.length && !platformList.includes(activePlatform)) {
+      setActivePlatform(platformList[0]);
+    }
+  }, [platformList, activePlatform]);
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return rows;
-    return rows.filter((r) => r.name.toLowerCase().includes(q));
-  }, [rows, search]);
+    let base = rows;
+    if (activePlatform && activePlatform !== "All") {
+      base = base.filter((r) => r.platforms.includes(activePlatform));
+    }
+    if (!q) return base;
+    return base.filter((r) => r.name.toLowerCase().includes(q));
+  }, [rows, search, activePlatform]);
 
   const downloadCSV = () => {
     const headers = ["Name", "Day (€)", "Week (€)", "Month (€)", "Week Δ%", "Month Δ%", "Goal (€)", "Streak (days)", "MassDM Sent", "Chats Unread", "Oldest Unread (days)", "Start Date", "Revenue All Time (€)"];
@@ -263,7 +296,8 @@ export default function ChatterReportsTab({ chatters }: Props) {
     const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url; a.download = `chatter-report-${iso(date)}.csv`;
+    const safePlatform = (activePlatform || "all").toLowerCase().replace(/\s+/g, "-");
+    a.href = url; a.download = `chatter-report-${safePlatform}-${iso(date)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -319,11 +353,26 @@ export default function ChatterReportsTab({ chatters }: Props) {
         </div>
       </div>
 
+      {/* Platform Tabs */}
+      <Tabs value={activePlatform} onValueChange={setActivePlatform} className="w-full">
+        <TabsList className="bg-card/60 border border-border/40 backdrop-blur-xl flex-wrap h-auto">
+          {platformList.map((p) => {
+            const count = rows.filter((r) => p === "All" || r.platforms.includes(p)).length;
+            return (
+              <TabsTrigger key={p} value={p} className="data-[state=active]:bg-[hsl(var(--gold))]/15 data-[state=active]:text-[hsl(var(--gold))]">
+                {p} <span className="ml-1.5 text-[10px] text-muted-foreground">({count})</span>
+              </TabsTrigger>
+            );
+          })}
+        </TabsList>
+      </Tabs>
+
       {/* Table */}
       <div className="glass-card rounded-2xl border border-border/40 backdrop-blur-xl overflow-hidden">
         <div className="text-center py-2.5 border-b border-border/30 bg-[hsl(var(--gold))]/5">
-          <span className="text-sm font-semibold text-[hsl(var(--gold))] tracking-wide">{format(date, "yyyy-MM-dd")}</span>
+          <span className="text-sm font-semibold text-[hsl(var(--gold))] tracking-wide">{activePlatform} — {format(date, "yyyy-MM-dd")}</span>
         </div>
+
 
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1200px] text-sm">
