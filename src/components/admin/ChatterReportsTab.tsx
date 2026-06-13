@@ -151,6 +151,7 @@ export default function ChatterReportsTab({ chatters }: Props) {
 
       const out: Row[] = chatters.map((c) => {
         const asgs = asgByUser.get(c.user_id) ?? [];
+        const platforms = Array.from(new Set(asgs.map((a: any) => platformByAccount.get(a.account_id)).filter(Boolean) as string[]));
         const inWindow = (d: string) => {
           for (const a of asgs) {
             const s = a.start_date;
