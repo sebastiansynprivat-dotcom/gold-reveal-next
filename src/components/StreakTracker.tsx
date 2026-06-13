@@ -14,8 +14,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { useUILanguage } from "@/hooks/useUILanguage";
 
+import { supabase } from "@/integrations/supabase/client";
+
 const STREAK_GOAL = 7;
-const DAILY_TARGET = 30;
 const STORAGE_KEY = "streak_data";
 
 interface StreakData {
