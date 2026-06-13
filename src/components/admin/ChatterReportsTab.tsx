@@ -43,6 +43,7 @@ interface Row {
   daily: { date: string; total: number }[];
   weekly: Bucket[];
   monthly: Bucket[];
+  platforms: string[];
 }
 
 const fmt = (n: number) => Math.round(n).toLocaleString("de-DE");
