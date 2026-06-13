@@ -144,7 +144,7 @@ export default function MonthlyStreakTracker({ dailyRevenue }: { dailyRevenue: n
   const progressPct = Math.min((consecutiveDays / STREAK_GOAL) * 100, 100);
 
   useEffect(() => {
-    if (dailyRevenue >= DAILY_TARGET && !streak.dates.includes(today)) {
+    if (dailyGoal > 0 && dailyRevenue >= dailyGoal && !streak.dates.includes(today)) {
       const updated = { dates: [...streak.dates, today] };
       setStreak(updated);
       saveStreak(updated);
