@@ -286,9 +286,8 @@ export default function ChatterReportsTab({ chatters }: Props) {
 
   const platformList = useMemo(() => {
     const set = new Set<string>();
-    rows.forEach((r) => r.platforms.forEach((p) => set.add(p)));
-    const list = Array.from(set).sort();
-    return list.length ? list : ["All"];
+    rows.forEach((r) => set.add(r.platform));
+    return Array.from(set).sort();
   }, [rows]);
 
   const [activePlatform, setActivePlatform] = useState<string>("");
@@ -301,9 +300,7 @@ export default function ChatterReportsTab({ chatters }: Props) {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     let base = rows;
-    if (activePlatform && activePlatform !== "All") {
-      base = base.filter((r) => r.platforms.includes(activePlatform));
-    }
+    if (activePlatform) base = base.filter((r) => r.platform === activePlatform);
     if (!q) return base;
     return base.filter((r) => r.name.toLowerCase().includes(q));
   }, [rows, search, activePlatform]);
