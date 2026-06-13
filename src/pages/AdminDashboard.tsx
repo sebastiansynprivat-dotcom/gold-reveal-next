@@ -9054,6 +9054,10 @@ export default function AdminDashboard() {
                 />
               )}
 
+              {activeTab === "reports" && (
+                <ChatterReportsTab chatters={chatters} />
+              )}
+
               {activeTab === "platzhalter" && <ModelDashboardTab />}
 
               {activeTab === "chatter_dash" && (
