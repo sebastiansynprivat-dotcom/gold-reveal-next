@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState, useRef } from "react";
-import { format } from "date-fns";
-import { CalendarIcon, Download, Search, TrendingDown, TrendingUp } from "lucide-react";
+import { format, subDays } from "date-fns";
+import { CalendarIcon, Download, Search, TrendingDown, TrendingUp, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
+import * as XLSX from "xlsx";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
@@ -9,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -48,6 +50,7 @@ interface Row {
   weekly: Bucket[];
   monthly: Bucket[];
   platform: string;
+  models: string[];
 }
 
 const fmt = (n: number) => Math.round(n).toLocaleString("de-DE");
@@ -128,15 +131,28 @@ export default function ChatterReportsTab({ chatters }: Props) {
 
       const accountIds = Array.from(new Set((assignments ?? []).map((a: any) => a.account_id)));
 
-      // Accounts → platform map
+      // Accounts → platform map + accounts → model_id map
       const platformByAccount = new Map<string, string>();
+      const modelIdByAccount = new Map<string, string>();
       for (let i = 0; i < accountIds.length; i += 100) {
         const slice = accountIds.slice(i, i + 100);
         const { data: accs } = await supabase
           .from("accounts")
-          .select("id,platform")
+          .select("id,platform,model_id")
           .in("id", slice);
-        (accs ?? []).forEach((a: any) => platformByAccount.set(a.id, a.platform || "Unknown"));
+        (accs ?? []).forEach((a: any) => {
+          platformByAccount.set(a.id, a.platform || "Unknown");
+          if (a.model_id) modelIdByAccount.set(a.id, a.model_id);
+        });
+      }
+
+      // Models map
+      const modelNameById = new Map<string, string>();
+      const modelIds = Array.from(new Set(Array.from(modelIdByAccount.values())));
+      for (let i = 0; i < modelIds.length; i += 100) {
+        const slice = modelIds.slice(i, i + 100);
+        const { data: mdls } = await supabase.from("models").select("id,name").in("id", slice);
+        (mdls ?? []).forEach((m: any) => modelNameById.set(m.id, m.name || ""));
       }
 
       // Accounts data up to selected date, last ~160 days
@@ -306,6 +322,15 @@ export default function ChatterReportsTab({ chatters }: Props) {
             c.start_date ??
             (c.created_at ? String(c.created_at).slice(0, 10) : null);
 
+          const modelsSet = new Set<string>();
+          for (const a of asgs) {
+            const mid = modelIdByAccount.get(a.account_id);
+            if (mid) {
+              const name = modelNameById.get(mid);
+              if (name) modelsSet.add(name);
+            }
+          }
+
           out.push({
             key: `${c.id ?? uid}__${platform}`,
             user_id: uid,
@@ -317,6 +342,7 @@ export default function ChatterReportsTab({ chatters }: Props) {
             start_date: fallbackStart,
             daily, weekly, monthly,
             platform,
+            models: Array.from(modelsSet),
           });
         }
       }
@@ -348,26 +374,58 @@ export default function ChatterReportsTab({ chatters }: Props) {
     return base.filter((r) => r.name.toLowerCase().includes(q));
   }, [rows, search, activePlatform]);
 
-  const downloadCSV = () => {
-    const headers = ["Name", "Day (€)", "Week (€)", "Month (€)", "Week Δ%", "Month Δ%", "Goal (€)", "Streak (days)", "MassDM Sent", "Chats Unread", "Oldest Unread (days)", "Start Date", "Revenue All Time (€)"];
-    const lines = [headers.join(",")];
-    for (const r of filtered) {
-      const wDelta = r.prev_week > 0 ? ((r.week - r.prev_week) / r.prev_week) * 100 : 0;
-      const mDelta = r.prev_month > 0 ? ((r.month - r.prev_month) / r.prev_month) * 100 : 0;
-      lines.push([
-        `"${r.name}"`, fmt(r.day), fmt(r.week), fmt(r.month),
-        wDelta.toFixed(1), mDelta.toFixed(1),
-        fmt(r.goal), r.streak, r.mass_dms, r.unread, r.oldest,
-        r.start_date ?? "", fmt(r.all_time),
-      ].join(","));
+  const buildReport = () => {
+    const headers = [
+      "Date", "Name", "Telegram ID", "Models",
+      "Yesterday", "Goal", "Streak",
+      "Last Week Revenue", "Last Month Revenue", "All Time Revenue",
+      "Mass DM", "Unread Chats", "Oldest Chat",
+    ];
+    const dateStr = format(subDays(new Date(), 1), "yyyy-MM-dd");
+    const rowsOut: (string | number)[][] = filtered.map((r) => [
+      dateStr,
+      r.name,
+      r.telegram_id ?? "",
+      (r.models ?? []).join(", "),
+      r.day,
+      r.goal,
+      r.streak,
+      r.week,
+      r.month,
+      r.all_time,
+      r.mass_dms,
+      r.unread,
+      r.oldest,
+    ]);
+    return { headers, rows: rowsOut, dateStr };
+  };
+
+  const downloadReport = (fmtKind: "xlsx" | "csv") => {
+    const { headers, rows: rowsOut, dateStr } = buildReport();
+    const platformName = activePlatform || "All";
+    const safePlatform = platformName.replace(/\s+/g, "_");
+    const filename = `${safePlatform}_Chatter_Report_${dateStr}.${fmtKind}`;
+
+    if (fmtKind === "xlsx") {
+      const ws = XLSX.utils.aoa_to_sheet([headers, ...rowsOut]);
+      ws["!cols"] = headers.map((h) => ({ wch: Math.max(12, h.length + 2) }));
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, platformName.slice(0, 31));
+      XLSX.writeFile(wb, filename);
+    } else {
+      const esc = (v: string | number) => {
+        const s = String(v ?? "");
+        return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+      };
+      const lines = [headers.map(esc).join(",")];
+      for (const r of rowsOut) lines.push(r.map(esc).join(","));
+      const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url; a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
     }
-    const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    const safePlatform = (activePlatform || "all").toLowerCase().replace(/\s+/g, "-");
-    a.href = url; a.download = `chatter-report-${safePlatform}-${iso(date)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
   };
 
   const DeltaChip = ({ curr, prev, label }: { curr: number; prev: number; label: string }) => {
@@ -415,9 +473,17 @@ export default function ChatterReportsTab({ chatters }: Props) {
               <Calendar mode="single" selected={date} onSelect={(d) => d && setDate(d)} initialFocus className={cn("p-3 pointer-events-auto")} />
             </PopoverContent>
           </Popover>
-          <Button onClick={downloadCSV} variant="outline" className="bg-card/60 border-[hsl(var(--gold))]/40 backdrop-blur-xl text-[hsl(var(--gold))] hover:text-[hsl(var(--gold))] hover:bg-[hsl(var(--gold))]/10">
-            <Download className="mr-2 h-4 w-4" /> Download Report
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="bg-card/60 border-[hsl(var(--gold))]/40 backdrop-blur-xl text-[hsl(var(--gold))] hover:text-[hsl(var(--gold))] hover:bg-[hsl(var(--gold))]/10">
+                <Download className="mr-2 h-4 w-4" /> Download Report <ChevronDown className="ml-2 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-card/95 backdrop-blur-xl border-[hsl(var(--gold))]/30">
+              <DropdownMenuItem onClick={() => downloadReport("xlsx")}>Download as XLSX</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => downloadReport("csv")}>Download as CSV</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
