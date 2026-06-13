@@ -240,7 +240,7 @@ export default function StreakTracker({ dailyRevenue }: { dailyRevenue: number }
             <DialogDescription className="text-muted-foreground text-center text-sm pt-3 space-y-2" asChild>
               <div>
                 <p className="text-base font-medium text-foreground">
-                  {t("streak.dialog.bodyPre")} <span className="text-accent font-bold">{t("streak.dialog.bodyMid")}</span> <span className="text-accent font-bold">{DAILY_TARGET}€</span> {t("streak.dialog.bodyEnd")}
+                  {t("streak.dialog.bodyPre")} <span className="text-accent font-bold">{t("streak.dialog.bodyMid")}</span> <span className="text-accent font-bold">{dailyGoal}€</span> {t("streak.dialog.bodyEnd")}
                 </p>
                 <p className="text-accent font-semibold">{t("streak.dialog.upgrade")}</p>
                 <p className="text-muted-foreground pt-1">
