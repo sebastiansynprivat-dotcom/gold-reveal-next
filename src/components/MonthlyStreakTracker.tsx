@@ -15,7 +15,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { isDemoMode } from "@/lib/demoMode";
 
 const STREAK_GOAL = 30;
-const DAILY_TARGET = 100;
 const STORAGE_KEY = "monthly_streak_data";
 const DIAMOND_SENT_KEY = "diamond_notification_sent";
 
