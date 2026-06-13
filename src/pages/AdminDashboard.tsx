@@ -60,7 +60,9 @@ import {
   Download,
   Pencil,
   MessageCircle,
+  FileBarChart,
 } from "lucide-react";
+import ChatterReportsTab from "@/components/admin/ChatterReportsTab";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import AdminModelReplyApprovals from "@/components/AdminModelReplyApprovals";
 import { Button } from "@/components/ui/button";
@@ -4055,6 +4057,7 @@ export default function AdminDashboard() {
   const allTabItems = [
     { key: "einnahmen" as const, label: "Einnahmen", icon: TrendingUp, onClick: () => { setActiveTab("einnahmen"); setTimeFilter("heute"); } },
     { key: "chatter" as const, label: "Chatter", icon: Users, onClick: () => setActiveTab("chatter") },
+    { key: "reports" as const, label: "Reports", icon: FileBarChart, onClick: () => setActiveTab("reports") },
     {
       key: "anfragen" as const,
       label: "Anfragen",
@@ -9049,6 +9052,10 @@ export default function AdminDashboard() {
                   assignmentsLoading={assignmentsLoading}
                   chatters={chatters}
                 />
+              )}
+
+              {activeTab === "reports" && (
+                <ChatterReportsTab chatters={chatters} />
               )}
 
               {activeTab === "platzhalter" && <ModelDashboardTab />}
