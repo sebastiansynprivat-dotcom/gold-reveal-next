@@ -269,7 +269,7 @@ export default function MonthlyStreakTracker({ dailyRevenue }: { dailyRevenue: n
                   className="text-base font-medium text-foreground"
                 >
                   Du hast <span className="text-accent font-bold">30 Tage in Folge</span> mind.{" "}
-                  <span className="text-accent font-bold">{DAILY_TARGET}€</span> Umsatz gemacht!
+                  <span className="text-accent font-bold">{dailyGoal}€</span> Umsatz gemacht!
                 </motion.p>
                 <motion.p
                   initial={{ opacity: 0, y: 10 }}
