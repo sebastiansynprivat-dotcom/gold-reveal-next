@@ -246,6 +246,7 @@ export default function ChatterReportsTab({ chatters }: Props) {
           goal: goalMap.get(c.user_id) || 0,
           start_date: c.start_date ?? null,
           daily, weekly, monthly,
+          platforms,
         };
       });
 
