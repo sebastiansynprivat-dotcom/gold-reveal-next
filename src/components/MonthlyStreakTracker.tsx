@@ -224,7 +224,7 @@ export default function MonthlyStreakTracker({ dailyRevenue }: { dailyRevenue: n
           </span>
         ) : (
           <span className="text-muted-foreground">
-            Erreiche heute <strong className="text-foreground">{DAILY_TARGET}€</strong> Umsatz für deine 30-Tage-Streak.
+            {dailyGoal > 0 ? <>Erreiche heute <strong className="text-foreground">{dailyGoal}€</strong> Umsatz für deine 30-Tage-Streak.</> : <>Setze ein Tagesziel, um die Streak zu starten.</>}
           </span>
         )}
       </div>
