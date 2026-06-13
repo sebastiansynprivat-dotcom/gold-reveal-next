@@ -50,6 +50,7 @@ interface Row {
   weekly: Bucket[];
   monthly: Bucket[];
   platform: string;
+  models: string[];
 }
 
 const fmt = (n: number) => Math.round(n).toLocaleString("de-DE");
