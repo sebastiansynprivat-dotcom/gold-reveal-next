@@ -416,7 +416,7 @@ export default function ChatterReportsTab({ chatters }: Props) {
                 <tr><td colSpan={8} className="text-center py-12 text-muted-foreground text-sm">No chatters match.</td></tr>
               )}
               {!loading && filtered.map((r) => (
-                <tr key={r.user_id} className="border-b border-border/20 hover:bg-white/[0.03] transition-colors">
+                <tr key={r.key} className="border-b border-border/20 hover:bg-white/[0.03] transition-colors">
                   <td className="px-4 py-4 w-[210px] max-w-[210px]" style={{ width: 210, maxWidth: 210 }}>
                     <div className="font-bold text-foreground truncate" title={r.name}>{r.name.toUpperCase()}</div>
                     {r.telegram_id && (
