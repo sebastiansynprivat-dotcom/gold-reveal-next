@@ -115,13 +115,25 @@ export default function ChatterReportsTab({ chatters }: Props) {
       if (userIds.length === 0) { setRows([]); setLoading(false); return; }
 
       const selISO = iso(date);
-      const weekStart = iso(addDays(date, -6));
-      const prevWeekStart = iso(addDays(date, -13));
-      const prevWeekEnd = iso(addDays(date, -7));
-      const monthStart = iso(new Date(date.getFullYear(), date.getMonth(), 1));
-      const prevMonthStart = iso(new Date(date.getFullYear(), date.getMonth() - 1, 1));
-      const prevMonthEnd = iso(new Date(date.getFullYear(), date.getMonth(), 0));
-      const historyStart = iso(addDays(date, -160));
+      // "Last week" = previous completed Mon–Sun week relative to selected date
+      const lastWeekStartD = startOfWeek(subWeeks(date, 1), { weekStartsOn: 1 });
+      const lastWeekEndD = endOfWeek(subWeeks(date, 1), { weekStartsOn: 1 });
+      const weekStart = iso(lastWeekStartD);
+      const weekEnd = iso(lastWeekEndD);
+      // Week before that, for prev_week comparison
+      const prevWeekStartD = startOfWeek(subWeeks(date, 2), { weekStartsOn: 1 });
+      const prevWeekEndD = endOfWeek(subWeeks(date, 2), { weekStartsOn: 1 });
+      const prevWeekStart = iso(prevWeekStartD);
+      const prevWeekEnd = iso(prevWeekEndD);
+      // "Last month" = previous completed calendar month relative to selected date
+      const lastMonthStartD = startOfMonth(subMonths(date, 1));
+      const lastMonthEndD = endOfMonth(subMonths(date, 1));
+      const monthStart = iso(lastMonthStartD);
+      const monthEnd = iso(lastMonthEndD);
+      const prevMonthStartD = startOfMonth(subMonths(date, 2));
+      const prevMonthEndD = endOfMonth(subMonths(date, 2));
+      const prevMonthStart = iso(prevMonthStartD);
+      const prevMonthEnd = iso(prevMonthEndD);
 
       // Assignments
       const { data: assignments } = await supabase
@@ -155,32 +167,29 @@ export default function ChatterReportsTab({ chatters }: Props) {
         (mdls ?? []).forEach((m: any) => modelNameById.set(m.id, m.name || ""));
       }
 
-      // Accounts data up to selected date, last ~160 days
-      let allData: any[] = [];
-      const BATCH = 100;
+      // Single paginated fetch of ALL accounts_data up to selected date — no date floor,
+      // and pages past 1000 rows so all_time is never silently truncated.
+      const allData: any[] = [];
+      const BATCH = 50;
+      const PAGE = 1000;
       for (let i = 0; i < accountIds.length; i += BATCH) {
         const slice = accountIds.slice(i, i + BATCH);
-        const { data } = await supabase
-          .from("accounts_data")
-          .select("account_id,date,total,mass_dms,unread_chats,oldest_chat")
-          .in("account_id", slice)
-          .lte("date", selISO)
-          .gte("date", historyStart);
-        if (data) allData = allData.concat(data);
+        let from = 0;
+        while (true) {
+          const { data, error } = await supabase
+            .from("accounts_data")
+            .select("account_id,date,total,mass_dms,unread_chats,oldest_chat")
+            .in("account_id", slice)
+            .lte("date", selISO)
+            .order("date", { ascending: false })
+            .range(from, from + PAGE - 1);
+          if (error || !data || data.length === 0) break;
+          allData.push(...data);
+          if (data.length < PAGE) break;
+          from += PAGE;
+        }
       }
 
-      // Also fetch all-time totals separately (sum across all dates up to selISO)
-      let allTimeData: any[] = [];
-      for (let i = 0; i < accountIds.length; i += BATCH) {
-        const slice = accountIds.slice(i, i + BATCH);
-        const { data } = await supabase
-          .from("accounts_data")
-          .select("account_id,date,total")
-          .in("account_id", slice)
-          .lte("date", selISO)
-          .lt("date", historyStart);
-        if (data) allTimeData = allTimeData.concat(data);
-      }
 
       // Goals + start dates from profiles
       const { data: profs } = await supabase
