@@ -3494,8 +3494,7 @@ export default function AdminDashboard() {
       // Delete user progress
       await supabase.from("user_progress").delete().eq("user_id", deleteTarget.user_id);
 
-      // Delete daily goals
-      await supabase.from("daily_goals").delete().eq("user_id", deleteTarget.user_id);
+      // (daily goal lives on profiles.daily_goal and is removed with the profile below)
 
       // Delete profile
       await supabase.from("profiles").delete().eq("user_id", deleteTarget.user_id);
@@ -3958,28 +3957,22 @@ export default function AdminDashboard() {
 
   const openGoalEditor = async (chatter: ChatterProfile) => {
     setGoalTarget(chatter);
-    // Load current goal
     const { data } = await supabase
-      .from("daily_goals")
-      .select("target_amount")
+      .from("profiles")
+      .select("daily_goal")
       .eq("user_id", chatter.user_id)
-      .order("created_at", { ascending: false })
-      .limit(1)
       .maybeSingle();
-    setGoalAmount(data?.target_amount != null ? String(data.target_amount) : "30");
+    setGoalAmount(data?.daily_goal != null ? String(data.daily_goal) : "0");
   };
 
   const saveGoal = async () => {
     if (!goalTarget) return;
     setGoalSaving(true);
-    const amount = Number(goalAmount) || 30;
-    // Upsert: delete old, insert new
-    await supabase.from("daily_goals").delete().eq("user_id", goalTarget.user_id);
-    const { error } = await supabase.from("daily_goals").insert({
-      user_id: goalTarget.user_id,
-      goal_text: `${amount}€ Tagesziel`,
-      target_amount: amount,
-    });
+    const amount = Number(goalAmount) || 0;
+    const { error } = await supabase
+      .from("profiles")
+      .update({ daily_goal: amount })
+      .eq("user_id", goalTarget.user_id);
     if (error) {
       toast.error("Fehler beim Speichern");
     } else {

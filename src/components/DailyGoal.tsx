@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useUILanguage } from "@/hooks/useUILanguage";
 
 export default function DailyGoal() {
-  const [goalAmount, setGoalAmount] = useState<number>(30);
+  const [goalAmount, setGoalAmount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const { t, lang } = useUILanguage();
 
@@ -13,15 +13,13 @@ export default function DailyGoal() {
       if (!user) { setLoading(false); return; }
 
       const { data } = await supabase
-        .from("daily_goals")
-        .select("target_amount")
+        .from("profiles")
+        .select("daily_goal")
         .eq("user_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(1)
         .maybeSingle();
 
-      if (data?.target_amount != null) {
-        setGoalAmount(Number(data.target_amount));
+      if (data?.daily_goal != null) {
+        setGoalAmount(Number(data.daily_goal));
       }
       setLoading(false);
     };

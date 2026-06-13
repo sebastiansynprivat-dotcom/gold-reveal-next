@@ -1,61 +1,74 @@
 ## Goal
 
-Make the Reports tabs strictly platform-scoped:
-- Each platform tab lists only chatters who have at least one assignment on a model of **that platform**.
-- Stats (D / W / M / All Time / MassDM / Unread / Streak / Goal) are computed using **only** that platform's accounts.
-- Chatters with no assignments at all do **not** appear in any tab.
+Move the chatter daily goal from the `daily_goals` table to a new `profiles.daily_goal` column (default `0`), redirect every dependent surface, make the Reports "Goal" column inline‑editable, and base the chatter streak on each chatter's own goal. Document the before/after in a memory file so the change is reversible.
 
-## Why the current tabs feel "unfiltered"
+## Dependents of `daily_goals` today
 
-In `ChatterReportsTab.tsx` one `Row` is built per chatter by summing `accounts_data` across **all** their assignments, with `row.platforms` being every platform they ever touched. The tab filter `r.platforms.includes(activePlatform)` therefore passes the same row on every tab it touched, and the totals never change between tabs.
+| # | File | Purpose |
+|---|------|---------|
+| 1 | `src/components/DailyGoal.tsx` | Chatter dashboard widget — reads latest `target_amount` |
+| 2 | `src/pages/AdminDashboard.tsx` (~3498, 3963–3981) | Deletes goal on chatter delete; "Set Goal" dialog reads + upserts |
+| 3 | `src/components/admin/ChatterReportsTab.tsx` (125–131) | Loads goals for the Goal column |
+| 4 | `supabase/functions/generate-chatter-summary/index.ts` (117–124) | AI coach uses goal in the prompt (fallback `30`) |
+
+Streak components (`StreakTracker.tsx`, `MonthlyStreakTracker.tsx`) currently use hard‑coded `DAILY_TARGET` — they don't read `daily_goals` yet, but will after this change.
 
 ## Plan
 
-### 1. One row per (chatter × platform) — keyed safely
+### 1. Memory file (before this migration)
 
-In the data effect:
+Create `mem://features/daily-goal-migration` capturing the **before / after** so we can revert:
 
-- Resolve every assignment's platform via the existing `platformByAccount` map.
-- Group each chatter's assignments by platform.
-- For each `(chatter, platform)` pair that has ≥ 1 assignment, emit one `Row`.
-- Compute `day`, `daily[]` (last 10 days), `weekly[]` / `monthly[]` (5 buckets each), `week`, `month`, `prev_week`, `prev_month`, `all_time`, `mass_dms`, `unread`, `oldest`, `streak` using **only** the accounts_data rows whose `account_id` belongs to that platform (and still gated by `inWindow(date)`).
-- Replace `Row.platforms: string[]` with `Row.platform: string`.
+- **Before:** `daily_goals(id, user_id, target_amount, created_at, …)` table; latest row per user wins; `DailyGoal` defaulted to `30`; admin dialog inserted a new row each save; AI prompt fell back to `30`; streak used hard‑coded thresholds (`30` chatter, `100` monthly).
+- **After:** `profiles.daily_goal numeric NOT NULL DEFAULT 0`; single source of truth per user; admin updates the column directly; AI and streak read the column; goal `0` means "no goal set" (no streak progress).
+- **Revert recipe:** re‑create `daily_goals` from the migration referenced below, backfill from `profiles.daily_goal`, restore the four files from git, drop `profiles.daily_goal`.
+- Add a link to it in `mem://index.md`.
 
-**Key safety (handles pre_create profiles without user_id):**
-Use the profile id as the stable identity, with user_id only as a tiebreaker:
+### 2. Schema migration
+
+```sql
+ALTER TABLE public.profiles
+  ADD COLUMN daily_goal numeric NOT NULL DEFAULT 0;
+
+UPDATE public.profiles p
+   SET daily_goal = g.target_amount
+  FROM (
+    SELECT DISTINCT ON (user_id) user_id, target_amount
+      FROM public.daily_goals
+     ORDER BY user_id, created_at DESC
+  ) g
+ WHERE p.user_id = g.user_id
+   AND g.target_amount IS NOT NULL;
+
+DROP TABLE public.daily_goals CASCADE;
 ```
-row.key = `${c.id ?? c.user_id ?? "anon"}__${platform}`
-```
-`ChatterProfile.id` (profile id) is always present, so this is unique even for pre_create chatters with `user_id === null`.
 
-### 2. Drop chatters with zero assignments
+No new RLS — existing `profiles` policies already cover read (own row / admins) and admin updates. Types regen automatically.
 
-After the grouping step, a chatter with no assignments produces zero rows and is excluded from every tab automatically. No additional filter needed; we just stop synthesizing the "fallback" row that today's code creates from `chatters` even when no assignment exists.
+### 3. Code redirects
 
-### 3. Tab filter becomes strict equality
+- **`DailyGoal.tsx`** — query `profiles.daily_goal` for `auth.uid()`; render `0€` when unset (no `30€` fallback).
+- **`AdminDashboard.tsx`**
+  - Remove the `daily_goals` delete on chatter delete.
+  - "Set Goal" dialog: read `profiles.daily_goal`, save via `update({ daily_goal: n }).eq("user_id", uid)`.
+- **`ChatterReportsTab.tsx`**
+  - Add `daily_goal` to the existing `profiles` select (drop the separate `daily_goals` fetch and `goalMap`).
+  - Make the Goal cell **click‑to‑edit**: click reveals a small inline `<input type="number" min="0">`; Enter / blur saves with `profiles.update({ daily_goal })` (key by `user_id`, fallback to `profiles.id` for pre‑create); Esc cancels; optimistic local update + toast.
+  - CSV export keeps the same `goal` column.
+- **`generate-chatter-summary/index.ts`** — read `daily_goal` from the already‑fetched profile; if `0`, change the prompt section to "TAGESZIEL: kein Ziel gesetzt" and skip the goal‑reached counters; otherwise behave as today.
 
-- `platformList` = unique `row.platform` values, sorted.
-- `filtered` = `rows.filter(r => r.platform === activePlatform)` + search filter.
-- Tab badge = row count per platform.
-- CSV download already operates on `filtered` → automatically becomes per-platform.
-- If `platformList` is empty, render an empty state ("No chatters with assignments yet").
+### 4. Streak based on the per‑chatter goal
 
-### 4. Start-date fallback chain
+- `StreakTracker.tsx`: fetch `profiles.daily_goal` once; a day counts only when `dailyRevenue >= goal && goal > 0`. If `goal === 0`, show "Set a daily goal to start a streak" and don't award days. Existing `getConsecutiveDays` already resets to `0` on a missed day — keep it. Replace `DAILY_TARGET` in copy with the live goal.
+- `MonthlyStreakTracker.tsx`: same swap (hard‑coded `100` → live `daily_goal`).
+- `STREAK_GOAL = 7` (run length) stays.
 
-When building each row, set `start_date` to the first non-empty of:
+### 5. Out of scope
 
-1. `profiles.start_date`
-2. `profiles.created_at` (sliced to `YYYY-MM-DD`)
-3. `ChatterProfile.created_at` (sliced to `YYYY-MM-DD`)
+No changes to revenue tables, account assignments, platform tabs, or other admin tabs. No new edge functions.
 
-Extend the local `ChatterLite` shape with `created_at?: string` (already present on `ChatterProfile`, just needs to be passed through).
+## Technical notes
 
-### 5. No backend changes
-
-All work stays in `src/components/admin/ChatterReportsTab.tsx`. No schema, RLS, or RPC changes — `platformByAccount`, `profiles`, and `accounts_data` are already fetched today; we only re-bucket them.
-
-## Out of scope
-
-- Toolbar, dialogs, and column layout stay as they are.
-- "Revenue (All Time)" still capped at the selected date (unchanged).
-- No edits to `ChatterOverviewTab` or other admin tabs.
+- After the migration, `types.ts` drops `daily_goals` and gains `profiles.daily_goal` — all four files compile against the new types in the same change.
+- Inline edit reuses table styling — no new dialog or component.
+- The memory file is written **before** the migration call so the revert recipe exists even if something fails mid‑migration.

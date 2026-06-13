@@ -892,33 +892,6 @@ export type Database = {
           },
         ]
       }
-      daily_goals: {
-        Row: {
-          created_at: string
-          goal_text: string
-          id: string
-          target_amount: number | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          goal_text: string
-          id?: string
-          target_amount?: number | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          goal_text?: string
-          id?: string
-          target_amount?: number | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       daily_revenue: {
         Row: {
           amount: number
@@ -2227,6 +2200,7 @@ export type Database = {
           account_email: string | null
           account_password: string | null
           created_at: string
+          daily_goal: number
           end_date: string | null
           group_name: string
           id: string
@@ -2246,6 +2220,7 @@ export type Database = {
           account_email?: string | null
           account_password?: string | null
           created_at?: string
+          daily_goal?: number
           end_date?: string | null
           group_name?: string
           id?: string
@@ -2265,6 +2240,7 @@ export type Database = {
           account_email?: string | null
           account_password?: string | null
           created_at?: string
+          daily_goal?: number
           end_date?: string | null
           group_name?: string
           id?: string
