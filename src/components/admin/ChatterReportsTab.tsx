@@ -254,7 +254,7 @@ export default function ChatterReportsTab({ chatters }: Props) {
             <thead>
               <tr className="border-b border-border/30 bg-card/40">
                 {["Name", "Revenue", "Goal", "Streak", "MassDM Sent", "Chats Unread / Oldest", "Start Date", "Revenue (All Time)"].map((h) => (
-                  <th key={h} className="px-4 py-3 text-left text-[11px] font-bold tracking-wider uppercase text-[hsl(var(--gold))]/80">{h}</th>
+                  <th key={h} className={cn("px-4 py-3 text-left text-[11px] font-bold tracking-wider uppercase text-[hsl(var(--gold))]/80", h === "Name" && "w-[120px]")}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -267,7 +267,7 @@ export default function ChatterReportsTab({ chatters }: Props) {
               )}
               {!loading && filtered.map((r) => (
                 <tr key={r.user_id} className="border-b border-border/20 hover:bg-white/[0.03] transition-colors">
-                  <td className="px-4 py-4 font-bold text-foreground whitespace-nowrap">{r.name.toUpperCase()}</td>
+                  <td className="px-4 py-4 font-bold text-foreground whitespace-nowrap w-[120px]">{r.name.toUpperCase()}</td>
                   <td className="px-4 py-4">
                     <div className="flex flex-col gap-1.5 w-[170px]">
                       <div className="px-2.5 py-1 rounded-md border border-border/40 bg-background/40 text-xs text-center font-medium">D: {fmt(r.day)}€</div>
