@@ -15,7 +15,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { isDemoMode } from "@/lib/demoMode";
 
 const STREAK_GOAL = 30;
-const DAILY_TARGET = 100;
 const STORAGE_KEY = "monthly_streak_data";
 const DIAMOND_SENT_KEY = "diamond_notification_sent";
 
@@ -126,6 +125,16 @@ export default function MonthlyStreakTracker({ dailyRevenue }: { dailyRevenue: n
   const [streak, setStreak] = useState<StreakData>(loadStreak);
   const [showDialog, setShowDialog] = useState(false);
   const [demoMode, setDemoMode] = useState(false);
+  const [dailyGoal, setDailyGoal] = useState<number>(0);
+
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase.from("profiles").select("daily_goal").eq("user_id", user.id).maybeSingle();
+      setDailyGoal(Number(data?.daily_goal || 0));
+    })();
+  }, []);
 
   const today = getToday();
   const displayStreak = demoMode ? buildDemoStreak() : streak;
@@ -135,7 +144,7 @@ export default function MonthlyStreakTracker({ dailyRevenue }: { dailyRevenue: n
   const progressPct = Math.min((consecutiveDays / STREAK_GOAL) * 100, 100);
 
   useEffect(() => {
-    if (dailyRevenue >= DAILY_TARGET && !streak.dates.includes(today)) {
+    if (dailyGoal > 0 && dailyRevenue >= dailyGoal && !streak.dates.includes(today)) {
       const updated = { dates: [...streak.dates, today] };
       setStreak(updated);
       saveStreak(updated);
@@ -215,7 +224,7 @@ export default function MonthlyStreakTracker({ dailyRevenue }: { dailyRevenue: n
           </span>
         ) : (
           <span className="text-muted-foreground">
-            Erreiche heute <strong className="text-foreground">{DAILY_TARGET}€</strong> Umsatz für deine 30-Tage-Streak.
+            {dailyGoal > 0 ? <>Erreiche heute <strong className="text-foreground">{dailyGoal}€</strong> Umsatz für deine 30-Tage-Streak.</> : <>Setze ein Tagesziel, um die Streak zu starten.</>}
           </span>
         )}
       </div>
@@ -260,7 +269,7 @@ export default function MonthlyStreakTracker({ dailyRevenue }: { dailyRevenue: n
                   className="text-base font-medium text-foreground"
                 >
                   Du hast <span className="text-accent font-bold">30 Tage in Folge</span> mind.{" "}
-                  <span className="text-accent font-bold">{DAILY_TARGET}€</span> Umsatz gemacht!
+                  <span className="text-accent font-bold">{dailyGoal}€</span> Umsatz gemacht!
                 </motion.p>
                 <motion.p
                   initial={{ opacity: 0, y: 10 }}

@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { format } from "date-fns";
 import { CalendarIcon, Download, Search, TrendingDown, TrendingUp } from "lucide-react";
+import { toast } from "sonner";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
@@ -52,6 +53,49 @@ interface Row {
 const fmt = (n: number) => Math.round(n).toLocaleString("de-DE");
 const iso = (d: Date) => d.toISOString().slice(0, 10);
 const addDays = (d: Date, n: number) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+
+function GoalCell({ value, onSave }: { value: number; onSave: (next: number) => void | Promise<void> }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(String(value || 0));
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => { setDraft(String(value || 0)); }, [value]);
+  useEffect(() => { if (editing) inputRef.current?.focus(); }, [editing]);
+
+  const commit = () => {
+    const n = Math.max(0, Math.round(Number(draft.replace(",", ".")) || 0));
+    setEditing(false);
+    if (n !== value) onSave(n);
+  };
+
+  if (editing) {
+    return (
+      <input
+        ref={inputRef}
+        type="number"
+        min={0}
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") { e.preventDefault(); commit(); }
+          if (e.key === "Escape") { e.preventDefault(); setDraft(String(value || 0)); setEditing(false); }
+        }}
+        className="w-24 px-2 py-1 rounded-md border border-[hsl(var(--gold))]/50 bg-background/60 text-sm outline-none focus:ring-2 focus:ring-[hsl(var(--gold))]/40"
+      />
+    );
+  }
+
+  return (
+    <button
+      onClick={() => setEditing(true)}
+      className="text-sm px-2 py-1 rounded-md hover:bg-[hsl(var(--gold))]/10 hover:text-[hsl(var(--gold))] transition-colors"
+      title="Click to edit goal"
+    >
+      {value > 0 ? `${fmt(value)}€` : <span className="text-muted-foreground">—</span>}
+    </button>
+  );
+}
 
 export default function ChatterReportsTab({ chatters }: Props) {
   const [date, setDate] = useState<Date>(new Date());
@@ -247,11 +291,14 @@ export default function ChatterReportsTab({ chatters }: Props) {
           const month = monthly[monthly.length - 1].total;
           const prev_month = monthly[monthly.length - 2]?.total || 0;
 
+          const goalForUser = goalMap.get(uid) || 0;
           let streak = 0;
-          for (let i = 0; i < 365; i++) {
-            const d = iso(addDays(date, -i));
-            if ((totalByDate.get(d) || 0) > 0) streak++;
-            else break;
+          if (goalForUser > 0) {
+            for (let i = 0; i < 365; i++) {
+              const d = iso(addDays(date, -i));
+              if ((totalByDate.get(d) || 0) >= goalForUser) streak++;
+              else break;
+            }
           }
 
           const fallbackStart =
@@ -464,7 +511,25 @@ export default function ChatterReportsTab({ chatters }: Props) {
                       </button>
                     </div>
                   </td>
-                  <td className="px-4 py-4 text-sm">{r.goal > 0 ? `${fmt(r.goal)}€` : "0"}</td>
+                  <td className="px-4 py-4 text-sm">
+                    <GoalCell
+                      value={r.goal}
+                      onSave={async (next) => {
+                        const prev = r.goal;
+                        setRows((rs) => rs.map((x) => (x.user_id === r.user_id ? { ...x, goal: next } : x)));
+                        const { error } = await supabase
+                          .from("profiles")
+                          .update({ daily_goal: next })
+                          .eq("user_id", r.user_id);
+                        if (error) {
+                          setRows((rs) => rs.map((x) => (x.user_id === r.user_id ? { ...x, goal: prev } : x)));
+                          toast.error("Failed to save goal");
+                        } else {
+                          toast.success("Goal updated");
+                        }
+                      }}
+                    />
+                  </td>
                   <td className="px-4 py-4 text-sm whitespace-nowrap">{r.streak} days</td>
                   <td className="px-4 py-4 text-sm whitespace-nowrap">{r.mass_dms} DMs Sent</td>
                   <td className="px-4 py-4 text-center">

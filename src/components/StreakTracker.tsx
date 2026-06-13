@@ -14,8 +14,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { useUILanguage } from "@/hooks/useUILanguage";
 
+import { supabase } from "@/integrations/supabase/client";
+
 const STREAK_GOAL = 7;
-const DAILY_TARGET = 30;
 const STORAGE_KEY = "streak_data";
 
 interface StreakData {
@@ -82,6 +83,17 @@ export default function StreakTracker({ dailyRevenue }: { dailyRevenue: number }
   const [demoMode, setDemoMode] = useState(false);
   const [copied, setCopied] = useState(false);
   const { playStreakSound } = useSoundEffects();
+  const [dailyGoal, setDailyGoal] = useState<number>(0);
+
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase.from("profiles").select("daily_goal").eq("user_id", user.id).maybeSingle();
+      setDailyGoal(Number(data?.daily_goal || 0));
+    })();
+  }, []);
+
 
   const whatsappText = t("streak.whatsappText");
   const today = getToday();
@@ -91,7 +103,7 @@ export default function StreakTracker({ dailyRevenue }: { dailyRevenue: number }
   const streakComplete = consecutiveDays >= STREAK_GOAL;
 
   useEffect(() => {
-    if (dailyRevenue >= DAILY_TARGET && !streak.dates.includes(today)) {
+    if (dailyGoal > 0 && dailyRevenue >= dailyGoal && !streak.dates.includes(today)) {
       const updated = { ...streak, dates: [...streak.dates, today], lastCheckedDate: today };
       setStreak(updated);
       saveStreak(updated);
@@ -204,9 +216,13 @@ export default function StreakTracker({ dailyRevenue }: { dailyRevenue: number }
           <span className="text-accent">
             {t("streak.todayDone")} {t("streak.daysToUpgradePre")} {STREAK_GOAL - consecutiveDays} {t("streak.daysToUpgradeSuffix")}
           </span>
+        ) : dailyGoal === 0 ? (
+          <span className="text-muted-foreground">
+            Set a daily goal to start a streak.
+          </span>
         ) : (
           <span className="text-muted-foreground">
-            {t("streak.openTodayPre")} <strong className="text-foreground">{DAILY_TARGET}€</strong> {t("streak.openTodaySuffix")}
+            {t("streak.openTodayPre")} <strong className="text-foreground">{dailyGoal}€</strong> {t("streak.openTodaySuffix")}
           </span>
         )}
       </div>
@@ -224,7 +240,7 @@ export default function StreakTracker({ dailyRevenue }: { dailyRevenue: number }
             <DialogDescription className="text-muted-foreground text-center text-sm pt-3 space-y-2" asChild>
               <div>
                 <p className="text-base font-medium text-foreground">
-                  {t("streak.dialog.bodyPre")} <span className="text-accent font-bold">{t("streak.dialog.bodyMid")}</span> <span className="text-accent font-bold">{DAILY_TARGET}€</span> {t("streak.dialog.bodyEnd")}
+                  {t("streak.dialog.bodyPre")} <span className="text-accent font-bold">{t("streak.dialog.bodyMid")}</span> <span className="text-accent font-bold">{dailyGoal}€</span> {t("streak.dialog.bodyEnd")}
                 </p>
                 <p className="text-accent font-semibold">{t("streak.dialog.upgrade")}</p>
                 <p className="text-muted-foreground pt-1">
