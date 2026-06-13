@@ -54,6 +54,49 @@ const fmt = (n: number) => Math.round(n).toLocaleString("de-DE");
 const iso = (d: Date) => d.toISOString().slice(0, 10);
 const addDays = (d: Date, n: number) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
 
+function GoalCell({ value, onSave }: { value: number; onSave: (next: number) => void | Promise<void> }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(String(value || 0));
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => { setDraft(String(value || 0)); }, [value]);
+  useEffect(() => { if (editing) inputRef.current?.focus(); }, [editing]);
+
+  const commit = () => {
+    const n = Math.max(0, Math.round(Number(draft.replace(",", ".")) || 0));
+    setEditing(false);
+    if (n !== value) onSave(n);
+  };
+
+  if (editing) {
+    return (
+      <input
+        ref={inputRef}
+        type="number"
+        min={0}
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") { e.preventDefault(); commit(); }
+          if (e.key === "Escape") { e.preventDefault(); setDraft(String(value || 0)); setEditing(false); }
+        }}
+        className="w-24 px-2 py-1 rounded-md border border-[hsl(var(--gold))]/50 bg-background/60 text-sm outline-none focus:ring-2 focus:ring-[hsl(var(--gold))]/40"
+      />
+    );
+  }
+
+  return (
+    <button
+      onClick={() => setEditing(true)}
+      className="text-sm px-2 py-1 rounded-md hover:bg-[hsl(var(--gold))]/10 hover:text-[hsl(var(--gold))] transition-colors"
+      title="Click to edit goal"
+    >
+      {value > 0 ? `${fmt(value)}€` : <span className="text-muted-foreground">—</span>}
+    </button>
+  );
+}
+
 export default function ChatterReportsTab({ chatters }: Props) {
   const [date, setDate] = useState<Date>(new Date());
   const [search, setSearch] = useState("");
