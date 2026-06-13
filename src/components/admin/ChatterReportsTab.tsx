@@ -353,11 +353,26 @@ export default function ChatterReportsTab({ chatters }: Props) {
         </div>
       </div>
 
+      {/* Platform Tabs */}
+      <Tabs value={activePlatform} onValueChange={setActivePlatform} className="w-full">
+        <TabsList className="bg-card/60 border border-border/40 backdrop-blur-xl flex-wrap h-auto">
+          {platformList.map((p) => {
+            const count = rows.filter((r) => p === "All" || r.platforms.includes(p)).length;
+            return (
+              <TabsTrigger key={p} value={p} className="data-[state=active]:bg-[hsl(var(--gold))]/15 data-[state=active]:text-[hsl(var(--gold))]">
+                {p} <span className="ml-1.5 text-[10px] text-muted-foreground">({count})</span>
+              </TabsTrigger>
+            );
+          })}
+        </TabsList>
+      </Tabs>
+
       {/* Table */}
       <div className="glass-card rounded-2xl border border-border/40 backdrop-blur-xl overflow-hidden">
         <div className="text-center py-2.5 border-b border-border/30 bg-[hsl(var(--gold))]/5">
-          <span className="text-sm font-semibold text-[hsl(var(--gold))] tracking-wide">{format(date, "yyyy-MM-dd")}</span>
+          <span className="text-sm font-semibold text-[hsl(var(--gold))] tracking-wide">{activePlatform} — {format(date, "yyyy-MM-dd")}</span>
         </div>
+
 
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1200px] text-sm">
