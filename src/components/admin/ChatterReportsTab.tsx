@@ -256,11 +256,29 @@ export default function ChatterReportsTab({ chatters }: Props) {
     return () => { cancelled = true; };
   }, [chatters, date]);
 
+  const platformList = useMemo(() => {
+    const set = new Set<string>();
+    rows.forEach((r) => r.platforms.forEach((p) => set.add(p)));
+    const list = Array.from(set).sort();
+    return list.length ? list : ["All"];
+  }, [rows]);
+
+  const [activePlatform, setActivePlatform] = useState<string>("");
+  useEffect(() => {
+    if (platformList.length && !platformList.includes(activePlatform)) {
+      setActivePlatform(platformList[0]);
+    }
+  }, [platformList, activePlatform]);
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return rows;
-    return rows.filter((r) => r.name.toLowerCase().includes(q));
-  }, [rows, search]);
+    let base = rows;
+    if (activePlatform && activePlatform !== "All") {
+      base = base.filter((r) => r.platforms.includes(activePlatform));
+    }
+    if (!q) return base;
+    return base.filter((r) => r.name.toLowerCase().includes(q));
+  }, [rows, search, activePlatform]);
 
   const downloadCSV = () => {
     const headers = ["Name", "Day (€)", "Week (€)", "Month (€)", "Week Δ%", "Month Δ%", "Goal (€)", "Streak (days)", "MassDM Sent", "Chats Unread", "Oldest Unread (days)", "Start Date", "Revenue All Time (€)"];
@@ -278,7 +296,8 @@ export default function ChatterReportsTab({ chatters }: Props) {
     const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = url; a.download = `chatter-report-${iso(date)}.csv`;
+    const safePlatform = (activePlatform || "all").toLowerCase().replace(/\s+/g, "-");
+    a.href = url; a.download = `chatter-report-${safePlatform}-${iso(date)}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
