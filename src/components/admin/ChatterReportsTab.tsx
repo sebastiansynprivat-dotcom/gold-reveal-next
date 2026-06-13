@@ -22,6 +22,7 @@ interface Props {
 interface Row {
   user_id: string;
   name: string;
+  telegram_id?: string;
   day: number;
   week: number;
   month: number;
