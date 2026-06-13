@@ -211,12 +211,6 @@ export default function ChatterReportsTab({ chatters }: Props) {
         arr.push(r);
         dataByAccount.set(r.account_id, arr);
       }
-      const olderByAccount = new Map<string, any[]>();
-      for (const r of allTimeData) {
-        const arr = olderByAccount.get(r.account_id) ?? [];
-        arr.push(r);
-        olderByAccount.set(r.account_id, arr);
-      }
 
       const asgByUser = new Map<string, any[]>();
       for (const a of assignments ?? []) {
