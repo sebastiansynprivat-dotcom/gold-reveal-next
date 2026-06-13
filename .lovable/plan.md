@@ -1,74 +1,82 @@
 ## Goal
 
-Move the chatter daily goal from the `daily_goals` table to a new `profiles.daily_goal` column (default `0`), redirect every dependent surface, make the Reports "Goal" column inline‑editable, and base the chatter streak on each chatter's own goal. Document the before/after in a memory file so the change is reversible.
+Replace the single CSV download in `src/components/admin/ChatterReportsTab.tsx` with a **format picker (CSV or XLSX)**, both producing the exact strict format below. File name follows `Platform_Chatter_Report_YYYY-MM-DD.<ext>`.
 
-## Dependents of `daily_goals` today
+## Final headers (in order, no `(€)` anywhere, no Notes)
 
-| # | File | Purpose |
-|---|------|---------|
-| 1 | `src/components/DailyGoal.tsx` | Chatter dashboard widget — reads latest `target_amount` |
-| 2 | `src/pages/AdminDashboard.tsx` (~3498, 3963–3981) | Deletes goal on chatter delete; "Set Goal" dialog reads + upserts |
-| 3 | `src/components/admin/ChatterReportsTab.tsx` (125–131) | Loads goals for the Goal column |
-| 4 | `supabase/functions/generate-chatter-summary/index.ts` (117–124) | AI coach uses goal in the prompt (fallback `30`) |
+1. Date
+2. Name
+3. Telegram ID
+4. Models
+5. Yesterday
+6. Goal
+7. Streak
+8. Last Week Revenue
+9. Last Month Revenue
+10. All Time Revenue
+11. Mass DM
+12. Unread Chats
+13. Oldest Chat
 
-Streak components (`StreakTracker.tsx`, `MonthlyStreakTracker.tsx`) currently use hard‑coded `DAILY_TARGET` — they don't read `daily_goals` yet, but will after this change.
+## Field sources
 
-## Plan
+| Column | Source |
+|--------|--------|
+| Date | `yesterday = addDays(new Date(), -1)` → `YYYY-MM-DD` (same value in every row) |
+| Name | `row.name` |
+| Telegram ID | `row.telegram_id` |
+| Models | Comma-separated model names from accounts assigned to this chatter on the active platform |
+| Yesterday | `row.day` (revenue on the selected report date) |
+| Goal | `profiles.daily_goal` (already in `row.goal`) |
+| Streak | `row.streak` |
+| Last Week Revenue | `row.week` |
+| Last Month Revenue | `row.month` |
+| All Time Revenue | `row.all_time` |
+| Mass DM | `row.mass_dms` (sum of latest `accounts_data.mass_dms` per assigned account) |
+| Unread Chats | `row.unread` (sum of latest `accounts_data.unread_chats`) |
+| Oldest Chat | `row.oldest` (max of latest `accounts_data.oldest_chat`, days) |
 
-### 1. Memory file (before this migration)
+## Scope per export
 
-Create `mem://features/daily-goal-migration` capturing the **before / after** so we can revert:
+- One row per chatter on the **currently active platform tab** (matches the on-screen `filtered` set).
+- Sheet name (XLSX) = the platform.
+- File name: `${Platform}_Chatter_Report_${yyyy-mm-dd}.${ext}` (platform kept readable, spaces → `_`).
 
-- **Before:** `daily_goals(id, user_id, target_amount, created_at, …)` table; latest row per user wins; `DailyGoal` defaulted to `30`; admin dialog inserted a new row each save; AI prompt fell back to `30`; streak used hard‑coded thresholds (`30` chatter, `100` monthly).
-- **After:** `profiles.daily_goal numeric NOT NULL DEFAULT 0`; single source of truth per user; admin updates the column directly; AI and streak read the column; goal `0` means "no goal set" (no streak progress).
-- **Revert recipe:** re‑create `daily_goals` from the migration referenced below, backfill from `profiles.daily_goal`, restore the four files from git, drop `profiles.daily_goal`.
-- Add a link to it in `mem://index.md`.
+## Data additions
 
-### 2. Schema migration
+`Models` requires a small fetch extension:
 
-```sql
-ALTER TABLE public.profiles
-  ADD COLUMN daily_goal numeric NOT NULL DEFAULT 0;
+1. Add `model_id` to the existing `accounts` select.
+2. Batch-fetch `models(id, name)` for distinct `model_id`s.
+3. Build `modelByAccount: Map<accountId, modelName>`.
+4. While building each row, collect distinct model names for that platform's assignments → `row.models: string[]`.
 
-UPDATE public.profiles p
-   SET daily_goal = g.target_amount
-  FROM (
-    SELECT DISTINCT ON (user_id) user_id, target_amount
-      FROM public.daily_goals
-     ORDER BY user_id, created_at DESC
-  ) g
- WHERE p.user_id = g.user_id
-   AND g.target_amount IS NOT NULL;
+## UI change — format picker
 
-DROP TABLE public.daily_goals CASCADE;
+Replace the single "Download Report" button with a **dropdown menu** (existing `@/components/ui/dropdown-menu`):
+
+```text
+[ ⬇ Download Report ▾ ]
+   ├─ Download as XLSX
+   └─ Download as CSV
 ```
 
-No new RLS — existing `profiles` policies already cover read (own row / admins) and admin updates. Types regen automatically.
+- Trigger keeps the current gold outline style and Download icon.
+- Selecting an option calls `downloadReport("xlsx")` or `downloadReport("csv")`.
 
-### 3. Code redirects
+## Generation
 
-- **`DailyGoal.tsx`** — query `profiles.daily_goal` for `auth.uid()`; render `0€` when unset (no `30€` fallback).
-- **`AdminDashboard.tsx`**
-  - Remove the `daily_goals` delete on chatter delete.
-  - "Set Goal" dialog: read `profiles.daily_goal`, save via `update({ daily_goal: n }).eq("user_id", uid)`.
-- **`ChatterReportsTab.tsx`**
-  - Add `daily_goal` to the existing `profiles` select (drop the separate `daily_goals` fetch and `goalMap`).
-  - Make the Goal cell **click‑to‑edit**: click reveals a small inline `<input type="number" min="0">`; Enter / blur saves with `profiles.update({ daily_goal })` (key by `user_id`, fallback to `profiles.id` for pre‑create); Esc cancels; optimistic local update + toast.
-  - CSV export keeps the same `goal` column.
-- **`generate-chatter-summary/index.ts`** — read `daily_goal` from the already‑fetched profile; if `0`, change the prompt section to "TAGESZIEL: kein Ziel gesetzt" and skip the goal‑reached counters; otherwise behave as today.
+- Add dependency: `xlsx` (SheetJS).
+- One shared `buildRows()` returns `{ headers, rows }` (numbers stay numeric, strings stay strings).
+- `downloadReport("csv")` → join with commas, quote strings containing `,` / `"` / `\n`, `Blob` + `URL.createObjectURL`.
+- `downloadReport("xlsx")` → `XLSX.utils.aoa_to_sheet([headers, ...rows])`, set column widths, `book_append_sheet(wb, ws, platform)`, `XLSX.writeFile(wb, filename)`.
 
-### 4. Streak based on the per‑chatter goal
+## Out of scope
 
-- `StreakTracker.tsx`: fetch `profiles.daily_goal` once; a day counts only when `dailyRevenue >= goal && goal > 0`. If `goal === 0`, show "Set a daily goal to start a streak" and don't award days. Existing `getConsecutiveDays` already resets to `0` on a missed day — keep it. Replace `DAILY_TARGET` in copy with the live goal.
-- `MonthlyStreakTracker.tsx`: same swap (hard‑coded `100` → live `daily_goal`).
-- `STREAK_GOAL = 7` (run length) stays.
-
-### 5. Out of scope
-
-No changes to revenue tables, account assignments, platform tabs, or other admin tabs. No new edge functions.
+No changes to the on-screen table, streak logic, goal editing, or any other tab.
 
 ## Technical notes
 
-- After the migration, `types.ts` drops `daily_goals` and gains `profiles.daily_goal` — all four files compile against the new types in the same change.
-- Inline edit reuses table styling — no new dialog or component.
-- The memory file is written **before** the migration call so the revert recipe exists even if something fails mid‑migration.
+- Yesterday is computed at click time so the export is always relative to "now", independent of the table's date picker.
+- `xlsx` adds ~400KB gzipped; acceptable for an admin-only tab. Loaded with a normal top-level import.
+- If `model_id` is null on an account, that account contributes no entry to `Models` (deduped, joined with `", "`).
