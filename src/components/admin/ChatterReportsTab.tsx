@@ -254,7 +254,7 @@ export default function ChatterReportsTab({ chatters }: Props) {
             <thead>
               <tr className="border-b border-border/30 bg-card/40">
                 {["Name", "Revenue", "Goal", "Streak", "MassDM Sent", "Chats Unread / Oldest", "Start Date", "Revenue (All Time)"].map((h) => (
-                  <th key={h} className="px-4 py-3 text-left text-[11px] font-bold tracking-wider uppercase text-[hsl(var(--gold))]/80">{h}</th>
+                  <th key={h} className={cn("px-4 py-3 text-left text-[11px] font-bold tracking-wider uppercase text-[hsl(var(--gold))]/80", h === "Name" && "w-[120px]")}>{h}</th>
                 ))}
               </tr>
             </thead>
