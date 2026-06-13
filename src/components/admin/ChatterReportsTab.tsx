@@ -160,106 +160,123 @@ export default function ChatterReportsTab({ chatters }: Props) {
         asgByUser.set(a.user_id, arr);
       }
 
-      const out: Row[] = chatters.map((c) => {
-        const asgs = asgByUser.get(c.user_id) ?? [];
-        const platforms = Array.from(new Set(asgs.map((a: any) => platformByAccount.get(a.account_id)).filter(Boolean) as string[]));
-        const inWindow = (d: string) => {
+      const out: Row[] = [];
+      for (const c of chatters) {
+        const uid = c.user_id;
+        if (!uid) continue;
+        const allAsgs = asgByUser.get(uid) ?? [];
+        if (allAsgs.length === 0) continue;
+
+        // Group assignments by platform
+        const asgByPlatform = new Map<string, any[]>();
+        for (const a of allAsgs) {
+          const p = platformByAccount.get(a.account_id);
+          if (!p) continue;
+          const arr = asgByPlatform.get(p) ?? [];
+          arr.push(a);
+          asgByPlatform.set(p, arr);
+        }
+
+        for (const [platform, asgs] of asgByPlatform.entries()) {
+          const inWindow = (d: string) => {
+            for (const a of asgs) {
+              const s = a.start_date;
+              const e = a.end_date || selISO;
+              if (s && d >= s && d <= e) return true;
+            }
+            return false;
+          };
+
+          let all_time = 0;
+          let mass_dms = 0, unread = 0, oldest = 0;
+          const totalByDate = new Map<string, number>();
+          const latestByAccount = new Map<string, any>();
+
           for (const a of asgs) {
-            const s = a.start_date;
-            const e = a.end_date || selISO;
-            if (s && d >= s && d <= e) return true;
+            const rowsA = dataByAccount.get(a.account_id) ?? [];
+            for (const r of rowsA) {
+              if (!inWindow(r.date)) continue;
+              const t = Number(r.total || 0);
+              all_time += t;
+              totalByDate.set(r.date, (totalByDate.get(r.date) || 0) + t);
+              const prev = latestByAccount.get(a.account_id);
+              if (!prev || r.date > prev.date) latestByAccount.set(a.account_id, r);
+            }
+            const older = olderByAccount.get(a.account_id) ?? [];
+            for (const r of older) {
+              if (!inWindow(r.date)) continue;
+              all_time += Number(r.total || 0);
+            }
           }
-          return false;
-        };
 
-        let all_time = 0;
-        let mass_dms = 0, unread = 0, oldest = 0;
-
-        const totalByDate = new Map<string, number>();
-        const latestByAccount = new Map<string, any>();
-
-        for (const a of asgs) {
-          const rowsA = dataByAccount.get(a.account_id) ?? [];
-          for (const r of rowsA) {
-            if (!inWindow(r.date)) continue;
-            const t = Number(r.total || 0);
-            all_time += t;
-            totalByDate.set(r.date, (totalByDate.get(r.date) || 0) + t);
-            const prev = latestByAccount.get(a.account_id);
-            if (!prev || r.date > prev.date) latestByAccount.set(a.account_id, r);
+          for (const r of latestByAccount.values()) {
+            mass_dms += Number(r.mass_dms || 0);
+            unread += Number(r.unread_chats || 0);
+            oldest = Math.max(oldest, Number(r.oldest_chat || 0));
           }
-          const older = olderByAccount.get(a.account_id) ?? [];
-          for (const r of older) {
-            if (!inWindow(r.date)) continue;
-            all_time += Number(r.total || 0);
+
+          const daily: { date: string; total: number }[] = [];
+          for (let i = 9; i >= 0; i--) {
+            const d = iso(addDays(date, -i));
+            daily.push({ date: d, total: totalByDate.get(d) || 0 });
           }
-        }
 
-        for (const r of latestByAccount.values()) {
-          mass_dms += Number(r.mass_dms || 0);
-          unread += Number(r.unread_chats || 0);
-          oldest = Math.max(oldest, Number(r.oldest_chat || 0));
-        }
-
-        // Last 10 days
-        const daily: { date: string; total: number }[] = [];
-        for (let i = 9; i >= 0; i--) {
-          const d = iso(addDays(date, -i));
-          daily.push({ date: d, total: totalByDate.get(d) || 0 });
-        }
-
-        // 5 weekly buckets (rolling 7-day windows ending on selected date)
-        const weekly: Bucket[] = [];
-        for (let w = 4; w >= 0; w--) {
-          const end = addDays(date, -7 * w);
-          const start = addDays(end, -6);
-          let total = 0;
-          for (let i = 0; i < 7; i++) {
-            const d = iso(addDays(start, i));
-            total += totalByDate.get(d) || 0;
+          const weekly: Bucket[] = [];
+          for (let w = 4; w >= 0; w--) {
+            const end = addDays(date, -7 * w);
+            const start = addDays(end, -6);
+            let total = 0;
+            for (let i = 0; i < 7; i++) {
+              const d = iso(addDays(start, i));
+              total += totalByDate.get(d) || 0;
+            }
+            weekly.push({ start: iso(start), end: iso(end), total });
           }
-          weekly.push({ start: iso(start), end: iso(end), total });
-        }
 
-        // 5 calendar months
-        const monthly: Bucket[] = [];
-        for (let m = 4; m >= 0; m--) {
-          const start = new Date(date.getFullYear(), date.getMonth() - m, 1);
-          const end = new Date(date.getFullYear(), date.getMonth() - m + 1, 0);
-          let total = 0;
-          const endIter = m === 0 ? date : end;
-          for (let d = new Date(start); d <= endIter; d = addDays(d, 1)) {
-            total += totalByDate.get(iso(d)) || 0;
+          const monthly: Bucket[] = [];
+          for (let m = 4; m >= 0; m--) {
+            const start = new Date(date.getFullYear(), date.getMonth() - m, 1);
+            const end = new Date(date.getFullYear(), date.getMonth() - m + 1, 0);
+            let total = 0;
+            const endIter = m === 0 ? date : end;
+            for (let d = new Date(start); d <= endIter; d = addDays(d, 1)) {
+              total += totalByDate.get(iso(d)) || 0;
+            }
+            monthly.push({ start: iso(start), end: iso(end), total });
           }
-          monthly.push({ start: iso(start), end: iso(end), total });
+
+          const day = totalByDate.get(selISO) || 0;
+          const week = weekly[weekly.length - 1].total;
+          const prev_week = weekly[weekly.length - 2]?.total || 0;
+          const month = monthly[monthly.length - 1].total;
+          const prev_month = monthly[monthly.length - 2]?.total || 0;
+
+          let streak = 0;
+          for (let i = 0; i < 365; i++) {
+            const d = iso(addDays(date, -i));
+            if ((totalByDate.get(d) || 0) > 0) streak++;
+            else break;
+          }
+
+          const fallbackStart =
+            startMap.get(uid) ??
+            c.start_date ??
+            (c.created_at ? String(c.created_at).slice(0, 10) : null);
+
+          out.push({
+            key: `${c.id ?? uid}__${platform}`,
+            user_id: uid,
+            name: c.group_name || c.telegram_id || uid.slice(0, 8),
+            telegram_id: c.telegram_id,
+            day, week, month, prev_week, prev_month, all_time,
+            mass_dms, unread, oldest, streak,
+            goal: goalMap.get(uid) || 0,
+            start_date: fallbackStart,
+            daily, weekly, monthly,
+            platform,
+          });
         }
-
-        const day = totalByDate.get(selISO) || 0;
-        const week = weekly[weekly.length - 1].total;
-        const prev_week = weekly[weekly.length - 2]?.total || 0;
-        const month = monthly[monthly.length - 1].total;
-        const prev_month = monthly[monthly.length - 2]?.total || 0;
-
-        // Streak
-        let streak = 0;
-        for (let i = 0; i < 365; i++) {
-          const d = iso(addDays(date, -i));
-          if ((totalByDate.get(d) || 0) > 0) streak++;
-          else break;
-        }
-
-        return {
-          user_id: c.user_id,
-          name: c.group_name || c.telegram_id || c.user_id.slice(0, 8),
-          telegram_id: c.telegram_id,
-          day, week, month, prev_week, prev_month, all_time,
-          mass_dms, unread, oldest, streak,
-          goal: goalMap.get(c.user_id) || 0,
-          start_date: startMap.get(c.user_id) ?? c.start_date ?? null,
-          daily, weekly, monthly,
-          platforms,
-        };
-      });
+      }
 
       setRows(out);
       setLoading(false);
