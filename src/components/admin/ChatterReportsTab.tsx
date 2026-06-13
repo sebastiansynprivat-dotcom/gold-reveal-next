@@ -248,11 +248,14 @@ export default function ChatterReportsTab({ chatters }: Props) {
           const month = monthly[monthly.length - 1].total;
           const prev_month = monthly[monthly.length - 2]?.total || 0;
 
+          const goalForUser = goalMap.get(uid) || 0;
           let streak = 0;
-          for (let i = 0; i < 365; i++) {
-            const d = iso(addDays(date, -i));
-            if ((totalByDate.get(d) || 0) > 0) streak++;
-            else break;
+          if (goalForUser > 0) {
+            for (let i = 0; i < 365; i++) {
+              const d = iso(addDays(date, -i));
+              if ((totalByDate.get(d) || 0) >= goalForUser) streak++;
+              else break;
+            }
           }
 
           const fallbackStart =
