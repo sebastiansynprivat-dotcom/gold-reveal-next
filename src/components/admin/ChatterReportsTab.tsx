@@ -261,11 +261,6 @@ export default function ChatterReportsTab({ chatters }: Props) {
               const prev = latestByAccount.get(a.account_id);
               if (!prev || r.date > prev.date) latestByAccount.set(a.account_id, r);
             }
-            const older = olderByAccount.get(a.account_id) ?? [];
-            for (const r of older) {
-              if (!inWindow(r.date)) continue;
-              all_time += Number(r.total || 0);
-            }
           }
 
           for (const r of latestByAccount.values()) {
@@ -274,41 +269,51 @@ export default function ChatterReportsTab({ chatters }: Props) {
             oldest = Math.max(oldest, Number(r.oldest_chat || 0));
           }
 
+          const sumRange = (startISO: string, endISO: string) => {
+            let s = 0;
+            for (const [d, v] of totalByDate) {
+              if (d >= startISO && d <= endISO) s += v;
+            }
+            return s;
+          };
+
           const daily: { date: string; total: number }[] = [];
           for (let i = 9; i >= 0; i--) {
             const d = iso(addDays(date, -i));
             daily.push({ date: d, total: totalByDate.get(d) || 0 });
           }
 
+          // weekly buckets — last 5 completed Mon–Sun weeks ending with "last week"
           const weekly: Bucket[] = [];
           for (let w = 4; w >= 0; w--) {
-            const end = addDays(date, -7 * w);
-            const start = addDays(end, -6);
-            let total = 0;
-            for (let i = 0; i < 7; i++) {
-              const d = iso(addDays(start, i));
-              total += totalByDate.get(d) || 0;
-            }
-            weekly.push({ start: iso(start), end: iso(end), total });
+            const ws = startOfWeek(subWeeks(date, w + 1), { weekStartsOn: 1 });
+            const we = endOfWeek(subWeeks(date, w + 1), { weekStartsOn: 1 });
+            weekly.push({ start: iso(ws), end: iso(we), total: sumRange(iso(ws), iso(we)) });
           }
 
+          // monthly buckets — last 5 completed calendar months ending with "last month"
           const monthly: Bucket[] = [];
           for (let m = 4; m >= 0; m--) {
-            const start = new Date(date.getFullYear(), date.getMonth() - m, 1);
-            const end = new Date(date.getFullYear(), date.getMonth() - m + 1, 0);
-            let total = 0;
-            const endIter = m === 0 ? date : end;
-            for (let d = new Date(start); d <= endIter; d = addDays(d, 1)) {
-              total += totalByDate.get(iso(d)) || 0;
-            }
-            monthly.push({ start: iso(start), end: iso(end), total });
+            const ms = startOfMonth(subMonths(date, m + 1));
+            const me = endOfMonth(subMonths(date, m + 1));
+            monthly.push({ start: iso(ms), end: iso(me), total: sumRange(iso(ms), iso(me)) });
           }
 
           const day = totalByDate.get(selISO) || 0;
-          const week = weekly[weekly.length - 1].total;
-          const prev_week = weekly[weekly.length - 2]?.total || 0;
-          const month = monthly[monthly.length - 1].total;
-          const prev_month = monthly[monthly.length - 2]?.total || 0;
+          const week = sumRange(weekStart, weekEnd);
+          const prev_week = sumRange(prevWeekStart, prevWeekEnd);
+          const month = sumRange(monthStart, monthEnd);
+          const prev_month = sumRange(prevMonthStart, prevMonthEnd);
+
+          if (import.meta.env.DEV) {
+            if (week > all_time + 0.001 || month > all_time + 0.001 || day > all_time + 0.001) {
+              // eslint-disable-next-line no-console
+              console.warn("[ChatterReports] invariant broken", {
+                chatter: c.group_name, platform, day, week, month, all_time,
+                assignments: asgs.map((a) => ({ s: a.start_date, e: a.end_date })),
+              });
+            }
+          }
 
           const goalForUser = goalMap.get(uid) || 0;
           let streak = 0;
