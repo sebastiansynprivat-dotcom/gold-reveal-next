@@ -127,6 +127,14 @@ export default function ChatterReportsTab({ chatters }: Props) {
       const goalMap = new Map<string, number>();
       (goals ?? []).forEach((g: any) => goalMap.set(g.user_id, Number(g.target_amount || 0)));
 
+      // Start dates from profiles
+      const { data: profs } = await supabase
+        .from("profiles")
+        .select("user_id,start_date,created_at")
+        .in("user_id", userIds);
+      const startMap = new Map<string, string | null>();
+      (profs ?? []).forEach((p: any) => startMap.set(p.user_id, p.start_date ?? (p.created_at ? String(p.created_at).slice(0, 10) : null)));
+
       if (cancelled) return;
 
       const dataByAccount = new Map<string, any[]>();
