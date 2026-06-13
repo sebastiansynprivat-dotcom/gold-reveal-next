@@ -81,6 +81,17 @@ export default function ChatterReportsTab({ chatters }: Props) {
 
       const accountIds = Array.from(new Set((assignments ?? []).map((a: any) => a.account_id)));
 
+      // Accounts → platform map
+      const platformByAccount = new Map<string, string>();
+      for (let i = 0; i < accountIds.length; i += 100) {
+        const slice = accountIds.slice(i, i + 100);
+        const { data: accs } = await supabase
+          .from("accounts")
+          .select("id,platform")
+          .in("id", slice);
+        (accs ?? []).forEach((a: any) => platformByAccount.set(a.id, a.platform || "Unknown"));
+      }
+
       // Accounts data up to selected date, last ~160 days
       let allData: any[] = [];
       const BATCH = 100;
