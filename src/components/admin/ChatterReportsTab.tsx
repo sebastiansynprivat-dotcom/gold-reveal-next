@@ -161,6 +161,7 @@ export default function ChatterReportsTab({ chatters }: Props) {
         return {
           user_id: c.user_id,
           name: c.group_name || c.telegram_id || c.user_id.slice(0, 8),
+          telegram_id: c.telegram_id,
           day, week, month, prev_week, prev_month, all_time,
           mass_dms, unread, oldest, streak,
           goal: goalMap.get(c.user_id) || 0,
