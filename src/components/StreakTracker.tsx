@@ -216,9 +216,13 @@ export default function StreakTracker({ dailyRevenue }: { dailyRevenue: number }
           <span className="text-accent">
             {t("streak.todayDone")} {t("streak.daysToUpgradePre")} {STREAK_GOAL - consecutiveDays} {t("streak.daysToUpgradeSuffix")}
           </span>
+        ) : dailyGoal === 0 ? (
+          <span className="text-muted-foreground">
+            Set a daily goal to start a streak.
+          </span>
         ) : (
           <span className="text-muted-foreground">
-            {t("streak.openTodayPre")} <strong className="text-foreground">{DAILY_TARGET}€</strong> {t("streak.openTodaySuffix")}
+            {t("streak.openTodayPre")} <strong className="text-foreground">{dailyGoal}€</strong> {t("streak.openTodaySuffix")}
           </span>
         )}
       </div>
