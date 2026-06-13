@@ -3,6 +3,8 @@ import { format } from "date-fns";
 import { CalendarIcon, Download, Search, TrendingDown, TrendingUp } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -18,6 +20,8 @@ interface ChatterLite {
 interface Props {
   chatters: ChatterLite[];
 }
+
+interface Bucket { start: string; end: string; total: number; }
 
 interface Row {
   user_id: string;
@@ -35,6 +39,9 @@ interface Row {
   streak: number;
   goal: number;
   start_date: string | null;
+  daily: { date: string; total: number }[];
+  weekly: Bucket[];
+  monthly: Bucket[];
 }
 
 const fmt = (n: number) => Math.round(n).toLocaleString("de-DE");
@@ -46,6 +53,7 @@ export default function ChatterReportsTab({ chatters }: Props) {
   const [search, setSearch] = useState("");
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(false);
+  const [reportFor, setReportFor] = useState<Row | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -61,6 +69,7 @@ export default function ChatterReportsTab({ chatters }: Props) {
       const monthStart = iso(new Date(date.getFullYear(), date.getMonth(), 1));
       const prevMonthStart = iso(new Date(date.getFullYear(), date.getMonth() - 1, 1));
       const prevMonthEnd = iso(new Date(date.getFullYear(), date.getMonth(), 0));
+      const historyStart = iso(addDays(date, -160));
 
       // Assignments
       const { data: assignments } = await supabase
@@ -70,7 +79,7 @@ export default function ChatterReportsTab({ chatters }: Props) {
 
       const accountIds = Array.from(new Set((assignments ?? []).map((a: any) => a.account_id)));
 
-      // Accounts data up to selected date
+      // Accounts data up to selected date, last ~160 days
       let allData: any[] = [];
       const BATCH = 100;
       for (let i = 0; i < accountIds.length; i += BATCH) {
@@ -79,8 +88,22 @@ export default function ChatterReportsTab({ chatters }: Props) {
           .from("accounts_data")
           .select("account_id,date,total,mass_dms,unread_chats,oldest_chat")
           .in("account_id", slice)
-          .lte("date", selISO);
+          .lte("date", selISO)
+          .gte("date", historyStart);
         if (data) allData = allData.concat(data);
+      }
+
+      // Also fetch all-time totals separately (sum across all dates up to selISO)
+      let allTimeData: any[] = [];
+      for (let i = 0; i < accountIds.length; i += BATCH) {
+        const slice = accountIds.slice(i, i + BATCH);
+        const { data } = await supabase
+          .from("accounts_data")
+          .select("account_id,date,total")
+          .in("account_id", slice)
+          .lte("date", selISO)
+          .lt("date", historyStart);
+        if (data) allTimeData = allTimeData.concat(data);
       }
 
       // Goals
@@ -93,15 +116,19 @@ export default function ChatterReportsTab({ chatters }: Props) {
 
       if (cancelled) return;
 
-      // Index data by account
       const dataByAccount = new Map<string, any[]>();
       for (const r of allData) {
         const arr = dataByAccount.get(r.account_id) ?? [];
         arr.push(r);
         dataByAccount.set(r.account_id, arr);
       }
+      const olderByAccount = new Map<string, any[]>();
+      for (const r of allTimeData) {
+        const arr = olderByAccount.get(r.account_id) ?? [];
+        arr.push(r);
+        olderByAccount.set(r.account_id, arr);
+      }
 
-      // Assignments by user
       const asgByUser = new Map<string, any[]>();
       for (const a of assignments ?? []) {
         const arr = asgByUser.get(a.user_id) ?? [];
@@ -120,10 +147,9 @@ export default function ChatterReportsTab({ chatters }: Props) {
           return false;
         };
 
-        let day = 0, week = 0, month = 0, all_time = 0, prev_week = 0, prev_month = 0;
+        let all_time = 0;
         let mass_dms = 0, unread = 0, oldest = 0;
 
-        // streak: walk backward day by day from selISO
         const totalByDate = new Map<string, number>();
         const latestByAccount = new Map<string, any>();
 
@@ -133,14 +159,14 @@ export default function ChatterReportsTab({ chatters }: Props) {
             if (!inWindow(r.date)) continue;
             const t = Number(r.total || 0);
             all_time += t;
-            if (r.date === selISO) day += t;
-            if (r.date >= weekStart && r.date <= selISO) week += t;
-            if (r.date >= monthStart && r.date <= selISO) month += t;
-            if (r.date >= prevWeekStart && r.date <= prevWeekEnd) prev_week += t;
-            if (r.date >= prevMonthStart && r.date <= prevMonthEnd) prev_month += t;
             totalByDate.set(r.date, (totalByDate.get(r.date) || 0) + t);
             const prev = latestByAccount.get(a.account_id);
             if (!prev || r.date > prev.date) latestByAccount.set(a.account_id, r);
+          }
+          const older = olderByAccount.get(a.account_id) ?? [];
+          for (const r of older) {
+            if (!inWindow(r.date)) continue;
+            all_time += Number(r.total || 0);
           }
         }
 
@@ -150,7 +176,46 @@ export default function ChatterReportsTab({ chatters }: Props) {
           oldest = Math.max(oldest, Number(r.oldest_chat || 0));
         }
 
-        // Streak: consecutive days with >0 revenue going back from selISO
+        // Last 10 days
+        const daily: { date: string; total: number }[] = [];
+        for (let i = 9; i >= 0; i--) {
+          const d = iso(addDays(date, -i));
+          daily.push({ date: d, total: totalByDate.get(d) || 0 });
+        }
+
+        // 5 weekly buckets (rolling 7-day windows ending on selected date)
+        const weekly: Bucket[] = [];
+        for (let w = 4; w >= 0; w--) {
+          const end = addDays(date, -7 * w);
+          const start = addDays(end, -6);
+          let total = 0;
+          for (let i = 0; i < 7; i++) {
+            const d = iso(addDays(start, i));
+            total += totalByDate.get(d) || 0;
+          }
+          weekly.push({ start: iso(start), end: iso(end), total });
+        }
+
+        // 5 calendar months
+        const monthly: Bucket[] = [];
+        for (let m = 4; m >= 0; m--) {
+          const start = new Date(date.getFullYear(), date.getMonth() - m, 1);
+          const end = new Date(date.getFullYear(), date.getMonth() - m + 1, 0);
+          let total = 0;
+          const endIter = m === 0 ? date : end;
+          for (let d = new Date(start); d <= endIter; d = addDays(d, 1)) {
+            total += totalByDate.get(iso(d)) || 0;
+          }
+          monthly.push({ start: iso(start), end: iso(end), total });
+        }
+
+        const day = totalByDate.get(selISO) || 0;
+        const week = weekly[weekly.length - 1].total;
+        const prev_week = weekly[weekly.length - 2]?.total || 0;
+        const month = monthly[monthly.length - 1].total;
+        const prev_month = monthly[monthly.length - 2]?.total || 0;
+
+        // Streak
         let streak = 0;
         for (let i = 0; i < 365; i++) {
           const d = iso(addDays(date, -i));
@@ -166,6 +231,7 @@ export default function ChatterReportsTab({ chatters }: Props) {
           mass_dms, unread, oldest, streak,
           goal: goalMap.get(c.user_id) || 0,
           start_date: c.start_date ?? null,
+          daily, weekly, monthly,
         };
       });
 
@@ -214,6 +280,14 @@ export default function ChatterReportsTab({ chatters }: Props) {
     );
   };
 
+  const TrendIcon = ({ curr, prev }: { curr: number; prev: number }) => {
+    if (prev <= 0) return null;
+    const up = curr >= prev;
+    return up
+      ? <TrendingUp className="h-3 w-3 text-emerald-400" />
+      : <TrendingDown className="h-3 w-3 text-rose-400" />;
+  };
+
   return (
     <div className="space-y-4">
       {/* Toolbar */}
@@ -252,11 +326,11 @@ export default function ChatterReportsTab({ chatters }: Props) {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1100px] text-sm">
+          <table className="w-full min-w-[1200px] text-sm">
             <thead>
               <tr className="border-b border-border/30 bg-card/40">
                 {["Name", "Revenue", "Goal", "Streak", "MassDM Sent", "Chats Unread / Oldest", "Start Date", "Revenue (All Time)"].map((h) => (
-                  <th key={h} className={cn("px-4 py-3 text-left text-[11px] font-bold tracking-wider uppercase text-[hsl(var(--gold))]/80", h === "Name" && "w-[110px] max-w-[110px]")} style={h === "Name" ? { width: 110, maxWidth: 110 } : undefined}>{h}</th>
+                  <th key={h} className={cn("px-4 py-3 text-left text-[11px] font-bold tracking-wider uppercase text-[hsl(var(--gold))]/80", h === "Name" && "w-[210px] max-w-[210px]")} style={h === "Name" ? { width: 210, maxWidth: 210 } : undefined}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -269,23 +343,55 @@ export default function ChatterReportsTab({ chatters }: Props) {
               )}
               {!loading && filtered.map((r) => (
                 <tr key={r.user_id} className="border-b border-border/20 hover:bg-white/[0.03] transition-colors">
-                  <td className="px-4 py-4 w-[110px] max-w-[110px]" style={{ width: 110, maxWidth: 110 }}>
+                  <td className="px-4 py-4 w-[210px] max-w-[210px]" style={{ width: 210, maxWidth: 210 }}>
                     <div className="font-bold text-foreground truncate" title={r.name}>{r.name.toUpperCase()}</div>
                     {r.telegram_id && (
                       <div className="text-[10px] text-muted-foreground truncate" title={r.telegram_id}>@{r.telegram_id}</div>
                     )}
                   </td>
                   <td className="px-4 py-4">
-                    <div className="flex flex-col gap-1.5 w-[170px]">
-                      <div className="px-2.5 py-1 rounded-md border border-border/40 bg-background/40 text-xs text-center font-medium">D: {fmt(r.day)}€</div>
-                      <div className="px-2.5 py-1.5 rounded-md border border-border/40 bg-background/40 text-center">
-                        <div className="text-xs font-medium">W: {fmt(r.week)}€</div>
-                        <DeltaChip curr={r.week} prev={r.prev_week} label="last vs previous week" />
-                      </div>
-                      <div className="px-2.5 py-1.5 rounded-md border border-border/40 bg-background/40 text-center">
-                        <div className="text-xs font-medium">M: {fmt(r.month)}€</div>
-                        <DeltaChip curr={r.month} prev={r.prev_month} label="last vs previous month" />
-                      </div>
+                    <div className="flex flex-col gap-1.5 w-[190px]">
+                      {/* D — hover */}
+                      <HoverCard openDelay={120}>
+                        <HoverCardTrigger asChild>
+                          <div className="px-2.5 py-1 rounded-md border border-border/40 bg-background/40 text-xs text-center font-medium cursor-default">
+                            D: {fmt(r.day)}€
+                          </div>
+                        </HoverCardTrigger>
+                        <HoverCardContent className="w-56 p-3 bg-popover/95 backdrop-blur-xl border-[hsl(var(--gold))]/30">
+                          <div className="text-[11px] font-semibold text-[hsl(var(--gold))] mb-2 uppercase tracking-wider">Last 10 Days</div>
+                          <div className="space-y-1">
+                            {r.daily.map((d) => (
+                              <div key={d.date} className="flex items-center justify-between text-xs">
+                                <span className="text-muted-foreground tabular-nums">{d.date}</span>
+                                <span className="font-medium tabular-nums">{fmt(d.total)}€</span>
+                              </div>
+                            ))}
+                          </div>
+                        </HoverCardContent>
+                      </HoverCard>
+
+                      {/* W — click */}
+                      <button
+                        onClick={() => setReportFor(r)}
+                        className="px-2.5 py-1.5 rounded-md border border-border/40 bg-background/40 text-center hover:border-[hsl(var(--gold))]/50 hover:bg-[hsl(var(--gold))]/5 transition-colors"
+                      >
+                        <div className="text-xs font-medium flex items-center justify-center gap-1.5">
+                          W: {fmt(r.week)}€ <TrendIcon curr={r.week} prev={r.prev_week} />
+                        </div>
+                        <DeltaChip curr={r.week} prev={r.prev_week} label="vs prev week" />
+                      </button>
+
+                      {/* M — click */}
+                      <button
+                        onClick={() => setReportFor(r)}
+                        className="px-2.5 py-1.5 rounded-md border border-border/40 bg-background/40 text-center hover:border-[hsl(var(--gold))]/50 hover:bg-[hsl(var(--gold))]/5 transition-colors"
+                      >
+                        <div className="text-xs font-medium flex items-center justify-center gap-1.5">
+                          M: {fmt(r.month)}€ <TrendIcon curr={r.month} prev={r.prev_month} />
+                        </div>
+                        <DeltaChip curr={r.month} prev={r.prev_month} label="vs prev month" />
+                      </button>
                     </div>
                   </td>
                   <td className="px-4 py-4 text-sm">{r.goal > 0 ? `${fmt(r.goal)}€` : "0"}</td>
@@ -303,6 +409,86 @@ export default function ChatterReportsTab({ chatters }: Props) {
           </table>
         </div>
       </div>
+
+      {/* Weekly / Monthly Report Dialog */}
+      <Dialog open={!!reportFor} onOpenChange={(o) => !o && setReportFor(null)}>
+        <DialogContent className="max-w-3xl bg-background/95 backdrop-blur-2xl border-[hsl(var(--gold))]/30">
+          <DialogHeader>
+            <DialogTitle className="text-[hsl(var(--gold))]">
+              Revenue Report — {reportFor?.name.toUpperCase()}
+            </DialogTitle>
+          </DialogHeader>
+          {reportFor && (
+            <div className="space-y-6">
+              {/* Weekly */}
+              <div>
+                <div className="text-xs font-bold uppercase tracking-wider text-[hsl(var(--gold))]/80 mb-2">Weekly Revenue (last 5 weeks)</div>
+                <div className="overflow-x-auto rounded-lg border border-border/40">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-card/40">
+                        {reportFor.weekly.map((b) => (
+                          <th key={b.start} className="px-3 py-2 text-center text-[10px] font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">
+                            {b.start}<br/>→ {b.end}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        {reportFor.weekly.map((b, i) => {
+                          const prev = reportFor.weekly[i - 1]?.total || 0;
+                          return (
+                            <td key={b.start} className="px-3 py-3 text-center font-semibold tabular-nums">
+                              <div className="flex items-center justify-center gap-1.5">
+                                {fmt(b.total)}€
+                                {i > 0 && <TrendIcon curr={b.total} prev={prev} />}
+                              </div>
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Monthly */}
+              <div>
+                <div className="text-xs font-bold uppercase tracking-wider text-[hsl(var(--gold))]/80 mb-2">Monthly Revenue (last 5 months)</div>
+                <div className="overflow-x-auto rounded-lg border border-border/40">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-card/40">
+                        {reportFor.monthly.map((b) => (
+                          <th key={b.start} className="px-3 py-2 text-center text-[10px] font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">
+                            {b.start.slice(0, 7)}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        {reportFor.monthly.map((b, i) => {
+                          const prev = reportFor.monthly[i - 1]?.total || 0;
+                          return (
+                            <td key={b.start} className="px-3 py-3 text-center font-semibold tabular-nums">
+                              <div className="flex items-center justify-center gap-1.5">
+                                {fmt(b.total)}€
+                                {i > 0 && <TrendIcon curr={b.total} prev={prev} />}
+                              </div>
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
