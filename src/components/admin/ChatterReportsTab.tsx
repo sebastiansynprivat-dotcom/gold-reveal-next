@@ -468,7 +468,25 @@ export default function ChatterReportsTab({ chatters }: Props) {
                       </button>
                     </div>
                   </td>
-                  <td className="px-4 py-4 text-sm">{r.goal > 0 ? `${fmt(r.goal)}€` : "0"}</td>
+                  <td className="px-4 py-4 text-sm">
+                    <GoalCell
+                      value={r.goal}
+                      onSave={async (next) => {
+                        const prev = r.goal;
+                        setRows((rs) => rs.map((x) => (x.user_id === r.user_id ? { ...x, goal: next } : x)));
+                        const { error } = await supabase
+                          .from("profiles")
+                          .update({ daily_goal: next })
+                          .eq("user_id", r.user_id);
+                        if (error) {
+                          setRows((rs) => rs.map((x) => (x.user_id === r.user_id ? { ...x, goal: prev } : x)));
+                          toast.error("Failed to save goal");
+                        } else {
+                          toast.success("Goal updated");
+                        }
+                      }}
+                    />
+                  </td>
                   <td className="px-4 py-4 text-sm whitespace-nowrap">{r.streak} days</td>
                   <td className="px-4 py-4 text-sm whitespace-nowrap">{r.mass_dms} DMs Sent</td>
                   <td className="px-4 py-4 text-center">
