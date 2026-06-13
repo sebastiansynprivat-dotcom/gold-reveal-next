@@ -22,6 +22,7 @@ interface Props {
 interface Row {
   user_id: string;
   name: string;
+  telegram_id?: string;
   day: number;
   week: number;
   month: number;
@@ -160,6 +161,7 @@ export default function ChatterReportsTab({ chatters }: Props) {
         return {
           user_id: c.user_id,
           name: c.group_name || c.telegram_id || c.user_id.slice(0, 8),
+          telegram_id: c.telegram_id,
           day, week, month, prev_week, prev_month, all_time,
           mass_dms, unread, oldest, streak,
           goal: goalMap.get(c.user_id) || 0,
@@ -254,7 +256,7 @@ export default function ChatterReportsTab({ chatters }: Props) {
             <thead>
               <tr className="border-b border-border/30 bg-card/40">
                 {["Name", "Revenue", "Goal", "Streak", "MassDM Sent", "Chats Unread / Oldest", "Start Date", "Revenue (All Time)"].map((h) => (
-                  <th key={h} className={cn("px-4 py-3 text-left text-[11px] font-bold tracking-wider uppercase text-[hsl(var(--gold))]/80", h === "Name" && "w-[120px]")}>{h}</th>
+                  <th key={h} className={cn("px-4 py-3 text-left text-[11px] font-bold tracking-wider uppercase text-[hsl(var(--gold))]/80", h === "Name" && "w-[110px] max-w-[110px]")} style={h === "Name" ? { width: 110, maxWidth: 110 } : undefined}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -267,7 +269,12 @@ export default function ChatterReportsTab({ chatters }: Props) {
               )}
               {!loading && filtered.map((r) => (
                 <tr key={r.user_id} className="border-b border-border/20 hover:bg-white/[0.03] transition-colors">
-                  <td className="px-4 py-4 font-bold text-foreground whitespace-nowrap w-[120px]">{r.name.toUpperCase()}</td>
+                  <td className="px-4 py-4 w-[110px] max-w-[110px]" style={{ width: 110, maxWidth: 110 }}>
+                    <div className="font-bold text-foreground truncate" title={r.name}>{r.name.toUpperCase()}</div>
+                    {r.telegram_id && (
+                      <div className="text-[10px] text-muted-foreground truncate" title={r.telegram_id}>@{r.telegram_id}</div>
+                    )}
+                  </td>
                   <td className="px-4 py-4">
                     <div className="flex flex-col gap-1.5 w-[170px]">
                       <div className="px-2.5 py-1 rounded-md border border-border/40 bg-background/40 text-xs text-center font-medium">D: {fmt(r.day)}€</div>
