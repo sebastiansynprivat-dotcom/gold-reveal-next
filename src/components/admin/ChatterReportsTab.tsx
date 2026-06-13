@@ -12,10 +12,12 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ChatterLite {
-  user_id: string;
+  id?: string;
+  user_id?: string | null;
   group_name: string;
   telegram_id?: string;
   start_date?: string | null;
+  created_at?: string;
 }
 
 interface Props {
@@ -25,6 +27,7 @@ interface Props {
 interface Bucket { start: string; end: string; total: number; }
 
 interface Row {
+  key: string;
   user_id: string;
   name: string;
   telegram_id?: string;
@@ -43,7 +46,7 @@ interface Row {
   daily: { date: string; total: number }[];
   weekly: Bucket[];
   monthly: Bucket[];
-  platforms: string[];
+  platform: string;
 }
 
 const fmt = (n: number) => Math.round(n).toLocaleString("de-DE");
