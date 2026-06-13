@@ -63,7 +63,7 @@ serve(async (req) => {
     const singleUserId = body.user_id as string | undefined;
 
     // Get all profiles (or single)
-    let profilesQuery = supabase.from("profiles").select("user_id, group_name, telegram_id");
+    let profilesQuery = supabase.from("profiles").select("user_id, group_name, telegram_id, daily_goal");
     if (singleUserId) {
       profilesQuery = profilesQuery.eq("user_id", singleUserId);
     }
@@ -113,32 +113,34 @@ serve(async (req) => {
         // Skip users without any assigned accounts
         if (!accounts || accounts.length === 0) continue;
 
-        // Daily goal
-        const { data: goalData } = await supabase
-          .from("daily_goals")
-          .select("target_amount")
-          .eq("user_id", profile.user_id)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        const dailyGoal = goalData?.target_amount || 30;
+        // Daily goal (from profiles.daily_goal; 0 = no goal set)
+        const dailyGoal = Number((profile as any).daily_goal || 0);
 
         // Build data summary for AI
         const accountInfo = accounts?.map(acc => {
           return `- ${acc.platform} (${acc.account_email})`;
         }).join("\n") || "Keine Accounts zugewiesen";
 
-        // Count days where goal was reached in last 7 days
+        // Count days where goal was reached in last 7 days (only if goal is set)
         const revenueByDay = revenue?.filter(r => r.date >= sevenDaysAgoStr) || [];
-        const daysGoalReached = revenueByDay.filter(r => Number(r.amount) >= dailyGoal).length;
+        const daysGoalReached = dailyGoal > 0
+          ? revenueByDay.filter(r => Number(r.amount) >= dailyGoal).length
+          : 0;
+
+        const goalBlock = dailyGoal > 0
+          ? `TAGESZIEL: ${dailyGoal}€/Tag
+- Gestern: ${revYesterday}€ ${revYesterday >= dailyGoal ? "(✅ Ziel erreicht)" : "(❌ Ziel verfehlt)"}
+- Letzte 7 Tage: ${rev7d}€ (Tagesziel an ${daysGoalReached}/7 Tagen erreicht)
+- Letzte 30 Tage: ${rev30d}€`
+          : `TAGESZIEL: kein Ziel gesetzt
+- Gestern: ${revYesterday}€
+- Letzte 7 Tage: ${rev7d}€
+- Letzte 30 Tage: ${rev30d}€`;
 
         const dataPrompt = `
 Chatter: ${profile.group_name || "Unbekannt"}
 
-TAGESZIEL: ${dailyGoal}€/Tag
-- Gestern: ${revYesterday}€ ${revYesterday >= dailyGoal ? "(✅ Ziel erreicht)" : "(❌ Ziel verfehlt)"}
-- Letzte 7 Tage: ${rev7d}€ (Tagesziel an ${daysGoalReached}/7 Tagen erreicht)
-- Letzte 30 Tage: ${rev30d}€
+${goalBlock}
 
 ACCOUNTS (${accounts?.length || 0}):
 ${accountInfo}

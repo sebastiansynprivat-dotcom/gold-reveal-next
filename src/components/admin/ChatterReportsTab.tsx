@@ -122,21 +122,17 @@ export default function ChatterReportsTab({ chatters }: Props) {
         if (data) allTimeData = allTimeData.concat(data);
       }
 
-      // Goals
-      const { data: goals } = await supabase
-        .from("daily_goals")
-        .select("user_id,target_amount")
-        .in("user_id", userIds);
-      const goalMap = new Map<string, number>();
-      (goals ?? []).forEach((g: any) => goalMap.set(g.user_id, Number(g.target_amount || 0)));
-
-      // Start dates from profiles
+      // Goals + start dates from profiles
       const { data: profs } = await supabase
         .from("profiles")
-        .select("user_id,start_date,created_at")
+        .select("user_id,start_date,created_at,daily_goal")
         .in("user_id", userIds);
+      const goalMap = new Map<string, number>();
       const startMap = new Map<string, string | null>();
-      (profs ?? []).forEach((p: any) => startMap.set(p.user_id, p.start_date ?? (p.created_at ? String(p.created_at).slice(0, 10) : null)));
+      (profs ?? []).forEach((p: any) => {
+        goalMap.set(p.user_id, Number(p.daily_goal || 0));
+        startMap.set(p.user_id, p.start_date ?? (p.created_at ? String(p.created_at).slice(0, 10) : null));
+      });
 
       if (cancelled) return;
 
