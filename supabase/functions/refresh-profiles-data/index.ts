@@ -12,9 +12,11 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Optional x-api-key check: if the secret is configured AND a key is sent, it must match.
+    // Cron calls without it (idempotent, server-side aggregation only).
     const apiKey = req.headers.get('x-api-key')
     const expected = Deno.env.get('REVENUE_INGEST_API_KEY')
-    if (!expected || apiKey !== expected) {
+    if (apiKey && expected && apiKey !== expected) {
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
