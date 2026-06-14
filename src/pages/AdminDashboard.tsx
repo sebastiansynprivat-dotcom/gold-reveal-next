@@ -3470,34 +3470,50 @@ export default function AdminDashboard() {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      // Revoke Drive access for assigned accounts
-      const { data: userAccounts } = await supabase
-        .from("accounts")
-        .select("id, drive_folder_id")
-        .eq("assigned_to", deleteTarget.user_id);
-      if (userAccounts?.some((a) => a.drive_folder_id)) {
-        await revokeDriveAccess(
-          userAccounts.filter((a) => a.drive_folder_id).map((a) => a.id),
-          deleteTarget.user_id,
-        );
+      const hasUserId = !!deleteTarget.user_id;
+
+      if (hasUserId) {
+        // Revoke Drive access for assigned accounts
+        const { data: userAccounts } = await supabase
+          .from("accounts")
+          .select("id, drive_folder_id")
+          .eq("assigned_to", deleteTarget.user_id);
+        if (userAccounts?.some((a) => a.drive_folder_id)) {
+          await revokeDriveAccess(
+            userAccounts.filter((a) => a.drive_folder_id).map((a) => a.id),
+            deleteTarget.user_id,
+          );
+        }
+
+        // Unassign any accounts assigned to this user
+        await supabase
+          .from("accounts")
+          .update({ assigned_to: null, assigned_at: null })
+          .eq("assigned_to", deleteTarget.user_id);
+
+        // Delete push subscriptions
+        await supabase.from("push_subscriptions").delete().eq("user_id", deleteTarget.user_id);
+
+        // Delete user progress
+        await supabase.from("user_progress").delete().eq("user_id", deleteTarget.user_id);
       }
 
-      // Unassign any accounts assigned to this user
+      // Close any open assignment rows for this profile (covers pre-create too)
       await supabase
-        .from("accounts")
-        .update({ assigned_to: null, assigned_at: null })
-        .eq("assigned_to", deleteTarget.user_id);
+        .from("account_assignments")
+        .update({
+          end_date: new Date().toISOString().slice(0, 10),
+          unassigned_at: new Date().toISOString(),
+        })
+        .eq("profile_id", deleteTarget.id)
+        .is("end_date", null);
 
-      // Delete push subscriptions
-      await supabase.from("push_subscriptions").delete().eq("user_id", deleteTarget.user_id);
-
-      // Delete user progress
-      await supabase.from("user_progress").delete().eq("user_id", deleteTarget.user_id);
-
-      // (daily goal lives on profiles.daily_goal and is removed with the profile below)
-
-      // Delete profile
-      await supabase.from("profiles").delete().eq("user_id", deleteTarget.user_id);
+      // Delete profile (by user_id when available, else by row id for pre-create)
+      const delQ = hasUserId
+        ? supabase.from("profiles").delete().eq("user_id", deleteTarget.user_id)
+        : supabase.from("profiles").delete().eq("id", deleteTarget.id);
+      const { error: delErr } = await delQ;
+      if (delErr) throw delErr;
 
       toast.success(`${deleteTarget.group_name || "Chatter"} wurde komplett gelöscht`);
       setDeleteTarget(null);
