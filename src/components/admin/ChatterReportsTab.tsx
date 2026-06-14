@@ -31,7 +31,8 @@ interface Bucket { start: string; end: string; total: number; }
 
 interface Row {
   key: string;
-  user_id: string;
+  user_id: string | null;
+  profile_id: string;
   name: string;
   telegram_id?: string;
   day: number;
