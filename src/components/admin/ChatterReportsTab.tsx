@@ -31,7 +31,8 @@ interface Bucket { start: string; end: string; total: number; }
 
 interface Row {
   key: string;
-  user_id: string;
+  user_id: string | null;
+  profile_id: string;
   name: string;
   telegram_id?: string;
   day: number;
@@ -111,21 +112,24 @@ export default function ChatterReportsTab({ chatters }: Props) {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const userIds = chatters.map((c) => c.user_id).filter(Boolean);
-      if (userIds.length === 0) { setRows([]); setLoading(false); return; }
+
+      // Eligible: any chatter with a telegram_id (raw, what ingest writes)
+      const eligible = chatters.filter((c) => !!c.telegram_id && !!c.id);
+      if (eligible.length === 0) { setRows([]); setLoading(false); return; }
+
+      const userIds = Array.from(new Set(eligible.map((c) => c.user_id).filter(Boolean) as string[]));
+      const profileIds = Array.from(new Set(eligible.map((c) => c.id).filter(Boolean) as string[]));
+      const telegramIds = Array.from(new Set(eligible.map((c) => c.telegram_id!).filter(Boolean)));
 
       const selISO = iso(date);
-      // "Last week" = previous completed Mon–Sun week relative to selected date
       const lastWeekStartD = startOfWeek(subWeeks(date, 1), { weekStartsOn: 1 });
       const lastWeekEndD = endOfWeek(subWeeks(date, 1), { weekStartsOn: 1 });
       const weekStart = iso(lastWeekStartD);
       const weekEnd = iso(lastWeekEndD);
-      // Week before that, for prev_week comparison
       const prevWeekStartD = startOfWeek(subWeeks(date, 2), { weekStartsOn: 1 });
       const prevWeekEndD = endOfWeek(subWeeks(date, 2), { weekStartsOn: 1 });
       const prevWeekStart = iso(prevWeekStartD);
       const prevWeekEnd = iso(prevWeekEndD);
-      // "Last month" = previous completed calendar month relative to selected date
       const lastMonthStartD = startOfMonth(subMonths(date, 1));
       const lastMonthEndD = endOfMonth(subMonths(date, 1));
       const monthStart = iso(lastMonthStartD);
@@ -135,15 +139,26 @@ export default function ChatterReportsTab({ chatters }: Props) {
       const prevMonthStart = iso(prevMonthStartD);
       const prevMonthEnd = iso(prevMonthEndD);
 
-      // Assignments
-      const { data: assignments } = await supabase
-        .from("account_assignments")
-        .select("account_id,user_id,start_date,end_date")
-        .in("user_id", userIds);
+      // ----- Current assignments (grouping only) -----
+      const asgRows: any[] = [];
+      if (userIds.length > 0) {
+        const { data } = await supabase
+          .from("account_assignments")
+          .select("account_id,user_id,profile_id")
+          .in("user_id", userIds)
+          .is("end_date", null);
+        if (data) asgRows.push(...data);
+      }
+      if (profileIds.length > 0) {
+        const { data } = await supabase
+          .from("account_assignments")
+          .select("account_id,user_id,profile_id")
+          .in("profile_id", profileIds)
+          .is("end_date", null);
+        if (data) asgRows.push(...data);
+      }
 
-      const accountIds = Array.from(new Set((assignments ?? []).map((a: any) => a.account_id)));
-
-      // Accounts → platform map + accounts → model_id map
+      const accountIds = Array.from(new Set(asgRows.map((a) => a.account_id)));
       const platformByAccount = new Map<string, string>();
       const modelIdByAccount = new Map<string, string>();
       for (let i = 0; i < accountIds.length; i += 100) {
@@ -157,8 +172,6 @@ export default function ChatterReportsTab({ chatters }: Props) {
           if (a.model_id) modelIdByAccount.set(a.id, a.model_id);
         });
       }
-
-      // Models map
       const modelNameById = new Map<string, string>();
       const modelIds = Array.from(new Set(Array.from(modelIdByAccount.values())));
       for (let i = 0; i < modelIds.length; i += 100) {
@@ -167,190 +180,169 @@ export default function ChatterReportsTab({ chatters }: Props) {
         (mdls ?? []).forEach((m: any) => modelNameById.set(m.id, m.name || ""));
       }
 
-      // Single paginated fetch of ALL accounts_data up to selected date — no date floor,
-      // and pages past 1000 rows so all_time is never silently truncated.
-      const allData: any[] = [];
+      // Resolve each assignment to a chatter (by user_id OR profile_id)
+      const platformsByChatter = new Map<string, Set<string>>();
+      const modelsByChatter = new Map<string, Set<string>>();
+      const chatterByUser = new Map<string, any>();
+      const chatterByProfile = new Map<string, any>();
+      for (const c of eligible) {
+        if (c.user_id) chatterByUser.set(c.user_id, c);
+        if (c.id) chatterByProfile.set(c.id, c);
+      }
+      for (const a of asgRows) {
+        const c = (a.user_id && chatterByUser.get(a.user_id)) || (a.profile_id && chatterByProfile.get(a.profile_id));
+        if (!c) continue;
+        const p = platformByAccount.get(a.account_id);
+        if (!p) continue;
+        if (!platformsByChatter.has(c.id)) platformsByChatter.set(c.id, new Set());
+        platformsByChatter.get(c.id)!.add(p);
+        const mid = modelIdByAccount.get(a.account_id);
+        if (mid) {
+          const name = modelNameById.get(mid);
+          if (name) {
+            if (!modelsByChatter.has(c.id)) modelsByChatter.set(c.id, new Set());
+            modelsByChatter.get(c.id)!.add(name);
+          }
+        }
+      }
+
+      // ----- profiles_data (stats source) -----
+      const dataByTelegram = new Map<string, any[]>();
       const BATCH = 50;
       const PAGE = 1000;
-      for (let i = 0; i < accountIds.length; i += BATCH) {
-        const slice = accountIds.slice(i, i + BATCH);
+      for (let i = 0; i < telegramIds.length; i += BATCH) {
+        const slice = telegramIds.slice(i, i + BATCH);
         let from = 0;
         while (true) {
           const { data, error } = await supabase
-            .from("accounts_data")
-            .select("account_id,date,total,mass_dms,unread_chats,oldest_chat")
-            .in("account_id", slice)
+            .from("profiles_data")
+            .select("telegram_id,date,revenue,mass_dm,unread_chats,oldest_chat")
+            .in("telegram_id", slice)
             .lte("date", selISO)
             .order("date", { ascending: false })
             .range(from, from + PAGE - 1);
           if (error || !data || data.length === 0) break;
-          allData.push(...data);
+          for (const r of data) {
+            const arr = dataByTelegram.get(r.telegram_id) ?? [];
+            arr.push(r);
+            dataByTelegram.set(r.telegram_id, arr);
+          }
           if (data.length < PAGE) break;
           from += PAGE;
         }
       }
 
-
-      // Goals + start dates from profiles
-      const { data: profs } = await supabase
-        .from("profiles")
-        .select("user_id,start_date,created_at,daily_goal")
-        .in("user_id", userIds);
-      const goalMap = new Map<string, number>();
+      // ----- profiles (goal + start_date) by id OR user_id -----
+      const goalMap = new Map<string, number>(); // keyed by chatter.id
       const startMap = new Map<string, string | null>();
-      (profs ?? []).forEach((p: any) => {
-        goalMap.set(p.user_id, Number(p.daily_goal || 0));
-        startMap.set(p.user_id, p.start_date ?? (p.created_at ? String(p.created_at).slice(0, 10) : null));
-      });
+      if (profileIds.length > 0) {
+        const { data: profs } = await supabase
+          .from("profiles")
+          .select("id,user_id,start_date,created_at,daily_goal")
+          .in("id", profileIds);
+        (profs ?? []).forEach((p: any) => {
+          goalMap.set(p.id, Number(p.daily_goal || 0));
+          startMap.set(p.id, p.start_date ?? (p.created_at ? String(p.created_at).slice(0, 10) : null));
+        });
+      }
 
       if (cancelled) return;
 
-      const dataByAccount = new Map<string, any[]>();
-      for (const r of allData) {
-        const arr = dataByAccount.get(r.account_id) ?? [];
-        arr.push(r);
-        dataByAccount.set(r.account_id, arr);
-      }
-
-      const asgByUser = new Map<string, any[]>();
-      for (const a of assignments ?? []) {
-        const arr = asgByUser.get(a.user_id) ?? [];
-        arr.push(a);
-        asgByUser.set(a.user_id, arr);
-      }
-
       const out: Row[] = [];
-      for (const c of chatters) {
-        const uid = c.user_id;
-        if (!uid) continue;
-        const allAsgs = asgByUser.get(uid) ?? [];
-        if (allAsgs.length === 0) continue;
+      for (const c of eligible) {
+        const tid = c.telegram_id!;
+        const rowsT = dataByTelegram.get(tid) ?? [];
 
-        // Group assignments by platform
-        const asgByPlatform = new Map<string, any[]>();
-        for (const a of allAsgs) {
-          const p = platformByAccount.get(a.account_id);
-          if (!p) continue;
-          const arr = asgByPlatform.get(p) ?? [];
-          arr.push(a);
-          asgByPlatform.set(p, arr);
+        // totals by date
+        const totalByDate = new Map<string, number>();
+        for (const r of rowsT) {
+          totalByDate.set(r.date, (totalByDate.get(r.date) || 0) + Number(r.revenue || 0));
         }
 
-        for (const [platform, asgs] of asgByPlatform.entries()) {
-          const inWindow = (d: string) => {
-            for (const a of asgs) {
-              const s = a.start_date;
-              const e = a.end_date || selISO;
-              if (s && d >= s && d <= e) return true;
-            }
-            return false;
-          };
+        // latest row for activity fields
+        let latest: any = null;
+        for (const r of rowsT) {
+          if (!latest || r.date > latest.date) latest = r;
+        }
 
-          let all_time = 0;
-          let mass_dms = 0, unread = 0, oldest = 0;
-          const totalByDate = new Map<string, number>();
-          const latestByAccount = new Map<string, any>();
+        let all_time = 0;
+        for (const v of totalByDate.values()) all_time += v;
 
-          for (const a of asgs) {
-            const rowsA = dataByAccount.get(a.account_id) ?? [];
-            for (const r of rowsA) {
-              if (!inWindow(r.date)) continue;
-              const t = Number(r.total || 0);
-              all_time += t;
-              totalByDate.set(r.date, (totalByDate.get(r.date) || 0) + t);
-              const prev = latestByAccount.get(a.account_id);
-              if (!prev || r.date > prev.date) latestByAccount.set(a.account_id, r);
-            }
+        const sumRange = (s: string, e: string) => {
+          let t = 0;
+          for (const [d, v] of totalByDate) if (d >= s && d <= e) t += v;
+          return t;
+        };
+
+        const day = totalByDate.get(selISO) || 0;
+        const week = sumRange(weekStart, weekEnd);
+        const prev_week = sumRange(prevWeekStart, prevWeekEnd);
+        const month = sumRange(monthStart, monthEnd);
+        const prev_month = sumRange(prevMonthStart, prevMonthEnd);
+
+        const daily: { date: string; total: number }[] = [];
+        for (let i = 9; i >= 0; i--) {
+          const d = iso(addDays(date, -i));
+          daily.push({ date: d, total: totalByDate.get(d) || 0 });
+        }
+
+        const weekly: Bucket[] = [];
+        for (let w = 4; w >= 0; w--) {
+          const ws = startOfWeek(subWeeks(date, w + 1), { weekStartsOn: 1 });
+          const we = endOfWeek(subWeeks(date, w + 1), { weekStartsOn: 1 });
+          weekly.push({ start: iso(ws), end: iso(we), total: sumRange(iso(ws), iso(we)) });
+        }
+        const monthly: Bucket[] = [];
+        for (let m = 4; m >= 0; m--) {
+          const ms = startOfMonth(subMonths(date, m + 1));
+          const me = endOfMonth(subMonths(date, m + 1));
+          monthly.push({ start: iso(ms), end: iso(me), total: sumRange(iso(ms), iso(me)) });
+        }
+
+        if (import.meta.env.DEV) {
+          if (week > all_time + 0.001 || month > all_time + 0.001 || day > all_time + 0.001) {
+            // eslint-disable-next-line no-console
+            console.warn("[ChatterReports] invariant broken", { chatter: c.group_name, day, week, month, all_time });
           }
+        }
 
-          for (const r of latestByAccount.values()) {
-            mass_dms += Number(r.mass_dms || 0);
-            unread += Number(r.unread_chats || 0);
-            oldest = Math.max(oldest, Number(r.oldest_chat || 0));
-          }
-
-          const sumRange = (startISO: string, endISO: string) => {
-            let s = 0;
-            for (const [d, v] of totalByDate) {
-              if (d >= startISO && d <= endISO) s += v;
-            }
-            return s;
-          };
-
-          const daily: { date: string; total: number }[] = [];
-          for (let i = 9; i >= 0; i--) {
+        const goalForUser = goalMap.get(c.id!) || 0;
+        let streak = 0;
+        if (goalForUser > 0) {
+          for (let i = 0; i < 365; i++) {
             const d = iso(addDays(date, -i));
-            daily.push({ date: d, total: totalByDate.get(d) || 0 });
+            if ((totalByDate.get(d) || 0) >= goalForUser) streak++;
+            else break;
           }
+        }
 
-          // weekly buckets — last 5 completed Mon–Sun weeks ending with "last week"
-          const weekly: Bucket[] = [];
-          for (let w = 4; w >= 0; w--) {
-            const ws = startOfWeek(subWeeks(date, w + 1), { weekStartsOn: 1 });
-            const we = endOfWeek(subWeeks(date, w + 1), { weekStartsOn: 1 });
-            weekly.push({ start: iso(ws), end: iso(we), total: sumRange(iso(ws), iso(we)) });
-          }
+        const fallbackStart =
+          startMap.get(c.id!) ??
+          c.start_date ??
+          (c.created_at ? String(c.created_at).slice(0, 10) : null);
 
-          // monthly buckets — last 5 completed calendar months ending with "last month"
-          const monthly: Bucket[] = [];
-          for (let m = 4; m >= 0; m--) {
-            const ms = startOfMonth(subMonths(date, m + 1));
-            const me = endOfMonth(subMonths(date, m + 1));
-            monthly.push({ start: iso(ms), end: iso(me), total: sumRange(iso(ms), iso(me)) });
-          }
+        const mass_dms = Number(latest?.mass_dm || 0);
+        const unread = Number(latest?.unread_chats || 0);
+        const oldest = Number(latest?.oldest_chat || 0);
 
-          const day = totalByDate.get(selISO) || 0;
-          const week = sumRange(weekStart, weekEnd);
-          const prev_week = sumRange(prevWeekStart, prevWeekEnd);
-          const month = sumRange(monthStart, monthEnd);
-          const prev_month = sumRange(prevMonthStart, prevMonthEnd);
+        const platforms = Array.from(platformsByChatter.get(c.id!) ?? []);
+        const modelsArr = Array.from(modelsByChatter.get(c.id!) ?? []);
+        const bucketList = platforms.length > 0 ? platforms : ["Unassigned"];
 
-          if (import.meta.env.DEV) {
-            if (week > all_time + 0.001 || month > all_time + 0.001 || day > all_time + 0.001) {
-              // eslint-disable-next-line no-console
-              console.warn("[ChatterReports] invariant broken", {
-                chatter: c.group_name, platform, day, week, month, all_time,
-                assignments: asgs.map((a) => ({ s: a.start_date, e: a.end_date })),
-              });
-            }
-          }
-
-          const goalForUser = goalMap.get(uid) || 0;
-          let streak = 0;
-          if (goalForUser > 0) {
-            for (let i = 0; i < 365; i++) {
-              const d = iso(addDays(date, -i));
-              if ((totalByDate.get(d) || 0) >= goalForUser) streak++;
-              else break;
-            }
-          }
-
-          const fallbackStart =
-            startMap.get(uid) ??
-            c.start_date ??
-            (c.created_at ? String(c.created_at).slice(0, 10) : null);
-
-          const modelsSet = new Set<string>();
-          for (const a of asgs) {
-            const mid = modelIdByAccount.get(a.account_id);
-            if (mid) {
-              const name = modelNameById.get(mid);
-              if (name) modelsSet.add(name);
-            }
-          }
-
+        for (const platform of bucketList) {
           out.push({
-            key: `${c.id ?? uid}__${platform}`,
-            user_id: uid,
-            name: c.group_name || c.telegram_id || uid.slice(0, 8),
+            key: `${c.id}__${platform}`,
+            user_id: c.user_id ?? null,
+            profile_id: c.id!,
+            name: c.group_name || c.telegram_id || (c.user_id ?? c.id!).slice(0, 8),
             telegram_id: c.telegram_id,
             day, week, month, prev_week, prev_month, all_time,
             mass_dms, unread, oldest, streak,
-            goal: goalMap.get(uid) || 0,
+            goal: goalForUser,
             start_date: fallbackStart,
             daily, weekly, monthly,
             platform,
-            models: Array.from(modelsSet),
+            models: modelsArr,
           });
         }
       }
@@ -590,13 +582,13 @@ export default function ChatterReportsTab({ chatters }: Props) {
                       value={r.goal}
                       onSave={async (next) => {
                         const prev = r.goal;
-                        setRows((rs) => rs.map((x) => (x.user_id === r.user_id ? { ...x, goal: next } : x)));
-                        const { error } = await supabase
-                          .from("profiles")
-                          .update({ daily_goal: next })
-                          .eq("user_id", r.user_id);
+                        setRows((rs) => rs.map((x) => (x.profile_id === r.profile_id ? { ...x, goal: next } : x)));
+                        const q = supabase.from("profiles").update({ daily_goal: next });
+                        const { error } = await (r.user_id
+                          ? q.eq("user_id", r.user_id)
+                          : q.eq("id", r.profile_id));
                         if (error) {
-                          setRows((rs) => rs.map((x) => (x.user_id === r.user_id ? { ...x, goal: prev } : x)));
+                          setRows((rs) => rs.map((x) => (x.profile_id === r.profile_id ? { ...x, goal: prev } : x)));
                           toast.error("Failed to save goal");
                         } else {
                           toast.success("Goal updated");
