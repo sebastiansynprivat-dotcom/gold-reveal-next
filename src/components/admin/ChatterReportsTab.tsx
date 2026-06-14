@@ -582,13 +582,13 @@ export default function ChatterReportsTab({ chatters }: Props) {
                       value={r.goal}
                       onSave={async (next) => {
                         const prev = r.goal;
-                        setRows((rs) => rs.map((x) => (x.user_id === r.user_id ? { ...x, goal: next } : x)));
-                        const { error } = await supabase
-                          .from("profiles")
-                          .update({ daily_goal: next })
-                          .eq("user_id", r.user_id);
+                        setRows((rs) => rs.map((x) => (x.profile_id === r.profile_id ? { ...x, goal: next } : x)));
+                        const q = supabase.from("profiles").update({ daily_goal: next });
+                        const { error } = await (r.user_id
+                          ? q.eq("user_id", r.user_id)
+                          : q.eq("id", r.profile_id));
                         if (error) {
-                          setRows((rs) => rs.map((x) => (x.user_id === r.user_id ? { ...x, goal: prev } : x)));
+                          setRows((rs) => rs.map((x) => (x.profile_id === r.profile_id ? { ...x, goal: prev } : x)));
                           toast.error("Failed to save goal");
                         } else {
                           toast.success("Goal updated");
