@@ -2257,6 +2257,45 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles_data: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          mass_dm: number | null
+          models: Json
+          oldest_chat: number | null
+          revenue: number
+          telegram_id: string
+          unread_chats: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          id?: string
+          mass_dm?: number | null
+          models?: Json
+          oldest_chat?: number | null
+          revenue?: number
+          telegram_id: string
+          unread_chats?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          mass_dm?: number | null
+          models?: Json
+          oldest_chat?: number | null
+          revenue?: number
+          telegram_id?: string
+          unread_chats?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       push_subscriptions: {
         Row: {
           created_at: string
