@@ -139,44 +139,77 @@ export default function ChatterReportsTab({ chatters }: Props) {
       const prevMonthStart = iso(prevMonthStartD);
       const prevMonthEnd = iso(prevMonthEndD);
 
-      // ----- Current assignments (grouping only) -----
-      const asgRows: any[] = [];
-      if (userIds.length > 0) {
-        const { data } = await supabase
-          .from("account_assignments")
-          .select("account_id,user_id,profile_id")
-          .in("user_id", userIds)
-          .is("end_date", null);
-        if (data) asgRows.push(...data);
-      }
-      if (profileIds.length > 0) {
-        const { data } = await supabase
-          .from("account_assignments")
-          .select("account_id,user_id,profile_id")
-          .in("profile_id", profileIds)
-          .is("end_date", null);
-        if (data) asgRows.push(...data);
-      }
+      // ----- Fire independent fetches in parallel -----
+      const asgByUserP = userIds.length > 0
+        ? supabase.from("account_assignments").select("account_id,user_id,profile_id").in("user_id", userIds).is("end_date", null)
+        : Promise.resolve({ data: [] as any[] });
+      const asgByProfileP = profileIds.length > 0
+        ? supabase.from("account_assignments").select("account_id,user_id,profile_id").in("profile_id", profileIds).is("end_date", null)
+        : Promise.resolve({ data: [] as any[] });
+      const profsP = profileIds.length > 0
+        ? supabase.from("profiles").select("id,user_id,start_date,created_at,daily_goal").in("id", profileIds)
+        : Promise.resolve({ data: [] as any[] });
 
+      // profiles_data: run all telegram-id batches concurrently; paginate within each batch
+      const BATCH = 50;
+      const PAGE = 1000;
+      const telegramSlices: string[][] = [];
+      for (let i = 0; i < telegramIds.length; i += BATCH) telegramSlices.push(telegramIds.slice(i, i + BATCH));
+      const profilesDataP = Promise.all(telegramSlices.map(async (slice) => {
+        const collected: any[] = [];
+        let from = 0;
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+          const { data, error } = await supabase
+            .from("profiles_data")
+            .select("telegram_id,date,revenue,mass_dm,unread_chats,oldest_chat")
+            .in("telegram_id", slice)
+            .lte("date", selISO)
+            .order("date", { ascending: false })
+            .range(from, from + PAGE - 1);
+          if (error || !data || data.length === 0) break;
+          collected.push(...data);
+          if (data.length < PAGE) break;
+          from += PAGE;
+        }
+        return collected;
+      }));
+
+      const [asgByUserRes, asgByProfileRes, profsRes, profilesDataChunks] = await Promise.all([
+        asgByUserP, asgByProfileP, profsP, profilesDataP,
+      ]);
+      if (cancelled) return;
+
+      const asgRows: any[] = [
+        ...((asgByUserRes as any).data ?? []),
+        ...((asgByProfileRes as any).data ?? []),
+      ];
+
+      // ----- accounts + models in parallel chunks -----
       const accountIds = Array.from(new Set(asgRows.map((a) => a.account_id)));
+      const accountChunks: string[][] = [];
+      for (let i = 0; i < accountIds.length; i += 100) accountChunks.push(accountIds.slice(i, i + 100));
+      const accsResults = await Promise.all(accountChunks.map((slice) =>
+        supabase.from("accounts").select("id,platform,model_id").in("id", slice)
+      ));
+      if (cancelled) return;
       const platformByAccount = new Map<string, string>();
       const modelIdByAccount = new Map<string, string>();
-      for (let i = 0; i < accountIds.length; i += 100) {
-        const slice = accountIds.slice(i, i + 100);
-        const { data: accs } = await supabase
-          .from("accounts")
-          .select("id,platform,model_id")
-          .in("id", slice);
+      for (const { data: accs } of accsResults) {
         (accs ?? []).forEach((a: any) => {
           platformByAccount.set(a.id, a.platform || "Unknown");
           if (a.model_id) modelIdByAccount.set(a.id, a.model_id);
         });
       }
-      const modelNameById = new Map<string, string>();
       const modelIds = Array.from(new Set(Array.from(modelIdByAccount.values())));
-      for (let i = 0; i < modelIds.length; i += 100) {
-        const slice = modelIds.slice(i, i + 100);
-        const { data: mdls } = await supabase.from("models").select("id,name").in("id", slice);
+      const modelChunks: string[][] = [];
+      for (let i = 0; i < modelIds.length; i += 100) modelChunks.push(modelIds.slice(i, i + 100));
+      const mdlsResults = await Promise.all(modelChunks.map((slice) =>
+        supabase.from("models").select("id,name").in("id", slice)
+      ));
+      if (cancelled) return;
+      const modelNameById = new Map<string, string>();
+      for (const { data: mdls } of mdlsResults) {
         (mdls ?? []).forEach((m: any) => modelNameById.set(m.id, m.name || ""));
       }
 
@@ -206,45 +239,23 @@ export default function ChatterReportsTab({ chatters }: Props) {
         }
       }
 
-      // ----- profiles_data (stats source) -----
+      // ----- profiles_data -> map by telegram_id -----
       const dataByTelegram = new Map<string, any[]>();
-      const BATCH = 50;
-      const PAGE = 1000;
-      for (let i = 0; i < telegramIds.length; i += BATCH) {
-        const slice = telegramIds.slice(i, i + BATCH);
-        let from = 0;
-        while (true) {
-          const { data, error } = await supabase
-            .from("profiles_data")
-            .select("telegram_id,date,revenue,mass_dm,unread_chats,oldest_chat")
-            .in("telegram_id", slice)
-            .lte("date", selISO)
-            .order("date", { ascending: false })
-            .range(from, from + PAGE - 1);
-          if (error || !data || data.length === 0) break;
-          for (const r of data) {
-            const arr = dataByTelegram.get(r.telegram_id) ?? [];
-            arr.push(r);
-            dataByTelegram.set(r.telegram_id, arr);
-          }
-          if (data.length < PAGE) break;
-          from += PAGE;
+      for (const chunk of profilesDataChunks) {
+        for (const r of chunk) {
+          const arr = dataByTelegram.get(r.telegram_id) ?? [];
+          arr.push(r);
+          dataByTelegram.set(r.telegram_id, arr);
         }
       }
 
-      // ----- profiles (goal + start_date) by id OR user_id -----
-      const goalMap = new Map<string, number>(); // keyed by chatter.id
+      // ----- profiles (goal + start_date) -----
+      const goalMap = new Map<string, number>();
       const startMap = new Map<string, string | null>();
-      if (profileIds.length > 0) {
-        const { data: profs } = await supabase
-          .from("profiles")
-          .select("id,user_id,start_date,created_at,daily_goal")
-          .in("id", profileIds);
-        (profs ?? []).forEach((p: any) => {
-          goalMap.set(p.id, Number(p.daily_goal || 0));
-          startMap.set(p.id, p.start_date ?? (p.created_at ? String(p.created_at).slice(0, 10) : null));
-        });
-      }
+      ((profsRes as any).data ?? []).forEach((p: any) => {
+        goalMap.set(p.id, Number(p.daily_goal || 0));
+        startMap.set(p.id, p.start_date ?? (p.created_at ? String(p.created_at).slice(0, 10) : null));
+      });
 
       if (cancelled) return;
 
