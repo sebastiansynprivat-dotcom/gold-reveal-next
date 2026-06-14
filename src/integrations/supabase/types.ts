@@ -2794,6 +2794,7 @@ export type Database = {
         Args: { p_original_id: string }
         Returns: undefined
       }
+      refresh_profiles_data_today: { Args: never; Returns: number }
       set_credit_note_seq: { Args: { new_val: number }; Returns: undefined }
       text_to_bytea: { Args: { data: string }; Returns: string }
       urlencode:
