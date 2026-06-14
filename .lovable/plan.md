@@ -1,74 +1,69 @@
-## Goal
+# Why Reports are slow
 
-Compute all revenue + activity stats in the admin Reports tab from `profiles_data` (keyed by `telegram_id` + `date`), while still grouping chatters into platform buckets based on their **current assignments**. Pre-created chatters (no `user_id`, only `profile_id`) are first-class — their assignments are looked up by `profile_id`.
+The Reports tab fetches everything **sequentially** in one big `useEffect`, with several nested `await` loops. Each `await` is a separate round-trip to the backend, and they all block the next step.
 
-## File
+Concretely, for every load it does, in order:
 
-`src/components/admin/ChatterReportsTab.tsx`
+1. `account_assignments` by `user_id` — 1 round-trip
+2. `account_assignments` by `profile_id` — 1 round-trip
+3. `accounts` in chunks of 100 — N round-trips, **serial**
+4. `models` in chunks of 100 — N round-trips, **serial**
+5. `profiles_data` — telegram IDs sliced in batches of 50, and **for each batch a paginated `while(true)` loop** of 1000-row pages — many round-trips, fully **serial**
+6. `profiles` for goals/start dates — 1 round-trip
 
-## Data-loading rewrite
+With ~268 telegram IDs and ~11.6k `profiles_data` rows today, step 5 alone is ~6 sequential batches × (1+ pages each). Every other step waits for the previous one even though most of them are independent. That stacked latency (not the row count) is what the user sees as a long spinner.
 
-1. **Eligible chatters = anyone with a `telegram_id`**
-   - Skip only chatters with no `telegram_id` at all (nothing to key `profiles_data` on).
-   - Collect both:
-     - `userIds` = chatter `user_id`s (non-null) — for assignments + profiles lookup.
-     - `profileIds` = chatter `id`s (the `profiles.id`) — for **pre_create** chatters' assignments.
+A secondary cost: `profiles_data` is fetched for the **entire history** (only `.lte(selISO)`), which is fine for `all_time` but means every page transfer grows over time even when the visible windows are last week / last month / today.
 
-2. **Platform buckets — assignments, grouping only**
-   - Two fetches against `account_assignments` where `end_date IS NULL`:
-     - `.in("user_id", userIds)` for normal chatters.
-     - `.in("profile_id", profileIds)` for pre_create chatters.
-   - Merge results, then map each assignment back to the owning chatter using **either** `user_id` **or** `profile_id` (whichever matched).
-   - Fetch `accounts` (id → platform, model_id) for the union of account_ids.
-   - Fetch `models` (id → name) for involved model_ids — keeps the "Models" column populated.
-   - Build `platformsByChatter` and `modelsByChatter`, both keyed by `chatter.id` (works for users + pre_create alike).
-   - **Fallback bucket**: chatters with no current assignment of either kind appear under an "Unassigned" platform tab so they don't disappear from the report.
+Indexes on `profiles_data` are already correct (`(telegram_id, date)` unique + per-column), so this is a client-side orchestration problem, not a DB problem.
 
-3. **Stats source — `profiles_data`**
-   - Single paginated fetch (PAGE=1000, batches of 50 telegram_ids), keyed by the raw `telegram_id` from each chatter record:
-     ```
-     supabase.from("profiles_data")
-       .select("telegram_id,date,revenue,mass_dm,unread_chats,oldest_chat")
-       .in("telegram_id", batch)
-       .lte("date", selISO)
-       .order("date", { ascending: false })
-       .range(from, from + PAGE - 1)
-     ```
-   - Group rows into `dataByTelegram: Map<telegram_id, Row[]>`.
+# Plan
 
-4. **Per-chatter aggregation (platform-independent)**
-   - `totalByDate` = sum of `revenue` per date.
-   - `all_time` = sum across all dates ≤ selected date.
-   - `day` / `week` (last completed Mon–Sun) / `prev_week` / `month` (last completed calendar month) / `prev_month` — sum `totalByDate` over the same window definitions already in the file.
-   - `weekly` (5 buckets) and `monthly` (5 buckets) sparklines — same windows as today.
-   - `daily` (last 10 days) — from `totalByDate`.
-   - Activity from the **latest** `profiles_data` row ≤ selected date: `mass_dms` ← `r.mass_dm`, `unread` ← `r.unread_chats`, `oldest` ← `r.oldest_chat`.
-   - `streak` — driven by `totalByDate` vs `daily_goal`.
+Refactor the loader in `src/components/admin/ChatterReportsTab.tsx` only. No schema changes, no UI changes.
 
-5. **Emit rows per platform bucket (same totals duplicated)**
-   - For each platform in `platformsByChatter.get(chatter.id)`: emit a Row with that platform label, `models = Array.from(modelsByChatter.get(chatter.id))`, and the per-chatter totals/activity computed above.
-   - If no current assignments: emit one row under the "Unassigned" bucket.
-   - `key = ${chatter.id}__${platform}`.
+## 1. Parallelize independent fetches
 
-## Goals & start dates
+Kick these off together with `Promise.all` instead of serially:
 
-- `profiles` fetch widened to include both `userIds` and `profileIds`: `.or("user_id.in.(...),id.in.(...)")` — covers pre_create rows (which have an `id` but no `user_id`).
-- `goalMap` / `startMap` keyed by `chatter.id` (resolved per chatter).
-- Pre_create chatters with goal=0 simply render `streak=0` — same as today.
+- `account_assignments` by `user_id` **and** by `profile_id` (today: serial → parallel)
+- `profiles` (goals/start_date) — independent of assignments, can start immediately
+- `profiles_data` — independent of assignments, can start immediately
 
-## Things removed
+## 2. Parallelize the chunked sub-fetches
 
-- `accounts_data` fetch, `inWindow(...)` assignment-bounded filter, `latestByAccount` logic.
-- Assignment `start_date`/`end_date` no longer used for math (only "is there a current bucket?").
+- `accounts` in chunks of 100 → `Promise.all(chunks.map(...))`
+- `models` in chunks of 100 → `Promise.all(chunks.map(...))`
+- `profiles_data` telegram-ID batches → `Promise.all(batches.map(...))` instead of the outer `for` loop. Keep the inner pagination per batch (it's order-dependent), but run the batches concurrently.
 
-## Things unchanged
+## 3. Pre-aggregate `profiles_data` server-side via an RPC (optional, recommended)
 
-- UI: table columns, platform tabs (with new "Unassigned" tab when needed), sparklines, dialog, XLSX export, goal cell, streak rendering, search.
-- Telegram-id display in the row.
-- Dev-mode invariant guard (now compares week/month vs chatter-wide all_time).
+Add a `SECURITY DEFINER` SQL function `report_profile_totals(p_telegram_ids text[], p_as_of date)` that returns, per `telegram_id`:
 
-## Edge cases
+- `total_by_date jsonb` (date → revenue) limited to a rolling window that covers the widest range we render (last ~5 full months + current = ~180 days),
+- `all_time_revenue numeric` (sum ≤ `p_as_of`),
+- `latest_date`, `latest_mass_dm`, `latest_unread_chats`, `latest_oldest_chat`.
 
-- Query `profiles_data` with the raw `telegram_id` we have on the chatter record (matches what `ingest-profiles-data` writes). If lookups come back empty in dev, add a normalized fallback (`lower(strip_leading_@)`).
-- `revenue` numeric → `Number(r.revenue || 0)`.
-- DB column is `mass_dm` (singular); Row field stays `mass_dms`.
+The client then computes day/week/month/prev/weekly/monthly/streak/sparkline from the 180-day map and uses `all_time_revenue` directly. This:
+
+- Eliminates pagination round-trips entirely (1 RPC, ~268 rows of compact JSON).
+- Stops transferring the full row history every load.
+
+If we don't want to introduce an RPC, the parallelization in step 2 alone already removes the dominant serial latency.
+
+## 4. Small client-side tidy
+
+- Move `setLoading(true)` so the spinner appears immediately and a stale render isn't kept.
+- Drop the dev-mode invariant warn from the hot path or guard with a single check after aggregation.
+
+## Files touched
+
+- `src/components/admin/ChatterReportsTab.tsx` — refactor the `useEffect` loader only; table, tabs, dialog, export, goal cell untouched.
+- (Optional, step 3) one migration adding `report_profile_totals(...)` RPC + `GRANT EXECUTE ... TO authenticated`.
+
+## Expected impact
+
+Step 1+2 alone typically cuts load time by 3–5× because the long serial chain becomes a single wave of parallel requests. Step 3 makes it effectively constant-time as history grows.
+
+## Decision needed
+
+Do you want **(a) parallelization only** (frontend-only, no DB changes), or **(b) parallelization + the `report_profile_totals` RPC** for the biggest win and to keep it fast as `profiles_data` grows?
