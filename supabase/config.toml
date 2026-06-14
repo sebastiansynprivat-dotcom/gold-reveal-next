@@ -72,3 +72,6 @@ verify_jwt = false
 
 [functions.ingest-bot-notifications]
 verify_jwt = false
+
+[functions.ingest-profiles-data]
+verify_jwt = false
