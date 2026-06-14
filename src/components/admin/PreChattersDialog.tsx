@@ -168,6 +168,24 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
     }
     setSaving(true);
     try {
+      // 0) Guard: there must not already be a real (non pre-create) profile with this Telegram-ID.
+      //    Otherwise the pre-create row stays orphaned and is never matched on login.
+      const { data: existing, error: existErr } = await supabase
+        .from("profiles")
+        .select("id, group_name, pre_create, user_id")
+        .eq("telegram_id", telegram.trim())
+        .eq("pre_create", false)
+        .limit(1);
+      if (existErr) throw existErr;
+      if (existing && existing.length > 0) {
+        const name = (existing[0] as any).group_name || "Chatter";
+        toast.error(
+          `Es gibt bereits einen registrierten Chatter mit dieser Telegram-ID (${name}). Bitte Accounts direkt diesem Chatter zuweisen.`,
+        );
+        setSaving(false);
+        return;
+      }
+
       // 1) Create pre-create profile
       const { data: prof, error: profErr } = await supabase
         .from("profiles")
