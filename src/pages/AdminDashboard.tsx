@@ -10322,15 +10322,18 @@ export default function AdminDashboard() {
                 onClick={async () => {
                   if (!reassignTarget) return;
                   setSavingChatter(true);
-                  const { error } = await supabase
+                  const hasUserId = !!reassignTarget.user_id;
+                  const q = supabase
                     .from("profiles")
                     .update({
                       group_name: editName,
                       telegram_id: editTelegram,
                       language: editLanguage,
                       ui_language: editLanguage,
-                    } as any)
-                    .eq("user_id", reassignTarget.user_id);
+                    } as any);
+                  const { error } = await (hasUserId
+                    ? q.eq("user_id", reassignTarget.user_id)
+                    : q.eq("id", reassignTarget.id));
                   setSavingChatter(false);
                   if (error) {
                     toast.error("Speichern fehlgeschlagen: " + error.message);
