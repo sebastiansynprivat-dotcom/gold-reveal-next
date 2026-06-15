@@ -3378,17 +3378,34 @@ export default function ModelDashboardTab() {
                             </span>
                             <span className="text-xs text-muted-foreground">
                               {accs.length} Account{accs.length !== 1 ? "s" : ""}
+                              {accs.some((a) => a.archived) && (
+                                <span className="ml-1 text-muted-foreground/60">
+                                  ({accs.filter((a) => a.archived).length} archiviert)
+                                </span>
+                              )}
                             </span>
                           </div>
                         </AccordionTrigger>
                         <AccordionContent className="px-3 pb-3 space-y-2">
                           {accs.map((acc) => {
-                            const isEditing = editingAccountId === acc.id;
+                            const isEditing = editingAccountId === acc.id && !acc.archived;
                             return (
                               <div
                                 key={acc.id}
-                                className="rounded-lg border border-border/30 bg-secondary/20 p-3 space-y-2"
+                                className={cn(
+                                  "rounded-lg border p-3 space-y-2 transition-opacity",
+                                  acc.archived
+                                    ? "border-dashed border-border/30 bg-secondary/5 opacity-50 grayscale"
+                                    : "border-border/30 bg-secondary/20",
+                                )}
                               >
+                                {acc.archived && (
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full border border-border/40 bg-secondary/30 text-muted-foreground">
+                                      Archiviert
+                                    </span>
+                                  </div>
+                                )}
                                 {isEditing ? (
                                   /* ── Inline Edit Mode ── */
                                   <div className="space-y-2">
