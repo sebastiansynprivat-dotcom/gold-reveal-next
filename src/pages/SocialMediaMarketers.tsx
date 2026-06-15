@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { ArrowLeft, Plus, Trash2, UserPlus, Users, CheckCircle2, Mail } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, UserPlus, Users, CheckCircle2, Mail, Copy, Link as LinkIcon } from "lucide-react";
 import logo from "@/assets/logo.png";
 import GoldParticles from "@/components/GoldParticles";
 
