@@ -705,7 +705,8 @@ export default function ModelDashboardTab() {
       .from("deleted_records")
       .select("original_id, platform, data")
       .eq("entity_type", "account")
-      .eq("data->>model_id", modelId);
+      .eq("data->>model_id", modelId)
+      .is("restored_at", null);
     const archivedAccs: AccountRow[] = ((archivedRows || []) as Array<{ original_id: string; platform: string | null; data: any }>)
       .map((r) => ({
         id: r.original_id || r.data?.id || crypto.randomUUID(),
