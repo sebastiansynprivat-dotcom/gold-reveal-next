@@ -363,13 +363,14 @@ export default function SocialMediaDashboard() {
     // Trigger immediate Instagram scrape if there are new IG URLs (model or marketer)
     const shouldScrape = savedId && (newUrls.length > 0 || newMarketerIgs.length > 0) && (!editing || hasNewIg || hasNewMarketerIg);
     if (shouldScrape) {
-      toast.info("Instagram-Follower werden gescrapt…");
-      supabase.functions
-        .invoke("scrape-instagram-followers", { body: { model_id: savedId } })
-        .then(({ error }) => {
-          if (error) toast.error("Initial-Scrape fehlgeschlagen: " + error.message);
-          else { toast.success("Initial-Scrape abgeschlossen"); load(); }
-        });
+      toast.info("Instagram-Daten werden gescrapt…");
+      Promise.all([
+        supabase.functions.invoke("scrape-instagram-followers", { body: { model_id: savedId } }),
+        supabase.functions.invoke("scrape-instagram-posts", { body: { model_id: savedId } }),
+      ]).then(([f, p]) => {
+        if (f.error || p.error) toast.error("Initial-Scrape fehlgeschlagen");
+        else { toast.success("Initial-Scrape abgeschlossen"); load(); }
+      });
     }
   };
 
