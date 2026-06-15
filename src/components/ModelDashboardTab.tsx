@@ -192,6 +192,7 @@ interface AccountRow {
   assigned_to: string | null;
   model_active: boolean;
   currency?: string;
+  archived?: boolean;
 }
 
 interface ChatterProfile {
@@ -697,10 +698,32 @@ export default function ModelDashboardTab() {
       )
       .eq("model_id", modelId)
       .order("platform");
-    const accs = ((data as any as AccountRow[]) || []);
+    const liveAccs = ((data as any as AccountRow[]) || []).map((a) => ({ ...a, archived: false }));
+
+    // Pull archived (deleted) accounts for this model so they remain visible (grayed out)
+    const { data: archivedRows } = await (supabase as any)
+      .from("deleted_records")
+      .select("original_id, platform, data")
+      .eq("entity_type", "account")
+      .eq("data->>model_id", modelId);
+    const archivedAccs: AccountRow[] = ((archivedRows || []) as Array<{ original_id: string; platform: string | null; data: any }>)
+      .map((r) => ({
+        id: r.original_id || r.data?.id || crypto.randomUUID(),
+        account_email: r.data?.account_email || "",
+        account_domain: r.data?.account_domain || "",
+        account_password: r.data?.account_password || "",
+        platform: r.platform || r.data?.platform || "",
+        model_id: r.data?.model_id || null,
+        assigned_to: r.data?.assigned_to || null,
+        model_active: !!r.data?.model_active,
+        currency: r.data?.currency,
+        archived: true,
+      }));
+
+    const accs = [...liveAccs, ...archivedAccs];
     setModelAccounts(accs);
 
-    // Load profile data for assigned chatters
+    // Load profile data for assigned chatters (incl. archived)
     const assignedIds = Array.from(new Set(accs.map((a) => a.assigned_to).filter(Boolean) as string[]));
     if (assignedIds.length > 0) {
       const { data: profs } = await supabase
@@ -3355,17 +3378,34 @@ export default function ModelDashboardTab() {
                             </span>
                             <span className="text-xs text-muted-foreground">
                               {accs.length} Account{accs.length !== 1 ? "s" : ""}
+                              {accs.some((a) => a.archived) && (
+                                <span className="ml-1 text-muted-foreground/60">
+                                  ({accs.filter((a) => a.archived).length} archiviert)
+                                </span>
+                              )}
                             </span>
                           </div>
                         </AccordionTrigger>
                         <AccordionContent className="px-3 pb-3 space-y-2">
                           {accs.map((acc) => {
-                            const isEditing = editingAccountId === acc.id;
+                            const isEditing = editingAccountId === acc.id && !acc.archived;
                             return (
                               <div
                                 key={acc.id}
-                                className="rounded-lg border border-border/30 bg-secondary/20 p-3 space-y-2"
+                                className={cn(
+                                  "rounded-lg border p-3 space-y-2 transition-opacity",
+                                  acc.archived
+                                    ? "border-dashed border-border/30 bg-secondary/5 opacity-50 grayscale"
+                                    : "border-border/30 bg-secondary/20",
+                                )}
                               >
+                                {acc.archived && (
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full border border-border/40 bg-secondary/30 text-muted-foreground">
+                                      Archiviert
+                                    </span>
+                                  </div>
+                                )}
                                 {isEditing ? (
                                   /* ── Inline Edit Mode ── */
                                   <div className="space-y-2">
@@ -3432,7 +3472,7 @@ export default function ModelDashboardTab() {
                                           <p className="text-xs font-medium text-foreground truncate">
                                             {acc.account_email || "–"}
                                           </p>
-                                          {acc.account_email && (
+                                          {acc.account_email && !acc.archived && (
                                             <button
                                               type="button"
                                               onClick={() => {
@@ -3455,16 +3495,18 @@ export default function ModelDashboardTab() {
                                             <p className="text-[10px] text-muted-foreground font-mono">
                                               PW: {acc.account_password}
                                             </p>
-                                            <button
-                                              type="button"
-                                              onClick={() => {
-                                                navigator.clipboard.writeText(acc.account_password);
-                                                toast.success("Passwort kopiert");
-                                              }}
-                                              className="opacity-0 group-hover/pw:opacity-100 transition-opacity"
-                                            >
-                                              <Copy className="h-3 w-3 text-muted-foreground hover:text-foreground" />
-                                            </button>
+                                            {!acc.archived && (
+                                              <button
+                                                type="button"
+                                                onClick={() => {
+                                                  navigator.clipboard.writeText(acc.account_password);
+                                                  toast.success("Passwort kopiert");
+                                                }}
+                                                className="opacity-0 group-hover/pw:opacity-100 transition-opacity"
+                                              >
+                                                <Copy className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                                              </button>
+                                            )}
                                           </div>
                                         )}
                                         <p className="text-[10px] text-muted-foreground/60 font-mono">
@@ -3475,16 +3517,18 @@ export default function ModelDashboardTab() {
                                         <Button
                                           size="sm"
                                           variant="ghost"
-                                          onClick={() => startEditAccount(acc)}
-                                          className="h-7 text-[10px] gap-1 text-foreground hover:bg-accent/10"
+                                          disabled={acc.archived}
+                                          onClick={() => { if (!acc.archived) startEditAccount(acc); }}
+                                          className="h-7 text-[10px] gap-1 text-foreground hover:bg-accent/10 disabled:opacity-40 disabled:cursor-not-allowed"
                                         >
                                           <Pencil className="h-3 w-3" />
                                         </Button>
                                         <Button
                                           size="sm"
                                           variant="ghost"
-                                          onClick={() => deleteAccount(acc.id)}
-                                          className="h-7 text-[10px] text-destructive hover:bg-destructive/10"
+                                          disabled={acc.archived}
+                                          onClick={() => { if (!acc.archived) deleteAccount(acc.id); }}
+                                          className="h-7 text-[10px] text-destructive hover:bg-destructive/10 disabled:opacity-40 disabled:cursor-not-allowed"
                                         >
                                           <Trash2 className="h-3 w-3" />
                                         </Button>
@@ -3536,7 +3580,7 @@ export default function ModelDashboardTab() {
                 )}
 
                 {/* Add more accounts button – only if platforms available */}
-                {modelAccounts.length < PLATFORMS.length && (
+                {modelAccounts.filter((a) => !a.archived).length < PLATFORMS.length && (
                   <Button
                     size="sm"
                     variant="outline"
