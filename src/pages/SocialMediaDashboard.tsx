@@ -83,6 +83,7 @@ export default function SocialMediaDashboard() {
   const { isSuperAdmin } = useAdminRole();
   const [models, setModels] = useState<SocialMediaModel[]>([]);
   const [snapshots, setSnapshots] = useState<Record<string, { followers: number; recorded_at: string; instagram_url: string | null }[]>>({});
+  const [postSnaps, setPostSnaps] = useState<Record<string, { instagram_url: string | null; posts_7d: number; posts_30d: number; posts_total: number; last_post_at: string | null; recorded_at: string }[]>>({});
   const [chatterHistory, setChatterHistory] = useState<Record<string, { id: string; chatter_name: string; started_at: string; ended_at: string | null }[]>>({});
   const [historyOpenFor, setHistoryOpenFor] = useState<SocialMediaModel | null>(null);
   const [loading, setLoading] = useState(true);
@@ -107,22 +108,17 @@ export default function SocialMediaDashboard() {
   const runScrape = async () => {
     setScraping(true);
     try {
-      const { data, error } = await supabase.functions.invoke("scrape-instagram-followers");
-      if (error) throw error;
-      const saved = (data as any)?.saved ?? 0;
-      const scanned = (data as any)?.scanned ?? 0;
-      toast.success(`Scrape fertig: ${saved}/${scanned} Models aktualisiert`);
-      // Reload snapshots
-      const { data: snaps } = await supabase
-        .from("fanvue_instagram_snapshots" as any)
-        .select("model_id, followers, recorded_at, instagram_url")
-        .order("recorded_at", { ascending: true });
-      const grouped: Record<string, { followers: number; recorded_at: string; instagram_url: string | null }[]> = {};
-      (snaps || []).forEach((s: any) => {
-        if (!grouped[s.model_id]) grouped[s.model_id] = [];
-        grouped[s.model_id].push({ followers: s.followers, recorded_at: s.recorded_at, instagram_url: s.instagram_url ?? null });
-      });
-      setSnapshots(grouped);
+      const [followers, posts] = await Promise.all([
+        supabase.functions.invoke("scrape-instagram-followers"),
+        supabase.functions.invoke("scrape-instagram-posts"),
+      ]);
+      if (followers.error) throw followers.error;
+      if (posts.error) throw posts.error;
+      const fSaved = (followers.data as any)?.saved ?? 0;
+      const fScanned = (followers.data as any)?.scanned ?? 0;
+      const pSaved = (posts.data as any)?.saved ?? 0;
+      toast.success(`Scrape fertig: ${fSaved}/${fScanned} Follower · ${pSaved} Posting-Snapshots`);
+      await load();
     } catch (e: any) {
       toast.error(e?.message || "Scrape fehlgeschlagen");
     } finally {
@@ -173,7 +169,7 @@ export default function SocialMediaDashboard() {
         chatter_needed: !!m.chatter_needed,
       })));
     }
-    // Load all IG snapshots
+    // Load all IG follower snapshots
     const { data: snaps } = await supabase
       .from("fanvue_instagram_snapshots" as any)
       .select("model_id, followers, recorded_at, instagram_url")
@@ -183,6 +179,29 @@ export default function SocialMediaDashboard() {
       (grouped[s.model_id] ||= []).push({ followers: s.followers, recorded_at: s.recorded_at, instagram_url: s.instagram_url ?? null });
     });
     setSnapshots(grouped);
+
+    // Load latest IG post snapshots (one per model+url)
+    const { data: postRows } = await supabase
+      .from("fanvue_instagram_post_snapshots" as any)
+      .select("model_id, instagram_url, posts_7d, posts_30d, posts_total, last_post_at, recorded_at")
+      .order("recorded_at", { ascending: false });
+    const postMap: Record<string, { instagram_url: string | null; posts_7d: number; posts_30d: number; posts_total: number; last_post_at: string | null; recorded_at: string }[]> = {};
+    const seen = new Set<string>();
+    ((postRows || []) as any[]).forEach((r) => {
+      const key = `${r.model_id}::${(r.instagram_url || "").toLowerCase()}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      (postMap[r.model_id] ||= []).push({
+        instagram_url: r.instagram_url ?? null,
+        posts_7d: r.posts_7d ?? 0,
+        posts_30d: r.posts_30d ?? 0,
+        posts_total: r.posts_total ?? 0,
+        last_post_at: r.last_post_at ?? null,
+        recorded_at: r.recorded_at,
+      });
+    });
+    setPostSnaps(postMap);
+
 
     // Load chatter assignment history
     const { data: hist } = await supabase
@@ -344,13 +363,14 @@ export default function SocialMediaDashboard() {
     // Trigger immediate Instagram scrape if there are new IG URLs (model or marketer)
     const shouldScrape = savedId && (newUrls.length > 0 || newMarketerIgs.length > 0) && (!editing || hasNewIg || hasNewMarketerIg);
     if (shouldScrape) {
-      toast.info("Instagram-Follower werden gescrapt…");
-      supabase.functions
-        .invoke("scrape-instagram-followers", { body: { model_id: savedId } })
-        .then(({ error }) => {
-          if (error) toast.error("Initial-Scrape fehlgeschlagen: " + error.message);
-          else { toast.success("Initial-Scrape abgeschlossen"); load(); }
-        });
+      toast.info("Instagram-Daten werden gescrapt…");
+      Promise.all([
+        supabase.functions.invoke("scrape-instagram-followers", { body: { model_id: savedId } }),
+        supabase.functions.invoke("scrape-instagram-posts", { body: { model_id: savedId } }),
+      ]).then(([f, p]) => {
+        if (f.error || p.error) toast.error("Initial-Scrape fehlgeschlagen");
+        else { toast.success("Initial-Scrape abgeschlossen"); load(); }
+      });
     }
   };
 
@@ -776,6 +796,8 @@ export default function SocialMediaDashboard() {
                       .map((u) => u?.trim()).filter(Boolean);
                     const all = snapshots[m.id] || [];
                     const legacy = all.filter((s) => !s.instagram_url);
+                    const posts = postSnaps[m.id] || [];
+                    const findPost = (key: string) => posts.find((p) => normIg(p.instagram_url) === key) || null;
                     return (
                       <div className="space-y-2 border-t border-border/30 pt-3 mt-3">
                         <div className="flex items-center justify-between">
@@ -794,7 +816,7 @@ export default function SocialMediaDashboard() {
                           const key = normIg(u);
                           const snaps = all.filter((s) => normIg(s.instagram_url) === key);
                           const merged = snaps.length === 0 && igs.length === 1 ? [...legacy] : snaps;
-                          return <IgGrowthBlock key={u} url={u} snaps={merged} />;
+                          return <IgGrowthBlock key={u} url={u} snaps={merged} post={findPost(key)} />;
                         })}
                         {igs.length === 0 && legacy.length > 0 && (
                           <IgGrowthBlock url={null} snaps={legacy} />
@@ -814,6 +836,7 @@ export default function SocialMediaDashboard() {
                       return s.replace(/\/+$/, "");
                     };
                     const all = snapshots[m.id] || [];
+                    const posts = postSnaps[m.id] || [];
                     return (
                       <div className="border-t border-border/30 pt-3 mt-3">
                         <div className="flex items-center gap-1.5 mb-2">
@@ -827,6 +850,7 @@ export default function SocialMediaDashboard() {
                               : "";
                             const key = normIg(igHref);
                             const snaps = key ? all.filter((s) => normIg(s.instagram_url) === key) : [];
+                            const post = key ? posts.find((p) => normIg(p.instagram_url) === key) || null : null;
                             return (
                               <div key={i} className="flex flex-col gap-1 text-xs">
                                 <div className="flex items-center justify-between">
@@ -861,7 +885,7 @@ export default function SocialMediaDashboard() {
                                   </div>
                                 )}
                                 {mk.instagram && (
-                                  <IgGrowthBlock url={igHref} snaps={snaps} />
+                                  <IgGrowthBlock url={igHref} snaps={snaps} post={post} />
                                 )}
                               </div>
                             );
@@ -1439,7 +1463,9 @@ export default function SocialMediaDashboard() {
   );
 }
 
-function IgGrowthBlock({ url, snaps }: { url: string | null; snaps: { followers: number; recorded_at: string; instagram_url: string | null }[] }) {
+type PostStat = { posts_7d: number; posts_30d: number; posts_total: number; last_post_at: string | null; recorded_at: string } | null;
+
+function IgGrowthBlock({ url, snaps, post }: { url: string | null; snaps: { followers: number; recorded_at: string; instagram_url: string | null }[]; post?: PostStat }) {
   const latest = snaps[snaps.length - 1];
 
   // 7-day baseline: latest snapshot recorded >=7 days before "latest"
@@ -1522,6 +1548,20 @@ function IgGrowthBlock({ url, snaps }: { url: string | null; snaps: { followers:
             <svg width={w} height={h} className="shrink-0 overflow-visible">
               <path d={path} fill="none" stroke="hsl(var(--accent))" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
+          )}
+        </div>
+      )}
+      {post && (
+        <div className="mt-2 pt-2 border-t border-border/20 flex items-center justify-between text-[10px] text-muted-foreground">
+          <span className="flex items-center gap-1">
+            <Sparkles className="h-2.5 w-2.5 text-accent/70" />
+            <span className="font-semibold text-foreground/90">{post.posts_7d}</span> Posts / 7T
+            <span className="text-muted-foreground/60">· {post.posts_30d} / 30T</span>
+          </span>
+          {post.last_post_at && (
+            <span>
+              letzter Post: vor {Math.max(0, Math.floor((Date.now() - new Date(post.last_post_at).getTime()) / 86400000))}d
+            </span>
           )}
         </div>
       )}
