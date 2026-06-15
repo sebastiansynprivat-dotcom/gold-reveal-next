@@ -126,6 +126,7 @@ export default function SocialMediaModelDashboard() {
   const [planRows, setPlanRows] = useState<PlanRow[]>([]);
   const [dayRowsByPlan, setDayRowsByPlan] = useState<Record<string, DayRow[]>>({});
   const [statuses, setStatuses] = useState<Record<string, StatusRow>>({});
+  const [weekFb, setWeekFb] = useState<Record<string, WeekFeedback>>({});
   const [revealed, setRevealed] = useState<Record<number, boolean>>({});
   const [today] = useState(() => { const d = new Date(); d.setHours(0,0,0,0); return d; });
   const todayMonday = useMemo(() => mondayOf(today), [today]);
