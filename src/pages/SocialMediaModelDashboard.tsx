@@ -333,6 +333,68 @@ export default function SocialMediaModelDashboard() {
       );
   };
 
+  const weekFbKey = (aid: string, week: number) => `${aid}:${week}`;
+
+  const upsertWeekFeedback = async (aid: string, week: number, patch: Partial<WeekFeedback>) => {
+    const k = weekFbKey(aid, week);
+    const current = weekFb[k] || { assignment_id: aid, week_number: week, status: "pending" as const, feedback: "", folder_url: "" };
+    const next = { ...current, ...patch };
+    setWeekFb((s) => ({ ...s, [k]: next }));
+    const { data, error } = await supabase
+      .from("content_plan_week_feedback" as any)
+      .upsert(
+        {
+          assignment_id: aid,
+          week_number: week,
+          status: next.status,
+          feedback: next.feedback,
+          folder_url: next.folder_url,
+          created_by: user?.id ?? null,
+        },
+        { onConflict: "assignment_id,week_number" }
+      )
+      .select()
+      .single();
+    if (error) { toast.error("Feedback konnte nicht gespeichert werden"); return; }
+    setWeekFb((s) => ({ ...s, [k]: { ...next, id: (data as any).id } }));
+  };
+
+  const completeWholeWeek = async (aid: string, days: number[]) => {
+    const allDays = dayRowsByPlan[planRows.find((p) => p.assignment_id === aid)?.plan_id || ""] || [];
+    const rows: any[] = [];
+    days.forEach((dn) => {
+      const dr = allDays.find((x) => x.day_number === dn);
+      const cnt = dr?.items.length || 0;
+      for (let i = 0; i < cnt; i++) {
+        const cur = statuses[statusKey(aid, dn, i)];
+        rows.push({
+          assignment_id: aid,
+          day_number: dn,
+          item_index: i,
+          done: true,
+          completed_at: new Date().toISOString(),
+          upload_url: cur?.upload_url ?? "",
+          note: cur?.note ?? "",
+        });
+      }
+    });
+    if (rows.length === 0) { toast.info("Keine Aufgaben diese Woche."); return; }
+    const optimistic = { ...statuses };
+    rows.forEach((r) => {
+      optimistic[statusKey(r.assignment_id, r.day_number, r.item_index)] = {
+        assignment_id: r.assignment_id, day_number: r.day_number, item_index: r.item_index,
+        done: true, upload_url: r.upload_url, note: r.note,
+      } as StatusRow;
+    });
+    setStatuses(optimistic);
+    const { error } = await supabase
+      .from("content_plan_task_status")
+      .upsert(rows, { onConflict: "assignment_id,day_number,item_index" });
+    if (error) { toast.error("Konnte nicht alle Aufgaben abhaken"); load(); return; }
+    toast.success("Ganze Woche als erledigt markiert 🎉");
+  };
+
+
   // ----- Derived metrics -----
   const totals = useMemo(() => {
     let total = 0, done = 0, weekTotal = 0, weekDone = 0, todayTotal = 0, todayDone = 0;
