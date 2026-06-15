@@ -1547,6 +1547,20 @@ function IgGrowthBlock({ url, snaps, post }: { url: string | null; snaps: { foll
           )}
         </div>
       )}
+      {post && (
+        <div className="mt-2 pt-2 border-t border-border/20 flex items-center justify-between text-[10px] text-muted-foreground">
+          <span className="flex items-center gap-1">
+            <Sparkles className="h-2.5 w-2.5 text-accent/70" />
+            <span className="font-semibold text-foreground/90">{post.posts_7d}</span> Posts / 7T
+            <span className="text-muted-foreground/60">· {post.posts_30d} / 30T</span>
+          </span>
+          {post.last_post_at && (
+            <span>
+              letzter Post: vor {Math.max(0, Math.floor((Date.now() - new Date(post.last_post_at).getTime()) / 86400000))}d
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 }
