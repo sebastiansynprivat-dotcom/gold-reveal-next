@@ -108,22 +108,17 @@ export default function SocialMediaDashboard() {
   const runScrape = async () => {
     setScraping(true);
     try {
-      const { data, error } = await supabase.functions.invoke("scrape-instagram-followers");
-      if (error) throw error;
-      const saved = (data as any)?.saved ?? 0;
-      const scanned = (data as any)?.scanned ?? 0;
-      toast.success(`Scrape fertig: ${saved}/${scanned} Models aktualisiert`);
-      // Reload snapshots
-      const { data: snaps } = await supabase
-        .from("fanvue_instagram_snapshots" as any)
-        .select("model_id, followers, recorded_at, instagram_url")
-        .order("recorded_at", { ascending: true });
-      const grouped: Record<string, { followers: number; recorded_at: string; instagram_url: string | null }[]> = {};
-      (snaps || []).forEach((s: any) => {
-        if (!grouped[s.model_id]) grouped[s.model_id] = [];
-        grouped[s.model_id].push({ followers: s.followers, recorded_at: s.recorded_at, instagram_url: s.instagram_url ?? null });
-      });
-      setSnapshots(grouped);
+      const [followers, posts] = await Promise.all([
+        supabase.functions.invoke("scrape-instagram-followers"),
+        supabase.functions.invoke("scrape-instagram-posts"),
+      ]);
+      if (followers.error) throw followers.error;
+      if (posts.error) throw posts.error;
+      const fSaved = (followers.data as any)?.saved ?? 0;
+      const fScanned = (followers.data as any)?.scanned ?? 0;
+      const pSaved = (posts.data as any)?.saved ?? 0;
+      toast.success(`Scrape fertig: ${fSaved}/${fScanned} Follower · ${pSaved} Posting-Snapshots`);
+      await load();
     } catch (e: any) {
       toast.error(e?.message || "Scrape fehlgeschlagen");
     } finally {
