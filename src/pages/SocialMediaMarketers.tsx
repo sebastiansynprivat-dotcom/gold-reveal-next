@@ -245,7 +245,7 @@ export default function SocialMediaMarketers() {
           </DialogHeader>
           <div className="space-y-3">
             <p className="text-xs text-muted-foreground -mt-1">
-              Der Marketer erhält per E-Mail einen Einladungslink und legt sein Passwort beim ersten Login selbst fest.
+              Du bekommst direkt einen Einladungs-Link zum Kopieren — schick ihn dem Marketer (E-Mail, WhatsApp, …). Damit setzt er beim ersten Öffnen sein Passwort.
             </p>
             <div>
               <Label className="text-xs uppercase tracking-wider text-muted-foreground">Name</Label>
