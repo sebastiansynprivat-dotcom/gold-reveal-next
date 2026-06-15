@@ -85,9 +85,16 @@ export default function SocialMediaMarketers() {
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
-      toast.success("Einladung versendet — der Marketer erhält eine E-Mail.");
+      const link = (data as any)?.action_link as string | undefined;
+      const targetEmail = email.trim();
       setCreateOpen(false);
       setEmail(""); setPassword(""); setName(""); setSelectedModels(new Set());
+      if (link) {
+        setInviteEmail(targetEmail);
+        setInviteLink(link);
+      } else {
+        toast.success("Marketer angelegt.");
+      }
       load();
     } catch (e: any) {
       toast.error(e.message || "Einladung fehlgeschlagen");
