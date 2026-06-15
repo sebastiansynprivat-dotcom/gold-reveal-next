@@ -796,6 +796,8 @@ export default function SocialMediaDashboard() {
                       .map((u) => u?.trim()).filter(Boolean);
                     const all = snapshots[m.id] || [];
                     const legacy = all.filter((s) => !s.instagram_url);
+                    const posts = postSnaps[m.id] || [];
+                    const findPost = (key: string) => posts.find((p) => normIg(p.instagram_url) === key) || null;
                     return (
                       <div className="space-y-2 border-t border-border/30 pt-3 mt-3">
                         <div className="flex items-center justify-between">
@@ -814,7 +816,7 @@ export default function SocialMediaDashboard() {
                           const key = normIg(u);
                           const snaps = all.filter((s) => normIg(s.instagram_url) === key);
                           const merged = snaps.length === 0 && igs.length === 1 ? [...legacy] : snaps;
-                          return <IgGrowthBlock key={u} url={u} snaps={merged} />;
+                          return <IgGrowthBlock key={u} url={u} snaps={merged} post={findPost(key)} />;
                         })}
                         {igs.length === 0 && legacy.length > 0 && (
                           <IgGrowthBlock url={null} snaps={legacy} />
