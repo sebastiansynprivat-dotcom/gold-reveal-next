@@ -1,7 +1,6 @@
-// Invite a new Social Media Marketer via email.
-// Admin provides name + email + optional model_ids. We create the auth user
-// with an invite (Supabase sends the email), pre-assign role, display name,
-// and model assignments so the marketer can use everything on first login.
+// Create a Social Media Marketer account and return a one-time setup link
+// the admin can copy and share manually. This avoids relying on email delivery
+// (no custom email domain is configured for this project).
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
@@ -52,37 +51,48 @@ Deno.serve(async (req) => {
     const admin = createClient(supabaseUrl, serviceKey);
     const cleanEmail = String(email).toLowerCase().trim();
     const cleanName = (name && String(name).trim()) || "";
+    const redirectTo = redirect_to || undefined;
 
-    // Invite user via email. Supabase sends the invite mail automatically.
-    const { data: invited, error: inviteErr } = await admin.auth.admin.inviteUserByEmail(
-      cleanEmail,
-      {
-        data: { name: cleanName, role: "socialmedia_marketer" },
-        redirectTo: redirect_to || undefined,
-      }
-    );
+    // Find or create the auth user (without relying on email delivery).
+    let userId: string | null = null;
+    let isNewUser = false;
 
-    let userId: string | null = invited?.user?.id ?? null;
+    const { data: list } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    const existing = list?.users?.find((u: any) => (u.email || "").toLowerCase() === cleanEmail);
 
-    if (inviteErr || !userId) {
-      const msg = inviteErr?.message || "";
-      // If the user already exists, look them up and continue with role/assignments
-      if (msg.toLowerCase().includes("already") || msg.toLowerCase().includes("registered")) {
-        // Find existing user by email
-        const { data: list } = await admin.auth.admin.listUsers({ page: 1, perPage: 200 });
-        const existing = list?.users?.find((u: any) => (u.email || "").toLowerCase() === cleanEmail);
-        if (!existing) {
-          return new Response(JSON.stringify({ error: "Nutzer existiert bereits, konnte aber nicht geladen werden." }), {
-            status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-        userId = existing.id;
-      } else {
-        return new Response(JSON.stringify({ error: msg || "Einladung fehlgeschlagen." }), {
+    if (existing) {
+      userId = existing.id;
+    } else {
+      const { data: created, error: createErr } = await admin.auth.admin.createUser({
+        email: cleanEmail,
+        email_confirm: true,
+        user_metadata: { name: cleanName, role: "socialmedia_marketer" },
+      });
+      if (createErr || !created.user) {
+        return new Response(JSON.stringify({ error: createErr?.message || "Konnte Account nicht anlegen." }), {
           status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+      userId = created.user.id;
+      isNewUser = true;
     }
+
+    // Generate a recovery link the marketer can use to set/reset their password.
+    // Works for both newly created and pre-existing accounts.
+    const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
+      type: "recovery",
+      email: cleanEmail,
+      options: redirectTo ? { redirectTo } : undefined,
+    });
+
+    if (linkErr || !linkData) {
+      return new Response(JSON.stringify({ error: linkErr?.message || "Link konnte nicht erzeugt werden." }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const actionLink: string | undefined =
+      (linkData as any)?.properties?.action_link ?? (linkData as any)?.action_link;
 
     // Ensure marketer role
     await admin.from("user_roles").upsert(
@@ -109,9 +119,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    return new Response(JSON.stringify({ ok: true, user_id: userId }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return new Response(
+      JSON.stringify({ ok: true, user_id: userId, is_new_user: isNewUser, action_link: actionLink }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
   } catch (e) {
     return new Response(JSON.stringify({ error: (e as Error).message }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
