@@ -141,7 +141,7 @@ export default function SocialMediaModelDashboard() {
     // Model meta (first one)
     const { data: mdl } = await supabase
       .from("fanvue_models")
-      .select("id, name, instagram_url, instagram_urls, platform_logins")
+      .select("id, name, instagram_url, instagram_urls, platform_logins, marketers")
       .in("id", modelIds)
       .limit(1)
       .maybeSingle();
@@ -152,6 +152,7 @@ export default function SocialMediaModelDashboard() {
         instagram_url: (mdl as any).instagram_url || "",
         instagram_urls: Array.isArray((mdl as any).instagram_urls) ? (mdl as any).instagram_urls : [],
         platform_logins: Array.isArray((mdl as any).platform_logins) ? (mdl as any).platform_logins : [],
+        marketers: Array.isArray((mdl as any).marketers) ? (mdl as any).marketers : [],
       });
     }
 
