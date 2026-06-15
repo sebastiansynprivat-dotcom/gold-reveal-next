@@ -698,10 +698,32 @@ export default function ModelDashboardTab() {
       )
       .eq("model_id", modelId)
       .order("platform");
-    const accs = ((data as any as AccountRow[]) || []);
+    const liveAccs = ((data as any as AccountRow[]) || []).map((a) => ({ ...a, archived: false }));
+
+    // Pull archived (deleted) accounts for this model so they remain visible (grayed out)
+    const { data: archivedRows } = await (supabase as any)
+      .from("deleted_records")
+      .select("original_id, platform, data")
+      .eq("entity_type", "account")
+      .eq("data->>model_id", modelId);
+    const archivedAccs: AccountRow[] = ((archivedRows || []) as Array<{ original_id: string; platform: string | null; data: any }>)
+      .map((r) => ({
+        id: r.original_id || r.data?.id || crypto.randomUUID(),
+        account_email: r.data?.account_email || "",
+        account_domain: r.data?.account_domain || "",
+        account_password: r.data?.account_password || "",
+        platform: r.platform || r.data?.platform || "",
+        model_id: r.data?.model_id || null,
+        assigned_to: r.data?.assigned_to || null,
+        model_active: !!r.data?.model_active,
+        currency: r.data?.currency,
+        archived: true,
+      }));
+
+    const accs = [...liveAccs, ...archivedAccs];
     setModelAccounts(accs);
 
-    // Load profile data for assigned chatters
+    // Load profile data for assigned chatters (incl. archived)
     const assignedIds = Array.from(new Set(accs.map((a) => a.assigned_to).filter(Boolean) as string[]));
     if (assignedIds.length > 0) {
       const { data: profs } = await supabase
