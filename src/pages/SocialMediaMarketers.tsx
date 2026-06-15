@@ -285,7 +285,7 @@ export default function SocialMediaMarketers() {
           <DialogFooter>
             <Button variant="ghost" onClick={() => setCreateOpen(false)}>Abbrechen</Button>
             <Button onClick={handleCreate} disabled={submitting} className="bg-accent text-accent-foreground hover:bg-accent/90">
-              {submitting ? "Versende…" : "Einladung senden"}
+              {submitting ? "Lege an…" : "Link erzeugen"}
             </Button>
           </DialogFooter>
         </DialogContent>
