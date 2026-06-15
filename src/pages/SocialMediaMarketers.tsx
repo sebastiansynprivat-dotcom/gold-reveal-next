@@ -34,6 +34,9 @@ export default function SocialMediaMarketers() {
   const [editMarketer, setEditMarketer] = useState<Marketer | null>(null);
   const [editSelected, setEditSelected] = useState<Set<string>>(new Set());
 
+  const [inviteLink, setInviteLink] = useState<string | null>(null);
+  const [inviteEmail, setInviteEmail] = useState<string>("");
+
   const load = async () => {
     setLoading(true);
     const { data: m } = await supabase.from("fanvue_models").select("id,name,username").order("name");
