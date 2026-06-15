@@ -319,6 +319,12 @@ export default function SocialMediaDashboard() {
     const newUrls = (form.instagram_urls || []).map((u) => u.trim()).filter(Boolean);
     const hasNewIg = newUrls.some((u) => !prevUrls.has(u));
 
+    const prevMarketerIgs = new Set<string>(
+      editing ? (editing.marketers || []).map((mk: any) => (mk.instagram || "").trim()).filter(Boolean) : []
+    );
+    const newMarketerIgs = (form.marketers || []).map((mk: any) => (mk.instagram || "").trim()).filter(Boolean);
+    const hasNewMarketerIg = newMarketerIgs.some((u) => !prevMarketerIgs.has(u));
+
     if (editing) {
       res = await supabase.from("fanvue_models" as any).update(payload).eq("id", editing.id);
       savedId = editing.id;
@@ -335,8 +341,9 @@ export default function SocialMediaDashboard() {
     setDialogOpen(false);
     load();
 
-    // Trigger immediate Instagram scrape if there are new IG URLs (fire & forget)
-    if (savedId && newUrls.length > 0 && (!editing || hasNewIg)) {
+    // Trigger immediate Instagram scrape if there are new IG URLs (model or marketer)
+    const shouldScrape = savedId && (newUrls.length > 0 || newMarketerIgs.length > 0) && (!editing || hasNewIg || hasNewMarketerIg);
+    if (shouldScrape) {
       toast.info("Instagram-Follower werden gescrapt…");
       supabase.functions
         .invoke("scrape-instagram-followers", { body: { model_id: savedId } })
