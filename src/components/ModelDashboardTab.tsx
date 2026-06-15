@@ -854,7 +854,7 @@ export default function ModelDashboardTab() {
       setPlatformRevenues(platMap);
     })();
     return () => { cancelled = true; };
-  }, [selectedModelId, modelAccounts, revenuePeriod]);
+  }, [selectedModelId, modelAccounts, revenuePeriod, customRange.from, customRange.to]);
 
   // ─── Query payout_revenue for the main (fetchMonth, fetchYear) ───
   useEffect(() => {
