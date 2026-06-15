@@ -2140,7 +2140,7 @@ export default function ModelDashboardTab() {
                     <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-accent/8 via-transparent to-accent/5 pointer-events-none" />
                     <div className="relative">
                       <p className="text-[10px] text-muted-foreground mb-1 tracking-widest uppercase">
-                        Gesamtumsatz · {revenuePeriodLabels[revenuePeriod]}
+                        Gesamtumsatz · {revenuePeriod === "custom" && customRange.from ? customRangeLabel : revenuePeriodLabels[revenuePeriod]}
                       </p>
 
                       <p className="text-3xl font-extrabold text-gold-gradient-shimmer tracking-tight tabular-nums">
