@@ -2085,17 +2085,49 @@ export default function ModelDashboardTab() {
                   <div className="flex flex-wrap gap-1.5">
                     {(Object.keys(revenuePeriodLabels) as RevenuePeriod[]).map((p) => {
                       const active = revenuePeriod === p;
+                      const pillClass = cn(
+                        "text-[10px] px-2.5 py-1 rounded-full border transition-all tabular-nums inline-flex items-center gap-1",
+                        active
+                          ? "bg-accent/15 text-accent border-accent/40 shadow-sm"
+                          : "bg-secondary/30 text-muted-foreground border-border/30 hover:text-foreground hover:border-accent/20",
+                      );
+                      if (p === "custom") {
+                        return (
+                          <Popover key={p} open={customPickerOpen} onOpenChange={setCustomPickerOpen}>
+                            <PopoverTrigger asChild>
+                              <button
+                                type="button"
+                                onClick={() => { setRevenuePeriod("custom"); setCustomPickerOpen(true); }}
+                                className={pillClass}
+                              >
+                                <CalendarIcon className="w-3 h-3" />
+                                {active && customRange.from ? customRangeLabel : "Individuell"}
+                              </button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0 z-50" align="start">
+                              <Calendar
+                                mode="range"
+                                selected={{ from: customRange.from, to: customRange.to } as any}
+                                onSelect={(r: any) => {
+                                  setCustomRange({ from: r?.from, to: r?.to });
+                                  setRevenuePeriod("custom");
+                                  if (r?.from && r?.to) setCustomPickerOpen(false);
+                                }}
+                                numberOfMonths={2}
+                                initialFocus
+                                locale={de}
+                                className={cn("p-3 pointer-events-auto")}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        );
+                      }
                       return (
                         <button
                           key={p}
                           type="button"
                           onClick={() => setRevenuePeriod(p)}
-                          className={cn(
-                            "text-[10px] px-2.5 py-1 rounded-full border transition-all tabular-nums",
-                            active
-                              ? "bg-accent/15 text-accent border-accent/40 shadow-sm"
-                              : "bg-secondary/30 text-muted-foreground border-border/30 hover:text-foreground hover:border-accent/20",
-                          )}
+                          className={pillClass}
                         >
                           {revenuePeriodLabels[p]}
                         </button>
