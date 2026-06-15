@@ -520,59 +520,172 @@ export default function SocialMediaModelDashboard() {
               </div>
             </motion.section>
 
-            {/* IG GROWTH STRIP */}
-            {(igStats.followers > 0 || igStats.posts7d > 0 || lastPostDays !== null) && (
+            {/* IG ACCOUNTS – per-account growth + forecast */}
+            {igAccounts.length > 0 && (
               <motion.section
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.05 }}
-                className="rounded-2xl border border-accent/20 bg-card/40 backdrop-blur-sm p-4 md:p-5"
+                className="space-y-3"
               >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <Instagram className="h-4 w-4 text-accent" />
-                    <span className="text-xs uppercase tracking-wider font-semibold text-foreground/90">Dein IG Wachstum</span>
+                {/* Summary */}
+                <div
+                  className="rounded-2xl border border-accent/30 p-5 relative overflow-hidden"
+                  style={{
+                    background: "radial-gradient(120% 140% at 0% 0%, hsl(45 95% 55% / 0.14), transparent 55%), linear-gradient(180deg, hsl(0 0% 6% / 0.92), hsl(0 0% 4% / 0.92))",
+                  }}
+                >
+                  <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/60 to-transparent" />
+                  <div className="flex items-start justify-between gap-3 flex-wrap">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-accent/80 font-bold mb-1">
+                        <Target className="h-3 w-3" /> Prognose · nächste 30 Tage
+                      </div>
+                      <p className="text-3xl md:text-4xl font-extrabold tabular-nums">
+                        {totalForecast30 >= 0 ? "+" : ""}{totalForecast30.toLocaleString("de-DE")}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        erwartete neue Follower über deine {igAccounts.length} {igAccounts.length === 1 ? "Account" : "Accounts"}
+                      </p>
+                    </div>
+                    <Sparkles className="h-8 w-8 text-accent/60 shrink-0" />
                   </div>
-                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">letzte 7 Tage</span>
                 </div>
-                <div className="grid grid-cols-3 gap-3">
-                  <StatTile
-                    label="Follower"
-                    value={igStats.followers > 0 ? igStats.followers.toLocaleString("de-DE") : "–"}
-                    accent={
-                      igStats.followers > 0 ? (
-                        <span className={`flex items-center gap-1 ${trendColor}`}>
-                          <TrendIcon className="h-3 w-3" />
-                          {igStats.delta7 > 0 ? "+" : ""}{igStats.delta7.toLocaleString("de-DE")}
-                          <span className="text-muted-foreground/70">({igStats.pct7 > 0 ? "+" : ""}{igStats.pct7.toFixed(1)}%)</span>
-                        </span>
-                      ) : <span className="text-muted-foreground">Noch keine Daten</span>
-                    }
-                  />
-                  <StatTile
-                    label="Posts / 7T"
-                    value={igStats.posts7d.toString()}
-                    accent={
-                      <span className={igStats.posts7d >= 5 ? "text-emerald-400 flex items-center gap-1" : "text-muted-foreground"}>
-                        {igStats.posts7d >= 5 && <Flame className="h-3 w-3" />}
-                        {igStats.posts7d >= 7 ? "Top Pace" : igStats.posts7d >= 5 ? "Stark" : igStats.posts7d >= 3 ? "Solide" : "Mehr posten"}
-                      </span>
-                    }
-                  />
-                  <StatTile
-                    label="Letzter Post"
-                    value={lastPostDays === null ? "–" : lastPostDays === 0 ? "Heute" : `vor ${lastPostDays}d`}
-                    accent={
-                      lastPostDays === null ? <span className="text-muted-foreground">–</span>
-                      : lastPostDays <= 1 ? <span className="text-emerald-400">Frisch im Feed</span>
-                      : lastPostDays <= 3 ? <span className="text-yellow-400">Bald nachlegen</span>
-                      : <span className="text-red-400">Algorithmus schläft ein</span>
-                    }
-                  />
+
+                {/* Accounts header */}
+                <div className="flex items-center gap-2 pt-2">
+                  <Instagram className="h-4 w-4 text-accent" />
+                  <span className="text-xs uppercase tracking-wider font-semibold text-foreground/90">Deine Instagram-Accounts</span>
                 </div>
-                <p className="mt-3 text-[11px] text-muted-foreground/80 leading-relaxed">
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {igAccounts.map((a, idx) => {
+                    const snaps = snapsByKey[a.instagramNorm] || [];
+                    const m = computeMetrics(snaps);
+                    const chartData = snaps.map((s) => ({
+                      date: new Date(s.recorded_at).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" }),
+                      followers: s.followers,
+                    }));
+                    const gid = `igmg-${idx}`;
+                    const insight = m ? insightFor(m) : null;
+                    const insightColor =
+                      insight?.tone === "good" ? "text-emerald-400" :
+                      insight?.tone === "warn" ? "text-yellow-400" :
+                      insight?.tone === "bad" ? "text-red-400" : "text-muted-foreground";
+                    return (
+                      <motion.div
+                        key={`${a.instagramNorm}-${idx}`}
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.05 * idx }}
+                        className="rounded-2xl border border-accent/15 bg-card/40 backdrop-blur-sm p-4 relative overflow-hidden hover:border-accent/40 transition-all"
+                      >
+                        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
+                        <div className="flex items-start justify-between gap-2 mb-3">
+                          <div className="min-w-0">
+                            <a href={a.href} target="_blank" rel="noopener noreferrer"
+                              className="font-bold text-foreground truncate hover:text-accent transition-colors flex items-center gap-1.5">
+                              {a.label} <ExternalLink className="h-3 w-3 opacity-60" />
+                            </a>
+                            <p className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5 flex items-center gap-1">
+                              {a.source === "model"
+                                ? <><Users className="h-3 w-3" /> Dein eigener Account</>
+                                : <><Users className="h-3 w-3" /> betreut von {a.ownerLabel}</>}
+                            </p>
+                          </div>
+                          <Instagram className="h-4 w-4 text-accent/70 shrink-0" />
+                        </div>
+
+                        {m ? (
+                          <>
+                            <div className="flex items-baseline gap-2 mb-3">
+                              <span className="text-2xl font-extrabold tabular-nums">{m.current.toLocaleString("de-DE")}</span>
+                              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Follower</span>
+                              <span className={`ml-auto text-xs font-semibold flex items-center gap-1 ${m.growth7 >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                                {m.growth7 >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                                {m.growth7 >= 0 ? "+" : ""}{m.growth7.toLocaleString("de-DE")}
+                                <span className="text-muted-foreground/70 font-normal">({m.pct7 >= 0 ? "+" : ""}{m.pct7.toFixed(1)}% / 7T)</span>
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-3 gap-2 mb-3">
+                              <div className="rounded-lg bg-background/40 px-2 py-1.5">
+                                <p className="text-[9px] uppercase tracking-wider text-muted-foreground">7d</p>
+                                <p className={`text-sm font-bold tabular-nums ${m.growth7 >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                                  {m.growth7 >= 0 ? "+" : ""}{m.growth7.toLocaleString("de-DE")}
+                                </p>
+                              </div>
+                              <div className="rounded-lg bg-background/40 px-2 py-1.5">
+                                <p className="text-[9px] uppercase tracking-wider text-muted-foreground">30d</p>
+                                <p className={`text-sm font-bold tabular-nums ${m.growth30 >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                                  {m.growth30 >= 0 ? "+" : ""}{m.growth30.toLocaleString("de-DE")}
+                                </p>
+                              </div>
+                              <div className="rounded-lg bg-background/40 px-2 py-1.5">
+                                <p className="text-[9px] uppercase tracking-wider text-muted-foreground">/Tag</p>
+                                <p className={`text-sm font-bold tabular-nums ${m.perDay >= 0 ? "text-foreground" : "text-red-400"}`}>
+                                  {m.perDay >= 0 ? "+" : ""}{m.perDay.toFixed(1)}
+                                </p>
+                              </div>
+                            </div>
+
+                            {chartData.length >= 2 && (
+                              <div className="h-20 -mx-1 mb-3">
+                                <ResponsiveContainer width="100%" height="100%">
+                                  <AreaChart data={chartData}>
+                                    <defs>
+                                      <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="hsl(var(--accent))" stopOpacity={0.6} />
+                                        <stop offset="100%" stopColor="hsl(var(--accent))" stopOpacity={0} />
+                                      </linearGradient>
+                                    </defs>
+                                    <XAxis dataKey="date" hide />
+                                    <Tooltip
+                                      contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--accent) / 0.3)", borderRadius: 8, fontSize: 11 }}
+                                      labelStyle={{ color: "hsl(var(--muted-foreground))" }}
+                                    />
+                                    <Area type="monotone" dataKey="followers" stroke="hsl(var(--accent))" fill={`url(#${gid})`} strokeWidth={2} />
+                                  </AreaChart>
+                                </ResponsiveContainer>
+                              </div>
+                            )}
+
+                            <div className="grid grid-cols-3 gap-2 pt-2 border-t border-border/30">
+                              {[
+                                { label: "+30d", val: m.forecast30 },
+                                { label: "+60d", val: m.forecast60 },
+                                { label: "+90d", val: m.forecast90 },
+                              ].map((f) => (
+                                <div key={f.label} className="text-center">
+                                  <p className="text-[9px] uppercase tracking-wider text-muted-foreground">{f.label}</p>
+                                  <p className="text-sm font-bold text-accent tabular-nums inline-flex items-center gap-0.5">
+                                    <ArrowUpRight className="h-3 w-3" /> {f.val.toLocaleString("de-DE")}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+
+                            {insight && (
+                              <div className="mt-3 flex items-start gap-2 rounded-lg bg-background/40 border border-border/30 px-2.5 py-2">
+                                <Lightbulb className={`h-3.5 w-3.5 mt-0.5 shrink-0 ${insightColor}`} />
+                                <p className={`text-[11px] leading-relaxed ${insightColor}`}>{insight.text}</p>
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <div className="text-center py-6">
+                            <p className="text-xs italic text-muted-foreground mb-1">Noch keine Follower-Daten erfasst.</p>
+                            <p className="text-[10px] text-muted-foreground/70">Erste Snapshots erscheinen nach dem nächsten Scrape.</p>
+                          </div>
+                        )}
+                      </motion.div>
+                    );
+                  })}
+                </div>
+
+                <p className="text-[10px] text-muted-foreground/70 px-1">
                   <Rocket className="inline h-3 w-3 mr-1 text-accent" />
-                  Mehr Reels & Videos = mehr Reach = mehr Subs = mehr Umsatz. Posting-Konsistenz ist dein stärkster Hebel.
+                  Lineare Prognose auf Basis der letzten 30 Tage – je mehr Reels du postest, desto stärker übertriffst du diese Kurve.
                 </p>
               </motion.section>
             )}
