@@ -2212,7 +2212,13 @@ export default function ModelDashboardTab() {
                       const isCustomCur = !CURRENCIES.includes(accCurrency as any);
 
                       return (
-                        <div key={acc.id} className="glass-card-subtle rounded-xl p-3 space-y-2">
+                        <div
+                          key={acc.id}
+                          className={cn(
+                            "glass-card-subtle rounded-xl p-3 space-y-2 transition-opacity",
+                            acc.archived && "opacity-50 grayscale",
+                          )}
+                        >
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <div
@@ -2223,6 +2229,11 @@ export default function ModelDashboardTab() {
                               <Badge variant="outline" className={cn("text-[9px]", platformColors[acc.platform])}>
                                 {acc.account_email || acc.account_domain}
                               </Badge>
+                              {acc.archived && (
+                                <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-full border border-border/40 bg-secondary/30 text-muted-foreground">
+                                  Archiviert
+                                </span>
+                              )}
                             </div>
                             <div className="text-right">
                               <p className="text-sm font-bold text-foreground tabular-nums">
@@ -3369,24 +3380,29 @@ export default function ModelDashboardTab() {
                         className="border border-border/40 rounded-lg overflow-hidden"
                       >
                         <AccordionTrigger className="px-3 py-2.5 hover:no-underline hover:bg-accent/5">
-                          <div className="flex items-center gap-2.5">
-                            <span
-                              className={cn(
-                                "text-[10px] font-medium px-2.5 py-0.5 rounded-full border",
-                                platformColors[platform] || "bg-secondary/50 text-muted-foreground border-border/30",
-                              )}
-                            >
-                              {platform}
-                            </span>
-                            <span className="text-xs text-muted-foreground">
-                              {accs.length} Account{accs.length !== 1 ? "s" : ""}
-                              {accs.some((a) => a.archived) && (
-                                <span className="ml-1 text-muted-foreground/60">
-                                  ({accs.filter((a) => a.archived).length} archiviert)
+                          {(() => {
+                            const allArchived = accs.length > 0 && accs.every((a) => a.archived);
+                            return (
+                              <div className={cn("flex items-center gap-2.5 transition-opacity", allArchived && "opacity-50 grayscale")}>
+                                <span
+                                  className={cn(
+                                    "text-[10px] font-medium px-2.5 py-0.5 rounded-full border",
+                                    platformColors[platform] || "bg-secondary/50 text-muted-foreground border-border/30",
+                                  )}
+                                >
+                                  {platform}
                                 </span>
-                              )}
-                            </span>
-                          </div>
+                                <span className="text-xs text-muted-foreground">
+                                  {accs.length} Account{accs.length !== 1 ? "s" : ""}
+                                  {accs.some((a) => a.archived) && (
+                                    <span className="ml-1 text-muted-foreground/60">
+                                      ({accs.filter((a) => a.archived).length} archiviert)
+                                    </span>
+                                  )}
+                                </span>
+                              </div>
+                            );
+                          })()}
                         </AccordionTrigger>
                         <AccordionContent className="px-3 pb-3 space-y-2">
                           {accs.map((acc) => {

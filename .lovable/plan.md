@@ -1,15 +1,9 @@
-## Goal
-Fix duplicate archived accounts after restore, and cascade child-account restoration when a model is restored.
+## Gray out archived accounts in both Einnahmen and Account Management sections
 
-## Changes
+### 1. Einnahmen platform card
+In the `modelAccounts.map` block (~L2188-2297), apply `opacity-50 grayscale` to the card root when `acc.archived` is true. Keep all inputs and Selects fully interactive. Add a small "Archiviert" badge next to the platform name.
 
-### 1. `src/components/admin/DeletedRecordsTab.tsx` — restore handler
-- After successfully inserting the snapshot back into the live table, `DELETE FROM deleted_records WHERE id = row.id` instead of just setting `restored_at`. Keeps the archive clean (no ghost duplicates).
-- When the restored entity is a **model**: query `deleted_records` for `entity_type = 'account'` where `data->>'model_id'` equals the restored model id. For each, insert the snapshot back into `accounts`, then delete that archive row. Surface a toast like "Model + N accounts restored." Failures on individual children are logged and counted but don't abort the model restore.
+### 2. Account Management accordion trigger
+In the `accountsByPlatform.map` block (~L3365-3390), when **all** accounts in a platform group are archived, apply `opacity-50 grayscale` to the `<AccordionTrigger>` inner container so the header visually matches the archived state. Groups with mixed active/archived accounts remain unchanged.
 
-### 2. `src/components/ModelDashboardTab.tsx` — defensive filter
-- In `loadModelAccounts` (~L704) and the archived-accounts revenue aggregation (~L812), add `.is("restored_at", null)` to the `deleted_records` queries. Hides any legacy rows where `restored_at` was set but the row wasn't deleted, so no ghost archived cards appear.
-
-## Out of scope
-- No schema changes, no changes to delete/purge flow, no retroactive cleanup of existing `deleted_records` rows.
-- Einnahmen continues to include revenue from genuinely archived accounts; archived cards still render grayed with disabled buttons.
+No data-layer or disabled-state changes. Purely visual.
