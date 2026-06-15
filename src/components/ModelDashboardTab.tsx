@@ -769,6 +769,12 @@ export default function ModelDashboardTab() {
         const last = new Date(today.getFullYear(), today.getMonth(), 0);
         from = first; to = last; break;
       }
+      case "custom": {
+        if (!customRange.from) return;
+        from = startOfDay(customRange.from);
+        to = startOfDay(customRange.to || customRange.from);
+        break;
+      }
       case "this_month":
       default: {
         from = new Date(today.getFullYear(), today.getMonth(), 1);
