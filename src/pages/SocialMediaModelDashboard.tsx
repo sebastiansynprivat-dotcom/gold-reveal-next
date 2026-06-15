@@ -590,7 +590,7 @@ export default function SocialMediaModelDashboard() {
                             <p className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5 flex items-center gap-1">
                               {a.source === "model"
                                 ? <><Users className="h-3 w-3" /> Dein eigener Account</>
-                                : <><Users className="h-3 w-3" /> betreut von {a.ownerLabel}</>}
+                                : <><Users className="h-3 w-3" /> Betreuter Account</>}
                             </p>
                           </div>
                           <Instagram className="h-4 w-4 text-accent/70 shrink-0" />
