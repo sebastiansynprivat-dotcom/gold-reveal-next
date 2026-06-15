@@ -12,6 +12,7 @@ import {
   LogOut, CheckCircle2, Circle, CalendarDays, Sparkles, Link as LinkIcon, ExternalLink,
   Instagram, TrendingUp, TrendingDown, Minus, Flame, Film, Copy, KeyRound, HelpCircle,
   Rocket, Trophy, Eye, EyeOff, Target, ArrowUpRight, Lightbulb, Users,
+  ThumbsUp, ThumbsDown, MessageSquare, FolderOpen, CheckCheck,
 } from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, Tooltip } from "recharts";
 import logo from "@/assets/logo.png";
@@ -37,6 +38,15 @@ type StatusRow = {
   done: boolean;
   upload_url: string;
   note: string;
+};
+
+type WeekFeedback = {
+  id?: string;
+  assignment_id: string;
+  week_number: number;
+  status: "pending" | "approved" | "rejected";
+  feedback: string;
+  folder_url: string;
 };
 
 type Marketer = { name?: string; instagram?: string };
@@ -116,6 +126,7 @@ export default function SocialMediaModelDashboard() {
   const [planRows, setPlanRows] = useState<PlanRow[]>([]);
   const [dayRowsByPlan, setDayRowsByPlan] = useState<Record<string, DayRow[]>>({});
   const [statuses, setStatuses] = useState<Record<string, StatusRow>>({});
+  const [weekFb, setWeekFb] = useState<Record<string, WeekFeedback>>({});
   const [revealed, setRevealed] = useState<Record<number, boolean>>({});
   const [today] = useState(() => { const d = new Date(); d.setHours(0,0,0,0); return d; });
   const todayMonday = useMemo(() => mondayOf(today), [today]);
@@ -224,9 +235,27 @@ export default function SocialMediaModelDashboard() {
         map[statusKey(s.assignment_id, s.day_number, s.item_index)] = s;
       });
       setStatuses(map);
+
+      const { data: fbData } = await supabase
+        .from("content_plan_week_feedback" as any)
+        .select("*")
+        .in("assignment_id", rows.map((r) => r.assignment_id));
+      const fbMap: Record<string, WeekFeedback> = {};
+      ((fbData || []) as any[]).forEach((f) => {
+        fbMap[`${f.assignment_id}:${f.week_number}`] = {
+          id: f.id,
+          assignment_id: f.assignment_id,
+          week_number: f.week_number,
+          status: f.status,
+          feedback: f.feedback || "",
+          folder_url: f.folder_url || "",
+        };
+      });
+      setWeekFb(fbMap);
     } else {
       setDayRowsByPlan({});
       setStatuses({});
+      setWeekFb({});
     }
     setLoading(false);
   };
@@ -303,6 +332,68 @@ export default function SocialMediaModelDashboard() {
         { onConflict: "assignment_id,day_number,item_index" }
       );
   };
+
+  const weekFbKey = (aid: string, week: number) => `${aid}:${week}`;
+
+  const upsertWeekFeedback = async (aid: string, week: number, patch: Partial<WeekFeedback>) => {
+    const k = weekFbKey(aid, week);
+    const current = weekFb[k] || { assignment_id: aid, week_number: week, status: "pending" as const, feedback: "", folder_url: "" };
+    const next = { ...current, ...patch };
+    setWeekFb((s) => ({ ...s, [k]: next }));
+    const { data, error } = await supabase
+      .from("content_plan_week_feedback" as any)
+      .upsert(
+        {
+          assignment_id: aid,
+          week_number: week,
+          status: next.status,
+          feedback: next.feedback,
+          folder_url: next.folder_url,
+          created_by: user?.id ?? null,
+        },
+        { onConflict: "assignment_id,week_number" }
+      )
+      .select()
+      .single();
+    if (error) { toast.error("Feedback konnte nicht gespeichert werden"); return; }
+    setWeekFb((s) => ({ ...s, [k]: { ...next, id: (data as any).id } }));
+  };
+
+  const completeWholeWeek = async (aid: string, days: number[]) => {
+    const allDays = dayRowsByPlan[planRows.find((p) => p.assignment_id === aid)?.plan_id || ""] || [];
+    const rows: any[] = [];
+    days.forEach((dn) => {
+      const dr = allDays.find((x) => x.day_number === dn);
+      const cnt = dr?.items.length || 0;
+      for (let i = 0; i < cnt; i++) {
+        const cur = statuses[statusKey(aid, dn, i)];
+        rows.push({
+          assignment_id: aid,
+          day_number: dn,
+          item_index: i,
+          done: true,
+          completed_at: new Date().toISOString(),
+          upload_url: cur?.upload_url ?? "",
+          note: cur?.note ?? "",
+        });
+      }
+    });
+    if (rows.length === 0) { toast.info("Keine Aufgaben diese Woche."); return; }
+    const optimistic = { ...statuses };
+    rows.forEach((r) => {
+      optimistic[statusKey(r.assignment_id, r.day_number, r.item_index)] = {
+        assignment_id: r.assignment_id, day_number: r.day_number, item_index: r.item_index,
+        done: true, upload_url: r.upload_url, note: r.note,
+      } as StatusRow;
+    });
+    setStatuses(optimistic);
+    const { error } = await supabase
+      .from("content_plan_task_status")
+      .upsert(rows, { onConflict: "assignment_id,day_number,item_index" });
+    if (error) { toast.error("Konnte nicht alle Aufgaben abhaken"); load(); return; }
+    toast.success("Ganze Woche als erledigt markiert 🎉");
+  };
+
 
   // ----- Derived metrics -----
   const totals = useMemo(() => {
@@ -590,7 +681,7 @@ export default function SocialMediaModelDashboard() {
                             <p className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5 flex items-center gap-1">
                               {a.source === "model"
                                 ? <><Users className="h-3 w-3" /> Dein eigener Account</>
-                                : <><Users className="h-3 w-3" /> betreut von {a.ownerLabel}</>}
+                                : <><Users className="h-3 w-3" /> Betreuter Account</>}
                             </p>
                           </div>
                           <Instagram className="h-4 w-4 text-accent/70 shrink-0" />
@@ -803,7 +894,73 @@ export default function SocialMediaModelDashboard() {
                       </div>
                     ) : (
                       <div className="space-y-3">
-                        <div className="text-xs uppercase tracking-wider text-accent/80 font-semibold">Woche {weekIdx} · Tage {visible[0]}–{visible[visible.length - 1]}</div>
+                        {(() => {
+                          const fb = weekFb[`${pr.assignment_id}:${weekIdx}`];
+                          const status = fb?.status || "pending";
+                          return (
+                            <div className="rounded-xl border border-accent/25 bg-background/40 p-3 space-y-2.5">
+                              <div className="flex items-center justify-between flex-wrap gap-2">
+                                <div className="text-xs uppercase tracking-wider text-accent/80 font-semibold">Woche {weekIdx} · Tage {visible[0]}–{visible[visible.length - 1]}</div>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => completeWholeWeek(pr.assignment_id, visible)}
+                                  className="h-7 text-[11px] border-accent/40 hover:bg-accent/10"
+                                >
+                                  <CheckCheck className="h-3 w-3 mr-1" /> Ganze Woche abhaken
+                                </Button>
+                              </div>
+
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Status:</span>
+                                <button
+                                  type="button"
+                                  onClick={() => upsertWeekFeedback(pr.assignment_id, weekIdx, { status: status === "approved" ? "pending" : "approved" })}
+                                  className={`inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-md border transition ${status === "approved" ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-300" : "border-border/50 text-muted-foreground hover:border-emerald-500/40"}`}
+                                >
+                                  <ThumbsUp className="h-3 w-3" /> Freigegeben
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => upsertWeekFeedback(pr.assignment_id, weekIdx, { status: status === "rejected" ? "pending" : "rejected" })}
+                                  className={`inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-md border transition ${status === "rejected" ? "bg-red-500/20 border-red-500/50 text-red-300" : "border-border/50 text-muted-foreground hover:border-red-500/40"}`}
+                                >
+                                  <ThumbsDown className="h-3 w-3" /> Ablehnen
+                                </button>
+                                {status === "pending" && (
+                                  <span className="text-[10px] text-muted-foreground italic">Noch kein Feedback abgegeben</span>
+                                )}
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                <FolderOpen className="h-3.5 w-3.5 text-accent shrink-0" />
+                                <Input
+                                  placeholder="Link zum Wochen-Ordner (Drive, Dropbox, ...)"
+                                  defaultValue={fb?.folder_url || ""}
+                                  onBlur={(e) => { const v = e.target.value.trim(); if (v !== (fb?.folder_url || "")) upsertWeekFeedback(pr.assignment_id, weekIdx, { folder_url: v }); }}
+                                  className="h-7 text-xs bg-background/60"
+                                />
+                                {fb?.folder_url && (
+                                  <a href={fb.folder_url.startsWith("http") ? fb.folder_url : `https://${fb.folder_url}`} target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent/80 shrink-0">
+                                    <ExternalLink className="h-3.5 w-3.5" />
+                                  </a>
+                                )}
+                              </div>
+
+                              <div className="flex items-start gap-2">
+                                <MessageSquare className="h-3.5 w-3.5 text-accent mt-1.5 shrink-0" />
+                                <Textarea
+                                  placeholder="Kommentar / Feedback an dein Team (optional)"
+                                  rows={2}
+                                  defaultValue={fb?.feedback || ""}
+                                  onBlur={(e) => { const v = e.target.value; if (v !== (fb?.feedback || "")) upsertWeekFeedback(pr.assignment_id, weekIdx, { feedback: v }); }}
+                                  className="text-xs bg-background/60 resize-none"
+                                />
+                              </div>
+                            </div>
+                          );
+                        })()}
+
                         {visible.map((d) => {
                           const dayRow = allDays.find((x) => x.day_number === d);
                           const items = dayRow?.items || [];
