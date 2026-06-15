@@ -343,43 +343,97 @@ export default function SocialMediaModelDashboard() {
     };
   }, [planRows, dayRowsByPlan, statuses, today]);
 
-  // IG growth aggregation across model's IG URLs
-  const igStats = useMemo(() => {
-    const igUrls = model?.instagram_urls?.length ? model.instagram_urls : (model?.instagram_url ? [model.instagram_url] : []);
-    const keys = new Set(igUrls.map(normIg).filter(Boolean));
-    const matching = followerSnaps.filter((s) => keys.size === 0 || keys.has(normIg(s.instagram_url)));
-    // Group by url-key, take latest + 7-day baseline per key
-    const groups: Record<string, FollowerSnap[]> = {};
-    matching.forEach((s) => {
-      const k = normIg(s.instagram_url) || "_legacy";
-      (groups[k] ||= []).push(s);
+  // Build the full list of IG accounts the model should see (own + marketers')
+  const igAccounts = useMemo<IgAccount[]>(() => {
+    if (!model) return [];
+    const out: IgAccount[] = [];
+    const seen = new Set<string>();
+    const push = (raw: string, source: "model" | "marketer", ownerLabel: string) => {
+      const norm = normIg(raw);
+      if (!norm || seen.has(norm)) return;
+      seen.add(norm);
+      const href = raw.startsWith("http") ? raw : `https://instagram.com/${raw.replace(/^@/, "")}`;
+      const cleanLabel = raw
+        .replace(/^https?:\/\/(www\.)?instagram\.com\//i, "@")
+        .replace(/\/$/, "")
+        .replace(/^@?/, "@");
+      out.push({ source, ownerLabel, instagramRaw: raw, instagramNorm: norm, href, label: cleanLabel });
+    };
+    const ownUrls = model.instagram_urls?.length ? model.instagram_urls : (model.instagram_url ? [model.instagram_url] : []);
+    ownUrls.forEach((u) => u && push(u, "model", "Dein Account"));
+    (model.marketers || []).forEach((mk) => {
+      if (mk?.instagram) push(mk.instagram, "marketer", mk.name?.trim() || "Marketer");
     });
-    let followers = 0, delta7 = 0, baseline = 0;
-    Object.values(groups).forEach((snaps) => {
-      const sorted = snaps.slice().sort((a, b) => new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime());
-      const latest = sorted[sorted.length - 1];
-      if (!latest) return;
-      followers += latest.followers;
-      const cutoff = new Date(latest.recorded_at).getTime() - 7 * 86400000;
-      let base: FollowerSnap | null = null;
-      for (let i = sorted.length - 2; i >= 0; i--) {
-        if (new Date(sorted[i].recorded_at).getTime() <= cutoff) { base = sorted[i]; break; }
+    return out;
+  }, [model]);
+
+  // Group follower snapshots by normalized IG url
+  const snapsByKey = useMemo(() => {
+    const g: Record<string, FollowerSnap[]> = {};
+    followerSnaps.forEach((s) => {
+      const k = normIg(s.instagram_url);
+      if (!k) return;
+      (g[k] ||= []).push(s);
+    });
+    Object.keys(g).forEach((k) => g[k].sort((a, b) => new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime()));
+    return g;
+  }, [followerSnaps]);
+
+  const computeMetrics = (snaps: FollowerSnap[]) => {
+    if (!snaps.length) return null;
+    const last = snaps[snaps.length - 1];
+    const closest = (target: number) => {
+      let best = snaps[0];
+      let bestDiff = Math.abs(new Date(best.recorded_at).getTime() - target);
+      for (const s of snaps) {
+        const d = Math.abs(new Date(s.recorded_at).getTime() - target);
+        if (d < bestDiff) { bestDiff = d; best = s; }
       }
-      if (!base && sorted.length >= 2) base = sorted[0];
-      if (base) { baseline += base.followers; delta7 += latest.followers - base.followers; }
+      return best;
+    };
+    const now = Date.now();
+    const s7 = closest(now - 7 * 86400000);
+    const s30 = closest(now - 30 * 86400000);
+    const growth7 = last.followers - s7.followers;
+    const growth30 = last.followers - s30.followers;
+    const pct7 = s7.followers > 0 ? (growth7 / s7.followers) * 100 : 0;
+    const recent = snaps.filter((s) => new Date(s.recorded_at).getTime() >= now - 30 * 86400000);
+    let perDay = 0;
+    if (recent.length >= 2) {
+      const first = recent[0];
+      const days = Math.max(1, (new Date(last.recorded_at).getTime() - new Date(first.recorded_at).getTime()) / 86400000);
+      perDay = (last.followers - first.followers) / days;
+    } else if (snaps.length >= 2) {
+      const first = snaps[0];
+      const days = Math.max(1, (new Date(last.recorded_at).getTime() - new Date(first.recorded_at).getTime()) / 86400000);
+      perDay = (last.followers - first.followers) / days;
+    }
+    return {
+      current: last.followers,
+      growth7, growth30, pct7, perDay,
+      forecast30: Math.round(last.followers + perDay * 30),
+      forecast60: Math.round(last.followers + perDay * 60),
+      forecast90: Math.round(last.followers + perDay * 90),
+    };
+  };
+
+  type Metrics = NonNullable<ReturnType<typeof computeMetrics>>;
+  const insightFor = (m: Metrics): { tone: "good" | "warn" | "bad" | "neutral"; text: string } => {
+    if (m.perDay >= 50) return { tone: "good", text: `Starker Hebel: aktuell ca. ${Math.round(m.perDay)} neue Follower pro Tag. Bleib dran – jeder zusätzliche Reel beschleunigt die Kurve.` };
+    if (m.perDay >= 15) return { tone: "good", text: `Konstantes Wachstum von ca. ${Math.round(m.perDay)} Followern/Tag. Mit 1–2 Reels mehr pro Woche kannst du das verdoppeln.` };
+    if (m.perDay > 0) return { tone: "neutral", text: `Leichtes Wachstum (~${m.perDay.toFixed(1)}/Tag). Konsistenz fehlt – fester Posting-Rhythmus pusht den Algorithmus.` };
+    if (m.perDay === 0) return { tone: "warn", text: "Stillstand. Der Algorithmus straft Inaktivität ab – jetzt 2–3 Reels in den nächsten 48h posten." };
+    return { tone: "bad", text: `Du verlierst gerade Follower (${Math.round(m.perDay)}/Tag). Wahrscheinlich zu lange keine Reels – sofort gegensteuern.` };
+  };
+
+  const totalForecast30 = useMemo(() => {
+    let sum = 0;
+    igAccounts.forEach((a) => {
+      const m = computeMetrics(snapsByKey[a.instagramNorm] || []);
+      if (m) sum += m.forecast30 - m.current;
     });
-    const pct7 = baseline > 0 ? (delta7 / baseline) * 100 : 0;
-
-    const posts7d = postSnaps
-      .filter((p) => keys.size === 0 || keys.has(normIg(p.instagram_url)))
-      .reduce((a, p) => a + (p.posts_7d || 0), 0);
-    const lastPostAt = postSnaps
-      .filter((p) => (keys.size === 0 || keys.has(normIg(p.instagram_url))) && p.last_post_at)
-      .map((p) => new Date(p.last_post_at!).getTime())
-      .reduce((a, b) => Math.max(a, b), 0);
-
-    return { followers, delta7, pct7, posts7d, lastPostAt: lastPostAt || null };
-  }, [model, followerSnaps, postSnaps]);
+    return sum;
+  }, [igAccounts, snapsByKey]);
 
   const greeting = greetingFor(new Date().getHours());
   const firstName = (model?.name || "").split(/\s+/)[0] || "Star";
@@ -389,10 +443,6 @@ export default function SocialMediaModelDashboard() {
     navigator.clipboard.writeText(txt);
     toast.success(`${label} kopiert`);
   };
-
-  const TrendIcon = igStats.delta7 > 0 ? TrendingUp : igStats.delta7 < 0 ? TrendingDown : Minus;
-  const trendColor = igStats.delta7 > 0 ? "text-emerald-400" : igStats.delta7 < 0 ? "text-red-400" : "text-muted-foreground";
-  const lastPostDays = igStats.lastPostAt ? Math.max(0, Math.floor((Date.now() - igStats.lastPostAt) / 86400000)) : null;
 
   return (
     <div className="min-h-screen bg-background text-foreground relative">
