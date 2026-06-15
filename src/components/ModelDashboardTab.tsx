@@ -3580,7 +3580,7 @@ export default function ModelDashboardTab() {
                 )}
 
                 {/* Add more accounts button – only if platforms available */}
-                {modelAccounts.length < PLATFORMS.length && (
+                {modelAccounts.filter((a) => !a.archived).length < PLATFORMS.length && (
                   <Button
                     size="sm"
                     variant="outline"
