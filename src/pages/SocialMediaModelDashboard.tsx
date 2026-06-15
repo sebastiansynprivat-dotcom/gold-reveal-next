@@ -894,7 +894,73 @@ export default function SocialMediaModelDashboard() {
                       </div>
                     ) : (
                       <div className="space-y-3">
-                        <div className="text-xs uppercase tracking-wider text-accent/80 font-semibold">Woche {weekIdx} · Tage {visible[0]}–{visible[visible.length - 1]}</div>
+                        {(() => {
+                          const fb = weekFb[`${pr.assignment_id}:${weekIdx}`];
+                          const status = fb?.status || "pending";
+                          return (
+                            <div className="rounded-xl border border-accent/25 bg-background/40 p-3 space-y-2.5">
+                              <div className="flex items-center justify-between flex-wrap gap-2">
+                                <div className="text-xs uppercase tracking-wider text-accent/80 font-semibold">Woche {weekIdx} · Tage {visible[0]}–{visible[visible.length - 1]}</div>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => completeWholeWeek(pr.assignment_id, visible)}
+                                  className="h-7 text-[11px] border-accent/40 hover:bg-accent/10"
+                                >
+                                  <CheckCheck className="h-3 w-3 mr-1" /> Ganze Woche abhaken
+                                </Button>
+                              </div>
+
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Status:</span>
+                                <button
+                                  type="button"
+                                  onClick={() => upsertWeekFeedback(pr.assignment_id, weekIdx, { status: status === "approved" ? "pending" : "approved" })}
+                                  className={`inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-md border transition ${status === "approved" ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-300" : "border-border/50 text-muted-foreground hover:border-emerald-500/40"}`}
+                                >
+                                  <ThumbsUp className="h-3 w-3" /> Freigegeben
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => upsertWeekFeedback(pr.assignment_id, weekIdx, { status: status === "rejected" ? "pending" : "rejected" })}
+                                  className={`inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-md border transition ${status === "rejected" ? "bg-red-500/20 border-red-500/50 text-red-300" : "border-border/50 text-muted-foreground hover:border-red-500/40"}`}
+                                >
+                                  <ThumbsDown className="h-3 w-3" /> Ablehnen
+                                </button>
+                                {status === "pending" && (
+                                  <span className="text-[10px] text-muted-foreground italic">Noch kein Feedback abgegeben</span>
+                                )}
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                <FolderOpen className="h-3.5 w-3.5 text-accent shrink-0" />
+                                <Input
+                                  placeholder="Link zum Wochen-Ordner (Drive, Dropbox, ...)"
+                                  defaultValue={fb?.folder_url || ""}
+                                  onBlur={(e) => { const v = e.target.value.trim(); if (v !== (fb?.folder_url || "")) upsertWeekFeedback(pr.assignment_id, weekIdx, { folder_url: v }); }}
+                                  className="h-7 text-xs bg-background/60"
+                                />
+                                {fb?.folder_url && (
+                                  <a href={fb.folder_url.startsWith("http") ? fb.folder_url : `https://${fb.folder_url}`} target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent/80 shrink-0">
+                                    <ExternalLink className="h-3.5 w-3.5" />
+                                  </a>
+                                )}
+                              </div>
+
+                              <div className="flex items-start gap-2">
+                                <MessageSquare className="h-3.5 w-3.5 text-accent mt-1.5 shrink-0" />
+                                <Textarea
+                                  placeholder="Kommentar / Feedback an dein Team (optional)"
+                                  rows={2}
+                                  defaultValue={fb?.feedback || ""}
+                                  onBlur={(e) => { const v = e.target.value; if (v !== (fb?.feedback || "")) upsertWeekFeedback(pr.assignment_id, weekIdx, { feedback: v }); }}
+                                  className="text-xs bg-background/60 resize-none"
+                                />
+                              </div>
+                            </div>
+                          );
+                        })()}
+
                         {visible.map((d) => {
                           const dayRow = allDays.find((x) => x.day_number === d);
                           const items = dayRow?.items || [];
