@@ -319,6 +319,12 @@ export default function SocialMediaDashboard() {
     const newUrls = (form.instagram_urls || []).map((u) => u.trim()).filter(Boolean);
     const hasNewIg = newUrls.some((u) => !prevUrls.has(u));
 
+    const prevMarketerIgs = new Set<string>(
+      editing ? (editing.marketers || []).map((mk: any) => (mk.instagram || "").trim()).filter(Boolean) : []
+    );
+    const newMarketerIgs = (form.marketers || []).map((mk: any) => (mk.instagram || "").trim()).filter(Boolean);
+    const hasNewMarketerIg = newMarketerIgs.some((u) => !prevMarketerIgs.has(u));
+
     if (editing) {
       res = await supabase.from("fanvue_models" as any).update(payload).eq("id", editing.id);
       savedId = editing.id;
@@ -335,8 +341,9 @@ export default function SocialMediaDashboard() {
     setDialogOpen(false);
     load();
 
-    // Trigger immediate Instagram scrape if there are new IG URLs (fire & forget)
-    if (savedId && newUrls.length > 0 && (!editing || hasNewIg)) {
+    // Trigger immediate Instagram scrape if there are new IG URLs (model or marketer)
+    const shouldScrape = savedId && (newUrls.length > 0 || newMarketerIgs.length > 0) && (!editing || hasNewIg || hasNewMarketerIg);
+    if (shouldScrape) {
       toast.info("Instagram-Follower werden gescrapt…");
       supabase.functions
         .invoke("scrape-instagram-followers", { body: { model_id: savedId } })
@@ -797,51 +804,72 @@ export default function SocialMediaDashboard() {
                   })()}
 
 
-                  {m.marketers.length > 0 && (
-                    <div className="border-t border-border/30 pt-3 mt-3">
-                      <div className="flex items-center gap-1.5 mb-2">
-                        <UserCheck className="h-3 w-3 text-accent/70" />
-                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Marketer ({m.marketers.length})</span>
-                      </div>
-                      <div className="space-y-1.5">
-                        {m.marketers.map((mk, i) => (
-                          <div key={i} className="flex flex-col gap-0.5 text-xs">
-                            <div className="flex items-center justify-between">
-                              <span className="text-foreground truncate">{mk.name || "—"}</span>
-                              {mk.instagram && (
-                                <a
-                                  href={mk.instagram.startsWith("http") ? mk.instagram : `https://instagram.com/${mk.instagram.replace("@", "")}`}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-accent hover:underline flex items-center gap-1 shrink-0 ml-2"
-                                >
-                                  <Instagram className="h-3 w-3" />
-                                  <span className="truncate max-w-[100px]">{mk.instagram.replace(/^https?:\/\/(www\.)?instagram\.com\//, "@").replace(/\/$/, "")}</span>
-                                </a>
-                              )}
-                            </div>
-                            {(mk.tracking_link || mk.tracking_name) && (
-                              <div className="flex items-center gap-1 text-[10px] text-muted-foreground/80">
-                                <Link2 className="h-2.5 w-2.5 shrink-0" />
-                                {mk.tracking_link ? (
-                                  <a
-                                    href={mk.tracking_link.startsWith("http") ? mk.tracking_link : `https://${mk.tracking_link}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-accent/80 hover:underline truncate max-w-[180px]"
-                                  >
-                                    {mk.tracking_name || mk.tracking_link}
-                                  </a>
-                                ) : (
-                                  <span className="truncate">{mk.tracking_name}</span>
+                  {m.marketers.length > 0 && (() => {
+                    const normIg = (u: string | null | undefined) => {
+                      if (!u) return "";
+                      let s = u.trim().toLowerCase();
+                      s = s.replace(/^https?:\/\//, "").replace(/^www\./, "");
+                      s = s.replace(/^instagram\.[a-z.]+\//, "").replace(/^@/, "");
+                      s = s.split(/[?#]/)[0];
+                      return s.replace(/\/+$/, "");
+                    };
+                    const all = snapshots[m.id] || [];
+                    return (
+                      <div className="border-t border-border/30 pt-3 mt-3">
+                        <div className="flex items-center gap-1.5 mb-2">
+                          <UserCheck className="h-3 w-3 text-accent/70" />
+                          <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Marketer ({m.marketers.length})</span>
+                        </div>
+                        <div className="space-y-2">
+                          {m.marketers.map((mk, i) => {
+                            const igHref = mk.instagram
+                              ? (mk.instagram.startsWith("http") ? mk.instagram : `https://instagram.com/${mk.instagram.replace("@", "")}`)
+                              : "";
+                            const key = normIg(igHref);
+                            const snaps = key ? all.filter((s) => normIg(s.instagram_url) === key) : [];
+                            return (
+                              <div key={i} className="flex flex-col gap-1 text-xs">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-foreground truncate">{mk.name || "—"}</span>
+                                  {mk.instagram && (
+                                    <a
+                                      href={igHref}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-accent hover:underline flex items-center gap-1 shrink-0 ml-2"
+                                    >
+                                      <Instagram className="h-3 w-3" />
+                                      <span className="truncate max-w-[100px]">{mk.instagram.replace(/^https?:\/\/(www\.)?instagram\.com\//, "@").replace(/\/$/, "")}</span>
+                                    </a>
+                                  )}
+                                </div>
+                                {(mk.tracking_link || mk.tracking_name) && (
+                                  <div className="flex items-center gap-1 text-[10px] text-muted-foreground/80">
+                                    <Link2 className="h-2.5 w-2.5 shrink-0" />
+                                    {mk.tracking_link ? (
+                                      <a
+                                        href={mk.tracking_link.startsWith("http") ? mk.tracking_link : `https://${mk.tracking_link}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-accent/80 hover:underline truncate max-w-[180px]"
+                                      >
+                                        {mk.tracking_name || mk.tracking_link}
+                                      </a>
+                                    ) : (
+                                      <span className="truncate">{mk.tracking_name}</span>
+                                    )}
+                                  </div>
+                                )}
+                                {mk.instagram && (
+                                  <IgGrowthBlock url={igHref} snaps={snaps} />
                                 )}
                               </div>
-                            )}
-                          </div>
-                        ))}
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    );
+                  })()}
 
                   {m.platform_logins?.length > 0 && (
                     <div className="border-t border-border/30 pt-3 mt-3">

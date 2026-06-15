@@ -95,7 +95,7 @@ Deno.serve(async (req) => {
 
   let query = supabase
     .from("fanvue_models")
-    .select("id, name, instagram_url, instagram_urls, is_active");
+    .select("id, name, instagram_url, instagram_urls, marketers, is_active");
   if (onlyModelId) {
     query = query.eq("id", onlyModelId);
   } else {
@@ -111,8 +111,8 @@ Deno.serve(async (req) => {
   }
 
 
-  // Build (model_id, normalized_url, handle) triples
-  type Target = { model_id: string; name: string; url: string; handle: string };
+  // Build (model_id, normalized_url, handle) targets — includes model IGs + marketer IGs
+  type Target = { model_id: string; name: string; url: string; handle: string; kind: "model" | "marketer" };
   const targets: Target[] = [];
   for (const m of models ?? []) {
     const urls: string[] = [];
@@ -127,7 +127,17 @@ Deno.serve(async (req) => {
     }
     for (const url of urls) {
       const handle = handleFromUrl(url);
-      if (handle) targets.push({ model_id: m.id, name: m.name, url, handle });
+      if (handle) targets.push({ model_id: m.id, name: m.name, url, handle, kind: "model" });
+    }
+
+    // Marketer IG handles — stored under same model_id, distinguished by instagram_url
+    const marketers = Array.isArray((m as any).marketers) ? ((m as any).marketers as any[]) : [];
+    for (const mk of marketers) {
+      const ig = typeof mk?.instagram === "string" ? mk.instagram : "";
+      const n = normalizeUrl(ig);
+      if (!n) continue;
+      const handle = handleFromUrl(n);
+      if (handle) targets.push({ model_id: m.id, name: `${m.name} · ${mk.name || handle}`, url: n, handle, kind: "marketer" });
     }
   }
 
