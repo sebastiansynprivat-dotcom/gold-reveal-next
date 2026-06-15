@@ -3472,7 +3472,7 @@ export default function ModelDashboardTab() {
                                           <p className="text-xs font-medium text-foreground truncate">
                                             {acc.account_email || "–"}
                                           </p>
-                                          {acc.account_email && (
+                                          {acc.account_email && !acc.archived && (
                                             <button
                                               type="button"
                                               onClick={() => {
@@ -3495,16 +3495,18 @@ export default function ModelDashboardTab() {
                                             <p className="text-[10px] text-muted-foreground font-mono">
                                               PW: {acc.account_password}
                                             </p>
-                                            <button
-                                              type="button"
-                                              onClick={() => {
-                                                navigator.clipboard.writeText(acc.account_password);
-                                                toast.success("Passwort kopiert");
-                                              }}
-                                              className="opacity-0 group-hover/pw:opacity-100 transition-opacity"
-                                            >
-                                              <Copy className="h-3 w-3 text-muted-foreground hover:text-foreground" />
-                                            </button>
+                                            {!acc.archived && (
+                                              <button
+                                                type="button"
+                                                onClick={() => {
+                                                  navigator.clipboard.writeText(acc.account_password);
+                                                  toast.success("Passwort kopiert");
+                                                }}
+                                                className="opacity-0 group-hover/pw:opacity-100 transition-opacity"
+                                              >
+                                                <Copy className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                                              </button>
+                                            )}
                                           </div>
                                         )}
                                         <p className="text-[10px] text-muted-foreground/60 font-mono">
@@ -3515,16 +3517,18 @@ export default function ModelDashboardTab() {
                                         <Button
                                           size="sm"
                                           variant="ghost"
-                                          onClick={() => startEditAccount(acc)}
-                                          className="h-7 text-[10px] gap-1 text-foreground hover:bg-accent/10"
+                                          disabled={acc.archived}
+                                          onClick={() => { if (!acc.archived) startEditAccount(acc); }}
+                                          className="h-7 text-[10px] gap-1 text-foreground hover:bg-accent/10 disabled:opacity-40 disabled:cursor-not-allowed"
                                         >
                                           <Pencil className="h-3 w-3" />
                                         </Button>
                                         <Button
                                           size="sm"
                                           variant="ghost"
-                                          onClick={() => deleteAccount(acc.id)}
-                                          className="h-7 text-[10px] text-destructive hover:bg-destructive/10"
+                                          disabled={acc.archived}
+                                          onClick={() => { if (!acc.archived) deleteAccount(acc.id); }}
+                                          className="h-7 text-[10px] text-destructive hover:bg-destructive/10 disabled:opacity-40 disabled:cursor-not-allowed"
                                         >
                                           <Trash2 className="h-3 w-3" />
                                         </Button>
