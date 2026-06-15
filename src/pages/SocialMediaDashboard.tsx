@@ -413,17 +413,26 @@ export default function SocialMediaDashboard() {
   const removeInstagram = (i: number) =>
     setForm((f) => ({ ...f, instagram_urls: f.instagram_urls.filter((_, idx) => idx !== i) }));
 
-  const filtered = models.filter((m) => {
-    if (archiveFilter === "active" && m.archived_at) return false;
-    if (archiveFilter === "archived" && !m.archived_at) return false;
-    if (!search) return true;
-    const q = search.toLowerCase();
-    return (
-      m.name.toLowerCase().includes(q) ||
-      m.username.toLowerCase().includes(q) ||
-      m.chatter_name.toLowerCase().includes(q)
-    );
-  });
+  const STAGE_ORDER: Record<ModelStage, number> = {
+    active: 0,
+    ready: 1,
+    warm_up: 2,
+    onboarding: 3,
+  };
+
+  const filtered = models
+    .filter((m) => {
+      if (archiveFilter === "active" && m.archived_at) return false;
+      if (archiveFilter === "archived" && !m.archived_at) return false;
+      if (!search) return true;
+      const q = search.toLowerCase();
+      return (
+        m.name.toLowerCase().includes(q) ||
+        m.username.toLowerCase().includes(q) ||
+        m.chatter_name.toLowerCase().includes(q)
+      );
+    })
+    .sort((a, b) => STAGE_ORDER[a.stage] - STAGE_ORDER[b.stage]);
 
   const activeModels = models.filter((m) => !m.archived_at);
   const archivedCount = models.length - activeModels.length;
