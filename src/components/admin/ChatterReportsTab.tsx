@@ -387,7 +387,7 @@ export default function ChatterReportsTab({ chatters }: Props) {
 
   const buildReport = () => {
     const headers = [
-      "Date", "Name", "Telegram ID", "Models",
+      "Date", "Name", "Telegram ID", "Start Date", "Models",
       "Day Revenue", "Goal", "Streak",
       "Last Week Revenue", "Last Month Revenue", "All Time Revenue",
       "Mass DM", "Unread Chats", "Oldest Chat",
@@ -397,6 +397,7 @@ export default function ChatterReportsTab({ chatters }: Props) {
       dateStr,
       r.name,
       r.telegram_id ?? "",
+      r.start_date ? format(new Date(r.start_date), "yyyy-MM-dd") : "",
       (r.models ?? []).join(", "),
       r.day,
       r.goal,
