@@ -513,8 +513,10 @@ export default function ModelDashboardTab() {
   >({});
 
   // ─── Revenue period filter (UI only, not yet wired to historical data) ───
-  type RevenuePeriod = "today" | "yesterday" | "7d" | "30d" | "last_month" | "this_month";
+  type RevenuePeriod = "today" | "yesterday" | "7d" | "30d" | "last_month" | "this_month" | "custom";
   const [revenuePeriod, setRevenuePeriod] = useState<RevenuePeriod>("this_month");
+  const [customRange, setCustomRange] = useState<{ from?: Date; to?: Date }>({});
+  const [customPickerOpen, setCustomPickerOpen] = useState(false);
   const revenuePeriodLabels: Record<RevenuePeriod, string> = {
     today: "Heute",
     yesterday: "Gestern",
@@ -522,7 +524,15 @@ export default function ModelDashboardTab() {
     "30d": "Letzte 30 Tage",
     last_month: "Letzter Monat",
     this_month: "Dieser Monat",
+    custom: "Individuell",
   };
+  const customRangeLabel = customRange.from
+    ? `${formatDate(customRange.from, "dd.MM.yy", { locale: de })}${
+        customRange.to && customRange.to.getTime() !== customRange.from.getTime()
+          ? ` – ${formatDate(customRange.to, "dd.MM.yy", { locale: de })}`
+          : ""
+      }`
+    : "Individuell";
 
   // ─── Billing month for "Anteil berechnen" (provider invoice basis) ───
   const [billingMonth, setBillingMonth] = useState<string>(() => {
