@@ -1459,7 +1459,9 @@ export default function SocialMediaDashboard() {
   );
 }
 
-function IgGrowthBlock({ url, snaps }: { url: string | null; snaps: { followers: number; recorded_at: string; instagram_url: string | null }[] }) {
+type PostStat = { posts_7d: number; posts_30d: number; posts_total: number; last_post_at: string | null; recorded_at: string } | null;
+
+function IgGrowthBlock({ url, snaps, post }: { url: string | null; snaps: { followers: number; recorded_at: string; instagram_url: string | null }[]; post?: PostStat }) {
   const latest = snaps[snaps.length - 1];
 
   // 7-day baseline: latest snapshot recorded >=7 days before "latest"
