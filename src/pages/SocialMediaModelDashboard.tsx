@@ -40,6 +40,15 @@ type StatusRow = {
   note: string;
 };
 
+type WeekFeedback = {
+  id?: string;
+  assignment_id: string;
+  week_number: number;
+  status: "pending" | "approved" | "rejected";
+  feedback: string;
+  folder_url: string;
+};
+
 type Marketer = { name?: string; instagram?: string };
 
 type ModelInfo = {
