@@ -64,16 +64,43 @@ export default function DeletedRecordsTab() {
     setBusyId(row.id);
     try {
       const table = ENTITY_TABLES[row.entity_type];
-      // Strip volatile fields that can't be re-inserted as-is
       const payload = { ...row.data };
       const { error: insErr } = await (supabase as any).from(table).insert(payload);
       if (insErr) throw insErr;
-      const { error: updErr } = await (supabase as any)
-        .from("deleted_records")
-        .update({ restored_at: new Date().toISOString() })
-        .eq("id", row.id);
-      if (updErr) throw updErr;
-      toast.success("Wiederhergestellt");
+
+      // Delete the archive row instead of marking restored_at, to prevent duplicate ghost entries.
+      const { error: delErr } = await (supabase as any).from("deleted_records").delete().eq("id", row.id);
+      if (delErr) throw delErr;
+
+      // Cascade: if a model was restored, also restore its archived child accounts.
+      let childRestored = 0;
+      let childFailed = 0;
+      if (row.entity_type === "model") {
+        const { data: children } = await (supabase as any)
+          .from("deleted_records")
+          .select("*")
+          .eq("entity_type", "account")
+          .is("restored_at", null)
+          .filter("data->>model_id", "eq", row.original_id);
+        for (const child of (children || []) as DeletedRow[]) {
+          try {
+            const { error: cInsErr } = await (supabase as any).from("accounts").insert({ ...child.data });
+            if (cInsErr) throw cInsErr;
+            const { error: cDelErr } = await (supabase as any).from("deleted_records").delete().eq("id", child.id);
+            if (cDelErr) throw cDelErr;
+            childRestored++;
+          } catch (err) {
+            console.error("Child account restore failed", child.id, err);
+            childFailed++;
+          }
+        }
+      }
+
+      if (row.entity_type === "model" && (childRestored || childFailed)) {
+        toast.success(`Model + ${childRestored} Account(s) wiederhergestellt${childFailed ? ` (${childFailed} fehlgeschlagen)` : ""}`);
+      } else {
+        toast.success("Wiederhergestellt");
+      }
       load();
     } catch (e: any) {
       toast.error("Restore fehlgeschlagen: " + (e.message || String(e)));

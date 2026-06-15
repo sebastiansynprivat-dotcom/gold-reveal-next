@@ -705,7 +705,8 @@ export default function ModelDashboardTab() {
       .from("deleted_records")
       .select("original_id, platform, data")
       .eq("entity_type", "account")
-      .eq("data->>model_id", modelId);
+      .eq("data->>model_id", modelId)
+      .is("restored_at", null);
     const archivedAccs: AccountRow[] = ((archivedRows || []) as Array<{ original_id: string; platform: string | null; data: any }>)
       .map((r) => ({
         id: r.original_id || r.data?.id || crypto.randomUUID(),
@@ -813,7 +814,8 @@ export default function ModelDashboardTab() {
         .from("deleted_records")
         .select("original_id, platform, data")
         .eq("entity_type", "account")
-        .eq("data->>model_id", selectedModelId);
+        .eq("data->>model_id", selectedModelId)
+        .is("restored_at", null);
       const archivedList = (archived || []) as Array<{ original_id: string; platform: string | null; data: any }>;
       const archivedIds = archivedList.map((r) => r.original_id).filter(Boolean);
       const archivedPlatformById = new Map<string, string>();
