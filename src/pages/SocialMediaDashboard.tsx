@@ -836,6 +836,7 @@ export default function SocialMediaDashboard() {
                       return s.replace(/\/+$/, "");
                     };
                     const all = snapshots[m.id] || [];
+                    const posts = postSnaps[m.id] || [];
                     return (
                       <div className="border-t border-border/30 pt-3 mt-3">
                         <div className="flex items-center gap-1.5 mb-2">
@@ -849,6 +850,7 @@ export default function SocialMediaDashboard() {
                               : "";
                             const key = normIg(igHref);
                             const snaps = key ? all.filter((s) => normIg(s.instagram_url) === key) : [];
+                            const post = key ? posts.find((p) => normIg(p.instagram_url) === key) || null : null;
                             return (
                               <div key={i} className="flex flex-col gap-1 text-xs">
                                 <div className="flex items-center justify-between">
