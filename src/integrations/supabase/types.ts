@@ -779,6 +779,50 @@ export type Database = {
           },
         ]
       }
+      content_plan_week_feedback: {
+        Row: {
+          assignment_id: string
+          created_at: string
+          created_by: string | null
+          feedback: string | null
+          folder_url: string | null
+          id: string
+          status: string
+          updated_at: string
+          week_number: number
+        }
+        Insert: {
+          assignment_id: string
+          created_at?: string
+          created_by?: string | null
+          feedback?: string | null
+          folder_url?: string | null
+          id?: string
+          status?: string
+          updated_at?: string
+          week_number: number
+        }
+        Update: {
+          assignment_id?: string
+          created_at?: string
+          created_by?: string | null
+          feedback?: string | null
+          folder_url?: string | null
+          id?: string
+          status?: string
+          updated_at?: string
+          week_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_plan_week_feedback_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "content_plan_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       content_plans: {
         Row: {
           created_at: string
