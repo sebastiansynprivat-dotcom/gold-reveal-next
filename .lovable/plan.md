@@ -1,40 +1,35 @@
-## Hourly profiles_data refresh
+## Goal
+In the Model-Dashboard → Plattform-Accounts section, continue to display platform accounts that have been deleted (archived). Render them in the same grouped/accordion list but visually grayed out and with all action buttons (edit, delete, copy) disabled. New accounts can still be added; the archived rows are read-only ghosts.
 
-### What gets built
+## Scope
+File: `src/components/ModelDashboardTab.tsx` only. UI/presentation change. No backend/schema changes. Revenue logic that already reads `deleted_records` stays untouched.
 
-1. **New edge function `refresh-profiles-data`** (`supabase/functions/refresh-profiles-data/index.ts`)
-   - Auth: requires header `x-api-key` matching the existing `REVENUE_INGEST_API_KEY` secret. Returns 401 otherwise.
-   - Uses `SUPABASE_SERVICE_ROLE_KEY` to run a single SQL aggregation via `supabase.rpc` on a new SECURITY DEFINER function `public.refresh_profiles_data_today()`.
-   - Scope: **today only** (`date = current_date`). One row per assigned chatter per day.
-   - Returns `{ ok: true, updated_rows: N }`.
+## Approach
 
-2. **New SQL function `public.refresh_profiles_data_today()`** (via migration)
-   - Walks every assignment where `end_date IS NULL OR end_date >= current_date`.
-   - Resolves `telegram_id` via `profiles` (lookup by `aa.profile_id`, fallback `aa.user_id` → `profiles.user_id`).
-   - Aggregates today's `accounts_data` rows joined on `account_id`:
-     - `revenue` = `SUM(COALESCE(total, 0))`
-     - `mass_dm` = `SUM(COALESCE(mass_dms, 0))`
-     - `unread_chats` = `SUM(COALESCE(unread_chats, 0))`
-     - `oldest_chat` = `MAX(COALESCE(oldest_chat, 0))`
-     - `models` = `jsonb_agg(DISTINCT { model_id, name, account_id, platform, total })`
-   - Groups by `(telegram_id, current_date)`, filters out null/empty telegram_ids.
-   - Upserts into `profiles_data` `ON CONFLICT (telegram_id, date) DO UPDATE` setting all five aggregates + `models` + `updated_at = now()`.
-   - Returns affected row count.
+1. **Extend the row type** with an optional `archived?: boolean` flag on `AccountRow` (purely client-side).
 
-3. **Cron job** via `pg_cron` + `pg_net` (scheduled with `supabase--insert`, not migration — contains project-specific URL + anon key):
-   - Name: `refresh-profiles-data-hourly`
-   - Schedule: `0 * * * *` (top of every hour)
-   - Action: `net.http_post` to `https://acznyhzgbkdcmnbqvptt.supabase.co/functions/v1/refresh-profiles-data` with headers `{ Content-Type, apikey: <anon>, x-api-key: <REVENUE_INGEST_API_KEY> }`.
+2. **Load archived accounts** inside `loadModelAccounts(modelId)`:
+   - Query `deleted_records` where `entity_type = 'account'` and `data->>model_id = modelId` (or filter client-side after fetching by model_id snapshot — same approach already used for revenue at line ~789).
+   - Map each archived record into an `AccountRow`-shaped object using `data` (id from `original_id`, email/domain/password/platform/assigned_to from snapshot) and set `archived: true`.
+   - Merge with the live accounts array (live first, archived appended per platform) and pass to `setModelAccounts`.
+   - Include archived `assigned_to` ids in the chatter-profile fetch so the "Zugewiesener Chatter" line still resolves a name.
 
-### Technical notes
+3. **Render treatment** in the accordion item (~lines 3362–3528):
+   - Wrap each account card with conditional classes when `acc.archived`:
+     - Container: add `opacity-50 grayscale pointer-events-none-on-actions` — keep the card readable but muted (e.g. `opacity-60`, `border-dashed`, `bg-secondary/10`).
+     - Add a small "Archiviert" badge at the top of the card (muted pill).
+   - Disable / hide controls when archived:
+     - Edit button: `disabled` and not clickable (don't open edit mode).
+     - Delete button: `disabled`.
+     - Copy-to-clipboard buttons (email + password): hidden or disabled.
+     - Never enter inline edit mode for archived rows (guard `startEditAccount`).
+   - Keep all text (email, domain, PW, ID, assigned chatter) visible so admins can still reference what was there.
 
-- `pg_cron` + `pg_net` extensions: enabled in the migration if not already on.
-- The cron job reads `REVENUE_INGEST_API_KEY` as a literal value baked into the cron's SQL body. Rotating the secret later requires re-scheduling the cron.
-- No frontend changes. No schema changes to `profiles_data` (already has `(telegram_id, date)` unique key from the backfill).
-- Function deploys with `verify_jwt = false` by default; auth is enforced in code via `x-api-key`.
+4. **Accordion header count**: keep counting both live + archived in the per-platform count, OR display as `"3 Accounts (1 archiviert)"`. Use the latter for clarity.
 
-### Files touched
+5. **Add-account button** at the bottom: keep current logic (`modelAccounts.length < PLATFORMS.length`) but compute against live accounts only so archived rows don't block adding new ones.
 
-- new: `supabase/functions/refresh-profiles-data/index.ts`
-- migration: create `public.refresh_profiles_data_today()` + enable `pg_cron`/`pg_net`
-- one-off insert: schedule the cron job
+## Out of scope
+- No restore-archived action (not requested).
+- No changes to the deletion flow itself — archived rows already land in `deleted_records`.
+- No changes to other admin pages.
