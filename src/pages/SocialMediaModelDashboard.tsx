@@ -11,8 +11,9 @@ import { motion } from "framer-motion";
 import {
   LogOut, CheckCircle2, Circle, CalendarDays, Sparkles, Link as LinkIcon, ExternalLink,
   Instagram, TrendingUp, TrendingDown, Minus, Flame, Film, Copy, KeyRound, HelpCircle,
-  Rocket, Trophy, Eye, EyeOff,
+  Rocket, Trophy, Eye, EyeOff, Target, ArrowUpRight, Lightbulb, Users,
 } from "lucide-react";
+import { ResponsiveContainer, AreaChart, Area, XAxis, Tooltip } from "recharts";
 import logo from "@/assets/logo.png";
 import GoldParticles from "@/components/GoldParticles";
 
