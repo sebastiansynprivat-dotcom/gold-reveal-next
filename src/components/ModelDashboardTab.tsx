@@ -2212,7 +2212,13 @@ export default function ModelDashboardTab() {
                       const isCustomCur = !CURRENCIES.includes(accCurrency as any);
 
                       return (
-                        <div key={acc.id} className="glass-card-subtle rounded-xl p-3 space-y-2">
+                        <div
+                          key={acc.id}
+                          className={cn(
+                            "glass-card-subtle rounded-xl p-3 space-y-2 transition-opacity",
+                            acc.archived && "opacity-50 grayscale",
+                          )}
+                        >
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <div
@@ -2223,6 +2229,11 @@ export default function ModelDashboardTab() {
                               <Badge variant="outline" className={cn("text-[9px]", platformColors[acc.platform])}>
                                 {acc.account_email || acc.account_domain}
                               </Badge>
+                              {acc.archived && (
+                                <span className="text-[9px] uppercase tracking-wider px-1.5 py-0.5 rounded-full border border-border/40 bg-secondary/30 text-muted-foreground">
+                                  Archiviert
+                                </span>
+                              )}
                             </div>
                             <div className="text-right">
                               <p className="text-sm font-bold text-foreground tabular-nums">
