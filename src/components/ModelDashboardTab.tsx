@@ -46,7 +46,12 @@ import {
   Clock,
   Mail,
   AlertTriangle,
+  CalendarIcon,
 } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { format as formatDate } from "date-fns";
+import { de } from "date-fns/locale";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import CreditNoteForm from "@/components/CreditNoteForm";
@@ -508,8 +513,10 @@ export default function ModelDashboardTab() {
   >({});
 
   // ─── Revenue period filter (UI only, not yet wired to historical data) ───
-  type RevenuePeriod = "today" | "yesterday" | "7d" | "30d" | "last_month" | "this_month";
+  type RevenuePeriod = "today" | "yesterday" | "7d" | "30d" | "last_month" | "this_month" | "custom";
   const [revenuePeriod, setRevenuePeriod] = useState<RevenuePeriod>("this_month");
+  const [customRange, setCustomRange] = useState<{ from?: Date; to?: Date }>({});
+  const [customPickerOpen, setCustomPickerOpen] = useState(false);
   const revenuePeriodLabels: Record<RevenuePeriod, string> = {
     today: "Heute",
     yesterday: "Gestern",
@@ -517,7 +524,15 @@ export default function ModelDashboardTab() {
     "30d": "Letzte 30 Tage",
     last_month: "Letzter Monat",
     this_month: "Dieser Monat",
+    custom: "Individuell",
   };
+  const customRangeLabel = customRange.from
+    ? `${formatDate(customRange.from, "dd.MM.yy", { locale: de })}${
+        customRange.to && customRange.to.getTime() !== customRange.from.getTime()
+          ? ` – ${formatDate(customRange.to, "dd.MM.yy", { locale: de })}`
+          : ""
+      }`
+    : "Individuell";
 
   // ─── Billing month for "Anteil berechnen" (provider invoice basis) ───
   const [billingMonth, setBillingMonth] = useState<string>(() => {
@@ -754,6 +769,12 @@ export default function ModelDashboardTab() {
         const last = new Date(today.getFullYear(), today.getMonth(), 0);
         from = first; to = last; break;
       }
+      case "custom": {
+        if (!customRange.from) return;
+        from = startOfDay(customRange.from);
+        to = startOfDay(customRange.to || customRange.from);
+        break;
+      }
       case "this_month":
       default: {
         from = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -833,7 +854,7 @@ export default function ModelDashboardTab() {
       setPlatformRevenues(platMap);
     })();
     return () => { cancelled = true; };
-  }, [selectedModelId, modelAccounts, revenuePeriod]);
+  }, [selectedModelId, modelAccounts, revenuePeriod, customRange.from, customRange.to]);
 
   // ─── Query payout_revenue for the main (fetchMonth, fetchYear) ───
   useEffect(() => {
@@ -2064,17 +2085,49 @@ export default function ModelDashboardTab() {
                   <div className="flex flex-wrap gap-1.5">
                     {(Object.keys(revenuePeriodLabels) as RevenuePeriod[]).map((p) => {
                       const active = revenuePeriod === p;
+                      const pillClass = cn(
+                        "text-[10px] px-2.5 py-1 rounded-full border transition-all tabular-nums inline-flex items-center gap-1",
+                        active
+                          ? "bg-accent/15 text-accent border-accent/40 shadow-sm"
+                          : "bg-secondary/30 text-muted-foreground border-border/30 hover:text-foreground hover:border-accent/20",
+                      );
+                      if (p === "custom") {
+                        return (
+                          <Popover key={p} open={customPickerOpen} onOpenChange={setCustomPickerOpen}>
+                            <PopoverTrigger asChild>
+                              <button
+                                type="button"
+                                onClick={() => { setRevenuePeriod("custom"); setCustomPickerOpen(true); }}
+                                className={pillClass}
+                              >
+                                <CalendarIcon className="w-3 h-3" />
+                                {active && customRange.from ? customRangeLabel : "Individuell"}
+                              </button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0 z-50" align="start">
+                              <Calendar
+                                mode="range"
+                                selected={{ from: customRange.from, to: customRange.to } as any}
+                                onSelect={(r: any) => {
+                                  setCustomRange({ from: r?.from, to: r?.to });
+                                  setRevenuePeriod("custom");
+                                  if (r?.from && r?.to) setCustomPickerOpen(false);
+                                }}
+                                numberOfMonths={2}
+                                initialFocus
+                                locale={de}
+                                className={cn("p-3 pointer-events-auto")}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        );
+                      }
                       return (
                         <button
                           key={p}
                           type="button"
                           onClick={() => setRevenuePeriod(p)}
-                          className={cn(
-                            "text-[10px] px-2.5 py-1 rounded-full border transition-all tabular-nums",
-                            active
-                              ? "bg-accent/15 text-accent border-accent/40 shadow-sm"
-                              : "bg-secondary/30 text-muted-foreground border-border/30 hover:text-foreground hover:border-accent/20",
-                          )}
+                          className={pillClass}
                         >
                           {revenuePeriodLabels[p]}
                         </button>
@@ -2087,7 +2140,7 @@ export default function ModelDashboardTab() {
                     <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-accent/8 via-transparent to-accent/5 pointer-events-none" />
                     <div className="relative">
                       <p className="text-[10px] text-muted-foreground mb-1 tracking-widest uppercase">
-                        Gesamtumsatz · {revenuePeriodLabels[revenuePeriod]}
+                        Gesamtumsatz · {revenuePeriod === "custom" && customRange.from ? customRangeLabel : revenuePeriodLabels[revenuePeriod]}
                       </p>
 
                       <p className="text-3xl font-extrabold text-gold-gradient-shimmer tracking-tight tabular-nums">
