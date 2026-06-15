@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { ArrowLeft, Plus, Trash2, UserPlus, Users, CheckCircle2, Mail } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, UserPlus, Users, CheckCircle2, Mail, Copy, Link as LinkIcon } from "lucide-react";
 import logo from "@/assets/logo.png";
 import GoldParticles from "@/components/GoldParticles";
 
@@ -33,6 +33,9 @@ export default function SocialMediaMarketers() {
 
   const [editMarketer, setEditMarketer] = useState<Marketer | null>(null);
   const [editSelected, setEditSelected] = useState<Set<string>>(new Set());
+
+  const [inviteLink, setInviteLink] = useState<string | null>(null);
+  const [inviteEmail, setInviteEmail] = useState<string>("");
 
   const load = async () => {
     setLoading(true);
@@ -82,9 +85,16 @@ export default function SocialMediaMarketers() {
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
-      toast.success("Einladung versendet — der Marketer erhält eine E-Mail.");
+      const link = (data as any)?.action_link as string | undefined;
+      const targetEmail = email.trim();
       setCreateOpen(false);
       setEmail(""); setPassword(""); setName(""); setSelectedModels(new Set());
+      if (link) {
+        setInviteEmail(targetEmail);
+        setInviteLink(link);
+      } else {
+        toast.success("Marketer angelegt.");
+      }
       load();
     } catch (e: any) {
       toast.error(e.message || "Einladung fehlgeschlagen");
@@ -235,7 +245,7 @@ export default function SocialMediaMarketers() {
           </DialogHeader>
           <div className="space-y-3">
             <p className="text-xs text-muted-foreground -mt-1">
-              Der Marketer erhält per E-Mail einen Einladungslink und legt sein Passwort beim ersten Login selbst fest.
+              Du bekommst direkt einen Einladungs-Link zum Kopieren — schick ihn dem Marketer (E-Mail, WhatsApp, …). Damit setzt er beim ersten Öffnen sein Passwort.
             </p>
             <div>
               <Label className="text-xs uppercase tracking-wider text-muted-foreground">Name</Label>
@@ -275,7 +285,7 @@ export default function SocialMediaMarketers() {
           <DialogFooter>
             <Button variant="ghost" onClick={() => setCreateOpen(false)}>Abbrechen</Button>
             <Button onClick={handleCreate} disabled={submitting} className="bg-accent text-accent-foreground hover:bg-accent/90">
-              {submitting ? "Versende…" : "Einladung senden"}
+              {submitting ? "Lege an…" : "Link erzeugen"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -312,6 +322,47 @@ export default function SocialMediaMarketers() {
           <DialogFooter>
             <Button variant="ghost" onClick={() => setEditMarketer(null)}>Abbrechen</Button>
             <Button onClick={saveAssignments} className="bg-accent text-accent-foreground hover:bg-accent/90">Speichern</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Invite link result */}
+      <Dialog open={!!inviteLink} onOpenChange={(o) => !o && setInviteLink(null)}>
+        <DialogContent className="max-w-md bg-card/95 backdrop-blur-xl border-accent/30">
+          <DialogHeader>
+            <DialogTitle className="text-accent flex items-center gap-2">
+              <LinkIcon className="h-4 w-4" /> Einladungs-Link bereit
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-xs text-muted-foreground">
+              Schicke diesen Link an <span className="text-foreground font-medium">{inviteEmail}</span>.
+              Er ist einmalig gültig — der Marketer setzt damit sein Passwort und ist sofort eingeloggt.
+            </p>
+            <div className="flex items-stretch gap-2">
+              <Input readOnly value={inviteLink ?? ""} className="font-mono text-[11px]" onFocus={(e) => e.currentTarget.select()} />
+              <Button
+                size="icon"
+                className="bg-accent text-accent-foreground hover:bg-accent/90 shrink-0"
+                onClick={async () => {
+                  if (!inviteLink) return;
+                  try {
+                    await navigator.clipboard.writeText(inviteLink);
+                    toast.success("Link kopiert");
+                  } catch {
+                    toast.error("Konnte nicht kopieren");
+                  }
+                }}
+              >
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+            <p className="text-[10px] text-muted-foreground/70">
+              Hinweis: Der Link läuft i.d.R. nach 1 Stunde ab. Falls nötig, einfach erneut über „Marketer einladen" generieren.
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setInviteLink(null)}>Schließen</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
