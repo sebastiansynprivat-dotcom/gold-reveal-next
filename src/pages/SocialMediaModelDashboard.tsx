@@ -39,16 +39,28 @@ type StatusRow = {
   note: string;
 };
 
+type Marketer = { name?: string; instagram?: string };
+
 type ModelInfo = {
   id: string;
   name: string;
   instagram_url: string;
   instagram_urls: string[];
   platform_logins: { platform?: string; email?: string; password?: string; url?: string; username?: string }[];
+  marketers: Marketer[];
 };
 
 type FollowerSnap = { instagram_url: string | null; followers: number; recorded_at: string };
 type PostSnap = { instagram_url: string | null; posts_7d: number; posts_30d: number; last_post_at: string | null; recorded_at: string };
+
+type IgAccount = {
+  source: "model" | "marketer";
+  ownerLabel: string; // e.g. "Du" or marketer name
+  instagramRaw: string;
+  instagramNorm: string;
+  href: string;
+  label: string;
+};
 
 const WEEKDAYS_DE = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
