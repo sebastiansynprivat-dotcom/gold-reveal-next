@@ -388,11 +388,11 @@ export default function ChatterReportsTab({ chatters }: Props) {
   const buildReport = () => {
     const headers = [
       "Date", "Name", "Telegram ID", "Models",
-      "Yesterday", "Goal", "Streak",
+      "Day Revenue", "Goal", "Streak",
       "Last Week Revenue", "Last Month Revenue", "All Time Revenue",
       "Mass DM", "Unread Chats", "Oldest Chat",
     ];
-    const dateStr = format(subDays(new Date(), 1), "yyyy-MM-dd");
+    const dateStr = format(date, "yyyy-MM-dd");
     const rowsOut: (string | number)[][] = filtered.map((r) => [
       dateStr,
       r.name,
