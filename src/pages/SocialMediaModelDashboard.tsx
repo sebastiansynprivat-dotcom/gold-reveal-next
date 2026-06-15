@@ -11,8 +11,9 @@ import { motion } from "framer-motion";
 import {
   LogOut, CheckCircle2, Circle, CalendarDays, Sparkles, Link as LinkIcon, ExternalLink,
   Instagram, TrendingUp, TrendingDown, Minus, Flame, Film, Copy, KeyRound, HelpCircle,
-  Rocket, Trophy, Eye, EyeOff,
+  Rocket, Trophy, Eye, EyeOff, Target, ArrowUpRight, Lightbulb, Users,
 } from "lucide-react";
+import { ResponsiveContainer, AreaChart, Area, XAxis, Tooltip } from "recharts";
 import logo from "@/assets/logo.png";
 import GoldParticles from "@/components/GoldParticles";
 
@@ -38,16 +39,28 @@ type StatusRow = {
   note: string;
 };
 
+type Marketer = { name?: string; instagram?: string };
+
 type ModelInfo = {
   id: string;
   name: string;
   instagram_url: string;
   instagram_urls: string[];
   platform_logins: { platform?: string; email?: string; password?: string; url?: string; username?: string }[];
+  marketers: Marketer[];
 };
 
 type FollowerSnap = { instagram_url: string | null; followers: number; recorded_at: string };
 type PostSnap = { instagram_url: string | null; posts_7d: number; posts_30d: number; last_post_at: string | null; recorded_at: string };
+
+type IgAccount = {
+  source: "model" | "marketer";
+  ownerLabel: string; // e.g. "Du" or marketer name
+  instagramRaw: string;
+  instagramNorm: string;
+  href: string;
+  label: string;
+};
 
 const WEEKDAYS_DE = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
@@ -128,7 +141,7 @@ export default function SocialMediaModelDashboard() {
     // Model meta (first one)
     const { data: mdl } = await supabase
       .from("fanvue_models")
-      .select("id, name, instagram_url, instagram_urls, platform_logins")
+      .select("id, name, instagram_url, instagram_urls, platform_logins, marketers")
       .in("id", modelIds)
       .limit(1)
       .maybeSingle();
@@ -139,6 +152,7 @@ export default function SocialMediaModelDashboard() {
         instagram_url: (mdl as any).instagram_url || "",
         instagram_urls: Array.isArray((mdl as any).instagram_urls) ? (mdl as any).instagram_urls : [],
         platform_logins: Array.isArray((mdl as any).platform_logins) ? (mdl as any).platform_logins : [],
+        marketers: Array.isArray((mdl as any).marketers) ? (mdl as any).marketers : [],
       });
     }
 
@@ -329,43 +343,97 @@ export default function SocialMediaModelDashboard() {
     };
   }, [planRows, dayRowsByPlan, statuses, today]);
 
-  // IG growth aggregation across model's IG URLs
-  const igStats = useMemo(() => {
-    const igUrls = model?.instagram_urls?.length ? model.instagram_urls : (model?.instagram_url ? [model.instagram_url] : []);
-    const keys = new Set(igUrls.map(normIg).filter(Boolean));
-    const matching = followerSnaps.filter((s) => keys.size === 0 || keys.has(normIg(s.instagram_url)));
-    // Group by url-key, take latest + 7-day baseline per key
-    const groups: Record<string, FollowerSnap[]> = {};
-    matching.forEach((s) => {
-      const k = normIg(s.instagram_url) || "_legacy";
-      (groups[k] ||= []).push(s);
+  // Build the full list of IG accounts the model should see (own + marketers')
+  const igAccounts = useMemo<IgAccount[]>(() => {
+    if (!model) return [];
+    const out: IgAccount[] = [];
+    const seen = new Set<string>();
+    const push = (raw: string, source: "model" | "marketer", ownerLabel: string) => {
+      const norm = normIg(raw);
+      if (!norm || seen.has(norm)) return;
+      seen.add(norm);
+      const href = raw.startsWith("http") ? raw : `https://instagram.com/${raw.replace(/^@/, "")}`;
+      const cleanLabel = raw
+        .replace(/^https?:\/\/(www\.)?instagram\.com\//i, "@")
+        .replace(/\/$/, "")
+        .replace(/^@?/, "@");
+      out.push({ source, ownerLabel, instagramRaw: raw, instagramNorm: norm, href, label: cleanLabel });
+    };
+    const ownUrls = model.instagram_urls?.length ? model.instagram_urls : (model.instagram_url ? [model.instagram_url] : []);
+    ownUrls.forEach((u) => u && push(u, "model", "Dein Account"));
+    (model.marketers || []).forEach((mk) => {
+      if (mk?.instagram) push(mk.instagram, "marketer", mk.name?.trim() || "Marketer");
     });
-    let followers = 0, delta7 = 0, baseline = 0;
-    Object.values(groups).forEach((snaps) => {
-      const sorted = snaps.slice().sort((a, b) => new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime());
-      const latest = sorted[sorted.length - 1];
-      if (!latest) return;
-      followers += latest.followers;
-      const cutoff = new Date(latest.recorded_at).getTime() - 7 * 86400000;
-      let base: FollowerSnap | null = null;
-      for (let i = sorted.length - 2; i >= 0; i--) {
-        if (new Date(sorted[i].recorded_at).getTime() <= cutoff) { base = sorted[i]; break; }
+    return out;
+  }, [model]);
+
+  // Group follower snapshots by normalized IG url
+  const snapsByKey = useMemo(() => {
+    const g: Record<string, FollowerSnap[]> = {};
+    followerSnaps.forEach((s) => {
+      const k = normIg(s.instagram_url);
+      if (!k) return;
+      (g[k] ||= []).push(s);
+    });
+    Object.keys(g).forEach((k) => g[k].sort((a, b) => new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime()));
+    return g;
+  }, [followerSnaps]);
+
+  const computeMetrics = (snaps: FollowerSnap[]) => {
+    if (!snaps.length) return null;
+    const last = snaps[snaps.length - 1];
+    const closest = (target: number) => {
+      let best = snaps[0];
+      let bestDiff = Math.abs(new Date(best.recorded_at).getTime() - target);
+      for (const s of snaps) {
+        const d = Math.abs(new Date(s.recorded_at).getTime() - target);
+        if (d < bestDiff) { bestDiff = d; best = s; }
       }
-      if (!base && sorted.length >= 2) base = sorted[0];
-      if (base) { baseline += base.followers; delta7 += latest.followers - base.followers; }
+      return best;
+    };
+    const now = Date.now();
+    const s7 = closest(now - 7 * 86400000);
+    const s30 = closest(now - 30 * 86400000);
+    const growth7 = last.followers - s7.followers;
+    const growth30 = last.followers - s30.followers;
+    const pct7 = s7.followers > 0 ? (growth7 / s7.followers) * 100 : 0;
+    const recent = snaps.filter((s) => new Date(s.recorded_at).getTime() >= now - 30 * 86400000);
+    let perDay = 0;
+    if (recent.length >= 2) {
+      const first = recent[0];
+      const days = Math.max(1, (new Date(last.recorded_at).getTime() - new Date(first.recorded_at).getTime()) / 86400000);
+      perDay = (last.followers - first.followers) / days;
+    } else if (snaps.length >= 2) {
+      const first = snaps[0];
+      const days = Math.max(1, (new Date(last.recorded_at).getTime() - new Date(first.recorded_at).getTime()) / 86400000);
+      perDay = (last.followers - first.followers) / days;
+    }
+    return {
+      current: last.followers,
+      growth7, growth30, pct7, perDay,
+      forecast30: Math.round(last.followers + perDay * 30),
+      forecast60: Math.round(last.followers + perDay * 60),
+      forecast90: Math.round(last.followers + perDay * 90),
+    };
+  };
+
+  type Metrics = NonNullable<ReturnType<typeof computeMetrics>>;
+  const insightFor = (m: Metrics): { tone: "good" | "warn" | "bad" | "neutral"; text: string } => {
+    if (m.perDay >= 50) return { tone: "good", text: `Starker Hebel: aktuell ca. ${Math.round(m.perDay)} neue Follower pro Tag. Bleib dran – jeder zusätzliche Reel beschleunigt die Kurve.` };
+    if (m.perDay >= 15) return { tone: "good", text: `Konstantes Wachstum von ca. ${Math.round(m.perDay)} Followern/Tag. Mit 1–2 Reels mehr pro Woche kannst du das verdoppeln.` };
+    if (m.perDay > 0) return { tone: "neutral", text: `Leichtes Wachstum (~${m.perDay.toFixed(1)}/Tag). Konsistenz fehlt – fester Posting-Rhythmus pusht den Algorithmus.` };
+    if (m.perDay === 0) return { tone: "warn", text: "Stillstand. Der Algorithmus straft Inaktivität ab – jetzt 2–3 Reels in den nächsten 48h posten." };
+    return { tone: "bad", text: `Du verlierst gerade Follower (${Math.round(m.perDay)}/Tag). Wahrscheinlich zu lange keine Reels – sofort gegensteuern.` };
+  };
+
+  const totalForecast30 = useMemo(() => {
+    let sum = 0;
+    igAccounts.forEach((a) => {
+      const m = computeMetrics(snapsByKey[a.instagramNorm] || []);
+      if (m) sum += m.forecast30 - m.current;
     });
-    const pct7 = baseline > 0 ? (delta7 / baseline) * 100 : 0;
-
-    const posts7d = postSnaps
-      .filter((p) => keys.size === 0 || keys.has(normIg(p.instagram_url)))
-      .reduce((a, p) => a + (p.posts_7d || 0), 0);
-    const lastPostAt = postSnaps
-      .filter((p) => (keys.size === 0 || keys.has(normIg(p.instagram_url))) && p.last_post_at)
-      .map((p) => new Date(p.last_post_at!).getTime())
-      .reduce((a, b) => Math.max(a, b), 0);
-
-    return { followers, delta7, pct7, posts7d, lastPostAt: lastPostAt || null };
-  }, [model, followerSnaps, postSnaps]);
+    return sum;
+  }, [igAccounts, snapsByKey]);
 
   const greeting = greetingFor(new Date().getHours());
   const firstName = (model?.name || "").split(/\s+/)[0] || "Star";
@@ -375,10 +443,6 @@ export default function SocialMediaModelDashboard() {
     navigator.clipboard.writeText(txt);
     toast.success(`${label} kopiert`);
   };
-
-  const TrendIcon = igStats.delta7 > 0 ? TrendingUp : igStats.delta7 < 0 ? TrendingDown : Minus;
-  const trendColor = igStats.delta7 > 0 ? "text-emerald-400" : igStats.delta7 < 0 ? "text-red-400" : "text-muted-foreground";
-  const lastPostDays = igStats.lastPostAt ? Math.max(0, Math.floor((Date.now() - igStats.lastPostAt) / 86400000)) : null;
 
   return (
     <div className="min-h-screen bg-background text-foreground relative">
@@ -456,59 +520,172 @@ export default function SocialMediaModelDashboard() {
               </div>
             </motion.section>
 
-            {/* IG GROWTH STRIP */}
-            {(igStats.followers > 0 || igStats.posts7d > 0 || lastPostDays !== null) && (
+            {/* IG ACCOUNTS – per-account growth + forecast */}
+            {igAccounts.length > 0 && (
               <motion.section
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.05 }}
-                className="rounded-2xl border border-accent/20 bg-card/40 backdrop-blur-sm p-4 md:p-5"
+                className="space-y-3"
               >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <Instagram className="h-4 w-4 text-accent" />
-                    <span className="text-xs uppercase tracking-wider font-semibold text-foreground/90">Dein IG Wachstum</span>
+                {/* Summary */}
+                <div
+                  className="rounded-2xl border border-accent/30 p-5 relative overflow-hidden"
+                  style={{
+                    background: "radial-gradient(120% 140% at 0% 0%, hsl(45 95% 55% / 0.14), transparent 55%), linear-gradient(180deg, hsl(0 0% 6% / 0.92), hsl(0 0% 4% / 0.92))",
+                  }}
+                >
+                  <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/60 to-transparent" />
+                  <div className="flex items-start justify-between gap-3 flex-wrap">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-accent/80 font-bold mb-1">
+                        <Target className="h-3 w-3" /> Prognose · nächste 30 Tage
+                      </div>
+                      <p className="text-3xl md:text-4xl font-extrabold tabular-nums">
+                        {totalForecast30 >= 0 ? "+" : ""}{totalForecast30.toLocaleString("de-DE")}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        erwartete neue Follower über deine {igAccounts.length} {igAccounts.length === 1 ? "Account" : "Accounts"}
+                      </p>
+                    </div>
+                    <Sparkles className="h-8 w-8 text-accent/60 shrink-0" />
                   </div>
-                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">letzte 7 Tage</span>
                 </div>
-                <div className="grid grid-cols-3 gap-3">
-                  <StatTile
-                    label="Follower"
-                    value={igStats.followers > 0 ? igStats.followers.toLocaleString("de-DE") : "–"}
-                    accent={
-                      igStats.followers > 0 ? (
-                        <span className={`flex items-center gap-1 ${trendColor}`}>
-                          <TrendIcon className="h-3 w-3" />
-                          {igStats.delta7 > 0 ? "+" : ""}{igStats.delta7.toLocaleString("de-DE")}
-                          <span className="text-muted-foreground/70">({igStats.pct7 > 0 ? "+" : ""}{igStats.pct7.toFixed(1)}%)</span>
-                        </span>
-                      ) : <span className="text-muted-foreground">Noch keine Daten</span>
-                    }
-                  />
-                  <StatTile
-                    label="Posts / 7T"
-                    value={igStats.posts7d.toString()}
-                    accent={
-                      <span className={igStats.posts7d >= 5 ? "text-emerald-400 flex items-center gap-1" : "text-muted-foreground"}>
-                        {igStats.posts7d >= 5 && <Flame className="h-3 w-3" />}
-                        {igStats.posts7d >= 7 ? "Top Pace" : igStats.posts7d >= 5 ? "Stark" : igStats.posts7d >= 3 ? "Solide" : "Mehr posten"}
-                      </span>
-                    }
-                  />
-                  <StatTile
-                    label="Letzter Post"
-                    value={lastPostDays === null ? "–" : lastPostDays === 0 ? "Heute" : `vor ${lastPostDays}d`}
-                    accent={
-                      lastPostDays === null ? <span className="text-muted-foreground">–</span>
-                      : lastPostDays <= 1 ? <span className="text-emerald-400">Frisch im Feed</span>
-                      : lastPostDays <= 3 ? <span className="text-yellow-400">Bald nachlegen</span>
-                      : <span className="text-red-400">Algorithmus schläft ein</span>
-                    }
-                  />
+
+                {/* Accounts header */}
+                <div className="flex items-center gap-2 pt-2">
+                  <Instagram className="h-4 w-4 text-accent" />
+                  <span className="text-xs uppercase tracking-wider font-semibold text-foreground/90">Deine Instagram-Accounts</span>
                 </div>
-                <p className="mt-3 text-[11px] text-muted-foreground/80 leading-relaxed">
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {igAccounts.map((a, idx) => {
+                    const snaps = snapsByKey[a.instagramNorm] || [];
+                    const m = computeMetrics(snaps);
+                    const chartData = snaps.map((s) => ({
+                      date: new Date(s.recorded_at).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" }),
+                      followers: s.followers,
+                    }));
+                    const gid = `igmg-${idx}`;
+                    const insight = m ? insightFor(m) : null;
+                    const insightColor =
+                      insight?.tone === "good" ? "text-emerald-400" :
+                      insight?.tone === "warn" ? "text-yellow-400" :
+                      insight?.tone === "bad" ? "text-red-400" : "text-muted-foreground";
+                    return (
+                      <motion.div
+                        key={`${a.instagramNorm}-${idx}`}
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.05 * idx }}
+                        className="rounded-2xl border border-accent/15 bg-card/40 backdrop-blur-sm p-4 relative overflow-hidden hover:border-accent/40 transition-all"
+                      >
+                        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
+                        <div className="flex items-start justify-between gap-2 mb-3">
+                          <div className="min-w-0">
+                            <a href={a.href} target="_blank" rel="noopener noreferrer"
+                              className="font-bold text-foreground truncate hover:text-accent transition-colors flex items-center gap-1.5">
+                              {a.label} <ExternalLink className="h-3 w-3 opacity-60" />
+                            </a>
+                            <p className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5 flex items-center gap-1">
+                              {a.source === "model"
+                                ? <><Users className="h-3 w-3" /> Dein eigener Account</>
+                                : <><Users className="h-3 w-3" /> betreut von {a.ownerLabel}</>}
+                            </p>
+                          </div>
+                          <Instagram className="h-4 w-4 text-accent/70 shrink-0" />
+                        </div>
+
+                        {m ? (
+                          <>
+                            <div className="flex items-baseline gap-2 mb-3">
+                              <span className="text-2xl font-extrabold tabular-nums">{m.current.toLocaleString("de-DE")}</span>
+                              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Follower</span>
+                              <span className={`ml-auto text-xs font-semibold flex items-center gap-1 ${m.growth7 >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                                {m.growth7 >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                                {m.growth7 >= 0 ? "+" : ""}{m.growth7.toLocaleString("de-DE")}
+                                <span className="text-muted-foreground/70 font-normal">({m.pct7 >= 0 ? "+" : ""}{m.pct7.toFixed(1)}% / 7T)</span>
+                              </span>
+                            </div>
+
+                            <div className="grid grid-cols-3 gap-2 mb-3">
+                              <div className="rounded-lg bg-background/40 px-2 py-1.5">
+                                <p className="text-[9px] uppercase tracking-wider text-muted-foreground">7d</p>
+                                <p className={`text-sm font-bold tabular-nums ${m.growth7 >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                                  {m.growth7 >= 0 ? "+" : ""}{m.growth7.toLocaleString("de-DE")}
+                                </p>
+                              </div>
+                              <div className="rounded-lg bg-background/40 px-2 py-1.5">
+                                <p className="text-[9px] uppercase tracking-wider text-muted-foreground">30d</p>
+                                <p className={`text-sm font-bold tabular-nums ${m.growth30 >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                                  {m.growth30 >= 0 ? "+" : ""}{m.growth30.toLocaleString("de-DE")}
+                                </p>
+                              </div>
+                              <div className="rounded-lg bg-background/40 px-2 py-1.5">
+                                <p className="text-[9px] uppercase tracking-wider text-muted-foreground">/Tag</p>
+                                <p className={`text-sm font-bold tabular-nums ${m.perDay >= 0 ? "text-foreground" : "text-red-400"}`}>
+                                  {m.perDay >= 0 ? "+" : ""}{m.perDay.toFixed(1)}
+                                </p>
+                              </div>
+                            </div>
+
+                            {chartData.length >= 2 && (
+                              <div className="h-20 -mx-1 mb-3">
+                                <ResponsiveContainer width="100%" height="100%">
+                                  <AreaChart data={chartData}>
+                                    <defs>
+                                      <linearGradient id={gid} x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="hsl(var(--accent))" stopOpacity={0.6} />
+                                        <stop offset="100%" stopColor="hsl(var(--accent))" stopOpacity={0} />
+                                      </linearGradient>
+                                    </defs>
+                                    <XAxis dataKey="date" hide />
+                                    <Tooltip
+                                      contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--accent) / 0.3)", borderRadius: 8, fontSize: 11 }}
+                                      labelStyle={{ color: "hsl(var(--muted-foreground))" }}
+                                    />
+                                    <Area type="monotone" dataKey="followers" stroke="hsl(var(--accent))" fill={`url(#${gid})`} strokeWidth={2} />
+                                  </AreaChart>
+                                </ResponsiveContainer>
+                              </div>
+                            )}
+
+                            <div className="grid grid-cols-3 gap-2 pt-2 border-t border-border/30">
+                              {[
+                                { label: "+30d", val: m.forecast30 },
+                                { label: "+60d", val: m.forecast60 },
+                                { label: "+90d", val: m.forecast90 },
+                              ].map((f) => (
+                                <div key={f.label} className="text-center">
+                                  <p className="text-[9px] uppercase tracking-wider text-muted-foreground">{f.label}</p>
+                                  <p className="text-sm font-bold text-accent tabular-nums inline-flex items-center gap-0.5">
+                                    <ArrowUpRight className="h-3 w-3" /> {f.val.toLocaleString("de-DE")}
+                                  </p>
+                                </div>
+                              ))}
+                            </div>
+
+                            {insight && (
+                              <div className="mt-3 flex items-start gap-2 rounded-lg bg-background/40 border border-border/30 px-2.5 py-2">
+                                <Lightbulb className={`h-3.5 w-3.5 mt-0.5 shrink-0 ${insightColor}`} />
+                                <p className={`text-[11px] leading-relaxed ${insightColor}`}>{insight.text}</p>
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <div className="text-center py-6">
+                            <p className="text-xs italic text-muted-foreground mb-1">Noch keine Follower-Daten erfasst.</p>
+                            <p className="text-[10px] text-muted-foreground/70">Erste Snapshots erscheinen nach dem nächsten Scrape.</p>
+                          </div>
+                        )}
+                      </motion.div>
+                    );
+                  })}
+                </div>
+
+                <p className="text-[10px] text-muted-foreground/70 px-1">
                   <Rocket className="inline h-3 w-3 mr-1 text-accent" />
-                  Mehr Reels & Videos = mehr Reach = mehr Subs = mehr Umsatz. Posting-Konsistenz ist dein stärkster Hebel.
+                  Lineare Prognose auf Basis der letzten 30 Tage – je mehr Reels du postest, desto stärker übertriffst du diese Kurve.
                 </p>
               </motion.section>
             )}
