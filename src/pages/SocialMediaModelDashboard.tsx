@@ -235,9 +235,27 @@ export default function SocialMediaModelDashboard() {
         map[statusKey(s.assignment_id, s.day_number, s.item_index)] = s;
       });
       setStatuses(map);
+
+      const { data: fbData } = await supabase
+        .from("content_plan_week_feedback" as any)
+        .select("*")
+        .in("assignment_id", rows.map((r) => r.assignment_id));
+      const fbMap: Record<string, WeekFeedback> = {};
+      ((fbData || []) as any[]).forEach((f) => {
+        fbMap[`${f.assignment_id}:${f.week_number}`] = {
+          id: f.id,
+          assignment_id: f.assignment_id,
+          week_number: f.week_number,
+          status: f.status,
+          feedback: f.feedback || "",
+          folder_url: f.folder_url || "",
+        };
+      });
+      setWeekFb(fbMap);
     } else {
       setDayRowsByPlan({});
       setStatuses({});
+      setWeekFb({});
     }
     setLoading(false);
   };
