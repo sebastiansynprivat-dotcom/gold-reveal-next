@@ -885,7 +885,7 @@ export default function SocialMediaDashboard() {
                                   </div>
                                 )}
                                 {mk.instagram && (
-                                  <IgGrowthBlock url={igHref} snaps={snaps} />
+                                  <IgGrowthBlock url={igHref} snaps={snaps} post={post} />
                                 )}
                               </div>
                             );
