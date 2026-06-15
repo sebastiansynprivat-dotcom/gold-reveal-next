@@ -192,6 +192,7 @@ interface AccountRow {
   assigned_to: string | null;
   model_active: boolean;
   currency?: string;
+  archived?: boolean;
 }
 
 interface ChatterProfile {
