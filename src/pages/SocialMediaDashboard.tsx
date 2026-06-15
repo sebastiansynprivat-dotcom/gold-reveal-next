@@ -174,7 +174,7 @@ export default function SocialMediaDashboard() {
         chatter_needed: !!m.chatter_needed,
       })));
     }
-    // Load all IG snapshots
+    // Load all IG follower snapshots
     const { data: snaps } = await supabase
       .from("fanvue_instagram_snapshots" as any)
       .select("model_id, followers, recorded_at, instagram_url")
@@ -184,6 +184,29 @@ export default function SocialMediaDashboard() {
       (grouped[s.model_id] ||= []).push({ followers: s.followers, recorded_at: s.recorded_at, instagram_url: s.instagram_url ?? null });
     });
     setSnapshots(grouped);
+
+    // Load latest IG post snapshots (one per model+url)
+    const { data: postRows } = await supabase
+      .from("fanvue_instagram_post_snapshots" as any)
+      .select("model_id, instagram_url, posts_7d, posts_30d, posts_total, last_post_at, recorded_at")
+      .order("recorded_at", { ascending: false });
+    const postMap: Record<string, { instagram_url: string | null; posts_7d: number; posts_30d: number; posts_total: number; last_post_at: string | null; recorded_at: string }[]> = {};
+    const seen = new Set<string>();
+    ((postRows || []) as any[]).forEach((r) => {
+      const key = `${r.model_id}::${(r.instagram_url || "").toLowerCase()}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      (postMap[r.model_id] ||= []).push({
+        instagram_url: r.instagram_url ?? null,
+        posts_7d: r.posts_7d ?? 0,
+        posts_30d: r.posts_30d ?? 0,
+        posts_total: r.posts_total ?? 0,
+        last_post_at: r.last_post_at ?? null,
+        recorded_at: r.recorded_at,
+      });
+    });
+    setPostSnaps(postMap);
+
 
     // Load chatter assignment history
     const { data: hist } = await supabase
