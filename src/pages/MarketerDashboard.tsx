@@ -15,10 +15,30 @@ type Marketer = { name?: string; instagram?: string; tracking_link?: string; tra
 type ModelRow = { id: string; name: string; username: string; marketers?: Marketer[] | null };
 type Snapshot = { model_id: string; followers: number; recorded_at: string; instagram_url?: string | null };
 
+type IgAccount = {
+  modelId: string;
+  modelName: string;
+  modelUsername: string;
+  instagramRaw: string;
+  instagramNorm: string;
+  href: string;
+  label: string;
+};
+
 function daysAgo(n: number) {
   const d = new Date();
   d.setDate(d.getDate() - n);
   return d;
+}
+
+function normIg(s?: string | null): string {
+  if (!s) return "";
+  let v = s.trim().toLowerCase();
+  v = v.replace(/^https?:\/\/(www\.)?instagram\.com\//, "");
+  v = v.replace(/^@/, "");
+  v = v.replace(/\/+$/, "");
+  v = v.split("?")[0];
+  return v;
 }
 
 export default function MarketerDashboard() {
@@ -26,7 +46,7 @@ export default function MarketerDashboard() {
   const { user, signOut } = useAuth();
   const [loading, setLoading] = useState(true);
   const [models, setModels] = useState<ModelRow[]>([]);
-  const [snapshotsByModel, setSnapshotsByModel] = useState<Record<string, Snapshot[]>>({});
+  const [snapshotsByKey, setSnapshotsByKey] = useState<Record<string, Snapshot[]>>({});
   const [marketerName, setMarketerName] = useState<string>("");
 
   useEffect(() => {
@@ -34,13 +54,13 @@ export default function MarketerDashboard() {
       if (!user) return;
       setLoading(true);
 
-      // Load own display name to match marketer entries on models
       const { data: prof } = await supabase
         .from("admin_profiles")
         .select("display_name")
         .eq("user_id", user.id)
         .maybeSingle();
-      setMarketerName(((prof as any)?.display_name || "").trim());
+      const mName = ((prof as any)?.display_name || "").trim();
+      setMarketerName(mName);
 
       const { data: asg } = await supabase
         .from("marketer_model_assignments")
@@ -63,10 +83,11 @@ export default function MarketerDashboard() {
         .order("recorded_at", { ascending: true });
       const grouped: Record<string, Snapshot[]> = {};
       (snaps || []).forEach((s: any) => {
-        (grouped[s.model_id] ||= []).push(s);
+        const key = `${s.model_id}|${normIg(s.instagram_url)}`;
+        (grouped[key] ||= []).push(s);
       });
       setModels((mdls as ModelRow[]) || []);
-      setSnapshotsByModel(grouped);
+      setSnapshotsByKey(grouped);
       setLoading(false);
     })();
   }, [user]);
@@ -75,6 +96,32 @@ export default function MarketerDashboard() {
     await signOut();
     navigate("/marketer/login");
   };
+
+  // Build the list of IG accounts that belong to THIS marketer only
+  const igAccounts = useMemo<IgAccount[]>(() => {
+    if (!marketerName) return [];
+    const norm = (s?: string | null) => (s || "").trim().toLowerCase();
+    const out: IgAccount[] = [];
+    models.forEach(m => {
+      (m.marketers || []).forEach(mk => {
+        if (!mk?.instagram) return;
+        if (norm(mk.name) !== norm(marketerName)) return;
+        const raw = mk.instagram.trim();
+        const href = raw.startsWith("http") ? raw : `https://instagram.com/${raw.replace(/^@/, "")}`;
+        const label = raw.replace(/^https?:\/\/(www\.)?instagram\.com\//, "@").replace(/\/$/, "");
+        out.push({
+          modelId: m.id,
+          modelName: m.name,
+          modelUsername: m.username,
+          instagramRaw: raw,
+          instagramNorm: normIg(raw),
+          href,
+          label: label.startsWith("@") ? label : `@${label}`,
+        });
+      });
+    });
+    return out;
+  }, [models, marketerName]);
 
   const computeMetrics = (snaps: Snapshot[]) => {
     if (!snaps.length) return null;
@@ -93,7 +140,6 @@ export default function MarketerDashboard() {
     const growth7 = s7 ? last.followers - s7.followers : 0;
     const growth30 = s30 ? last.followers - s30.followers : 0;
 
-    // Linear forecast from last 30 days
     const recent = snaps.filter(s => new Date(s.recorded_at) >= daysAgo(30));
     let perDay = 0;
     if (recent.length >= 2) {
@@ -112,14 +158,16 @@ export default function MarketerDashboard() {
     };
   };
 
+  const snapsFor = (a: IgAccount) => snapshotsByKey[`${a.modelId}|${a.instagramNorm}`] || [];
+
   const totalForecast30 = useMemo(() => {
     let sum = 0;
-    models.forEach(m => {
-      const metrics = computeMetrics(snapshotsByModel[m.id] || []);
+    igAccounts.forEach(a => {
+      const metrics = computeMetrics(snapsFor(a));
       if (metrics) sum += metrics.forecast30 - metrics.current;
     });
     return sum;
-  }, [models, snapshotsByModel]);
+  }, [igAccounts, snapshotsByKey]);
 
   if (loading) {
     return (
@@ -143,7 +191,7 @@ export default function MarketerDashboard() {
               Marketer Dashboard
             </h1>
             <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground/70 font-medium">
-              {models.length} {models.length === 1 ? "Model" : "Models"} betreut
+              {igAccounts.length} {igAccounts.length === 1 ? "Account" : "Accounts"} betreut
             </p>
           </div>
           <div className="flex-1" />
@@ -167,70 +215,51 @@ export default function MarketerDashboard() {
               <p className="text-3xl md:text-4xl font-bold text-foreground tabular-nums">
                 {totalForecast30 >= 0 ? "+" : ""}{totalForecast30.toLocaleString("de-DE")}
               </p>
-              <p className="text-sm text-muted-foreground mt-1">erwartetes Follower-Wachstum über alle Models</p>
+              <p className="text-sm text-muted-foreground mt-1">erwartetes Follower-Wachstum über deine Accounts</p>
             </div>
             <Sparkles className="h-10 w-10 text-accent/60" />
           </div>
         </motion.div>
 
-        {/* My Models */}
+        {/* My Instagram Accounts */}
         <section>
           <div className="flex items-center gap-2 mb-3">
-            <Users className="h-4 w-4 text-accent" />
-            <h2 className="text-sm uppercase tracking-[0.2em] text-muted-foreground font-bold">Meine Models</h2>
+            <Instagram className="h-4 w-4 text-accent" />
+            <h2 className="text-sm uppercase tracking-[0.2em] text-muted-foreground font-bold">Meine Instagram-Accounts</h2>
           </div>
-          {models.length === 0 ? (
+          {igAccounts.length === 0 ? (
             <div className="rounded-2xl border border-border/40 bg-card/40 p-10 text-center text-muted-foreground">
               <Instagram className="h-10 w-10 mx-auto mb-3 opacity-30" />
-              <p>Dir wurden noch keine Models zugewiesen.</p>
+              <p>Dir sind noch keine Instagram-Accounts zugewiesen.</p>
               <p className="text-xs mt-1">Wende dich an dein Admin-Team.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {models.map(m => {
-                const snaps = snapshotsByModel[m.id] || [];
+              {igAccounts.map((a, idx) => {
+                const snaps = snapsFor(a);
                 const metrics = computeMetrics(snaps);
                 const chartData = snaps.map(s => ({
                   date: new Date(s.recorded_at).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" }),
                   followers: s.followers,
                 }));
+                const key = `${a.modelId}-${a.instagramNorm}-${idx}`;
                 return (
                   <motion.div
-                    key={m.id} layout
+                    key={key} layout
                     initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
                     className="rounded-2xl border border-accent/15 bg-card/40 backdrop-blur-sm p-5 relative overflow-hidden hover:border-accent/40 transition-all"
                   >
                     <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
-                    <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-start justify-between mb-3 gap-2">
                       <div className="min-w-0">
-                        <h3 className="font-bold text-foreground truncate">{m.name}</h3>
-                        {m.username && <p className="text-xs text-muted-foreground truncate">@{m.username}</p>}
+                        <a href={a.href} target="_blank" rel="noopener noreferrer"
+                          className="font-bold text-foreground truncate hover:text-accent transition-colors block">
+                          {a.label}
+                        </a>
+                        <p className="text-xs text-muted-foreground truncate">für {a.modelName}</p>
                       </div>
                       <Instagram className="h-4 w-4 text-accent/70 shrink-0" />
                     </div>
-                    {(() => {
-                      const norm = (s?: string | null) => (s || "").trim().toLowerCase();
-                      const mine = (m.marketers || []).filter(
-                        (mk) => marketerName && norm(mk.name) === norm(marketerName) && mk.instagram
-                      );
-                      if (mine.length === 0) return null;
-                      return (
-                        <div className="mb-3 flex flex-wrap gap-1.5">
-                          {mine.map((mk, i) => {
-                            const raw = mk.instagram!.trim();
-                            const href = raw.startsWith("http") ? raw : `https://instagram.com/${raw.replace(/^@/, "")}`;
-                            const label = raw.replace(/^https?:\/\/(www\.)?instagram\.com\//, "@").replace(/\/$/, "");
-                            return (
-                              <a key={i} href={href} target="_blank" rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-accent/30 bg-accent/10 text-accent text-[10px] hover:bg-accent/20 transition-colors max-w-full">
-                                <Instagram className="h-2.5 w-2.5 shrink-0" />
-                                <span className="truncate">{label}</span>
-                              </a>
-                            );
-                          })}
-                        </div>
-                      );
-                    })()}
                     {metrics ? (
                       <>
                         <div className="flex items-baseline gap-2 mb-2">
@@ -256,7 +285,7 @@ export default function MarketerDashboard() {
                             <ResponsiveContainer width="100%" height="100%">
                               <AreaChart data={chartData}>
                                 <defs>
-                                  <linearGradient id={`g-${m.id}`} x1="0" y1="0" x2="0" y2="1">
+                                  <linearGradient id={`g-${key}`} x1="0" y1="0" x2="0" y2="1">
                                     <stop offset="0%" stopColor="hsl(var(--accent))" stopOpacity={0.6} />
                                     <stop offset="100%" stopColor="hsl(var(--accent))" stopOpacity={0} />
                                   </linearGradient>
@@ -266,7 +295,7 @@ export default function MarketerDashboard() {
                                   contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--accent) / 0.3)", borderRadius: 8, fontSize: 11 }}
                                   labelStyle={{ color: "hsl(var(--muted-foreground))" }}
                                 />
-                                <Area type="monotone" dataKey="followers" stroke="hsl(var(--accent))" fill={`url(#g-${m.id})`} strokeWidth={2} />
+                                <Area type="monotone" dataKey="followers" stroke="hsl(var(--accent))" fill={`url(#g-${key})`} strokeWidth={2} />
                               </AreaChart>
                             </ResponsiveContainer>
                           </div>
@@ -290,7 +319,7 @@ export default function MarketerDashboard() {
         </section>
 
         {/* Forecasts detail */}
-        {models.length > 0 && (
+        {igAccounts.length > 0 && (
           <section>
             <div className="flex items-center gap-2 mb-3">
               <Target className="h-4 w-4 text-accent" />
@@ -300,6 +329,7 @@ export default function MarketerDashboard() {
               <table className="w-full text-sm">
                 <thead className="bg-background/40 text-[10px] uppercase tracking-wider text-muted-foreground">
                   <tr>
+                    <th className="px-4 py-2.5 text-left">Account</th>
                     <th className="px-4 py-2.5 text-left">Model</th>
                     <th className="px-4 py-2.5 text-right">Jetzt</th>
                     <th className="px-4 py-2.5 text-right">+30d</th>
@@ -308,11 +338,12 @@ export default function MarketerDashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/20">
-                  {models.map(m => {
-                    const metrics = computeMetrics(snapshotsByModel[m.id] || []);
+                  {igAccounts.map((a, idx) => {
+                    const metrics = computeMetrics(snapsFor(a));
                     return (
-                      <tr key={m.id} className="hover:bg-accent/5 transition-colors">
-                        <td className="px-4 py-2.5 font-medium text-foreground">{m.name}</td>
+                      <tr key={`${a.modelId}-${a.instagramNorm}-${idx}`} className="hover:bg-accent/5 transition-colors">
+                        <td className="px-4 py-2.5 font-medium text-foreground">{a.label}</td>
+                        <td className="px-4 py-2.5 text-muted-foreground">{a.modelName}</td>
                         <td className="px-4 py-2.5 text-right tabular-nums text-muted-foreground">
                           {metrics?.current.toLocaleString("de-DE") ?? "—"}
                         </td>
