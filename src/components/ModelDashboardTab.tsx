@@ -47,6 +47,9 @@ import {
   Mail,
   AlertTriangle,
   CalendarIcon,
+  Smartphone,
+  Bell,
+  BellOff,
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
@@ -506,6 +509,10 @@ export default function ModelDashboardTab() {
   // Steckbrief / Model Profile
   const [modelProfile, setModelProfile] = useState<import("@/lib/modelProfilePdf").ModelProfileData | null>(null);
   const [filledProfileIds, setFilledProfileIds] = useState<Set<string>>(new Set());
+  // PWA install + Push notification status per model
+  const [pwaInstalledModelIds, setPwaInstalledModelIds] = useState<Set<string>>(new Set());
+  const [pushEnabledModelIds, setPushEnabledModelIds] = useState<Set<string>>(new Set());
+  const [hasUserModelIds, setHasUserModelIds] = useState<Set<string>>(new Set());
 
   // Revenue from model_dashboard (per-platform)
   const [dashboardRevenues, setDashboardRevenues] = useState<Record<string, number>>({});
@@ -1018,6 +1025,46 @@ export default function ModelDashboardTab() {
       .then(({ data }) => {
         if (data) setFilledProfileIds(new Set((data as any[]).map((r) => r.model_id)));
       });
+  }, [selectedModelId]);
+
+  // Load Web-App install + Push notification status for all models.
+  // Reloaded when the selected model changes so newly-installed apps show up.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: users } = await (supabase.from("model_users") as any)
+        .select("model_id, user_id, pwa_installed");
+      if (cancelled || !users) return;
+      const rows = users as Array<{ model_id: string; user_id: string | null; pwa_installed: boolean }>;
+      const hasUser = new Set<string>();
+      const pwaSet = new Set<string>();
+      const userIdToModel = new Map<string, string>();
+      rows.forEach((r) => {
+        if (r.model_id) hasUser.add(r.model_id);
+        if (r.model_id && r.pwa_installed) pwaSet.add(r.model_id);
+        if (r.user_id && r.model_id) userIdToModel.set(r.user_id, r.model_id);
+      });
+      setHasUserModelIds(hasUser);
+      setPwaInstalledModelIds(pwaSet);
+
+      const userIds = Array.from(userIdToModel.keys());
+      if (userIds.length === 0) {
+        setPushEnabledModelIds(new Set());
+        return;
+      }
+      const { data: subs } = await supabase
+        .from("push_subscriptions")
+        .select("user_id")
+        .in("user_id", userIds);
+      if (cancelled) return;
+      const pushSet = new Set<string>();
+      (subs || []).forEach((s: any) => {
+        const mid = userIdToModel.get(s.user_id);
+        if (mid) pushSet.add(mid);
+      });
+      setPushEnabledModelIds(pushSet);
+    })();
+    return () => { cancelled = true; };
   }, [selectedModelId]);
 
 
@@ -1814,6 +1861,34 @@ export default function ModelDashboardTab() {
                             <AlertTriangle className="h-2.5 w-2.5" />
                             Duplikat
                           </span>
+                        )}
+                        {hasUserModelIds.has(model.id) && (
+                          <>
+                            <Smartphone
+                              className={cn(
+                                "h-3 w-3 shrink-0",
+                                pwaInstalledModelIds.has(model.id)
+                                  ? "text-accent"
+                                  : "text-muted-foreground/40",
+                              )}
+                              aria-label={
+                                pwaInstalledModelIds.has(model.id)
+                                  ? "Web-App installiert"
+                                  : "Web-App nicht installiert"
+                              }
+                            />
+                            {pushEnabledModelIds.has(model.id) ? (
+                              <Bell
+                                className="h-3 w-3 shrink-0 text-accent"
+                                aria-label="Push-Benachrichtigungen aktiv"
+                              />
+                            ) : (
+                              <BellOff
+                                className="h-3 w-3 shrink-0 text-muted-foreground/40"
+                                aria-label="Push-Benachrichtigungen nicht aktiv"
+                              />
+                            )}
+                          </>
                         )}
                       </div>
                       {model.address && <p className="text-[10px] text-muted-foreground truncate">{model.address}</p>}
