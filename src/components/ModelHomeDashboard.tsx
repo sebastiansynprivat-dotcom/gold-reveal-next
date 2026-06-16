@@ -31,6 +31,7 @@ import { Download, Trash2 } from "lucide-react";
 import { generateProviderInvoicePdf, downloadPdf } from "@/lib/providerInvoicePdf";
 import ModelFaqSection from "@/components/ModelFaqSection";
 import ContentImpactCalculator from "@/components/ContentImpactCalculator";
+import LifestyleContentSection from "@/components/LifestyleContentSection";
 import ModelOnboardingTour from "@/components/ModelOnboardingTour";
 import ModelRequestsSection from "@/components/ModelRequestsSection";
 import { Sparkles, Info } from "lucide-react";
@@ -853,6 +854,10 @@ export default function ModelHomeDashboard({
         currency={forceCurrency || modelCurrency}
         language={lang}
       />
+
+      {/* Lifestyle & feed content – traffic engine */}
+      <LifestyleContentSection language={lang} />
+
 
       {/* Custom Requests — interactive (forwarded by team) */}
       <div data-tour="requests">
