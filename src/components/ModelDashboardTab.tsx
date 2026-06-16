@@ -1027,6 +1027,46 @@ export default function ModelDashboardTab() {
       });
   }, [selectedModelId]);
 
+  // Load Web-App install + Push notification status for all models.
+  // Reloaded when the selected model changes so newly-installed apps show up.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const { data: users } = await (supabase.from("model_users") as any)
+        .select("model_id, user_id, pwa_installed");
+      if (cancelled || !users) return;
+      const rows = users as Array<{ model_id: string; user_id: string | null; pwa_installed: boolean }>;
+      const hasUser = new Set<string>();
+      const pwaSet = new Set<string>();
+      const userIdToModel = new Map<string, string>();
+      rows.forEach((r) => {
+        if (r.model_id) hasUser.add(r.model_id);
+        if (r.model_id && r.pwa_installed) pwaSet.add(r.model_id);
+        if (r.user_id && r.model_id) userIdToModel.set(r.user_id, r.model_id);
+      });
+      setHasUserModelIds(hasUser);
+      setPwaInstalledModelIds(pwaSet);
+
+      const userIds = Array.from(userIdToModel.keys());
+      if (userIds.length === 0) {
+        setPushEnabledModelIds(new Set());
+        return;
+      }
+      const { data: subs } = await supabase
+        .from("push_subscriptions")
+        .select("user_id")
+        .in("user_id", userIds);
+      if (cancelled) return;
+      const pushSet = new Set<string>();
+      (subs || []).forEach((s: any) => {
+        const mid = userIdToModel.get(s.user_id);
+        if (mid) pushSet.add(mid);
+      });
+      setPushEnabledModelIds(pushSet);
+    })();
+    return () => { cancelled = true; };
+  }, [selectedModelId]);
+
 
 
   // ─── Filter models ───
