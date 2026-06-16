@@ -54,6 +54,13 @@ type ProfileRow = {
   content_video_speaking: boolean | null;
   content_dick_ratings: boolean | null;
   content_joi: boolean | null;
+  content_anal_fingering: boolean | null;
+  content_anal_plug: boolean | null;
+  content_anal_penetration: boolean | null;
+  content_squirting: boolean | null;
+  content_orgasm: boolean | null;
+  content_moaning_name: boolean | null;
+  content_roleplay_costumes: boolean | null;
 };
 
 const PERSONAL_FIELDS: Record<"de" | "en", { key: keyof ProfileRow; label: string; hint?: string }[]> = {
