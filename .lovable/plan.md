@@ -1,9 +1,19 @@
-## Gray out archived accounts in both Einnahmen and Account Management sections
+## Goal
+Exclude chatters whose Start Date is after the selected report date from the Chatter Reports view, platform tab counts, table, and downloaded XLSX/CSV.
 
-### 1. Einnahmen platform card
-In the `modelAccounts.map` block (~L2188-2297), apply `opacity-50 grayscale` to the card root when `acc.archived` is true. Keep all inputs and Selects fully interactive. Add a small "Archiviert" badge next to the platform name.
+## Change
+In `src/components/admin/ChatterReportsTab.tsx`:
 
-### 2. Account Management accordion trigger
-In the `accountsByPlatform.map` block (~L3365-3390), when **all** accounts in a platform group are archived, apply `opacity-50 grayscale` to the `<AccordionTrigger>` inner container so the header visually matches the archived state. Groups with mixed active/archived accounts remain unchanged.
+1. Add a date-aware filter applied before all consumers of `rows`:
+   - A chatter is included only if `start_date` is null/empty OR `start_date <= selectedDate`.
+   - Comparison uses ISO `yyyy-MM-dd` strings to avoid timezone drift.
 
-No data-layer or disabled-state changes. Purely visual.
+2. Apply this filter:
+   - To the `platformList` derivation (so empty platforms don't show inflated counts).
+   - To the per-tab `count` shown next to each platform pill (line ~506).
+   - To the `filtered` memo that feeds the table and `buildReport()` (used by both XLSX and CSV downloads — no separate changes needed there).
+
+## Notes
+- Pure presentation-layer filter; no DB, RLS, or schema changes.
+- Chatters with no `start_date` remain visible (current behavior preserved).
+- Switching the date picker to an earlier day will immediately shrink the list and tab counts; switching back restores them.
