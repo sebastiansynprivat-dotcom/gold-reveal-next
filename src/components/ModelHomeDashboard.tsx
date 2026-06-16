@@ -857,6 +857,10 @@ export default function ModelHomeDashboard({
         </p>
       </section>
 
+      {/* Custom Requests — interactive (forwarded by team) */}
+      <div data-tour="requests">
+        <ModelRequestsSection modelId={modelId} language={lang} />
+      </div>
 
       {/* Content Impact Calculator */}
       <ContentImpactCalculator
@@ -868,12 +872,6 @@ export default function ModelHomeDashboard({
 
       {/* Lifestyle & feed content – traffic engine */}
       <LifestyleContentSection language={lang} />
-
-
-      {/* Custom Requests — interactive (forwarded by team) */}
-      <div data-tour="requests">
-        <ModelRequestsSection modelId={modelId} language={lang} />
-      </div>
 
 
       {/* Platforms — expandable cards with credentials */}
