@@ -164,7 +164,7 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
     favorite_color: "", favorite_movie: "", favorite_food: "", favorite_music: "",
     occupation: "", hobbies: "", dream: "",
     special_marks: "", natural_hair: "", shoe_size: "", bra_size: "", height: "", weight: "",
-    content_preferences: "", no_gos: "", additional_info: "",
+    content_preferences: "", no_gos: "", personality: "", additional_info: "",
   };
   const [profile, setProfile] = useState<ProfileRow>(empty);
   const [confirmedAt, setConfirmedAt] = useState<string | null>(null);
