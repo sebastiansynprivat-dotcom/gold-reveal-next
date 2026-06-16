@@ -861,19 +861,6 @@ export default function ModelHomeDashboard({
       <div data-tour="requests">
         <ModelRequestsSection modelId={modelId} language={lang} />
       </div>
-
-      {/* Content Impact Calculator */}
-      <ContentImpactCalculator
-        projectedMonth={projectedMonth}
-        commissionPct={commissionPct}
-        currency={forceCurrency || modelCurrency}
-        language={lang}
-      />
-
-      {/* Lifestyle & feed content – traffic engine */}
-      <LifestyleContentSection language={lang} />
-
-
       {/* Platforms — expandable cards with credentials */}
       <section data-tour="platforms" className="glass-card rounded-2xl p-5 space-y-4 card-inner-glow">
         <div className="flex items-center gap-2">
@@ -1185,6 +1172,19 @@ export default function ModelHomeDashboard({
           )}
         </div>
       </section>
+
+      {/* Content Impact Calculator */}
+      <ContentImpactCalculator
+        projectedMonth={projectedMonth}
+        commissionPct={commissionPct}
+        currency={forceCurrency || modelCurrency}
+        language={lang}
+      />
+
+      {/* Lifestyle & feed content – traffic engine */}
+      <LifestyleContentSection language={lang} />
+
+
 
 
 
