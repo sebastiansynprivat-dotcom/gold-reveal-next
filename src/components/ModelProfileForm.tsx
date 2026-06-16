@@ -441,29 +441,46 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
             <Camera className="h-4 w-4 text-accent" />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-base font-bold text-foreground">Shooting-Präferenzen</h3>
+            <h3 className="text-base font-bold text-foreground">
+              {modelLanguage === "en" ? "Shooting Preferences" : "Shooting-Präferenzen"}
+            </h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {modelLanguage === "en"
+                ? "Which content is an option for you?"
+                : "Welcher Content kommt für dich in Frage?"}
+            </p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          {([
-            { key: "content_anal_fingering", label: "Anales Fingern" },
-            { key: "content_anal_plug", label: "Analplug" },
-            { key: "content_anal_penetration", label: "Anale Penetration" },
-            { key: "content_squirting", label: "Squirten" },
-            { key: "content_orgasm", label: "Orgasmus" },
-            { key: "content_moaning_name", label: "Stöhnen eines besonderen Namens" },
-            { key: "content_roleplay_costumes", label: "Rollenspiele in Kostümen" },
-            ...(modelLanguage === "de" ? [
-              { key: "content_audios_for_chat", label: "Audios für den Chat aufnehmen" },
-              { key: "content_video_speaking", label: "Im Video sprechen" },
-              { key: "content_dick_ratings", label: "Dickratings" },
-              { key: "content_joi", label: "Jerk Off Instructions (JOI / Wichsanleitung)" },
-            ] as const : []),
-          ] as const).map((opt) => {
+          {((modelLanguage === "en"
+            ? [
+                { key: "content_anal_fingering", label: "Anal fingering" },
+                { key: "content_anal_plug", label: "Anal plug" },
+                { key: "content_anal_penetration", label: "Anal penetration" },
+                { key: "content_squirting", label: "Squirting" },
+                { key: "content_orgasm", label: "Orgasm" },
+                { key: "content_moaning_name", label: "Moaning a specific name" },
+                { key: "content_roleplay_costumes", label: "Roleplay in costumes" },
+              ]
+            : [
+                { key: "content_anal_fingering", label: "Anales Fingern" },
+                { key: "content_anal_plug", label: "Analplug" },
+                { key: "content_anal_penetration", label: "Anale Penetration" },
+                { key: "content_squirting", label: "Squirten" },
+                { key: "content_orgasm", label: "Orgasmus" },
+                { key: "content_moaning_name", label: "Stöhnen eines besonderen Namens" },
+                { key: "content_roleplay_costumes", label: "Rollenspiele in Kostümen" },
+                { key: "content_audios_for_chat", label: "Audios für den Chat aufnehmen" },
+                { key: "content_video_speaking", label: "Im Video sprechen" },
+                { key: "content_dick_ratings", label: "Dickratings" },
+                { key: "content_joi", label: "Jerk Off Instructions (JOI / Wichsanleitung)" },
+              ]) as { key: keyof ProfileRow; label: string }[]).map((opt) => {
             const v = profile[opt.key] as boolean | null;
             const isYes = v === true;
             const isNo = v === false;
+            const yesLabel = modelLanguage === "en" ? "Yes" : "Ja";
+            const noLabel = modelLanguage === "en" ? "No" : "Nein";
             return (
               <div
                 key={opt.key}
@@ -480,7 +497,7 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
                         : "bg-transparent border-border/60 text-muted-foreground hover:text-foreground"
                     }`}
                   >
-                    Ja
+                    {yesLabel}
                   </button>
                   <button
                     type="button"
@@ -491,7 +508,7 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
                         : "bg-transparent border-border/60 text-muted-foreground hover:text-foreground"
                     }`}
                   >
-                    Nein
+                    {noLabel}
                   </button>
                 </div>
               </div>
