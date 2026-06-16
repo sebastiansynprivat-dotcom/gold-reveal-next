@@ -1629,10 +1629,17 @@ export type Database = {
           city: string | null
           confirmed_at: string | null
           confirmed_by: string | null
+          content_anal_fingering: boolean | null
+          content_anal_penetration: boolean | null
+          content_anal_plug: boolean | null
           content_audios_for_chat: boolean | null
           content_dick_ratings: boolean | null
           content_joi: boolean | null
+          content_moaning_name: boolean | null
+          content_orgasm: boolean | null
           content_preferences: string | null
+          content_roleplay_costumes: boolean | null
+          content_squirting: boolean | null
           content_video_speaking: boolean | null
           created_at: string
           dream: string | null
@@ -1670,10 +1677,17 @@ export type Database = {
           city?: string | null
           confirmed_at?: string | null
           confirmed_by?: string | null
+          content_anal_fingering?: boolean | null
+          content_anal_penetration?: boolean | null
+          content_anal_plug?: boolean | null
           content_audios_for_chat?: boolean | null
           content_dick_ratings?: boolean | null
           content_joi?: boolean | null
+          content_moaning_name?: boolean | null
+          content_orgasm?: boolean | null
           content_preferences?: string | null
+          content_roleplay_costumes?: boolean | null
+          content_squirting?: boolean | null
           content_video_speaking?: boolean | null
           created_at?: string
           dream?: string | null
@@ -1711,10 +1725,17 @@ export type Database = {
           city?: string | null
           confirmed_at?: string | null
           confirmed_by?: string | null
+          content_anal_fingering?: boolean | null
+          content_anal_penetration?: boolean | null
+          content_anal_plug?: boolean | null
           content_audios_for_chat?: boolean | null
           content_dick_ratings?: boolean | null
           content_joi?: boolean | null
+          content_moaning_name?: boolean | null
+          content_orgasm?: boolean | null
           content_preferences?: string | null
+          content_roleplay_costumes?: boolean | null
+          content_squirting?: boolean | null
           content_video_speaking?: boolean | null
           created_at?: string
           dream?: string | null
