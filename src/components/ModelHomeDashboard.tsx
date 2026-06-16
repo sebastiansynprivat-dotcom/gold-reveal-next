@@ -855,6 +855,10 @@ export default function ModelHomeDashboard({
         language={lang}
       />
 
+      {/* Lifestyle & feed content – traffic engine */}
+      <LifestyleContentSection language={lang} />
+
+
       {/* Custom Requests — interactive (forwarded by team) */}
       <div data-tour="requests">
         <ModelRequestsSection modelId={modelId} language={lang} />
