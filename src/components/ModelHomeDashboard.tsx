@@ -1233,7 +1233,7 @@ export default function ModelHomeDashboard({
                       </div>
                     )}
                     <div className="flex justify-between gap-2 pt-1.5 mt-1.5 border-t border-emerald-500/20">
-                      <span className="text-muted-foreground text-xs">{copy.payout}</span>
+                      <span className="text-accent text-xs font-semibold">{copy.payout}</span>
                       <span className="text-base font-bold text-accent tabular-nums">
                         {fmtMoneyDec(Number(cn.net_amount || 0), invoiceCurrency)}
                       </span>
