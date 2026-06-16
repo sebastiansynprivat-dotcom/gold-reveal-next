@@ -425,6 +425,79 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
         />
       </section>
 
+      {/* Shoot briefing — German models only (🇩🇪 tag) */}
+      {modelLanguage === "de" && (
+        <section className="glass-card rounded-xl p-5 space-y-4 border-l-2 border-accent/40">
+          <div className="flex items-start gap-3">
+            <div className="h-9 w-9 rounded-lg bg-accent/15 flex items-center justify-center shrink-0">
+              <Camera className="h-4 w-4 text-accent" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-base font-bold text-foreground">Shooting-Briefing 🇩🇪</h3>
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                Hi, ich bin dein Fotograf für das kommende Shooting — eine ehrliche Vorab-Info,
+                damit du genau weißt, was wir vor Ort produzieren. Das Set ist explizit (erotisch /
+                versaut), professionell betreut und ausschließlich für Erwachsene über 18 bestimmt.
+                Es gibt einen geschützten Raum, eine vertrauliche Atmosphäre und klare Pausen — alles
+                läuft nur in dem Rahmen, dem du vorher schriftlich zustimmst. Bitte markiere unten
+                ehrlich, was für dich okay ist. Du kannst jede Auswahl jederzeit zurückziehen, am
+                Set jederzeit „Stop“ sagen, und alles, was hier nicht angehakt ist, wird nicht
+                produziert.
+              </p>
+              <p className="text-[11px] text-muted-foreground/80 mt-2">
+                Bitte hake nur an, womit du dich wirklich wohlfühlst:
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            {([
+              { key: "content_audios_for_chat", label: "Audios für den Chat aufnehmen" },
+              { key: "content_video_speaking", label: "Im Video sprechen" },
+              { key: "content_dick_ratings", label: "Dickratings" },
+              { key: "content_joi", label: "Jerk Off Instructions (JOI / Wichsanleitung)" },
+            ] as const).map((opt) => {
+              const v = profile[opt.key] as boolean | null;
+              const isYes = v === true;
+              const isNo = v === false;
+              return (
+                <div
+                  key={opt.key}
+                  className="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-background/40 px-3 py-2.5"
+                >
+                  <span className="text-sm text-foreground flex-1 min-w-0">{opt.label}</span>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => set(opt.key, true)}
+                      className={`text-[11px] font-semibold px-2.5 py-1 rounded-md border transition ${
+                        isYes
+                          ? "bg-emerald-500/20 border-emerald-400/60 text-emerald-300"
+                          : "bg-transparent border-border/60 text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      Ja
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => set(opt.key, false)}
+                      className={`text-[11px] font-semibold px-2.5 py-1 rounded-md border transition ${
+                        isNo
+                          ? "bg-rose-500/20 border-rose-400/60 text-rose-300"
+                          : "bg-transparent border-border/60 text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      Nein
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+
       {/* Additional info */}
       <section className="glass-card rounded-xl p-5 space-y-3">
         <div className="flex items-center gap-2">
