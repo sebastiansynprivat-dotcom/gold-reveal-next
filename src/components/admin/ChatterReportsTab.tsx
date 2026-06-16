@@ -510,7 +510,7 @@ export default function ChatterReportsTab({ chatters }: Props) {
       <Tabs value={activePlatform} onValueChange={setActivePlatform} className="w-full">
         <TabsList className="bg-card/60 border border-border/40 backdrop-blur-xl flex-wrap h-auto">
           {platformList.map((p) => {
-            const count = rows.filter((r) => r.platform === p).length;
+            const count = dateScopedRows.filter((r) => r.platform === p).length;
             return (
               <TabsTrigger key={p} value={p} className="data-[state=active]:bg-[hsl(var(--gold))]/15 data-[state=active]:text-[hsl(var(--gold))]">
                 {p} <span className="ml-1.5 text-[10px] text-muted-foreground">({count})</span>
