@@ -434,15 +434,14 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
         />
       </section>
 
-      {/* Shoot briefing — German models only (🇩🇪 tag) */}
-      {modelLanguage === "de" && (
+      {/* Shoot briefing — all models */}
         <section className="glass-card rounded-xl p-5 space-y-4 border-l-2 border-accent/40">
           <div className="flex items-start gap-3">
             <div className="h-9 w-9 rounded-lg bg-accent/15 flex items-center justify-center shrink-0">
               <Camera className="h-4 w-4 text-accent" />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-base font-bold text-foreground">Shooting-Briefing 🇩🇪</h3>
+              <h3 className="text-base font-bold text-foreground">Shooting-Briefing</h3>
               <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
                 Hi, ich bin dein Fotograf für das kommende Shooting — eine ehrliche Vorab-Info,
                 damit du genau weißt, was wir vor Ort produzieren. Das Set ist explizit (erotisch /
@@ -450,7 +449,7 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
                 Es gibt einen geschützten Raum, eine vertrauliche Atmosphäre und klare Pausen — alles
                 läuft nur in dem Rahmen, dem du vorher schriftlich zustimmst. Bitte markiere unten
                 ehrlich, was für dich okay ist. Du kannst jede Auswahl jederzeit zurückziehen, am
-                Set jederzeit „Stop“ sagen, und alles, was hier nicht angehakt ist, wird nicht
+                Set jederzeit „Stop" sagen, und alles, was hier nicht angehakt ist, wird nicht
                 produziert.
               </p>
               <p className="text-[11px] text-muted-foreground/80 mt-2">
@@ -461,6 +460,13 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {([
+              { key: "content_anal_fingering", label: "Anales Fingern" },
+              { key: "content_anal_plug", label: "Analplug" },
+              { key: "content_anal_penetration", label: "Anale Penetration" },
+              { key: "content_squirting", label: "Squirten" },
+              { key: "content_orgasm", label: "Orgasmus" },
+              { key: "content_moaning_name", label: "Stöhnen eines besonderen Namens" },
+              { key: "content_roleplay_costumes", label: "Rollenspiele in Kostümen" },
               { key: "content_audios_for_chat", label: "Audios für den Chat aufnehmen" },
               { key: "content_video_speaking", label: "Im Video sprechen" },
               { key: "content_dick_ratings", label: "Dickratings" },
@@ -504,7 +510,6 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
             })}
           </div>
         </section>
-      )}
 
 
       {/* Additional info */}
