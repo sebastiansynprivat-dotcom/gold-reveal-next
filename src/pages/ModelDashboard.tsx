@@ -145,6 +145,7 @@ export default function ModelDashboard() {
 
   return (
     <div className="min-h-screen pb-24 model-feminine-shell relative">
+      <GoldParticles />
       {/* Soft feminine blush halos layered above the gold body bg */}
       <div className="pointer-events-none fixed inset-0 -z-0 overflow-hidden">
         <div
