@@ -3,9 +3,10 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { AutoTextarea } from "@/components/ui/auto-textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Save, Check, User, Camera, AlertTriangle, Info, Lock, ShieldCheck } from "lucide-react";
+import { Save, Check, User, Camera, AlertTriangle, Info, Lock, ShieldCheck, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 interface Props {
@@ -47,6 +48,7 @@ type ProfileRow = {
   weight: string | null;
   content_preferences: string | null;
   no_gos: string | null;
+  personality: string | null;
   additional_info: string | null;
 };
 
