@@ -98,7 +98,7 @@ const COPY = {
     details: "Details ansehen",
     monthsCovered: "Abgerechnete Monate",
     platformRevenues: "Umsatz pro Plattform",
-    payout: "Payout",
+    payout: "Dein Payout",
     invoiceNumber: "Rechnungs-Nr.",
     billedOn: "Abgerechnet am",
     servicePeriod: "Leistungszeitraum",
