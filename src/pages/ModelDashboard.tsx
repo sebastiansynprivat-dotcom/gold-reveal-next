@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { LogOut, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import logo from "@/assets/logo.png";
+import GoldParticles from "@/components/GoldParticles";
 import ModelProfileForm from "@/components/ModelProfileForm";
 import ModelHomeDashboard from "@/components/ModelHomeDashboard";
 
@@ -144,6 +145,7 @@ export default function ModelDashboard() {
 
   return (
     <div className="min-h-screen pb-24 model-feminine-shell relative">
+      <GoldParticles />
       {/* Soft feminine blush halos layered above the gold body bg */}
       <div className="pointer-events-none fixed inset-0 -z-0 overflow-hidden">
         <div
