@@ -10357,7 +10357,9 @@ export default function AdminDashboard() {
                     toast.success("Datensatz gespeichert");
                     setChatters((prev) =>
                       prev.map((c) =>
-                        c.user_id === reassignTarget.user_id
+                        (reassignTarget.user_id
+                          ? c.user_id === reassignTarget.user_id
+                          : c.id === reassignTarget.id)
                           ? ({ ...c, group_name: editName, telegram_id: editTelegram, language: editLanguage, ui_language: editLanguage } as any)
                           : c,
                       ),
