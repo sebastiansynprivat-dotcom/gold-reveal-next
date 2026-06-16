@@ -3,9 +3,10 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { AutoTextarea } from "@/components/ui/auto-textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Save, Check, User, Camera, AlertTriangle, Info, Lock, ShieldCheck } from "lucide-react";
+import { Save, Check, User, Camera, AlertTriangle, Info, Lock, ShieldCheck, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 interface Props {
@@ -47,6 +48,7 @@ type ProfileRow = {
   weight: string | null;
   content_preferences: string | null;
   no_gos: string | null;
+  personality: string | null;
   additional_info: string | null;
 };
 
@@ -103,6 +105,9 @@ const COPY = {
     noGosPlaceholder: "Trage deine No-Gos hier ein…",
     additional: "Zusätzliche Informationen",
     additionalLabel: "Was ist dir wichtig und worauf sollen wir achten?",
+    personality: "Eigenschaften / Persönlichkeit",
+    personalityLabel: "Wie würdest du dich als Person beschreiben? (Charakter, Eigenschaften, Vibe)",
+    personalityPlaceholder: "z. B. verspielt, dominant, neugierig, humorvoll, romantisch, frech, einfühlsam …",
     saveDraft: "Zwischenspeichern",
     submit: "Steckbrief absenden",
     submitting: "Sende…",
@@ -132,6 +137,9 @@ const COPY = {
     noGosPlaceholder: "List your no-gos here…",
     additional: "Additional information",
     additionalLabel: "What is important to you, and what should we take care of?",
+    personality: "Traits / Personality",
+    personalityLabel: "How would you describe yourself as a person? (character, traits, vibe)",
+    personalityPlaceholder: "e.g. playful, dominant, curious, witty, romantic, cheeky, empathic …",
     saveDraft: "Save draft",
     submit: "Submit profile",
     submitting: "Submitting…",
@@ -162,7 +170,7 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
     favorite_color: "", favorite_movie: "", favorite_food: "", favorite_music: "",
     occupation: "", hobbies: "", dream: "",
     special_marks: "", natural_hair: "", shoe_size: "", bra_size: "", height: "", weight: "",
-    content_preferences: "", no_gos: "", additional_info: "",
+    content_preferences: "", no_gos: "", personality: "", additional_info: "",
   };
   const [profile, setProfile] = useState<ProfileRow>(empty);
   const [confirmedAt, setConfirmedAt] = useState<string | null>(null);
@@ -355,7 +363,7 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
           {PERSONAL_FIELDS[lang].map((f) => (
             <div key={f.key as string} className="space-y-1.5">
               <Label className="text-xs font-medium text-foreground">{f.label}</Label>
-              <Input
+              <AutoTextarea
                 value={(profile[f.key] as string) ?? ""}
                 onChange={(e) => set(f.key, e.target.value)}
                 className="bg-background/50"
@@ -373,7 +381,7 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
           <h3 className="text-base font-bold text-foreground">{copy.content}</h3>
         </div>
         <Label className="text-xs text-muted-foreground">{copy.contentLabel}</Label>
-        <Textarea
+        <AutoTextarea
           value={profile.content_preferences ?? ""}
           onChange={(e) => set("content_preferences", e.target.value)}
           className="bg-background/50 min-h-[100px]"
@@ -388,11 +396,26 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
           <h3 className="text-base font-bold text-foreground">No Gos</h3>
         </div>
         <Label className="text-xs text-muted-foreground">{copy.noGosLabel}</Label>
-        <Textarea
+        <AutoTextarea
           value={profile.no_gos ?? ""}
           onChange={(e) => set("no_gos", e.target.value)}
           className="bg-background/50 min-h-[120px]"
           placeholder={copy.noGosPlaceholder}
+        />
+      </section>
+
+      {/* Personality / Traits */}
+      <section className="glass-card rounded-xl p-5 space-y-3">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-accent" />
+          <h3 className="text-base font-bold text-foreground">{copy.personality}</h3>
+        </div>
+        <Label className="text-xs text-muted-foreground">{copy.personalityLabel}</Label>
+        <AutoTextarea
+          value={profile.personality ?? ""}
+          onChange={(e) => set("personality", e.target.value)}
+          className="bg-background/50 min-h-[100px]"
+          placeholder={copy.personalityPlaceholder}
         />
       </section>
 
@@ -403,7 +426,7 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
           <h3 className="text-base font-bold text-foreground">{copy.additional}</h3>
         </div>
         <Label className="text-xs text-muted-foreground">{copy.additionalLabel}</Label>
-        <Textarea
+        <AutoTextarea
           value={profile.additional_info ?? ""}
           onChange={(e) => set("additional_info", e.target.value)}
           className="bg-background/50 min-h-[100px]"
