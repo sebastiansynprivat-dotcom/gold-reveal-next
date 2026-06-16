@@ -1,6 +1,7 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Camera, Sparkles, TrendingUp, Repeat } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
 
 interface Props {
   /** projected monthly revenue (gross) based on current trend */
@@ -19,12 +20,12 @@ const COPY = {
       "Eine vorsichtige Schätzung – realistisch, basierend auf deinem aktuellen Trend.",
     perMonth: "/ Monat",
     couldAdd: "Könnte zusätzlich bringen",
-    netHint: "Dein Anteil",
     recurring: "Pro Monat fortlaufend",
     recurringHint:
       "Sets sind kein Einmal-Boost – sie verkaufen sich Monat für Monat weiter und stapeln sich auf.",
     yourShare: "Dein Anteil",
     setLabel: (n: number) => (n === 1 ? "1 Set" : `${n} Sets`),
+    sliderHint: "Schiebe den Regler – sieh, was deine nächsten Sets bringen können.",
     disclaimer:
       "Schätzwerte. Der reale Impact hängt von Content-Qualität, Plattform und Zielgruppe ab.",
     ideaCta: "Set-Idee mit dem Team besprechen",
@@ -35,19 +36,17 @@ const COPY = {
       "A careful estimate – realistic, based on your current monthly trend.",
     perMonth: "/ month",
     couldAdd: "Could add",
-    netHint: "Your share",
     recurring: "Recurring every month",
     recurringHint:
       "Sets aren't a one-time boost – they keep selling month after month and stack up.",
     yourShare: "Your share",
     setLabel: (n: number) => (n === 1 ? "1 set" : `${n} sets`),
+    sliderHint: "Drag the slider – see what your next sets could bring.",
     disclaimer:
       "Estimates only. Real impact depends on content quality, platform and audience.",
     ideaCta: "Discuss set idea with the team",
   },
 };
-
-const TIERS = [1, 2, 3, 4, 5, 6];
 
 export default function ContentImpactCalculator({
   projectedMonth,
@@ -57,10 +56,9 @@ export default function ContentImpactCalculator({
 }: Props) {
   const lang = language === "en" ? "en" : "de";
   const copy = COPY[lang];
+  const [sets, setSets] = useState(2);
 
-  // Per-set floor: 1 set ≈ 50–150 of the model's currency (halved from before).
-  // Light scaling with current monthly performance so top earners still see
-  // meaningful numbers, but never blown up.
+  // 1 set ≈ 50–150 of the model's currency, lightly scaled with trend.
   const perSet = useMemo(() => {
     const low = Math.max(50, projectedMonth * 0.02);
     const high = Math.max(150, projectedMonth * 0.04);
@@ -80,6 +78,11 @@ export default function ContentImpactCalculator({
       return `${rounded} ${currency}`;
     }
   };
+
+  const low = perSet.low * sets;
+  const high = perSet.high * sets;
+  const netLow = (low * commissionPct) / 100;
+  const netHigh = (high * commissionPct) / 100;
 
   return (
     <section
@@ -109,49 +112,60 @@ export default function ContentImpactCalculator({
         </div>
       </div>
 
-      {/* Tier grid – 6 stages */}
-      <div className="relative grid grid-cols-2 sm:grid-cols-3 gap-2">
-        {TIERS.map((n, i) => {
-          const low = perSet.low * n;
-          const high = perSet.high * n;
-          const netLow = (low * commissionPct) / 100;
-          const netHigh = (high * commissionPct) / 100;
-          const featured = n === 2; // gently highlight the "sweet spot"
-          return (
-            <motion.div
+      {/* Result card */}
+      <motion.div
+        key={sets}
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25 }}
+        className="relative rounded-xl p-4 bg-accent/10 border border-accent/40 gold-border-glow text-center"
+      >
+        <div className="flex items-center justify-center gap-2 text-[10px] uppercase tracking-wider text-muted-foreground">
+          <span>{copy.couldAdd}</span>
+          <span className="px-1.5 py-0.5 rounded-full bg-accent/20 text-accent text-[10px] font-semibold tabular-nums">
+            +{sets}
+          </span>
+          <span>{copy.setLabel(sets)}</span>
+        </div>
+        <p className="mt-1 text-2xl font-bold text-gold-gradient tabular-nums leading-tight">
+          +{fmt(low)} – {fmt(high)}
+        </p>
+        <p className="text-[10px] text-muted-foreground/80">{copy.perMonth}</p>
+        {commissionPct > 0 && (
+          <p className="mt-1.5 text-xs text-emerald-400 tabular-nums">
+            {copy.yourShare}: +{fmt(netLow)} – {fmt(netHigh)}
+          </p>
+        )}
+      </motion.div>
+
+      {/* Slider */}
+      <div className="relative space-y-2 px-1">
+        <Slider
+          value={[sets]}
+          onValueChange={(v) => setSets(v[0])}
+          min={1}
+          max={6}
+          step={1}
+          className="w-full"
+        />
+        <div className="flex justify-between text-[10px] text-muted-foreground/70 tabular-nums px-0.5">
+          {[1, 2, 3, 4, 5, 6].map((n) => (
+            <button
               key={n}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: i * 0.04 }}
+              type="button"
+              onClick={() => setSets(n)}
               className={[
-                "relative rounded-xl p-3 overflow-hidden transition-colors",
-                featured
-                  ? "bg-accent/10 border border-accent/40 gold-border-glow"
-                  : "glass-card-subtle border border-border/40",
+                "tabular-nums transition-colors",
+                sets === n ? "text-accent font-semibold" : "hover:text-foreground",
               ].join(" ")}
             >
-              <div className="flex items-baseline justify-between">
-                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                  {copy.setLabel(n)}
-                </span>
-                <span className="text-base font-bold text-gold-gradient tabular-nums">
-                  +{n}
-                </span>
-              </div>
-              <p className="mt-1.5 text-sm font-bold text-foreground tabular-nums leading-tight">
-                +{fmt(low)} – {fmt(high)}
-              </p>
-              <p className="text-[10px] text-muted-foreground/80 -mt-0.5">
-                {copy.perMonth}
-              </p>
-              {commissionPct > 0 && (
-                <p className="mt-1 text-[10px] text-emerald-400 tabular-nums leading-tight">
-                  {copy.yourShare}: +{fmt(netLow)} – {fmt(netHigh)}
-                </p>
-              )}
-            </motion.div>
-          );
-        })}
+              {n}
+            </button>
+          ))}
+        </div>
+        <p className="text-[10px] text-center text-muted-foreground/70">
+          {copy.sliderHint}
+        </p>
       </div>
 
       <div className="relative flex items-start gap-1.5">
