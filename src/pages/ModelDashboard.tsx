@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { LogOut, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import logo from "@/assets/logo.png";
+import GoldParticles from "@/components/GoldParticles";
 import ModelProfileForm from "@/components/ModelProfileForm";
 import ModelHomeDashboard from "@/components/ModelHomeDashboard";
 
