@@ -434,27 +434,15 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
         />
       </section>
 
-      {/* Shoot briefing — all models */}
+      {/* Shooting preferences — German models only */}
+      {lang === "de" && (
         <section className="glass-card rounded-xl p-5 space-y-4 border-l-2 border-accent/40">
           <div className="flex items-start gap-3">
             <div className="h-9 w-9 rounded-lg bg-accent/15 flex items-center justify-center shrink-0">
               <Camera className="h-4 w-4 text-accent" />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-base font-bold text-foreground">Shooting-Briefing</h3>
-              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                Hi, ich bin dein Fotograf für das kommende Shooting — eine ehrliche Vorab-Info,
-                damit du genau weißt, was wir vor Ort produzieren. Das Set ist explizit (erotisch /
-                versaut), professionell betreut und ausschließlich für Erwachsene über 18 bestimmt.
-                Es gibt einen geschützten Raum, eine vertrauliche Atmosphäre und klare Pausen — alles
-                läuft nur in dem Rahmen, dem du vorher schriftlich zustimmst. Bitte markiere unten
-                ehrlich, was für dich okay ist. Du kannst jede Auswahl jederzeit zurückziehen, am
-                Set jederzeit „Stop" sagen, und alles, was hier nicht angehakt ist, wird nicht
-                produziert.
-              </p>
-              <p className="text-[11px] text-muted-foreground/80 mt-2">
-                Bitte hake nur an, womit du dich wirklich wohlfühlst:
-              </p>
+              <h3 className="text-base font-bold text-foreground">Shooting-Präferenzen</h3>
             </div>
           </div>
 
@@ -510,6 +498,8 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
             })}
           </div>
         </section>
+      )}
+
 
 
       {/* Additional info */}
