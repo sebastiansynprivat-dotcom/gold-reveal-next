@@ -872,6 +872,7 @@ export type Database = {
           provider_vat_id: string | null
           service_period_end: string
           service_period_start: string
+          settled_by_credit_note_number: string | null
           tx_hash: string | null
           vat_amount: number
           vat_rate: number
@@ -897,6 +898,7 @@ export type Database = {
           provider_vat_id?: string | null
           service_period_end?: string
           service_period_start?: string
+          settled_by_credit_note_number?: string | null
           tx_hash?: string | null
           vat_amount?: number
           vat_rate?: number
@@ -922,6 +924,7 @@ export type Database = {
           provider_vat_id?: string | null
           service_period_end?: string
           service_period_start?: string
+          settled_by_credit_note_number?: string | null
           tx_hash?: string | null
           vat_amount?: number
           vat_rate?: number
