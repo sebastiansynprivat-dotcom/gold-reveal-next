@@ -183,6 +183,8 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
     special_marks: "", natural_hair: "", shoe_size: "", bra_size: "", height: "", weight: "",
     content_preferences: "", no_gos: "", personality: "", additional_info: "",
     content_audios_for_chat: null, content_video_speaking: null, content_dick_ratings: null, content_joi: null,
+    content_anal_fingering: null, content_anal_plug: null, content_anal_penetration: null,
+    content_squirting: null, content_orgasm: null, content_moaning_name: null, content_roleplay_costumes: null,
   };
   const [profile, setProfile] = useState<ProfileRow>(empty);
   const [confirmedAt, setConfirmedAt] = useState<string | null>(null);
