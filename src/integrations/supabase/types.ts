@@ -1889,6 +1889,7 @@ export type Database = {
           id: string
           model_id: string | null
           plaintext_password: string | null
+          pwa_installed: boolean
           user_id: string
         }
         Insert: {
@@ -1898,6 +1899,7 @@ export type Database = {
           id?: string
           model_id?: string | null
           plaintext_password?: string | null
+          pwa_installed?: boolean
           user_id: string
         }
         Update: {
@@ -1907,6 +1909,7 @@ export type Database = {
           id?: string
           model_id?: string | null
           plaintext_password?: string | null
+          pwa_installed?: boolean
           user_id?: string
         }
         Relationships: [

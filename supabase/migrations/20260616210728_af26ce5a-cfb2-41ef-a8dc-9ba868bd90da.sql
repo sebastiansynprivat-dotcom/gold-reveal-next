@@ -1,0 +1,1 @@
+ALTER TABLE public.model_users ADD COLUMN IF NOT EXISTS pwa_installed boolean NOT NULL DEFAULT false;
