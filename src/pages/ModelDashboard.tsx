@@ -98,15 +98,17 @@ export default function ModelDashboard() {
           .select("name, username, model_agency")
           .eq("id", resolvedModelId)
           .maybeSingle();
+        let resolvedLang: "de" | "en" = modelLanguage;
         if (model) {
           setModelName(model.name || "");
           setModelUsername(model.username || null);
           // SYN agency = international models → force English UI
           if (String((model as any).model_agency || "").toLowerCase() === "syn") {
+            resolvedLang = "en";
             setModelLanguage("en");
           }
         }
-        await loadProfileMeta(resolvedModelId);
+        await loadProfileMeta(resolvedModelId, resolvedLang);
       }
 
       setModelId(resolvedModelId);
