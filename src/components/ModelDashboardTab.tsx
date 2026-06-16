@@ -1862,6 +1862,34 @@ export default function ModelDashboardTab() {
                             Duplikat
                           </span>
                         )}
+                        {hasUserModelIds.has(model.id) && (
+                          <>
+                            <Smartphone
+                              className={cn(
+                                "h-3 w-3 shrink-0",
+                                pwaInstalledModelIds.has(model.id)
+                                  ? "text-accent"
+                                  : "text-muted-foreground/40",
+                              )}
+                              aria-label={
+                                pwaInstalledModelIds.has(model.id)
+                                  ? "Web-App installiert"
+                                  : "Web-App nicht installiert"
+                              }
+                            />
+                            {pushEnabledModelIds.has(model.id) ? (
+                              <Bell
+                                className="h-3 w-3 shrink-0 text-accent"
+                                aria-label="Push-Benachrichtigungen aktiv"
+                              />
+                            ) : (
+                              <BellOff
+                                className="h-3 w-3 shrink-0 text-muted-foreground/40"
+                                aria-label="Push-Benachrichtigungen nicht aktiv"
+                              />
+                            )}
+                          </>
+                        )}
                       </div>
                       {model.address && <p className="text-[10px] text-muted-foreground truncate">{model.address}</p>}
                     </div>
