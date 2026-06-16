@@ -1647,6 +1647,7 @@ export type Database = {
           natural_hair: string | null
           no_gos: string | null
           occupation: string | null
+          personality: string | null
           place_of_birth: string | null
           shoe_size: string | null
           source_language: string
@@ -1683,6 +1684,7 @@ export type Database = {
           natural_hair?: string | null
           no_gos?: string | null
           occupation?: string | null
+          personality?: string | null
           place_of_birth?: string | null
           shoe_size?: string | null
           source_language?: string
@@ -1719,6 +1721,7 @@ export type Database = {
           natural_hair?: string | null
           no_gos?: string | null
           occupation?: string | null
+          personality?: string | null
           place_of_birth?: string | null
           shoe_size?: string | null
           source_language?: string
