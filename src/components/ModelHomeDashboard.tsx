@@ -1132,6 +1132,13 @@ export default function ModelHomeDashboard({
                         ? `${fmtDate(cn.service_period_start)} — ${fmtDate(cn.service_period_end)}`
                         : fmtDate(cn.credit_note_date)}
                     </p>
+                    {cn.settled_by_credit_note_number && (
+                      <p className="text-[10px] text-emerald-400/80 mt-0.5">
+                        {lang === "en"
+                          ? `Settled in ${cn.settled_by_credit_note_number}`
+                          : `Beglichen in ${cn.settled_by_credit_note_number}`}
+                      </p>
+                    )}
                   </button>
                   <div className="text-right shrink-0">
                     <p className="text-sm font-bold text-accent tabular-nums">
