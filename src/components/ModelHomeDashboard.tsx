@@ -366,7 +366,7 @@ export default function ModelHomeDashboard({
       // HISTORY CUTOFF: First real billing happened April 2026. Everything before is hidden (test data).
       const HISTORY_CUTOFF = "2026-04-01";
       const { data: cn } = await (supabase.from("credit_notes") as any)
-        .select("id, credit_note_number, credit_note_date, service_period_start, service_period_end, net_amount, gross_amount, vat_rate, vat_amount, payment_date, description, provider_name, provider_address, provider_is_business, provider_vat_id, payment_method, crypto_coin, tx_hash")
+        .select("id, credit_note_number, credit_note_date, service_period_start, service_period_end, net_amount, gross_amount, vat_rate, vat_amount, payment_date, description, provider_name, provider_address, provider_is_business, provider_vat_id, payment_method, crypto_coin, tx_hash, settled_by_credit_note_number")
         .in("account_id", accountIds)
         .gte("credit_note_date", HISTORY_CUTOFF)
         .order("credit_note_date", { ascending: false })
@@ -1132,6 +1132,13 @@ export default function ModelHomeDashboard({
                         ? `${fmtDate(cn.service_period_start)} — ${fmtDate(cn.service_period_end)}`
                         : fmtDate(cn.credit_note_date)}
                     </p>
+                    {cn.settled_by_credit_note_number && (
+                      <p className="text-[10px] text-emerald-400/80 mt-0.5">
+                        {lang === "en"
+                          ? `Settled in ${cn.settled_by_credit_note_number}`
+                          : `Beglichen in ${cn.settled_by_credit_note_number}`}
+                      </p>
+                    )}
                   </button>
                   <div className="text-right shrink-0">
                     <p className="text-sm font-bold text-accent tabular-nums">

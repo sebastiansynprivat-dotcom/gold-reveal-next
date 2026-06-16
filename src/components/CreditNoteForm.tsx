@@ -911,6 +911,15 @@ export default function CreditNoteForm({
       if (rpcError) throw rpcError;
       const creditNoteNumber = rpcData as string;
 
+      // Determine paid vs open status:
+      // - "Paid" if there is a real transaction reference (txHash for crypto,
+      //   or an explicit payment date for bank transfer).
+      // - Otherwise the credit note is created as "Offen" — the admin fetched
+      //   the numbers but the payout was below threshold and got deferred.
+      const isBankMethod = modelPaymentMethod === "bank";
+      const isPaid = isBankMethod ? !!paymentDate : !!txHash.trim();
+      const finalPaymentDate = isPaid ? (paymentDate || null) : null;
+
       // Save to DB
       const { error: insertError } = await supabase.from("credit_notes" as any).insert({
         credit_note_number: creditNoteNumber,
@@ -926,17 +935,49 @@ export default function CreditNoteForm({
         vat_rate: vatRate,
         vat_amount: vatAmount,
         gross_amount: grossAmount,
-        payment_method: modelPaymentMethod === "bank" ? "Bank Transfer" : `${cryptoCoin} (${cryptoNetwork})`,
+        payment_method: isBankMethod ? "Bank Transfer" : `${cryptoCoin} (${cryptoNetwork})`,
         crypto_coin: cryptoCoin,
         tx_hash: txHash,
         exchange_rate: exchangeRate,
-        payment_date: paymentDate || null,
+        payment_date: finalPaymentDate,
         account_id: accountId || null,
         created_by: (await supabase.auth.getUser()).data.user?.id,
         chatter_name: chatterName,
       } as any);
 
       if (insertError) throw insertError;
+
+      // Auto-settle: when this NEW invoice is paid, retro-mark any prior
+      // "Offen" credit_notes for the same provider as settled by this one.
+      // This implements the carry-over case: a month below the payout
+      // threshold is shown as Open, then bundled into the next paid invoice.
+      if (isPaid && servicePeriodStart) {
+        try {
+          let sq: any = (supabase.from("credit_notes") as any)
+            .select("id, credit_note_number")
+            .is("payment_date", null)
+            .is("settled_by_credit_note_number", null)
+            .lt("service_period_start", servicePeriodStart);
+          if (accountId) sq = sq.eq("account_id", accountId);
+          else if (chatterName) sq = sq.eq("chatter_name", chatterName).is("account_id", null);
+          else sq = null;
+          if (sq) {
+            const priorRes: any = await sq;
+            const openPrior: any[] = priorRes.data || [];
+            if (openPrior.length > 0) {
+              await (supabase.from("credit_notes") as any)
+                .update({
+                  payment_date: finalPaymentDate,
+                  settled_by_credit_note_number: creditNoteNumber,
+                })
+                .in("id", openPrior.map((r: any) => r.id));
+            }
+          }
+        } catch (settleErr) {
+          console.warn("[CreditNoteForm] auto-settle failed (non-fatal):", settleErr);
+        }
+      }
+
 
       if (providerEntityType && providerEntityId) {
         const table = providerEntityType === "chatter" ? "chatters" : "models";
