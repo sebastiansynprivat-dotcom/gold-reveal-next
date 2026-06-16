@@ -82,9 +82,10 @@ export default function LifestyleContentSection({ language = "de" }: Props) {
           }}
         />
 
-        <div className="relative flex items-center gap-4">
+        <div className="relative flex flex-col sm:flex-row items-center gap-4">
           {/* Polaroid stack */}
-          <div className="relative h-24 w-32 sm:w-40 shrink-0">
+          <div className="relative h-24 w-40 sm:w-44 shrink-0">
+
             {POLAROIDS.map((p, i) => (
               <motion.div
                 key={i}
