@@ -426,7 +426,7 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
           <h3 className="text-base font-bold text-foreground">{copy.additional}</h3>
         </div>
         <Label className="text-xs text-muted-foreground">{copy.additionalLabel}</Label>
-        <Textarea
+        <AutoTextarea
           value={profile.additional_info ?? ""}
           onChange={(e) => set("additional_info", e.target.value)}
           className="bg-background/50 min-h-[100px]"
