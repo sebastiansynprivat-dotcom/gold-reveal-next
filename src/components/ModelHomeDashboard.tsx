@@ -538,7 +538,7 @@ export default function ModelHomeDashboard({
       if (!cancelled) setEstimatedPayouts(out);
     })();
     return () => { cancelled = true; };
-  }, [modelId, inProgressMonths, platformPcts]);
+  }, [modelId, inProgressMonths, platformPcts, monthRevenue, commissionPct]);
 
 
 
