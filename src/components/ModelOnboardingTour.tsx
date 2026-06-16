@@ -273,9 +273,9 @@ export default function ModelOnboardingTour({ language = "de", manualOpen, onMan
           className="tour-gold-border rounded-[14px]"
           style={{
             left: x,
-            top: y,
+            top: hy,
             width: w,
-            height: h,
+            height: hh,
             boxShadow: "0 0 24px hsl(43 56% 52% / 0.25), 0 0 48px hsl(43 56% 52% / 0.08)",
           }}
         />
