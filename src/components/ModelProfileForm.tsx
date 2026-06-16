@@ -189,11 +189,10 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const { data } = await supabase
-        .from("model_profiles")
-        .select("*")
-        .eq("model_id", modelId)
-        .maybeSingle();
+      const [{ data }, { data: mdl }] = await Promise.all([
+        supabase.from("model_profiles").select("*").eq("model_id", modelId).maybeSingle(),
+        (supabase.from("models") as any).select("model_language").eq("id", modelId).maybeSingle(),
+      ]);
       if (cancelled) return;
       if (data) {
         setProfile({ ...empty, ...data } as ProfileRow);
@@ -201,13 +200,14 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
         setLastChangeAt((data as any).last_change_at || null);
         setHasApprovedSnapshot(!!(data as any).approved_snapshot);
       }
+      setModelLanguage(String((mdl as any)?.model_language || "de").toLowerCase());
       setLoading(false);
     })();
     return () => { cancelled = true; };
   }, [modelId]);
 
-  const set = (key: keyof ProfileRow, value: string) =>
-    setProfile((p) => ({ ...p, [key]: value }));
+  const set = (key: keyof ProfileRow, value: string | boolean | null) =>
+    setProfile((p) => ({ ...p, [key]: value as any }));
 
   const requiredMissing = isInitialSubmission && (
     !(profile.name || "").trim() ||
