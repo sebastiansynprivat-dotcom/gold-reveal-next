@@ -377,13 +377,20 @@ export default function ChatterReportsTab({ chatters }: Props) {
     }
   }, [platformList, activePlatform]);
 
+  const selectedIso = useMemo(() => format(date, "yyyy-MM-dd"), [date]);
+
+  const dateScopedRows = useMemo(
+    () => rows.filter((r) => !r.start_date || r.start_date.slice(0, 10) <= selectedIso),
+    [rows, selectedIso],
+  );
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    let base = rows;
+    let base = dateScopedRows;
     if (activePlatform) base = base.filter((r) => r.platform === activePlatform);
     if (!q) return base;
     return base.filter((r) => r.name.toLowerCase().includes(q));
-  }, [rows, search, activePlatform]);
+  }, [dateScopedRows, search, activePlatform]);
 
   const buildReport = () => {
     const headers = [
