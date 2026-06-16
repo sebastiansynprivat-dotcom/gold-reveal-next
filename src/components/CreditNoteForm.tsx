@@ -863,6 +863,49 @@ export default function CreditNoteForm({
     setGenerating(true);
 
     try {
+      // Idempotency: supersede any prior credit_note for the same provider+period.
+      // Re-runs of the fetch flow (e.g. after a password correction) must NOT
+      // create duplicate invoices for the same month. Unlink the referenced
+      // payout_revenue rows so they become billable again, then delete the
+      // stale credit_note(s). The freshly generated invoice below becomes the
+      // canonical record for that period.
+      if (servicePeriodStart && servicePeriodEnd) {
+        try {
+          let dq: any = (supabase.from("credit_notes") as any)
+            .select("id, credit_note_number")
+            .eq("service_period_start", servicePeriodStart)
+            .eq("service_period_end", servicePeriodEnd);
+          if (accountId) dq = dq.eq("account_id", accountId);
+          else if (chatterName) dq = dq.eq("chatter_name", chatterName);
+          else dq = null;
+          if (dq) {
+            const existingRes: any = await dq;
+            const stale: any[] = existingRes.data || [];
+            if (stale.length > 0) {
+              const nums: string[] = stale
+                .map((r: any) => r.credit_note_number)
+                .filter(Boolean);
+              if (nums.length > 0) {
+                await (supabase.from("payout_revenue") as any)
+                  .update({
+                    billed_at: null,
+                    billed_amount: null,
+                    billed_credit_note_number: null,
+                    billed_snapshot: null,
+                    billing_in_progress: false,
+                  })
+                  .in("billed_credit_note_number", nums);
+              }
+              await (supabase.from("credit_notes") as any)
+                .delete()
+                .in("id", stale.map((r: any) => r.id));
+            }
+          }
+        } catch (dedupeErr) {
+          console.warn("[CreditNoteForm] dedupe failed (non-fatal):", dedupeErr);
+        }
+      }
+
       // Get next credit note number from DB
       const { data: rpcData, error: rpcError } = await supabase.rpc("next_credit_note_number" as any);
       if (rpcError) throw rpcError;
