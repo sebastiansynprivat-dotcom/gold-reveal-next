@@ -175,6 +175,7 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
     occupation: "", hobbies: "", dream: "",
     special_marks: "", natural_hair: "", shoe_size: "", bra_size: "", height: "", weight: "",
     content_preferences: "", no_gos: "", personality: "", additional_info: "",
+    content_audios_for_chat: null, content_video_speaking: null, content_dick_ratings: null, content_joi: null,
   };
   const [profile, setProfile] = useState<ProfileRow>(empty);
   const [confirmedAt, setConfirmedAt] = useState<string | null>(null);
@@ -183,6 +184,7 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<number | null>(null);
+  const [modelLanguage, setModelLanguage] = useState<string>("de");
 
   useEffect(() => {
     let cancelled = false;
