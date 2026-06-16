@@ -1111,9 +1111,22 @@ export default function ModelHomeDashboard({
                     onClick={() => setDetailInvoice(cn)}
                     className="flex-1 min-w-0 text-left hover:opacity-80 transition-opacity"
                   >
-                    <p className="text-xs font-semibold text-foreground truncate">
-                      {cn.credit_note_number}
-                    </p>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <p className="text-xs font-semibold text-foreground truncate">
+                        {cn.credit_note_number}
+                      </p>
+                      {cn.payment_date ? (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[9px] font-semibold uppercase tracking-wider">
+                          <CheckCircle2 className="h-2.5 w-2.5" />
+                          {lang === "en" ? "Paid" : "Bezahlt"}
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-400/30 text-[9px] font-semibold uppercase tracking-wider">
+                          <Clock className="h-2.5 w-2.5" />
+                          {lang === "en" ? "Open" : "Offen"}
+                        </span>
+                      )}
+                    </div>
                     <p className="text-[10px] text-muted-foreground">
                       {cn.service_period_start && cn.service_period_end
                         ? `${fmtDate(cn.service_period_start)} — ${fmtDate(cn.service_period_end)}`
