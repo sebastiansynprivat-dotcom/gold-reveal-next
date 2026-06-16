@@ -363,7 +363,7 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
           {PERSONAL_FIELDS[lang].map((f) => (
             <div key={f.key as string} className="space-y-1.5">
               <Label className="text-xs font-medium text-foreground">{f.label}</Label>
-              <Input
+              <AutoTextarea
                 value={(profile[f.key] as string) ?? ""}
                 onChange={(e) => set(f.key, e.target.value)}
                 className="bg-background/50"
@@ -381,7 +381,7 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
           <h3 className="text-base font-bold text-foreground">{copy.content}</h3>
         </div>
         <Label className="text-xs text-muted-foreground">{copy.contentLabel}</Label>
-        <Textarea
+        <AutoTextarea
           value={profile.content_preferences ?? ""}
           onChange={(e) => set("content_preferences", e.target.value)}
           className="bg-background/50 min-h-[100px]"
@@ -396,11 +396,26 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
           <h3 className="text-base font-bold text-foreground">No Gos</h3>
         </div>
         <Label className="text-xs text-muted-foreground">{copy.noGosLabel}</Label>
-        <Textarea
+        <AutoTextarea
           value={profile.no_gos ?? ""}
           onChange={(e) => set("no_gos", e.target.value)}
           className="bg-background/50 min-h-[120px]"
           placeholder={copy.noGosPlaceholder}
+        />
+      </section>
+
+      {/* Personality / Traits */}
+      <section className="glass-card rounded-xl p-5 space-y-3">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-accent" />
+          <h3 className="text-base font-bold text-foreground">{copy.personality}</h3>
+        </div>
+        <Label className="text-xs text-muted-foreground">{copy.personalityLabel}</Label>
+        <AutoTextarea
+          value={profile.personality ?? ""}
+          onChange={(e) => set("personality", e.target.value)}
+          className="bg-background/50 min-h-[100px]"
+          placeholder={copy.personalityPlaceholder}
         />
       </section>
 
