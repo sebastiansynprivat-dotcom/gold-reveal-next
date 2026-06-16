@@ -394,28 +394,35 @@ export default function ChatterReportsTab({ chatters }: Props) {
 
   const buildReport = () => {
     const headers = [
-      "Date", "Name", "Telegram ID", "Start Date", "Models",
-      "Day Revenue", "Goal", "Streak",
+      "Date", "Name", "Telegram ID", "Models",
+      "Yesterday Revenue", "Goal", "Streak",
       "Last Week Revenue", "Last Month Revenue", "All Time Revenue",
       "Mass DM", "Unread Chats", "Oldest Chat",
+      "Notes", "Start Date",
     ];
     const dateStr = format(date, "yyyy-MM-dd");
-    const rowsOut: (string | number)[][] = filtered.map((r) => [
-      dateStr,
-      r.name,
-      r.telegram_id ?? "",
-      r.start_date ? format(new Date(r.start_date), "yyyy-MM-dd") : "",
-      (r.models ?? []).join(", "),
-      r.day,
-      r.goal,
-      r.streak,
-      r.week,
-      r.month,
-      r.all_time,
-      r.mass_dms,
-      r.unread,
-      r.oldest,
-    ]);
+    const rowsOut: (string | number)[][] = filtered.map((r) => {
+      const yesterday = r.daily && r.daily.length >= 2
+        ? r.daily[r.daily.length - 2].total
+        : 0;
+      return [
+        dateStr,
+        r.name,
+        r.telegram_id ?? "",
+        (r.models ?? []).join(", "),
+        yesterday,
+        r.goal,
+        r.streak,
+        r.week,
+        r.month,
+        r.all_time,
+        r.mass_dms,
+        r.unread,
+        r.oldest,
+        "",
+        r.start_date ? format(new Date(r.start_date), "yyyy-MM-dd") : "",
+      ];
+    });
     return { headers, rows: rowsOut, dateStr };
   };
 

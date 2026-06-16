@@ -1,19 +1,14 @@
 ## Goal
-Exclude chatters whose Start Date is after the selected report date from the Chatter Reports view, platform tab counts, table, and downloaded XLSX/CSV.
+Make the downloaded Chatter Report (XLSX + CSV) strictly follow this column order:
 
-## Change
-In `src/components/admin/ChatterReportsTab.tsx`:
+`Date, Name, Telegram ID, Models, Yesterday Revenue, Goal, Streak, Last Week Revenue, Last Month Revenue, All Time Revenue, Mass DM, Unread Chats, Oldest Chat, Notes, Start Date`
 
-1. Add a date-aware filter applied before all consumers of `rows`:
-   - A chatter is included only if `start_date` is null/empty OR `start_date <= selectedDate`.
-   - Comparison uses ISO `yyyy-MM-dd` strings to avoid timezone drift.
+## Changes (single file: `src/components/admin/ChatterReportsTab.tsx`, `buildReport`)
 
-2. Apply this filter:
-   - To the `platformList` derivation (so empty platforms don't show inflated counts).
-   - To the per-tab `count` shown next to each platform pill (line ~506).
-   - To the `filtered` memo that feeds the table and `buildReport()` (used by both XLSX and CSV downloads — no separate changes needed there).
+1. **Reorder headers** to match the spec above (move `Start Date` to the end, move `Models` before revenue, insert `Notes` before `Start Date`).
+2. **Rename** `Day Revenue` → `Yesterday Revenue`.
+3. **Yesterday Revenue value** = revenue on the day *before* the selected report date. Source it from the existing `r.daily` array: `daily[daily.length - 2].total` (selected date is the last entry, previous day is the second-to-last). Fallback to `0` if missing.
+4. **Notes column** = always empty string `""`.
+5. Row values emitted in the new order accordingly.
 
-## Notes
-- Pure presentation-layer filter; no DB, RLS, or schema changes.
-- Chatters with no `start_date` remain visible (current behavior preserved).
-- Switching the date picker to an earlier day will immediately shrink the list and tab counts; switching back restores them.
+No other UI, table, or filtering logic changes. XLSX column widths auto-adjust since they derive from header lengths.
