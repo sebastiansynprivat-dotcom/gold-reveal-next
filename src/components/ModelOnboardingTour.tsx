@@ -242,13 +242,18 @@ export default function ModelOnboardingTour({ language = "de", manualOpen, onMan
 
   const vw = window.innerWidth;
   const vh = window.innerHeight;
+  // Ensure the cutout never touches the viewport edges, so the dark veil
+  // always has a visible strip on all sides (esp. top on mobile browsers).
+  const minMargin = 12;
+  const hy = Math.max(y, minMargin);
+  const hh = Math.max(0, h - (hy - y));
   const overlayPath =
     w > 0
       ? `M0,0 L${vw},0 L${vw},${vh} L0,${vh} Z ` +
-        `M${x + r},${y} L${x + w - r},${y} Q${x + w},${y} ${x + w},${y + r} ` +
-        `L${x + w},${y + h - r} Q${x + w},${y + h} ${x + w - r},${y + h} ` +
-        `L${x + r},${y + h} Q${x},${y + h} ${x},${y + h - r} ` +
-        `L${x},${y + r} Q${x},${y} ${x + r},${y} Z`
+        `M${x + r},${hy} L${x + w - r},${hy} Q${x + w},${hy} ${x + w},${hy + r} ` +
+        `L${x + w},${hy + hh - r} Q${x + w},${hy + hh} ${x + w - r},${hy + hh} ` +
+        `L${x + r},${hy + hh} Q${x},${hy + hh} ${x},${hy + hh - r} ` +
+        `L${x},${hy + r} Q${x},${hy} ${x + r},${hy} Z`
       : `M0,0 L${vw},0 L${vw},${vh} L0,${vh} Z`;
 
   return (
@@ -268,9 +273,9 @@ export default function ModelOnboardingTour({ language = "de", manualOpen, onMan
           className="tour-gold-border rounded-[14px]"
           style={{
             left: x,
-            top: y,
+            top: hy,
             width: w,
-            height: h,
+            height: hh,
             boxShadow: "0 0 24px hsl(43 56% 52% / 0.25), 0 0 48px hsl(43 56% 52% / 0.08)",
           }}
         />
