@@ -448,6 +448,17 @@ export default function ModelHomeDashboard({
           }
         }
       }
+      // Default fallback: always treat the CURRENT month as "in progress"
+      // when the model hasn't been billed for it yet. The admin can still
+      // explicitly mark months as in-progress to override, but the model
+      // should never see an empty "Abrechnung in Bearbeitung" section
+      // just because no flag was set yet.
+      const now = new Date();
+      const curM = now.getMonth() + 1;
+      const curY = now.getFullYear();
+      if (!billedSet.has(`${curM}-${curY}`) && !rows.some((r) => r.month === curM && r.year === curY)) {
+        rows.push({ month: curM, year: curY });
+      }
       if (!cancelled) setInProgressMonths(rows);
     })();
     return () => { cancelled = true; };
