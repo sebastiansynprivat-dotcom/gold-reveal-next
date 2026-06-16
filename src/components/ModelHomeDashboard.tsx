@@ -514,14 +514,27 @@ export default function ModelHomeDashboard({
       const pctBrezzels = (platformPcts.brezzels || platformPcts.fallback || 0) / 100;
 
       const out: Record<string, number> = {};
+      const now = new Date();
+      const curMonth = now.getMonth() + 1;
+      const curYear = now.getFullYear();
       for (const { year, month } of inProgressMonths) {
         const cur = byKey[keyOf(year, month)] || {};
         const prev = byKey[keyOf(prevOf(year, month).y, prevOf(year, month).m)] || {};
         const maloum = Number(cur.maloum_revenue || 0) * pctMaloum;
         const brezzels = Number(cur.brezzels_revenue || 0) * pctBrezzels;
         const fourbased = Number(prev.fourbased_revenue || 0) * pctFourbased;
-        out[keyOf(year, month)] = maloum + brezzels + fourbased;
+        let est = maloum + brezzels + fourbased;
+        // Fallback: if payout_revenue has no data yet for the current
+        // in-progress month, derive an estimate from the live accounts_data
+        // revenue × the model's commission percentage. Ensures the model
+        // never sees an empty estimation while data is still syncing.
+        if (est <= 0 && year === curYear && month === curMonth) {
+          const pct = Number(commissionPct || platformPcts.fallback || 0) / 100;
+          est = Number(monthRevenue || 0) * pct;
+        }
+        out[keyOf(year, month)] = est;
       }
+
       if (!cancelled) setEstimatedPayouts(out);
     })();
     return () => { cancelled = true; };
