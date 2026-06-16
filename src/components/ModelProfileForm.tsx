@@ -50,6 +50,10 @@ type ProfileRow = {
   no_gos: string | null;
   personality: string | null;
   additional_info: string | null;
+  content_audios_for_chat: boolean | null;
+  content_video_speaking: boolean | null;
+  content_dick_ratings: boolean | null;
+  content_joi: boolean | null;
 };
 
 const PERSONAL_FIELDS: Record<"de" | "en", { key: keyof ProfileRow; label: string; hint?: string }[]> = {
