@@ -509,6 +509,10 @@ export default function ModelDashboardTab() {
   // Steckbrief / Model Profile
   const [modelProfile, setModelProfile] = useState<import("@/lib/modelProfilePdf").ModelProfileData | null>(null);
   const [filledProfileIds, setFilledProfileIds] = useState<Set<string>>(new Set());
+  // PWA install + Push notification status per model
+  const [pwaInstalledModelIds, setPwaInstalledModelIds] = useState<Set<string>>(new Set());
+  const [pushEnabledModelIds, setPushEnabledModelIds] = useState<Set<string>>(new Set());
+  const [hasUserModelIds, setHasUserModelIds] = useState<Set<string>>(new Set());
 
   // Revenue from model_dashboard (per-platform)
   const [dashboardRevenues, setDashboardRevenues] = useState<Record<string, number>>({});
