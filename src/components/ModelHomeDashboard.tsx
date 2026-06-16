@@ -237,6 +237,27 @@ export default function ModelHomeDashboard({
   const [modelCurrency, setModelCurrency] = useState<string>("EUR");
   const [forceCurrency, setForceCurrency] = useState<string | null>(null);
 
+  // Track PWA install (standalone display-mode) for the logged-in model user.
+  // Skipped in Admin Preview so admins don't flip the flag for the model.
+  useEffect(() => {
+    if (isAdminPreview) return;
+    const isStandalone =
+      typeof window !== "undefined" &&
+      (window.matchMedia?.("(display-mode: standalone)").matches ||
+        (window.navigator as any).standalone === true);
+    if (!isStandalone) return;
+    let cancelled = false;
+    (async () => {
+      const { data: u } = await supabase.auth.getUser();
+      const uid = u?.user?.id;
+      if (!uid || cancelled) return;
+      await (supabase.from("model_users") as any)
+        .update({ pwa_installed: true })
+        .eq("user_id", uid);
+    })();
+    return () => { cancelled = true; };
+  }, [isAdminPreview]);
+
   // Load model commission % + currency
   useEffect(() => {
     let cancelled = false;
