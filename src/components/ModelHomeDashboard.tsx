@@ -146,7 +146,7 @@ const COPY = {
     details: "View details",
     monthsCovered: "Billed months",
     platformRevenues: "Revenue per platform",
-    payout: "Payout",
+    payout: "Your Payout",
     invoiceNumber: "Invoice no.",
     billedOn: "Billed on",
     servicePeriod: "Service period",
