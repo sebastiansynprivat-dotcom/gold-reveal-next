@@ -93,13 +93,13 @@ export default function LifestyleContentSection({ language = "de" }: Props) {
                 animate={{ opacity: 1, y: p.top, rotate: p.rotate }}
                 transition={{ duration: 0.5, delay: i * 0.08, ease: "easeOut" }}
                 className={[
-                  "absolute left-1/2 top-1/2 -ml-9 -mt-12 h-20 w-16",
+                  "absolute left-0 top-1/2 -mt-12 h-20 w-16",
                   "rounded-md border shadow-lg backdrop-blur-sm",
                   p.accent
                     ? "border-accent/60 bg-gradient-to-br from-accent/40 via-accent/20 to-transparent z-20"
                     : "border-border/60 bg-gradient-to-br from-secondary/60 to-secondary/20 z-10",
                 ].join(" ")}
-                style={{ marginLeft: -32 + i * 18 }}
+                style={{ marginLeft: i * 18 }}
               >
                 <div className="m-1.5 h-12 rounded-sm bg-gradient-to-br from-foreground/10 to-foreground/5" />
                 <div className="mx-2 mt-1 flex items-center gap-1">
