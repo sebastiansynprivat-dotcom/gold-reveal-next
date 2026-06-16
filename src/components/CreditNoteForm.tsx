@@ -863,6 +863,7 @@ export default function CreditNoteForm({
     setGenerating(true);
 
     try {
+      // test marker
       // Get next credit note number from DB
       const { data: rpcData, error: rpcError } = await supabase.rpc("next_credit_note_number" as any);
       if (rpcError) throw rpcError;
