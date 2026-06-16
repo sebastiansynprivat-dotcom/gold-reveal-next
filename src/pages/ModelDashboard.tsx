@@ -229,7 +229,7 @@ export default function ModelDashboard() {
               modelName={modelName || accountName}
               lockedReason={confirmedAt ? "confirmed" : null}
               onSubmitted={async () => {
-                await loadProfileMeta(modelId);
+                await loadProfileMeta(modelId, modelLanguage);
                 setEditingProfile(false);
               }}
             />
