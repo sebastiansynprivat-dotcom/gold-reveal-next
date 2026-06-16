@@ -24,16 +24,25 @@ export default function ModelDashboard() {
   const [loading, setLoading] = useState(true);
   const [editingProfile, setEditingProfile] = useState(false);
 
-  // All fields shown to the model in the profile form
+  // All text fields shown to the model in the profile form
   const PROFILE_FIELDS = [
     "name", "age", "city", "place_of_birth",
     "favorite_color", "favorite_movie", "favorite_food", "favorite_music",
     "occupation", "hobbies", "dream", "special_marks",
     "natural_hair", "shoe_size", "bra_size", "height", "weight",
-    "content_preferences", "no_gos", "additional_info",
+    "content_preferences", "no_gos", "personality", "additional_info",
   ] as const;
 
-  const loadProfileMeta = useCallback(async (mid: string) => {
+  // Shooting preference booleans — German models see all 11, English models only 7
+  const SHOOTING_FIELDS_UNIVERSAL = [
+    "content_anal_fingering", "content_anal_plug", "content_anal_penetration",
+    "content_squirting", "content_orgasm", "content_moaning_name", "content_roleplay_costumes",
+  ] as const;
+  const SHOOTING_FIELDS_DE_ONLY = [
+    "content_audios_for_chat", "content_video_speaking", "content_dick_ratings", "content_joi",
+  ] as const;
+
+  const loadProfileMeta = useCallback(async (mid: string, lang: "de" | "en") => {
     const { data } = await (supabase.from("model_profiles") as any)
       .select("*")
       .eq("model_id", mid)
@@ -41,13 +50,20 @@ export default function ModelDashboard() {
     setSubmittedAt(data?.submitted_at || null);
     setConfirmedAt(data?.confirmed_at || null);
     let filled = 0;
+    const shootingFields = lang === "en"
+      ? SHOOTING_FIELDS_UNIVERSAL
+      : [...SHOOTING_FIELDS_UNIVERSAL, ...SHOOTING_FIELDS_DE_ONLY];
+    const total = PROFILE_FIELDS.length + shootingFields.length;
     if (data) {
       for (const k of PROFILE_FIELDS) {
         if (String((data as any)[k] || "").trim()) filled++;
       }
+      for (const k of shootingFields) {
+        if ((data as any)[k] === true || (data as any)[k] === false) filled++;
+      }
     }
     setProfileFilled(filled);
-    setProfileTotal(PROFILE_FIELDS.length);
+    setProfileTotal(total);
   }, []);
 
 
