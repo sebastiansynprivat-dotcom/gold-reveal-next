@@ -103,6 +103,8 @@ const COPY = {
     servicePeriod: "Leistungszeitraum",
     inProgress: "Abrechnung in Arbeit",
     inProgressHint: "wird gerade vorbereitet",
+    estimated: "Geschätzte Auszahlung",
+    estimatedHint: "Schätzwert – die finale Auszahlung kann abweichen.",
   },
 
   en: {
@@ -149,6 +151,8 @@ const COPY = {
     servicePeriod: "Service period",
     inProgress: "Payout in progress",
     inProgressHint: "is being prepared",
+    estimated: "Estimated payout",
+    estimatedHint: "Estimate only – verify against the actual payout.",
   },
 };
 
@@ -221,6 +225,8 @@ export default function ModelHomeDashboard({
   const [detailInvoice, setDetailInvoice] = useState<any | null>(null);
   const [issuer, setIssuer] = useState<{ name: string; address: string; vat_id: string } | null>(null);
   const [inProgressMonths, setInProgressMonths] = useState<Array<{ month: number; year: number }>>([]);
+  const [platformPcts, setPlatformPcts] = useState<{ fourbased: number; maloum: number; brezzels: number; fallback: number }>({ fourbased: 0, maloum: 0, brezzels: 0, fallback: 0 });
+  const [estimatedPayouts, setEstimatedPayouts] = useState<Record<string, number>>({});
 
   const [loading, setLoading] = useState(true);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
@@ -240,7 +246,7 @@ export default function ModelHomeDashboard({
           .eq("model_id", modelId)
           .maybeSingle(),
         (supabase.from("models") as any)
-          .select("currency, model_agency")
+          .select("currency, model_agency, revenue_percentage, revenue_percentage_fourbased, revenue_percentage_maloum, revenue_percentage_brezzels")
           .eq("id", modelId)
           .maybeSingle(),
       ]);
@@ -250,6 +256,14 @@ export default function ModelHomeDashboard({
       // SYN agency = international models → force USD display
       setForceCurrency(isSyn ? "USD" : null);
       setModelCurrency(isSyn ? "USD" : ((mdl?.currency as string) || "EUR"));
+      const m: any = mdl || {};
+      const fallback = Number(m.revenue_percentage || dash?.revenue_percentage || 0);
+      setPlatformPcts({
+        fourbased: Number(m.revenue_percentage_fourbased || fallback || 0),
+        maloum: Number(m.revenue_percentage_maloum || fallback || 0),
+        brezzels: Number(m.revenue_percentage_brezzels || fallback || 0),
+        fallback,
+      });
     })();
     return () => { cancelled = true; };
   }, [modelId]);
@@ -437,6 +451,70 @@ export default function ModelHomeDashboard({
     })();
     return () => { cancelled = true; };
   }, [modelId]);
+
+  // Estimated payout for each in-progress month.
+  //  - Maloum & Brezzels: revenue of the month itself (paid early next month)
+  //  - 4Based: shifted by ~30 days → use previous month's revenue
+  //  - Each platform multiplied by its per-platform revenue share
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (!modelId || inProgressMonths.length === 0) {
+        if (!cancelled) setEstimatedPayouts({});
+        return;
+      }
+      // Build the set of (year, month) pairs we need to query:
+      // current month for maloum/brezzels + previous month for 4based.
+      const needed = new Set<string>();
+      const keyOf = (y: number, m: number) => `${y}-${m}`;
+      const prevOf = (y: number, m: number) => {
+        const pm = m === 1 ? 12 : m - 1;
+        const py = m === 1 ? y - 1 : y;
+        return { y: py, m: pm };
+      };
+      for (const { year, month } of inProgressMonths) {
+        needed.add(keyOf(year, month));
+        const p = prevOf(year, month);
+        needed.add(keyOf(p.y, p.m));
+      }
+      const pairs = Array.from(needed).map((k) => {
+        const [y, m] = k.split("-").map(Number);
+        return { y, m };
+      });
+      // Fetch in one round-trip — small list, parallelize.
+      const results = await Promise.all(
+        pairs.map(({ y, m }) =>
+          (supabase.from("payout_revenue") as any)
+            .select("last_fetched_year, last_fetched_month, fourbased_revenue, maloum_revenue, brezzels_revenue")
+            .eq("model_id", modelId)
+            .eq("last_fetched_year", y)
+            .eq("last_fetched_month", m)
+            .maybeSingle()
+            .then((res: any) => ({ y, m, row: res.data })),
+        ),
+      );
+      if (cancelled) return;
+      const byKey: Record<string, any> = {};
+      for (const r of results) byKey[keyOf(r.y, r.m)] = r.row;
+
+      const pctFourbased = (platformPcts.fourbased || platformPcts.fallback || 0) / 100;
+      const pctMaloum = (platformPcts.maloum || platformPcts.fallback || 0) / 100;
+      const pctBrezzels = (platformPcts.brezzels || platformPcts.fallback || 0) / 100;
+
+      const out: Record<string, number> = {};
+      for (const { year, month } of inProgressMonths) {
+        const cur = byKey[keyOf(year, month)] || {};
+        const prev = byKey[keyOf(prevOf(year, month).y, prevOf(year, month).m)] || {};
+        const maloum = Number(cur.maloum_revenue || 0) * pctMaloum;
+        const brezzels = Number(cur.brezzels_revenue || 0) * pctBrezzels;
+        const fourbased = Number(prev.fourbased_revenue || 0) * pctFourbased;
+        out[keyOf(year, month)] = maloum + brezzels + fourbased;
+      }
+      if (!cancelled) setEstimatedPayouts(out);
+    })();
+    return () => { cancelled = true; };
+  }, [modelId, inProgressMonths, platformPcts]);
+
 
 
   const downloadInvoicePdf = (cn: any) => {
@@ -977,6 +1055,24 @@ export default function ModelHomeDashboard({
                 </div>
                 <p className="text-[11px] text-amber-200/70">{copy.inProgressHint}</p>
               </div>
+              {(() => {
+                const sorted = [...inProgressMonths].sort((a, b) => (b.year - a.year) || (b.month - a.month));
+                const totalEstimate = sorted.reduce((s, m) => s + (estimatedPayouts[`${m.year}-${m.month}`] || 0), 0);
+                if (totalEstimate <= 0) return null;
+                return (
+                  <div className="shrink-0 text-right space-y-0.5 max-w-[45%]">
+                    <p className="text-[9px] uppercase tracking-wider text-amber-300/90 font-semibold">
+                      {copy.estimated}
+                    </p>
+                    <p className="text-lg font-bold text-amber-100 tabular-nums leading-tight">
+                      ≈ {fmtMoney(totalEstimate)}
+                    </p>
+                    <p className="text-[10px] text-amber-200/60 leading-snug">
+                      {copy.estimatedHint}
+                    </p>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         )}
