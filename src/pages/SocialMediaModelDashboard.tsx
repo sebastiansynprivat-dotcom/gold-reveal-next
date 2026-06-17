@@ -386,7 +386,7 @@ export default function SocialMediaModelDashboard() {
     setWeekFb((s) => ({ ...s, [k]: { ...next, id: (data as any).id } }));
   };
 
-  const completeWholeWeek = async (aid: string, days: number[]) => {
+  const completeWholeWeek = async (aid: string, days: number[], opts?: { uploadUrl?: string }) => {
     const allDays = dayRowsByPlan[planRows.find((p) => p.assignment_id === aid)?.plan_id || ""] || [];
     const rows: any[] = [];
     days.forEach((dn) => {
@@ -400,7 +400,7 @@ export default function SocialMediaModelDashboard() {
           item_index: i,
           done: true,
           completed_at: new Date().toISOString(),
-          upload_url: cur?.upload_url ?? "",
+          upload_url: opts?.uploadUrl ?? cur?.upload_url ?? "",
           note: cur?.note ?? "",
         });
       }
@@ -946,64 +946,81 @@ export default function SocialMediaModelDashboard() {
                         {(() => {
                           const fb = weekFb[`${pr.assignment_id}:${weekIdx}`];
                           const status = fb?.status || "pending";
+                          const lastDayDate = new Date(start);
+                          lastDayDate.setDate(start.getDate() + (visible[visible.length - 1] - 1));
+                          const weekOver = today.getTime() > lastDayDate.getTime();
                           return (
-                            <div className="rounded-xl border border-accent/25 bg-background/40 p-3 space-y-2.5">
+                            <div className="rounded-xl border border-accent/25 bg-background/40 p-3.5 space-y-3 antialiased subpixel-antialiased">
                               <div className="flex items-center justify-between flex-wrap gap-2">
-                                <div className="text-xs uppercase tracking-wider text-accent/80 font-semibold">Woche {weekIdx} · Tage {visible[0]}–{visible[visible.length - 1]}</div>
+                                <div className="text-xs uppercase tracking-wider text-accent/80 font-semibold leading-none">Woche {weekIdx} · Tage {visible[0]}–{visible[visible.length - 1]}</div>
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  onClick={() => completeWholeWeek(pr.assignment_id, visible)}
-                                  className="h-7 text-[11px] border-accent/40 hover:bg-accent/10"
+                                  onClick={() => {
+                                    upsertWeekFeedback(pr.assignment_id, weekIdx, { status: "approved" });
+                                    completeWholeWeek(pr.assignment_id, visible);
+                                  }}
+                                  className={`h-7 text-[11px] border-emerald-500/40 hover:bg-emerald-500/10 ${status === "approved" ? "bg-emerald-500/20 text-emerald-300" : ""}`}
                                 >
-                                  <CheckCheck className="h-3 w-3 mr-1" /> Ganze Woche abhaken
+                                  <CheckCheck className="h-3.5 w-3.5 mr-1" /> Erledigt
                                 </Button>
                               </div>
 
+                              {weekOver && (
+                                <div className="rounded-lg border border-accent/30 bg-accent/5 p-2.5 text-[11px] text-foreground/80 leading-relaxed">
+                                  <span className="font-semibold text-accent">Woche vorbei:</span> Du kannst entweder den Wochen-Link unten einfügen und auf alle Inhalte anwenden – oder einfach nur auf „Erledigt" klicken.
+                                </div>
+                              )}
+
                               <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Status:</span>
-                                <button
-                                  type="button"
-                                  onClick={() => upsertWeekFeedback(pr.assignment_id, weekIdx, { status: status === "approved" ? "pending" : "approved" })}
-                                  className={`inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-md border transition ${status === "approved" ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-300" : "border-border/50 text-muted-foreground hover:border-emerald-500/40"}`}
-                                >
-                                  <ThumbsUp className="h-3 w-3" /> Freigegeben
-                                </button>
+                                <span className="text-[10px] uppercase tracking-wider text-muted-foreground leading-none">Feedback:</span>
                                 <button
                                   type="button"
                                   onClick={() => upsertWeekFeedback(pr.assignment_id, weekIdx, { status: status === "rejected" ? "pending" : "rejected" })}
-                                  className={`inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-md border transition ${status === "rejected" ? "bg-red-500/20 border-red-500/50 text-red-300" : "border-border/50 text-muted-foreground hover:border-red-500/40"}`}
+                                  className={`inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-md border transition leading-none ${status === "rejected" ? "bg-red-500/20 border-red-500/50 text-red-300" : "border-border/50 text-muted-foreground hover:border-red-500/40"}`}
                                 >
-                                  <ThumbsDown className="h-3 w-3" /> Ablehnen
+                                  <ThumbsDown className="h-3 w-3" /> Probleme melden
                                 </button>
                                 {status === "pending" && (
-                                  <span className="text-[10px] text-muted-foreground italic">Noch kein Feedback abgegeben</span>
+                                  <span className="text-[10px] text-muted-foreground italic">Optional</span>
                                 )}
                               </div>
 
-                              <div className="flex items-center gap-2">
-                                <FolderOpen className="h-3.5 w-3.5 text-accent shrink-0" />
-                                <Input
-                                  placeholder="Link zum Wochen-Ordner (Drive, Dropbox, ...)"
-                                  defaultValue={fb?.folder_url || ""}
-                                  onBlur={(e) => { const v = e.target.value.trim(); if (v !== (fb?.folder_url || "")) upsertWeekFeedback(pr.assignment_id, weekIdx, { folder_url: v }); }}
-                                  className="h-7 text-xs bg-background/60"
-                                />
+                              <div className="space-y-1.5">
+                                <div className="flex items-center gap-2">
+                                  <FolderOpen className="h-3.5 w-3.5 text-accent shrink-0" />
+                                  <Input
+                                    placeholder="Link zum Wochen-Ordner (optional, Drive/Dropbox …)"
+                                    defaultValue={fb?.folder_url || ""}
+                                    onBlur={(e) => { const v = e.target.value.trim(); if (v !== (fb?.folder_url || "")) upsertWeekFeedback(pr.assignment_id, weekIdx, { folder_url: v }); }}
+                                    className="h-8 text-xs bg-background/60 leading-tight"
+                                  />
+                                  {fb?.folder_url && (
+                                    <a href={fb.folder_url.startsWith("http") ? fb.folder_url : `https://${fb.folder_url}`} target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent/80 shrink-0">
+                                      <ExternalLink className="h-3.5 w-3.5" />
+                                    </a>
+                                  )}
+                                </div>
                                 {fb?.folder_url && (
-                                  <a href={fb.folder_url.startsWith("http") ? fb.folder_url : `https://${fb.folder_url}`} target="_blank" rel="noopener noreferrer" className="text-accent hover:text-accent/80 shrink-0">
-                                    <ExternalLink className="h-3.5 w-3.5" />
-                                  </a>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => completeWholeWeek(pr.assignment_id, visible, { uploadUrl: fb.folder_url })}
+                                    className="h-7 w-full text-[11px] border-accent/40 hover:bg-accent/10"
+                                  >
+                                    <CheckCheck className="h-3.5 w-3.5 mr-1" /> Wochen-Link auf alle Inhalte anwenden & abhaken
+                                  </Button>
                                 )}
                               </div>
 
                               <div className="flex items-start gap-2">
-                                <MessageSquare className="h-3.5 w-3.5 text-accent mt-1.5 shrink-0" />
+                                <MessageSquare className="h-3.5 w-3.5 text-accent mt-2 shrink-0" />
                                 <Textarea
-                                  placeholder="Kommentar / Feedback an dein Team (optional)"
+                                  placeholder="Kommentar an dein Team (optional)"
                                   rows={2}
                                   defaultValue={fb?.feedback || ""}
                                   onBlur={(e) => { const v = e.target.value; if (v !== (fb?.feedback || "")) upsertWeekFeedback(pr.assignment_id, weekIdx, { feedback: v }); }}
-                                  className="text-xs bg-background/60 resize-none"
+                                  className="text-xs bg-background/60 resize-none leading-relaxed"
                                 />
                               </div>
                             </div>
@@ -1018,12 +1035,12 @@ export default function SocialMediaModelDashboard() {
                           const wd = WEEKDAYS_DE[(dayDate.getDay() + 6) % 7];
                           const isToday = dayDate.getTime() === today.getTime();
                           return (
-                            <div key={d} className={`rounded-xl border p-3 ${isToday ? "border-accent/50 bg-accent/5" : "border-border/40 bg-background/40"}`}>
+                            <div key={d} className={`rounded-xl border p-3 antialiased subpixel-antialiased ${isToday ? "border-accent/50 bg-accent/5" : "border-border/40 bg-background/40"}`}>
                               <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-2">
-                                  <span className="text-xs font-bold text-foreground">{wd}, {dayDate.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" })}</span>
-                                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Tag {d}</span>
-                                  {isToday && <span className="text-[10px] uppercase tracking-wider text-accent font-bold">Heute</span>}
+                                  <span className="text-xs font-bold text-foreground leading-none">{wd}, {dayDate.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" })}</span>
+                                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground leading-none">Tag {d}</span>
+                                  {isToday && <span className="text-[10px] uppercase tracking-wider text-accent font-bold leading-none">Heute</span>}
                                 </div>
                               </div>
                               {items.length === 0 ? (
@@ -1038,34 +1055,42 @@ export default function SocialMediaModelDashboard() {
                                     const refUrl = it.reference_url || legacyUrl;
                                     const displayTitle = legacyUrl ? "" : (it.title || "");
                                     return (
-                                      <div key={idx} className={`rounded-lg border p-2.5 ${done ? "border-emerald-500/40 bg-emerald-500/5" : "border-accent/20 bg-accent/5"}`}>
-                                        <div className="flex items-start gap-2">
-                                          <button onClick={() => toggleDone(pr.assignment_id, d, idx)} className="shrink-0 mt-0.5" aria-label="Erledigt">
+                                      <div key={idx} className={`rounded-lg border p-3 transition-colors ${done ? "border-emerald-500/40 bg-emerald-500/5" : "border-accent/20 bg-accent/5"}`}>
+                                        <div className="flex items-start gap-2.5">
+                                          <button onClick={() => toggleDone(pr.assignment_id, d, idx)} className="shrink-0 mt-[2px]" aria-label="Erledigt">
                                             {done ? <CheckCircle2 className="h-5 w-5 text-emerald-400" /> : <Circle className="h-5 w-5 text-muted-foreground hover:text-accent transition-colors" />}
                                           </button>
-                                          <LinkIcon className="h-3.5 w-3.5 mt-1 shrink-0 text-accent" />
-                                          <div className="flex-1 min-w-0 space-y-1.5">
-                                            {displayTitle && (
-                                              <div className={`text-sm font-semibold ${done ? "line-through text-muted-foreground" : "text-foreground"}`}>{displayTitle}</div>
+                                          <div className="flex-1 min-w-0 space-y-2">
+                                            {displayTitle ? (
+                                              <div className={`text-sm font-semibold leading-snug ${done ? "line-through text-muted-foreground" : "text-foreground"}`}>{displayTitle}</div>
+                                            ) : refUrl ? (
+                                              <div className={`text-sm font-semibold leading-snug ${done ? "line-through text-muted-foreground" : "text-foreground"}`}>Content-Piece {idx + 1}</div>
+                                            ) : (
+                                              <div className="text-sm font-semibold leading-snug text-muted-foreground italic">Kein Inhalt</div>
                                             )}
-                                            {refUrl ? (
-                                              <a href={refUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs text-accent hover:underline break-all">
+                                            {refUrl && (
+                                              <a href={refUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-xs text-accent hover:underline leading-none">
                                                 <ExternalLink className="h-3 w-3 shrink-0" /> Referenz ansehen
                                               </a>
-                                            ) : (!displayTitle && <span className="text-xs italic text-muted-foreground">Kein Inhalt</span>)}
-                                            {it.notes && <div className="text-[11px] text-muted-foreground whitespace-pre-wrap">{it.notes}</div>}
-                                            <Input
-                                              placeholder="Upload-Link (Drive, Notion, ...)"
-                                              defaultValue={st?.upload_url || ""}
-                                              onBlur={(e) => { const v = e.target.value; if (v !== (st?.upload_url || "")) updateStatusField(pr.assignment_id, d, idx, { upload_url: v }); }}
-                                              className="h-7 text-xs bg-background/60"
-                                            />
+                                            )}
+                                            {it.notes && <div className="text-[11px] text-muted-foreground whitespace-pre-wrap leading-relaxed">{it.notes}</div>}
+                                            <div className="space-y-1 pt-1">
+                                              <label className="text-[10px] uppercase tracking-wider text-muted-foreground/80 flex items-center gap-1 leading-none">
+                                                <LinkIcon className="h-3 w-3 text-accent" /> Upload-Link <span className="normal-case text-muted-foreground/60 tracking-normal">(optional – du kannst auch nur abhaken)</span>
+                                              </label>
+                                              <Input
+                                                placeholder="z. B. Drive / Notion / Dropbox"
+                                                defaultValue={st?.upload_url || ""}
+                                                onBlur={(e) => { const v = e.target.value; if (v !== (st?.upload_url || "")) updateStatusField(pr.assignment_id, d, idx, { upload_url: v }); }}
+                                                className="h-8 text-xs bg-background/60 leading-tight"
+                                              />
+                                            </div>
                                             <Textarea
                                               placeholder="Notiz (optional)"
                                               rows={2}
                                               defaultValue={st?.note || ""}
                                               onBlur={(e) => { const v = e.target.value; if (v !== (st?.note || "")) updateStatusField(pr.assignment_id, d, idx, { note: v }); }}
-                                              className="text-xs bg-background/60 resize-none"
+                                              className="text-xs bg-background/60 resize-none leading-relaxed"
                                             />
                                           </div>
                                         </div>
