@@ -250,6 +250,7 @@ const App = () => (
               <Route path="/marketer/login" element={<MarketerLogin />} />
               <Route path="/marketer/setup-password" element={<MarketerSetupPassword />} />
               <Route path="/marketer" element={<MarketerProtectedRoute><MarketerDashboard /></MarketerProtectedRoute>} />
+              <Route path="/marketer/coaching" element={<MarketerProtectedRoute><MarketerCoaching /></MarketerProtectedRoute>} />
 
 
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
