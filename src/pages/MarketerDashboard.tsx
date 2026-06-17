@@ -184,6 +184,7 @@ export default function MarketerDashboard() {
   };
 
   const snapsFor = (a: IgAccount) => snapshotsByKey[`${a.modelId}|${a.instagramNorm}`] || [];
+  const postFor = (a: IgAccount) => postsByKey[`${a.modelId}|${a.instagramNorm}`] || null;
 
   const totalForecast30 = useMemo(() => {
     let sum = 0;
