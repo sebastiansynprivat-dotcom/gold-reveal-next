@@ -386,7 +386,7 @@ export default function SocialMediaModelDashboard() {
     setWeekFb((s) => ({ ...s, [k]: { ...next, id: (data as any).id } }));
   };
 
-  const completeWholeWeek = async (aid: string, days: number[]) => {
+  const completeWholeWeek = async (aid: string, days: number[], opts?: { uploadUrl?: string }) => {
     const allDays = dayRowsByPlan[planRows.find((p) => p.assignment_id === aid)?.plan_id || ""] || [];
     const rows: any[] = [];
     days.forEach((dn) => {
@@ -400,7 +400,7 @@ export default function SocialMediaModelDashboard() {
           item_index: i,
           done: true,
           completed_at: new Date().toISOString(),
-          upload_url: cur?.upload_url ?? "",
+          upload_url: opts?.uploadUrl ?? cur?.upload_url ?? "",
           note: cur?.note ?? "",
         });
       }
