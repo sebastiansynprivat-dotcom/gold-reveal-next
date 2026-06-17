@@ -335,8 +335,8 @@ const MODULES: Module[] = [
           {
             heading: "Beispiele",
             bullets: [
-              "**FC-Bayern-Fangirl** → „Single, FC-Bayern-Fan" / „Lass ein Herz da, wenn dich mein Lieblingsverein nicht stört"",
-              "**Stewardess** → „Suche Flugbegleitung" / „Liebe es, in der Luft zu …"",
+              '**FC-Bayern-Fangirl** → „Single, FC-Bayern-Fan" / „Lass ein Herz da, wenn dich mein Lieblingsverein nicht stört"',
+              '**Stewardess** → „Suche Flugbegleitung" / „Liebe es, in der Luft zu …"',
             ],
           },
         ],
