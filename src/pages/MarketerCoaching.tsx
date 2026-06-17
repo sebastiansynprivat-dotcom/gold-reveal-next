@@ -9,6 +9,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import PushNotificationDialog from "@/components/PushNotificationDialog";
+import NotificationBanner from "@/components/NotificationBanner";
+import { useAppPresence } from "@/hooks/useAppPresence";
 
 // =========================================================================
 // COACHING CURRICULUM
@@ -487,6 +490,8 @@ export default function MarketerCoaching() {
   const [openLesson, setOpenLesson] = useState<{ moduleId: string; lessonId: string } | null>(null);
   const [quoteIdx] = useState(() => Math.floor(Math.random() * QUOTES.length));
 
+  useAppPresence("marketer");
+
   // Load progress
   useEffect(() => {
     if (!user?.id) return;
@@ -617,6 +622,8 @@ export default function MarketerCoaching() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-background/95 antialiased subpixel-antialiased">
+      <PushNotificationDialog />
+      <NotificationBanner />
       {/* Header */}
       <header className="sticky top-0 z-30 border-b border-border/40 bg-background/70 backdrop-blur-xl">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">

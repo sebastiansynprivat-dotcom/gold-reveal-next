@@ -8,13 +8,14 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { ArrowLeft, Plus, Trash2, UserPlus, Users, CheckCircle2, Mail, Copy, Link as LinkIcon } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, UserPlus, Users, CheckCircle2, Mail, Copy, Link as LinkIcon, Smartphone, Bell, BellOff } from "lucide-react";
 import logo from "@/assets/logo.png";
 import GoldParticles from "@/components/GoldParticles";
 
 type Model = { id: string; name: string; username: string };
 type Marketer = { user_id: string; email?: string; name?: string };
 type Assignment = { id: string; marketer_user_id: string; model_id: string };
+type InstallStatus = { user_id: string; role?: string | null; pwa_installed_at?: string | null; push_enabled_at?: string | null; last_active_at?: string | null };
 
 export default function SocialMediaMarketers() {
   const navigate = useNavigate();
@@ -23,6 +24,8 @@ export default function SocialMediaMarketers() {
   const [models, setModels] = useState<Model[]>([]);
   const [marketers, setMarketers] = useState<Marketer[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [installByUser, setInstallByUser] = useState<Record<string, InstallStatus>>({});
+  const [modelInstall, setModelInstall] = useState<Array<{ model_id: string; model_name: string; status?: InstallStatus }>>([]);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [email, setEmail] = useState("");
@@ -57,6 +60,38 @@ export default function SocialMediaMarketers() {
     const nameById = new Map<string, string>();
     ((profs || []) as any[]).forEach((p) => nameById.set(p.user_id, p.display_name || ""));
     setMarketers(ids.map(id => ({ user_id: id, name: nameById.get(id) || "" })));
+
+    // Load PWA / push status for all marketers + models
+    const { data: modelUsers } = await supabase
+      .from("model_users")
+      .select("user_id, model_id");
+    const modelUserIds = ((modelUsers || []) as any[]).map((r) => r.user_id).filter(Boolean);
+    const allIds = Array.from(new Set([...ids, ...modelUserIds]));
+
+    const { data: statusRows } = allIds.length
+      ? await (supabase as any)
+          .from("app_install_status")
+          .select("user_id, role, pwa_installed_at, push_enabled_at, last_active_at")
+          .in("user_id", allIds)
+      : { data: [] as any[] };
+
+    const byUser: Record<string, InstallStatus> = {};
+    ((statusRows || []) as any[]).forEach((r) => { byUser[r.user_id] = r; });
+    setInstallByUser(byUser);
+
+    // Build model status rows for the model overview
+    const modelById = new Map<string, string>();
+    ((m as any[]) || []).forEach((mm) => modelById.set(mm.id, mm.name || ""));
+    setModelInstall(
+      ((modelUsers || []) as any[])
+        .filter((r) => r.model_id && r.user_id)
+        .map((r) => ({
+          model_id: r.model_id,
+          model_name: modelById.get(r.model_id) || "—",
+          status: byUser[r.user_id],
+        }))
+    );
+
     setLoading(false);
   };
 
@@ -227,6 +262,22 @@ export default function SocialMediaMarketers() {
                       )}
                     </div>
                   )}
+                  {(() => {
+                    const st = installByUser[m.user_id];
+                    const installed = !!st?.pwa_installed_at;
+                    const pushOn = !!st?.push_enabled_at;
+                    return (
+                      <div className="flex flex-wrap gap-1.5 mb-3">
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] border ${installed ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300" : "bg-muted/30 border-border/40 text-muted-foreground"}`}>
+                          <Smartphone className="h-3 w-3" /> {installed ? "App installiert" : "Nicht installiert"}
+                        </span>
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] border ${pushOn ? "bg-accent/15 border-accent/40 text-accent" : "bg-muted/30 border-border/40 text-muted-foreground"}`}>
+                          {pushOn ? <Bell className="h-3 w-3" /> : <BellOff className="h-3 w-3" />}
+                          {pushOn ? "Push aktiv" : "Keine Push"}
+                        </span>
+                      </div>
+                    );
+                  })()}
                   <Button variant="outline" size="sm" className="w-full border-accent/30 text-accent hover:bg-accent/10" onClick={() => openEdit(m)}>
                     <Users className="h-3.5 w-3.5 mr-1.5" /> Models zuweisen
                   </Button>
@@ -234,6 +285,36 @@ export default function SocialMediaMarketers() {
               );
             })}
           </div>
+        )}
+
+        {/* Model PWA / Push Overview */}
+        {modelInstall.length > 0 && (
+          <section className="rounded-2xl border border-accent/15 bg-card/40 backdrop-blur-sm p-5 relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
+            <div className="flex items-center gap-2 mb-3">
+              <Smartphone className="h-4 w-4 text-accent" />
+              <h2 className="font-bold text-foreground">Models — App & Push Status</h2>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {modelInstall.map((row) => {
+                const installed = !!row.status?.pwa_installed_at;
+                const pushOn = !!row.status?.push_enabled_at;
+                return (
+                  <div key={row.model_id} className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg border border-border/30 bg-background/40">
+                    <span className="truncate text-sm text-foreground">{row.model_name}</span>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] border ${installed ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300" : "bg-muted/30 border-border/40 text-muted-foreground"}`}>
+                        <Smartphone className="h-3 w-3" />
+                      </span>
+                      <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] border ${pushOn ? "bg-accent/15 border-accent/40 text-accent" : "bg-muted/30 border-border/40 text-muted-foreground"}`}>
+                        {pushOn ? <Bell className="h-3 w-3" /> : <BellOff className="h-3 w-3" />}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
         )}
       </main>
 

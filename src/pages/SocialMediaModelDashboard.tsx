@@ -18,6 +18,9 @@ import { ResponsiveContainer, AreaChart, Area, XAxis, Tooltip } from "recharts";
 import logo from "@/assets/logo.png";
 import GoldParticles from "@/components/GoldParticles";
 import TelegramContentChannels from "@/components/TelegramContentChannels";
+import PushNotificationDialog from "@/components/PushNotificationDialog";
+import NotificationBanner from "@/components/NotificationBanner";
+import { useAppPresence } from "@/hooks/useAppPresence";
 
 // New shape: { title, reference_url, notes }. Legacy may have `type`/title-as-URL.
 type ContentItem = { title?: string; reference_url?: string; notes?: string; type?: string };
@@ -142,6 +145,8 @@ function motivationFor(pct: number, doneToday: number, totalToday: number): { ti
 export default function SocialMediaModelDashboard() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+
+  useAppPresence("model");
   const [loading, setLoading] = useState(true);
   const [model, setModel] = useState<ModelInfo | null>(null);
   const [followerSnaps, setFollowerSnaps] = useState<FollowerSnap[]>([]);
@@ -565,6 +570,8 @@ export default function SocialMediaModelDashboard() {
   return (
     <div className="min-h-screen bg-background text-foreground relative">
       <GoldParticles />
+      <PushNotificationDialog />
+      <NotificationBanner />
       <header className="fixed top-0 left-0 right-0 z-40 border-b border-accent/20 bg-[linear-gradient(180deg,hsl(0_0%_4%/0.95)_0%,hsl(0_0%_6%/0.85)_100%)] backdrop-blur-2xl">
         <div className="relative z-10 flex items-center gap-3 px-4 py-3.5 md:px-6">
           <div className="relative shrink-0">

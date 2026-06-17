@@ -1,0 +1,16 @@
+{
+  "name": "SheX Marketer",
+  "short_name": "SheX Marketer",
+  "description": "SheX Marketer Dashboard & Coaching",
+  "id": "/marketer",
+  "start_url": "/marketer",
+  "scope": "/marketer",
+  "display": "standalone",
+  "theme_color": "#0a0a0a",
+  "background_color": "#0a0a0a",
+  "icons": [
+    { "src": "/pwa-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/pwa-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/pwa-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

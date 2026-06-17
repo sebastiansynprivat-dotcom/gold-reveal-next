@@ -55,6 +55,20 @@ serve(async (req) => {
 
     if (error) throw error;
 
+    // Mark push_enabled_at on app_install_status
+    if (userId) {
+      await adminClient
+        .from("app_install_status")
+        .upsert(
+          {
+            user_id: userId,
+            push_enabled_at: new Date().toISOString(),
+            last_active_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id" }
+        );
+    }
+
     return new Response(
       JSON.stringify({ success: true }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }

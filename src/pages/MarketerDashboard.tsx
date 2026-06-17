@@ -11,6 +11,9 @@ import { ResponsiveContainer, AreaChart, Area, XAxis, Tooltip } from "recharts";
 import logo from "@/assets/logo.png";
 import GoldParticles from "@/components/GoldParticles";
 import TelegramContentChannels from "@/components/TelegramContentChannels";
+import PushNotificationDialog from "@/components/PushNotificationDialog";
+import NotificationBanner from "@/components/NotificationBanner";
+import { useAppPresence } from "@/hooks/useAppPresence";
 
 type Marketer = { name?: string; instagram?: string; tracking_link?: string; tracking_name?: string };
 type ModelRow = {
@@ -72,6 +75,8 @@ export default function MarketerDashboard() {
   const [snapshotsByKey, setSnapshotsByKey] = useState<Record<string, Snapshot[]>>({});
   const [postsByKey, setPostsByKey] = useState<Record<string, PostSnap>>({});
   const [marketerName, setMarketerName] = useState<string>("");
+
+  useAppPresence("marketer");
 
   useEffect(() => {
     (async () => {
@@ -219,6 +224,8 @@ export default function MarketerDashboard() {
   return (
     <div className="min-h-screen bg-background text-foreground relative">
       <GoldParticles />
+      <PushNotificationDialog />
+      <NotificationBanner />
       <header className="fixed top-0 left-0 right-0 z-40 border-b border-accent/20 bg-[linear-gradient(180deg,hsl(0_0%_4%/0.95)_0%,hsl(0_0%_6%/0.85)_100%)] backdrop-blur-2xl">
         <div className="relative z-10 flex items-center gap-3 px-4 py-3.5 md:px-6">
           <div className="relative shrink-0">
