@@ -329,20 +329,54 @@ export default function SocialMediaContentPlans() {
                   </div>
 
                   {asgs.length > 0 && (
-                    <div className="space-y-1.5 mb-3 max-h-32 overflow-y-auto">
+                    <div className="space-y-2.5 mb-3 max-h-96 overflow-y-auto pr-1">
                       {asgs.map((a) => {
                         const mdl = models.find((mm) => mm.id === a.model_id);
                         const prog = progressByAssignment[a.id] || { done: 0, total: 0 };
                         const pct = prog.total > 0 ? Math.round((prog.done / prog.total) * 100) : 0;
+                        const fbs = feedbackByAssignment[a.id] || [];
+                        const withContent = fbs.filter((f) => (f.feedback && f.feedback.trim()) || f.status === "rejected" || f.folder_url);
                         return (
-                          <div key={a.id} className="text-xs">
+                          <div key={a.id} className="text-xs space-y-1.5 pb-2 border-b border-border/20 last:border-b-0">
                             <div className="flex items-center justify-between mb-0.5">
-                              <span className="text-foreground truncate">{mdl?.name || "—"}</span>
+                              <span className="text-foreground truncate font-medium">{mdl?.name || "—"}</span>
                               <span className="text-muted-foreground tabular-nums">{prog.done}/{prog.total}</span>
                             </div>
                             <div className="h-1.5 rounded-full bg-background/60 overflow-hidden">
                               <div className="h-full bg-gradient-to-r from-accent to-yellow-400 transition-all" style={{ width: `${pct}%` }} />
                             </div>
+                            {withContent.length > 0 && (
+                              <div className="space-y-1.5 mt-1.5">
+                                {withContent.map((f) => (
+                                  <div key={f.week_number} className="rounded-md border border-border/40 bg-background/40 p-2 space-y-1">
+                                    <div className="flex items-center justify-between gap-2">
+                                      <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Woche {f.week_number}</span>
+                                      {f.status === "rejected" && (
+                                        <span className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-red-500/15 border border-red-500/40 text-red-300">
+                                          <ThumbsDown className="h-2.5 w-2.5" /> Abgelehnt
+                                        </span>
+                                      )}
+                                    </div>
+                                    {f.feedback && f.feedback.trim() && (
+                                      <div className="flex items-start gap-1.5 text-[11px] text-foreground/90">
+                                        <MessageSquare className="h-3 w-3 text-accent mt-0.5 shrink-0" />
+                                        <span className="whitespace-pre-wrap break-words">{f.feedback}</span>
+                                      </div>
+                                    )}
+                                    {f.folder_url && (
+                                      <a
+                                        href={f.folder_url.startsWith("http") ? f.folder_url : `https://${f.folder_url}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="inline-flex items-center gap-1 text-[10px] text-accent hover:text-accent/80 truncate"
+                                      >
+                                        <ExternalLink className="h-2.5 w-2.5" /> {f.folder_url}
+                                      </a>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         );
                       })}
