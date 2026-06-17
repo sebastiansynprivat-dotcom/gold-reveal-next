@@ -1215,6 +1215,7 @@ export default function ModelHomeDashboard({
         commissionPct={commissionPct}
         currency={forceCurrency || modelCurrency}
         language={lang}
+        contentInstructionsUrl={isSynAgency ? "https://t.me/+m-OwmEjOv0MzYTU8" : undefined}
       />
 
       {/* Lifestyle & feed content – traffic engine */}
