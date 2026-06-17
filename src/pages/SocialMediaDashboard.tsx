@@ -96,6 +96,7 @@ export default function SocialMediaDashboard() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [archiveFilter, setArchiveFilter] = useState<"active" | "archived" | "all">("active");
+  const [statFilter, setStatFilter] = useState<"all" | "setup" | "chatters" | "needed">("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<SocialMediaModel | null>(null);
   const [form, setForm] = useState<typeof emptyModel>(emptyModel);
