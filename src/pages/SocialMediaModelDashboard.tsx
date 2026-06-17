@@ -156,7 +156,7 @@ export default function SocialMediaModelDashboard() {
     // Model meta (first one)
     const { data: mdl } = await supabase
       .from("fanvue_models")
-      .select("id, name, instagram_url, instagram_urls, platform_logins, marketers")
+      .select("id, name, instagram_url, instagram_urls, platform_logins, marketers, telegram_reels_url, telegram_backgrounds_url, telegram_feed_url")
       .in("id", modelIds)
       .limit(1)
       .maybeSingle();
@@ -168,6 +168,9 @@ export default function SocialMediaModelDashboard() {
         instagram_urls: Array.isArray((mdl as any).instagram_urls) ? (mdl as any).instagram_urls : [],
         platform_logins: Array.isArray((mdl as any).platform_logins) ? (mdl as any).platform_logins : [],
         marketers: Array.isArray((mdl as any).marketers) ? (mdl as any).marketers : [],
+        telegram_reels_url: (mdl as any).telegram_reels_url ?? null,
+        telegram_backgrounds_url: (mdl as any).telegram_backgrounds_url ?? null,
+        telegram_feed_url: (mdl as any).telegram_feed_url ?? null,
       });
     }
 
