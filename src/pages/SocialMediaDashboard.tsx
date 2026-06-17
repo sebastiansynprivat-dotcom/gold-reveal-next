@@ -51,6 +51,9 @@ type SocialMediaModel = {
   status: string;
   stage: ModelStage;
   is_active: boolean;
+  telegram_reels_url: string;
+  telegram_backgrounds_url: string;
+  telegram_feed_url: string;
   created_at: string;
   archived_at: string | null;
 };
@@ -75,7 +78,11 @@ const emptyModel: Omit<SocialMediaModel, "id" | "created_at" | "archived_at"> = 
   status: "active",
   stage: "onboarding",
   is_active: true,
+  telegram_reels_url: "",
+  telegram_backgrounds_url: "",
+  telegram_feed_url: "",
 };
+
 
 export default function SocialMediaDashboard() {
   const navigate = useNavigate();
