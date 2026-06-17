@@ -23,6 +23,7 @@ type ModelRow = {
   telegram_feed_url?: string | null;
 };
 type Snapshot = { model_id: string; followers: number; recorded_at: string; instagram_url?: string | null };
+type PostSnap = { model_id: string; instagram_url: string | null; posts_7d: number; posts_30d: number; posts_total: number; last_post_at: string | null; recorded_at: string };
 
 type IgAccount = {
   modelId: string;
@@ -56,6 +57,7 @@ export default function MarketerDashboard() {
   const [loading, setLoading] = useState(true);
   const [models, setModels] = useState<ModelRow[]>([]);
   const [snapshotsByKey, setSnapshotsByKey] = useState<Record<string, Snapshot[]>>({});
+  const [postsByKey, setPostsByKey] = useState<Record<string, PostSnap>>({});
   const [marketerName, setMarketerName] = useState<string>("");
 
   useEffect(() => {
@@ -95,6 +97,20 @@ export default function MarketerDashboard() {
         const key = `${s.model_id}|${normIg(s.instagram_url)}`;
         (grouped[key] ||= []).push(s);
       });
+
+      // Latest post snapshot per (model, instagram_url)
+      const { data: psnaps } = await supabase
+        .from("fanvue_instagram_post_snapshots" as any)
+        .select("model_id,instagram_url,posts_7d,posts_30d,posts_total,last_post_at,recorded_at")
+        .in("model_id", ids)
+        .order("recorded_at", { ascending: false });
+      const pmap: Record<string, PostSnap> = {};
+      (psnaps || []).forEach((p: any) => {
+        const key = `${p.model_id}|${normIg(p.instagram_url)}`;
+        if (!pmap[key]) pmap[key] = p as PostSnap;
+      });
+      setPostsByKey(pmap);
+
       setModels((mdls as ModelRow[]) || []);
       setSnapshotsByKey(grouped);
       setLoading(false);
@@ -168,6 +184,7 @@ export default function MarketerDashboard() {
   };
 
   const snapsFor = (a: IgAccount) => snapshotsByKey[`${a.modelId}|${a.instagramNorm}`] || [];
+  const postFor = (a: IgAccount) => postsByKey[`${a.modelId}|${a.instagramNorm}`] || null;
 
   const totalForecast30 = useMemo(() => {
     let sum = 0;
@@ -247,6 +264,7 @@ export default function MarketerDashboard() {
               {igAccounts.map((a, idx) => {
                 const snaps = snapsFor(a);
                 const metrics = computeMetrics(snaps);
+                const post = postFor(a);
                 const chartData = snaps.map(s => ({
                   date: new Date(s.recorded_at).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" }),
                   followers: s.followers,
@@ -275,7 +293,7 @@ export default function MarketerDashboard() {
                           <span className="text-2xl font-bold text-foreground tabular-nums">{metrics.current.toLocaleString("de-DE")}</span>
                           <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Follower</span>
                         </div>
-                        <div className="grid grid-cols-2 gap-2 mb-3">
+                        <div className="grid grid-cols-3 gap-2 mb-3">
                           <div className="rounded-lg bg-background/40 px-2 py-1.5">
                             <p className="text-[9px] uppercase tracking-wider text-muted-foreground">7d</p>
                             <p className={`text-sm font-bold tabular-nums ${metrics.growth7 >= 0 ? "text-emerald-400" : "text-destructive"}`}>
@@ -288,7 +306,19 @@ export default function MarketerDashboard() {
                               {metrics.growth30 >= 0 ? "+" : ""}{metrics.growth30.toLocaleString("de-DE")}
                             </p>
                           </div>
+                          <div className="rounded-lg bg-background/40 px-2 py-1.5">
+                            <p className="text-[9px] uppercase tracking-wider text-muted-foreground">Posts 7d</p>
+                            <p className="text-sm font-bold tabular-nums text-accent">
+                              {post ? post.posts_7d : "—"}
+                            </p>
+                          </div>
                         </div>
+                        {post?.last_post_at && (
+                          <p className="text-[10px] text-muted-foreground -mt-2 mb-2">
+                            Letzter Post: vor {Math.max(0, Math.floor((Date.now() - new Date(post.last_post_at).getTime()) / 86400000))}d
+                            <span className="text-muted-foreground/60"> · {post.posts_30d} Posts / 30d</span>
+                          </p>
+                        )}
                         {chartData.length >= 2 && (
                           <div className="h-16 -mx-1">
                             <ResponsiveContainer width="100%" height="100%">

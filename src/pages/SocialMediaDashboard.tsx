@@ -777,6 +777,12 @@ export default function SocialMediaDashboard() {
                     )}
                     <StatusRow icon={CheckCircle2} label="Account" active={m.account_setup} />
                     <StatusRow icon={MessageCircle} label="Chatter zugeteilt" active={m.chatter_assigned} extra={m.chatter_name} />
+                    <StatusRow
+                      icon={UserCheck}
+                      label="Marketer zugeteilt"
+                      active={(m.marketers?.length ?? 0) > 0}
+                      extra={m.marketers?.length ? m.marketers.map((mk) => mk.name).filter(Boolean).join(", ") : undefined}
+                    />
                   </div>
 
                   {(() => {
