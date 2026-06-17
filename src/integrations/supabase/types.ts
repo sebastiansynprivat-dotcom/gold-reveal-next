@@ -356,6 +356,39 @@ export type Database = {
         }
         Relationships: []
       }
+      app_install_status: {
+        Row: {
+          created_at: string
+          last_active_at: string
+          push_enabled_at: string | null
+          pwa_installed_at: string | null
+          role: string | null
+          updated_at: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          last_active_at?: string
+          push_enabled_at?: string | null
+          pwa_installed_at?: string | null
+          role?: string | null
+          updated_at?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          last_active_at?: string
+          push_enabled_at?: string | null
+          pwa_installed_at?: string | null
+          role?: string | null
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       bot_messages: {
         Row: {
           account_id: string | null
