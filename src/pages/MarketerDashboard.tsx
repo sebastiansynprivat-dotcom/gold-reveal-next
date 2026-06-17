@@ -190,9 +190,9 @@ export default function MarketerDashboard() {
       growth7,
       growth30,
       perDay,
-      forecast30: Math.round(last.followers + perDay * 30),
-      forecast60: Math.round(last.followers + perDay * 60),
-      forecast90: Math.round(last.followers + perDay * 90),
+      forecast30: projectFollowers(last.followers, perDay, 30),
+      forecast60: projectFollowers(last.followers, perDay, 60),
+      forecast90: projectFollowers(last.followers, perDay, 90),
     };
   };
 
