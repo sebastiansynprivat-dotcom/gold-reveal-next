@@ -132,6 +132,7 @@ export default function SocialMediaModelDashboard() {
   const [statuses, setStatuses] = useState<Record<string, StatusRow>>({});
   const [weekFb, setWeekFb] = useState<Record<string, WeekFeedback>>({});
   const [revealed, setRevealed] = useState<Record<number, boolean>>({});
+  const [platformLoginsExpanded, setPlatformLoginsExpanded] = useState(false);
   const [today] = useState(() => { const d = new Date(); d.setHours(0,0,0,0); return d; });
   const todayMonday = useMemo(() => mondayOf(today), [today]);
 
