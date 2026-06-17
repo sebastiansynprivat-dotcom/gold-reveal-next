@@ -483,6 +483,7 @@ export default function MarketerCoaching() {
   const [loading, setLoading] = useState(true);
   const [completed, setCompleted] = useState<Set<string>>(new Set());
   const [dailyDone, setDailyDone] = useState<Set<string>>(new Set());
+  const [history, setHistory] = useState<Record<string, number>>({}); // dateISO -> # tasks done
   const [openLesson, setOpenLesson] = useState<{ moduleId: string; lessonId: string } | null>(null);
   const [quoteIdx] = useState(() => Math.floor(Math.random() * QUOTES.length));
 
@@ -491,12 +492,22 @@ export default function MarketerCoaching() {
     if (!user?.id) return;
     (async () => {
       setLoading(true);
-      const [progressRes, tasksRes] = await Promise.all([
+      const since = new Date();
+      since.setDate(since.getDate() - 90);
+      const sinceISO = since.toISOString().slice(0, 10);
+      const [progressRes, tasksRes, historyRes] = await Promise.all([
         supabase.from("marketer_coaching_progress").select("lesson_id").eq("user_id", user.id),
         supabase.from("marketer_daily_tasks").select("task_key,done").eq("user_id", user.id).eq("task_date", todayISO()),
+        supabase.from("marketer_daily_tasks").select("task_date,done").eq("user_id", user.id).gte("task_date", sinceISO),
       ]);
       setCompleted(new Set((progressRes.data || []).map((r: any) => r.lesson_id)));
       setDailyDone(new Set((tasksRes.data || []).filter((r: any) => r.done).map((r: any) => r.task_key)));
+      const counts: Record<string, number> = {};
+      (historyRes.data || []).forEach((r: any) => {
+        if (!r.done) return;
+        counts[r.task_date] = (counts[r.task_date] || 0) + 1;
+      });
+      setHistory(counts);
       setLoading(false);
     })();
   }, [user?.id]);
@@ -540,8 +551,11 @@ export default function MarketerCoaching() {
     const next = new Set(dailyDone);
     if (wasDone) next.delete(key); else next.add(key);
     setDailyDone(next);
+    // mirror into history for streak
+    const t = todayISO();
+    setHistory((h) => ({ ...h, [t]: next.size }));
     await supabase.from("marketer_daily_tasks").upsert(
-      { user_id: user.id, task_date: todayISO(), task_key: key, done: !wasDone },
+      { user_id: user.id, task_date: t, task_key: key, done: !wasDone },
       { onConflict: "user_id,task_date,task_key" }
     );
     if (!wasDone && next.size === DAILY_TASKS.length) {
@@ -550,6 +564,38 @@ export default function MarketerCoaching() {
   };
 
   const dailyPct = Math.round((dailyDone.size / DAILY_TASKS.length) * 100);
+
+  // Streak: consecutive days (ending today OR yesterday) where all DAILY_TASKS were done
+  const { currentStreak, bestStreak, perfectDays } = useMemo(() => {
+    const full = DAILY_TASKS.length;
+    const perfect = new Set(Object.entries(history).filter(([, c]) => c >= full).map(([d]) => d));
+    // current streak ending today/yesterday
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    let cur = 0;
+    if (!perfect.has(start.toISOString().slice(0, 10))) {
+      // if today not perfect yet, start from yesterday so the streak doesn't reset before day ends
+      start.setDate(start.getDate() - 1);
+    }
+    while (perfect.has(start.toISOString().slice(0, 10))) {
+      cur += 1;
+      start.setDate(start.getDate() - 1);
+    }
+    // best streak in window
+    const sorted = [...perfect].sort();
+    let best = 0, run = 0;
+    let prev: Date | null = null;
+    for (const d of sorted) {
+      const cd = new Date(d + "T00:00:00");
+      if (prev && (cd.getTime() - prev.getTime()) === 86400000) run += 1;
+      else run = 1;
+      if (run > best) best = run;
+      prev = cd;
+    }
+    return { currentStreak: cur, bestStreak: Math.max(best, cur), perfectDays: perfect.size };
+  }, [history]);
+
+
 
   const handleLogout = async () => {
     await signOut();
