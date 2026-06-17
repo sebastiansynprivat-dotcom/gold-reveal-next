@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Plus, Trash2, Users, CalendarDays, Pencil, X, CheckCircle2, Link as LinkIcon } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Users, CalendarDays, Pencil, X, CheckCircle2, Link as LinkIcon, MessageSquare, ThumbsDown, ExternalLink } from "lucide-react";
 import logo from "@/assets/logo.png";
 import GoldParticles from "@/components/GoldParticles";
 
