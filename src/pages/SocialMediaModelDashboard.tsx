@@ -855,6 +855,16 @@ export default function SocialMediaModelDashboard() {
               </motion.section>
             )}
 
+            {/* Telegram Content-Kanäle */}
+            {model && (
+              <TelegramContentChannels
+                reelsUrl={model.telegram_reels_url}
+                backgroundsUrl={model.telegram_backgrounds_url}
+                feedUrl={model.telegram_feed_url}
+                subtitle="So kommst du direkt an den frischesten Content für deine Reels, Background-Videos und Feed-Posts."
+              />
+            )}
+
             {/* CONTENT PLAN (existing functionality, kept) */}
             {planRows.length === 0 ? (
               <div className="text-center py-12 rounded-2xl border border-border/40 bg-card/30 text-muted-foreground">
