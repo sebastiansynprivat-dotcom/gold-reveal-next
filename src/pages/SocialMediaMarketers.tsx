@@ -410,36 +410,39 @@ export default function SocialMediaMarketers() {
 
       {/* Invite link result */}
       <Dialog open={!!inviteLink} onOpenChange={(o) => !o && setInviteLink(null)}>
-        <DialogContent className="max-w-md bg-card/95 backdrop-blur-xl border-accent/30">
+        <DialogContent className="max-w-xl sm:max-w-2xl bg-card/95 backdrop-blur-xl border-accent/30">
           <DialogHeader>
-            <DialogTitle className="text-accent flex items-center gap-2">
-              <LinkIcon className="h-4 w-4" /> Einladungs-Link bereit
+            <DialogTitle className="text-accent flex items-center gap-2 text-lg">
+              <LinkIcon className="h-5 w-5" /> Einladungs-Link bereit
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-3">
-            <p className="text-xs text-muted-foreground">
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
               Schicke diesen Link an <span className="text-foreground font-medium">{inviteEmail}</span>.
               Er ist einmalig gültig — der Marketer setzt damit sein Passwort und ist sofort eingeloggt.
             </p>
-            <div className="flex items-stretch gap-2">
-              <Input readOnly value={inviteLink ?? ""} className="font-mono text-[11px]" onFocus={(e) => e.currentTarget.select()} />
-              <Button
-                size="icon"
-                className="bg-accent text-accent-foreground hover:bg-accent/90 shrink-0"
-                onClick={async () => {
-                  if (!inviteLink) return;
-                  try {
-                    await navigator.clipboard.writeText(inviteLink);
-                    toast.success("Link kopiert");
-                  } catch {
-                    toast.error("Konnte nicht kopieren");
-                  }
-                }}
-              >
-                <Copy className="h-4 w-4" />
-              </Button>
-            </div>
-            <p className="text-[10px] text-muted-foreground/70">
+            <Textarea
+              readOnly
+              value={inviteLink ?? ""}
+              rows={4}
+              className="font-mono text-sm break-all resize-none bg-background/50 border-accent/20 focus-visible:ring-accent/30"
+              onFocus={(e) => e.currentTarget.select()}
+            />
+            <Button
+              className="w-full bg-accent text-accent-foreground hover:bg-accent/90 h-11"
+              onClick={async () => {
+                if (!inviteLink) return;
+                try {
+                  await navigator.clipboard.writeText(inviteLink);
+                  toast.success("Link kopiert");
+                } catch {
+                  toast.error("Konnte nicht kopieren");
+                }
+              }}
+            >
+              <Copy className="h-4 w-4 mr-2" /> Link kopieren
+            </Button>
+            <p className="text-xs text-muted-foreground/70">
               Hinweis: Der Link läuft i.d.R. nach 1 Stunde ab. Falls nötig, einfach erneut über „Marketer einladen" generieren.
             </p>
           </div>
