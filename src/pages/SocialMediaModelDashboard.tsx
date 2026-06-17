@@ -1021,16 +1021,43 @@ export default function SocialMediaModelDashboard() {
                                 )}
                               </div>
 
-                              <div className="flex items-start gap-2">
-                                <MessageSquare className="h-3.5 w-3.5 text-accent mt-2 shrink-0" />
-                                <Textarea
-                                  placeholder="Kommentar an dein Team (optional)"
-                                  rows={2}
-                                  defaultValue={fb?.feedback || ""}
-                                  onBlur={(e) => { const v = e.target.value; if (v !== (fb?.feedback || "")) upsertWeekFeedback(pr.assignment_id, weekIdx, { feedback: v }); }}
-                                  className="text-xs bg-background/60 resize-none leading-relaxed"
-                                />
-                              </div>
+                              {(() => {
+                                const ck = `${pr.assignment_id}:${weekIdx}`;
+                                const saved = fb?.feedback || "";
+                                const draft = commentDrafts[ck] ?? saved;
+                                const dirty = draft !== saved;
+                                return (
+                                  <div className="space-y-1.5">
+                                    <div className="flex items-start gap-2">
+                                      <MessageSquare className="h-3.5 w-3.5 text-accent mt-2 shrink-0" />
+                                      <Textarea
+                                        placeholder="Kommentar an dein Team (optional)"
+                                        rows={2}
+                                        value={draft}
+                                        onChange={(e) => setCommentDrafts((s) => ({ ...s, [ck]: e.target.value }))}
+                                        className="text-xs bg-background/60 resize-none leading-relaxed"
+                                      />
+                                    </div>
+                                    <div className="flex items-center justify-between gap-2 pl-5">
+                                      <span className="text-[10px] text-muted-foreground">
+                                        {saved ? (dirty ? "Ungespeicherte Änderungen" : "✓ Gespeichert – sichtbar im Admin-Dashboard") : "Noch kein Kommentar gesendet"}
+                                      </span>
+                                      <Button
+                                        size="sm"
+                                        onClick={async () => {
+                                          await upsertWeekFeedback(pr.assignment_id, weekIdx, { feedback: draft });
+                                          setCommentDrafts((s) => { const n = { ...s }; delete n[ck]; return n; });
+                                          toast.success("Kommentar gesendet");
+                                        }}
+                                        disabled={!dirty}
+                                        className="h-7 text-[11px] bg-accent text-accent-foreground hover:bg-accent/90 disabled:opacity-40"
+                                      >
+                                        <Send className="h-3 w-3 mr-1" /> Kommentar senden
+                                      </Button>
+                                    </div>
+                                  </div>
+                                );
+                              })()}
                             </div>
                           );
                         })()}
