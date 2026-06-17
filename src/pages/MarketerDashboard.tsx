@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import {
   LogOut, TrendingUp, Users, Sparkles, Instagram, Target, BookOpen, ArrowUpRight,
+  Lock, Zap, Flame, ChevronRight, Trophy,
 } from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, Tooltip } from "recharts";
 import logo from "@/assets/logo.png";
