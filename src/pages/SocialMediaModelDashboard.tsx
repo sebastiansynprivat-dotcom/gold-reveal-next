@@ -58,6 +58,9 @@ type ModelInfo = {
   instagram_urls: string[];
   platform_logins: { platform?: string; email?: string; password?: string; url?: string; username?: string }[];
   marketers: Marketer[];
+  telegram_reels_url?: string | null;
+  telegram_backgrounds_url?: string | null;
+  telegram_feed_url?: string | null;
 };
 
 type FollowerSnap = { instagram_url: string | null; followers: number; recorded_at: string };
