@@ -264,6 +264,7 @@ export default function MarketerDashboard() {
               {igAccounts.map((a, idx) => {
                 const snaps = snapsFor(a);
                 const metrics = computeMetrics(snaps);
+                const post = postFor(a);
                 const chartData = snaps.map(s => ({
                   date: new Date(s.recorded_at).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" }),
                   followers: s.followers,
