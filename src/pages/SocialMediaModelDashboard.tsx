@@ -803,7 +803,7 @@ export default function SocialMediaModelDashboard() {
 
                 <p className="text-[10px] text-muted-foreground/70 px-1">
                   <Rocket className="inline h-3 w-3 mr-1 text-accent" />
-                  Lineare Prognose auf Basis der letzten 30 Tage – je mehr Reels du postest, desto stärker übertriffst du diese Kurve.
+                  Prognose adaptiv: junge Accounts (&lt; 1.000 Follower) starten mit einer realistischen Wachstumsspanne (100–500 / Monat), ab 1.000 Followern fließt dein gemessener Trend ein. Je mehr Reels du postest, desto stärker übertriffst du diese Kurve.
                 </p>
               </motion.section>
             )}
