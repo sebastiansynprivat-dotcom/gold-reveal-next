@@ -96,6 +96,7 @@ export default function SocialMediaDashboard() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [archiveFilter, setArchiveFilter] = useState<"active" | "archived" | "all">("active");
+  const [statFilter, setStatFilter] = useState<"all" | "setup" | "chatters" | "needed">("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<SocialMediaModel | null>(null);
   const [form, setForm] = useState<typeof emptyModel>(emptyModel);
@@ -464,6 +465,9 @@ export default function SocialMediaDashboard() {
     .filter((m) => {
       if (archiveFilter === "active" && m.archived_at) return false;
       if (archiveFilter === "archived" && !m.archived_at) return false;
+      if (statFilter === "setup" && !m.account_setup) return false;
+      if (statFilter === "chatters" && !m.chatter_assigned) return false;
+      if (statFilter === "needed" && !(m.chatter_needed && !m.chatter_assigned)) return false;
       if (!search) return true;
       const q = search.toLowerCase();
       return (
@@ -546,27 +550,42 @@ export default function SocialMediaDashboard() {
       <main className="relative z-10 max-w-7xl mx-auto px-4 md:px-6 py-6 space-y-6">
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {[
-            { label: "Models gesamt", value: stats.total, icon: Users },
-            { label: "Account eingerichtet", value: stats.setup, icon: CheckCircle2 },
-            { label: "Mit Chatter", value: stats.chatters, icon: MessageCircle },
-            { label: "Chatter benötigt", value: stats.needed, icon: MessageCircle },
-          ].map(({ label, value, icon: Icon }) => (
-            <motion.div
-              key={label}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="rounded-2xl border border-accent/20 bg-card/40 backdrop-blur-sm p-4 relative overflow-hidden"
-            >
-              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</span>
-                <Icon className="h-3.5 w-3.5 text-accent/70" />
-              </div>
-              <div className="text-2xl font-bold text-foreground">{value}</div>
-            </motion.div>
-          ))}
+          {([
+            { key: "all" as const, label: "Models gesamt", value: stats.total, icon: Users },
+            { key: "setup" as const, label: "Account eingerichtet", value: stats.setup, icon: CheckCircle2 },
+            { key: "chatters" as const, label: "Mit Chatter", value: stats.chatters, icon: MessageCircle },
+            { key: "needed" as const, label: "Chatter benötigt", value: stats.needed, icon: MessageCircle },
+          ]).map(({ key, label, value, icon: Icon }) => {
+            const active = statFilter === key;
+            return (
+              <motion.button
+                key={label}
+                type="button"
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                whileHover={{ y: -2 }}
+                onClick={() => setStatFilter((prev) => (prev === key ? "all" : key))}
+                className={`text-left rounded-2xl border backdrop-blur-sm p-4 relative overflow-hidden transition-all ${
+                  active
+                    ? "border-accent/70 bg-accent/15 shadow-[0_0_25px_hsl(var(--accent)/0.25)]"
+                    : "border-accent/20 bg-card/40 hover:border-accent/50 hover:bg-card/60"
+                }`}
+                title={key === "all" ? "Alle Models anzeigen" : `Nur "${label}" anzeigen`}
+              >
+                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
+                <div className="flex items-center justify-between mb-1">
+                  <span className={`text-[10px] uppercase tracking-wider ${active ? "text-accent" : "text-muted-foreground"}`}>{label}</span>
+                  <Icon className={`h-3.5 w-3.5 ${active ? "text-accent" : "text-accent/70"}`} />
+                </div>
+                <div className={`text-2xl font-bold ${active ? "text-accent" : "text-foreground"}`}>{value}</div>
+                {active && key !== "all" && (
+                  <div className="mt-1 text-[9px] uppercase tracking-wider text-accent/80 font-semibold">Filter aktiv · Klick zum Zurücksetzen</div>
+                )}
+              </motion.button>
+            );
+          })}
         </div>
+
 
         {/* Toolbar */}
         <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
