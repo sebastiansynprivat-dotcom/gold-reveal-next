@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { ArrowLeft, Plus, Trash2, UserPlus, Users, CheckCircle2, Mail, Copy, Link as LinkIcon, Smartphone, Bell, BellOff } from "lucide-react";
