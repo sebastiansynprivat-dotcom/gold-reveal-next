@@ -789,6 +789,16 @@ export default function SocialMediaModelDashboard() {
               </motion.section>
             )}
 
+            {/* Telegram Content-Kanäle (über Plattform-Logins) */}
+            {model && (
+              <TelegramContentChannels
+                reelsUrl={model.telegram_reels_url}
+                backgroundsUrl={model.telegram_backgrounds_url}
+                feedUrl={model.telegram_feed_url}
+                subtitle="So kommst du direkt an den frischesten Content für deine Reels, Background-Videos und Feed-Posts."
+              />
+            )}
+
             {/* PLATFORM LOGINS */}
             {model?.platform_logins && model.platform_logins.length > 0 && (
               <motion.section
@@ -867,15 +877,6 @@ export default function SocialMediaModelDashboard() {
               </motion.section>
             )}
 
-            {/* Telegram Content-Kanäle */}
-            {model && (
-              <TelegramContentChannels
-                reelsUrl={model.telegram_reels_url}
-                backgroundsUrl={model.telegram_backgrounds_url}
-                feedUrl={model.telegram_feed_url}
-                subtitle="So kommst du direkt an den frischesten Content für deine Reels, Background-Videos und Feed-Posts."
-              />
-            )}
 
             {/* CONTENT PLAN (existing functionality, kept) */}
             {planRows.length === 0 ? (
