@@ -41,6 +41,19 @@ function daysAgo(n: number) {
   return d;
 }
 
+// Forecast helper — never negative; ramps new accounts (<1000) with a 100–500/30d baseline.
+function projectFollowers(current: number, perDay: number, days: number): number {
+  const safePerDay = Math.max(0, perDay);
+  if (current < 1000) {
+    const baselineMonthly = 100 + Math.min(400, (current / 1000) * 400);
+    const observedMonthly = safePerDay * 30;
+    const monthly = Math.max(baselineMonthly, observedMonthly);
+    return Math.round(current + (monthly * days) / 30);
+  }
+  return Math.round(current + safePerDay * days);
+}
+
+
 function normIg(s?: string | null): string {
   if (!s) return "";
   let v = s.trim().toLowerCase();
