@@ -131,8 +131,7 @@ const SocialMediaProtectedRoute = ({ children }: { children: React.ReactNode }) 
     import("@/integrations/supabase/client").then(({ supabase }) => {
       supabase.from("user_roles").select("role").eq("user_id", user.id)
         .in("role", ["fanvue_partner", "super_admin", "admin"])
-        .maybeSingle()
-        .then(({ data }) => setHasAccess(!!data));
+        .then(({ data }) => setHasAccess((data?.length ?? 0) > 0));
     });
   }, [user]);
 
