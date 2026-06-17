@@ -29,18 +29,18 @@ export function useAppPresence(role: "chatter" | "marketer" | "model" | "admin")
         // Don't overwrite pwa_installed_at if it's already set and we're not standalone right now.
         if (!isStandalone) {
           await supabase
-            .from("app_install_status")
+            .from("app_install_status" as any)
             .upsert(payload, { onConflict: "user_id" });
         } else {
           // When standalone, also record install time (only if not previously set)
           const { data: existing } = await supabase
-            .from("app_install_status")
+            .from("app_install_status" as any)
             .select("pwa_installed_at")
             .eq("user_id", user.id)
             .maybeSingle();
           if (existing?.pwa_installed_at) delete payload.pwa_installed_at;
           await supabase
-            .from("app_install_status")
+            .from("app_install_status" as any)
             .upsert(payload, { onConflict: "user_id" });
         }
       } catch (e) {
