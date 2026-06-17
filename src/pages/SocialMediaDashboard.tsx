@@ -1119,27 +1119,33 @@ export default function SocialMediaDashboard() {
 
       {/* Edit/Create Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto overflow-x-hidden bg-card border-accent/20 p-3 sm:p-6">
-          <DialogHeader className="pr-6">
-            <DialogTitle className="text-base sm:text-lg pr-2">{editing ? "Model bearbeiten" : "Neues Model anlegen"}</DialogTitle>
+        <DialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:w-full sm:max-w-2xl max-h-[90vh] overflow-y-auto overflow-x-hidden bg-card border-accent/20 p-0 antialiased subpixel-antialiased">
+          <DialogHeader className="sticky top-0 z-10 px-5 sm:px-6 py-4 border-b border-border/60 bg-card/95 backdrop-blur-md">
+            <DialogTitle className="text-lg sm:text-xl font-semibold tracking-tight text-foreground flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-accent shadow-[0_0_10px_hsl(var(--accent)/0.8)]" />
+              {editing ? "Model bearbeiten" : "Neues Model anlegen"}
+            </DialogTitle>
+            <p className="text-[12px] text-muted-foreground/80 mt-1 ml-3.5">
+              Alle Felder werden sofort gespeichert, sobald du auf Speichern klickst.
+            </p>
           </DialogHeader>
 
-          <div className="space-y-4 py-2">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <div>
-                <Label className="text-xs">Name *</Label>
-                <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Anzeigename" />
+          <div className="space-y-5 px-5 sm:px-6 py-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label className="text-[11px] uppercase tracking-[0.12em] text-foreground/70 font-semibold">Name *</Label>
+                <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Anzeigename" className="h-10 text-sm" />
               </div>
-              <div>
-                <Label className="text-xs">Plattform Username</Label>
-                <Input value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} placeholder="username" />
+              <div className="space-y-1.5">
+                <Label className="text-[11px] uppercase tracking-[0.12em] text-foreground/70 font-semibold">Plattform Username</Label>
+                <Input value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} placeholder="username" className="h-10 text-sm" />
               </div>
             </div>
 
-            <div>
-              <Label className="text-xs">Stage</Label>
+            <div className="space-y-1.5">
+              <Label className="text-[11px] uppercase tracking-[0.12em] text-foreground/70 font-semibold">Stage</Label>
               <Select value={form.stage} onValueChange={(v) => setForm({ ...form, stage: v as ModelStage, chatter_needed: v === "ready" && !form.chatter_assigned ? true : form.chatter_needed })}>
-                <SelectTrigger className="bg-background/40">
+                <SelectTrigger className="bg-background/40 h-10 text-sm">
                   <SelectValue placeholder="Stage wählen" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1152,8 +1158,8 @@ export default function SocialMediaDashboard() {
 
 
             {/* Status Toggles */}
-            <div className="rounded-xl border border-border/40 p-3 sm:p-4 space-y-3 bg-secondary/20">
-              <h4 className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Status</h4>
+            <div className="rounded-xl border border-border/50 p-4 sm:p-5 space-y-3 bg-background/40">
+              <h4 className="text-[11px] uppercase tracking-[0.14em] text-accent/90 font-semibold">Status</h4>
               <ToggleRow label="Account eingerichtet" checked={form.account_setup} onChange={(v) => setForm({ ...form, account_setup: v })} />
               <ToggleRow label="Chatter benötigt" checked={form.chatter_needed} onChange={(v) => setForm({ ...form, chatter_needed: v })} />
               <ToggleRow label="Chatter zugeteilt" checked={form.chatter_assigned} onChange={(v) => setForm({ ...form, chatter_assigned: v, chatter_needed: v ? false : form.chatter_needed })} />
@@ -1162,21 +1168,21 @@ export default function SocialMediaDashboard() {
                   value={form.chatter_name}
                   onChange={(e) => setForm({ ...form, chatter_name: e.target.value })}
                   placeholder="Chatter Name"
-                  className="text-sm"
+                  className="text-sm h-10"
                 />
               )}
             </div>
 
             {/* Social Links (Instagram only, dynamic) */}
-            <div className="rounded-xl border border-border/40 p-3 sm:p-4 space-y-2 bg-secondary/20">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Instagram Accounts</h4>
-                <Button size="sm" variant="ghost" onClick={addInstagram} className="text-accent h-7">
+            <div className="rounded-xl border border-border/50 p-4 sm:p-5 space-y-3 bg-background/40">
+              <div className="flex items-center justify-between">
+                <h4 className="text-[11px] uppercase tracking-[0.14em] text-accent/90 font-semibold">Instagram Accounts</h4>
+                <Button size="sm" variant="ghost" onClick={addInstagram} className="text-accent h-7 hover:bg-accent/10">
                   <Plus className="h-3.5 w-3.5 mr-1" /> Hinzufügen
                 </Button>
               </div>
               {form.instagram_urls.length === 0 ? (
-                <p className="text-xs text-muted-foreground italic">Noch kein Instagram Account hinzugefügt</p>
+                <p className="text-xs text-muted-foreground/80 italic">Noch kein Instagram Account hinzugefügt</p>
               ) : (
                 <div className="space-y-2">
                   {form.instagram_urls.map((url, i) => (
@@ -1186,9 +1192,9 @@ export default function SocialMediaDashboard() {
                         placeholder="Instagram URL oder @handle"
                         value={url}
                         onChange={(e) => updateInstagram(i, e.target.value)}
-                        className="text-sm min-w-0 flex-1"
+                        className="text-sm h-10 min-w-0 flex-1"
                       />
-                      <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive shrink-0" onClick={() => removeInstagram(i)}>
+                      <Button size="icon" variant="ghost" className="h-9 w-9 text-destructive shrink-0" onClick={() => removeInstagram(i)}>
                         <X className="h-3.5 w-3.5" />
                       </Button>
                     </div>
@@ -1198,59 +1204,63 @@ export default function SocialMediaDashboard() {
             </div>
 
             {/* Linktree (separate from social links) */}
-            <div className="rounded-xl border border-border/40 p-3 sm:p-4 space-y-2 bg-secondary/20">
-              <h4 className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-2">Linktree</h4>
+            <div className="rounded-xl border border-border/50 p-4 sm:p-5 space-y-3 bg-background/40">
+              <h4 className="text-[11px] uppercase tracking-[0.14em] text-accent/90 font-semibold">Linktree</h4>
               <div className="flex items-center gap-2 min-w-0">
                 <Link2 className="h-4 w-4 text-muted-foreground shrink-0" />
                 <Input
                   placeholder="https://linktr.ee/username"
                   value={form.linktree_url}
                   onChange={(e) => setForm({ ...form, linktree_url: e.target.value })}
-                  className="text-sm min-w-0 flex-1"
+                  className="text-sm h-10 min-w-0 flex-1"
                 />
               </div>
             </div>
 
             {/* Telegram Content Channels */}
-            <div className="rounded-xl border border-accent/30 p-3 sm:p-4 space-y-2 bg-gradient-to-br from-accent/5 via-transparent to-transparent">
-              <h4 className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-2 flex items-center gap-1.5">
-                <Sparkles className="h-3 w-3 text-accent" /> Telegram Content-Kanäle
-              </h4>
-              <p className="text-[10px] text-muted-foreground/70 mb-2">Diese Links werden Marketern und dem Model im Dashboard angezeigt.</p>
-              {[
-                { key: "telegram_reels_url" as const, label: "Reels" },
-                { key: "telegram_backgrounds_url" as const, label: "Background-Videos" },
-                { key: "telegram_feed_url" as const, label: "Feed / Story (Bilder)" },
-              ].map((row) => (
-                <div key={row.key} className="space-y-1">
-                  <Label className="text-[11px] text-muted-foreground">{row.label}</Label>
-                  <div className="flex items-center gap-2 min-w-0">
-                    <Link2 className="h-4 w-4 text-accent/70 shrink-0" />
-                    <Input
-                      placeholder="https://t.me/..."
-                      value={(form as any)[row.key] || ""}
-                      onChange={(e) => setForm({ ...form, [row.key]: e.target.value })}
-                      className="text-sm min-w-0 flex-1"
-                    />
+            <div className="rounded-xl border border-accent/30 p-4 sm:p-5 space-y-3 bg-gradient-to-br from-accent/[0.07] via-transparent to-transparent">
+              <div>
+                <h4 className="text-[11px] uppercase tracking-[0.14em] text-accent font-semibold flex items-center gap-1.5">
+                  <Sparkles className="h-3 w-3" /> Telegram Content-Kanäle
+                </h4>
+                <p className="text-[11px] text-muted-foreground/80 mt-1">Diese Links werden Marketern und dem Model im Dashboard angezeigt.</p>
+              </div>
+              <div className="space-y-2.5">
+                {[
+                  { key: "telegram_reels_url" as const, label: "Reels" },
+                  { key: "telegram_backgrounds_url" as const, label: "Background-Videos" },
+                  { key: "telegram_feed_url" as const, label: "Feed / Story (Bilder)" },
+                ].map((row) => (
+                  <div key={row.key} className="space-y-1">
+                    <Label className="text-[11px] text-foreground/70 font-medium">{row.label}</Label>
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Link2 className="h-4 w-4 text-accent/70 shrink-0" />
+                      <Input
+                        placeholder="https://t.me/..."
+                        value={(form as any)[row.key] || ""}
+                        onChange={(e) => setForm({ ...form, [row.key]: e.target.value })}
+                        className="text-sm h-10 min-w-0 flex-1"
+                      />
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
 
             {/* Marketers */}
-            <div className="rounded-xl border border-border/40 p-3 sm:p-4 space-y-2 bg-secondary/20">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Marketer & Instagram-Links</h4>
-                <Button size="sm" variant="ghost" onClick={addMarketer} className="text-accent h-7">
+            <div className="rounded-xl border border-border/50 p-4 sm:p-5 space-y-3 bg-background/40">
+              <div className="flex items-center justify-between">
+                <h4 className="text-[11px] uppercase tracking-[0.14em] text-accent/90 font-semibold">Marketer & Instagram-Links</h4>
+                <Button size="sm" variant="ghost" onClick={addMarketer} className="text-accent h-7 hover:bg-accent/10">
                   <Plus className="h-3.5 w-3.5 mr-1" /> Hinzufügen
                 </Button>
               </div>
               {form.marketers.length === 0 ? (
-                <p className="text-xs text-muted-foreground italic">Noch keine Marketer eingetragen</p>
+                <p className="text-xs text-muted-foreground/80 italic">Noch keine Marketer eingetragen</p>
               ) : (
                 <div className="space-y-3">
                   {form.marketers.map((mk, i) => (
-                    <div key={i} className="rounded-lg border border-border/30 p-2.5 space-y-2 bg-background/30">
+                    <div key={i} className="rounded-lg border border-border/40 p-3 space-y-2 bg-card/60">
                       <div className="flex flex-col sm:flex-row gap-2 sm:items-center min-w-0">
                         {(() => {
                           const isKnown = marketerOptions.some((mo) => mo.name === mk.name);
@@ -1267,7 +1277,7 @@ export default function SocialMediaDashboard() {
                                   }
                                 }}
                               >
-                                <SelectTrigger className="text-sm min-w-0 flex-1 h-9">
+                                <SelectTrigger className="text-sm min-w-0 flex-1 h-10">
                                   <SelectValue placeholder="Marketer wählen…" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -1284,7 +1294,7 @@ export default function SocialMediaDashboard() {
                               placeholder="Name"
                               value={mk.name}
                               onChange={(e) => updateMarketer(i, "name", e.target.value)}
-                              className="text-sm min-w-0 flex-1"
+                              className="text-sm h-10 min-w-0 flex-1"
                             />
                           );
                         })()}
@@ -1293,9 +1303,9 @@ export default function SocialMediaDashboard() {
                             placeholder="@instagram oder URL"
                             value={mk.instagram}
                             onChange={(e) => updateMarketer(i, "instagram", e.target.value)}
-                            className="text-sm min-w-0 flex-1"
+                            className="text-sm h-10 min-w-0 flex-1"
                           />
-                          <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive shrink-0" onClick={() => removeMarketer(i)}>
+                          <Button size="icon" variant="ghost" className="h-9 w-9 text-destructive shrink-0" onClick={() => removeMarketer(i)}>
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
                         </div>
@@ -1305,13 +1315,13 @@ export default function SocialMediaDashboard() {
                           placeholder="Tracking Name"
                           value={mk.tracking_name || ""}
                           onChange={(e) => updateMarketer(i, "tracking_name", e.target.value)}
-                          className="text-sm"
+                          className="text-sm h-10"
                         />
                         <Input
                           placeholder="Tracking Link"
                           value={mk.tracking_link || ""}
                           onChange={(e) => updateMarketer(i, "tracking_link", e.target.value)}
-                          className="text-sm"
+                          className="text-sm h-10"
                         />
                       </div>
                     </div>
@@ -1321,29 +1331,29 @@ export default function SocialMediaDashboard() {
             </div>
 
             {/* Platform Logins */}
-            <div className="rounded-xl border border-border/40 p-3 sm:p-4 space-y-2 bg-secondary/20">
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="text-xs uppercase tracking-wider text-muted-foreground font-semibold flex items-center gap-1.5">
+            <div className="rounded-xl border border-border/50 p-4 sm:p-5 space-y-3 bg-background/40">
+              <div className="flex items-center justify-between">
+                <h4 className="text-[11px] uppercase tracking-[0.14em] text-accent/90 font-semibold flex items-center gap-1.5">
                   <KeyRound className="h-3 w-3" /> Plattform Logins
                 </h4>
-                <Button size="sm" variant="ghost" onClick={addLogin} className="text-accent h-7">
+                <Button size="sm" variant="ghost" onClick={addLogin} className="text-accent h-7 hover:bg-accent/10">
                   <Plus className="h-3.5 w-3.5 mr-1" /> Hinzufügen
                 </Button>
               </div>
               {form.platform_logins.length === 0 ? (
-                <p className="text-xs text-muted-foreground italic">Noch keine Plattform-Zugänge hinterlegt</p>
+                <p className="text-xs text-muted-foreground/80 italic">Noch keine Plattform-Zugänge hinterlegt</p>
               ) : (
                 <div className="space-y-2">
                   {form.platform_logins.map((lg, i) => (
-                    <div key={i} className="rounded-lg border border-border/30 p-2.5 space-y-2 bg-background/30">
+                    <div key={i} className="rounded-lg border border-border/40 p-3 space-y-2 bg-card/60">
                       <div className="flex items-center gap-2">
                         <Input
                           placeholder="Plattform (z.B. Fanvue, OnlyFans)"
                           value={lg.platform}
                           onChange={(e) => updateLogin(i, "platform", e.target.value)}
-                          className="text-sm flex-1"
+                          className="text-sm h-10 flex-1"
                         />
-                        <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive shrink-0" onClick={() => removeLogin(i)}>
+                        <Button size="icon" variant="ghost" className="h-9 w-9 text-destructive shrink-0" onClick={() => removeLogin(i)}>
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
@@ -1352,14 +1362,14 @@ export default function SocialMediaDashboard() {
                           placeholder="E-Mail / Username"
                           value={lg.email}
                           onChange={(e) => updateLogin(i, "email", e.target.value)}
-                          className="text-sm"
+                          className="text-sm h-10"
                           autoComplete="off"
                         />
                         <Input
                           placeholder="Passwort"
                           value={lg.password}
                           onChange={(e) => updateLogin(i, "password", e.target.value)}
-                          className="text-sm font-mono"
+                          className="text-sm h-10 font-mono"
                           autoComplete="off"
                         />
                       </div>
@@ -1371,20 +1381,21 @@ export default function SocialMediaDashboard() {
 
 
             {/* Notes */}
-            <div>
-              <Label className="text-xs">Notizen</Label>
+            <div className="space-y-1.5">
+              <Label className="text-[11px] uppercase tracking-[0.12em] text-foreground/70 font-semibold">Notizen</Label>
               <Textarea
                 value={form.notes}
                 onChange={(e) => setForm({ ...form, notes: e.target.value })}
                 placeholder="Interne Notizen..."
                 rows={3}
+                className="text-sm"
               />
             </div>
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="sticky bottom-0 z-10 px-5 sm:px-6 py-4 border-t border-border/60 bg-card/95 backdrop-blur-md gap-2">
             <Button variant="ghost" onClick={() => setDialogOpen(false)}>Abbrechen</Button>
-            <Button onClick={handleSave} disabled={saving} className="bg-accent text-accent-foreground hover:bg-accent/90">
+            <Button onClick={handleSave} disabled={saving} className="bg-accent text-accent-foreground hover:bg-accent/90 font-semibold tracking-tight">
               {saving ? "Speichern..." : "Speichern"}
             </Button>
           </DialogFooter>
