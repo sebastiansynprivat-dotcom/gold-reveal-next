@@ -23,6 +23,7 @@ type ModelRow = {
   telegram_feed_url?: string | null;
 };
 type Snapshot = { model_id: string; followers: number; recorded_at: string; instagram_url?: string | null };
+type PostSnap = { model_id: string; instagram_url: string | null; posts_7d: number; posts_30d: number; posts_total: number; last_post_at: string | null; recorded_at: string };
 
 type IgAccount = {
   modelId: string;
