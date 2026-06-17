@@ -61,6 +61,23 @@ Deno.serve(async (req) => {
     const existing = list?.users?.find((u: any) => (u.email || "").toLowerCase() === cleanEmail);
 
     if (existing) {
+      // SAFETY: Refuse to invite an email that already belongs to an admin/super_admin/sub_admin.
+      // Generating a recovery link for that account would let the marketer reset
+      // (and thereby steal) the admin's password.
+      const { data: existingRoles } = await admin
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", existing.id);
+      const isAdminAccount = (existingRoles || []).some((r: any) =>
+        ["super_admin", "admin", "sub_admin"].includes(r.role)
+      );
+      if (isAdminAccount) {
+        return new Response(JSON.stringify({
+          error: "Diese E-Mail gehört bereits zu einem Admin-Account. Bitte eine andere E-Mail für den Marketer verwenden.",
+        }), {
+          status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       userId = existing.id;
     } else {
       const { data: created, error: createErr } = await admin.auth.admin.createUser({
