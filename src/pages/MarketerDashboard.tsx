@@ -57,6 +57,7 @@ export default function MarketerDashboard() {
   const [loading, setLoading] = useState(true);
   const [models, setModels] = useState<ModelRow[]>([]);
   const [snapshotsByKey, setSnapshotsByKey] = useState<Record<string, Snapshot[]>>({});
+  const [postsByKey, setPostsByKey] = useState<Record<string, PostSnap>>({});
   const [marketerName, setMarketerName] = useState<string>("");
 
   useEffect(() => {
