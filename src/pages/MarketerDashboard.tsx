@@ -377,6 +377,25 @@ export default function MarketerDashboard() {
           </section>
         )}
 
+        {/* Telegram Content-Kanäle pro Model */}
+        {models.map((m) => {
+          const hasAny =
+            (m.telegram_reels_url || "").trim() ||
+            (m.telegram_backgrounds_url || "").trim() ||
+            (m.telegram_feed_url || "").trim();
+          if (!hasAny) return null;
+          return (
+            <TelegramContentChannels
+              key={`tg-${m.id}`}
+              title={`Content-Kanäle · ${m.name}`}
+              subtitle="Direkt zu den Telegram-Kanälen mit dem aktuellen Content für dieses Model."
+              reelsUrl={m.telegram_reels_url}
+              backgroundsUrl={m.telegram_backgrounds_url}
+              feedUrl={m.telegram_feed_url}
+            />
+          );
+        })}
+
         {/* Coaching */}
         <section>
           <div className="flex items-center gap-2 mb-3">
