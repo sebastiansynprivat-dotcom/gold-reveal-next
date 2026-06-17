@@ -483,6 +483,7 @@ export default function MarketerCoaching() {
   const [loading, setLoading] = useState(true);
   const [completed, setCompleted] = useState<Set<string>>(new Set());
   const [dailyDone, setDailyDone] = useState<Set<string>>(new Set());
+  const [history, setHistory] = useState<Record<string, number>>({}); // dateISO -> # tasks done
   const [openLesson, setOpenLesson] = useState<{ moduleId: string; lessonId: string } | null>(null);
   const [quoteIdx] = useState(() => Math.floor(Math.random() * QUOTES.length));
 
@@ -491,12 +492,22 @@ export default function MarketerCoaching() {
     if (!user?.id) return;
     (async () => {
       setLoading(true);
-      const [progressRes, tasksRes] = await Promise.all([
+      const since = new Date();
+      since.setDate(since.getDate() - 90);
+      const sinceISO = since.toISOString().slice(0, 10);
+      const [progressRes, tasksRes, historyRes] = await Promise.all([
         supabase.from("marketer_coaching_progress").select("lesson_id").eq("user_id", user.id),
         supabase.from("marketer_daily_tasks").select("task_key,done").eq("user_id", user.id).eq("task_date", todayISO()),
+        supabase.from("marketer_daily_tasks").select("task_date,done").eq("user_id", user.id).gte("task_date", sinceISO),
       ]);
       setCompleted(new Set((progressRes.data || []).map((r: any) => r.lesson_id)));
       setDailyDone(new Set((tasksRes.data || []).filter((r: any) => r.done).map((r: any) => r.task_key)));
+      const counts: Record<string, number> = {};
+      (historyRes.data || []).forEach((r: any) => {
+        if (!r.done) return;
+        counts[r.task_date] = (counts[r.task_date] || 0) + 1;
+      });
+      setHistory(counts);
       setLoading(false);
     })();
   }, [user?.id]);
@@ -540,8 +551,11 @@ export default function MarketerCoaching() {
     const next = new Set(dailyDone);
     if (wasDone) next.delete(key); else next.add(key);
     setDailyDone(next);
+    // mirror into history for streak
+    const t = todayISO();
+    setHistory((h) => ({ ...h, [t]: next.size }));
     await supabase.from("marketer_daily_tasks").upsert(
-      { user_id: user.id, task_date: todayISO(), task_key: key, done: !wasDone },
+      { user_id: user.id, task_date: t, task_key: key, done: !wasDone },
       { onConflict: "user_id,task_date,task_key" }
     );
     if (!wasDone && next.size === DAILY_TASKS.length) {
@@ -550,6 +564,38 @@ export default function MarketerCoaching() {
   };
 
   const dailyPct = Math.round((dailyDone.size / DAILY_TASKS.length) * 100);
+
+  // Streak: consecutive days (ending today OR yesterday) where all DAILY_TASKS were done
+  const { currentStreak, bestStreak, perfectDays } = useMemo(() => {
+    const full = DAILY_TASKS.length;
+    const perfect = new Set(Object.entries(history).filter(([, c]) => c >= full).map(([d]) => d));
+    // current streak ending today/yesterday
+    const start = new Date();
+    start.setHours(0, 0, 0, 0);
+    let cur = 0;
+    if (!perfect.has(start.toISOString().slice(0, 10))) {
+      // if today not perfect yet, start from yesterday so the streak doesn't reset before day ends
+      start.setDate(start.getDate() - 1);
+    }
+    while (perfect.has(start.toISOString().slice(0, 10))) {
+      cur += 1;
+      start.setDate(start.getDate() - 1);
+    }
+    // best streak in window
+    const sorted = [...perfect].sort();
+    let best = 0, run = 0;
+    let prev: Date | null = null;
+    for (const d of sorted) {
+      const cd = new Date(d + "T00:00:00");
+      if (prev && (cd.getTime() - prev.getTime()) === 86400000) run += 1;
+      else run = 1;
+      if (run > best) best = run;
+      prev = cd;
+    }
+    return { currentStreak: cur, bestStreak: Math.max(best, cur), perfectDays: perfect.size };
+  }, [history]);
+
+
 
   const handleLogout = async () => {
     await signOut();
@@ -663,7 +709,48 @@ export default function MarketerCoaching() {
             </div>
           </div>
 
+          {/* Streak banner */}
+          <div className={`mb-4 rounded-2xl border p-4 flex items-center gap-4 overflow-hidden relative ${
+            currentStreak >= 3
+              ? "border-orange-500/40 bg-gradient-to-br from-orange-500/15 via-amber-500/10 to-accent/10"
+              : "border-border/40 bg-background/40"
+          }`}>
+            {currentStreak >= 3 && (
+              <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-orange-500/20 blur-3xl pointer-events-none" />
+            )}
+            <div className={`relative h-14 w-14 rounded-2xl flex items-center justify-center shrink-0 ${
+              currentStreak >= 3
+                ? "bg-gradient-to-br from-orange-500/30 to-amber-400/20 border border-orange-400/40 shadow-[0_0_20px_rgba(251,146,60,0.35)]"
+                : "bg-background/60 border border-border/50"
+            }`}>
+              <Flame className={`h-7 w-7 ${currentStreak >= 3 ? "text-orange-400" : currentStreak >= 1 ? "text-accent" : "text-muted-foreground/60"}`} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-baseline gap-2 flex-wrap">
+                <span className={`text-3xl font-extrabold tabular-nums leading-none ${currentStreak >= 3 ? "text-orange-300" : "text-foreground"}`}>
+                  {currentStreak}
+                </span>
+                <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                  {currentStreak === 1 ? "Tag Streak" : "Tage Streak"}
+                </span>
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-1 leading-snug">
+                {currentStreak === 0
+                  ? "Hak heute alle 6 Aufgaben ab und starte deinen Streak."
+                  : dailyDone.size === DAILY_TASKS.length
+                  ? "Heute komplett – stark! Morgen weiter dranbleiben."
+                  : `Noch ${DAILY_TASKS.length - dailyDone.size} ${DAILY_TASKS.length - dailyDone.size === 1 ? "Aufgabe" : "Aufgaben"} bis dein Streak heute zählt.`}
+              </p>
+            </div>
+            <div className="hidden sm:flex flex-col items-end shrink-0 text-right">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Best · 90d</div>
+              <div className="text-base font-bold text-accent tabular-nums">{bestStreak} {bestStreak === 1 ? "Tag" : "Tage"}</div>
+              <div className="text-[10px] text-muted-foreground mt-0.5">{perfectDays} perfekte Tage</div>
+            </div>
+          </div>
+
           <div className="grid gap-2">
+
             {DAILY_TASKS.map((t) => {
               const done = dailyDone.has(t.key);
               return (
