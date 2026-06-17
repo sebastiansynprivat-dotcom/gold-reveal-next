@@ -49,9 +49,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
+  const normalizeEmail = (value: string) => value.trim().toLowerCase();
+
   const signUp = async (email: string, password: string, metadata?: { group_name?: string; name?: string }) => {
     const { error } = await supabase.auth.signUp({
-      email,
+      email: normalizeEmail(email),
       password,
       options: metadata ? { data: metadata } : undefined,
     });
@@ -67,7 +69,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({ email: normalizeEmail(email), password });
     return { error };
   };
 

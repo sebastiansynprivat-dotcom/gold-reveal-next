@@ -6,6 +6,7 @@ import { Shield, Lock, KeyRound, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import ForgotPasswordDialog from "@/components/ForgotPasswordDialog";
 import logo from "@/assets/logo.png";
 import { toast } from "sonner";
 
@@ -23,6 +24,7 @@ const AdminLogin = () => {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [totpVerified, setTotpVerified] = useState(false);
   const [loginCompleted, setLoginCompleted] = useState(false);
+  const [forgotOpen, setForgotOpen] = useState(false);
 
   // Only check admin status AFTER explicit login on this page
   useEffect(() => {
@@ -179,6 +181,7 @@ const AdminLogin = () => {
 
         {/* Step 1: Login */}
         {step === "login" && (
+          <>
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="relative input-gold-shimmer rounded-lg">
               <Input
@@ -229,7 +232,23 @@ const AdminLogin = () => {
             <Button type="submit" disabled={submitting} className="w-full">
               {submitting ? "Anmelden..." : "Admin-Login"}
             </Button>
+
+            <button
+              type="button"
+              onClick={() => setForgotOpen(true)}
+              className="w-full text-center text-xs text-muted-foreground hover:text-accent transition-colors"
+            >
+              Passwort vergessen?
+            </button>
           </form>
+
+          <ForgotPasswordDialog
+            open={forgotOpen}
+            onClose={() => setForgotOpen(false)}
+            defaultEmail={email}
+            redirectPath="/reset-password?returnTo=/admin/login"
+          />
+          </>
         )}
 
         {/* Step 2: TOTP Setup */}

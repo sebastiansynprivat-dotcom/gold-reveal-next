@@ -1,12 +1,11 @@
 /// <reference lib="webworker" />
+import { clientsClaim } from "workbox-core";
 import { cleanupOutdatedCaches, precacheAndRoute } from "workbox-precaching";
 
 declare let self: ServiceWorkerGlobalScope;
 
-// Do NOT call skipWaiting() / clients.claim() — those would activate a new SW
-// over an already-open tab and (combined with the controllerchange reload)
-// caused the page to reload itself ~30s after every visit, throwing the user
-// back to the start route. A new SW now waits until all tabs are closed.
+self.skipWaiting();
+clientsClaim();
 cleanupOutdatedCaches();
 precacheAndRoute(self.__WB_MANIFEST);
 

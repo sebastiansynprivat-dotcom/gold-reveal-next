@@ -9,6 +9,8 @@ const inputClass =
 
 export default function ResetPassword() {
   const navigate = useNavigate();
+  const returnTo = new URLSearchParams(window.location.search).get("returnTo");
+  const redirectPath = returnTo?.startsWith("/") ? returnTo : "/auth";
   const [ready, setReady] = useState(false);
   const [password, setPassword] = useState("");
   const [password2, setPassword2] = useState("");
@@ -51,7 +53,7 @@ export default function ResetPassword() {
       return;
     }
     setSuccess(true);
-    setTimeout(() => navigate("/auth"), 2500);
+    setTimeout(() => navigate(redirectPath), 2500);
   };
 
   return (
