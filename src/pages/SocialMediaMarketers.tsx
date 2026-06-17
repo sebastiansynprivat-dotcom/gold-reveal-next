@@ -61,9 +61,9 @@ export default function SocialMediaMarketers() {
     ((profs || []) as any[]).forEach((p) => nameById.set(p.user_id, p.display_name || ""));
     setMarketers(ids.map(id => ({ user_id: id, name: nameById.get(id) || "" })));
 
-    // Load PWA / push status for all marketers + models
+    // Load PWA / push status only for actual SMM marketers + models whose Plattform-Login generiert wurde
     const { data: modelUsers } = await supabase
-      .from("model_users")
+      .from("fanvue_model_users" as any)
       .select("user_id, model_id");
     const modelUserIds = ((modelUsers || []) as any[]).map((r) => r.user_id).filter(Boolean);
     const allIds = Array.from(new Set([...ids, ...modelUserIds]));
@@ -79,12 +79,12 @@ export default function SocialMediaMarketers() {
     ((statusRows || []) as any[]).forEach((r) => { byUser[r.user_id] = r; });
     setInstallByUser(byUser);
 
-    // Build model status rows for the model overview
+    // Build model status rows: nur Models mit echtem Plattform-Login
     const modelById = new Map<string, string>();
     ((m as any[]) || []).forEach((mm) => modelById.set(mm.id, mm.name || ""));
     setModelInstall(
       ((modelUsers || []) as any[])
-        .filter((r) => r.model_id && r.user_id)
+        .filter((r) => r.model_id && r.user_id && modelById.has(r.model_id))
         .map((r) => ({
           model_id: r.model_id,
           model_name: modelById.get(r.model_id) || "—",
