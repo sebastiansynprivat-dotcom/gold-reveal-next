@@ -431,6 +431,36 @@ export default function SocialMediaDashboard() {
     }
   };
 
+  const restoreChatter = async (m: SocialMediaModel, chatterName: string) => {
+    if (!chatterName) return;
+    // Setting chatter_name fires the DB trigger: closes any open row, opens a new one for chatterName.
+    const { error } = await supabase
+      .from("fanvue_models" as any)
+      .update({ chatter_name: chatterName, chatter_assigned: true })
+      .eq("id", m.id);
+    if (error) {
+      toast.error("Chatter wiederherstellen fehlgeschlagen");
+    } else {
+      toast.success(`${chatterName} wiederhergestellt`);
+      setHistoryOpenFor((prev) => (prev && prev.id === m.id ? { ...prev, chatter_name: chatterName, chatter_assigned: true } : prev));
+      load();
+    }
+  };
+
+  const deleteChatterHistory = async (assignmentId: string, modelId: string) => {
+    if (!confirm("Diesen archivierten Chatter-Eintrag endgültig löschen?")) return;
+    const { error } = await supabase
+      .from("fanvue_model_chatter_assignments" as any)
+      .delete()
+      .eq("id", assignmentId);
+    if (error) {
+      toast.error("Löschen fehlgeschlagen");
+    } else {
+      toast.success("Eintrag gelöscht");
+      load();
+    }
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/socialmedia/login");
