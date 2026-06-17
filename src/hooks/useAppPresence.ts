@@ -33,12 +33,15 @@ export function useAppPresence(role: "chatter" | "marketer" | "model" | "admin")
             .upsert(payload, { onConflict: "user_id" });
         } else {
           // When standalone, also record install time (only if not previously set)
-          const { data: existing } = await supabase
-            .from("app_install_status" as any)
+          const { data: existing } = await (supabase as any)
+            .from("app_install_status")
             .select("pwa_installed_at")
             .eq("user_id", user.id)
             .maybeSingle();
-          if (existing?.pwa_installed_at) delete payload.pwa_installed_at;
+          if ((existing as any)?.pwa_installed_at) delete payload.pwa_installed_at;
+          await supabase
+            .from("app_install_status" as any)
+            .upsert(payload, { onConflict: "user_id" });
           await supabase
             .from("app_install_status" as any)
             .upsert(payload, { onConflict: "user_id" });
