@@ -175,6 +175,45 @@ export default function ContentImpactCalculator({
         </p>
       </div>
 
+      {contentInstructionsUrl && (
+        <motion.a
+          href={contentInstructionsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="relative group block rounded-xl overflow-hidden border border-accent/50 gold-border-glow"
+          style={{
+            background:
+              "linear-gradient(135deg, hsl(var(--accent) / 0.18) 0%, hsl(var(--accent) / 0.08) 50%, hsl(var(--accent) / 0.18) 100%)",
+          }}
+        >
+          {/* Shimmer overlay */}
+          <span
+            className="pointer-events-none absolute inset-0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out"
+            style={{
+              background:
+                "linear-gradient(90deg, transparent, hsl(var(--accent) / 0.35), transparent)",
+            }}
+          />
+          <div className="relative flex items-center gap-3 px-4 py-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent/20 border border-accent/40">
+              <BookOpen className="h-4 w-4 text-accent" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] uppercase tracking-wider text-accent/90 font-semibold">
+                {copy.instructionsTitle}
+              </p>
+              <p className="text-sm font-bold text-gold-gradient leading-tight mt-0.5 truncate">
+                {copy.instructionsCta}
+              </p>
+            </div>
+            <ArrowRight className="h-4 w-4 text-accent shrink-0 transition-transform group-hover:translate-x-1" />
+          </div>
+        </motion.a>
+      )}
+
+
       <div className="relative flex items-start gap-1.5">
         <TrendingUp className="h-3 w-3 text-accent shrink-0 mt-0.5" />
         <p className="text-[10px] text-muted-foreground/70 leading-relaxed">
