@@ -43,6 +43,10 @@
           manifestHref = '/manifest-model.webmanifest';
           title = 'SheX Model';
           shortName = 'SheX Model';
+        } else if (lower.startsWith('/marketer') || lower.startsWith('/socialmedia')) {
+          manifestHref = '/manifest-marketer.webmanifest';
+          title = 'SheX Marketer';
+          shortName = 'SheX Marketer';
         }
         document.write('<link rel="manifest" href="' + manifestHref + '" id="app-manifest">');
         var t = document.getElementById('apple-app-title');
