@@ -12,7 +12,7 @@ import {
   LogOut, CheckCircle2, Circle, CalendarDays, Sparkles, Link as LinkIcon, ExternalLink,
   Instagram, TrendingUp, TrendingDown, Minus, Flame, Film, Copy, KeyRound, HelpCircle,
   Rocket, Trophy, Eye, EyeOff, Target, ArrowUpRight, Lightbulb, Users,
-  ThumbsUp, ThumbsDown, MessageSquare, FolderOpen, CheckCheck, ChevronDown,
+  ThumbsUp, ThumbsDown, MessageSquare, FolderOpen, CheckCheck, ChevronDown, Send,
 } from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, Tooltip } from "recharts";
 import logo from "@/assets/logo.png";
@@ -155,6 +155,7 @@ export default function SocialMediaModelDashboard() {
   const [dayRowsByPlan, setDayRowsByPlan] = useState<Record<string, DayRow[]>>({});
   const [statuses, setStatuses] = useState<Record<string, StatusRow>>({});
   const [weekFb, setWeekFb] = useState<Record<string, WeekFeedback>>({});
+  const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({});
   const [revealed, setRevealed] = useState<Record<number, boolean>>({});
   const [platformLoginsExpanded, setPlatformLoginsExpanded] = useState(false);
   const [today] = useState(() => { const d = new Date(); d.setHours(0,0,0,0); return d; });
@@ -986,7 +987,7 @@ export default function SocialMediaModelDashboard() {
                                   onClick={() => upsertWeekFeedback(pr.assignment_id, weekIdx, { status: status === "rejected" ? "pending" : "rejected" })}
                                   className={`inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-md border transition leading-none ${status === "rejected" ? "bg-red-500/20 border-red-500/50 text-red-300" : "border-border/50 text-muted-foreground hover:border-red-500/40"}`}
                                 >
-                                  <ThumbsDown className="h-3 w-3" /> Probleme melden
+                                  <ThumbsDown className="h-3 w-3" /> Daumen runter / Ablehnen
                                 </button>
                                 {status === "pending" && (
                                   <span className="text-[10px] text-muted-foreground italic">Optional</span>
@@ -1020,16 +1021,43 @@ export default function SocialMediaModelDashboard() {
                                 )}
                               </div>
 
-                              <div className="flex items-start gap-2">
-                                <MessageSquare className="h-3.5 w-3.5 text-accent mt-2 shrink-0" />
-                                <Textarea
-                                  placeholder="Kommentar an dein Team (optional)"
-                                  rows={2}
-                                  defaultValue={fb?.feedback || ""}
-                                  onBlur={(e) => { const v = e.target.value; if (v !== (fb?.feedback || "")) upsertWeekFeedback(pr.assignment_id, weekIdx, { feedback: v }); }}
-                                  className="text-xs bg-background/60 resize-none leading-relaxed"
-                                />
-                              </div>
+                              {(() => {
+                                const ck = `${pr.assignment_id}:${weekIdx}`;
+                                const saved = fb?.feedback || "";
+                                const draft = commentDrafts[ck] ?? saved;
+                                const dirty = draft !== saved;
+                                return (
+                                  <div className="space-y-1.5">
+                                    <div className="flex items-start gap-2">
+                                      <MessageSquare className="h-3.5 w-3.5 text-accent mt-2 shrink-0" />
+                                      <Textarea
+                                        placeholder="Kommentar an dein Team (optional)"
+                                        rows={2}
+                                        value={draft}
+                                        onChange={(e) => setCommentDrafts((s) => ({ ...s, [ck]: e.target.value }))}
+                                        className="text-xs bg-background/60 resize-none leading-relaxed"
+                                      />
+                                    </div>
+                                    <div className="flex items-center justify-between gap-2 pl-5">
+                                      <span className="text-[10px] text-muted-foreground">
+                                        {saved ? (dirty ? "Ungespeicherte Änderungen" : "✓ Gespeichert – sichtbar im Admin-Dashboard") : "Noch kein Kommentar gesendet"}
+                                      </span>
+                                      <Button
+                                        size="sm"
+                                        onClick={async () => {
+                                          await upsertWeekFeedback(pr.assignment_id, weekIdx, { feedback: draft });
+                                          setCommentDrafts((s) => { const n = { ...s }; delete n[ck]; return n; });
+                                          toast.success("Kommentar gesendet");
+                                        }}
+                                        disabled={!dirty}
+                                        className="h-7 text-[11px] bg-accent text-accent-foreground hover:bg-accent/90 disabled:opacity-40"
+                                      >
+                                        <Send className="h-3 w-3 mr-1" /> Kommentar senden
+                                      </Button>
+                                    </div>
+                                  </div>
+                                );
+                              })()}
                             </div>
                           );
                         })()}
