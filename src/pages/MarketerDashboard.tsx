@@ -92,6 +92,15 @@ export default function MarketerDashboard() {
       const mName = ((prof as any)?.display_name || "").trim();
       setMarketerName(mName);
 
+      // Load coaching completion status
+      const { data: progress } = await supabase
+        .from("marketer_coaching_progress")
+        .select("lesson_id")
+        .eq("user_id", user.id);
+      const completedLessons = new Set((progress || []).map((r: any) => r.lesson_id));
+      const totalLessons = 20; // sync with MarketerCoaching.tsx ALL_LESSON_IDS count
+      setCoachingComplete(completedLessons.size >= totalLessons);
+
       const { data: asg } = await supabase
         .from("marketer_model_assignments")
         .select("model_id")
