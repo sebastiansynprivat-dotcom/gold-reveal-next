@@ -224,6 +224,8 @@ export default function MarketerDashboard() {
   return (
     <div className="min-h-screen bg-background text-foreground relative">
       <GoldParticles />
+      <PushNotificationDialog />
+      <NotificationBanner />
       <header className="fixed top-0 left-0 right-0 z-40 border-b border-accent/20 bg-[linear-gradient(180deg,hsl(0_0%_4%/0.95)_0%,hsl(0_0%_6%/0.85)_100%)] backdrop-blur-2xl">
         <div className="relative z-10 flex items-center gap-3 px-4 py-3.5 md:px-6">
           <div className="relative shrink-0">
