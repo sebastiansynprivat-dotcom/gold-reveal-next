@@ -987,7 +987,7 @@ export default function SocialMediaModelDashboard() {
                                   onClick={() => upsertWeekFeedback(pr.assignment_id, weekIdx, { status: status === "rejected" ? "pending" : "rejected" })}
                                   className={`inline-flex items-center gap-1 text-[11px] px-2 py-1 rounded-md border transition leading-none ${status === "rejected" ? "bg-red-500/20 border-red-500/50 text-red-300" : "border-border/50 text-muted-foreground hover:border-red-500/40"}`}
                                 >
-                                  <ThumbsDown className="h-3 w-3" /> Probleme melden
+                                  <ThumbsDown className="h-3 w-3" /> Daumen runter / Ablehnen
                                 </button>
                                 {status === "pending" && (
                                   <span className="text-[10px] text-muted-foreground italic">Optional</span>
