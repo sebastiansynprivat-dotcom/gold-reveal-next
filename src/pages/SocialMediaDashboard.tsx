@@ -1150,6 +1150,32 @@ export default function SocialMediaDashboard() {
               </div>
             </div>
 
+            {/* Telegram Content Channels */}
+            <div className="rounded-xl border border-accent/30 p-3 sm:p-4 space-y-2 bg-gradient-to-br from-accent/5 via-transparent to-transparent">
+              <h4 className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-2 flex items-center gap-1.5">
+                <Sparkles className="h-3 w-3 text-accent" /> Telegram Content-Kanäle
+              </h4>
+              <p className="text-[10px] text-muted-foreground/70 mb-2">Diese Links werden Marketern und dem Model im Dashboard angezeigt.</p>
+              {[
+                { key: "telegram_reels_url" as const, label: "Reels" },
+                { key: "telegram_backgrounds_url" as const, label: "Background-Videos" },
+                { key: "telegram_feed_url" as const, label: "Feed / Story (Bilder)" },
+              ].map((row) => (
+                <div key={row.key} className="space-y-1">
+                  <Label className="text-[11px] text-muted-foreground">{row.label}</Label>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Link2 className="h-4 w-4 text-accent/70 shrink-0" />
+                    <Input
+                      placeholder="https://t.me/..."
+                      value={(form as any)[row.key] || ""}
+                      onChange={(e) => setForm({ ...form, [row.key]: e.target.value })}
+                      className="text-sm min-w-0 flex-1"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
             {/* Marketers */}
             <div className="rounded-xl border border-border/40 p-3 sm:p-4 space-y-2 bg-secondary/20">
               <div className="flex items-center justify-between mb-2">
