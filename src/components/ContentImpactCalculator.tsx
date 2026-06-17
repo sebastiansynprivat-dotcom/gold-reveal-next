@@ -59,6 +59,7 @@ export default function ContentImpactCalculator({
   commissionPct,
   currency,
   language = "de",
+  contentInstructionsUrl,
 }: Props) {
   const lang = language === "en" ? "en" : "de";
   const copy = COPY[lang];
