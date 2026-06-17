@@ -415,7 +415,7 @@ export default function MarketerDashboard() {
               </table>
             </div>
             <p className="text-[10px] text-muted-foreground/70 mt-2">
-              Lineare Trendprognose auf Basis der letzten 30 Tage. Tatsächliche Werte können abweichen.
+              Adaptive Prognose: neue Accounts (&lt; 1.000 Follower) starten mit 100–500 erwartetem Wachstum / Monat; ab 1.000 Followern auf Basis des gemessenen Trends der letzten 30 Tage. Werte können abweichen.
             </p>
           </section>
         )}
