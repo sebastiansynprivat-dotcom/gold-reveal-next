@@ -78,6 +78,25 @@ type IgAccount = {
 
 const WEEKDAYS_DE = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
+// Forecast helper:
+//  • Never returns a value below the current follower count (no "Minusbereich").
+//  • New accounts (<1000 followers): blends a baseline range (100–500 / 30d)
+//    with observed growth, so brand-new IGs see realistic ramp-up.
+//  • Established accounts (≥1000 followers): linear trend on observed perDay.
+function projectFollowers(current: number, perDay: number, days: number): number {
+  const safePerDay = Math.max(0, perDay);
+  if (current < 1000) {
+    // Baseline scales from ~100 (0 followers) up to ~500 (≈1000 followers) per 30d
+    const baselineMonthly = 100 + Math.min(400, (current / 1000) * 400);
+    const observedMonthly = safePerDay * 30;
+    // Weight observed growth more as it strengthens, but keep baseline as floor
+    const monthly = Math.max(baselineMonthly, observedMonthly);
+    return Math.round(current + (monthly * days) / 30);
+  }
+  return Math.round(current + safePerDay * days);
+}
+
+
 function mondayOf(d: Date) {
   const day = d.getDay();
   const diff = day === 0 ? -6 : 1 - day;
