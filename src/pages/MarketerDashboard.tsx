@@ -5,7 +5,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import {
-  LogOut, TrendingUp, Users, Sparkles, Instagram, Target, BookOpen, ArrowUpRight,
+  LogOut, TrendingUp, Sparkles, Instagram, Target, BookOpen, ArrowUpRight,
+  Lock, Zap, Flame, ChevronRight,
 } from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, Tooltip } from "recharts";
 import logo from "@/assets/logo.png";
@@ -44,7 +45,6 @@ function daysAgo(n: number) {
   return d;
 }
 
-// Forecast helper — never negative; ramps new accounts (<1000) with a 100–500/30d baseline.
 function projectFollowers(current: number, perDay: number, days: number): number {
   const safePerDay = Math.max(0, perDay);
   if (current < 1000) {
@@ -56,7 +56,6 @@ function projectFollowers(current: number, perDay: number, days: number): number
   return Math.round(current + safePerDay * days);
 }
 
-
 function normIg(s?: string | null): string {
   if (!s) return "";
   let v = s.trim().toLowerCase();
@@ -67,6 +66,42 @@ function normIg(s?: string | null): string {
   return v;
 }
 
+const DAILY_TASK_PREVIEW = [
+  { icon: "💬", label: "5–10 Reels ansehen, liken & kommentieren" },
+  { icon: "🎬", label: "Reel #1 posten (08–10 oder 12–14 Uhr)" },
+  { icon: "🎬", label: "Reel #2 posten (18–20 Uhr Primetime)" },
+  { icon: "📸", label: "Mindestens 1 Story posten" },
+  { icon: "🖼️", label: "Feed-Bild prüfen / heute posten" },
+  { icon: "📊", label: "Performance vom Vortag kurz prüfen" },
+];
+
+function LockedSection({ children, locked, title, icon: Icon, hint }: {
+  children: React.ReactNode;
+  locked: boolean;
+  title: string;
+  icon: React.ElementType;
+  hint?: string;
+}) {
+  return (
+    <section className={`relative ${locked ? "opacity-50 pointer-events-none select-none" : ""}`}>
+      <div className="flex items-center gap-2 mb-3">
+        <Icon className="h-4 w-4 text-accent" />
+        <h2 className="text-sm uppercase tracking-[0.2em] text-muted-foreground font-bold">{title}</h2>
+        {locked && <Lock className="h-3 w-3 text-muted-foreground" />}
+      </div>
+      {children}
+      {locked && (
+        <div className="absolute inset-0 flex items-center justify-center z-10">
+          <div className="rounded-2xl border border-accent/30 bg-gradient-to-br from-accent/15 via-card/50 to-background/40 backdrop-blur-sm p-6 text-center shadow-xl">
+            <Lock className="h-8 w-8 text-accent mx-auto mb-3" />
+            <p className="text-sm font-bold text-foreground">{hint || "Schließe zuerst das Coaching ab."}</p>
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
 export default function MarketerDashboard() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
@@ -75,6 +110,7 @@ export default function MarketerDashboard() {
   const [snapshotsByKey, setSnapshotsByKey] = useState<Record<string, Snapshot[]>>({});
   const [postsByKey, setPostsByKey] = useState<Record<string, PostSnap>>({});
   const [marketerName, setMarketerName] = useState<string>("");
+  const [coachingComplete, setCoachingComplete] = useState<boolean | null>(null);
 
   useAppPresence("marketer");
 
@@ -90,6 +126,15 @@ export default function MarketerDashboard() {
         .maybeSingle();
       const mName = ((prof as any)?.display_name || "").trim();
       setMarketerName(mName);
+
+      // Load coaching completion status
+      const { data: progress } = await supabase
+        .from("marketer_coaching_progress")
+        .select("lesson_id")
+        .eq("user_id", user.id);
+      const completedLessons = new Set((progress || []).map((r: any) => r.lesson_id));
+      const totalLessons = 20; // sync with MarketerCoaching.tsx ALL_LESSON_IDS count
+      setCoachingComplete(completedLessons.size >= totalLessons);
 
       const { data: asg } = await supabase
         .from("marketer_model_assignments")
@@ -116,7 +161,6 @@ export default function MarketerDashboard() {
         (grouped[key] ||= []).push(s);
       });
 
-      // Latest post snapshot per (model, instagram_url)
       const { data: psnaps } = await supabase
         .from("fanvue_instagram_post_snapshots" as any)
         .select("model_id,instagram_url,posts_7d,posts_30d,posts_total,last_post_at,recorded_at")
@@ -140,7 +184,6 @@ export default function MarketerDashboard() {
     navigate("/marketer/login");
   };
 
-  // Build the list of IG accounts that belong to THIS marketer only
   const igAccounts = useMemo<IgAccount[]>(() => {
     if (!marketerName) return [];
     const norm = (s?: string | null) => (s || "").trim().toLowerCase();
@@ -213,6 +256,9 @@ export default function MarketerDashboard() {
     return sum;
   }, [igAccounts, snapshotsByKey]);
 
+  const locked = coachingComplete === false;
+  const showLockedHint = coachingComplete === false;
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -249,30 +295,65 @@ export default function MarketerDashboard() {
       <div className="h-[68px]" />
 
       <main className="relative z-10 max-w-7xl mx-auto px-4 md:px-6 py-6 space-y-8">
-        {/* Hero summary */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl border border-accent/30 bg-gradient-to-br from-accent/15 via-accent/5 to-transparent p-6 backdrop-blur-sm relative overflow-hidden"
-        >
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent to-transparent" />
-          <div className="flex items-start justify-between gap-4 flex-wrap">
-            <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-accent/80 font-bold mb-1">Prognose · 30 Tage</p>
-              <p className="text-3xl md:text-4xl font-bold text-foreground tabular-nums">
-                {totalForecast30 >= 0 ? "+" : ""}{totalForecast30.toLocaleString("de-DE")}
-              </p>
-              <p className="text-sm text-muted-foreground mt-1">erwartetes Follower-Wachstum über deine Accounts</p>
-            </div>
-            <Sparkles className="h-10 w-10 text-accent/60" />
-          </div>
-        </motion.div>
 
-        {/* My Instagram Accounts */}
+        {/* Coaching CTA — always first */}
         <section>
           <div className="flex items-center gap-2 mb-3">
-            <Instagram className="h-4 w-4 text-accent" />
-            <h2 className="text-sm uppercase tracking-[0.2em] text-muted-foreground font-bold">Meine Instagram-Accounts</h2>
+            <BookOpen className="h-4 w-4 text-accent" />
+            <h2 className="text-sm uppercase tracking-[0.2em] text-muted-foreground font-bold">Coaching</h2>
           </div>
+          <button
+            onClick={() => navigate("/marketer/coaching")}
+            className="group w-full text-left relative overflow-hidden rounded-2xl border border-accent/30 bg-gradient-to-br from-accent/15 via-card/50 to-background/40 backdrop-blur-sm p-6 hover:border-accent/60 transition-all"
+          >
+            <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-accent/15 blur-3xl pointer-events-none group-hover:bg-accent/25 transition-colors" />
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/60 to-transparent" />
+            <div className="relative flex items-start gap-4 flex-wrap">
+              <div className="h-12 w-12 rounded-xl border border-accent/40 bg-background/60 flex items-center justify-center shrink-0">
+                <Sparkles className="h-6 w-6 text-accent" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[10px] uppercase tracking-[0.3em] text-accent/80 font-bold">SheX Marketer Academy</div>
+                <h3 className="text-xl font-extrabold text-foreground mt-1 leading-tight">Vom Onboarding zur Skalierung.</h3>
+                <p className="text-sm text-muted-foreground mt-2 max-w-xl leading-relaxed">
+                  Interaktives Coaching: Aufwärmprozess, Postingzeiten, Branding, Werbung, Skalierung – Schritt für Schritt mit Fortschrittstracking und täglicher Routine-Checkliste.
+                </p>
+                {showLockedHint && (
+                  <div className="mt-3 inline-flex items-center gap-2 rounded-lg bg-accent/10 border border-accent/20 px-3 py-2 text-xs text-accent font-bold">
+                    <Lock className="h-3.5 w-3.5" />
+                    Hier erst mal das Coaching abschließen und dann geht es weiter.
+                  </div>
+                )}
+                <div className="mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-accent group-hover:gap-2.5 transition-all">
+                  {coachingComplete ? "Coaching öffnen" : "Jetzt starten"} <ArrowUpRight className="h-4 w-4" />
+                </div>
+              </div>
+            </div>
+          </button>
+        </section>
+
+        {/* Locked feature preview: Forecast */}
+        <LockedSection locked={locked} title="Prognose" icon={Target} hint="Abschluss des Coachings erforderlich.">
+          <motion.div
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+            className="rounded-2xl border border-accent/30 bg-gradient-to-br from-accent/15 via-accent/5 to-transparent p-6 backdrop-blur-sm relative overflow-hidden"
+          >
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent to-transparent" />
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-accent/80 font-bold mb-1">Prognose · 30 Tage</p>
+                <p className="text-3xl md:text-4xl font-bold text-foreground tabular-nums">
+                  {totalForecast30 >= 0 ? "+" : ""}{totalForecast30.toLocaleString("de-DE")}
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">erwartetes Follower-Wachstum über deine Accounts</p>
+              </div>
+              <Sparkles className="h-10 w-10 text-accent/60" />
+            </div>
+          </motion.div>
+        </LockedSection>
+
+        {/* Locked feature preview: Instagram Accounts */}
+        <LockedSection locked={locked} title="Meine Instagram-Accounts" icon={Instagram} hint="Abschluss des Coachings erforderlich.">
           {igAccounts.length === 0 ? (
             <div className="rounded-2xl border border-border/40 bg-card/40 p-10 text-center text-muted-foreground">
               <Instagram className="h-10 w-10 mx-auto mb-3 opacity-30" />
@@ -375,15 +456,11 @@ export default function MarketerDashboard() {
               })}
             </div>
           )}
-        </section>
+        </LockedSection>
 
-        {/* Forecasts detail */}
+        {/* Locked feature preview: Forecasts detail table */}
         {igAccounts.length > 0 && (
-          <section>
-            <div className="flex items-center gap-2 mb-3">
-              <Target className="h-4 w-4 text-accent" />
-              <h2 className="text-sm uppercase tracking-[0.2em] text-muted-foreground font-bold">Prognosen</h2>
-            </div>
+          <LockedSection locked={locked} title="Prognosen" icon={TrendingUp} hint="Abschluss des Coachings erforderlich.">
             <div className="rounded-2xl border border-accent/15 bg-card/40 backdrop-blur-sm overflow-hidden">
               <table className="w-full text-sm">
                 <thead className="bg-background/40 text-[10px] uppercase tracking-wider text-muted-foreground">
@@ -424,10 +501,37 @@ export default function MarketerDashboard() {
             <p className="text-[10px] text-muted-foreground/70 mt-2">
               Adaptive Prognose: neue Accounts (&lt; 1.000 Follower) starten mit 100–500 erwartetem Wachstum / Monat; ab 1.000 Followern auf Basis des gemessenen Trends der letzten 30 Tage. Werte können abweichen.
             </p>
-          </section>
+          </LockedSection>
         )}
 
-        {/* Telegram Content-Kanäle pro Model */}
+        {/* Locked feature preview: Daily Routine + Streaks */}
+        <LockedSection locked={locked} title="Tagesroutine & Streaks" icon={Zap} hint="Abschluss des Coachings erforderlich.">
+          <div className="rounded-2xl border border-accent/20 bg-card/40 backdrop-blur-sm p-5">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="h-12 w-12 rounded-xl border border-orange-400/30 bg-gradient-to-br from-orange-500/20 to-amber-400/10 flex items-center justify-center">
+                <Flame className="h-6 w-6 text-orange-400" />
+              </div>
+              <div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-extrabold text-foreground">0</span>
+                  <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Tage Streak</span>
+                </div>
+                <p className="text-[11px] text-muted-foreground">Starte deinen Streak nach dem Coaching-Abschluss.</p>
+              </div>
+            </div>
+            <div className="grid gap-2">
+              {DAILY_TASK_PREVIEW.map((t, i) => (
+                <div key={i} className="flex items-center gap-3 rounded-xl border border-border/40 bg-background/40 p-3 text-left opacity-60">
+                  <span className="text-xl shrink-0">{t.icon}</span>
+                  <span className="flex-1 text-sm leading-snug text-muted-foreground">{t.label}</span>
+                  <Lock className="h-4 w-4 text-muted-foreground shrink-0" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </LockedSection>
+
+        {/* Telegram Content-Kanäle pro Model — always visible */}
         {models.map((m) => {
           const hasAny =
             (m.telegram_reels_url || "").trim() ||
@@ -446,35 +550,6 @@ export default function MarketerDashboard() {
           );
         })}
 
-        {/* Coaching */}
-        <section>
-          <div className="flex items-center gap-2 mb-3">
-            <BookOpen className="h-4 w-4 text-accent" />
-            <h2 className="text-sm uppercase tracking-[0.2em] text-muted-foreground font-bold">Coaching</h2>
-          </div>
-          <button
-            onClick={() => navigate("/marketer/coaching")}
-            className="group w-full text-left relative overflow-hidden rounded-2xl border border-accent/30 bg-gradient-to-br from-accent/15 via-card/50 to-background/40 backdrop-blur-sm p-6 hover:border-accent/60 transition-all"
-          >
-            <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-accent/15 blur-3xl pointer-events-none group-hover:bg-accent/25 transition-colors" />
-            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/60 to-transparent" />
-            <div className="relative flex items-start gap-4 flex-wrap">
-              <div className="h-12 w-12 rounded-xl border border-accent/40 bg-background/60 flex items-center justify-center shrink-0">
-                <Sparkles className="h-6 w-6 text-accent" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-[10px] uppercase tracking-[0.3em] text-accent/80 font-bold">SheX Marketer Academy</div>
-                <h3 className="text-xl font-extrabold text-foreground mt-1 leading-tight">Vom Onboarding zur Skalierung.</h3>
-                <p className="text-sm text-muted-foreground mt-2 max-w-xl leading-relaxed">
-                  Interaktives Coaching: Aufwärmprozess, Postingzeiten, Branding, Werbung, Skalierung – Schritt für Schritt mit Fortschrittstracking und täglicher Routine-Checkliste.
-                </p>
-                <div className="mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-accent group-hover:gap-2.5 transition-all">
-                  Jetzt starten <ArrowUpRight className="h-4 w-4" />
-                </div>
-              </div>
-            </div>
-          </button>
-        </section>
       </main>
     </div>
   );
