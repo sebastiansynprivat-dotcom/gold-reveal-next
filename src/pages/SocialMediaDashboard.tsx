@@ -326,7 +326,13 @@ export default function SocialMediaDashboard() {
     const igs = Array.isArray(rest.instagram_urls) && rest.instagram_urls.length > 0
       ? rest.instagram_urls
       : (rest.instagram_url ? [rest.instagram_url] : []);
-    setForm({ ...rest, instagram_urls: igs });
+    setForm({
+      ...rest,
+      instagram_urls: igs,
+      telegram_reels_url: rest.telegram_reels_url ?? "",
+      telegram_backgrounds_url: rest.telegram_backgrounds_url ?? "",
+      telegram_feed_url: rest.telegram_feed_url ?? "",
+    });
     setDialogOpen(true);
   };
 
