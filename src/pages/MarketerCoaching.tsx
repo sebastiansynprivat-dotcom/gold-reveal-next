@@ -490,6 +490,8 @@ export default function MarketerCoaching() {
   const [openLesson, setOpenLesson] = useState<{ moduleId: string; lessonId: string } | null>(null);
   const [quoteIdx] = useState(() => Math.floor(Math.random() * QUOTES.length));
 
+  useAppPresence("marketer");
+
   // Load progress
   useEffect(() => {
     if (!user?.id) return;

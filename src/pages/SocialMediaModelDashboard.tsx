@@ -145,6 +145,8 @@ function motivationFor(pct: number, doneToday: number, totalToday: number): { ti
 export default function SocialMediaModelDashboard() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+
+  useAppPresence("model");
   const [loading, setLoading] = useState(true);
   const [model, setModel] = useState<ModelInfo | null>(null);
   const [followerSnaps, setFollowerSnaps] = useState<FollowerSnap[]>([]);
