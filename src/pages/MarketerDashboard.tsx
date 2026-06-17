@@ -97,6 +97,20 @@ export default function MarketerDashboard() {
         const key = `${s.model_id}|${normIg(s.instagram_url)}`;
         (grouped[key] ||= []).push(s);
       });
+
+      // Latest post snapshot per (model, instagram_url)
+      const { data: psnaps } = await supabase
+        .from("fanvue_instagram_post_snapshots" as any)
+        .select("model_id,instagram_url,posts_7d,posts_30d,posts_total,last_post_at,recorded_at")
+        .in("model_id", ids)
+        .order("recorded_at", { ascending: false });
+      const pmap: Record<string, PostSnap> = {};
+      (psnaps || []).forEach((p: any) => {
+        const key = `${p.model_id}|${normIg(p.instagram_url)}`;
+        if (!pmap[key]) pmap[key] = p as PostSnap;
+      });
+      setPostsByKey(pmap);
+
       setModels((mdls as ModelRow[]) || []);
       setSnapshotsByKey(grouped);
       setLoading(false);
