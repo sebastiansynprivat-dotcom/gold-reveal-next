@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Camera, Sparkles, TrendingUp, Repeat } from "lucide-react";
+import { Camera, Sparkles, TrendingUp, Repeat, BookOpen, ArrowRight } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 
 interface Props {
@@ -11,6 +11,8 @@ interface Props {
   /** model currency code */
   currency: string;
   language?: "de" | "en";
+  /** Optional URL to content instructions (e.g. Telegram channel for SYN models) */
+  contentInstructionsUrl?: string;
 }
 
 const COPY = {
