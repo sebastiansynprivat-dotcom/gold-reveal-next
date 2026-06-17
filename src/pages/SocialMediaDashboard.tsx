@@ -465,6 +465,9 @@ export default function SocialMediaDashboard() {
     .filter((m) => {
       if (archiveFilter === "active" && m.archived_at) return false;
       if (archiveFilter === "archived" && !m.archived_at) return false;
+      if (statFilter === "setup" && !m.account_setup) return false;
+      if (statFilter === "chatters" && !m.chatter_assigned) return false;
+      if (statFilter === "needed" && !(m.chatter_needed && !m.chatter_assigned)) return false;
       if (!search) return true;
       const q = search.toLowerCase();
       return (
