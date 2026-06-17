@@ -276,6 +276,7 @@ export default function ModelHomeDashboard({
       if (cancelled) return;
       setCommissionPct(Number(dash?.revenue_percentage || 0));
       const isSyn = String((mdl as any)?.model_agency || "").toLowerCase() === "syn";
+      setIsSynAgency(isSyn);
       // SYN agency = international models → force USD display
       setForceCurrency(isSyn ? "USD" : null);
       setModelCurrency(isSyn ? "USD" : ((mdl?.currency as string) || "EUR"));
