@@ -40,6 +40,7 @@ const Library = lazy(() => import("./pages/Library"));
 const MarketerLogin = lazy(() => import("./pages/MarketerLogin"));
 const MarketerSetupPassword = lazy(() => import("./pages/MarketerSetupPassword"));
 const MarketerDashboard = lazy(() => import("./pages/MarketerDashboard"));
+const MarketerCoaching = lazy(() => import("./pages/MarketerCoaching"));
 const SocialMediaMarketers = lazy(() => import("./pages/SocialMediaMarketers"));
 
 import AutoTranslator from "@/components/AutoTranslator";
@@ -249,6 +250,7 @@ const App = () => (
               <Route path="/marketer/login" element={<MarketerLogin />} />
               <Route path="/marketer/setup-password" element={<MarketerSetupPassword />} />
               <Route path="/marketer" element={<MarketerProtectedRoute><MarketerDashboard /></MarketerProtectedRoute>} />
+              <Route path="/marketer/coaching" element={<MarketerProtectedRoute><MarketerCoaching /></MarketerProtectedRoute>} />
 
 
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

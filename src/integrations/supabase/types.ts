@@ -1393,6 +1393,57 @@ export type Database = {
         }
         Relationships: []
       }
+      marketer_coaching_progress: {
+        Row: {
+          completed_at: string
+          created_at: string
+          id: string
+          lesson_id: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          created_at?: string
+          id?: string
+          lesson_id: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          created_at?: string
+          id?: string
+          lesson_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      marketer_daily_tasks: {
+        Row: {
+          created_at: string
+          done: boolean
+          id: string
+          task_date: string
+          task_key: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          done?: boolean
+          id?: string
+          task_date: string
+          task_key: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          done?: boolean
+          id?: string
+          task_date?: string
+          task_key?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       marketer_model_assignments: {
         Row: {
           assigned_at: string

@@ -445,21 +445,28 @@ export default function MarketerDashboard() {
             <BookOpen className="h-4 w-4 text-accent" />
             <h2 className="text-sm uppercase tracking-[0.2em] text-muted-foreground font-bold">Coaching</h2>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[
-              { title: "Grundlagen Instagram Growth", desc: "Hook, Hold, Conversion — was wirklich zählt." },
-              { title: "Reel-Skripte die viral gehen", desc: "Bewährte Strukturen für deine Models." },
-              { title: "Wöchentliche Performance-Reviews", desc: "So lieferst du klare Insights ans Model." },
-            ].map((c, i) => (
-              <div key={i} className="rounded-2xl border border-accent/15 bg-card/40 backdrop-blur-sm p-5 relative overflow-hidden">
-                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent" />
-                <TrendingUp className="h-5 w-5 text-accent mb-3" />
-                <h3 className="font-bold text-foreground mb-1">{c.title}</h3>
-                <p className="text-xs text-muted-foreground">{c.desc}</p>
-                <p className="text-[10px] uppercase tracking-wider text-accent/70 mt-3">Bald verfügbar</p>
+          <button
+            onClick={() => navigate("/marketer/coaching")}
+            className="group w-full text-left relative overflow-hidden rounded-2xl border border-accent/30 bg-gradient-to-br from-accent/15 via-card/50 to-background/40 backdrop-blur-sm p-6 hover:border-accent/60 transition-all"
+          >
+            <div className="absolute -top-16 -right-16 w-48 h-48 rounded-full bg-accent/15 blur-3xl pointer-events-none group-hover:bg-accent/25 transition-colors" />
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/60 to-transparent" />
+            <div className="relative flex items-start gap-4 flex-wrap">
+              <div className="h-12 w-12 rounded-xl border border-accent/40 bg-background/60 flex items-center justify-center shrink-0">
+                <Sparkles className="h-6 w-6 text-accent" />
               </div>
-            ))}
-          </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-[10px] uppercase tracking-[0.3em] text-accent/80 font-bold">SheX Marketer Academy</div>
+                <h3 className="text-xl font-extrabold text-foreground mt-1 leading-tight">Vom Onboarding zur Skalierung.</h3>
+                <p className="text-sm text-muted-foreground mt-2 max-w-xl leading-relaxed">
+                  Interaktives Coaching: Aufwärmprozess, Postingzeiten, Branding, Werbung, Skalierung – Schritt für Schritt mit Fortschrittstracking und täglicher Routine-Checkliste.
+                </p>
+                <div className="mt-3 inline-flex items-center gap-1.5 text-sm font-bold text-accent group-hover:gap-2.5 transition-all">
+                  Jetzt starten <ArrowUpRight className="h-4 w-4" />
+                </div>
+              </div>
+            </div>
+          </button>
         </section>
       </main>
     </div>
