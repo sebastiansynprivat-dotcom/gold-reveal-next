@@ -1200,6 +1200,9 @@ export type Database = {
           social_linked: boolean
           stage: string
           status: string
+          telegram_backgrounds_url: string | null
+          telegram_feed_url: string | null
+          telegram_reels_url: string | null
           tiktok_url: string
           twitter_url: string
           updated_at: string
@@ -1226,6 +1229,9 @@ export type Database = {
           social_linked?: boolean
           stage?: string
           status?: string
+          telegram_backgrounds_url?: string | null
+          telegram_feed_url?: string | null
+          telegram_reels_url?: string | null
           tiktok_url?: string
           twitter_url?: string
           updated_at?: string
@@ -1252,6 +1258,9 @@ export type Database = {
           social_linked?: boolean
           stage?: string
           status?: string
+          telegram_backgrounds_url?: string | null
+          telegram_feed_url?: string | null
+          telegram_reels_url?: string | null
           tiktok_url?: string
           twitter_url?: string
           updated_at?: string

@@ -51,6 +51,9 @@ type SocialMediaModel = {
   status: string;
   stage: ModelStage;
   is_active: boolean;
+  telegram_reels_url: string;
+  telegram_backgrounds_url: string;
+  telegram_feed_url: string;
   created_at: string;
   archived_at: string | null;
 };
@@ -75,7 +78,11 @@ const emptyModel: Omit<SocialMediaModel, "id" | "created_at" | "archived_at"> = 
   status: "active",
   stage: "onboarding",
   is_active: true,
+  telegram_reels_url: "",
+  telegram_backgrounds_url: "",
+  telegram_feed_url: "",
 };
+
 
 export default function SocialMediaDashboard() {
   const navigate = useNavigate();
@@ -319,7 +326,13 @@ export default function SocialMediaDashboard() {
     const igs = Array.isArray(rest.instagram_urls) && rest.instagram_urls.length > 0
       ? rest.instagram_urls
       : (rest.instagram_url ? [rest.instagram_url] : []);
-    setForm({ ...rest, instagram_urls: igs });
+    setForm({
+      ...rest,
+      instagram_urls: igs,
+      telegram_reels_url: rest.telegram_reels_url ?? "",
+      telegram_backgrounds_url: rest.telegram_backgrounds_url ?? "",
+      telegram_feed_url: rest.telegram_feed_url ?? "",
+    });
     setDialogOpen(true);
   };
 
@@ -1135,6 +1148,32 @@ export default function SocialMediaDashboard() {
                   className="text-sm min-w-0 flex-1"
                 />
               </div>
+            </div>
+
+            {/* Telegram Content Channels */}
+            <div className="rounded-xl border border-accent/30 p-3 sm:p-4 space-y-2 bg-gradient-to-br from-accent/5 via-transparent to-transparent">
+              <h4 className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-2 flex items-center gap-1.5">
+                <Sparkles className="h-3 w-3 text-accent" /> Telegram Content-Kanäle
+              </h4>
+              <p className="text-[10px] text-muted-foreground/70 mb-2">Diese Links werden Marketern und dem Model im Dashboard angezeigt.</p>
+              {[
+                { key: "telegram_reels_url" as const, label: "Reels" },
+                { key: "telegram_backgrounds_url" as const, label: "Background-Videos" },
+                { key: "telegram_feed_url" as const, label: "Feed / Story (Bilder)" },
+              ].map((row) => (
+                <div key={row.key} className="space-y-1">
+                  <Label className="text-[11px] text-muted-foreground">{row.label}</Label>
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Link2 className="h-4 w-4 text-accent/70 shrink-0" />
+                    <Input
+                      placeholder="https://t.me/..."
+                      value={(form as any)[row.key] || ""}
+                      onChange={(e) => setForm({ ...form, [row.key]: e.target.value })}
+                      className="text-sm min-w-0 flex-1"
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
 
             {/* Marketers */}

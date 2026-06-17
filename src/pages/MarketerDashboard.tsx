@@ -10,9 +10,18 @@ import {
 import { ResponsiveContainer, AreaChart, Area, XAxis, Tooltip } from "recharts";
 import logo from "@/assets/logo.png";
 import GoldParticles from "@/components/GoldParticles";
+import TelegramContentChannels from "@/components/TelegramContentChannels";
 
 type Marketer = { name?: string; instagram?: string; tracking_link?: string; tracking_name?: string };
-type ModelRow = { id: string; name: string; username: string; marketers?: Marketer[] | null };
+type ModelRow = {
+  id: string;
+  name: string;
+  username: string;
+  marketers?: Marketer[] | null;
+  telegram_reels_url?: string | null;
+  telegram_backgrounds_url?: string | null;
+  telegram_feed_url?: string | null;
+};
 type Snapshot = { model_id: string; followers: number; recorded_at: string; instagram_url?: string | null };
 
 type IgAccount = {
@@ -72,7 +81,7 @@ export default function MarketerDashboard() {
       }
       const { data: mdls } = await supabase
         .from("fanvue_models")
-        .select("id,name,username,marketers")
+        .select("id,name,username,marketers,telegram_reels_url,telegram_backgrounds_url,telegram_feed_url")
         .in("id", ids);
       const since = daysAgo(60).toISOString();
       const { data: snaps } = await supabase
@@ -367,6 +376,25 @@ export default function MarketerDashboard() {
             </p>
           </section>
         )}
+
+        {/* Telegram Content-Kanäle pro Model */}
+        {models.map((m) => {
+          const hasAny =
+            (m.telegram_reels_url || "").trim() ||
+            (m.telegram_backgrounds_url || "").trim() ||
+            (m.telegram_feed_url || "").trim();
+          if (!hasAny) return null;
+          return (
+            <TelegramContentChannels
+              key={`tg-${m.id}`}
+              title={`Content-Kanäle · ${m.name}`}
+              subtitle="Direkt zu den Telegram-Kanälen mit dem aktuellen Content für dieses Model."
+              reelsUrl={m.telegram_reels_url}
+              backgroundsUrl={m.telegram_backgrounds_url}
+              feedUrl={m.telegram_feed_url}
+            />
+          );
+        })}
 
         {/* Coaching */}
         <section>

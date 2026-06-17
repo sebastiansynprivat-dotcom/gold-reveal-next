@@ -17,6 +17,7 @@ import {
 import { ResponsiveContainer, AreaChart, Area, XAxis, Tooltip } from "recharts";
 import logo from "@/assets/logo.png";
 import GoldParticles from "@/components/GoldParticles";
+import TelegramContentChannels from "@/components/TelegramContentChannels";
 
 // New shape: { title, reference_url, notes }. Legacy may have `type`/title-as-URL.
 type ContentItem = { title?: string; reference_url?: string; notes?: string; type?: string };
@@ -58,6 +59,9 @@ type ModelInfo = {
   instagram_urls: string[];
   platform_logins: { platform?: string; email?: string; password?: string; url?: string; username?: string }[];
   marketers: Marketer[];
+  telegram_reels_url?: string | null;
+  telegram_backgrounds_url?: string | null;
+  telegram_feed_url?: string | null;
 };
 
 type FollowerSnap = { instagram_url: string | null; followers: number; recorded_at: string };
@@ -152,7 +156,7 @@ export default function SocialMediaModelDashboard() {
     // Model meta (first one)
     const { data: mdl } = await supabase
       .from("fanvue_models")
-      .select("id, name, instagram_url, instagram_urls, platform_logins, marketers")
+      .select("id, name, instagram_url, instagram_urls, platform_logins, marketers, telegram_reels_url, telegram_backgrounds_url, telegram_feed_url")
       .in("id", modelIds)
       .limit(1)
       .maybeSingle();
@@ -164,6 +168,9 @@ export default function SocialMediaModelDashboard() {
         instagram_urls: Array.isArray((mdl as any).instagram_urls) ? (mdl as any).instagram_urls : [],
         platform_logins: Array.isArray((mdl as any).platform_logins) ? (mdl as any).platform_logins : [],
         marketers: Array.isArray((mdl as any).marketers) ? (mdl as any).marketers : [],
+        telegram_reels_url: (mdl as any).telegram_reels_url ?? null,
+        telegram_backgrounds_url: (mdl as any).telegram_backgrounds_url ?? null,
+        telegram_feed_url: (mdl as any).telegram_feed_url ?? null,
       });
     }
 
@@ -846,6 +853,16 @@ export default function SocialMediaModelDashboard() {
                   })}
                 </div>
               </motion.section>
+            )}
+
+            {/* Telegram Content-Kanäle */}
+            {model && (
+              <TelegramContentChannels
+                reelsUrl={model.telegram_reels_url}
+                backgroundsUrl={model.telegram_backgrounds_url}
+                feedUrl={model.telegram_feed_url}
+                subtitle="So kommst du direkt an den frischesten Content für deine Reels, Background-Videos und Feed-Posts."
+              />
             )}
 
             {/* CONTENT PLAN (existing functionality, kept) */}
