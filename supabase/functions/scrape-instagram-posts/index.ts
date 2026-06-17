@@ -17,8 +17,12 @@ function normalizeUrl(u: string): string | null {
   if (!u) return null;
   let url = u.trim();
   if (!url) return null;
-  if (url.startsWith("@")) url = `https://instagram.com/${url.slice(1)}`;
-  if (!/^https?:\/\//i.test(url)) url = `https://${url}`;
+  if (url.startsWith("@")) url = `https://www.instagram.com/${url.slice(1)}`;
+  else if (!/^https?:\/\//i.test(url) && !url.includes("/") && !/\s/.test(url)) {
+    url = `https://www.instagram.com/${url}`;
+  } else if (!/^https?:\/\//i.test(url)) {
+    url = `https://${url}`;
+  }
   if (!/instagram\.com/i.test(url)) return null;
   try {
     const parsed = new URL(url);
