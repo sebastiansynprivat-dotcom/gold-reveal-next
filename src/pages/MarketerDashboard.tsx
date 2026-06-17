@@ -41,6 +41,19 @@ function daysAgo(n: number) {
   return d;
 }
 
+// Forecast helper — never negative; ramps new accounts (<1000) with a 100–500/30d baseline.
+function projectFollowers(current: number, perDay: number, days: number): number {
+  const safePerDay = Math.max(0, perDay);
+  if (current < 1000) {
+    const baselineMonthly = 100 + Math.min(400, (current / 1000) * 400);
+    const observedMonthly = safePerDay * 30;
+    const monthly = Math.max(baselineMonthly, observedMonthly);
+    return Math.round(current + (monthly * days) / 30);
+  }
+  return Math.round(current + safePerDay * days);
+}
+
+
 function normIg(s?: string | null): string {
   if (!s) return "";
   let v = s.trim().toLowerCase();
@@ -177,9 +190,9 @@ export default function MarketerDashboard() {
       growth7,
       growth30,
       perDay,
-      forecast30: Math.round(last.followers + perDay * 30),
-      forecast60: Math.round(last.followers + perDay * 60),
-      forecast90: Math.round(last.followers + perDay * 90),
+      forecast30: projectFollowers(last.followers, perDay, 30),
+      forecast60: projectFollowers(last.followers, perDay, 60),
+      forecast90: projectFollowers(last.followers, perDay, 90),
     };
   };
 
@@ -402,7 +415,7 @@ export default function MarketerDashboard() {
               </table>
             </div>
             <p className="text-[10px] text-muted-foreground/70 mt-2">
-              Lineare Trendprognose auf Basis der letzten 30 Tage. Tatsächliche Werte können abweichen.
+              Adaptive Prognose: neue Accounts (&lt; 1.000 Follower) starten mit 100–500 erwartetem Wachstum / Monat; ab 1.000 Followern auf Basis des gemessenen Trends der letzten 30 Tage. Werte können abweichen.
             </p>
           </section>
         )}

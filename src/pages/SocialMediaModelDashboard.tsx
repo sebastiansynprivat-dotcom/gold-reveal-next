@@ -78,6 +78,25 @@ type IgAccount = {
 
 const WEEKDAYS_DE = ["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"];
 
+// Forecast helper:
+//  • Never returns a value below the current follower count (no "Minusbereich").
+//  • New accounts (<1000 followers): blends a baseline range (100–500 / 30d)
+//    with observed growth, so brand-new IGs see realistic ramp-up.
+//  • Established accounts (≥1000 followers): linear trend on observed perDay.
+function projectFollowers(current: number, perDay: number, days: number): number {
+  const safePerDay = Math.max(0, perDay);
+  if (current < 1000) {
+    // Baseline scales from ~100 (0 followers) up to ~500 (≈1000 followers) per 30d
+    const baselineMonthly = 100 + Math.min(400, (current / 1000) * 400);
+    const observedMonthly = safePerDay * 30;
+    // Weight observed growth more as it strengthens, but keep baseline as floor
+    const monthly = Math.max(baselineMonthly, observedMonthly);
+    return Math.round(current + (monthly * days) / 30);
+  }
+  return Math.round(current + safePerDay * days);
+}
+
+
 function mondayOf(d: Date) {
   const day = d.getDay();
   const diff = day === 0 ? -6 : 1 - day;
@@ -510,9 +529,9 @@ export default function SocialMediaModelDashboard() {
     return {
       current: last.followers,
       growth7, growth30, pct7, perDay,
-      forecast30: Math.round(last.followers + perDay * 30),
-      forecast60: Math.round(last.followers + perDay * 60),
-      forecast90: Math.round(last.followers + perDay * 90),
+      forecast30: projectFollowers(last.followers, perDay, 30),
+      forecast60: projectFollowers(last.followers, perDay, 60),
+      forecast90: projectFollowers(last.followers, perDay, 90),
     };
   };
 
@@ -784,9 +803,19 @@ export default function SocialMediaModelDashboard() {
 
                 <p className="text-[10px] text-muted-foreground/70 px-1">
                   <Rocket className="inline h-3 w-3 mr-1 text-accent" />
-                  Lineare Prognose auf Basis der letzten 30 Tage – je mehr Reels du postest, desto stärker übertriffst du diese Kurve.
+                  Prognose adaptiv: junge Accounts (&lt; 1.000 Follower) starten mit einer realistischen Wachstumsspanne (100–500 / Monat), ab 1.000 Followern fließt dein gemessener Trend ein. Je mehr Reels du postest, desto stärker übertriffst du diese Kurve.
                 </p>
               </motion.section>
+            )}
+
+            {/* Telegram Content-Kanäle (über Plattform-Logins) */}
+            {model && (
+              <TelegramContentChannels
+                reelsUrl={model.telegram_reels_url}
+                backgroundsUrl={model.telegram_backgrounds_url}
+                feedUrl={model.telegram_feed_url}
+                subtitle="So kommst du direkt an den frischesten Content für deine Reels, Background-Videos und Feed-Posts."
+              />
             )}
 
             {/* PLATFORM LOGINS */}
@@ -867,15 +896,6 @@ export default function SocialMediaModelDashboard() {
               </motion.section>
             )}
 
-            {/* Telegram Content-Kanäle */}
-            {model && (
-              <TelegramContentChannels
-                reelsUrl={model.telegram_reels_url}
-                backgroundsUrl={model.telegram_backgrounds_url}
-                feedUrl={model.telegram_feed_url}
-                subtitle="So kommst du direkt an den frischesten Content für deine Reels, Background-Videos und Feed-Posts."
-              />
-            )}
 
             {/* CONTENT PLAN (existing functionality, kept) */}
             {planRows.length === 0 ? (
