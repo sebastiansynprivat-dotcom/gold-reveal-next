@@ -75,3 +75,6 @@ verify_jwt = false
 
 [functions.ingest-profiles-data]
 verify_jwt = false
+
+[functions.scrape-instagram-posts]
+verify_jwt = false
