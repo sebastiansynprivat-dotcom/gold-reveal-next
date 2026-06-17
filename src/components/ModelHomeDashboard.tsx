@@ -236,6 +236,7 @@ export default function ModelHomeDashboard({
   const [commissionPct, setCommissionPct] = useState<number>(0);
   const [modelCurrency, setModelCurrency] = useState<string>("EUR");
   const [forceCurrency, setForceCurrency] = useState<string | null>(null);
+  const [isSynAgency, setIsSynAgency] = useState(false);
 
   // Track PWA install (standalone display-mode) for the logged-in model user.
   // Skipped in Admin Preview so admins don't flip the flag for the model.
