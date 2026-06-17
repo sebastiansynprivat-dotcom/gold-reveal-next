@@ -10,9 +10,18 @@ import {
 import { ResponsiveContainer, AreaChart, Area, XAxis, Tooltip } from "recharts";
 import logo from "@/assets/logo.png";
 import GoldParticles from "@/components/GoldParticles";
+import TelegramContentChannels from "@/components/TelegramContentChannels";
 
 type Marketer = { name?: string; instagram?: string; tracking_link?: string; tracking_name?: string };
-type ModelRow = { id: string; name: string; username: string; marketers?: Marketer[] | null };
+type ModelRow = {
+  id: string;
+  name: string;
+  username: string;
+  marketers?: Marketer[] | null;
+  telegram_reels_url?: string | null;
+  telegram_backgrounds_url?: string | null;
+  telegram_feed_url?: string | null;
+};
 type Snapshot = { model_id: string; followers: number; recorded_at: string; instagram_url?: string | null };
 
 type IgAccount = {
