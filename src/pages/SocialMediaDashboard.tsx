@@ -431,6 +431,36 @@ export default function SocialMediaDashboard() {
     }
   };
 
+  const restoreChatter = async (m: SocialMediaModel, chatterName: string) => {
+    if (!chatterName) return;
+    // Setting chatter_name fires the DB trigger: closes any open row, opens a new one for chatterName.
+    const { error } = await supabase
+      .from("fanvue_models" as any)
+      .update({ chatter_name: chatterName, chatter_assigned: true })
+      .eq("id", m.id);
+    if (error) {
+      toast.error("Chatter wiederherstellen fehlgeschlagen");
+    } else {
+      toast.success(`${chatterName} wiederhergestellt`);
+      setHistoryOpenFor((prev) => (prev && prev.id === m.id ? { ...prev, chatter_name: chatterName, chatter_assigned: true } : prev));
+      load();
+    }
+  };
+
+  const deleteChatterHistory = async (assignmentId: string, modelId: string) => {
+    if (!confirm("Diesen archivierten Chatter-Eintrag endgültig löschen?")) return;
+    const { error } = await supabase
+      .from("fanvue_model_chatter_assignments" as any)
+      .delete()
+      .eq("id", assignmentId);
+    if (error) {
+      toast.error("Löschen fehlgeschlagen");
+    } else {
+      toast.success("Eintrag gelöscht");
+      load();
+    }
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate("/socialmedia/login");
@@ -1433,8 +1463,22 @@ export default function SocialMediaDashboard() {
             const fmt = (d: string) => new Date(d).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
             const days = (a: string, b: string) =>
               Math.max(1, Math.round((new Date(b).getTime() - new Date(a).getTime()) / 86400000));
+            const archived = hist.filter((h) => h.ended_at);
+            const totalDays = archived.reduce((s, h) => s + days(h.started_at, h.ended_at!), 0);
             return (
               <div className="space-y-2 mt-2">
+                {archived.length > 0 && (
+                  <div className="grid grid-cols-2 gap-2 mb-1">
+                    <div className="rounded-lg border border-accent/20 bg-accent/5 p-2 text-center">
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Archiviert</div>
+                      <div className="text-lg font-bold text-accent">{archived.length}</div>
+                    </div>
+                    <div className="rounded-lg border border-accent/20 bg-accent/5 p-2 text-center">
+                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Tage gesamt</div>
+                      <div className="text-lg font-bold text-accent">{totalDays}</div>
+                    </div>
+                  </div>
+                )}
                 {hist.map((h) => {
                   const isOpen = !h.ended_at;
                   return (
@@ -1463,6 +1507,28 @@ export default function SocialMediaDashboard() {
                         <span className="opacity-50">→</span>
                         <span>{h.ended_at ? fmt(h.ended_at) : "heute"}</span>
                       </div>
+                      {!isOpen && historyOpenFor && (
+                        <div className="flex gap-1.5 mt-2 pt-2 border-t border-border/30">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 text-xs border-accent/40 text-accent hover:bg-accent/10 gap-1"
+                            onClick={() => restoreChatter(historyOpenFor, h.chatter_name)}
+                          >
+                            <ArchiveRestore className="h-3 w-3" />
+                            Wiederherstellen
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="h-7 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+                            onClick={() => deleteChatterHistory(h.id, historyOpenFor.id)}
+                            title="Eintrag endgültig löschen"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
