@@ -60,6 +60,38 @@ export default function SocialMediaMarketers() {
     const nameById = new Map<string, string>();
     ((profs || []) as any[]).forEach((p) => nameById.set(p.user_id, p.display_name || ""));
     setMarketers(ids.map(id => ({ user_id: id, name: nameById.get(id) || "" })));
+
+    // Load PWA / push status for all marketers + models
+    const { data: modelUsers } = await supabase
+      .from("model_users")
+      .select("user_id, model_id");
+    const modelUserIds = ((modelUsers || []) as any[]).map((r) => r.user_id).filter(Boolean);
+    const allIds = Array.from(new Set([...ids, ...modelUserIds]));
+
+    const { data: statusRows } = allIds.length
+      ? await (supabase as any)
+          .from("app_install_status")
+          .select("user_id, role, pwa_installed_at, push_enabled_at, last_active_at")
+          .in("user_id", allIds)
+      : { data: [] as any[] };
+
+    const byUser: Record<string, InstallStatus> = {};
+    ((statusRows || []) as any[]).forEach((r) => { byUser[r.user_id] = r; });
+    setInstallByUser(byUser);
+
+    // Build model status rows for the model overview
+    const modelById = new Map<string, string>();
+    ((m as any[]) || []).forEach((mm) => modelById.set(mm.id, mm.name || ""));
+    setModelInstall(
+      ((modelUsers || []) as any[])
+        .filter((r) => r.model_id && r.user_id)
+        .map((r) => ({
+          model_id: r.model_id,
+          model_name: modelById.get(r.model_id) || "—",
+          status: byUser[r.user_id],
+        }))
+    );
+
     setLoading(false);
   };
 
