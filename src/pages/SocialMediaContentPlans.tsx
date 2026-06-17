@@ -76,9 +76,10 @@ export default function SocialMediaContentPlans() {
     // Compute progress per assignment
     if (asgs.length) {
       const planIds = Array.from(new Set(asgs.map((x) => x.plan_id)));
-      const [{ data: dayRows }, { data: statusRows }] = await Promise.all([
+      const [{ data: dayRows }, { data: statusRows }, { data: fbRows }] = await Promise.all([
         supabase.from("content_plan_days").select("plan_id,day_number,items").in("plan_id", planIds),
         supabase.from("content_plan_task_status").select("assignment_id,done").in("assignment_id", asgs.map((x) => x.id)),
+        supabase.from("content_plan_week_feedback" as any).select("assignment_id,week_number,status,feedback,folder_url,updated_at").in("assignment_id", asgs.map((x) => x.id)).order("week_number"),
       ]);
       const totalsByPlan: Record<string, number> = {};
       (dayRows || []).forEach((r: any) => {
@@ -93,8 +94,21 @@ export default function SocialMediaContentPlans() {
         map[x.id] = { done: doneByAsg[x.id] || 0, total: totalsByPlan[x.plan_id] || 0 };
       });
       setProgressByAssignment(map);
+
+      const fbMap: Record<string, Array<{ week_number: number; status: string; feedback: string; folder_url: string; updated_at: string }>> = {};
+      ((fbRows || []) as any[]).forEach((r) => {
+        (fbMap[r.assignment_id] ||= []).push({
+          week_number: r.week_number,
+          status: r.status,
+          feedback: r.feedback || "",
+          folder_url: r.folder_url || "",
+          updated_at: r.updated_at,
+        });
+      });
+      setFeedbackByAssignment(fbMap);
     } else {
       setProgressByAssignment({});
+      setFeedbackByAssignment({});
     }
     setLoading(false);
   };
