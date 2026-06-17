@@ -236,6 +236,7 @@ export default function ModelHomeDashboard({
   const [commissionPct, setCommissionPct] = useState<number>(0);
   const [modelCurrency, setModelCurrency] = useState<string>("EUR");
   const [forceCurrency, setForceCurrency] = useState<string | null>(null);
+  const [isSynAgency, setIsSynAgency] = useState(false);
 
   // Track PWA install (standalone display-mode) for the logged-in model user.
   // Skipped in Admin Preview so admins don't flip the flag for the model.
@@ -275,6 +276,7 @@ export default function ModelHomeDashboard({
       if (cancelled) return;
       setCommissionPct(Number(dash?.revenue_percentage || 0));
       const isSyn = String((mdl as any)?.model_agency || "").toLowerCase() === "syn";
+      setIsSynAgency(isSyn);
       // SYN agency = international models → force USD display
       setForceCurrency(isSyn ? "USD" : null);
       setModelCurrency(isSyn ? "USD" : ((mdl?.currency as string) || "EUR"));
@@ -1213,6 +1215,7 @@ export default function ModelHomeDashboard({
         commissionPct={commissionPct}
         currency={forceCurrency || modelCurrency}
         language={lang}
+        contentInstructionsUrl={isSynAgency ? "https://t.me/+m-OwmEjOv0MzYTU8" : undefined}
       />
 
       {/* Lifestyle & feed content – traffic engine */}
