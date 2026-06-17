@@ -8,13 +8,14 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { ArrowLeft, Plus, Trash2, UserPlus, Users, CheckCircle2, Mail, Copy, Link as LinkIcon } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, UserPlus, Users, CheckCircle2, Mail, Copy, Link as LinkIcon, Smartphone, Bell, BellOff } from "lucide-react";
 import logo from "@/assets/logo.png";
 import GoldParticles from "@/components/GoldParticles";
 
 type Model = { id: string; name: string; username: string };
 type Marketer = { user_id: string; email?: string; name?: string };
 type Assignment = { id: string; marketer_user_id: string; model_id: string };
+type InstallStatus = { user_id: string; role?: string | null; pwa_installed_at?: string | null; push_enabled_at?: string | null; last_active_at?: string | null };
 
 export default function SocialMediaMarketers() {
   const navigate = useNavigate();
@@ -23,6 +24,8 @@ export default function SocialMediaMarketers() {
   const [models, setModels] = useState<Model[]>([]);
   const [marketers, setMarketers] = useState<Marketer[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [installByUser, setInstallByUser] = useState<Record<string, InstallStatus>>({});
+  const [modelInstall, setModelInstall] = useState<Array<{ model_id: string; model_name: string; status?: InstallStatus }>>([]);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [email, setEmail] = useState("");
