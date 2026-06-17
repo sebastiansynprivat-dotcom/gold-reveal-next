@@ -12,7 +12,7 @@ import {
   LogOut, CheckCircle2, Circle, CalendarDays, Sparkles, Link as LinkIcon, ExternalLink,
   Instagram, TrendingUp, TrendingDown, Minus, Flame, Film, Copy, KeyRound, HelpCircle,
   Rocket, Trophy, Eye, EyeOff, Target, ArrowUpRight, Lightbulb, Users,
-  ThumbsUp, ThumbsDown, MessageSquare, FolderOpen, CheckCheck,
+  ThumbsUp, ThumbsDown, MessageSquare, FolderOpen, CheckCheck, ChevronDown,
 } from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, Tooltip } from "recharts";
 import logo from "@/assets/logo.png";
@@ -132,6 +132,7 @@ export default function SocialMediaModelDashboard() {
   const [statuses, setStatuses] = useState<Record<string, StatusRow>>({});
   const [weekFb, setWeekFb] = useState<Record<string, WeekFeedback>>({});
   const [revealed, setRevealed] = useState<Record<number, boolean>>({});
+  const [platformLoginsExpanded, setPlatformLoginsExpanded] = useState(false);
   const [today] = useState(() => { const d = new Date(); d.setHours(0,0,0,0); return d; });
   const todayMonday = useMemo(() => mondayOf(today), [today]);
 
@@ -796,62 +797,73 @@ export default function SocialMediaModelDashboard() {
                 transition={{ delay: 0.1 }}
                 className="rounded-2xl border border-accent/20 bg-card/40 backdrop-blur-sm p-4 md:p-5"
               >
-                <div className="flex items-center gap-2 mb-3">
-                  <KeyRound className="h-4 w-4 text-accent" />
-                  <span className="text-xs uppercase tracking-wider font-semibold text-foreground/90">Deine Plattform-Logins</span>
-                </div>
-                <div className="grid gap-2.5">
-                  {model.platform_logins.map((lg, i) => {
-                    const showPw = !!revealed[i];
-                    return (
-                      <div key={i} className="rounded-xl border border-border/40 bg-background/50 p-3">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <span className="font-semibold text-sm text-foreground">{lg.platform || "Plattform"}</span>
-                            {lg.url && (
-                              <a href={lg.url.startsWith("http") ? lg.url : `https://${lg.url}`} target="_blank" rel="noopener noreferrer" className="text-accent/80 hover:text-accent">
-                                <ExternalLink className="h-3 w-3" />
-                              </a>
+                <button
+                  type="button"
+                  onClick={() => setPlatformLoginsExpanded((p) => !p)}
+                  className="w-full flex items-center justify-between gap-2 group/login mb-0"
+                >
+                  <div className="flex items-center gap-2">
+                    <KeyRound className="h-4 w-4 text-accent" />
+                    <span className="text-xs uppercase tracking-wider font-semibold text-foreground/90">
+                      Deine Plattform-Logins ({model.platform_logins.length})
+                    </span>
+                  </div>
+                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${platformLoginsExpanded ? "rotate-180" : ""}`} />
+                </button>
+                {platformLoginsExpanded && (
+                  <div className="grid gap-2.5 mt-3">
+                    {model.platform_logins.map((lg, i) => {
+                      const showPw = !!revealed[i];
+                      return (
+                        <div key={i} className="rounded-xl border border-border/40 bg-background/50 p-3">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <span className="font-semibold text-sm text-foreground">{lg.platform || "Plattform"}</span>
+                              {lg.url && (
+                                <a href={lg.url.startsWith("http") ? lg.url : `https://${lg.url}`} target="_blank" rel="noopener noreferrer" className="text-accent/80 hover:text-accent">
+                                  <ExternalLink className="h-3 w-3" />
+                                </a>
+                              )}
+                            </div>
+                          </div>
+                          <div className="space-y-1.5 text-xs">
+                            {(lg.email || lg.username) && (
+                              <button
+                                type="button"
+                                onClick={() => copyText(lg.email || lg.username || "", "E-Mail")}
+                                className="w-full flex items-center justify-between gap-2 text-muted-foreground hover:text-accent transition-colors group"
+                              >
+                                <span className="truncate">{lg.email || lg.username}</span>
+                                <Copy className="h-3 w-3 opacity-50 group-hover:opacity-100 shrink-0" />
+                              </button>
+                            )}
+                            {lg.password && (
+                              <div className="flex items-center justify-between gap-2">
+                                <span className="font-mono text-foreground/90 truncate flex-1">
+                                  {showPw ? lg.password : "•".repeat(Math.min(12, lg.password.length))}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => setRevealed((r) => ({ ...r, [i]: !r[i] }))}
+                                  className="text-muted-foreground hover:text-accent shrink-0"
+                                >
+                                  {showPw ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => copyText(lg.password || "", "Passwort")}
+                                  className="text-muted-foreground hover:text-accent shrink-0"
+                                >
+                                  <Copy className="h-3 w-3" />
+                                </button>
+                              </div>
                             )}
                           </div>
                         </div>
-                        <div className="space-y-1.5 text-xs">
-                          {(lg.email || lg.username) && (
-                            <button
-                              type="button"
-                              onClick={() => copyText(lg.email || lg.username || "", "E-Mail")}
-                              className="w-full flex items-center justify-between gap-2 text-muted-foreground hover:text-accent transition-colors group"
-                            >
-                              <span className="truncate">{lg.email || lg.username}</span>
-                              <Copy className="h-3 w-3 opacity-50 group-hover:opacity-100 shrink-0" />
-                            </button>
-                          )}
-                          {lg.password && (
-                            <div className="flex items-center justify-between gap-2">
-                              <span className="font-mono text-foreground/90 truncate flex-1">
-                                {showPw ? lg.password : "•".repeat(Math.min(12, lg.password.length))}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => setRevealed((r) => ({ ...r, [i]: !r[i] }))}
-                                className="text-muted-foreground hover:text-accent shrink-0"
-                              >
-                                {showPw ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => copyText(lg.password || "", "Passwort")}
-                                className="text-muted-foreground hover:text-accent shrink-0"
-                              >
-                                <Copy className="h-3 w-3" />
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                )}
               </motion.section>
             )}
 
