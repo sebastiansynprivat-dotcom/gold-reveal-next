@@ -42,6 +42,7 @@ export default function SocialMediaContentPlans() {
   const [models, setModels] = useState<Model[]>([]);
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [progressByAssignment, setProgressByAssignment] = useState<Record<string, { done: number; total: number }>>({});
+  const [feedbackByAssignment, setFeedbackByAssignment] = useState<Record<string, Array<{ week_number: number; status: string; feedback: string; folder_url: string; updated_at: string }>>>({});
   const [loading, setLoading] = useState(true);
 
   // Edit/create plan dialog
