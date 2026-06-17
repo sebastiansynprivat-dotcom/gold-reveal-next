@@ -293,7 +293,7 @@ export default function MarketerDashboard() {
                           <span className="text-2xl font-bold text-foreground tabular-nums">{metrics.current.toLocaleString("de-DE")}</span>
                           <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Follower</span>
                         </div>
-                        <div className="grid grid-cols-2 gap-2 mb-3">
+                        <div className="grid grid-cols-3 gap-2 mb-3">
                           <div className="rounded-lg bg-background/40 px-2 py-1.5">
                             <p className="text-[9px] uppercase tracking-wider text-muted-foreground">7d</p>
                             <p className={`text-sm font-bold tabular-nums ${metrics.growth7 >= 0 ? "text-emerald-400" : "text-destructive"}`}>
@@ -306,7 +306,19 @@ export default function MarketerDashboard() {
                               {metrics.growth30 >= 0 ? "+" : ""}{metrics.growth30.toLocaleString("de-DE")}
                             </p>
                           </div>
+                          <div className="rounded-lg bg-background/40 px-2 py-1.5">
+                            <p className="text-[9px] uppercase tracking-wider text-muted-foreground">Posts 7d</p>
+                            <p className="text-sm font-bold tabular-nums text-accent">
+                              {post ? post.posts_7d : "—"}
+                            </p>
+                          </div>
                         </div>
+                        {post?.last_post_at && (
+                          <p className="text-[10px] text-muted-foreground -mt-2 mb-2">
+                            Letzter Post: vor {Math.max(0, Math.floor((Date.now() - new Date(post.last_post_at).getTime()) / 86400000))}d
+                            <span className="text-muted-foreground/60"> · {post.posts_30d} Posts / 30d</span>
+                          </p>
+                        )}
                         {chartData.length >= 2 && (
                           <div className="h-16 -mx-1">
                             <ResponsiveContainer width="100%" height="100%">
