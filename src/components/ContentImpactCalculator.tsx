@@ -31,6 +31,8 @@ const COPY = {
     disclaimer:
       "Schätzwerte. Der reale Impact hängt von Content-Qualität, Plattform und Zielgruppe ab.",
     ideaCta: "Set-Idee mit dem Team besprechen",
+    instructionsTitle: "So holst du das Maximum aus jedem Set",
+    instructionsCta: "Hier Content Instructions anschauen",
   },
   en: {
     title: "What new sets could bring you",
@@ -47,6 +49,8 @@ const COPY = {
     disclaimer:
       "Estimates only. Real impact depends on content quality, platform and audience.",
     ideaCta: "Discuss set idea with the team",
+    instructionsTitle: "How to get the most out of every set",
+    instructionsCta: "View content instructions here",
   },
 };
 
