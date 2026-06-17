@@ -709,7 +709,48 @@ export default function MarketerCoaching() {
             </div>
           </div>
 
+          {/* Streak banner */}
+          <div className={`mb-4 rounded-2xl border p-4 flex items-center gap-4 overflow-hidden relative ${
+            currentStreak >= 3
+              ? "border-orange-500/40 bg-gradient-to-br from-orange-500/15 via-amber-500/10 to-accent/10"
+              : "border-border/40 bg-background/40"
+          }`}>
+            {currentStreak >= 3 && (
+              <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-orange-500/20 blur-3xl pointer-events-none" />
+            )}
+            <div className={`relative h-14 w-14 rounded-2xl flex items-center justify-center shrink-0 ${
+              currentStreak >= 3
+                ? "bg-gradient-to-br from-orange-500/30 to-amber-400/20 border border-orange-400/40 shadow-[0_0_20px_rgba(251,146,60,0.35)]"
+                : "bg-background/60 border border-border/50"
+            }`}>
+              <Flame className={`h-7 w-7 ${currentStreak >= 3 ? "text-orange-400" : currentStreak >= 1 ? "text-accent" : "text-muted-foreground/60"}`} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-baseline gap-2 flex-wrap">
+                <span className={`text-3xl font-extrabold tabular-nums leading-none ${currentStreak >= 3 ? "text-orange-300" : "text-foreground"}`}>
+                  {currentStreak}
+                </span>
+                <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                  {currentStreak === 1 ? "Tag Streak" : "Tage Streak"}
+                </span>
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-1 leading-snug">
+                {currentStreak === 0
+                  ? "Hak heute alle 6 Aufgaben ab und starte deinen Streak."
+                  : dailyDone.size === DAILY_TASKS.length
+                  ? "Heute komplett – stark! Morgen weiter dranbleiben."
+                  : `Noch ${DAILY_TASKS.length - dailyDone.size} ${DAILY_TASKS.length - dailyDone.size === 1 ? "Aufgabe" : "Aufgaben"} bis dein Streak heute zählt.`}
+              </p>
+            </div>
+            <div className="hidden sm:flex flex-col items-end shrink-0 text-right">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Best · 90d</div>
+              <div className="text-base font-bold text-accent tabular-nums">{bestStreak} {bestStreak === 1 ? "Tag" : "Tage"}</div>
+              <div className="text-[10px] text-muted-foreground mt-0.5">{perfectDays} perfekte Tage</div>
+            </div>
+          </div>
+
           <div className="grid gap-2">
+
             {DAILY_TASKS.map((t) => {
               const done = dailyDone.has(t.key);
               return (
