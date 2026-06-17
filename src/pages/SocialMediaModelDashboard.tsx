@@ -18,6 +18,9 @@ import { ResponsiveContainer, AreaChart, Area, XAxis, Tooltip } from "recharts";
 import logo from "@/assets/logo.png";
 import GoldParticles from "@/components/GoldParticles";
 import TelegramContentChannels from "@/components/TelegramContentChannels";
+import PushNotificationDialog from "@/components/PushNotificationDialog";
+import NotificationBanner from "@/components/NotificationBanner";
+import { useAppPresence } from "@/hooks/useAppPresence";
 
 // New shape: { title, reference_url, notes }. Legacy may have `type`/title-as-URL.
 type ContentItem = { title?: string; reference_url?: string; notes?: string; type?: string };

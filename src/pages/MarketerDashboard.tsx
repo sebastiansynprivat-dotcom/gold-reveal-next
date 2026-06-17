@@ -11,6 +11,9 @@ import { ResponsiveContainer, AreaChart, Area, XAxis, Tooltip } from "recharts";
 import logo from "@/assets/logo.png";
 import GoldParticles from "@/components/GoldParticles";
 import TelegramContentChannels from "@/components/TelegramContentChannels";
+import PushNotificationDialog from "@/components/PushNotificationDialog";
+import NotificationBanner from "@/components/NotificationBanner";
+import { useAppPresence } from "@/hooks/useAppPresence";
 
 type Marketer = { name?: string; instagram?: string; tracking_link?: string; tracking_name?: string };
 type ModelRow = {
@@ -72,6 +75,8 @@ export default function MarketerDashboard() {
   const [snapshotsByKey, setSnapshotsByKey] = useState<Record<string, Snapshot[]>>({});
   const [postsByKey, setPostsByKey] = useState<Record<string, PostSnap>>({});
   const [marketerName, setMarketerName] = useState<string>("");
+
+  useAppPresence("marketer");
 
   useEffect(() => {
     (async () => {

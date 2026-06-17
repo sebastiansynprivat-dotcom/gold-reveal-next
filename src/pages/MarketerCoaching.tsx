@@ -9,6 +9,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import PushNotificationDialog from "@/components/PushNotificationDialog";
+import NotificationBanner from "@/components/NotificationBanner";
+import { useAppPresence } from "@/hooks/useAppPresence";
 
 // =========================================================================
 // COACHING CURRICULUM
