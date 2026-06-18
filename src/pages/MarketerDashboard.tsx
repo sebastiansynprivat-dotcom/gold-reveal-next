@@ -508,32 +508,10 @@ export default function MarketerDashboard() {
           </LockedSection>
         )}
 
-        {/* Locked feature preview: Daily Routine + Streaks */}
-        <LockedSection locked={locked} title="Tagesroutine & Streaks" icon={Zap} hint="Abschluss des Coachings erforderlich.">
-          <div className="rounded-2xl border border-accent/20 bg-card/40 backdrop-blur-sm p-5">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="h-12 w-12 rounded-xl border border-orange-400/30 bg-gradient-to-br from-orange-500/20 to-amber-400/10 flex items-center justify-center">
-                <Flame className="h-6 w-6 text-orange-400" />
-              </div>
-              <div>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-extrabold text-foreground">0</span>
-                  <span className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Tage Streak</span>
-                </div>
-                <p className="text-[11px] text-muted-foreground">Starte deinen Streak nach dem Coaching-Abschluss.</p>
-              </div>
-            </div>
-            <div className="grid gap-2">
-              {DAILY_TASK_PREVIEW.map((t, i) => (
-                <div key={i} className="flex items-center gap-3 rounded-xl border border-border/40 bg-background/40 p-3 text-left opacity-60">
-                  <span className="text-xl shrink-0">{t.icon}</span>
-                  <span className="flex-1 text-sm leading-snug text-muted-foreground">{t.label}</span>
-                  <Lock className="h-4 w-4 text-muted-foreground shrink-0" />
-                </div>
-              ))}
-            </div>
-          </div>
-        </LockedSection>
+        {/* Dynamische Tagesroutine – nur sichtbar nach abgeschlossenem Coaching */}
+        {coachingComplete && user?.id && (
+          <MarketerDailyRoutine userId={user.id} coachingCompletedAt={coachingCompletedAt} />
+        )}
 
         {/* Telegram Content-Kanäle pro Model — always visible */}
         {models.map((m) => {
