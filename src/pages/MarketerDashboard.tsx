@@ -488,6 +488,17 @@ export default function MarketerDashboard() {
           <MarketerDailyRoutine userId={user.id} coachingCompletedAt={coachingCompletedAt} />
         )}
 
+        {/* Coaching-Library – nach Abschluss als Nachschlagewerk unterhalb der Tagesroutine */}
+        {coachingComplete && (
+          <section>
+            <div className="flex items-center gap-2 mb-3">
+              <BookOpen className="h-4 w-4 text-accent" />
+              <h2 className="text-sm uppercase tracking-[0.2em] text-muted-foreground font-bold">Coaching-Library</h2>
+            </div>
+            <CoachingCta navigate={navigate} coachingComplete={coachingComplete} showLockedHint={false} />
+          </section>
+        )}
+
         {/* Telegram Content-Kanäle pro Model — always visible */}
         {models.map((m) => {
           const hasAny =
