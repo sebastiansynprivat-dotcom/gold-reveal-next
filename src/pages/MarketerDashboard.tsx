@@ -14,6 +14,7 @@ import GoldParticles from "@/components/GoldParticles";
 import TelegramContentChannels from "@/components/TelegramContentChannels";
 import PushNotificationDialog from "@/components/PushNotificationDialog";
 import NotificationBanner from "@/components/NotificationBanner";
+import MarketerDailyRoutine from "@/components/MarketerDailyRoutine";
 import { useAppPresence } from "@/hooks/useAppPresence";
 
 type Marketer = { name?: string; instagram?: string; tracking_link?: string; tracking_name?: string };
