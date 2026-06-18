@@ -124,11 +124,21 @@ export default function MarketerDashboard() {
       // Load coaching completion status
       const { data: progress } = await supabase
         .from("marketer_coaching_progress")
-        .select("lesson_id")
+        .select("lesson_id,completed_at")
         .eq("user_id", user.id);
-      const completedLessons = new Set((progress || []).map((r: any) => r.lesson_id));
+      const rows = (progress || []) as any[];
+      const completedLessons = new Set(rows.map((r) => r.lesson_id));
       const totalLessons = 20; // sync with MarketerCoaching.tsx ALL_LESSON_IDS count
-      setCoachingComplete(completedLessons.size >= totalLessons);
+      const isComplete = completedLessons.size >= totalLessons;
+      setCoachingComplete(isComplete);
+      if (isComplete && rows.length > 0) {
+        const latest = rows
+          .map((r) => (r.completed_at ? new Date(r.completed_at).getTime() : 0))
+          .reduce((a, b) => Math.max(a, b), 0);
+        setCoachingCompletedAt(latest > 0 ? new Date(latest) : new Date());
+      } else {
+        setCoachingCompletedAt(null);
+      }
 
       const { data: asg } = await supabase
         .from("marketer_model_assignments")
