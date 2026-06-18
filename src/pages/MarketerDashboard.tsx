@@ -67,14 +67,6 @@ function normIg(s?: string | null): string {
   return v;
 }
 
-const DAILY_TASK_PREVIEW = [
-  { icon: "💬", label: "5–10 Reels ansehen, liken & kommentieren" },
-  { icon: "🎬", label: "Reel #1 posten (08–10 oder 12–14 Uhr)" },
-  { icon: "🎬", label: "Reel #2 posten (18–20 Uhr Primetime)" },
-  { icon: "📸", label: "Mindestens 1 Story posten" },
-  { icon: "🖼️", label: "Feed-Bild prüfen / heute posten" },
-  { icon: "📊", label: "Performance vom Vortag kurz prüfen" },
-];
 
 function LockedSection({ children, locked, title, icon: Icon, hint }: {
   children: React.ReactNode;
