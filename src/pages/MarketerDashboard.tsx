@@ -104,6 +104,7 @@ export default function MarketerDashboard() {
   const [postsByKey, setPostsByKey] = useState<Record<string, PostSnap>>({});
   const [marketerName, setMarketerName] = useState<string>("");
   const [coachingComplete, setCoachingComplete] = useState<boolean | null>(null);
+  const [coachingCompletedAt, setCoachingCompletedAt] = useState<Date | null>(null);
 
   useAppPresence("marketer");
 
