@@ -170,8 +170,29 @@ Deno.serve(async (req) => {
         .eq("user_id", user.id);
     }
 
+    // Create a server-side 2FA session (8h validity). Client must present
+    // this token to validate_admin_2fa_session() on every admin route entry.
+    const sessionTokenBytes = new Uint8Array(32);
+    crypto.getRandomValues(sessionTokenBytes);
+    const sessionToken = Array.from(sessionTokenBytes)
+      .map((b) => b.toString(16).padStart(2, "0"))
+      .join("");
+
+    // Best-effort cleanup of expired rows for this user
+    await serviceClient
+      .from("admin_2fa_sessions")
+      .delete()
+      .lt("expires_at", new Date().toISOString())
+      .eq("user_id", user.id);
+
+    await serviceClient.from("admin_2fa_sessions").insert({
+      user_id: user.id,
+      session_token: sessionToken,
+      expires_at: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
+    });
+
     return new Response(
-      JSON.stringify({ valid: true }),
+      JSON.stringify({ valid: true, session_token: sessionToken }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
