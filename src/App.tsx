@@ -70,29 +70,46 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-  
+  const [twoFaOk, setTwoFaOk] = useState<boolean | null>(null);
+
   useEffect(() => {
     if (!user) return;
-    import("@/integrations/supabase/client").then(({ supabase }) => {
-      supabase.rpc("is_admin").then(({ data }) => setIsAdmin(data === true));
+    let cancelled = false;
+    import("@/integrations/supabase/client").then(async ({ supabase }) => {
+      const { data: adminOk } = await supabase.rpc("is_admin");
+      if (cancelled) return;
+      setIsAdmin(adminOk === true);
+
+      const token = localStorage.getItem("admin_2fa_token");
+      if (!token) {
+        setTwoFaOk(false);
+        return;
+      }
+      const { data: valid } = await supabase.rpc("validate_admin_2fa_session", {
+        p_token: token,
+      });
+      if (cancelled) return;
+      if (valid !== true) {
+        localStorage.removeItem("admin_2fa_token");
+        localStorage.removeItem("admin_2fa_verified");
+        sessionStorage.removeItem("admin_2fa_verified");
+      }
+      setTwoFaOk(valid === true);
     });
+    return () => { cancelled = true; };
   }, [user]);
-  
-  if (loading || (user && isAdmin === null)) {
+
+  if (loading || (user && (isAdmin === null || twoFaOk === null))) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
-  
+
   if (!user || isAdmin === false) return <Navigate to="/admin/login" replace />;
-  
-  const verified = localStorage.getItem("admin_2fa_verified") || sessionStorage.getItem("admin_2fa_verified");
-  const isValid = verified && (Date.now() - parseInt(verified)) < 30 * 24 * 60 * 60 * 1000;
-  
-  if (!isValid) return <Navigate to="/admin/login" replace />;
-  
+  if (!twoFaOk) return <Navigate to="/admin/login" replace />;
+
   return <>{children}</>;
 };
 
