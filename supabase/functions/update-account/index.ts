@@ -44,6 +44,11 @@ function pickAllowed(updates: Record<string, unknown>) {
   return sanitized;
 }
 
+function hasNullModelId(updates: Record<string, unknown>) {
+  return "model_id" in updates && (updates.model_id === null || updates.model_id === "");
+}
+
+
 function extractBatchItem(raw: any) {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
   if (typeof raw.account_id !== "string" || !UUID_RE.test(raw.account_id)) return null;
