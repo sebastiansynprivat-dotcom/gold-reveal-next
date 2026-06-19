@@ -127,6 +127,9 @@ const AdminLogin = () => {
         if (step === "setup") {
           toast.success("2FA erfolgreich eingerichtet!");
         }
+        if (res.data?.session_token) {
+          localStorage.setItem("admin_2fa_token", res.data.session_token);
+        }
         setTotpVerified(true);
       }
     } catch (err: any) {
