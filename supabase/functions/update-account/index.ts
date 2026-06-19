@@ -141,6 +141,8 @@ Deno.serve(async (req) => {
     const sanitized = pickAllowed(updates);
     if (Object.keys(sanitized).length === 0)
       return json({ error: "No allowed fields in updates" }, 400);
+    if (hasNullModelId(sanitized))
+      return json({ error: "model_id cannot be null — accounts must always belong to a model. Create or select a model first." }, 400);
 
     const { data, error } = await supabase
       .from("accounts")
