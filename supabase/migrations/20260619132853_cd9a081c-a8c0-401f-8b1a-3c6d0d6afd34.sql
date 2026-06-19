@@ -1,0 +1,1 @@
+ALTER TABLE public.accounts ALTER COLUMN model_id SET NOT NULL;
