@@ -38,12 +38,17 @@ async function getSystemPrompt(lang: "de" | "en"): Promise<string> {
   }
 }
 
+import { verifyCaller, unauthorized } from "../_shared/auth.ts";
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    const caller = await verifyCaller(req);
+    if (!caller) return unauthorized(corsHeaders);
+
     const { messages, uiLanguage } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
