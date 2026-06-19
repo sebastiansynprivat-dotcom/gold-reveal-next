@@ -60,7 +60,25 @@ export default function DeletedRecordsTab() {
   });
 
   const restore = async (row: DeletedRow) => {
-    if (!confirm(`Datensatz "${row.name || row.email || row.original_id}" wiederherstellen?`)) return;
+    const label = row.name || row.email || row.original_id;
+    let confirmMsg = `Datensatz "${label}" wiederherstellen?`;
+    if (row.entity_type === "model") {
+      try {
+        const { count } = await (supabase as any)
+          .from("deleted_records")
+          .select("id", { count: "exact", head: true })
+          .eq("entity_type", "account")
+          .is("restored_at", null)
+          .filter("data->>model_id", "eq", row.original_id);
+        const n = count ?? 0;
+        confirmMsg = n > 0
+          ? `Model "${label}" wiederherstellen?\n\nDazu werden ${n} archivierte Account(s) automatisch mit-wiederhergestellt.`
+          : `Model "${label}" wiederherstellen?`;
+      } catch {
+        // fall back to generic confirm
+      }
+    }
+    if (!confirm(confirmMsg)) return;
     setBusyId(row.id);
     try {
       const table = ENTITY_TABLES[row.entity_type];
