@@ -1,20 +1,19 @@
-## Add child-account preview to model restore confirmation
+## Block account restore when its model is archived or purged
 
-When an admin clicks "Restore" on an archived model in `DeletedRecordsTab`, replace the generic confirm with a count-aware confirm that shows how many archived accounts will be cascade-restored.
+Enforce: an account can only be restored if its `model_id` exists in the live `models` table. If the model is archived (in `deleted_records`) or purged (gone entirely), block the restore with an actionable error.
 
 ### Change
-File: `src/components/admin/DeletedRecordsTab.tsx`, function `restore` (lines 62–115).
+File: `src/components/admin/DeletedRecordsTab.tsx`, function `restore`.
 
-Before the existing `confirm(...)` call, when `row.entity_type === "model"`:
-1. Query `deleted_records` for `entity_type = 'account'`, `restored_at is null`, `data->>model_id = row.original_id`, using `select("id", { count: "exact", head: true })`.
-2. Build the confirm message:
-   - 0 children → `Model "<name>" wiederherstellen?`
-   - N children → `Model "<name>" wiederherstellen?\n\nDazu werden N archivierte Account(s) automatisch mit-wiederhergestellt.`
-3. For non-model rows, keep the current confirm text unchanged.
+Inside the `row.entity_type === "account"` branch, after the existing `!payload.model_id` guard:
 
-No other logic changes — the existing cascade-restore loop already handles the actual restoration. Failure of the count query falls back to the generic confirm (non-blocking).
+1. Query `models` for `id = payload.model_id` (head + count or `.maybeSingle()`).
+2. If not found, check `deleted_records` for an archived model row with `entity_type = 'model'` and `original_id = payload.model_id`:
+   - Archived → toast: `"Das zugehörige Model ist archiviert. Bitte zuerst das Model wiederherstellen."`
+   - Not found anywhere (purged) → toast: `"Das zugehörige Model wurde endgültig gelöscht. Account kann nicht wiederhergestellt werden."`
+3. Return without inserting.
 
 ### Out of scope
-- No DB/schema changes.
-- No change to archive flow, purge flow, or account-only restore.
-- No UI redesign of the table.
+- Model restore flow (already cascade-restores its children).
+- Purge flow.
+- DB-level constraint (the `accounts.model_id` NOT NULL + FK already prevents bad inserts; this guard just produces a friendly message before the DB rejects it).

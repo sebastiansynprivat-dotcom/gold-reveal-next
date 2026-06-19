@@ -88,6 +88,28 @@ export default function DeletedRecordsTab() {
         setBusyId(null);
         return;
       }
+      if (row.entity_type === "account") {
+        const { data: liveModel } = await (supabase as any)
+          .from("models")
+          .select("id")
+          .eq("id", payload.model_id)
+          .maybeSingle();
+        if (!liveModel) {
+          const { data: archivedModel } = await (supabase as any)
+            .from("deleted_records")
+            .select("id")
+            .eq("entity_type", "model")
+            .eq("original_id", payload.model_id)
+            .maybeSingle();
+          if (archivedModel) {
+            toast.error("Das zugehörige Model ist archiviert. Bitte zuerst das Model wiederherstellen.");
+          } else {
+            toast.error("Das zugehörige Model wurde endgültig gelöscht. Account kann nicht wiederhergestellt werden.");
+          }
+          setBusyId(null);
+          return;
+        }
+      }
       const { error: insErr } = await (supabase as any).from(table).insert(payload);
       if (insErr) throw insErr;
 
