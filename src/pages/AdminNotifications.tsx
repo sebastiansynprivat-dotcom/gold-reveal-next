@@ -33,6 +33,7 @@ export default function AdminNotifications() {
     setSending(true);
     try {
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const session = (await supabase.auth.getSession()).data.session;
       const res = await fetch(
         `https://${projectId}.supabase.co/functions/v1/send-notification`,
         {
@@ -40,6 +41,7 @@ export default function AdminNotifications() {
           headers: {
             "Content-Type": "application/json",
             apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            Authorization: `Bearer ${session?.access_token ?? ""}`,
           },
           body: JSON.stringify({ title: title.trim(), body: body.trim() }),
         }
