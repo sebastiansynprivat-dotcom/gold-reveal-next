@@ -8,12 +8,17 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+import { verifyCaller, unauthorized, forbidden } from "../_shared/auth.ts";
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    const caller = await verifyCaller(req);
+    if (!caller) return unauthorized(corsHeaders);
+
     const { user_id } = await req.json();
 
     if (!user_id) {
@@ -21,6 +26,11 @@ serve(async (req) => {
         JSON.stringify({ error: "user_id is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // Non-admin callers may only target themselves
+    if (!caller.isServiceRole && !caller.isAdmin && caller.userId !== user_id) {
+      return forbidden(corsHeaders);
     }
 
     const vapidPublic = Deno.env.get("VAPID_PUBLIC_KEY");
