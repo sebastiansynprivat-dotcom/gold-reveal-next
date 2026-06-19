@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
 import { useUILanguage } from "@/hooks/useUILanguage";
+import { supabase } from "@/integrations/supabase/client";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
