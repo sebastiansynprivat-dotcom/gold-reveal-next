@@ -45,12 +45,18 @@ UNWICHTIG: Login-Häufigkeit und Bot-DM-Status sind NICHT relevant. Erwähne die
 
 Sei direkt und nenne Zahlen. Lob wo verdient, Kritik wo nötig.`;
 
+import { verifyCaller, unauthorized, forbidden } from "../_shared/auth.ts";
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    const caller = await verifyCaller(req);
+    if (!caller) return unauthorized(corsHeaders);
+    if (!caller.isAdmin && !caller.isServiceRole) return forbidden(corsHeaders);
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
