@@ -11,10 +11,16 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+import { verifyCaller, unauthorized, forbidden } from "../_shared/auth.ts";
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    const caller = await verifyCaller(req);
+    if (!caller) return unauthorized(corsHeaders);
+    if (!caller.isAdmin && !caller.isServiceRole) return forbidden(corsHeaders);
+
     const { title, body, title_en, body_en, target_user_id } = await req.json();
 
     if (!title || !body) {

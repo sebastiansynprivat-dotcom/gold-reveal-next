@@ -60,7 +60,6 @@ const AdminLogin = () => {
   // If admin verified TOTP, redirect
   useEffect(() => {
     if (totpVerified) {
-      localStorage.setItem("admin_2fa_verified", Date.now().toString());
       navigate("/admin", { replace: true });
     }
   }, [totpVerified, navigate]);
@@ -127,6 +126,9 @@ const AdminLogin = () => {
       } else {
         if (step === "setup") {
           toast.success("2FA erfolgreich eingerichtet!");
+        }
+        if (res.data?.session_token) {
+          localStorage.setItem("admin_2fa_token", res.data.session_token);
         }
         setTotpVerified(true);
       }

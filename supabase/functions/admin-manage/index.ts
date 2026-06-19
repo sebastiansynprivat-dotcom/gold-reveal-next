@@ -78,8 +78,18 @@ Deno.serve(async (req) => {
       });
     }
 
+    const callerIsSuperAdmin = callerRole.role === "super_admin";
+
     const { action, email, target_user_id, new_role } = await req.json();
     console.log("admin-manage: action", { action, email: email ? String(email).toLowerCase().trim() : undefined });
+
+    // Mutating actions require super_admin to prevent privilege escalation
+    if ((action === "add" || action === "remove" || action === "change_role") && !callerIsSuperAdmin) {
+      return new Response(JSON.stringify({ error: "Only super admins can manage admin roles" }), {
+        status: 403,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     if (action === "list") {
       const { data: roles } = await serviceClient

@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, RefreshCw, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import DOMPurify from "dompurify";
 
 interface Props {
   open: boolean;
@@ -93,7 +94,7 @@ export default function ModelBiographyDialog({ open, onOpenChange, modelId, mode
           ) : (
             <div
               className="biography-content prose prose-sm prose-invert max-w-none"
-              dangerouslySetInnerHTML={{ __html: data.html }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(data.html, { USE_PROFILES: { html: true } }) }}
             />
           )}
         </div>
