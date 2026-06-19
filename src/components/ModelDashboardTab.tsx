@@ -1411,7 +1411,10 @@ export default function ModelDashboardTab() {
 
   // ─── Add platform account ───
   const handleAddAccount = async () => {
-    if (!selectedModelId) return;
+    if (!selectedModelId) {
+      toast.error("Accounts can't exist without a model. Please create or select a model first.");
+      return;
+    }
     const selected = Object.entries(newAccounts).filter(([, v]) => v.selected);
     if (selected.length === 0) {
       toast.error("Wähle mindestens eine Plattform");
