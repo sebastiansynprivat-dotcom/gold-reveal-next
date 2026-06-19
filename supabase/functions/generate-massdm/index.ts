@@ -19,12 +19,17 @@ Regeln:
 - WICHTIG: Variiere das Wording jedes Mal stark, damit sich keine Nachricht mit der eines anderen Chatters doppelt. Nutze unterschiedliche Formulierungen, Satzstrukturen und Wörter.
 - Antworte NUR mit der Nachricht selbst, keine Erklärungen drumherum`;
 
+import { verifyCaller, unauthorized } from "../_shared/auth.ts";
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    const caller = await verifyCaller(req);
+    if (!caller) return unauthorized(corsHeaders);
+
     const { previousMessages = [] } = await req.json().catch(() => ({ previousMessages: [] }));
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
