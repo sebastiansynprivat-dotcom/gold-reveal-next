@@ -1,7 +1,13 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { verifyCaller, unauthorized, forbidden } from '../_shared/auth.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+
+  const caller = await verifyCaller(req);
+  if (!caller) return unauthorized(corsHeaders);
+  if (!caller.isAdmin && !caller.isServiceRole) return forbidden(corsHeaders);
+
 
   try {
     const { notes } = await req.json();
