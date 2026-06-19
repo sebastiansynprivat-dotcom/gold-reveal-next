@@ -2815,11 +2815,13 @@ export default function AdminDashboard() {
       } catch (e) { console.warn("sofort-push EN translate failed", e); }
 
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const session = (await supabase.auth.getSession()).data.session;
       const res = await fetch(`https://${projectId}.supabase.co/functions/v1/send-notification`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          Authorization: `Bearer ${session?.access_token ?? ""}`,
         },
         body: JSON.stringify({
           title: notifTitle.trim(),
