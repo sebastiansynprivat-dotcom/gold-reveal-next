@@ -103,6 +103,10 @@ Deno.serve(async (req) => {
           results.push({ account_id: item.account_id, updated: 0, error: "No fields to update" });
           continue;
         }
+        if (hasNullModelId(item.updates)) {
+          results.push({ account_id: item.account_id, updated: 0, error: "model_id cannot be null — accounts must always belong to a model" });
+          continue;
+        }
         const { data, error } = await supabase
           .from("accounts")
           .update(item.updates)
