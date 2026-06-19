@@ -94,7 +94,7 @@ export default function ModelBiographyDialog({ open, onOpenChange, modelId, mode
           ) : (
             <div
               className="biography-content prose prose-sm prose-invert max-w-none"
-              dangerouslySetInnerHTML={{ __html: data.html }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(data.html, { USE_PROFILES: { html: true } }) }}
             />
           )}
         </div>
