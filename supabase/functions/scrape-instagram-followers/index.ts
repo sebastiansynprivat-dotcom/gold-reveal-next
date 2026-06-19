@@ -73,8 +73,14 @@ async function apifyScrape(usernames: string[], token: string): Promise<ApifyIte
   return Array.isArray(json) ? json : [];
 }
 
+import { verifyCaller, unauthorized, forbidden } from "../_shared/auth.ts";
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+
+  const caller = await verifyCaller(req);
+  if (!caller) return unauthorized(corsHeaders);
+  if (!caller.isAdmin && !caller.isServiceRole) return forbidden(corsHeaders);
 
   const token = Deno.env.get("APIFY_API_TOKEN");
   if (!token) {
