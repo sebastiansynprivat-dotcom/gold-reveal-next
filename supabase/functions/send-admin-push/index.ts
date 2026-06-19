@@ -10,12 +10,18 @@ const corsHeaders = {
 
 type Event = "new_request" | "new_revenue" | "new_request_comment" | "test";
 
+import { verifyCaller, unauthorized, forbidden } from "../_shared/auth.ts";
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
+    const caller = await verifyCaller(req);
+    if (!caller) return unauthorized(corsHeaders);
+    if (!caller.isAdmin && !caller.isServiceRole) return forbidden(corsHeaders);
+
     const { event, title, body, url, platform } = await req.json() as {
       event: Event; title: string; body: string; url?: string; platform?: string;
     };
