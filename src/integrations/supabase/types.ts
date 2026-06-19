@@ -198,6 +198,30 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_2fa_sessions: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          session_token: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          session_token: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          session_token?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       admin_account_access: {
         Row: {
           account_id: string
@@ -2893,6 +2917,10 @@ export type Database = {
       }
       refresh_profiles_data_today: { Args: never; Returns: number }
       set_credit_note_seq: { Args: { new_val: number }; Returns: undefined }
+      validate_admin_2fa_session: {
+        Args: { p_token: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role:
