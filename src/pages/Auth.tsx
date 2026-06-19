@@ -153,6 +153,7 @@ const Auth = () => {
 
             try {
               const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+              const session = (await supabase.auth.getSession()).data.session;
               await fetch(
                 `https://${projectId}.supabase.co/functions/v1/notify-account-assigned`,
                 {
@@ -160,6 +161,7 @@ const Auth = () => {
                   headers: {
                     "Content-Type": "application/json",
                     apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+                    Authorization: `Bearer ${session?.access_token ?? ""}`,
                   },
                   body: JSON.stringify({ user_id: user.id }),
                 }
