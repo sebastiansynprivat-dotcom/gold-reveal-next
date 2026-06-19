@@ -28,8 +28,13 @@ Rules:
 - Return ONLY a JSON object: {"t": ["...", "...", ...]} with translations in the same order.`;
 }
 
+import { verifyCaller, unauthorized } from "../_shared/auth.ts";
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  const caller = await verifyCaller(req);
+  if (!caller) return unauthorized(corsHeaders);
 
   try {
     const body = await req.json().catch(() => ({}));
