@@ -44,6 +44,11 @@ function pickAllowed(updates: Record<string, unknown>) {
   return sanitized;
 }
 
+function hasNullModelId(updates: Record<string, unknown>) {
+  return "model_id" in updates && (updates.model_id === null || updates.model_id === "");
+}
+
+
 function extractBatchItem(raw: any) {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
   if (typeof raw.account_id !== "string" || !UUID_RE.test(raw.account_id)) return null;
@@ -98,6 +103,10 @@ Deno.serve(async (req) => {
           results.push({ account_id: item.account_id, updated: 0, error: "No fields to update" });
           continue;
         }
+        if (hasNullModelId(item.updates)) {
+          results.push({ account_id: item.account_id, updated: 0, error: "model_id cannot be null — accounts must always belong to a model" });
+          continue;
+        }
         const { data, error } = await supabase
           .from("accounts")
           .update(item.updates)
@@ -132,6 +141,8 @@ Deno.serve(async (req) => {
     const sanitized = pickAllowed(updates);
     if (Object.keys(sanitized).length === 0)
       return json({ error: "No allowed fields in updates" }, 400);
+    if (hasNullModelId(sanitized))
+      return json({ error: "model_id cannot be null — accounts must always belong to a model. Create or select a model first." }, 400);
 
     const { data, error } = await supabase
       .from("accounts")

@@ -1411,7 +1411,10 @@ export default function ModelDashboardTab() {
 
   // ─── Add platform account ───
   const handleAddAccount = async () => {
-    if (!selectedModelId) return;
+    if (!selectedModelId) {
+      toast.error("Accounts can't exist without a model. Please create or select a model first.");
+      return;
+    }
     const selected = Object.entries(newAccounts).filter(([, v]) => v.selected);
     if (selected.length === 0) {
       toast.error("Wähle mindestens eine Plattform");
@@ -1595,12 +1598,11 @@ export default function ModelDashboardTab() {
   // ─── Delete model ───
   const deleteModel = async () => {
     if (!selectedModelId) return;
-    // First unlink accounts
-    await (supabase.from("accounts") as any).update({ model_id: null }).eq("model_id", selectedModelId);
+    // Delete the model directly — the cascade_delete_model_accounts trigger
+    // archives all associated accounts (with model_id preserved) into deleted_records.
     const { error } = await (supabase.from("models") as any).delete().eq("id", selectedModelId);
     if (error) toast.error(error.message);
     else {
-      // toast.success("Model gelöscht");
       setSelectedModelId("");
       await loadModels();
     }

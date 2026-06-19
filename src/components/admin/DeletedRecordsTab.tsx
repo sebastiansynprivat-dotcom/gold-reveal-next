@@ -65,6 +65,11 @@ export default function DeletedRecordsTab() {
     try {
       const table = ENTITY_TABLES[row.entity_type];
       const payload = { ...row.data };
+      if (row.entity_type === "account" && !payload.model_id) {
+        toast.error("Dieser Account hat kein Model. Bitte zuerst das zugehörige Model erstellen oder wiederherstellen.");
+        setBusyId(null);
+        return;
+      }
       const { error: insErr } = await (supabase as any).from(table).insert(payload);
       if (insErr) throw insErr;
 

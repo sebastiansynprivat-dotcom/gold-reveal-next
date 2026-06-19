@@ -79,7 +79,7 @@ export type Database = {
           message: boolean
           model_active: boolean
           model_agency: string
-          model_id: string | null
+          model_id: string
           model_language: string
           platform: string
           post: boolean
@@ -105,7 +105,7 @@ export type Database = {
           message?: boolean
           model_active?: boolean
           model_agency?: string
-          model_id?: string | null
+          model_id: string
           model_language?: string
           platform?: string
           post?: boolean
@@ -131,7 +131,7 @@ export type Database = {
           message?: boolean
           model_active?: boolean
           model_agency?: string
-          model_id?: string | null
+          model_id?: string
           model_language?: string
           platform?: string
           post?: boolean

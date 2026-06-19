@@ -825,6 +825,10 @@ export default function AdminDashboard() {
 
   const updateAccountField = useCallback(
     async (accId: string, patch: Partial<AccountEntry>) => {
+      if ("model_id" in patch && (patch.model_id === null || patch.model_id === "")) {
+        toast.error("Accounts can't exist without a model. Please create or select a model first.");
+        return;
+      }
       setAccounts((prev) => prev.map((a) => (a.id === accId ? { ...a, ...patch } : a)));
       const { error } = await supabase.from("accounts").update(patch as any).eq("id", accId);
       if (error) {
