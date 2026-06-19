@@ -170,8 +170,11 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const authHeader = req.headers.get("Authorization");
-    const isServiceRole = req.headers.get("x-service-role") === "true";
+    const authHeader = req.headers.get("Authorization") || "";
+    const bearer = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const isServiceRole = bearer.length > 0 && bearer === serviceKey;
+
     let callerUserId: string | null = null;
     let callerIsAdmin = false;
 
