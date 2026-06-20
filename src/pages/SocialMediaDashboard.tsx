@@ -558,6 +558,16 @@ export default function SocialMediaDashboard() {
             <Sparkles className="h-3.5 w-3.5" />
             <span className="hidden sm:inline ml-1.5">Marketer</span>
           </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => navigate("/socialmedia/admin/applications")}
+            className="shrink-0 border border-accent/30 bg-accent/5 text-accent hover:bg-accent/15 hover:border-accent/50 transition-all mr-2"
+            title="Marketer-Bewerbungen"
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline ml-1.5">Bewerbungen</span>
+          </Button>
           {isSuperAdmin && (
             <Button
               variant="secondary"
