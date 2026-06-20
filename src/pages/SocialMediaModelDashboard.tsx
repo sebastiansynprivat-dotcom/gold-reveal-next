@@ -1193,7 +1193,7 @@ export default function SocialMediaModelDashboard() {
                     Wie erreiche ich mein Team?
                   </AccordionTrigger>
                   <AccordionContent className="text-xs text-muted-foreground leading-relaxed">
-                    Schreib deinem zuständigen Marketer direkt auf WhatsApp oder Telegram. Bei dringenden Themen ans Office – Antwort innerhalb von 24h garantiert.
+                    Meld dich bei Lukas unter der +49 1511 8728438
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
