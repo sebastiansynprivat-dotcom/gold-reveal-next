@@ -52,6 +52,7 @@ import confetti from "canvas-confetti";
 import DashboardChat from "@/components/DashboardChat";
 import BillingAudioDialog from "@/components/BillingAudioDialog";
 import DailyChecklist from "@/components/DailyChecklist";
+import BrezzelsCommentTargets from "@/components/BrezzelsCommentTargets";
 import MassDmGenerator from "@/components/MassDmGenerator";
 import DailyGoal from "@/components/DailyGoal";
 import StreakTracker from "@/components/StreakTracker";
@@ -1608,6 +1609,11 @@ export default function Dashboard() {
         <div data-tour="checklist">
           <DailyChecklist />
         </div>
+
+        {/* Brezzels-Profile kommentieren – nur für Chatter mit einem Brezzels-Account */}
+        {assignedAccounts.some((a) => (a.platform || "").toLowerCase() === "brezzels") && (
+          <BrezzelsCommentTargets />
+        )}
 
         {/* Bonus Model - alles in einer Karte (nur im Demo-Modus sichtbar) */}
         {isDemoMode() && (
