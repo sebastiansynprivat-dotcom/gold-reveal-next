@@ -42,6 +42,8 @@ export default function SocialMediaContentPlans() {
   const { user } = useAuth();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [models, setModels] = useState<Model[]>([]);
+  const [marketers, setMarketers] = useState<Marketer[]>([]);
+  const [activeTab, setActiveTab] = useState<TargetType>("model");
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [progressByAssignment, setProgressByAssignment] = useState<Record<string, { done: number; total: number }>>({});
   const [feedbackByAssignment, setFeedbackByAssignment] = useState<Record<string, Array<{ week_number: number; status: string; feedback: string; folder_url: string; updated_at: string }>>>({});
