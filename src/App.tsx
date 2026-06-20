@@ -256,6 +256,7 @@ const App = () => (
               <Route path="/socialmedia/admin" element={<SocialMediaProtectedRoute><SocialMediaDashboard /></SocialMediaProtectedRoute>} />
               <Route path="/socialmedia/admin/plans" element={<SocialMediaProtectedRoute><SocialMediaContentPlans /></SocialMediaProtectedRoute>} />
               <Route path="/socialmedia/admin/marketers" element={<SocialMediaProtectedRoute><SocialMediaMarketers /></SocialMediaProtectedRoute>} />
+              <Route path="/socialmedia/admin/applications" element={<SocialMediaProtectedRoute><SocialMediaMarketerApplications /></SocialMediaProtectedRoute>} />
               <Route path="/socialmedia/model" element={<SocialMediaModelProtectedRoute><SocialMediaModelDashboard /></SocialMediaModelProtectedRoute>} />
               {/* Legacy /fanvue → /socialmedia redirects */}
               <Route path="/fanvue/login" element={<Navigate to="/socialmedia/login" replace />} />
