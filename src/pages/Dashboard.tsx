@@ -52,6 +52,7 @@ import confetti from "canvas-confetti";
 import DashboardChat from "@/components/DashboardChat";
 import BillingAudioDialog from "@/components/BillingAudioDialog";
 import DailyChecklist from "@/components/DailyChecklist";
+import BrezzelsCommentTargets from "@/components/BrezzelsCommentTargets";
 import MassDmGenerator from "@/components/MassDmGenerator";
 import DailyGoal from "@/components/DailyGoal";
 import StreakTracker from "@/components/StreakTracker";
