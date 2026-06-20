@@ -179,18 +179,27 @@ Deno.serve(async (req) => {
       .join("");
 
     // Best-effort cleanup of expired rows for this user
-    await serviceClient
+    const delRes = await serviceClient
       .from("admin_2fa_sessions")
       .delete()
       .lt("expires_at", new Date().toISOString())
       .eq("user_id", user.id);
+    if (delRes.error) console.error("[totp-verify] cleanup error", delRes.error);
 
-    await serviceClient.from("admin_2fa_sessions").insert({
+    const insRes = await serviceClient.from("admin_2fa_sessions").insert({
       user_id: user.id,
       session_token: sessionToken,
       expires_at: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
     });
+    if (insRes.error) {
+      console.error("[totp-verify] INSERT FAILED", JSON.stringify(insRes.error));
+      return new Response(
+        JSON.stringify({ error: "Konnte 2FA-Session nicht speichern: " + insRes.error.message, valid: false }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
+    console.log("[totp-verify] success for user", user.id, "token-prefix", sessionToken.slice(0, 8));
     return new Response(
       JSON.stringify({ valid: true, session_token: sessionToken }),
       {
