@@ -19,9 +19,11 @@ import GoldParticles from "@/components/GoldParticles";
 type ContentItem = { title: string; reference_url?: string; notes?: string; type?: string };
 type DayMap = Record<number, ContentItem[]>;
 
-type Plan = { id: string; title: string; description: string; created_at: string };
+type TargetType = "model" | "marketer";
+type Plan = { id: string; title: string; description: string; created_at: string; target_type: TargetType };
 type Model = { id: string; name: string; username: string };
-type Assignment = { id: string; plan_id: string; model_id: string; start_date: string };
+type Marketer = { user_id: string; name: string };
+type Assignment = { id: string; plan_id: string; model_id: string | null; marketer_user_id: string | null; start_date: string };
 
 const DAYS = 30;
 
