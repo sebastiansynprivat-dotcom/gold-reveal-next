@@ -522,6 +522,92 @@ export default function MarketerDashboard() {
           );
         })}
 
+        {/* Instagram Logins pro Model */}
+        {(() => {
+          const norm = (s?: string | null) => (s || "").trim().toLowerCase();
+          const copy = async (text: string, label: string) => {
+            try { await navigator.clipboard.writeText(text); toast.success(`${label} kopiert`); }
+            catch { toast.error("Kopieren fehlgeschlagen"); }
+          };
+          const blocks = models.map((m) => {
+            const modelLogins = (m.instagram_logins || []).filter((l) => l && (l.username || l.password || l.url));
+            const myMarketer = (m.marketers || []).find(
+              (mk) => norm(mk.name) === norm(marketerName) && (mk.ig_username || mk.ig_password),
+            );
+            if (modelLogins.length === 0 && !myMarketer) return null;
+            return { model: m, modelLogins, myMarketer };
+          }).filter(Boolean) as Array<{ model: ModelRow; modelLogins: InstagramLogin[]; myMarketer?: Marketer }>;
+
+          if (blocks.length === 0) return null;
+
+          return (
+            <section>
+              <div className="flex items-center gap-2 mb-3">
+                <KeyRound className="h-4 w-4 text-accent" />
+                <h2 className="text-sm uppercase tracking-[0.2em] text-muted-foreground font-bold">Instagram Logins</h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {blocks.map(({ model, modelLogins, myMarketer }) => (
+                  <div key={`login-${model.id}`} className="rounded-2xl border border-accent/15 bg-card/40 backdrop-blur-sm p-5">
+                    <h3 className="font-bold text-foreground mb-3">{model.name}</h3>
+                    <div className="space-y-3">
+                      {modelLogins.map((lg, i) => (
+                        <div key={`m-${i}`} className="rounded-lg border border-border/30 bg-background/40 p-3 space-y-1.5">
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <Instagram className="h-3.5 w-3.5 text-accent/70" />
+                            <span className="truncate">{lg.url || "Model-IG"}</span>
+                          </div>
+                          {lg.username && (
+                            <button
+                              onClick={() => copy(lg.username, "Username")}
+                              className="flex items-center justify-between w-full text-sm gap-2 group"
+                            >
+                              <span className="text-foreground font-mono truncate">{lg.username}</span>
+                              <Copy className="h-3.5 w-3.5 text-muted-foreground group-hover:text-accent shrink-0" />
+                            </button>
+                          )}
+                          {lg.password && (
+                            <button
+                              onClick={() => copy(lg.password, "Passwort")}
+                              className="flex items-center justify-between w-full text-sm gap-2 group"
+                            >
+                              <span className="text-foreground font-mono truncate">{lg.password}</span>
+                              <Copy className="h-3.5 w-3.5 text-muted-foreground group-hover:text-accent shrink-0" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                      {myMarketer && (
+                        <div className="rounded-lg border border-accent/30 bg-accent/5 p-3 space-y-1.5">
+                          <div className="flex items-center gap-2 text-xs text-accent">
+                            <Instagram className="h-3.5 w-3.5" />
+                            <span className="truncate">Dein IG für {model.name} · {myMarketer.instagram || ""}</span>
+                          </div>
+                          {myMarketer.ig_username && (
+                            <button onClick={() => copy(myMarketer.ig_username!, "Username")} className="flex items-center justify-between w-full text-sm gap-2 group">
+                              <span className="text-foreground font-mono truncate">{myMarketer.ig_username}</span>
+                              <Copy className="h-3.5 w-3.5 text-muted-foreground group-hover:text-accent shrink-0" />
+                            </button>
+                          )}
+                          {myMarketer.ig_password && (
+                            <button onClick={() => copy(myMarketer.ig_password!, "Passwort")} className="flex items-center justify-between w-full text-sm gap-2 group">
+                              <span className="text-foreground font-mono truncate">{myMarketer.ig_password}</span>
+                              <Copy className="h-3.5 w-3.5 text-muted-foreground group-hover:text-accent shrink-0" />
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          );
+        })()}
+
+        {/* Content Pläne für diesen Marketer */}
+        <MarketerContentPlans />
+
       </main>
     </div>
   );
