@@ -1610,6 +1610,11 @@ export default function Dashboard() {
           <DailyChecklist />
         </div>
 
+        {/* Brezzels-Profile kommentieren – nur für Chatter mit einem Brezzels-Account */}
+        {assignedAccounts.some((a) => (a.platform || "").toLowerCase() === "brezzels") && (
+          <BrezzelsCommentTargets />
+        )}
+
         {/* Bonus Model - alles in einer Karte (nur im Demo-Modus sichtbar) */}
         {isDemoMode() && (
           <BonusModelSection
