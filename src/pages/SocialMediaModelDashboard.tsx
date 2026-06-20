@@ -1168,8 +1168,8 @@ export default function SocialMediaModelDashboard() {
                   <AccordionTrigger className="text-sm text-left hover:no-underline">
                     Wie viel Content sollte ich pro Woche liefern?
                   </AccordionTrigger>
-                  <AccordionContent className="text-xs text-muted-foreground leading-relaxed">
-                    Faustregel: mindestens <span className="text-accent font-semibold">5–7 Reels pro Woche</span>. Wer früher liefert, gewinnt – schneller Content = schneller Wachstum. Halte dich an deinen Content Plan oben und du bist auf der sicheren Seite.
+                  <AccordionContent className="text-xs text-muted-foreground leading-relaxed whitespace-pre-line">
+                    Minimum 7 Reels von der Contentliste 14-21 Background Videos - (pro Tag 2-3){"\n"}{"\n"}5-10 Feedbilder/Storys{"\n"}{"\n"}Pro Woche.
                   </AccordionContent>
                 </AccordionItem>
                 <AccordionItem value="q3" className="border-border/40">
