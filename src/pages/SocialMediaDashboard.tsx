@@ -1223,21 +1223,41 @@ export default function SocialMediaDashboard() {
               {form.instagram_urls.length === 0 ? (
                 <p className="text-xs text-muted-foreground/80 italic">Noch kein Instagram Account hinzugefügt</p>
               ) : (
-                <div className="space-y-2">
-                  {form.instagram_urls.map((url, i) => (
-                    <div key={i} className="flex items-center gap-2 min-w-0">
-                      <Instagram className="h-4 w-4 text-muted-foreground shrink-0" />
-                      <Input
-                        placeholder="Instagram URL oder @handle"
-                        value={url}
-                        onChange={(e) => updateInstagram(i, e.target.value)}
-                        className="text-sm h-10 min-w-0 flex-1"
-                      />
-                      <Button size="icon" variant="ghost" className="h-9 w-9 text-destructive shrink-0" onClick={() => removeInstagram(i)}>
-                        <X className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  ))}
+                <div className="space-y-3">
+                  {form.instagram_urls.map((url, i) => {
+                    const lg = form.instagram_logins[i] || { url: "", username: "", password: "" };
+                    return (
+                      <div key={i} className="rounded-lg border border-border/40 p-3 space-y-2 bg-card/60">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Instagram className="h-4 w-4 text-muted-foreground shrink-0" />
+                          <Input
+                            placeholder="Instagram URL oder @handle"
+                            value={url}
+                            onChange={(e) => updateInstagram(i, e.target.value)}
+                            className="text-sm h-10 min-w-0 flex-1"
+                          />
+                          <Button size="icon" variant="ghost" className="h-9 w-9 text-destructive shrink-0" onClick={() => removeInstagram(i)}>
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pl-6">
+                          <Input
+                            placeholder="IG Username (für Login)"
+                            value={lg.username}
+                            onChange={(e) => updateInstagramLogin(i, "username", e.target.value)}
+                            className="text-sm h-10"
+                          />
+                          <Input
+                            placeholder="IG Passwort"
+                            value={lg.password}
+                            onChange={(e) => updateInstagramLogin(i, "password", e.target.value)}
+                            className="text-sm h-10"
+                          />
+                        </div>
+                        <p className="text-[10px] text-muted-foreground/70 pl-6">Wird dem Model nicht angezeigt — nur Marketer & Admins.</p>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
