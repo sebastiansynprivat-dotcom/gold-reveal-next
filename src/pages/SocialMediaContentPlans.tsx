@@ -60,7 +60,7 @@ export default function SocialMediaContentPlans() {
   // Assign dialog
   const [assignOpen, setAssignOpen] = useState(false);
   const [assignPlan, setAssignPlan] = useState<Plan | null>(null);
-  const [selectedModels, setSelectedModels] = useState<Set<string>>(new Set());
+  const [selectedTargets, setSelectedTargets] = useState<Set<string>>(new Set());
   const [startDate, setStartDate] = useState<string>(() => mondayOf(new Date()).toISOString().slice(0, 10));
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
