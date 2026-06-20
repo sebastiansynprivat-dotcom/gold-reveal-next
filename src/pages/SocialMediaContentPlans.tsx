@@ -19,9 +19,11 @@ import GoldParticles from "@/components/GoldParticles";
 type ContentItem = { title: string; reference_url?: string; notes?: string; type?: string };
 type DayMap = Record<number, ContentItem[]>;
 
-type Plan = { id: string; title: string; description: string; created_at: string };
+type TargetType = "model" | "marketer";
+type Plan = { id: string; title: string; description: string; created_at: string; target_type: TargetType };
 type Model = { id: string; name: string; username: string };
-type Assignment = { id: string; plan_id: string; model_id: string; start_date: string };
+type Marketer = { user_id: string; name: string };
+type Assignment = { id: string; plan_id: string; model_id: string | null; marketer_user_id: string | null; start_date: string };
 
 const DAYS = 30;
 
@@ -40,6 +42,8 @@ export default function SocialMediaContentPlans() {
   const { user } = useAuth();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [models, setModels] = useState<Model[]>([]);
+  const [marketers, setMarketers] = useState<Marketer[]>([]);
+  const [activeTab, setActiveTab] = useState<TargetType>("model");
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [progressByAssignment, setProgressByAssignment] = useState<Record<string, { done: number; total: number }>>({});
   const [feedbackByAssignment, setFeedbackByAssignment] = useState<Record<string, Array<{ week_number: number; status: string; feedback: string; folder_url: string; updated_at: string }>>>({});
@@ -56,19 +60,32 @@ export default function SocialMediaContentPlans() {
   // Assign dialog
   const [assignOpen, setAssignOpen] = useState(false);
   const [assignPlan, setAssignPlan] = useState<Plan | null>(null);
-  const [selectedModels, setSelectedModels] = useState<Set<string>>(new Set());
+  const [selectedTargets, setSelectedTargets] = useState<Set<string>>(new Set());
   const [startDate, setStartDate] = useState<string>(() => mondayOf(new Date()).toISOString().slice(0, 10));
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
-    const [{ data: p }, { data: m }, { data: a }] = await Promise.all([
+    const [{ data: p }, { data: m }, { data: a }, { data: roleRows }] = await Promise.all([
       supabase.from("content_plans").select("*").order("created_at", { ascending: false }),
       supabase.from("fanvue_models").select("id,name,username").order("name"),
       supabase.from("content_plan_assignments").select("*"),
+      supabase.from("user_roles").select("user_id").eq("role", "socialmedia_marketer"),
     ]);
-    setPlans((p as Plan[]) || []);
+    setPlans(((p as any[]) || []).map((x) => ({ ...x, target_type: (x.target_type as TargetType) || "model" })));
+    setModels((m as Model[]) || []);
+
+    const mids = Array.from(new Set(((roleRows || []) as any[]).map((r) => r.user_id)));
+    if (mids.length) {
+      const { data: profs } = await supabase.from("admin_profiles").select("user_id, display_name").in("user_id", mids);
+      const nameById = new Map<string, string>();
+      ((profs || []) as any[]).forEach((pp) => nameById.set(pp.user_id, pp.display_name || ""));
+      setMarketers(mids.map((id) => ({ user_id: id, name: nameById.get(id) || `Marketer ${id.slice(0, 6)}` })));
+    } else {
+      setMarketers([]);
+    }
+
     setModels((m as Model[]) || []);
     const asgs = (a as Assignment[]) || [];
     setAssignments(asgs);
@@ -169,9 +186,9 @@ export default function SocialMediaContentPlans() {
     try {
       let planId = editingPlan?.id;
       if (!planId) {
-        const { data, error } = await supabase
-          .from("content_plans")
-          .insert({ title: planTitle.trim(), description: planDesc, created_by: user?.id })
+        const { data, error } = await (supabase
+          .from("content_plans") as any)
+          .insert({ title: planTitle.trim(), description: planDesc, created_by: user?.id, target_type: activeTab })
           .select()
           .single();
         if (error) throw error;
@@ -211,33 +228,34 @@ export default function SocialMediaContentPlans() {
     load();
   };
 
+  const targetKeyOf = (a: Assignment) =>
+    (a.marketer_user_id ? a.marketer_user_id : a.model_id) as string;
+
   const openAssign = (plan: Plan) => {
     setAssignPlan(plan);
-    const existing = (assignmentsByPlan[plan.id] || []).map((a) => a.model_id);
-    setSelectedModels(new Set(existing));
+    const existing = (assignmentsByPlan[plan.id] || []).map(targetKeyOf).filter(Boolean) as string[];
+    setSelectedTargets(new Set(existing));
     setStartDate(mondayOf(new Date()).toISOString().slice(0, 10));
     setAssignOpen(true);
   };
 
   const saveAssignments = async () => {
     if (!assignPlan) return;
+    const isMarketer = assignPlan.target_type === "marketer";
     const existing = assignmentsByPlan[assignPlan.id] || [];
-    const existingIds = new Set(existing.map((a) => a.model_id));
-    const newSet = selectedModels;
+    const existingIds = new Set(existing.map(targetKeyOf));
+    const newSet = selectedTargets;
 
     const toAdd: string[] = [];
     newSet.forEach((id) => { if (!existingIds.has(id)) toAdd.push(id); });
-    const toRemove: string[] = existing.filter((a) => !newSet.has(a.model_id)).map((a) => a.id);
+    const toRemove: string[] = existing.filter((a) => !newSet.has(targetKeyOf(a))).map((a) => a.id);
 
     try {
       if (toAdd.length) {
-        const rows = toAdd.map((mid) => ({
-          plan_id: assignPlan.id,
-          model_id: mid,
-          start_date: startDate,
-          assigned_by: user?.id,
-        }));
-        const { error } = await supabase.from("content_plan_assignments").insert(rows);
+        const rows = toAdd.map((tid) => isMarketer
+          ? { plan_id: assignPlan.id, marketer_user_id: tid, start_date: startDate, assigned_by: user?.id }
+          : { plan_id: assignPlan.id, model_id: tid, start_date: startDate, assigned_by: user?.id });
+        const { error } = await (supabase.from("content_plan_assignments") as any).insert(rows);
         if (error) throw error;
       }
       if (toRemove.length) {
@@ -277,28 +295,57 @@ export default function SocialMediaContentPlans() {
       <div className="h-[68px]" />
 
       <main className="relative z-10 max-w-7xl mx-auto px-4 md:px-6 py-6 space-y-6">
-        <div className="flex justify-end">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="inline-flex items-center gap-1 rounded-xl border border-accent/20 bg-card/40 p-1 backdrop-blur-sm">
+            {(["model", "marketer"] as TargetType[]).map((t) => (
+              <button
+                key={t}
+                onClick={() => setActiveTab(t)}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+                  activeTab === t
+                    ? "bg-accent text-accent-foreground shadow"
+                    : "text-muted-foreground hover:text-foreground hover:bg-background/40"
+                }`}
+              >
+                {t === "model" ? "Für Models" : "Für Marketer"}
+              </button>
+            ))}
+          </div>
           <Button onClick={openCreate} className="bg-accent text-accent-foreground hover:bg-accent/90">
-            <Plus className="h-4 w-4 mr-1.5" /> Neuer Content Plan
+            <Plus className="h-4 w-4 mr-1.5" />
+            {activeTab === "model" ? "Neuer Plan (Models)" : "Neuer Plan (Marketer)"}
           </Button>
         </div>
 
-        {loading ? (
-          <div className="flex justify-center py-20">
-            <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-          </div>
-        ) : plans.length === 0 ? (
-          <div className="text-center py-20 text-muted-foreground">
-            <CalendarDays className="h-12 w-12 mx-auto mb-3 opacity-30" />
-            <p>Noch keine Content Pläne</p>
-            <Button onClick={openCreate} variant="ghost" className="mt-3 text-accent">
-              <Plus className="h-4 w-4 mr-1.5" /> Ersten Plan anlegen
-            </Button>
-          </div>
-        ) : (
+        {(() => {
+          const filteredPlans = plans.filter((p) => p.target_type === activeTab);
+          if (loading) {
+            return (
+              <div className="flex justify-center py-20">
+                <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+              </div>
+            );
+          }
+          if (filteredPlans.length === 0) {
+            return (
+              <div className="text-center py-20 text-muted-foreground">
+                <CalendarDays className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                <p>Noch keine Content Pläne für {activeTab === "model" ? "Models" : "Marketer"}.</p>
+                <Button onClick={openCreate} variant="ghost" className="mt-3 text-accent">
+                  <Plus className="h-4 w-4 mr-1.5" /> Ersten Plan anlegen
+                </Button>
+              </div>
+            );
+          }
+          return (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {plans.map((plan) => {
+            {filteredPlans.map((plan) => {
               const asgs = assignmentsByPlan[plan.id] || [];
+              const isMarketerPlan = plan.target_type === "marketer";
+              const targetLabel = isMarketerPlan ? "Marketer" : "Model";
+              const nameFor = (a: Assignment) => isMarketerPlan
+                ? (marketers.find((mk) => mk.user_id === a.marketer_user_id)?.name || "—")
+                : (models.find((mm) => mm.id === a.model_id)?.name || "—");
               return (
                 <motion.div
                   key={plan.id}
@@ -325,13 +372,12 @@ export default function SocialMediaContentPlans() {
 
                   <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
                     <Users className="h-3.5 w-3.5" />
-                    <span>{asgs.length} Model{asgs.length === 1 ? "" : "s"} zugewiesen</span>
+                    <span>{asgs.length} {targetLabel}{asgs.length === 1 ? "" : "s"} zugewiesen</span>
                   </div>
 
                   {asgs.length > 0 && (
                     <div className="space-y-2.5 mb-3 max-h-96 overflow-y-auto pr-1">
                       {asgs.map((a) => {
-                        const mdl = models.find((mm) => mm.id === a.model_id);
                         const prog = progressByAssignment[a.id] || { done: 0, total: 0 };
                         const pct = prog.total > 0 ? Math.round((prog.done / prog.total) * 100) : 0;
                         const fbs = feedbackByAssignment[a.id] || [];
@@ -339,7 +385,7 @@ export default function SocialMediaContentPlans() {
                         return (
                           <div key={a.id} className="text-xs space-y-1.5 pb-2 border-b border-border/20 last:border-b-0">
                             <div className="flex items-center justify-between mb-0.5">
-                              <span className="text-foreground truncate font-medium">{mdl?.name || "—"}</span>
+                              <span className="text-foreground truncate font-medium">{nameFor(a)}</span>
                               <span className="text-muted-foreground tabular-nums">{prog.done}/{prog.total}</span>
                             </div>
                             <div className="h-1.5 rounded-full bg-background/60 overflow-hidden">
@@ -384,13 +430,14 @@ export default function SocialMediaContentPlans() {
                   )}
 
                   <Button variant="outline" size="sm" className="w-full border-accent/30 text-accent hover:bg-accent/10" onClick={() => openAssign(plan)}>
-                    <Users className="h-3.5 w-3.5 mr-1.5" /> Models zuweisen
+                    <Users className="h-3.5 w-3.5 mr-1.5" /> {targetLabel} zuweisen
                   </Button>
                 </motion.div>
               );
             })}
           </div>
-        )}
+          );
+        })()}
       </main>
 
       {/* Editor Dialog */}
@@ -484,41 +531,51 @@ export default function SocialMediaContentPlans() {
       <Dialog open={assignOpen} onOpenChange={setAssignOpen}>
         <DialogContent className="max-w-md bg-card/95 backdrop-blur-xl border-accent/30">
           <DialogHeader>
-            <DialogTitle className="text-accent">Models zuweisen</DialogTitle>
+            <DialogTitle className="text-accent">
+              {assignPlan?.target_type === "marketer" ? "Marketer zuweisen" : "Models zuweisen"}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <div>
               <Label className="text-xs uppercase tracking-wider text-muted-foreground">Startdatum (Montag)</Label>
               <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-              <p className="text-[10px] text-muted-foreground/70 mt-1">Ab diesem Tag startet Woche 1 für neu zugewiesene Models.</p>
+              <p className="text-[10px] text-muted-foreground/70 mt-1">Ab diesem Tag startet Woche 1 für neu Zugewiesene.</p>
             </div>
             <div>
-              <Label className="text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">Models</Label>
+              <Label className="text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">
+                {assignPlan?.target_type === "marketer" ? "Marketer" : "Models"}
+              </Label>
               <div className="max-h-72 overflow-y-auto rounded-lg border border-border/40 bg-background/40 divide-y divide-border/20">
-                {models.length === 0 && <p className="p-3 text-xs text-muted-foreground">Keine Models vorhanden.</p>}
-                {models.map((mm) => {
-                  const checked = selectedModels.has(mm.id);
-                  return (
-                    <button
-                      key={mm.id}
-                      type="button"
-                      onClick={() => {
-                        setSelectedModels((s) => {
-                          const next = new Set(s);
-                          if (next.has(mm.id)) next.delete(mm.id); else next.add(mm.id);
-                          return next;
-                        });
-                      }}
-                      className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${checked ? "bg-accent/10 text-foreground" : "text-muted-foreground hover:bg-background/60"}`}
-                    >
-                      <div className={`h-4 w-4 rounded border flex items-center justify-center shrink-0 ${checked ? "bg-accent border-accent" : "border-border"}`}>
-                        {checked && <CheckCircle2 className="h-3 w-3 text-accent-foreground" />}
-                      </div>
-                      <span className="flex-1 truncate">{mm.name || "—"}</span>
-                      {mm.username && <span className="text-[10px] text-muted-foreground">@{mm.username}</span>}
-                    </button>
-                  );
-                })}
+                {(() => {
+                  const list: { id: string; primary: string; secondary?: string }[] =
+                    assignPlan?.target_type === "marketer"
+                      ? marketers.map((mk) => ({ id: mk.user_id, primary: mk.name }))
+                      : models.map((mm) => ({ id: mm.id, primary: mm.name || "—", secondary: mm.username }));
+                  if (list.length === 0) return <p className="p-3 text-xs text-muted-foreground">Keine Einträge vorhanden.</p>;
+                  return list.map((it) => {
+                    const checked = selectedTargets.has(it.id);
+                    return (
+                      <button
+                        key={it.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedTargets((s) => {
+                            const next = new Set(s);
+                            if (next.has(it.id)) next.delete(it.id); else next.add(it.id);
+                            return next;
+                          });
+                        }}
+                        className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${checked ? "bg-accent/10 text-foreground" : "text-muted-foreground hover:bg-background/60"}`}
+                      >
+                        <div className={`h-4 w-4 rounded border flex items-center justify-center shrink-0 ${checked ? "bg-accent border-accent" : "border-border"}`}>
+                          {checked && <CheckCircle2 className="h-3 w-3 text-accent-foreground" />}
+                        </div>
+                        <span className="flex-1 truncate">{it.primary}</span>
+                        {it.secondary && <span className="text-[10px] text-muted-foreground">@{it.secondary}</span>}
+                      </button>
+                    );
+                  });
+                })()}
               </div>
             </div>
           </div>

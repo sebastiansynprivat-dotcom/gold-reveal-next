@@ -42,6 +42,7 @@ const MarketerSetupPassword = lazy(() => import("./pages/MarketerSetupPassword")
 const MarketerDashboard = lazy(() => import("./pages/MarketerDashboard"));
 const MarketerCoaching = lazy(() => import("./pages/MarketerCoaching"));
 const SocialMediaMarketers = lazy(() => import("./pages/SocialMediaMarketers"));
+const SocialMediaMarketerApplications = lazy(() => import("./pages/SocialMediaMarketerApplications"));
 
 import AutoTranslator from "@/components/AutoTranslator";
 
@@ -255,6 +256,7 @@ const App = () => (
               <Route path="/socialmedia/admin" element={<SocialMediaProtectedRoute><SocialMediaDashboard /></SocialMediaProtectedRoute>} />
               <Route path="/socialmedia/admin/plans" element={<SocialMediaProtectedRoute><SocialMediaContentPlans /></SocialMediaProtectedRoute>} />
               <Route path="/socialmedia/admin/marketers" element={<SocialMediaProtectedRoute><SocialMediaMarketers /></SocialMediaProtectedRoute>} />
+              <Route path="/socialmedia/admin/applications" element={<SocialMediaProtectedRoute><SocialMediaMarketerApplications /></SocialMediaProtectedRoute>} />
               <Route path="/socialmedia/model" element={<SocialMediaModelProtectedRoute><SocialMediaModelDashboard /></SocialMediaModelProtectedRoute>} />
               {/* Legacy /fanvue → /socialmedia redirects */}
               <Route path="/fanvue/login" element={<Navigate to="/socialmedia/login" replace />} />

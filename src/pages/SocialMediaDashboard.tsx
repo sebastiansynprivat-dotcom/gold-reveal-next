@@ -18,8 +18,9 @@ import logo from "@/assets/logo.png";
 import GoldParticles from "@/components/GoldParticles";
 import { useAdminRole } from "@/hooks/useAdminRole";
 
-type Marketer = { name: string; instagram: string; tracking_link?: string; tracking_name?: string };
+type Marketer = { name: string; instagram: string; tracking_link?: string; tracking_name?: string; ig_username?: string; ig_password?: string };
 type PlatformLogin = { platform: string; email: string; password: string };
+type InstagramLogin = { url: string; username: string; password: string };
 
 export type ModelStage = "onboarding" | "warm_up" | "active" | "ready";
 
@@ -41,6 +42,7 @@ type SocialMediaModel = {
   social_linked: boolean;
   instagram_url: string;
   instagram_urls: string[];
+  instagram_logins: InstagramLogin[];
   linktree_url: string;
   tiktok_url: string;
   twitter_url: string;
@@ -68,6 +70,7 @@ const emptyModel: Omit<SocialMediaModel, "id" | "created_at" | "archived_at"> = 
   social_linked: false,
   instagram_url: "",
   instagram_urls: [],
+  instagram_logins: [],
   linktree_url: "",
   tiktok_url: "",
   twitter_url: "",
@@ -173,6 +176,7 @@ export default function SocialMediaDashboard() {
         marketers: Array.isArray(m.marketers) ? m.marketers : [],
         platform_logins: Array.isArray(m.platform_logins) ? m.platform_logins : [],
         instagram_urls: Array.isArray(m.instagram_urls) ? m.instagram_urls : [],
+        instagram_logins: Array.isArray(m.instagram_logins) ? m.instagram_logins : [],
         linktree_url: m.linktree_url ?? "",
         stage: (m.stage as ModelStage) ?? "onboarding",
         chatter_needed: !!m.chatter_needed,
@@ -479,11 +483,30 @@ export default function SocialMediaDashboard() {
   const removeLogin = (i: number) =>
     setForm((f) => ({ ...f, platform_logins: f.platform_logins.filter((_, idx) => idx !== i) }));
 
-  const addInstagram = () => setForm((f) => ({ ...f, instagram_urls: [...f.instagram_urls, ""] }));
+  const addInstagram = () => setForm((f) => ({
+    ...f,
+    instagram_urls: [...f.instagram_urls, ""],
+    instagram_logins: [...f.instagram_logins, { url: "", username: "", password: "" }],
+  }));
   const updateInstagram = (i: number, v: string) =>
-    setForm((f) => ({ ...f, instagram_urls: f.instagram_urls.map((u, idx) => idx === i ? v : u) }));
+    setForm((f) => ({
+      ...f,
+      instagram_urls: f.instagram_urls.map((u, idx) => idx === i ? v : u),
+      instagram_logins: f.instagram_logins.map((l, idx) => idx === i ? { ...l, url: v } : l),
+    }));
+  const updateInstagramLogin = (i: number, field: "username" | "password", value: string) =>
+    setForm((f) => {
+      const logins = [...f.instagram_logins];
+      while (logins.length <= i) logins.push({ url: f.instagram_urls[logins.length] || "", username: "", password: "" });
+      logins[i] = { ...logins[i], [field]: value };
+      return { ...f, instagram_logins: logins };
+    });
   const removeInstagram = (i: number) =>
-    setForm((f) => ({ ...f, instagram_urls: f.instagram_urls.filter((_, idx) => idx !== i) }));
+    setForm((f) => ({
+      ...f,
+      instagram_urls: f.instagram_urls.filter((_, idx) => idx !== i),
+      instagram_logins: f.instagram_logins.filter((_, idx) => idx !== i),
+    }));
 
   const STAGE_ORDER: Record<ModelStage, number> = {
     active: 0,
@@ -557,6 +580,16 @@ export default function SocialMediaDashboard() {
           >
             <Sparkles className="h-3.5 w-3.5" />
             <span className="hidden sm:inline ml-1.5">Marketer</span>
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => navigate("/socialmedia/admin/applications")}
+            className="shrink-0 border border-accent/30 bg-accent/5 text-accent hover:bg-accent/15 hover:border-accent/50 transition-all mr-2"
+            title="Marketer-Bewerbungen"
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline ml-1.5">Bewerbungen</span>
           </Button>
           {isSuperAdmin && (
             <Button
@@ -1190,21 +1223,41 @@ export default function SocialMediaDashboard() {
               {form.instagram_urls.length === 0 ? (
                 <p className="text-xs text-muted-foreground/80 italic">Noch kein Instagram Account hinzugefügt</p>
               ) : (
-                <div className="space-y-2">
-                  {form.instagram_urls.map((url, i) => (
-                    <div key={i} className="flex items-center gap-2 min-w-0">
-                      <Instagram className="h-4 w-4 text-muted-foreground shrink-0" />
-                      <Input
-                        placeholder="Instagram URL oder @handle"
-                        value={url}
-                        onChange={(e) => updateInstagram(i, e.target.value)}
-                        className="text-sm h-10 min-w-0 flex-1"
-                      />
-                      <Button size="icon" variant="ghost" className="h-9 w-9 text-destructive shrink-0" onClick={() => removeInstagram(i)}>
-                        <X className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                  ))}
+                <div className="space-y-3">
+                  {form.instagram_urls.map((url, i) => {
+                    const lg = form.instagram_logins[i] || { url: "", username: "", password: "" };
+                    return (
+                      <div key={i} className="rounded-lg border border-border/40 p-3 space-y-2 bg-card/60">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <Instagram className="h-4 w-4 text-muted-foreground shrink-0" />
+                          <Input
+                            placeholder="Instagram URL oder @handle"
+                            value={url}
+                            onChange={(e) => updateInstagram(i, e.target.value)}
+                            className="text-sm h-10 min-w-0 flex-1"
+                          />
+                          <Button size="icon" variant="ghost" className="h-9 w-9 text-destructive shrink-0" onClick={() => removeInstagram(i)}>
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pl-6">
+                          <Input
+                            placeholder="IG Username (für Login)"
+                            value={lg.username}
+                            onChange={(e) => updateInstagramLogin(i, "username", e.target.value)}
+                            className="text-sm h-10"
+                          />
+                          <Input
+                            placeholder="IG Passwort"
+                            value={lg.password}
+                            onChange={(e) => updateInstagramLogin(i, "password", e.target.value)}
+                            className="text-sm h-10"
+                          />
+                        </div>
+                        <p className="text-[10px] text-muted-foreground/70 pl-6">Wird dem Model nicht angezeigt — nur Marketer & Admins.</p>
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -1330,6 +1383,21 @@ export default function SocialMediaDashboard() {
                           className="text-sm h-10"
                         />
                       </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <Input
+                          placeholder="IG Login Username"
+                          value={mk.ig_username || ""}
+                          onChange={(e) => updateMarketer(i, "ig_username", e.target.value)}
+                          className="text-sm h-10"
+                        />
+                        <Input
+                          placeholder="IG Login Passwort"
+                          value={mk.ig_password || ""}
+                          onChange={(e) => updateMarketer(i, "ig_password", e.target.value)}
+                          className="text-sm h-10"
+                        />
+                      </div>
+                      <p className="text-[10px] text-muted-foreground/70">Login wird Model nicht angezeigt — nur diesem Marketer & Admins.</p>
                     </div>
                   ))}
                 </div>
