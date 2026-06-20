@@ -186,9 +186,9 @@ export default function SocialMediaContentPlans() {
     try {
       let planId = editingPlan?.id;
       if (!planId) {
-        const { data, error } = await supabase
-          .from("content_plans")
-          .insert({ title: planTitle.trim(), description: planDesc, created_by: user?.id })
+        const { data, error } = await (supabase
+          .from("content_plans") as any)
+          .insert({ title: planTitle.trim(), description: planDesc, created_by: user?.id, target_type: activeTab })
           .select()
           .single();
         if (error) throw error;
@@ -228,33 +228,34 @@ export default function SocialMediaContentPlans() {
     load();
   };
 
+  const targetKeyOf = (a: Assignment) =>
+    (a.marketer_user_id ? a.marketer_user_id : a.model_id) as string;
+
   const openAssign = (plan: Plan) => {
     setAssignPlan(plan);
-    const existing = (assignmentsByPlan[plan.id] || []).map((a) => a.model_id);
-    setSelectedModels(new Set(existing));
+    const existing = (assignmentsByPlan[plan.id] || []).map(targetKeyOf).filter(Boolean) as string[];
+    setSelectedTargets(new Set(existing));
     setStartDate(mondayOf(new Date()).toISOString().slice(0, 10));
     setAssignOpen(true);
   };
 
   const saveAssignments = async () => {
     if (!assignPlan) return;
+    const isMarketer = assignPlan.target_type === "marketer";
     const existing = assignmentsByPlan[assignPlan.id] || [];
-    const existingIds = new Set(existing.map((a) => a.model_id));
-    const newSet = selectedModels;
+    const existingIds = new Set(existing.map(targetKeyOf));
+    const newSet = selectedTargets;
 
     const toAdd: string[] = [];
     newSet.forEach((id) => { if (!existingIds.has(id)) toAdd.push(id); });
-    const toRemove: string[] = existing.filter((a) => !newSet.has(a.model_id)).map((a) => a.id);
+    const toRemove: string[] = existing.filter((a) => !newSet.has(targetKeyOf(a))).map((a) => a.id);
 
     try {
       if (toAdd.length) {
-        const rows = toAdd.map((mid) => ({
-          plan_id: assignPlan.id,
-          model_id: mid,
-          start_date: startDate,
-          assigned_by: user?.id,
-        }));
-        const { error } = await supabase.from("content_plan_assignments").insert(rows);
+        const rows = toAdd.map((tid) => isMarketer
+          ? { plan_id: assignPlan.id, marketer_user_id: tid, start_date: startDate, assigned_by: user?.id }
+          : { plan_id: assignPlan.id, model_id: tid, start_date: startDate, assigned_by: user?.id });
+        const { error } = await (supabase.from("content_plan_assignments") as any).insert(rows);
         if (error) throw error;
       }
       if (toRemove.length) {
