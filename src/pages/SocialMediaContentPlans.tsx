@@ -67,12 +67,25 @@ export default function SocialMediaContentPlans() {
 
   const load = async () => {
     setLoading(true);
-    const [{ data: p }, { data: m }, { data: a }] = await Promise.all([
+    const [{ data: p }, { data: m }, { data: a }, { data: roleRows }] = await Promise.all([
       supabase.from("content_plans").select("*").order("created_at", { ascending: false }),
       supabase.from("fanvue_models").select("id,name,username").order("name"),
       supabase.from("content_plan_assignments").select("*"),
+      supabase.from("user_roles").select("user_id").eq("role", "socialmedia_marketer"),
     ]);
-    setPlans((p as Plan[]) || []);
+    setPlans(((p as any[]) || []).map((x) => ({ ...x, target_type: (x.target_type as TargetType) || "model" })));
+    setModels((m as Model[]) || []);
+
+    const mids = Array.from(new Set(((roleRows || []) as any[]).map((r) => r.user_id)));
+    if (mids.length) {
+      const { data: profs } = await supabase.from("admin_profiles").select("user_id, display_name").in("user_id", mids);
+      const nameById = new Map<string, string>();
+      ((profs || []) as any[]).forEach((pp) => nameById.set(pp.user_id, pp.display_name || ""));
+      setMarketers(mids.map((id) => ({ user_id: id, name: nameById.get(id) || `Marketer ${id.slice(0, 6)}` })));
+    } else {
+      setMarketers([]);
+    }
+
     setModels((m as Model[]) || []);
     const asgs = (a as Assignment[]) || [];
     setAssignments(asgs);
