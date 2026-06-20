@@ -6,23 +6,27 @@ import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import {
   LogOut, TrendingUp, Sparkles, Instagram, Target, BookOpen, ArrowUpRight,
-  Lock, Zap, Flame, ChevronRight,
+  Lock, Zap, Flame, ChevronRight, KeyRound, Copy,
 } from "lucide-react";
 import { ResponsiveContainer, AreaChart, Area, XAxis, Tooltip } from "recharts";
+import { toast } from "sonner";
 import logo from "@/assets/logo.png";
 import GoldParticles from "@/components/GoldParticles";
 import TelegramContentChannels from "@/components/TelegramContentChannels";
 import PushNotificationDialog from "@/components/PushNotificationDialog";
 import NotificationBanner from "@/components/NotificationBanner";
 import MarketerDailyRoutine from "@/components/MarketerDailyRoutine";
+import MarketerContentPlans from "@/components/MarketerContentPlans";
 import { useAppPresence } from "@/hooks/useAppPresence";
 
-type Marketer = { name?: string; instagram?: string; tracking_link?: string; tracking_name?: string };
+type Marketer = { name?: string; instagram?: string; tracking_link?: string; tracking_name?: string; ig_username?: string; ig_password?: string };
+type InstagramLogin = { url: string; username: string; password: string };
 type ModelRow = {
   id: string;
   name: string;
   username: string;
   marketers?: Marketer[] | null;
+  instagram_logins?: InstagramLogin[] | null;
   telegram_reels_url?: string | null;
   telegram_backgrounds_url?: string | null;
   telegram_feed_url?: string | null;
