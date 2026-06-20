@@ -77,19 +77,23 @@ const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     if (!user) return;
     let cancelled = false;
     import("@/integrations/supabase/client").then(async ({ supabase }) => {
-      const { data: adminOk } = await supabase.rpc("is_admin");
+      const { data: adminOk, error: adminErr } = await supabase.rpc("is_admin");
       if (cancelled) return;
+      if (adminErr) console.error("[AdminGuard] is_admin error", adminErr);
       setIsAdmin(adminOk === true);
 
       const token = localStorage.getItem("admin_2fa_token");
       if (!token) {
+        console.log("[AdminGuard] no 2fa token in localStorage");
         setTwoFaOk(false);
         return;
       }
-      const { data: valid } = await supabase.rpc("validate_admin_2fa_session", {
+      const { data: valid, error: valErr } = await supabase.rpc("validate_admin_2fa_session", {
         p_token: token,
       });
       if (cancelled) return;
+      if (valErr) console.error("[AdminGuard] validate error", valErr);
+      console.log("[AdminGuard] validate result", valid, "for token prefix", token.slice(0, 8));
       if (valid !== true) {
         localStorage.removeItem("admin_2fa_token");
         localStorage.removeItem("admin_2fa_verified");
