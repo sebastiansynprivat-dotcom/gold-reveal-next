@@ -42,6 +42,7 @@ type SocialMediaModel = {
   social_linked: boolean;
   instagram_url: string;
   instagram_urls: string[];
+  instagram_logins: InstagramLogin[];
   linktree_url: string;
   tiktok_url: string;
   twitter_url: string;
