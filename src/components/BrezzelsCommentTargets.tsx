@@ -11,7 +11,7 @@ import { toast } from "sonner";
 
 type Target = { id: string; url: string; completed: boolean };
 
-const DAILY_COUNT = 20;
+const DAILY_COUNT = 10;
 const DAILY_GOAL = 10;
 
 export default function BrezzelsCommentTargets() {
