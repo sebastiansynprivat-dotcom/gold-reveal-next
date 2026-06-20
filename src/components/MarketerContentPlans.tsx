@@ -64,7 +64,7 @@ export default function MarketerContentPlans() {
     const { error } = await supabase
       .from("content_plan_task_status")
       .upsert(
-        { assignment_id: asgId, day_number: day, item_index: idx, done: next, done_at: next ? new Date().toISOString() : null, user_id: user?.id },
+        { assignment_id: asgId, day_number: day, item_index: idx, done: next, completed_at: next ? new Date().toISOString() : null },
         { onConflict: "assignment_id,day_number,item_index" }
       );
     if (error) toast.error("Speichern fehlgeschlagen: " + error.message);
