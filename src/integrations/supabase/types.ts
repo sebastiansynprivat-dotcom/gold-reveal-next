@@ -717,7 +717,8 @@ export type Database = {
           assigned_at: string
           assigned_by: string | null
           id: string
-          model_id: string
+          marketer_user_id: string | null
+          model_id: string | null
           plan_id: string
           start_date: string
         }
@@ -725,7 +726,8 @@ export type Database = {
           assigned_at?: string
           assigned_by?: string | null
           id?: string
-          model_id: string
+          marketer_user_id?: string | null
+          model_id?: string | null
           plan_id: string
           start_date?: string
         }
@@ -733,7 +735,8 @@ export type Database = {
           assigned_at?: string
           assigned_by?: string | null
           id?: string
-          model_id?: string
+          marketer_user_id?: string | null
+          model_id?: string | null
           plan_id?: string
           start_date?: string
         }
@@ -886,6 +889,7 @@ export type Database = {
           created_by: string | null
           description: string | null
           id: string
+          target_type: string
           title: string
           updated_at: string
         }
@@ -894,6 +898,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           id?: string
+          target_type?: string
           title: string
           updated_at?: string
         }
@@ -902,6 +907,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           id?: string
+          target_type?: string
           title?: string
           updated_at?: string
         }
@@ -1245,6 +1251,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           id: string
+          instagram_logins: Json
           instagram_url: string
           instagram_urls: Json
           is_active: boolean
@@ -1274,6 +1281,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          instagram_logins?: Json
           instagram_url?: string
           instagram_urls?: Json
           is_active?: boolean
@@ -1303,6 +1311,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           id?: string
+          instagram_logins?: Json
           instagram_url?: string
           instagram_urls?: Json
           is_active?: boolean
@@ -2720,6 +2729,39 @@ export type Database = {
           send_time?: string
           title?: string
           weekday?: number | null
+        }
+        Relationships: []
+      }
+      socialmedia_marketer_applications: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          notes: string
+          phone: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          notes?: string
+          phone?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          notes?: string
+          phone?: string
+          status?: string
+          updated_at?: string
         }
         Relationships: []
       }
