@@ -339,8 +339,13 @@ export default function SocialMediaContentPlans() {
           }
           return (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {plans.map((plan) => {
+            {filteredPlans.map((plan) => {
               const asgs = assignmentsByPlan[plan.id] || [];
+              const isMarketerPlan = plan.target_type === "marketer";
+              const targetLabel = isMarketerPlan ? "Marketer" : "Model";
+              const nameFor = (a: Assignment) => isMarketerPlan
+                ? (marketers.find((mk) => mk.user_id === a.marketer_user_id)?.name || "—")
+                : (models.find((mm) => mm.id === a.model_id)?.name || "—");
               return (
                 <motion.div
                   key={plan.id}
@@ -367,13 +372,12 @@ export default function SocialMediaContentPlans() {
 
                   <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
                     <Users className="h-3.5 w-3.5" />
-                    <span>{asgs.length} Model{asgs.length === 1 ? "" : "s"} zugewiesen</span>
+                    <span>{asgs.length} {targetLabel}{asgs.length === 1 ? "" : "s"} zugewiesen</span>
                   </div>
 
                   {asgs.length > 0 && (
                     <div className="space-y-2.5 mb-3 max-h-96 overflow-y-auto pr-1">
                       {asgs.map((a) => {
-                        const mdl = models.find((mm) => mm.id === a.model_id);
                         const prog = progressByAssignment[a.id] || { done: 0, total: 0 };
                         const pct = prog.total > 0 ? Math.round((prog.done / prog.total) * 100) : 0;
                         const fbs = feedbackByAssignment[a.id] || [];
@@ -381,7 +385,7 @@ export default function SocialMediaContentPlans() {
                         return (
                           <div key={a.id} className="text-xs space-y-1.5 pb-2 border-b border-border/20 last:border-b-0">
                             <div className="flex items-center justify-between mb-0.5">
-                              <span className="text-foreground truncate font-medium">{mdl?.name || "—"}</span>
+                              <span className="text-foreground truncate font-medium">{nameFor(a)}</span>
                               <span className="text-muted-foreground tabular-nums">{prog.done}/{prog.total}</span>
                             </div>
                             <div className="h-1.5 rounded-full bg-background/60 overflow-hidden">
@@ -426,13 +430,14 @@ export default function SocialMediaContentPlans() {
                   )}
 
                   <Button variant="outline" size="sm" className="w-full border-accent/30 text-accent hover:bg-accent/10" onClick={() => openAssign(plan)}>
-                    <Users className="h-3.5 w-3.5 mr-1.5" /> Models zuweisen
+                    <Users className="h-3.5 w-3.5 mr-1.5" /> {targetLabel} zuweisen
                   </Button>
                 </motion.div>
               );
             })}
           </div>
-        )}
+          );
+        })()}
       </main>
 
       {/* Editor Dialog */}
