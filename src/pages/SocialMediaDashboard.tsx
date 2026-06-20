@@ -1383,6 +1383,21 @@ export default function SocialMediaDashboard() {
                           className="text-sm h-10"
                         />
                       </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <Input
+                          placeholder="IG Login Username"
+                          value={mk.ig_username || ""}
+                          onChange={(e) => updateMarketer(i, "ig_username", e.target.value)}
+                          className="text-sm h-10"
+                        />
+                        <Input
+                          placeholder="IG Login Passwort"
+                          value={mk.ig_password || ""}
+                          onChange={(e) => updateMarketer(i, "ig_password", e.target.value)}
+                          className="text-sm h-10"
+                        />
+                      </div>
+                      <p className="text-[10px] text-muted-foreground/70">Login wird Model nicht angezeigt — nur diesem Marketer & Admins.</p>
                     </div>
                   ))}
                 </div>
