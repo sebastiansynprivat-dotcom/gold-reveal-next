@@ -42,6 +42,7 @@ const MarketerSetupPassword = lazy(() => import("./pages/MarketerSetupPassword")
 const MarketerDashboard = lazy(() => import("./pages/MarketerDashboard"));
 const MarketerCoaching = lazy(() => import("./pages/MarketerCoaching"));
 const SocialMediaMarketers = lazy(() => import("./pages/SocialMediaMarketers"));
+const SocialMediaMarketerApplications = lazy(() => import("./pages/SocialMediaMarketerApplications"));
 
 import AutoTranslator from "@/components/AutoTranslator";
 
