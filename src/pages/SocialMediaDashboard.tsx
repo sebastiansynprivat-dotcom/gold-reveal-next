@@ -483,11 +483,30 @@ export default function SocialMediaDashboard() {
   const removeLogin = (i: number) =>
     setForm((f) => ({ ...f, platform_logins: f.platform_logins.filter((_, idx) => idx !== i) }));
 
-  const addInstagram = () => setForm((f) => ({ ...f, instagram_urls: [...f.instagram_urls, ""] }));
+  const addInstagram = () => setForm((f) => ({
+    ...f,
+    instagram_urls: [...f.instagram_urls, ""],
+    instagram_logins: [...f.instagram_logins, { url: "", username: "", password: "" }],
+  }));
   const updateInstagram = (i: number, v: string) =>
-    setForm((f) => ({ ...f, instagram_urls: f.instagram_urls.map((u, idx) => idx === i ? v : u) }));
+    setForm((f) => ({
+      ...f,
+      instagram_urls: f.instagram_urls.map((u, idx) => idx === i ? v : u),
+      instagram_logins: f.instagram_logins.map((l, idx) => idx === i ? { ...l, url: v } : l),
+    }));
+  const updateInstagramLogin = (i: number, field: "username" | "password", value: string) =>
+    setForm((f) => {
+      const logins = [...f.instagram_logins];
+      while (logins.length <= i) logins.push({ url: f.instagram_urls[logins.length] || "", username: "", password: "" });
+      logins[i] = { ...logins[i], [field]: value };
+      return { ...f, instagram_logins: logins };
+    });
   const removeInstagram = (i: number) =>
-    setForm((f) => ({ ...f, instagram_urls: f.instagram_urls.filter((_, idx) => idx !== i) }));
+    setForm((f) => ({
+      ...f,
+      instagram_urls: f.instagram_urls.filter((_, idx) => idx !== i),
+      instagram_logins: f.instagram_logins.filter((_, idx) => idx !== i),
+    }));
 
   const STAGE_ORDER: Record<ModelStage, number> = {
     active: 0,
