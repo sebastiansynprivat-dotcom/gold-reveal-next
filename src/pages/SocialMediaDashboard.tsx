@@ -70,6 +70,7 @@ const emptyModel: Omit<SocialMediaModel, "id" | "created_at" | "archived_at"> = 
   social_linked: false,
   instagram_url: "",
   instagram_urls: [],
+  instagram_logins: [],
   linktree_url: "",
   tiktok_url: "",
   twitter_url: "",
