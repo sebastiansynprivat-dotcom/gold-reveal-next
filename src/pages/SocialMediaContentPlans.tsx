@@ -204,7 +204,7 @@ export default function SocialMediaContentPlans() {
       const rows = Array.from({ length: DAYS }, (_, i) => i + 1).map((d) => ({
         plan_id: planId!,
         day_number: d,
-        items: (days[d] || []).filter((it) => it.title.trim() !== ""),
+        items: (days[d] || []).filter((it) => (it.title || "").trim() !== "" || (it.reference_url || "").trim() !== "" || (it.notes || "").trim() !== ""),
       }));
       const { error: dErr } = await supabase
         .from("content_plan_days")
