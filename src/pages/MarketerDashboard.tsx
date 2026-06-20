@@ -154,7 +154,7 @@ export default function MarketerDashboard() {
       }
       const { data: mdls } = await supabase
         .from("fanvue_models")
-        .select("id,name,username,marketers,telegram_reels_url,telegram_backgrounds_url,telegram_feed_url")
+        .select("id,name,username,marketers,instagram_logins,telegram_reels_url,telegram_backgrounds_url,telegram_feed_url")
         .in("id", ids);
       const since = daysAgo(60).toISOString();
       const { data: snaps } = await supabase
