@@ -176,6 +176,7 @@ export default function SocialMediaDashboard() {
         marketers: Array.isArray(m.marketers) ? m.marketers : [],
         platform_logins: Array.isArray(m.platform_logins) ? m.platform_logins : [],
         instagram_urls: Array.isArray(m.instagram_urls) ? m.instagram_urls : [],
+        instagram_logins: Array.isArray(m.instagram_logins) ? m.instagram_logins : [],
         linktree_url: m.linktree_url ?? "",
         stage: (m.stage as ModelStage) ?? "onboarding",
         chatter_needed: !!m.chatter_needed,
