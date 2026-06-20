@@ -531,41 +531,51 @@ export default function SocialMediaContentPlans() {
       <Dialog open={assignOpen} onOpenChange={setAssignOpen}>
         <DialogContent className="max-w-md bg-card/95 backdrop-blur-xl border-accent/30">
           <DialogHeader>
-            <DialogTitle className="text-accent">Models zuweisen</DialogTitle>
+            <DialogTitle className="text-accent">
+              {assignPlan?.target_type === "marketer" ? "Marketer zuweisen" : "Models zuweisen"}
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <div>
               <Label className="text-xs uppercase tracking-wider text-muted-foreground">Startdatum (Montag)</Label>
               <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-              <p className="text-[10px] text-muted-foreground/70 mt-1">Ab diesem Tag startet Woche 1 für neu zugewiesene Models.</p>
+              <p className="text-[10px] text-muted-foreground/70 mt-1">Ab diesem Tag startet Woche 1 für neu Zugewiesene.</p>
             </div>
             <div>
-              <Label className="text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">Models</Label>
+              <Label className="text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">
+                {assignPlan?.target_type === "marketer" ? "Marketer" : "Models"}
+              </Label>
               <div className="max-h-72 overflow-y-auto rounded-lg border border-border/40 bg-background/40 divide-y divide-border/20">
-                {models.length === 0 && <p className="p-3 text-xs text-muted-foreground">Keine Models vorhanden.</p>}
-                {models.map((mm) => {
-                  const checked = selectedModels.has(mm.id);
-                  return (
-                    <button
-                      key={mm.id}
-                      type="button"
-                      onClick={() => {
-                        setSelectedModels((s) => {
-                          const next = new Set(s);
-                          if (next.has(mm.id)) next.delete(mm.id); else next.add(mm.id);
-                          return next;
-                        });
-                      }}
-                      className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${checked ? "bg-accent/10 text-foreground" : "text-muted-foreground hover:bg-background/60"}`}
-                    >
-                      <div className={`h-4 w-4 rounded border flex items-center justify-center shrink-0 ${checked ? "bg-accent border-accent" : "border-border"}`}>
-                        {checked && <CheckCircle2 className="h-3 w-3 text-accent-foreground" />}
-                      </div>
-                      <span className="flex-1 truncate">{mm.name || "—"}</span>
-                      {mm.username && <span className="text-[10px] text-muted-foreground">@{mm.username}</span>}
-                    </button>
-                  );
-                })}
+                {(() => {
+                  const list: { id: string; primary: string; secondary?: string }[] =
+                    assignPlan?.target_type === "marketer"
+                      ? marketers.map((mk) => ({ id: mk.user_id, primary: mk.name }))
+                      : models.map((mm) => ({ id: mm.id, primary: mm.name || "—", secondary: mm.username }));
+                  if (list.length === 0) return <p className="p-3 text-xs text-muted-foreground">Keine Einträge vorhanden.</p>;
+                  return list.map((it) => {
+                    const checked = selectedTargets.has(it.id);
+                    return (
+                      <button
+                        key={it.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedTargets((s) => {
+                            const next = new Set(s);
+                            if (next.has(it.id)) next.delete(it.id); else next.add(it.id);
+                            return next;
+                          });
+                        }}
+                        className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${checked ? "bg-accent/10 text-foreground" : "text-muted-foreground hover:bg-background/60"}`}
+                      >
+                        <div className={`h-4 w-4 rounded border flex items-center justify-center shrink-0 ${checked ? "bg-accent border-accent" : "border-border"}`}>
+                          {checked && <CheckCircle2 className="h-3 w-3 text-accent-foreground" />}
+                        </div>
+                        <span className="flex-1 truncate">{it.primary}</span>
+                        {it.secondary && <span className="text-[10px] text-muted-foreground">@{it.secondary}</span>}
+                      </button>
+                    );
+                  });
+                })()}
               </div>
             </div>
           </div>
