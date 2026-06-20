@@ -495,6 +495,65 @@ export type Database = {
           },
         ]
       }
+      brezzels_comment_assignments: {
+        Row: {
+          assigned_date: string
+          completed: boolean
+          completed_at: string | null
+          created_at: string
+          id: string
+          target_id: string
+          user_id: string
+        }
+        Insert: {
+          assigned_date?: string
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          target_id: string
+          user_id: string
+        }
+        Update: {
+          assigned_date?: string
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          target_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brezzels_comment_assignments_target_id_fkey"
+            columns: ["target_id"]
+            isOneToOne: false
+            referencedRelation: "brezzels_comment_targets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      brezzels_comment_targets: {
+        Row: {
+          active: boolean
+          created_at: string
+          id: string
+          url: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          url: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          id?: string
+          url?: string
+        }
+        Relationships: []
+      }
       chatter_summaries: {
         Row: {
           created_at: string
@@ -2889,6 +2948,14 @@ export type Database = {
         Returns: boolean
       }
       current_model_id: { Args: never; Returns: string }
+      get_brezzels_comment_targets: {
+        Args: { p_count?: number }
+        Returns: {
+          completed: boolean
+          id: string
+          url: string
+        }[]
+      }
       get_chatter_real_stats: {
         Args: { p_profile_ids?: string[]; p_user_ids: string[] }
         Returns: {
