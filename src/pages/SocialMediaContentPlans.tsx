@@ -295,25 +295,49 @@ export default function SocialMediaContentPlans() {
       <div className="h-[68px]" />
 
       <main className="relative z-10 max-w-7xl mx-auto px-4 md:px-6 py-6 space-y-6">
-        <div className="flex justify-end">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div className="inline-flex items-center gap-1 rounded-xl border border-accent/20 bg-card/40 p-1 backdrop-blur-sm">
+            {(["model", "marketer"] as TargetType[]).map((t) => (
+              <button
+                key={t}
+                onClick={() => setActiveTab(t)}
+                className={`px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all ${
+                  activeTab === t
+                    ? "bg-accent text-accent-foreground shadow"
+                    : "text-muted-foreground hover:text-foreground hover:bg-background/40"
+                }`}
+              >
+                {t === "model" ? "Für Models" : "Für Marketer"}
+              </button>
+            ))}
+          </div>
           <Button onClick={openCreate} className="bg-accent text-accent-foreground hover:bg-accent/90">
-            <Plus className="h-4 w-4 mr-1.5" /> Neuer Content Plan
+            <Plus className="h-4 w-4 mr-1.5" />
+            {activeTab === "model" ? "Neuer Plan (Models)" : "Neuer Plan (Marketer)"}
           </Button>
         </div>
 
-        {loading ? (
-          <div className="flex justify-center py-20">
-            <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
-          </div>
-        ) : plans.length === 0 ? (
-          <div className="text-center py-20 text-muted-foreground">
-            <CalendarDays className="h-12 w-12 mx-auto mb-3 opacity-30" />
-            <p>Noch keine Content Pläne</p>
-            <Button onClick={openCreate} variant="ghost" className="mt-3 text-accent">
-              <Plus className="h-4 w-4 mr-1.5" /> Ersten Plan anlegen
-            </Button>
-          </div>
-        ) : (
+        {(() => {
+          const filteredPlans = plans.filter((p) => p.target_type === activeTab);
+          if (loading) {
+            return (
+              <div className="flex justify-center py-20">
+                <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
+              </div>
+            );
+          }
+          if (filteredPlans.length === 0) {
+            return (
+              <div className="text-center py-20 text-muted-foreground">
+                <CalendarDays className="h-12 w-12 mx-auto mb-3 opacity-30" />
+                <p>Noch keine Content Pläne für {activeTab === "model" ? "Models" : "Marketer"}.</p>
+                <Button onClick={openCreate} variant="ghost" className="mt-3 text-accent">
+                  <Plus className="h-4 w-4 mr-1.5" /> Ersten Plan anlegen
+                </Button>
+              </div>
+            );
+          }
+          return (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {plans.map((plan) => {
               const asgs = assignmentsByPlan[plan.id] || [];
