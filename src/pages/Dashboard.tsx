@@ -50,6 +50,7 @@ import { isDemoMode } from "@/lib/demoMode";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import DashboardChat from "@/components/DashboardChat";
+import { useAppPresence } from "@/hooks/useAppPresence";
 import BillingAudioDialog from "@/components/BillingAudioDialog";
 import DailyChecklist from "@/components/DailyChecklist";
 import BrezzelsCommentTargets from "@/components/BrezzelsCommentTargets";
