@@ -317,6 +317,7 @@ export default function ModelHomeDashboard({
           setRevenueByAccount({});
           setLifetimeByAccount({});
           setMonthRevenue(0);
+          setHistoricalMonthlyAvg(0);
           setLoading(false);
         }
         return;
