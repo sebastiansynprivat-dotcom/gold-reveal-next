@@ -169,6 +169,7 @@ export default function ModelRequestsSection({ modelId, language = "de" }: Props
   const [rejectText, setRejectText] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [burst, setBurst] = useState<BurstKey | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
   const lastBurstRef = useRef<{ key: BurstKey; ts: number } | null>(null);
 
   const load = async () => {
