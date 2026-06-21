@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { decodeBase64 } from "https://deno.land/std@0.224.0/encoding/base64.ts";
 import JSZip from "https://esm.sh/jszip@3.10.1";
+import { extractText, getDocumentProxy } from "https://esm.sh/unpdf@0.12.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -124,6 +125,7 @@ async function findSteckbriefInFolder(
   const mimes = [
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "application/vnd.google-apps.document",
+    "application/pdf",
   ];
   const q = encodeURIComponent(
     `'${folderId}' in parents and trashed=false and (${mimes
@@ -213,7 +215,18 @@ async function docxToText(bytes: Uint8Array): Promise<string> {
   return collect.join("\n\n");
 }
 
-// ─── AI parse with Lovable AI Gateway ──────────────────────────────────
+// ─── PDF → plain text via unpdf ────────────────────────────────────────
+async function pdfToText(bytes: Uint8Array): Promise<string> {
+  const pdf = await getDocumentProxy(bytes);
+  const { text } = await extractText(pdf, { mergePages: true });
+  const out = (Array.isArray(text) ? text.join("\n\n") : String(text || ""))
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+  return out;
+}
+
+
 async function aiExtractProfile(rawText: string): Promise<Record<string, string>> {
   const apiKey = Deno.env.get("LOVABLE_API_KEY");
   if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
@@ -366,7 +379,10 @@ Deno.serve(async (req) => {
         );
       }
       const bytes = await fetchDocxBytesFromDrive(file, token);
-      rawText = await docxToText(bytes);
+      rawText =
+        file.mimeType === "application/pdf"
+          ? await pdfToText(bytes)
+          : await docxToText(bytes);
       sourceLabel = `Drive: ${file.name}`;
     } else {
       const b64 = body?.file_base64 as string | undefined;
@@ -376,10 +392,21 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+      const fileName = (body?.file_name as string | undefined) || "";
+      const dataUrlMime = b64.match(/^data:([^;,]+)[;,]/)?.[1] || "";
       const bytes = decodeBase64(b64.replace(/^data:[^,]+,/, ""));
-      rawText = await docxToText(bytes);
-      sourceLabel = body?.file_name || "Upload";
+      const isPdf =
+        dataUrlMime === "application/pdf" ||
+        /\.pdf$/i.test(fileName) ||
+        (bytes.length >= 4 &&
+          bytes[0] === 0x25 &&
+          bytes[1] === 0x50 &&
+          bytes[2] === 0x44 &&
+          bytes[3] === 0x46);
+      rawText = isPdf ? await pdfToText(bytes) : await docxToText(bytes);
+      sourceLabel = fileName || "Upload";
     }
+
 
     if (!rawText || rawText.length < 30) {
       return new Response(

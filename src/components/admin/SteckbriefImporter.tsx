@@ -50,12 +50,14 @@ export default function SteckbriefImporter({
     const f = e.target.files?.[0];
     e.target.value = "";
     if (!f) return;
-    if (
-      !f.name.toLowerCase().endsWith(".docx") &&
-      f.type !==
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-    ) {
-      toast.error("Bitte eine .docx Datei wählen");
+    const nameLower = f.name.toLowerCase();
+    const isDocx =
+      nameLower.endsWith(".docx") ||
+      f.type ===
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    const isPdf = nameLower.endsWith(".pdf") || f.type === "application/pdf";
+    if (!isDocx && !isPdf) {
+      toast.error("Bitte eine .docx oder .pdf Datei wählen");
       return;
     }
     const buf = await f.arrayBuffer();
@@ -103,7 +105,7 @@ export default function SteckbriefImporter({
               className="text-[11px] h-7 gap-1.5 bg-gradient-to-r from-accent to-accent/80 text-accent-foreground hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               title={
                 hasDriveFolder
-                  ? "Sucht im hinterlegten Drive-Ordner nach einer .docx / Google Doc"
+                  ? "Sucht im hinterlegten Drive-Ordner nach einer .docx, Google Doc oder .pdf"
                   : "Kein Drive-Ordner am Model hinterlegt"
               }
             >
@@ -126,12 +128,12 @@ export default function SteckbriefImporter({
               ) : (
                 <Upload className="h-3 w-3" />
               )}
-              .docx hochladen
+              .docx / .pdf hochladen
             </Button>
             <input
               ref={fileRef}
               type="file"
-              accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              accept=".docx,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
               onChange={onFileChosen}
               className="hidden"
             />
