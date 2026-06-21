@@ -241,7 +241,7 @@ export default function SocialMediaContentPlans() {
     setAssignPlan(plan);
     const existing = (assignmentsByPlan[plan.id] || []).map(targetKeyOf).filter(Boolean) as string[];
     setSelectedTargets(new Set(existing));
-    setStartDate(mondayOf(new Date()).toISOString().slice(0, 10));
+    setStartDate(todayISO());
     setAssignOpen(true);
   };
 
