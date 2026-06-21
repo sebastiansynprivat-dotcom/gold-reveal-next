@@ -16,8 +16,9 @@ export default function SteckbriefImporter({
   hasDriveFolder,
   onImported,
 }: Props) {
-  const [busy, setBusy] = useState<null | "drive" | "upload">(null);
+  const [busy, setBusy] = useState<null | "drive" | "upload" | "image">(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
+  const imageRef = useRef<HTMLInputElement | null>(null);
 
   const callImport = async (
     body: Record<string, unknown>,
