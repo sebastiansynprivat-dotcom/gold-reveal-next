@@ -1101,7 +1101,7 @@ export default function ModelDashboardTab() {
 
 
 
-  // ─── Filter models ───
+  // ─── Filter + sort models ───
   const filteredModels = useMemo(() => {
     let list = models;
     if (agencyFilter !== "all") {
@@ -1110,10 +1110,27 @@ export default function ModelDashboardTab() {
     if (showDuplicatesOnly) list = list.filter((m) => duplicateModelIds.has(m.id));
     if (steckbriefFilter === "filled") list = list.filter((m) => filledProfileIds.has(m.id));
     else if (steckbriefFilter === "empty") list = list.filter((m) => !filledProfileIds.has(m.id));
-    if (!searchQuery) return list;
-    const q = searchQuery.toLowerCase();
-    return list.filter((m) => m.name.toLowerCase().includes(q) || (m.username || "").toLowerCase().includes(q));
-  }, [models, searchQuery, showDuplicatesOnly, duplicateModelIds, agencyFilter, steckbriefFilter, filledProfileIds]);
+    else if (steckbriefFilter === "confirmed") list = list.filter((m) => profileStatusOf(m.id) === "confirmed");
+    else if (steckbriefFilter === "unconfirmed")
+      list = list.filter((m) => {
+        const s = profileStatusOf(m.id);
+        return s === "pending_new" || s === "pending_change";
+      });
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter((m) => m.name.toLowerCase().includes(q) || (m.username || "").toLowerCase().includes(q));
+    }
+    if (sortMode === "newest") {
+      const ts = (id: string) => {
+        const m = profileMeta.get(id);
+        if (!m) return 0;
+        const t = m.last_change_at || m.submitted_at || m.confirmed_at;
+        return t ? new Date(t).getTime() : 0;
+      };
+      list = [...list].sort((a, b) => ts(b.id) - ts(a.id));
+    }
+    return list;
+  }, [models, searchQuery, showDuplicatesOnly, duplicateModelIds, agencyFilter, steckbriefFilter, filledProfileIds, profileMeta, sortMode]);
 
 
 
