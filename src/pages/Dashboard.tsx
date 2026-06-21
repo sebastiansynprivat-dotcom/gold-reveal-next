@@ -228,6 +228,7 @@ function AnimatedDecimalValue({
 }
 
 export default function Dashboard() {
+  useAppPresence("chatter");
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const platform = searchParams.get("platform") || "Brezzels";
