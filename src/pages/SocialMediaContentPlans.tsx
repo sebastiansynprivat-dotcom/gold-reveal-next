@@ -609,9 +609,9 @@ export default function SocialMediaContentPlans() {
           </DialogHeader>
           <div className="space-y-3">
             <div>
-              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Startdatum (Montag)</Label>
+              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Startdatum (Tag 1)</Label>
               <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-              <p className="text-[10px] text-muted-foreground/70 mt-1">Ab diesem Tag startet Woche 1 für neu Zugewiesene.</p>
+              <p className="text-[10px] text-muted-foreground/70 mt-1">Ab diesem Tag ist der Plan sofort sichtbar – Tag 1 = Startdatum.</p>
             </div>
             <div>
               <Label className="text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">
