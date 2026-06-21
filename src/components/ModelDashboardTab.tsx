@@ -4333,19 +4333,36 @@ export default function ModelDashboardTab() {
                                 />
                               </div>
                             </div>
-                            <div className="space-y-1">
-                              <Label className="text-[10px] text-muted-foreground">Domain</Label>
-                              <Input
-                                value={entry.account_domain}
-                                onChange={(e) =>
-                                  setCreateAccounts((prev) => ({
-                                    ...prev,
-                                    [platform]: { ...prev[platform], account_domain: e.target.value },
-                                  }))
-                                }
-                                className="bg-secondary/40 border-border/50 text-xs h-8"
-                              />
+                            <div className="grid grid-cols-2 gap-2">
+                              <div className="space-y-1">
+                                <Label className="text-[10px] text-muted-foreground">Username *</Label>
+                                <Input
+                                  value={entry.username}
+                                  onChange={(e) =>
+                                    setCreateAccounts((prev) => ({
+                                      ...prev,
+                                      [platform]: { ...prev[platform], username: e.target.value },
+                                    }))
+                                  }
+                                  placeholder="@username"
+                                  className="bg-secondary/40 border-border/50 text-xs h-8"
+                                />
+                              </div>
+                              <div className="space-y-1">
+                                <Label className="text-[10px] text-muted-foreground">Domain</Label>
+                                <Input
+                                  value={entry.account_domain}
+                                  onChange={(e) =>
+                                    setCreateAccounts((prev) => ({
+                                      ...prev,
+                                      [platform]: { ...prev[platform], account_domain: e.target.value },
+                                    }))
+                                  }
+                                  className="bg-secondary/40 border-border/50 text-xs h-8"
+                                />
+                              </div>
                             </div>
+
                             <label className="flex items-center gap-2 pt-1 cursor-pointer">
                               <Checkbox
                                 checked={!!entry.campaign}
