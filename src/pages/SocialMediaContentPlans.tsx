@@ -27,7 +27,7 @@ type Assignment = { id: string; plan_id: string; model_id: string | null; market
 
 const DAYS = 30;
 
-// ISO Monday of a given date
+// ISO Monday of a given date (kept for assignment helper UI only)
 function mondayOf(d: Date) {
   const day = d.getDay();
   const diff = day === 0 ? -6 : 1 - day;
@@ -35,6 +35,12 @@ function mondayOf(d: Date) {
   m.setDate(d.getDate() + diff);
   m.setHours(0, 0, 0, 0);
   return m;
+}
+
+function todayISO() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString().slice(0, 10);
 }
 
 export default function SocialMediaContentPlans() {
