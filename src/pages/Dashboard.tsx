@@ -50,6 +50,7 @@ import { isDemoMode } from "@/lib/demoMode";
 import { toast } from "sonner";
 import confetti from "canvas-confetti";
 import DashboardChat from "@/components/DashboardChat";
+import { useAppPresence } from "@/hooks/useAppPresence";
 import BillingAudioDialog from "@/components/BillingAudioDialog";
 import DailyChecklist from "@/components/DailyChecklist";
 import BrezzelsCommentTargets from "@/components/BrezzelsCommentTargets";
@@ -227,6 +228,7 @@ function AnimatedDecimalValue({
 }
 
 export default function Dashboard() {
+  useAppPresence("chatter");
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const platform = searchParams.get("platform") || "Brezzels";

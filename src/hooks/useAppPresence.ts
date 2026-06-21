@@ -18,34 +18,29 @@ export function useAppPresence(role: "chatter" | "marketer" | "model" | "admin")
           (window.matchMedia?.("(display-mode: standalone)").matches ||
             (window.navigator as any).standalone === true);
 
+        const now = new Date().toISOString();
         const payload: Record<string, any> = {
           user_id: user.id,
           role,
-          last_active_at: new Date().toISOString(),
+          last_active_at: now,
           user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
         };
-        if (isStandalone) payload.pwa_installed_at = new Date().toISOString();
 
-        // Don't overwrite pwa_installed_at if it's already set and we're not standalone right now.
-        if (!isStandalone) {
-          await supabase
-            .from("app_install_status" as any)
-            .upsert(payload, { onConflict: "user_id" });
-        } else {
-          // When standalone, also record install time (only if not previously set)
+        if (isStandalone) {
+          // Only set pwa_installed_at if not already recorded (first standalone open).
           const { data: existing } = await (supabase as any)
             .from("app_install_status")
             .select("pwa_installed_at")
             .eq("user_id", user.id)
             .maybeSingle();
-          if ((existing as any)?.pwa_installed_at) delete payload.pwa_installed_at;
-          await supabase
-            .from("app_install_status" as any)
-            .upsert(payload, { onConflict: "user_id" });
-          await supabase
-            .from("app_install_status" as any)
-            .upsert(payload, { onConflict: "user_id" });
+          if (!existing?.pwa_installed_at) {
+            payload.pwa_installed_at = now;
+          }
         }
+
+        await supabase
+          .from("app_install_status" as any)
+          .upsert(payload, { onConflict: "user_id" });
       } catch (e) {
         // silent
       }

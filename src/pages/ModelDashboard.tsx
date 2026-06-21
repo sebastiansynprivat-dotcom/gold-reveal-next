@@ -7,8 +7,10 @@ import logo from "@/assets/logo.png";
 import GoldParticles from "@/components/GoldParticles";
 import ModelProfileForm from "@/components/ModelProfileForm";
 import ModelHomeDashboard from "@/components/ModelHomeDashboard";
+import { useAppPresence } from "@/hooks/useAppPresence";
 
 export default function ModelDashboard() {
+  useAppPresence("model");
   const { user, signOut } = useAuth();
   const [accountName, setAccountName] = useState("");
   const [modelId, setModelId] = useState<string | null>(null);
