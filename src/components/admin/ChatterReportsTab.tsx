@@ -451,35 +451,95 @@ export default function ChatterReportsTab({ chatters }: Props) {
 
   const buildReport = () => {
     const headers = [
-      "Date", "Name", "Telegram ID", "Models",
+      "Date", "Name", "Telegram ID", "Platform", "Model",
       "Yesterday Revenue", "Goal", "Streak",
       "Last Week Revenue", "Last Month Revenue", "All Time Revenue",
       "Mass DM", "Unread Chats", "Oldest Chat",
       "Notes", "Start Date",
     ];
     const dateStr = format(date, "yyyy-MM-dd");
-    const rowsOut: (string | number)[][] = filtered.map((r) => {
-      const yesterday = r.daily && r.daily.length >= 2
-        ? r.daily[r.daily.length - 2].total
-        : 0;
-      return [
-        dateStr,
-        r.name,
-        r.telegram_id ?? "",
-        (r.models ?? []).join(", "),
-        yesterday,
-        r.goal,
-        r.streak,
-        r.week,
-        r.month,
-        r.all_time,
-        r.mass_dms,
-        r.unread,
-        r.oldest,
-        "",
-        r.start_date ? format(new Date(r.start_date), "yyyy-MM-dd") : "",
-      ];
-    });
+    const selISO = iso(date);
+    const yISO = iso(addDays(date, -1));
+    const wsISO = iso(startOfWeek(subWeeks(date, 1), { weekStartsOn: 1 }));
+    const weISO = iso(endOfWeek(subWeeks(date, 1), { weekStartsOn: 1 }));
+    const msISO = iso(startOfMonth(subMonths(date, 1)));
+    const meISO = iso(endOfMonth(subMonths(date, 1)));
+
+    // Aggregate accounts_data for a set of accountIds in this chatter's assignment windows
+    const aggregate = (profileId: string, accountIds: string[]) => {
+      let yesterday = 0, week = 0, month = 0, allTime = 0;
+      let massDM = 0, unread = 0, oldest = 0;
+      const inWindow = (accId: string, d: string) => {
+        const ws = windowsRef.current.get(`${profileId}|${accId}`) ?? [];
+        if (ws.length === 0) return true;
+        for (const w of ws) {
+          const s = w.start_date ?? "0000-01-01";
+          const e = w.end_date ?? selISO;
+          if (d >= s && d <= e && d <= selISO) return true;
+        }
+        return false;
+      };
+      for (const accId of accountIds) {
+        const rows = accountsDataRef.current.get(accId) ?? [];
+        let latestDate = "";
+        let latestRow: AccountDataPoint | null = null;
+        for (const r of rows) {
+          if (r.date > selISO) continue;
+          if (!inWindow(accId, r.date)) continue;
+          allTime += r.total;
+          if (r.date >= msISO && r.date <= meISO) month += r.total;
+          if (r.date >= wsISO && r.date <= weISO) week += r.total;
+          if (r.date === yISO) yesterday += r.total;
+          if (!latestDate || r.date > latestDate) {
+            latestDate = r.date;
+            latestRow = r;
+          }
+        }
+        if (latestRow) {
+          massDM += latestRow.mass_dms;
+          unread += latestRow.unread_chats;
+          if (latestRow.oldest_chat > oldest) oldest = latestRow.oldest_chat;
+        }
+      }
+      return {
+        yesterday: Math.round(yesterday),
+        week: Math.round(week),
+        month: Math.round(month),
+        allTime: Math.round(allTime),
+        massDM, unread, oldest,
+      };
+    };
+
+    const rowsOut: (string | number)[][] = [];
+    for (const r of filtered) {
+      const startStr = r.start_date ? format(new Date(r.start_date), "yyyy-MM-dd") : "";
+      const platformModels = modelAccountsRef.current.get(r.profile_id)?.get(r.platform);
+      const modelEntries = platformModels ? Array.from(platformModels.entries()) : [];
+
+      if (modelEntries.length === 0) {
+        // No per-model breakdown available — fall back to chatter-level numbers
+        const yesterdayFallback = r.daily && r.daily.length >= 2 ? r.daily[r.daily.length - 2].total : 0;
+        rowsOut.push([
+          dateStr, r.name, r.telegram_id ?? "", r.platform, "Unassigned",
+          Math.round(yesterdayFallback), r.goal, r.streak,
+          Math.round(r.week), Math.round(r.month), Math.round(r.all_time),
+          r.mass_dms, r.unread, r.oldest, "", startStr,
+        ]);
+        continue;
+      }
+
+      // One row per model, sorted alphabetically for stable output
+      modelEntries.sort((a, b) => a[0].localeCompare(b[0]));
+      for (const [modelName, accSet] of modelEntries) {
+        const agg = aggregate(r.profile_id, Array.from(accSet));
+        rowsOut.push([
+          dateStr, r.name, r.telegram_id ?? "", r.platform, modelName,
+          agg.yesterday, r.goal, r.streak,
+          agg.week, agg.month, agg.allTime,
+          agg.massDM, agg.unread, agg.oldest, "", startStr,
+        ]);
+      }
+    }
     return { headers, rows: rowsOut, dateStr };
   };
 
