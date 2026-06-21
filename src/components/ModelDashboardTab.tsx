@@ -190,6 +190,7 @@ interface AccountRow {
   account_email: string;
   account_domain: string;
   account_password: string;
+  username: string;
   platform: string;
   model_id: string | null;
   assigned_to: string | null;
@@ -197,6 +198,7 @@ interface AccountRow {
   currency?: string;
   archived?: boolean;
 }
+
 
 interface ChatterProfile {
   user_id: string;
@@ -434,13 +436,14 @@ export default function ModelDashboardTab() {
     PLATFORMS.reduce(
       (acc, p) => ({
         ...acc,
-        [p]: { selected: false, account_email: "", account_password: "", account_domain: PLATFORM_DOMAINS[p] || "", campaign: false },
+        [p]: { selected: false, account_email: "", account_password: "", account_domain: PLATFORM_DOMAINS[p] || "", username: "", campaign: false },
       }),
       {} as Record<
         string,
-        { selected: boolean; account_email: string; account_password: string; account_domain: string; campaign: boolean }
+        { selected: boolean; account_email: string; account_password: string; account_domain: string; username: string; campaign: boolean }
       >,
     );
+
 
   // Create model dialog
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -495,7 +498,9 @@ export default function ModelDashboardTab() {
     account_email: "",
     account_password: "",
     account_domain: "",
+    username: "",
   });
+
 
   // Model login dialog
   const [modelLoginDialog, setModelLoginDialog] = useState(false);
@@ -701,7 +706,7 @@ export default function ModelDashboardTab() {
     const { data } = await supabase
       .from("accounts")
       .select(
-        "id, account_email, account_domain, account_password, platform, model_id, assigned_to, model_active, currency" as any,
+        "id, account_email, account_domain, account_password, username, platform, model_id, assigned_to, model_active, currency" as any,
       )
       .eq("model_id", modelId)
       .order("platform");
@@ -720,6 +725,7 @@ export default function ModelDashboardTab() {
         account_email: r.data?.account_email || "",
         account_domain: r.data?.account_domain || "",
         account_password: r.data?.account_password || "",
+        username: r.data?.username || "",
         platform: r.platform || r.data?.platform || "",
         model_id: r.data?.model_id || null,
         assigned_to: r.data?.assigned_to || null,
@@ -727,6 +733,7 @@ export default function ModelDashboardTab() {
         currency: r.data?.currency,
         archived: true,
       }));
+
 
     const accs = [...liveAccs, ...archivedAccs];
     setModelAccounts(accs);
@@ -1251,6 +1258,12 @@ export default function ModelDashboardTab() {
         return;
       }
     }
+    // ── Require username on every selected platform account ──
+    const missingUsername = Object.entries(createAccounts).find(([, v]) => v.selected && !v.username.trim());
+    if (missingUsername) {
+      toast.error(`Username fehlt für ${missingUsername[0]}`);
+      return;
+    }
     setCreating(true);
     const { data: userData } = await supabase.auth.getUser();
     const userId = userData.user?.id;
@@ -1286,6 +1299,7 @@ export default function ModelDashboardTab() {
         account_email: entry.account_email,
         account_password: entry.account_password,
         account_domain: entry.account_domain,
+        username: entry.username.trim(),
         campaign: !!entry.campaign,
         drive_folder_id: extractDriveFolderId(newModel.drive_folder_id),
         model_language: newModel.model_language,
@@ -1295,6 +1309,7 @@ export default function ModelDashboardTab() {
         created_by: userId,
       });
     }
+
 
     toast.success(
       `Model erstellt${selected.length > 0 ? ` mit ${selected.length} Account${selected.length > 1 ? "s" : ""}` : ""} ✅`,
@@ -1429,6 +1444,12 @@ export default function ModelDashboardTab() {
         return;
       }
     }
+    // ── Require username on every selected platform account ──
+    const missingUsername2 = selected.find(([, v]) => !v.username.trim());
+    if (missingUsername2) {
+      toast.error(`Username fehlt für ${missingUsername2[0]}`);
+      return;
+    }
     setAddingAccount(true);
     const { data: userData } = await supabase.auth.getUser();
     let errors = 0;
@@ -1438,6 +1459,7 @@ export default function ModelDashboardTab() {
         account_email: entry.account_email,
         account_password: entry.account_password,
         account_domain: entry.account_domain,
+        username: entry.username.trim(),
         campaign: !!entry.campaign,
         drive_folder_id: extractDriveFolderId(modelForm.drive_folder_id || ""),
         model_language: modelForm.model_language || "de",
@@ -1451,6 +1473,7 @@ export default function ModelDashboardTab() {
         toast.error(`${platform}: ${error.message}`);
       }
     }
+
     if (errors === 0) {
       toast.success(`${selected.length} Account${selected.length > 1 ? "s" : ""} hinzugefügt ✅`);
       setNewAccounts(emptyAccountEntries());
@@ -1479,6 +1502,7 @@ export default function ModelDashboardTab() {
       account_email: acc.account_email,
       account_password: acc.account_password,
       account_domain: acc.account_domain,
+      username: acc.username || "",
     });
   };
 
@@ -1494,12 +1518,17 @@ export default function ModelDashboardTab() {
         return;
       }
     }
+    if (!editAccountData.username.trim()) {
+      toast.error("Username ist erforderlich");
+      return;
+    }
     const { error } = await supabase
       .from("accounts")
       .update({
         account_email: editAccountData.account_email,
         account_password: editAccountData.account_password,
         account_domain: editAccountData.account_domain,
+        username: editAccountData.username.trim(),
       } as any)
       .eq("id", editingAccountId);
     if (error) toast.error(error.message);
@@ -1508,6 +1537,7 @@ export default function ModelDashboardTab() {
       setEditingAccountId(null);
       if (selectedModelId) await loadModelAccounts(selectedModelId);
       await loadAllAccountsIndex();
+
     }
   };
 
