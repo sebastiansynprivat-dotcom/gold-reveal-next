@@ -50,12 +50,14 @@ export default function SteckbriefImporter({
     const f = e.target.files?.[0];
     e.target.value = "";
     if (!f) return;
-    if (
-      !f.name.toLowerCase().endsWith(".docx") &&
-      f.type !==
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-    ) {
-      toast.error("Bitte eine .docx Datei wählen");
+    const nameLower = f.name.toLowerCase();
+    const isDocx =
+      nameLower.endsWith(".docx") ||
+      f.type ===
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+    const isPdf = nameLower.endsWith(".pdf") || f.type === "application/pdf";
+    if (!isDocx && !isPdf) {
+      toast.error("Bitte eine .docx oder .pdf Datei wählen");
       return;
     }
     const buf = await f.arrayBuffer();
