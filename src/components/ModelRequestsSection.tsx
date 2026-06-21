@@ -407,9 +407,15 @@ export default function ModelRequestsSection({ modelId, language = "de" }: Props
 
       {open.length === 0 && closed.length === 0 ? (
         <p className="text-xs text-muted-foreground leading-relaxed">{copy.none}</p>
+      ) : open.length === 0 ? (
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          {lang === "en"
+            ? "All caught up — no open requests right now."
+            : "Alles erledigt – aktuell keine offenen Anfragen."}
+        </p>
       ) : (
         <div className="space-y-3">
-          {[...open, ...closed.slice(0, 3)].map((req) => {
+          {open.map((req) => {
             const isDone = req.model_status === "done";
             const isRejected = req.model_status === "rejected";
             const closedReq = isDone || isRejected;
