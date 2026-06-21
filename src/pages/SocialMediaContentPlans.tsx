@@ -190,6 +190,7 @@ export default function SocialMediaContentPlans() {
 
   const addItem = (day: number) => {
     setDays((prev) => ({ ...prev, [day]: [...(prev[day] || []), { title: "", reference_url: "", notes: "" }] }));
+    setOpenDays((prev) => new Set(prev).add(day));
   };
   const updateItem = (day: number, idx: number, patch: Partial<ContentItem>) => {
     setDays((prev) => {
