@@ -720,7 +720,20 @@ export default function ModelHomeDashboard({
   const now = new Date();
   const dayOfMonth = now.getDate();
   const totalDays = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-  const projectedMonth = dayOfMonth > 0 ? Math.round((monthRevenue / dayOfMonth) * totalDays) : 0;
+  // Smarter monthly forecast:
+  //   • Early in the month the run-rate (monthRevenue / dayOfMonth × totalDays) is
+  //     noisy and almost always too low → blend it with the 3-month historical
+  //     average, weighted by how far into the month we are.
+  //   • After ~day 14 we fully trust the live run-rate.
+  //   • If the live pace already beats history we surface the higher number so
+  //     a great month is reflected immediately, not anchored down by history.
+  //   • The forecast can never fall below what has already been earned.
+  const linearProjection = dayOfMonth > 0 ? (monthRevenue / dayOfMonth) * totalDays : 0;
+  const runRateWeight = Math.min(1, dayOfMonth / 14);
+  const blendedProjection = historicalMonthlyAvg > 0
+    ? linearProjection * runRateWeight + historicalMonthlyAvg * (1 - runRateWeight)
+    : linearProjection;
+  const projectedMonth = Math.round(Math.max(blendedProjection, linearProjection, monthRevenue));
 
   const copyValue = async (key: string, value: string) => {
     try {
