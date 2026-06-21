@@ -109,6 +109,12 @@ function mondayOf(d: Date) {
   return m;
 }
 
+function planStart(iso: string) {
+  const d = new Date(iso);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
 function daysBetween(a: Date, b: Date) {
   return Math.floor((b.getTime() - a.getTime()) / 86400000);
 }
