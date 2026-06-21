@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Plus, Trash2, Users, CalendarDays, Pencil, X, CheckCircle2, Link as LinkIcon, MessageSquare, ThumbsDown, ExternalLink } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Users, CalendarDays, Pencil, X, CheckCircle2, Link as LinkIcon, MessageSquare, ThumbsDown, ExternalLink, ChevronDown, ChevronRight, Copy } from "lucide-react";
 import logo from "@/assets/logo.png";
 import GoldParticles from "@/components/GoldParticles";
 
@@ -27,7 +27,7 @@ type Assignment = { id: string; plan_id: string; model_id: string | null; market
 
 const DAYS = 30;
 
-// ISO Monday of a given date
+// ISO Monday of a given date (kept for assignment helper UI only)
 function mondayOf(d: Date) {
   const day = d.getDay();
   const diff = day === 0 ? -6 : 1 - day;
@@ -35,6 +35,12 @@ function mondayOf(d: Date) {
   m.setDate(d.getDate() + diff);
   m.setHours(0, 0, 0, 0);
   return m;
+}
+
+function todayISO() {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  return d.toISOString().slice(0, 10);
 }
 
 export default function SocialMediaContentPlans() {
@@ -55,13 +61,14 @@ export default function SocialMediaContentPlans() {
   const [planTitle, setPlanTitle] = useState("");
   const [planDesc, setPlanDesc] = useState("");
   const [days, setDays] = useState<DayMap>({});
+  const [openDays, setOpenDays] = useState<Set<number>>(new Set([1]));
   const [saving, setSaving] = useState(false);
 
   // Assign dialog
   const [assignOpen, setAssignOpen] = useState(false);
   const [assignPlan, setAssignPlan] = useState<Plan | null>(null);
   const [selectedTargets, setSelectedTargets] = useState<Set<string>>(new Set());
-  const [startDate, setStartDate] = useState<string>(() => mondayOf(new Date()).toISOString().slice(0, 10));
+  const [startDate, setStartDate] = useState<string>(() => todayISO());
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
@@ -145,6 +152,7 @@ export default function SocialMediaContentPlans() {
     setPlanTitle("");
     setPlanDesc("");
     setDays({});
+    setOpenDays(new Set([1]));
     setEditorOpen(true);
   };
 
@@ -159,11 +167,30 @@ export default function SocialMediaContentPlans() {
     const map: DayMap = {};
     (data || []).forEach((r: any) => { map[r.day_number] = (r.items as ContentItem[]) || []; });
     setDays(map);
+    const filled = Object.keys(map).map(Number).filter((d) => (map[d]?.length || 0) > 0);
+    setOpenDays(new Set(filled.length ? filled : [1]));
     setEditorOpen(true);
+  };
+
+  const toggleDayOpen = (day: number) => {
+    setOpenDays((prev) => {
+      const next = new Set(prev);
+      if (next.has(day)) next.delete(day); else next.add(day);
+      return next;
+    });
+  };
+
+  const duplicateToNext = (day: number) => {
+    if (day >= DAYS) return;
+    const src = days[day] || [];
+    if (src.length === 0) return;
+    setDays((prev) => ({ ...prev, [day + 1]: src.map((it) => ({ ...it })) }));
+    setOpenDays((prev) => new Set(prev).add(day + 1));
   };
 
   const addItem = (day: number) => {
     setDays((prev) => ({ ...prev, [day]: [...(prev[day] || []), { title: "", reference_url: "", notes: "" }] }));
+    setOpenDays((prev) => new Set(prev).add(day));
   };
   const updateItem = (day: number, idx: number, patch: Partial<ContentItem>) => {
     setDays((prev) => {
@@ -235,7 +262,7 @@ export default function SocialMediaContentPlans() {
     setAssignPlan(plan);
     const existing = (assignmentsByPlan[plan.id] || []).map(targetKeyOf).filter(Boolean) as string[];
     setSelectedTargets(new Set(existing));
-    setStartDate(mondayOf(new Date()).toISOString().slice(0, 10));
+    setStartDate(todayISO());
     setAssignOpen(true);
   };
 
@@ -459,57 +486,102 @@ export default function SocialMediaContentPlans() {
             </div>
 
             <div className="border-t border-border/30 pt-3">
-              <div className="text-xs uppercase tracking-wider text-muted-foreground mb-2">30 Tage Inhalt</div>
-              <p className="text-[11px] text-muted-foreground/70 mb-3">Models sehen wöchentlich – jeden Montag rollt die nächste Woche frei.</p>
-              <div className="grid grid-cols-1 gap-3">
+              <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
+                <div className="text-xs uppercase tracking-wider text-muted-foreground">30 Tage Inhalt</div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 px-2 text-[11px] text-muted-foreground hover:text-accent"
+                    onClick={() => setOpenDays(new Set(Array.from({ length: DAYS }, (_, i) => i + 1)))}
+                  >
+                    Alle aufklappen
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 px-2 text-[11px] text-muted-foreground hover:text-accent"
+                    onClick={() => setOpenDays(new Set())}
+                  >
+                    Alle zuklappen
+                  </Button>
+                </div>
+              </div>
+              <p className="text-[11px] text-muted-foreground/70 mb-3">
+                Klicke auf einen Tag, um Inhalte hinzuzufügen. Mit „Tag duplizieren" kannst du Inhalte auf den nächsten Tag kopieren.
+              </p>
+              <div className="grid grid-cols-1 gap-2">
                 {Array.from({ length: DAYS }, (_, i) => i + 1).map((d) => {
                   const items = days[d] || [];
                   const weekIdx = Math.ceil(d / 7);
+                  const isOpen = openDays.has(d);
                   return (
-                    <div key={d} className="rounded-xl border border-border/40 bg-background/40 p-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="border-accent/40 text-accent text-[10px]">Tag {d}</Badge>
-                          <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Woche {weekIdx}</span>
-                        </div>
-                        <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-accent" onClick={() => addItem(d)}>
-                          <Plus className="h-3 w-3 mr-1" /> Inhalt
-                        </Button>
-                      </div>
-                      {items.length === 0 ? (
-                        <p className="text-[11px] text-muted-foreground/60 italic">Keine Inhalte – füge Titel, Referenz-Link und Notiz hinzu.</p>
-                      ) : (
-                        <div className="space-y-2">
-                          {items.map((it, idx) => (
-                            <div key={idx} className="rounded-lg border border-accent/20 bg-accent/5 px-2 py-1.5 flex items-start gap-2">
-                              <LinkIcon className="h-3.5 w-3.5 mt-1.5 shrink-0 text-accent" />
-                              <div className="flex-1 space-y-1">
-                                <Input
-                                  value={it.title}
-                                  onChange={(e) => updateItem(d, idx, { title: e.target.value })}
-                                  placeholder="Titel / Thema"
-                                  className="h-7 text-xs bg-background/40"
-                                />
-                                <Input
-                                  type="url"
-                                  value={it.reference_url || ""}
-                                  onChange={(e) => updateItem(d, idx, { reference_url: e.target.value })}
-                                  placeholder="Referenz-Video URL (z.B. TikTok/Reel-Link)"
-                                  className="h-7 text-xs bg-background/40"
-                                />
-                                <Textarea
-                                  value={it.notes || ""}
-                                  onChange={(e) => updateItem(d, idx, { notes: e.target.value })}
-                                  placeholder="Notiz / Anweisung (optional)"
-                                  rows={2}
-                                  className="text-xs bg-background/40 min-h-[44px]"
-                                />
+                    <div key={d} className="rounded-xl border border-border/40 bg-background/40 overflow-hidden">
+                      <button
+                        type="button"
+                        onClick={() => toggleDayOpen(d)}
+                        className="w-full flex items-center gap-2 px-3 py-2 hover:bg-background/60 transition-colors text-left"
+                      >
+                        {isOpen ? <ChevronDown className="h-3.5 w-3.5 text-accent shrink-0" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />}
+                        <Badge variant="outline" className="border-accent/40 text-accent text-[10px] shrink-0">Tag {d}</Badge>
+                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground shrink-0">W{weekIdx}</span>
+                        <span className="flex-1 text-xs text-foreground/80 truncate">
+                          {items.length > 0
+                            ? items.map((it) => it.title).filter(Boolean).join(" · ") || `${items.length} Inhalt${items.length === 1 ? "" : "e"}`
+                            : <span className="text-muted-foreground/50 italic">leer</span>}
+                        </span>
+                        {items.length > 0 && (
+                          <span className="text-[10px] tabular-nums text-accent/80 shrink-0">{items.length}</span>
+                        )}
+                      </button>
+                      {isOpen && (
+                        <div className="px-3 pb-3 pt-1 space-y-2 border-t border-border/30">
+                          {items.length === 0 ? (
+                            <p className="text-[11px] text-muted-foreground/60 italic">Noch keine Inhalte.</p>
+                          ) : (
+                            items.map((it, idx) => (
+                              <div key={idx} className="rounded-lg border border-accent/20 bg-accent/5 px-2 py-1.5 flex items-start gap-2">
+                                <LinkIcon className="h-3.5 w-3.5 mt-1.5 shrink-0 text-accent" />
+                                <div className="flex-1 space-y-1">
+                                  <Input
+                                    value={it.title}
+                                    onChange={(e) => updateItem(d, idx, { title: e.target.value })}
+                                    placeholder="Titel / Thema"
+                                    className="h-7 text-xs bg-background/40"
+                                  />
+                                  <Input
+                                    type="url"
+                                    value={it.reference_url || ""}
+                                    onChange={(e) => updateItem(d, idx, { reference_url: e.target.value })}
+                                    placeholder="Referenz-Video URL (z.B. TikTok/Reel-Link)"
+                                    className="h-7 text-xs bg-background/40"
+                                  />
+                                  <Textarea
+                                    value={it.notes || ""}
+                                    onChange={(e) => updateItem(d, idx, { notes: e.target.value })}
+                                    placeholder="Notiz / Anweisung (optional)"
+                                    rows={2}
+                                    className="text-xs bg-background/40 min-h-[44px]"
+                                  />
+                                </div>
+                                <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" onClick={() => removeItem(d, idx)}>
+                                  <X className="h-3 w-3" />
+                                </Button>
                               </div>
-                              <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0" onClick={() => removeItem(d, idx)}>
-                                <X className="h-3 w-3" />
+                            ))
+                          )}
+                          <div className="flex items-center gap-2 pt-1">
+                            <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-accent" onClick={() => addItem(d)}>
+                              <Plus className="h-3 w-3 mr-1" /> Inhalt hinzufügen
+                            </Button>
+                            {items.length > 0 && d < DAYS && (
+                              <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-muted-foreground hover:text-accent" onClick={() => duplicateToNext(d)}>
+                                <Copy className="h-3 w-3 mr-1" /> Auf Tag {d + 1} kopieren
                               </Button>
-                            </div>
-                          ))}
+                            )}
+                          </div>
                         </div>
                       )}
                     </div>
@@ -537,9 +609,9 @@ export default function SocialMediaContentPlans() {
           </DialogHeader>
           <div className="space-y-3">
             <div>
-              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Startdatum (Montag)</Label>
+              <Label className="text-xs uppercase tracking-wider text-muted-foreground">Startdatum (Tag 1)</Label>
               <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-              <p className="text-[10px] text-muted-foreground/70 mt-1">Ab diesem Tag startet Woche 1 für neu Zugewiesene.</p>
+              <p className="text-[10px] text-muted-foreground/70 mt-1">Ab diesem Tag ist der Plan sofort sichtbar – Tag 1 = Startdatum.</p>
             </div>
             <div>
               <Label className="text-xs uppercase tracking-wider text-muted-foreground mb-1.5 block">

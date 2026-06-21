@@ -109,6 +109,12 @@ function mondayOf(d: Date) {
   return m;
 }
 
+function planStart(iso: string) {
+  const d = new Date(iso);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
 function daysBetween(a: Date, b: Date) {
   return Math.floor((b.getTime() - a.getTime()) / 86400000);
 }
@@ -301,9 +307,9 @@ export default function SocialMediaModelDashboard() {
   };
 
   const visibleDaysForAssignment = (startDateISO: string): number[] => {
-    const start = mondayOf(new Date(startDateISO));
-    if (todayMonday < start) return [];
-    const weekOffset = Math.floor(daysBetween(start, todayMonday) / 7);
+    const start = planStart(startDateISO);
+    if (today < start) return [];
+    const weekOffset = Math.floor(daysBetween(start, today) / 7);
     const firstDay = weekOffset * 7 + 1;
     const lastDay = firstDay + 6;
     return Array.from({ length: 7 }, (_, i) => firstDay + i).filter((d) => d >= 1 && d <= 30 && d <= lastDay);
@@ -434,7 +440,7 @@ export default function SocialMediaModelDashboard() {
     planRows.forEach((pr) => {
       const allDays = dayRowsByPlan[pr.plan_id] || [];
       const visible = visibleDaysForAssignment(pr.start_date);
-      const start = mondayOf(new Date(pr.start_date));
+      const start = planStart(pr.start_date);
       allDays.forEach((d) => {
         d.items.forEach((_, idx) => {
           total += 1;
@@ -915,7 +921,7 @@ export default function SocialMediaModelDashboard() {
               planRows.map((pr) => {
                 const allDays = dayRowsByPlan[pr.plan_id] || [];
                 const visible = visibleDaysForAssignment(pr.start_date);
-                const start = mondayOf(new Date(pr.start_date));
+                const start = planStart(pr.start_date);
                 const weekIdx = visible.length ? Math.floor((visible[0] - 1) / 7) + 1 : 0;
                 const totalItems = allDays.reduce((acc, d) => acc + d.items.length, 0);
                 const doneItems = Object.values(statuses).filter((s) => s.assignment_id === pr.assignment_id && s.done).length;
