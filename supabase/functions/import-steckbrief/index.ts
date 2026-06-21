@@ -214,7 +214,18 @@ async function docxToText(bytes: Uint8Array): Promise<string> {
   return collect.join("\n\n");
 }
 
-// ─── AI parse with Lovable AI Gateway ──────────────────────────────────
+// ─── PDF → plain text via unpdf ────────────────────────────────────────
+async function pdfToText(bytes: Uint8Array): Promise<string> {
+  const pdf = await getDocumentProxy(bytes);
+  const { text } = await extractText(pdf, { mergePages: true });
+  const out = (Array.isArray(text) ? text.join("\n\n") : String(text || ""))
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+  return out;
+}
+
+
 async function aiExtractProfile(rawText: string): Promise<Record<string, string>> {
   const apiKey = Deno.env.get("LOVABLE_API_KEY");
   if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
