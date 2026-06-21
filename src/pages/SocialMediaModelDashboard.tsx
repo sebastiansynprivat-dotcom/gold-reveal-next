@@ -921,7 +921,7 @@ export default function SocialMediaModelDashboard() {
               planRows.map((pr) => {
                 const allDays = dayRowsByPlan[pr.plan_id] || [];
                 const visible = visibleDaysForAssignment(pr.start_date);
-                const start = mondayOf(new Date(pr.start_date));
+                const start = planStart(pr.start_date);
                 const weekIdx = visible.length ? Math.floor((visible[0] - 1) / 7) + 1 : 0;
                 const totalItems = allDays.reduce((acc, d) => acc + d.items.length, 0);
                 const doneItems = Object.values(statuses).filter((s) => s.assignment_id === pr.assignment_id && s.done).length;
