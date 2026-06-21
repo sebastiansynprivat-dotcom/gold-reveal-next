@@ -1036,13 +1036,26 @@ export default function ModelDashboardTab() {
       .then(({ data }) => setModelProfile((data as any) || null));
   }, [selectedModelId]);
 
-  // Load list of model_ids that have a profile (for the list badge)
+  // Load profile meta (status + timestamps) for the list filters/sort
   useEffect(() => {
     supabase
       .from("model_profiles" as any)
-      .select("model_id")
+      .select("model_id, confirmed_at, submitted_at, last_change_at, approved_snapshot")
       .then(({ data }) => {
-        if (data) setFilledProfileIds(new Set((data as any[]).map((r) => r.model_id)));
+        if (!data) return;
+        const ids = new Set<string>();
+        const map = new Map<string, ProfileMeta>();
+        (data as any[]).forEach((r) => {
+          ids.add(r.model_id);
+          map.set(r.model_id, {
+            confirmed_at: r.confirmed_at || null,
+            submitted_at: r.submitted_at || null,
+            last_change_at: r.last_change_at || null,
+            has_snapshot: !!r.approved_snapshot,
+          });
+        });
+        setFilledProfileIds(ids);
+        setProfileMeta(map);
       });
   }, [selectedModelId]);
 
