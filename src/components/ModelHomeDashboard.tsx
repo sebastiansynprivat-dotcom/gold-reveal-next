@@ -344,10 +344,23 @@ export default function ModelHomeDashboard({
         .gte("date", monthFrom)
         .lte("date", monthTo);
 
-      const [{ data: rev }, { data: lifetimeRev }, { data: monthRev }] = await Promise.all([
+      // Pull the last 3 fully-completed calendar months for a historical baseline.
+      const firstOfThisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+      const histFrom = new Date(firstOfThisMonth);
+      histFrom.setMonth(histFrom.getMonth() - 3);
+      const histTo = new Date(firstOfThisMonth);
+      histTo.setDate(0); // last day of previous month
+      const historyQ = (supabase.from("accounts_data") as any)
+        .select("date, total")
+        .in("account_id", accountIds)
+        .gte("date", fmt(histFrom))
+        .lte("date", fmt(histTo));
+
+      const [{ data: rev }, { data: lifetimeRev }, { data: monthRev }, { data: histRev }] = await Promise.all([
         periodQ,
         lifetimeQ,
         monthQ,
+        historyQ,
       ]);
 
       const byAccount: Record<string, number> = {};
@@ -360,10 +373,22 @@ export default function ModelHomeDashboard({
       });
       const monthSum = (monthRev || []).reduce((s: number, r: any) => s + Number(r.total || 0), 0);
 
+      // Group historical totals by YYYY-MM, then average across months that have any data.
+      const histByMonth: Record<string, number> = {};
+      (histRev || []).forEach((r: any) => {
+        const key = String(r.date).slice(0, 7);
+        histByMonth[key] = (histByMonth[key] || 0) + Number(r.total || 0);
+      });
+      const histValues = Object.values(histByMonth).filter((v) => v > 0);
+      const histAvg = histValues.length > 0
+        ? histValues.reduce((s, v) => s + v, 0) / histValues.length
+        : 0;
+
       if (!cancelled) {
         setRevenueByAccount(byAccount);
         setLifetimeByAccount(lifetimeAcc);
         setMonthRevenue(monthSum);
+        setHistoricalMonthlyAvg(histAvg);
         setLoading(false);
       }
     })();
