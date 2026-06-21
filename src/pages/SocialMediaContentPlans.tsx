@@ -311,7 +311,7 @@ export default function SocialMediaContentPlans() {
             <h1 className="text-base md:text-lg font-bold tracking-tight bg-gradient-to-r from-accent via-yellow-200 to-accent bg-clip-text text-transparent">
               Content Pläne
             </h1>
-            <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground/70 font-medium">30 Tage · Wochenweise an Models</p>
+            <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground/70 font-medium">Models · Marketer</p>
           </div>
           <div className="flex-1" />
           <Button variant="secondary" size="sm" onClick={() => navigate("/socialmedia/admin")} className="border border-accent/30 bg-accent/5 text-accent hover:bg-accent/15">
