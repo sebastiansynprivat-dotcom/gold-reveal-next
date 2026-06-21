@@ -67,7 +67,7 @@ export default function SocialMediaContentPlans() {
   const [assignOpen, setAssignOpen] = useState(false);
   const [assignPlan, setAssignPlan] = useState<Plan | null>(null);
   const [selectedTargets, setSelectedTargets] = useState<Set<string>>(new Set());
-  const [startDate, setStartDate] = useState<string>(() => mondayOf(new Date()).toISOString().slice(0, 10));
+  const [startDate, setStartDate] = useState<string>(() => todayISO());
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
