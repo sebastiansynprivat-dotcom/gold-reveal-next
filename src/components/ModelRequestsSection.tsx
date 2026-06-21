@@ -38,6 +38,7 @@ interface ModelRequest {
   model_completed_at: string | null;
   content_link: string | null;
   admin_comment: string | null;
+  status: string | null;
 }
 
 interface Props {
