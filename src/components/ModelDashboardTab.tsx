@@ -1084,10 +1084,12 @@ export default function ModelDashboardTab() {
       list = list.filter((m) => String((m as any).model_agency || "shex").toLowerCase() === agencyFilter);
     }
     if (showDuplicatesOnly) list = list.filter((m) => duplicateModelIds.has(m.id));
+    if (steckbriefFilter === "filled") list = list.filter((m) => filledProfileIds.has(m.id));
+    else if (steckbriefFilter === "empty") list = list.filter((m) => !filledProfileIds.has(m.id));
     if (!searchQuery) return list;
     const q = searchQuery.toLowerCase();
     return list.filter((m) => m.name.toLowerCase().includes(q) || (m.username || "").toLowerCase().includes(q));
-  }, [models, searchQuery, showDuplicatesOnly, duplicateModelIds, agencyFilter]);
+  }, [models, searchQuery, showDuplicatesOnly, duplicateModelIds, agencyFilter, steckbriefFilter, filledProfileIds]);
 
 
 
