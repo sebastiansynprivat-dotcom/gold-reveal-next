@@ -1,46 +1,28 @@
-# Social Media Dashboard – 3 Erweiterungen
+## Goal
+Add a `username` field to the `accounts` table, require it during account creation, and make it editable in the per-platform account section of the Model dashboard (Admin → Models → "Plattform-Accounts").
 
-## 1. Reiter „Marketer-Bewerbungen"
+## 1. Database migration
+- `ALTER TABLE public.accounts ADD COLUMN username text;`
+- No NOT NULL constraint (existing rows would break). Required-ness is enforced in the UI.
+- Allow the `update-account` edge function to accept the new field by adding `"username"` to its `ALLOWED` set.
 
-**Neue Seite** `/socialmedia/admin/applications` mit einfacher Notiz-Tabelle.
+## 2. Account creation paths (require username)
+All flows live in `src/components/ModelDashboardTab.tsx`:
 
-- Neue DB-Tabelle `socialmedia_marketer_applications`: `name`, `phone`, `notes`, `status` (offen/abgelehnt/eingestellt — optional), `created_by`, Timestamps.
-- RLS: nur Admins (`is_admin`) lesen/schreiben.
-- UI: Tabelle mit Inline-Add-Zeile + Edit/Delete pro Zeile. Felder: Name, Telefon, Notizen. Kein Workflow, rein Notiz-Liste.
-- Link in den Header-Buttons der bestehenden Admin-Seiten (Dashboard / Marketer / Content Pläne) ergänzen: „Bewerbungen".
+- **Create new Model wizard** (`createAccounts` state, ~line 437) — add `username: ""` to the per-platform draft shape; render a "Username" input next to email/password (~line 4263); when submitting at ~line 1284, include `username` and reject submit if any selected platform has empty username (toast: "Username fehlt für <platform>").
+- **Add accounts to existing Model** (similar block at ~line 4410 / insert at ~line 1436) — same input + required validation + include in insert payload.
+- **Edit existing account dialog** (`editAccountData` ~line 494, input ~line 3511, update at ~line 1499) — add Username input, require non-empty, include in update payload.
 
-## 2. Logins für Instagram-Accounts
+## 3. Display
+- Show username under the account row in the admin Plattform-Accounts table (~line 3568, next to `account_email`).
+- Read-only display in the model-facing `ModelHomeDashboard.tsx` accounts list (~line 967/995) — include in the select at line 300, render under the email with a copy button matching the existing pattern. (Models view-only here; editing stays admin-side as today.)
 
-Aktuell sind `instagram_urls: string[]` (pro Model) reine URLs. Pro IG-Account soll **Username + Passwort** hinterlegbar sein — sowohl für Model-eigene IGs als auch für die Marketer-IGs.
+## 4. Types
+Regenerated automatically after migration approval — no manual edit to `src/integrations/supabase/types.ts`.
 
-- Schema-Erweiterung **ohne** Datenverlust:
-  - `fanvue_models.instagram_logins` (jsonb, default `[]`) — Array `{ url, username, password }`. URL referenziert eine Eintrag aus `instagram_urls` (Match nach String). Migration füllt initial leere Logins für bestehende URLs.
-  - `fanvue_models.marketers` (jsonb) bekommt zusätzlich pro Marketer-Eintrag optionale Felder `ig_username`, `ig_password` (am bestehenden Marketer-Objekt).
-- **Admin-Dashboard** (`SocialMediaDashboard.tsx`): Im Edit-Dialog neben jedem IG-URL-Feld zwei zusätzliche Inputs für Username + Passwort (Passwort als sichtbar, Copy-Button). Gleiches für jeden Marketer-Block.
-- **Marketer-Dashboard** (`MarketerDashboard.tsx`): bei jedem zugewiesenen Model die Model-IG-Logins anzeigen (Read-only, Copy-Buttons), sowie die eigenen Marketer-IG-Logins (gefiltert auf den eingeloggten Marketer per `marketerName`-Match).
-- **Model-Dashboard** (`SocialMediaModelDashboard.tsx`): IG-Logins werden **nicht** geladen/angezeigt. Bestehende Plattform-Logins (Fanvue etc.) bleiben unverändert sichtbar.
-- RLS bleibt gleich; die Daten liegen alle in `fanvue_models`. Felder werden im SELECT des Model-Dashboards **nicht** angefordert.
+## Out of scope
+- No backfill of existing rows (username stays NULL until edited).
+- No change to ingest/edge functions besides `update-account` allowlist.
 
-## 3. Contentpläne trennen: Models vs. Marketer
-
-- `content_plans` bekommt neue Spalte `target_type text` (`'model' | 'marketer'`, default `'model'`).
-- `content_plan_assignments` bekommt `marketer_user_id uuid` (nullable). Constraint: genau eines von `model_id` / `marketer_user_id` gesetzt.
-- **`SocialMediaContentPlans.tsx`** (Admin):
-  - Oben Tabs: „Für Models" / „Für Marketer".
-  - „Neuer Plan"-Button erstellt im aktiven Tab — `target_type` entsprechend gesetzt.
-  - Zuweisungs-Dialog zeigt im Model-Tab Model-Liste, im Marketer-Tab Marketer-Liste (aus `user_roles` + `marketer_model_assignments`).
-- **`MarketerDashboard.tsx`**: Lädt zusätzlich seine `content_plan_assignments` (per `marketer_user_id = auth.uid()`) und rendert sie analog zum Model-Dashboard (Wochen-Tabs, Task-Status, Wochen-Feedback). Code wird aus dem Model-Dashboard in eine wiederverwendbare Komponente `ContentPlanViewer` extrahiert.
-- RLS für `content_plan_assignments`: Marketer dürfen ihre eigenen Zuweisungen lesen; Task-Status & Feedback analog am `assignment_id`.
-
-## Technische Details
-
-- Eine kombinierte Migration für alle Schema-Änderungen + RLS.
-- Typen werden nach Migration regeneriert; Code-Änderungen folgen danach.
-- Bestehende Plan-Daten erhalten `target_type='model'` rückwirkend → keine UX-Regression.
-- `ContentPlanViewer` als gemeinsame Komponente für Model- & Marketer-Dashboard, um Duplikation zu vermeiden.
-
-## Out of Scope
-
-- Bewerbungs-Workflow (Status-Tracking, E-Mails) — bewusst nicht implementiert, Tabelle dient nur als Notiz-Liste.
-- Passwort-Verschlüsselung der IG-Logins — analog zu bestehenden Plattform-Logins im Klartext (Memory: Passwörter bewusst sichtbar).
-- Kein Migrationspfad für `instagram_url` (Single) — bleibt für Legacy-Anzeige bestehen.
+## Open question
+"Platform-Accounts section of the model-dashboard" — I'm reading this as the **Admin** Model tab (where accounts are created/edited per platform). The model-facing dashboard only displays accounts read-only; I'll add `username` to that display too but not make it editable there. Confirm if you actually want models to edit their own usernames.
