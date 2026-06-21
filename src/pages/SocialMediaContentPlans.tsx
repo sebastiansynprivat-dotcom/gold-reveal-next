@@ -152,6 +152,7 @@ export default function SocialMediaContentPlans() {
     setPlanTitle("");
     setPlanDesc("");
     setDays({});
+    setOpenDays(new Set([1]));
     setEditorOpen(true);
   };
 
@@ -166,7 +167,25 @@ export default function SocialMediaContentPlans() {
     const map: DayMap = {};
     (data || []).forEach((r: any) => { map[r.day_number] = (r.items as ContentItem[]) || []; });
     setDays(map);
+    const filled = Object.keys(map).map(Number).filter((d) => (map[d]?.length || 0) > 0);
+    setOpenDays(new Set(filled.length ? filled : [1]));
     setEditorOpen(true);
+  };
+
+  const toggleDayOpen = (day: number) => {
+    setOpenDays((prev) => {
+      const next = new Set(prev);
+      if (next.has(day)) next.delete(day); else next.add(day);
+      return next;
+    });
+  };
+
+  const duplicateToNext = (day: number) => {
+    if (day >= DAYS) return;
+    const src = days[day] || [];
+    if (src.length === 0) return;
+    setDays((prev) => ({ ...prev, [day + 1]: src.map((it) => ({ ...it })) }));
+    setOpenDays((prev) => new Set(prev).add(day + 1));
   };
 
   const addItem = (day: number) => {
