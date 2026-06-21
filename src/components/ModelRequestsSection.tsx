@@ -203,9 +203,16 @@ export default function ModelRequestsSection({ modelId, language = "de" }: Props
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modelId]);
 
-  const isClosed = (r: ModelRequest) => r.model_status === "done" || r.model_status === "rejected";
+  const isClosed = (r: ModelRequest) =>
+    r.model_status === "done" || r.model_status === "rejected" || r.status === "done";
   const open = requests.filter((r) => !isClosed(r));
-  const closed = requests.filter(isClosed);
+  const closed = requests
+    .filter(isClosed)
+    .sort((a, b) => {
+      const ta = new Date(a.model_completed_at || a.created_at).getTime();
+      const tb = new Date(b.model_completed_at || b.created_at).getTime();
+      return tb - ta;
+    });
 
   const triggerBurst = (key: BurstKey) => {
     const prev = lastBurstRef.current;
