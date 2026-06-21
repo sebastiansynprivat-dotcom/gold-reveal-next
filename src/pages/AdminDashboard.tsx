@@ -6430,8 +6430,19 @@ export default function AdminDashboard() {
                               if (requestFilter === "accepted" && contentLinkFilter === "without_link" && r.content_link)
                                 return false;
                             }
-                            if (requestSearchQuery.trim() && !String(r.model_name || "").toLowerCase().includes(requestSearchQuery.trim().toLowerCase()))
-                              return false;
+                            if (requestSearchQuery.trim()) {
+                              const q = requestSearchQuery.trim().toLowerCase().replace(/^@/, "");
+                              const hay = [
+                                r.model_name,
+                                (r as any)._model?.name,
+                                (r as any)._model?.username,
+                                r.customer_name,
+                                r.description,
+                              ]
+                                .map((v) => String(v || "").toLowerCase().replace(/@/g, ""))
+                                .join(" | ");
+                              if (!hay.includes(q)) return false;
+                            }
                             if (requestPlatformFilter !== "all") {
                               const _pm = (r.description || "").match(/^\[Plattform:\s*([^\]]+)\]\s*/i);
                               if (!_pm || _pm[1].trim().toLowerCase() !== requestPlatformFilter.toLowerCase()) return false;
