@@ -166,8 +166,46 @@ export default function SteckbriefImporter({
               onChange={onFileChosen}
               className="hidden"
             />
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onPickImage}
+              disabled={busy !== null}
+              className="text-[11px] h-7 gap-1.5 border-fuchsia-400/40 text-fuchsia-300 hover:bg-fuchsia-400/10"
+              title="KI generiert einen passenden Fantasie-Steckbrief basierend auf einem Foto des Models"
+            >
+              {busy === "image" ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <Wand2 className="h-3 w-3" />
+              )}
+              KI aus Foto generieren
+            </Button>
+            <input
+              ref={imageRef}
+              type="file"
+              accept="image/*"
+              onChange={onImageChosen}
+              className="hidden"
+            />
           </div>
           <AnimatePresence>
+            {busy && (
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex items-center gap-1.5 text-[10px] text-accent"
+              >
+                {busy === "image" ? <ImageIcon className="h-3 w-3" /> : <FileText className="h-3 w-3" />}
+                {busy === "drive"
+                  ? "Datei aus Drive ziehen & KI liest aus…"
+                  : busy === "image"
+                    ? "KI analysiert das Foto & erfindet den passenden Steckbrief…"
+                    : "Datei wird gelesen & KI extrahiert die Felder…"}
+              </motion.p>
+            )}
+          </AnimatePresence>
             {busy && (
               <motion.p
                 initial={{ opacity: 0 }}
