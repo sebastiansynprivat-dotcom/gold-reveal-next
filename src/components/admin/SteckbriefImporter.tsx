@@ -128,12 +128,12 @@ export default function SteckbriefImporter({
               ) : (
                 <Upload className="h-3 w-3" />
               )}
-              .docx hochladen
+              .docx / .pdf hochladen
             </Button>
             <input
               ref={fileRef}
               type="file"
-              accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              accept=".docx,.pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/pdf"
               onChange={onFileChosen}
               className="hidden"
             />
