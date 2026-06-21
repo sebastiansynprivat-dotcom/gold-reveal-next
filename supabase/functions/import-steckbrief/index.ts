@@ -125,6 +125,7 @@ async function findSteckbriefInFolder(
   const mimes = [
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "application/vnd.google-apps.document",
+    "application/pdf",
   ];
   const q = encodeURIComponent(
     `'${folderId}' in parents and trashed=false and (${mimes
