@@ -547,7 +547,7 @@ export default function ChatterReportsTab({ chatters }: Props) {
     const { headers, rows: rowsOut, dateStr } = buildReport();
     const platformName = activePlatform || "All";
     const safePlatform = platformName.replace(/\s+/g, "_");
-    const filename = `${safePlatform}_Chatter_Report_${dateStr}.${fmtKind}`;
+    const filename = `${safePlatform}_Chatter_Report_by_Model_${dateStr}.${fmtKind}`;
 
     if (fmtKind === "xlsx") {
       const ws = XLSX.utils.aoa_to_sheet([headers, ...rowsOut]);
