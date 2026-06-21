@@ -153,11 +153,12 @@ export default function ChatterReportsTab({ chatters }: Props) {
 
       // ----- Fire independent fetches in parallel -----
       const asgByUserP = userIds.length > 0
-        ? supabase.from("account_assignments").select("account_id,user_id,profile_id").in("user_id", userIds).is("end_date", null)
+        ? supabase.from("account_assignments").select("account_id,user_id,profile_id,start_date,end_date").in("user_id", userIds).is("end_date", null)
         : Promise.resolve({ data: [] as any[] });
       const asgByProfileP = profileIds.length > 0
-        ? supabase.from("account_assignments").select("account_id,user_id,profile_id").in("profile_id", profileIds).is("end_date", null)
+        ? supabase.from("account_assignments").select("account_id,user_id,profile_id,start_date,end_date").in("profile_id", profileIds).is("end_date", null)
         : Promise.resolve({ data: [] as any[] });
+
       const profsP = profileIds.length > 0
         ? supabase.from("profiles").select("id,user_id,start_date,created_at,daily_goal").in("id", profileIds)
         : Promise.resolve({ data: [] as any[] });
