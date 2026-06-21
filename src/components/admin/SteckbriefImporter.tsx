@@ -22,7 +22,7 @@ export default function SteckbriefImporter({
 
   const callImport = async (
     body: Record<string, unknown>,
-    mode: "drive" | "upload"
+    mode: "drive" | "upload" | "image"
   ) => {
     setBusy(mode);
     try {
