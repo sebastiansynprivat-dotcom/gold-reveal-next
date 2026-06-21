@@ -313,6 +313,7 @@ export default function ModelDashboardTab() {
   const [loading, setLoading] = useState(true);
   const [showDuplicatesOnly, setShowDuplicatesOnly] = useState(false);
   const [agencyFilter, setAgencyFilter] = useState<"all" | "shex" | "syn">("all");
+  const [steckbriefFilter, setSteckbriefFilter] = useState<"all" | "filled" | "empty">("all");
   const [agencyBilling, setAgencyBilling] = useState<Record<string, boolean>>({ shex: false, syn: false });
 
   // Load global per-agency billing-in-progress flags
@@ -1083,10 +1084,12 @@ export default function ModelDashboardTab() {
       list = list.filter((m) => String((m as any).model_agency || "shex").toLowerCase() === agencyFilter);
     }
     if (showDuplicatesOnly) list = list.filter((m) => duplicateModelIds.has(m.id));
+    if (steckbriefFilter === "filled") list = list.filter((m) => filledProfileIds.has(m.id));
+    else if (steckbriefFilter === "empty") list = list.filter((m) => !filledProfileIds.has(m.id));
     if (!searchQuery) return list;
     const q = searchQuery.toLowerCase();
     return list.filter((m) => m.name.toLowerCase().includes(q) || (m.username || "").toLowerCase().includes(q));
-  }, [models, searchQuery, showDuplicatesOnly, duplicateModelIds, agencyFilter]);
+  }, [models, searchQuery, showDuplicatesOnly, duplicateModelIds, agencyFilter, steckbriefFilter, filledProfileIds]);
 
 
 
@@ -1749,6 +1752,41 @@ export default function ModelDashboardTab() {
                 {a === "all" ? "Alle" : a === "shex" ? "sheX" : "SYN"}
               </button>
             ))}
+          </div>
+          <div
+            className="inline-flex rounded-lg border border-border bg-secondary/40 p-0.5"
+            title="Steckbrief-Status filtern"
+          >
+            {(["all", "filled", "empty"] as const).map((s) => {
+              const count =
+                s === "all"
+                  ? models.length
+                  : s === "filled"
+                    ? models.filter((m) => filledProfileIds.has(m.id)).length
+                    : models.filter((m) => !filledProfileIds.has(m.id)).length;
+              const label =
+                s === "all" ? "Steckbrief" : s === "filled" ? "✓ Vorhanden" : "✗ Fehlt";
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setSteckbriefFilter(s)}
+                  className={cn(
+                    "px-2.5 py-1 rounded-md text-[11px] font-semibold tracking-wider transition-colors flex items-center gap-1",
+                    steckbriefFilter === s
+                      ? s === "filled"
+                        ? "bg-emerald-500/20 text-emerald-300"
+                        : s === "empty"
+                          ? "bg-rose-500/20 text-rose-300"
+                          : "bg-accent text-accent-foreground"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {label}
+                  <span className="tabular-nums opacity-70">{count}</span>
+                </button>
+              );
+            })}
           </div>
           <Button
             type="button"
