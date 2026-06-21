@@ -424,7 +424,8 @@ Deno.serve(async (req) => {
 
     const body = await req.json();
     const modelId: string | undefined = body?.model_id;
-    const mode: "drive" | "upload" = body?.mode === "upload" ? "upload" : "drive";
+    const mode: "drive" | "upload" | "image" =
+      body?.mode === "upload" ? "upload" : body?.mode === "image" ? "image" : "drive";
     if (!modelId) {
       return new Response(JSON.stringify({ error: "model_id required" }), {
         status: 400,
@@ -439,6 +440,7 @@ Deno.serve(async (req) => {
 
     let rawText = "";
     let sourceLabel = "";
+    let fields: Record<string, string> | null = null;
 
     if (mode === "drive") {
       const { data: model } = await admin
@@ -473,6 +475,22 @@ Deno.serve(async (req) => {
           ? await pdfToText(bytes)
           : await docxToText(bytes);
       sourceLabel = `Drive: ${file.name}`;
+    } else if (mode === "image") {
+      const b64 = body?.file_base64 as string | undefined;
+      if (!b64) {
+        return new Response(JSON.stringify({ error: "file_base64 required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const fileName = (body?.file_name as string | undefined) || "";
+      const dataUrlMime = b64.match(/^data:([^;,]+)[;,]/)?.[1] || "";
+      const cleanB64 = b64.replace(/^data:[^,]+,/, "");
+      const mime = dataUrlMime || (/\.png$/i.test(fileName) ? "image/png" : "image/jpeg");
+      const { data: model } = await admin
+        .from("models").select("name").eq("id", modelId).maybeSingle();
+      fields = await aiInventProfileFromImage(cleanB64, mime, (model as any)?.name || "");
+      sourceLabel = `KI aus Bild: ${fileName || "Upload"}`;
     } else {
       const b64 = body?.file_base64 as string | undefined;
       if (!b64) {
@@ -497,7 +515,7 @@ Deno.serve(async (req) => {
     }
 
 
-    if (!rawText || rawText.length < 30) {
+    if (mode !== "image" && (!rawText || rawText.length < 30)) {
       return new Response(
         JSON.stringify({
           error: "Die Datei konnte nicht gelesen werden oder ist leer.",
@@ -506,7 +524,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const fields = await aiExtractProfile(rawText);
+    if (!fields) fields = await aiExtractProfile(rawText);
     const nonEmpty = Object.values(fields).filter((v) => v && v.length > 0).length;
     if (nonEmpty === 0) {
       return new Response(
