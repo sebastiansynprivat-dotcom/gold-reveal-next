@@ -14,6 +14,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Plus, Trash2, Users, CalendarDays, Pencil, X, CheckCircle2, Link as LinkIcon, MessageSquare, ThumbsDown, ExternalLink, ChevronDown, ChevronRight, Copy } from "lucide-react";
 import logo from "@/assets/logo.png";
 import GoldParticles from "@/components/GoldParticles";
+import MarketerListsAdmin from "@/components/admin/MarketerListsAdmin";
 
 // Item shape: { title, reference_url, notes }. Legacy items may carry `type` — ignored on render.
 type ContentItem = { title: string; reference_url?: string; notes?: string; type?: string };
