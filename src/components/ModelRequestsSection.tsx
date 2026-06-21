@@ -177,11 +177,11 @@ export default function ModelRequestsSection({ modelId, language = "de" }: Props
     const { data } = await supabase
       .from("model_requests")
       .select(
-        "id, description, price, customer_name, request_type, attachments, created_at, forwarded_to_model_at, model_status, model_completed_at, content_link, admin_comment"
+        "id, description, price, customer_name, request_type, attachments, created_at, forwarded_to_model_at, model_status, model_completed_at, content_link, admin_comment, status"
       )
       .eq("model_id", modelId)
       .order("created_at", { ascending: false })
-      .limit(50);
+      .limit(200);
     setRequests((data || []) as any);
     setLoading(false);
   };
