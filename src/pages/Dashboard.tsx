@@ -1135,9 +1135,20 @@ export default function Dashboard() {
                       onSubmitted={loadMyRequests}
                       editData={editRequest}
                       onEditClear={() => setEditRequest(null)}
-                      modelLanguage={activeModels[0]?.language || "de"}
+                      modelLanguage={
+                        // When the chatter has exactly ONE model, that model's language is
+                        // the source of truth — even if it's inactive. Otherwise prefer the
+                        // first active model, falling back to the first assigned model.
+                        (allModels.length === 1
+                          ? allModels[0].language
+                          : activeModels[0]?.language || allModels[0]?.language) || "de"
+                      }
                       availablePlatforms={Array.from(
-                        new Set(activeModels.flatMap((m) => Array.from(m.platforms))),
+                        new Set(
+                          (activeModels.length > 0 ? activeModels : allModels).flatMap((m) =>
+                            Array.from(m.platforms),
+                          ),
+                        ),
                       )}
                       availableModels={allModels.map((m) => ({
                         id: m.id,
