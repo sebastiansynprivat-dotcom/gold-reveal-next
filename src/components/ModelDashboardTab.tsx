@@ -1795,18 +1795,33 @@ export default function ModelDashboardTab() {
             ))}
           </div>
           <div
-            className="inline-flex rounded-lg border border-border bg-secondary/40 p-0.5"
+            className="inline-flex rounded-lg border border-border bg-secondary/40 p-0.5 flex-wrap"
             title="Steckbrief-Status filtern"
           >
-            {(["all", "filled", "empty"] as const).map((s) => {
+            {(["all", "filled", "empty", "confirmed", "unconfirmed"] as const).map((s) => {
               const count =
                 s === "all"
                   ? models.length
                   : s === "filled"
                     ? models.filter((m) => filledProfileIds.has(m.id)).length
-                    : models.filter((m) => !filledProfileIds.has(m.id)).length;
+                    : s === "empty"
+                      ? models.filter((m) => !filledProfileIds.has(m.id)).length
+                      : s === "confirmed"
+                        ? models.filter((m) => profileStatusOf(m.id) === "confirmed").length
+                        : models.filter((m) => {
+                            const st = profileStatusOf(m.id);
+                            return st === "pending_new" || st === "pending_change";
+                          }).length;
               const label =
-                s === "all" ? "Steckbrief" : s === "filled" ? "✓ Vorhanden" : "✗ Fehlt";
+                s === "all"
+                  ? "Steckbrief"
+                  : s === "filled"
+                    ? "✓ Vorhanden"
+                    : s === "empty"
+                      ? "✗ Fehlt"
+                      : s === "confirmed"
+                        ? "✓ Bestätigt"
+                        : "⏳ Unbestätigt";
               return (
                 <button
                   key={s}
@@ -1815,11 +1830,13 @@ export default function ModelDashboardTab() {
                   className={cn(
                     "px-2.5 py-1 rounded-md text-[11px] font-semibold tracking-wider transition-colors flex items-center gap-1",
                     steckbriefFilter === s
-                      ? s === "filled"
+                      ? s === "filled" || s === "confirmed"
                         ? "bg-emerald-500/20 text-emerald-300"
                         : s === "empty"
                           ? "bg-rose-500/20 text-rose-300"
-                          : "bg-accent text-accent-foreground"
+                          : s === "unconfirmed"
+                            ? "bg-amber-500/20 text-amber-300"
+                            : "bg-accent text-accent-foreground"
                       : "text-muted-foreground hover:text-foreground",
                   )}
                 >
@@ -1828,6 +1845,21 @@ export default function ModelDashboardTab() {
                 </button>
               );
             })}
+          </div>
+          <div className="inline-flex rounded-lg border border-border bg-secondary/40 p-0.5" title="Sortierung">
+            {(["name", "newest"] as const).map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setSortMode(s)}
+                className={cn(
+                  "px-2.5 py-1 rounded-md text-[11px] font-semibold tracking-wider transition-colors",
+                  sortMode === s ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {s === "name" ? "A–Z" : "Neueste"}
+              </button>
+            ))}
           </div>
           <Button
             type="button"
