@@ -313,7 +313,8 @@ export default function ModelDashboardTab() {
   const [loading, setLoading] = useState(true);
   const [showDuplicatesOnly, setShowDuplicatesOnly] = useState(false);
   const [agencyFilter, setAgencyFilter] = useState<"all" | "shex" | "syn">("all");
-  const [steckbriefFilter, setSteckbriefFilter] = useState<"all" | "filled" | "empty">("all");
+  const [steckbriefFilter, setSteckbriefFilter] = useState<"all" | "filled" | "empty" | "confirmed" | "unconfirmed">("all");
+  const [sortMode, setSortMode] = useState<"name" | "newest">("name");
   const [agencyBilling, setAgencyBilling] = useState<Record<string, boolean>>({ shex: false, syn: false });
 
   // Load global per-agency billing-in-progress flags
