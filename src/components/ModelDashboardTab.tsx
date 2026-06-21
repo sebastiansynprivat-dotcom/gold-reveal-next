@@ -2136,13 +2136,17 @@ export default function ModelDashboardTab() {
                 const isFilled = filledFields > 0;
                 const submittedAt = (profile as any)?.submitted_at as string | null | undefined;
                 const confirmedAt = (profile as any)?.confirmed_at as string | null | undefined;
-                const status: "confirmed" | "pending" | "draft" | "empty" = confirmedAt
+                const approvedSnapshot = (profile as any)?.approved_snapshot as any;
+                const hasSnapshot = !!approvedSnapshot;
+                const status: "confirmed" | "pending" | "pending_change" | "draft" | "empty" = confirmedAt
                   ? "confirmed"
-                  : submittedAt
-                    ? "pending"
-                    : isFilled
-                      ? "draft"
-                      : "empty";
+                  : hasSnapshot
+                    ? "pending_change"
+                    : submittedAt
+                      ? "pending"
+                      : isFilled
+                        ? "draft"
+                        : "empty";
                 const username = selectedModel?.username?.trim() || "";
 
 
@@ -2162,7 +2166,40 @@ export default function ModelDashboardTab() {
                     return;
                   }
                   setModelProfile({ ...(profile as any), confirmed_at: nowIso, confirmed_by: u?.user?.id, approved_snapshot: snapshot } as any);
+                  setProfileMeta((prev) => {
+                    const next = new Map(prev);
+                    const cur = next.get(selectedModelId) || { confirmed_at: null, submitted_at: null, last_change_at: null, has_snapshot: false };
+                    next.set(selectedModelId, { ...cur, confirmed_at: nowIso, has_snapshot: true });
+                    return next;
+                  });
                   toast.success("Steckbrief bestätigt — jetzt im Chatter-Dashboard sichtbar");
+                };
+
+                const rejectChange = async () => {
+                  if (!profile || !selectedModelId || !approvedSnapshot) return;
+                  const { data: u } = await supabase.auth.getUser();
+                  const nowIso = new Date().toISOString();
+                  const restored = { ...approvedSnapshot, model_id: selectedModelId };
+                  const { error } = await (supabase.from("model_profiles" as any) as any)
+                    .update({
+                      ...restored,
+                      confirmed_at: nowIso,
+                      confirmed_by: u?.user?.id,
+                      approved_snapshot: approvedSnapshot,
+                      last_change_at: nowIso,
+                    })
+                    .eq("model_id", selectedModelId);
+                  if (error) {
+                    toast.error("Ablehnung fehlgeschlagen");
+                    return;
+                  }
+                  setModelProfile({ ...restored, confirmed_at: nowIso, approved_snapshot: approvedSnapshot, last_change_at: nowIso } as any);
+                  setProfileMeta((prev) => {
+                    const next = new Map(prev);
+                    next.set(selectedModelId, { confirmed_at: nowIso, submitted_at: (restored as any).submitted_at || null, last_change_at: nowIso, has_snapshot: true });
+                    return next;
+                  });
+                  toast.success("Änderung abgelehnt — vorheriger Stand wiederhergestellt");
                 };
 
                 const revokeConfirmation = async () => {
@@ -2175,6 +2212,12 @@ export default function ModelDashboardTab() {
                     return;
                   }
                   setModelProfile({ ...(profile as any), confirmed_at: null, confirmed_by: null } as any);
+                  setProfileMeta((prev) => {
+                    const next = new Map(prev);
+                    const cur = next.get(selectedModelId);
+                    if (cur) next.set(selectedModelId, { ...cur, confirmed_at: null });
+                    return next;
+                  });
                   toast.success("Bestätigung zurückgezogen");
                 };
 
