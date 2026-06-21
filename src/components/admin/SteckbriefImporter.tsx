@@ -206,20 +206,6 @@ export default function SteckbriefImporter({
               </motion.p>
             )}
           </AnimatePresence>
-            {busy && (
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex items-center gap-1.5 text-[10px] text-accent"
-              >
-                <FileText className="h-3 w-3" />
-                {busy === "drive"
-                  ? "Datei aus Drive ziehen & KI liest aus…"
-                  : "Datei wird gelesen & KI extrahiert die Felder…"}
-              </motion.p>
-            )}
-          </AnimatePresence>
         </div>
       </div>
     </motion.div>
