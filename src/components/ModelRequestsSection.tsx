@@ -19,6 +19,8 @@ import {
   Link2,
   XCircle,
   Layers,
+  History,
+  ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
