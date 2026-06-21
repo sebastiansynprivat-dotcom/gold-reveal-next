@@ -220,6 +220,7 @@ export default function ModelHomeDashboard({
   const [revenueByAccount, setRevenueByAccount] = useState<Record<string, number>>({});
   const [lifetimeByAccount, setLifetimeByAccount] = useState<Record<string, number>>({});
   const [monthRevenue, setMonthRevenue] = useState<number>(0);
+  const [historicalMonthlyAvg, setHistoricalMonthlyAvg] = useState<number>(0);
   const [requests, setRequests] = useState<any[]>([]);
   const [creditNotes, setCreditNotes] = useState<any[]>([]);
   const [payoutSnapshots, setPayoutSnapshots] = useState<Record<string, any[]>>({});
@@ -316,6 +317,7 @@ export default function ModelHomeDashboard({
           setRevenueByAccount({});
           setLifetimeByAccount({});
           setMonthRevenue(0);
+          setHistoricalMonthlyAvg(0);
           setLoading(false);
         }
         return;
@@ -343,10 +345,23 @@ export default function ModelHomeDashboard({
         .gte("date", monthFrom)
         .lte("date", monthTo);
 
-      const [{ data: rev }, { data: lifetimeRev }, { data: monthRev }] = await Promise.all([
+      // Pull the last 3 fully-completed calendar months for a historical baseline.
+      const firstOfThisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+      const histFrom = new Date(firstOfThisMonth);
+      histFrom.setMonth(histFrom.getMonth() - 3);
+      const histTo = new Date(firstOfThisMonth);
+      histTo.setDate(0); // last day of previous month
+      const historyQ = (supabase.from("accounts_data") as any)
+        .select("date, total")
+        .in("account_id", accountIds)
+        .gte("date", fmt(histFrom))
+        .lte("date", fmt(histTo));
+
+      const [{ data: rev }, { data: lifetimeRev }, { data: monthRev }, { data: histRev }] = await Promise.all([
         periodQ,
         lifetimeQ,
         monthQ,
+        historyQ,
       ]);
 
       const byAccount: Record<string, number> = {};
@@ -359,10 +374,22 @@ export default function ModelHomeDashboard({
       });
       const monthSum = (monthRev || []).reduce((s: number, r: any) => s + Number(r.total || 0), 0);
 
+      // Group historical totals by YYYY-MM, then average across months that have any data.
+      const histByMonth: Record<string, number> = {};
+      (histRev || []).forEach((r: any) => {
+        const key = String(r.date).slice(0, 7);
+        histByMonth[key] = (histByMonth[key] || 0) + Number(r.total || 0);
+      });
+      const histValues = Object.values(histByMonth).filter((v) => v > 0);
+      const histAvg = histValues.length > 0
+        ? histValues.reduce((s, v) => s + v, 0) / histValues.length
+        : 0;
+
       if (!cancelled) {
         setRevenueByAccount(byAccount);
         setLifetimeByAccount(lifetimeAcc);
         setMonthRevenue(monthSum);
+        setHistoricalMonthlyAvg(histAvg);
         setLoading(false);
       }
     })();
@@ -550,11 +577,22 @@ export default function ModelHomeDashboard({
         let est = maloum + brezzels + fourbased;
         // Fallback: if payout_revenue has no data yet for the current
         // in-progress month, derive an estimate from the live accounts_data
-        // revenue × the model's commission percentage. Ensures the model
-        // never sees an empty estimation while data is still syncing.
+        // revenue × the model's commission percentage. Uses the same smart
+        // blended monthly projection (history × run-rate) so the payout
+        // forecast isn't anchored down to almost zero in the first days of
+        // the month.
         if (est <= 0 && year === curYear && month === curMonth) {
           const pct = Number(commissionPct || platformPcts.fallback || 0) / 100;
-          est = Number(monthRevenue || 0) * pct;
+          const now2 = new Date();
+          const dom = now2.getDate();
+          const tdays = new Date(now2.getFullYear(), now2.getMonth() + 1, 0).getDate();
+          const linear = dom > 0 ? (Number(monthRevenue || 0) / dom) * tdays : 0;
+          const weight = Math.min(1, dom / 14);
+          const blended = historicalMonthlyAvg > 0
+            ? linear * weight + historicalMonthlyAvg * (1 - weight)
+            : linear;
+          const projected = Math.max(blended, linear, Number(monthRevenue || 0));
+          est = projected * pct;
         }
         out[keyOf(year, month)] = est;
       }
@@ -562,7 +600,7 @@ export default function ModelHomeDashboard({
       if (!cancelled) setEstimatedPayouts(out);
     })();
     return () => { cancelled = true; };
-  }, [modelId, inProgressMonths, platformPcts, monthRevenue, commissionPct]);
+  }, [modelId, inProgressMonths, platformPcts, monthRevenue, historicalMonthlyAvg, commissionPct]);
 
 
 
@@ -693,7 +731,20 @@ export default function ModelHomeDashboard({
   const now = new Date();
   const dayOfMonth = now.getDate();
   const totalDays = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-  const projectedMonth = dayOfMonth > 0 ? Math.round((monthRevenue / dayOfMonth) * totalDays) : 0;
+  // Smarter monthly forecast:
+  //   • Early in the month the run-rate (monthRevenue / dayOfMonth × totalDays) is
+  //     noisy and almost always too low → blend it with the 3-month historical
+  //     average, weighted by how far into the month we are.
+  //   • After ~day 14 we fully trust the live run-rate.
+  //   • If the live pace already beats history we surface the higher number so
+  //     a great month is reflected immediately, not anchored down by history.
+  //   • The forecast can never fall below what has already been earned.
+  const linearProjection = dayOfMonth > 0 ? (monthRevenue / dayOfMonth) * totalDays : 0;
+  const runRateWeight = Math.min(1, dayOfMonth / 14);
+  const blendedProjection = historicalMonthlyAvg > 0
+    ? linearProjection * runRateWeight + historicalMonthlyAvg * (1 - runRateWeight)
+    : linearProjection;
+  const projectedMonth = Math.round(Math.max(blendedProjection, linearProjection, monthRevenue));
 
   const copyValue = async (key: string, value: string) => {
     try {
