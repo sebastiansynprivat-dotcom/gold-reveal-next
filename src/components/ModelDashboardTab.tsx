@@ -3559,16 +3559,30 @@ export default function ModelDashboardTab() {
                                         />
                                       </div>
                                     </div>
-                                    <div className="space-y-1">
-                                      <Label className="text-[10px] text-muted-foreground">Domain</Label>
-                                      <Input
-                                        value={editAccountData.account_domain}
-                                        onChange={(e) =>
-                                          setEditAccountData((prev) => ({ ...prev, account_domain: e.target.value }))
-                                        }
-                                        className="bg-secondary/40 border-border/50 text-xs h-8"
-                                      />
+                                    <div className="grid grid-cols-2 gap-2">
+                                      <div className="space-y-1">
+                                        <Label className="text-[10px] text-muted-foreground">Username *</Label>
+                                        <Input
+                                          value={editAccountData.username}
+                                          onChange={(e) =>
+                                            setEditAccountData((prev) => ({ ...prev, username: e.target.value }))
+                                          }
+                                          placeholder="@username"
+                                          className="bg-secondary/40 border-border/50 text-xs h-8"
+                                        />
+                                      </div>
+                                      <div className="space-y-1">
+                                        <Label className="text-[10px] text-muted-foreground">Domain</Label>
+                                        <Input
+                                          value={editAccountData.account_domain}
+                                          onChange={(e) =>
+                                            setEditAccountData((prev) => ({ ...prev, account_domain: e.target.value }))
+                                          }
+                                          className="bg-secondary/40 border-border/50 text-xs h-8"
+                                        />
+                                      </div>
                                     </div>
+
                                     <div className="flex gap-2">
                                       <Button
                                         size="sm"
@@ -3610,11 +3624,17 @@ export default function ModelDashboardTab() {
                                             </button>
                                           )}
                                         </div>
+                                        {acc.username && (
+                                          <p className="text-[10px] text-accent/90 font-mono truncate">
+                                            @{acc.username.replace(/^@/, "")}
+                                          </p>
+                                        )}
                                         {acc.account_domain && (
                                           <p className="text-[10px] text-muted-foreground truncate">
                                             {acc.account_domain}
                                           </p>
                                         )}
+
                                         {acc.account_password && (
                                           <div className="flex items-center gap-1.5 group/pw">
                                             <p className="text-[10px] text-muted-foreground font-mono">
