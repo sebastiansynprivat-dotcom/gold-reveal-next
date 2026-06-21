@@ -297,8 +297,9 @@ export default function ModelHomeDashboard({
     let cancelled = false;
     (async () => {
       const { data } = await (supabase.from("accounts") as any)
-        .select("id, platform, account_email, account_password, account_domain, assigned_to")
+        .select("id, platform, account_email, account_password, account_domain, username, assigned_to")
         .eq("model_id", modelId);
+
       if (!cancelled) setAccounts(data || []);
     })();
     return () => { cancelled = true; };
@@ -988,6 +989,24 @@ export default function ModelHomeDashboard({
                     />
                   </CollapsibleTrigger>
                   <CollapsibleContent className="px-4 pb-4 space-y-2 border-t border-border/30 pt-3">
+                    {/* Username */}
+                    {a.username && (
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Username</p>
+                          <p className="text-xs text-accent font-mono truncate">@{String(a.username).replace(/^@/, "")}</p>
+                        </div>
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7 shrink-0"
+                          onClick={() => copyValue(`username-${a.id}`, String(a.username).replace(/^@/, ""))}
+                        >
+                          {copiedKey === `username-${a.id}` ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+                        </Button>
+                      </div>
+                    )}
                     {/* Email */}
                     <div className="flex items-center gap-2">
                       <div className="flex-1 min-w-0">
@@ -1006,6 +1025,7 @@ export default function ModelHomeDashboard({
                         </Button>
                       )}
                     </div>
+
                     {/* Password */}
                     <div className="flex items-center gap-2">
                       <div className="flex-1 min-w-0">

@@ -13,6 +13,8 @@ const ALLOWED = new Set([
   "account_email",
   "account_password",
   "account_domain",
+  "username",
+
   "platform",
   "folder_name",
   "subfolder_name",
