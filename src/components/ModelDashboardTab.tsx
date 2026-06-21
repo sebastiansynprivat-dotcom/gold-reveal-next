@@ -4493,21 +4493,9 @@ export default function ModelDashboardTab() {
                                   }))
                                 }
                                 placeholder="••••••••"
-                              className="bg-secondary/40 border-border/50 text-xs h-8"
-                            />
-                          </div>
-                          <label className="flex items-center gap-2 pt-1 cursor-pointer">
-                            <Checkbox
-                              checked={!!entry.campaign}
-                              onCheckedChange={(v) =>
-                                setNewAccounts((prev) => ({
-                                  ...prev,
-                                  [platform]: { ...prev[platform], campaign: !!v },
-                                }))
-                              }
-                            />
-                            <span className="text-[10px] text-muted-foreground">Campaign</span>
-                          </label>
+                                className="bg-secondary/40 border-border/50 text-xs h-8"
+                              />
+                            </div>
                           </div>
                           <div className="grid grid-cols-2 gap-2">
                             <div className="space-y-1">
@@ -4533,12 +4521,25 @@ export default function ModelDashboardTab() {
                                     ...prev,
                                     [platform]: { ...prev[platform], account_domain: e.target.value },
                                   }))
-
-                              }
-                              className="bg-secondary/40 border-border/50 text-xs h-8"
-                            />
+                                }
+                                className="bg-secondary/40 border-border/50 text-xs h-8"
+                              />
+                            </div>
                           </div>
+                          <label className="flex items-center gap-2 pt-1 cursor-pointer">
+                            <Checkbox
+                              checked={!!entry.campaign}
+                              onCheckedChange={(v) =>
+                                setNewAccounts((prev) => ({
+                                  ...prev,
+                                  [platform]: { ...prev[platform], campaign: !!v },
+                                }))
+                              }
+                            />
+                            <span className="text-[10px] text-muted-foreground">Campaign</span>
+                          </label>
                         </div>
+
                       </motion.div>
                     )}
                   </AnimatePresence>
