@@ -2309,14 +2309,24 @@ export default function ModelDashboardTab() {
                         <Eye className="h-3 w-3" />
                         Als Model ansehen
                       </Button>
-                      {status === "pending" && (
+                      {(status === "pending" || status === "pending_change") && (
                         <Button
                           size="sm"
                           onClick={confirmProfile}
                           className="text-xs gap-1.5 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-[0_0_12px_-2px_hsl(142_76%_45%/0.6)] hover:scale-[1.02] transition-all"
                         >
                           <ShieldCheck className="h-3 w-3" />
-                          Steckbrief bestätigen
+                          {status === "pending_change" ? "Änderung freigeben" : "Steckbrief bestätigen"}
+                        </Button>
+                      )}
+                      {status === "pending_change" && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={rejectChange}
+                          className="text-xs gap-1.5 border-rose-500/40 text-rose-300 hover:bg-rose-500/10"
+                        >
+                          Änderung ablehnen
                         </Button>
                       )}
                       {status === "confirmed" && (
