@@ -123,7 +123,7 @@ export default function SteckbriefImporter({
               Steckbrief automatisch importieren
             </p>
             <p className="text-[10px] text-muted-foreground leading-relaxed">
-              Zieht die Felder aus dem Word-Steckbrief und überschreibt den bestehenden Steckbrief.
+              Felder aus Word/PDF importieren — oder per Foto durch KI einen passenden Fantasie-Steckbrief generieren lassen.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
