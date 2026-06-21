@@ -19,6 +19,8 @@ import {
   Link2,
   XCircle,
   Layers,
+  History,
+  ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -36,6 +38,7 @@ interface ModelRequest {
   model_completed_at: string | null;
   content_link: string | null;
   admin_comment: string | null;
+  status: string | null;
 }
 
 interface Props {
@@ -73,6 +76,10 @@ const COPY = {
     confirmReject: "Anfrage wirklich ablehnen?",
     save: "Speichern",
     cancel: "Abbrechen",
+    historyTitle: "Verlauf",
+    historyEmpty: "Noch keine erledigten Anfragen.",
+    historyShow: "Verlauf anzeigen",
+    historyHide: "Verlauf ausblenden",
   },
   en: {
     title: "Custom requests",
@@ -103,6 +110,10 @@ const COPY = {
     confirmReject: "Really reject this request?",
     save: "Save",
     cancel: "Cancel",
+    historyTitle: "History",
+    historyEmpty: "No completed requests yet.",
+    historyShow: "Show history",
+    historyHide: "Hide history",
   },
 } as const;
 
@@ -159,6 +170,7 @@ export default function ModelRequestsSection({ modelId, language = "de" }: Props
   const [rejectText, setRejectText] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [burst, setBurst] = useState<BurstKey | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
   const lastBurstRef = useRef<{ key: BurstKey; ts: number } | null>(null);
 
   const load = async () => {
@@ -166,11 +178,11 @@ export default function ModelRequestsSection({ modelId, language = "de" }: Props
     const { data } = await supabase
       .from("model_requests")
       .select(
-        "id, description, price, customer_name, request_type, attachments, created_at, forwarded_to_model_at, model_status, model_completed_at, content_link, admin_comment"
+        "id, description, price, customer_name, request_type, attachments, created_at, forwarded_to_model_at, model_status, model_completed_at, content_link, admin_comment, status"
       )
       .eq("model_id", modelId)
       .order("created_at", { ascending: false })
-      .limit(50);
+      .limit(200);
     setRequests((data || []) as any);
     setLoading(false);
   };
@@ -191,9 +203,16 @@ export default function ModelRequestsSection({ modelId, language = "de" }: Props
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modelId]);
 
-  const isClosed = (r: ModelRequest) => r.model_status === "done" || r.model_status === "rejected";
+  const isClosed = (r: ModelRequest) =>
+    r.model_status === "done" || r.model_status === "rejected" || r.status === "done";
   const open = requests.filter((r) => !isClosed(r));
-  const closed = requests.filter(isClosed);
+  const closed = requests
+    .filter(isClosed)
+    .sort((a, b) => {
+      const ta = new Date(a.model_completed_at || a.created_at).getTime();
+      const tb = new Date(b.model_completed_at || b.created_at).getTime();
+      return tb - ta;
+    });
 
   const triggerBurst = (key: BurstKey) => {
     const prev = lastBurstRef.current;
@@ -388,9 +407,15 @@ export default function ModelRequestsSection({ modelId, language = "de" }: Props
 
       {open.length === 0 && closed.length === 0 ? (
         <p className="text-xs text-muted-foreground leading-relaxed">{copy.none}</p>
+      ) : open.length === 0 ? (
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          {lang === "en"
+            ? "All caught up — no open requests right now."
+            : "Alles erledigt – aktuell keine offenen Anfragen."}
+        </p>
       ) : (
         <div className="space-y-3">
-          {[...open, ...closed.slice(0, 3)].map((req) => {
+          {open.map((req) => {
             const isDone = req.model_status === "done";
             const isRejected = req.model_status === "rejected";
             const closedReq = isDone || isRejected;
@@ -607,6 +632,115 @@ export default function ModelRequestsSection({ modelId, language = "de" }: Props
           })}
         </div>
       )}
+
+      {/* History */}
+      {closed.length > 0 && (
+        <div className="pt-2 border-t border-border/30">
+          <button
+            type="button"
+            onClick={() => setShowHistory((v) => !v)}
+            className="w-full flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors py-2"
+          >
+            <History className="h-3.5 w-3.5" />
+            <span>{copy.historyTitle}</span>
+            <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted/30 tabular-nums">
+              {closed.length}
+            </span>
+            <ChevronDown
+              className={cn(
+                "h-3.5 w-3.5 ml-auto transition-transform",
+                showHistory && "rotate-180"
+              )}
+            />
+          </button>
+          <AnimatePresence initial={false}>
+            {showHistory && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.25 }}
+                className="overflow-hidden"
+              >
+                <div className="space-y-2 pt-2">
+                  {closed.map((req) => {
+                    const isDone = req.model_status === "done" || req.status === "done";
+                    const isRejected = req.model_status === "rejected";
+                    const { platform, cleaned } = parsePlatform(req.description);
+                    const ps = platform ? platformStyle(platform) : null;
+                    return (
+                      <div
+                        key={req.id}
+                        className={cn(
+                          "rounded-lg p-3 border bg-background/20 space-y-1.5",
+                          isRejected
+                            ? "border-rose-500/20"
+                            : "border-emerald-500/20"
+                        )}
+                      >
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {platform && ps && (
+                            <span
+                              className={cn(
+                                "inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md border",
+                                ps.bg, ps.text, ps.border
+                              )}
+                            >
+                              {platform}
+                            </span>
+                          )}
+                          <span
+                            className={cn(
+                              "inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full border",
+                              isRejected
+                                ? "bg-rose-500/15 text-rose-300 border-rose-500/30"
+                                : "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
+                            )}
+                          >
+                            {isRejected ? (
+                              <><XCircle className="h-2.5 w-2.5" /> {copy.statusRejected}</>
+                            ) : (
+                              <><CheckCircle2 className="h-2.5 w-2.5" /> {copy.statusDone}</>
+                            )}
+                          </span>
+                          {req.price != null && (
+                            <span className="text-[10px] text-emerald-400/80 tabular-nums">
+                              {Number(req.price).toFixed(2)} €
+                            </span>
+                          )}
+                          <span className="ml-auto text-[10px] text-muted-foreground tabular-nums">
+                            {fmtDate(req.model_completed_at || req.created_at)}
+                          </span>
+                        </div>
+                        <p className="text-xs text-foreground/85 leading-snug line-clamp-3 whitespace-pre-wrap break-words">
+                          {cleaned}
+                        </p>
+                        {req.customer_name && (
+                          <p className="text-[10px] text-muted-foreground">
+                            {copy.customer}: {req.customer_name}
+                          </p>
+                        )}
+                        {isDone && req.content_link && (
+                          <a
+                            href={req.content_link}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-[11px] text-emerald-300 hover:text-emerald-200 underline underline-offset-2 break-all"
+                          >
+                            <Link2 className="h-3 w-3 shrink-0" />
+                            {req.content_link}
+                          </a>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
+
 
       {/* Speed-Streak Burst overlay */}
       <AnimatePresence>
