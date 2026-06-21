@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Cloud, Upload, Loader2, FileText, Sparkles } from "lucide-react";
+import { Cloud, Upload, Loader2, FileText, Sparkles, Image as ImageIcon, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -16,12 +16,13 @@ export default function SteckbriefImporter({
   hasDriveFolder,
   onImported,
 }: Props) {
-  const [busy, setBusy] = useState<null | "drive" | "upload">(null);
+  const [busy, setBusy] = useState<null | "drive" | "upload" | "image">(null);
   const fileRef = useRef<HTMLInputElement | null>(null);
+  const imageRef = useRef<HTMLInputElement | null>(null);
 
   const callImport = async (
     body: Record<string, unknown>,
-    mode: "drive" | "upload"
+    mode: "drive" | "upload" | "image"
   ) => {
     setBusy(mode);
     try {
@@ -78,6 +79,34 @@ export default function SteckbriefImporter({
     );
   };
 
+  const onPickImage = () => imageRef.current?.click();
+
+  const onImageChosen = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    e.target.value = "";
+    if (!f) return;
+    if (!f.type.startsWith("image/")) {
+      toast.error("Bitte ein Bild wählen (JPG, PNG, WEBP)");
+      return;
+    }
+    if (f.size > 8 * 1024 * 1024) {
+      toast.error("Bild ist größer als 8 MB");
+      return;
+    }
+    const buf = await f.arrayBuffer();
+    const bytes = new Uint8Array(buf);
+    let bin = "";
+    const chunk = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunk) {
+      bin += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk) as unknown as number[]);
+    }
+    const b64 = btoa(bin);
+    await callImport(
+      { model_id: modelId, mode: "image", file_base64: `data:${f.type};base64,${b64}`, file_name: f.name },
+      "image"
+    );
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -4 }}
@@ -94,7 +123,7 @@ export default function SteckbriefImporter({
               Steckbrief automatisch importieren
             </p>
             <p className="text-[10px] text-muted-foreground leading-relaxed">
-              Zieht die Felder aus dem Word-Steckbrief und überschreibt den bestehenden Steckbrief.
+              Felder aus Word/PDF importieren — oder per Foto durch KI einen passenden Fantasie-Steckbrief generieren lassen.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -137,6 +166,28 @@ export default function SteckbriefImporter({
               onChange={onFileChosen}
               className="hidden"
             />
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onPickImage}
+              disabled={busy !== null}
+              className="text-[11px] h-7 gap-1.5 border-fuchsia-400/40 text-fuchsia-300 hover:bg-fuchsia-400/10"
+              title="KI generiert einen passenden Fantasie-Steckbrief basierend auf einem Foto des Models"
+            >
+              {busy === "image" ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <Wand2 className="h-3 w-3" />
+              )}
+              KI aus Foto generieren
+            </Button>
+            <input
+              ref={imageRef}
+              type="file"
+              accept="image/*"
+              onChange={onImageChosen}
+              className="hidden"
+            />
           </div>
           <AnimatePresence>
             {busy && (
@@ -146,10 +197,12 @@ export default function SteckbriefImporter({
                 exit={{ opacity: 0 }}
                 className="flex items-center gap-1.5 text-[10px] text-accent"
               >
-                <FileText className="h-3 w-3" />
+                {busy === "image" ? <ImageIcon className="h-3 w-3" /> : <FileText className="h-3 w-3" />}
                 {busy === "drive"
                   ? "Datei aus Drive ziehen & KI liest aus…"
-                  : "Datei wird gelesen & KI extrahiert die Felder…"}
+                  : busy === "image"
+                    ? "KI analysiert das Foto & erfindet den passenden Steckbrief…"
+                    : "Datei wird gelesen & KI extrahiert die Felder…"}
               </motion.p>
             )}
           </AnimatePresence>
