@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Cloud, Upload, Loader2, FileText, Sparkles } from "lucide-react";
+import { Cloud, Upload, Loader2, FileText, Sparkles, Image as ImageIcon, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
