@@ -185,32 +185,25 @@ export default function ChatterReportsTab({ chatters }: Props) {
         ...((asgByProfileRes as any).data ?? []),
       ];
 
-      // ----- accounts + models in parallel chunks -----
+      // ----- accounts in parallel chunks -----
       const accountIds = Array.from(new Set(asgRows.map((a) => a.account_id)));
       const accountChunks: string[][] = [];
       for (let i = 0; i < accountIds.length; i += 100) accountChunks.push(accountIds.slice(i, i + 100));
       const accsResults = await Promise.all(accountChunks.map((slice) =>
-        supabase.from("accounts").select("id,platform,model_id").in("id", slice)
+        supabase.from("accounts").select("id,platform,username,account_email").in("id", slice)
       ));
       if (cancelled) return;
       const platformByAccount = new Map<string, string>();
-      const modelIdByAccount = new Map<string, string>();
+      const displayByAccount = new Map<string, string>();
       for (const { data: accs } of accsResults) {
         (accs ?? []).forEach((a: any) => {
           platformByAccount.set(a.id, a.platform || "Unknown");
-          if (a.model_id) modelIdByAccount.set(a.id, a.model_id);
+          const display =
+            (a.username && String(a.username).trim()) ||
+            (a.account_email && String(a.account_email).trim()) ||
+            "";
+          if (display) displayByAccount.set(a.id, display);
         });
-      }
-      const modelIds = Array.from(new Set(Array.from(modelIdByAccount.values())));
-      const modelChunks: string[][] = [];
-      for (let i = 0; i < modelIds.length; i += 100) modelChunks.push(modelIds.slice(i, i + 100));
-      const mdlsResults = await Promise.all(modelChunks.map((slice) =>
-        supabase.from("models").select("id,name").in("id", slice)
-      ));
-      if (cancelled) return;
-      const modelNameById = new Map<string, string>();
-      for (const { data: mdls } of mdlsResults) {
-        (mdls ?? []).forEach((m: any) => modelNameById.set(m.id, m.name || ""));
       }
 
       // Resolve each assignment to a chatter (by user_id OR profile_id)
@@ -229,13 +222,10 @@ export default function ChatterReportsTab({ chatters }: Props) {
         if (!p) continue;
         if (!platformsByChatter.has(c.id)) platformsByChatter.set(c.id, new Set());
         platformsByChatter.get(c.id)!.add(p);
-        const mid = modelIdByAccount.get(a.account_id);
-        if (mid) {
-          const name = modelNameById.get(mid);
-          if (name) {
-            if (!modelsByChatter.has(c.id)) modelsByChatter.set(c.id, new Set());
-            modelsByChatter.get(c.id)!.add(name);
-          }
+        const display = displayByAccount.get(a.account_id);
+        if (display) {
+          if (!modelsByChatter.has(c.id)) modelsByChatter.set(c.id, new Set());
+          modelsByChatter.get(c.id)!.add(display);
         }
       }
 
