@@ -394,18 +394,27 @@ export default function Dashboard() {
       .then(async ({ data }) => {
         const accounts = data || [];
         const modelIds = Array.from(new Set(accounts.map((a: any) => a.model_id).filter(Boolean)));
-        const nameById: Record<string, string> = {};
+        const metaById: Record<string, { name?: string; lang?: string }> = {};
         if (modelIds.length > 0) {
           const { data: models } = await supabase
             .from("models")
-            .select("id, name")
+            .select("id, name, model_language")
             .in("id", modelIds as string[]);
           (models || []).forEach((m: any) => {
-            nameById[m.id] = m.name;
+            metaById[m.id] = { name: m.name, lang: m.model_language };
           });
         }
         setAssignedAccounts(
-          accounts.map((a: any) => ({ ...a, model_name: a.model_id ? nameById[a.model_id] : undefined })),
+          accounts.map((a: any) => {
+            const meta = a.model_id ? metaById[a.model_id] : undefined;
+            return {
+              ...a,
+              model_name: meta?.name,
+              // Prefer the models table (source of truth) over accounts.model_language,
+              // which can be stale if the model's language was changed later.
+              model_language: meta?.lang || a.model_language || "de",
+            };
+          }),
         );
       });
 
@@ -1126,9 +1135,20 @@ export default function Dashboard() {
                       onSubmitted={loadMyRequests}
                       editData={editRequest}
                       onEditClear={() => setEditRequest(null)}
-                      modelLanguage={activeModels[0]?.language || "de"}
+                      modelLanguage={
+                        // When the chatter has exactly ONE model, that model's language is
+                        // the source of truth — even if it's inactive. Otherwise prefer the
+                        // first active model, falling back to the first assigned model.
+                        (allModels.length === 1
+                          ? allModels[0].language
+                          : activeModels[0]?.language || allModels[0]?.language) || "de"
+                      }
                       availablePlatforms={Array.from(
-                        new Set(activeModels.flatMap((m) => Array.from(m.platforms))),
+                        new Set(
+                          (activeModels.length > 0 ? activeModels : allModels).flatMap((m) =>
+                            Array.from(m.platforms),
+                          ),
+                        ),
                       )}
                       availableModels={allModels.map((m) => ({
                         id: m.id,

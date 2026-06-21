@@ -62,10 +62,14 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage:
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
 
   const hasModelList = !!availableModels && availableModels.length > 0;
+  // When the chatter has exactly ONE model, that model is the source of truth for
+  // both name + language + platform — even before the auto-select effect runs.
+  const soleModel = hasModelList && availableModels!.length === 1 ? availableModels![0] : null;
   const selectedModel = hasModelList
-    ? availableModels!.find((m) => m.id === selectedModelId) || null
+    ? availableModels!.find((m) => m.id === selectedModelId) || soleModel || null
     : null;
-  const modelLanguage: "de" | "en" = selectedModel?.language || modelLanguageProp;
+  const modelLanguage: "de" | "en" =
+    selectedModel?.language || soleModel?.language || modelLanguageProp;
   const effectivePlatforms = selectedModel
     ? selectedModel.platforms
     : availablePlatforms && availablePlatforms.length > 0
