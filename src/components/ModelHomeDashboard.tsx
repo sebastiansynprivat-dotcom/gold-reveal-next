@@ -220,6 +220,7 @@ export default function ModelHomeDashboard({
   const [revenueByAccount, setRevenueByAccount] = useState<Record<string, number>>({});
   const [lifetimeByAccount, setLifetimeByAccount] = useState<Record<string, number>>({});
   const [monthRevenue, setMonthRevenue] = useState<number>(0);
+  const [historicalMonthlyAvg, setHistoricalMonthlyAvg] = useState<number>(0);
   const [requests, setRequests] = useState<any[]>([]);
   const [creditNotes, setCreditNotes] = useState<any[]>([]);
   const [payoutSnapshots, setPayoutSnapshots] = useState<Record<string, any[]>>({});
