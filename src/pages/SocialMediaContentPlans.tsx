@@ -348,12 +348,7 @@ export default function SocialMediaContentPlans() {
 
         {activeTab === "marketer" ? (
           <MarketerListsAdmin />
-        ) : (<></>)}
-
-        {activeTab === "model" && (<></>)}
-        {activeTab === "model" && (
-
-        {(() => {
+        ) : (() => {
           const filteredPlans = plans.filter((p) => p.target_type === activeTab);
           if (loading) {
             return (
