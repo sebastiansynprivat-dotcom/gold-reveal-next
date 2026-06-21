@@ -198,13 +198,34 @@ export default function ChatterReportsTab({ chatters }: Props) {
         ...((asgByProfileRes as any).data ?? []),
       ];
 
-      // ----- accounts in parallel chunks -----
+      // ----- accounts + accounts_data in parallel chunks -----
       const accountIds = Array.from(new Set(asgRows.map((a) => a.account_id)));
       const accountChunks: string[][] = [];
       for (let i = 0; i < accountIds.length; i += 100) accountChunks.push(accountIds.slice(i, i + 100));
-      const accsResults = await Promise.all(accountChunks.map((slice) =>
+      const accsP = Promise.all(accountChunks.map((slice) =>
         supabase.from("accounts").select("id,platform,username,account_email").in("id", slice)
       ));
+      const ADPAGE = 1000;
+      const accountsDataP = Promise.all(accountChunks.map(async (slice) => {
+        const collected: any[] = [];
+        let from = 0;
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+          const { data, error } = await supabase
+            .from("accounts_data")
+            .select("account_id,date,total,mass_dms,unread_chats,oldest_chat")
+            .in("account_id", slice)
+            .lte("date", selISO)
+            .order("date", { ascending: false })
+            .range(from, from + ADPAGE - 1);
+          if (error || !data || data.length === 0) break;
+          collected.push(...data);
+          if (data.length < ADPAGE) break;
+          from += ADPAGE;
+        }
+        return collected;
+      }));
+      const [accsResults, accountsDataChunks] = await Promise.all([accsP, accountsDataP]);
       if (cancelled) return;
       const platformByAccount = new Map<string, string>();
       const displayByAccount = new Map<string, string>();
@@ -219,9 +240,30 @@ export default function ChatterReportsTab({ chatters }: Props) {
         });
       }
 
+      // accounts_data by account_id
+      const accountsDataByAccount = new Map<string, AccountDataPoint[]>();
+      for (const chunk of accountsDataChunks) {
+        for (const r of chunk) {
+          const arr = accountsDataByAccount.get(r.account_id) ?? [];
+          arr.push({
+            date: r.date,
+            total: Number(r.total || 0),
+            mass_dms: Number(r.mass_dms || 0),
+            unread_chats: Number(r.unread_chats || 0),
+            oldest_chat: Number(r.oldest_chat || 0),
+          });
+          accountsDataByAccount.set(r.account_id, arr);
+        }
+      }
+      accountsDataRef.current = accountsDataByAccount;
+
       // Resolve each assignment to a chatter (by user_id OR profile_id)
       const platformsByChatter = new Map<string, Set<string>>();
       const modelsByChatter = new Map<string, Set<string>>();
+      // profileId -> platform -> model -> Set<accountId>
+      const modelAccounts = new Map<string, Map<string, Map<string, Set<string>>>>();
+      // `${profileId}|${accountId}` -> windows
+      const windows = new Map<string, AssignmentWindow[]>();
       const chatterByUser = new Map<string, any>();
       const chatterByProfile = new Map<string, any>();
       for (const c of eligible) {
@@ -239,8 +281,20 @@ export default function ChatterReportsTab({ chatters }: Props) {
         if (display) {
           if (!modelsByChatter.has(c.id)) modelsByChatter.set(c.id, new Set());
           modelsByChatter.get(c.id)!.add(display);
+          if (!modelAccounts.has(c.id)) modelAccounts.set(c.id, new Map());
+          const byPlat = modelAccounts.get(c.id)!;
+          if (!byPlat.has(p)) byPlat.set(p, new Map());
+          const byModel = byPlat.get(p)!;
+          if (!byModel.has(display)) byModel.set(display, new Set());
+          byModel.get(display)!.add(a.account_id);
+          const wkey = `${c.id}|${a.account_id}`;
+          const arr = windows.get(wkey) ?? [];
+          arr.push({ start_date: a.start_date ?? null, end_date: a.end_date ?? null });
+          windows.set(wkey, arr);
         }
       }
+      modelAccountsRef.current = modelAccounts;
+      windowsRef.current = windows;
 
       // ----- profiles_data -> map by telegram_id -----
       const dataByTelegram = new Map<string, any[]>();
