@@ -14,6 +14,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Plus, Trash2, Users, CalendarDays, Pencil, X, CheckCircle2, Link as LinkIcon, MessageSquare, ThumbsDown, ExternalLink, ChevronDown, ChevronRight, Copy } from "lucide-react";
 import logo from "@/assets/logo.png";
 import GoldParticles from "@/components/GoldParticles";
+import MarketerListsAdmin from "@/components/admin/MarketerListsAdmin";
 
 // Item shape: { title, reference_url, notes }. Legacy items may carry `type` — ignored on render.
 type ContentItem = { title: string; reference_url?: string; notes?: string; type?: string };
@@ -310,7 +311,7 @@ export default function SocialMediaContentPlans() {
             <h1 className="text-base md:text-lg font-bold tracking-tight bg-gradient-to-r from-accent via-yellow-200 to-accent bg-clip-text text-transparent">
               Content Pläne
             </h1>
-            <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground/70 font-medium">30 Tage · Wochenweise an Models</p>
+            <p className="text-[10px] tracking-[0.15em] uppercase text-muted-foreground/70 font-medium">Models · Marketer</p>
           </div>
           <div className="flex-1" />
           <Button variant="secondary" size="sm" onClick={() => navigate("/socialmedia/admin")} className="border border-accent/30 bg-accent/5 text-accent hover:bg-accent/15">
@@ -338,13 +339,16 @@ export default function SocialMediaContentPlans() {
               </button>
             ))}
           </div>
-          <Button onClick={openCreate} className="bg-accent text-accent-foreground hover:bg-accent/90">
-            <Plus className="h-4 w-4 mr-1.5" />
-            {activeTab === "model" ? "Neuer Plan (Models)" : "Neuer Plan (Marketer)"}
-          </Button>
+          {activeTab === "model" && (
+            <Button onClick={openCreate} className="bg-accent text-accent-foreground hover:bg-accent/90">
+              <Plus className="h-4 w-4 mr-1.5" /> Neuer Plan (Models)
+            </Button>
+          )}
         </div>
 
-        {(() => {
+        {activeTab === "marketer" ? (
+          <MarketerListsAdmin />
+        ) : (() => {
           const filteredPlans = plans.filter((p) => p.target_type === activeTab);
           if (loading) {
             return (

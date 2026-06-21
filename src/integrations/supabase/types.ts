@@ -1572,6 +1572,103 @@ export type Database = {
         }
         Relationships: []
       }
+      marketer_list_items: {
+        Row: {
+          created_at: string
+          done: boolean
+          done_at: string | null
+          done_by: string | null
+          id: string
+          list_id: string
+          notes: string | null
+          position: number
+          reference_url: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          done?: boolean
+          done_at?: string | null
+          done_by?: string | null
+          id?: string
+          list_id: string
+          notes?: string | null
+          position?: number
+          reference_url?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          done?: boolean
+          done_at?: string | null
+          done_by?: string | null
+          id?: string
+          list_id?: string
+          notes?: string | null
+          position?: number
+          reference_url?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketer_list_items_list_id_fkey"
+            columns: ["list_id"]
+            isOneToOne: false
+            referencedRelation: "marketer_lists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketer_lists: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          model_id: string
+          position: number
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          model_id: string
+          position?: number
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          model_id?: string
+          position?: number
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketer_lists_model_id_fkey"
+            columns: ["model_id"]
+            isOneToOne: false
+            referencedRelation: "fanvue_models"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketer_model_assignments: {
         Row: {
           assigned_at: string
@@ -2949,6 +3046,10 @@ export type Database = {
       can_access_account: {
         Args: { p_account_id: string; p_user_id: string }
         Returns: boolean
+      }
+      complete_marketer_list: {
+        Args: { p_list_id: string }
+        Returns: undefined
       }
       current_model_id: { Args: never; Returns: string }
       get_brezzels_comment_targets: {
