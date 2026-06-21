@@ -2235,6 +2235,11 @@ export default function ModelDashboardTab() {
                           <Clock className="h-3 w-3" /> Prüfung läuft
                         </span>
                       )}
+                      {status === "pending_change" && (
+                        <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider px-2 py-1 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                          <Clock className="h-3 w-3" /> Änderung wartet auf Freigabe
+                        </span>
+                      )}
                       {status === "draft" && (
                         <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider px-2 py-1 rounded-full bg-sky-500/15 text-sky-400 border border-sky-500/30">
                           <Pencil className="h-3 w-3" /> Entwurf
