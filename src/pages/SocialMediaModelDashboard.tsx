@@ -307,9 +307,9 @@ export default function SocialMediaModelDashboard() {
   };
 
   const visibleDaysForAssignment = (startDateISO: string): number[] => {
-    const start = mondayOf(new Date(startDateISO));
-    if (todayMonday < start) return [];
-    const weekOffset = Math.floor(daysBetween(start, todayMonday) / 7);
+    const start = planStart(startDateISO);
+    if (today < start) return [];
+    const weekOffset = Math.floor(daysBetween(start, today) / 7);
     const firstDay = weekOffset * 7 + 1;
     const lastDay = firstDay + 6;
     return Array.from({ length: 7 }, (_, i) => firstDay + i).filter((d) => d >= 1 && d <= 30 && d <= lastDay);
