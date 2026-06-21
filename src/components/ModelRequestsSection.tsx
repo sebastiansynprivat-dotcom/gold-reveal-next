@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import {
   Inbox,
   CheckCircle2,
@@ -15,6 +16,9 @@ import {
   Zap,
   Rocket,
   TrendingUp,
+  Link2,
+  XCircle,
+  Layers,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -30,6 +34,8 @@ interface ModelRequest {
   forwarded_to_model_at: string | null;
   model_status: string | null;
   model_completed_at: string | null;
+  content_link: string | null;
+  admin_comment: string | null;
 }
 
 interface Props {
@@ -44,9 +50,16 @@ const COPY = {
     statusOpen: "Neu",
     statusInProgress: "In Bearbeitung",
     statusDone: "Erledigt",
+    statusRejected: "Abgelehnt",
     done: "Erledigt & speichern",
+    reject: "Ablehnen",
     askBack: "Rückfrage stellen",
     askPlaceholder: "Schreib uns eine kurze Rückfrage – wir geben sie an den Chatter weiter, sobald wir sie freigegeben haben.",
+    rejectPlaceholder: "Kurzer Grund für die Ablehnung (optional) – z. B. nicht möglich, nicht im Profil, etc.",
+    linkLabel: "Content-Link (optional)",
+    linkPlaceholder: "https://… z. B. Drive, Dropbox, WeTransfer",
+    commentLabel: "Kommentar an das Team (optional)",
+    commentPlaceholder: "Z. B. „Content ist hochgeladen, viel Spaß!“",
     send: "Absenden",
     sending: "Senden…",
     askInfo: "Deine Antwort wird vom Team geprüft und dann an den Chatter weitergeleitet.",
@@ -54,6 +67,12 @@ const COPY = {
     completedAt: "Erledigt am",
     customer: "Kunde",
     price: "Preis",
+    platform: "Plattform",
+    contentLink: "Content-Link",
+    open: "Öffnen",
+    confirmReject: "Anfrage wirklich ablehnen?",
+    save: "Speichern",
+    cancel: "Abbrechen",
   },
   en: {
     title: "Custom requests",
@@ -61,9 +80,16 @@ const COPY = {
     statusOpen: "New",
     statusInProgress: "In progress",
     statusDone: "Done",
+    statusRejected: "Rejected",
     done: "Mark done & save",
+    reject: "Reject",
     askBack: "Ask the team",
     askPlaceholder: "Send the team a short question — we'll forward it to the chatter once approved.",
+    rejectPlaceholder: "Short reason for rejection (optional) — e.g. not possible, not on profile…",
+    linkLabel: "Content link (optional)",
+    linkPlaceholder: "https://… e.g. Drive, Dropbox, WeTransfer",
+    commentLabel: "Comment to the team (optional)",
+    commentPlaceholder: "E.g. \"Content uploaded, enjoy!\"",
     send: "Send",
     sending: "Sending…",
     askInfo: "Your reply is reviewed by the team and then forwarded to the chatter.",
@@ -71,6 +97,12 @@ const COPY = {
     completedAt: "Completed",
     customer: "Customer",
     price: "Price",
+    platform: "Platform",
+    contentLink: "Content link",
+    open: "Open",
+    confirmReject: "Really reject this request?",
+    save: "Save",
+    cancel: "Cancel",
   },
 } as const;
 
@@ -91,6 +123,28 @@ const SPEED_MESSAGES = {
 
 type BurstKey = keyof typeof SPEED_MESSAGES.de;
 
+const PLATFORM_STYLES: Record<string, { bg: string; text: string; border: string; dot: string }> = {
+  brezzels:  { bg: "bg-fuchsia-500/15", text: "text-fuchsia-300", border: "border-fuchsia-500/40", dot: "bg-fuchsia-400" },
+  maloum:    { bg: "bg-violet-500/15",  text: "text-violet-300",  border: "border-violet-500/40",  dot: "bg-violet-400"  },
+  fansly:    { bg: "bg-sky-500/15",     text: "text-sky-300",     border: "border-sky-500/40",     dot: "bg-sky-400"     },
+  onlyfans:  { bg: "bg-cyan-500/15",    text: "text-cyan-300",    border: "border-cyan-500/40",    dot: "bg-cyan-400"    },
+  fanvue:    { bg: "bg-emerald-500/15", text: "text-emerald-300", border: "border-emerald-500/40", dot: "bg-emerald-400" },
+  fansyme:   { bg: "bg-pink-500/15",    text: "text-pink-300",    border: "border-pink-500/40",    dot: "bg-pink-400"    },
+};
+
+function parsePlatform(description: string): { platform: string | null; cleaned: string } {
+  const m = description.match(/^\s*\[\s*Pl?attform\s*[:\-]\s*([^\]]+?)\s*\]\s*/i);
+  if (!m) return { platform: null, cleaned: description };
+  return { platform: m[1].trim(), cleaned: description.slice(m[0].length) };
+}
+
+function platformStyle(name: string) {
+  const k = name.toLowerCase().replace(/\s+/g, "");
+  return PLATFORM_STYLES[k] || {
+    bg: "bg-accent/15", text: "text-accent", border: "border-accent/40", dot: "bg-accent",
+  };
+}
+
 export default function ModelRequestsSection({ modelId, language = "de" }: Props) {
   const lang = language === "en" ? "en" : "de";
   const copy = COPY[lang];
@@ -98,6 +152,11 @@ export default function ModelRequestsSection({ modelId, language = "de" }: Props
   const [loading, setLoading] = useState(true);
   const [askingId, setAskingId] = useState<string | null>(null);
   const [askText, setAskText] = useState("");
+  const [doneId, setDoneId] = useState<string | null>(null);
+  const [doneLink, setDoneLink] = useState("");
+  const [doneComment, setDoneComment] = useState("");
+  const [rejectingId, setRejectingId] = useState<string | null>(null);
+  const [rejectText, setRejectText] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
   const [burst, setBurst] = useState<BurstKey | null>(null);
   const lastBurstRef = useRef<{ key: BurstKey; ts: number } | null>(null);
@@ -107,7 +166,7 @@ export default function ModelRequestsSection({ modelId, language = "de" }: Props
     const { data } = await supabase
       .from("model_requests")
       .select(
-        "id, description, price, customer_name, request_type, attachments, created_at, forwarded_to_model_at, model_status, model_completed_at"
+        "id, description, price, customer_name, request_type, attachments, created_at, forwarded_to_model_at, model_status, model_completed_at, content_link, admin_comment"
       )
       .eq("model_id", modelId)
       .order("created_at", { ascending: false })
@@ -132,11 +191,11 @@ export default function ModelRequestsSection({ modelId, language = "de" }: Props
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [modelId]);
 
-  const open = requests.filter((r) => r.model_status !== "done");
-  const done = requests.filter((r) => r.model_status === "done");
+  const isClosed = (r: ModelRequest) => r.model_status === "done" || r.model_status === "rejected";
+  const open = requests.filter((r) => !isClosed(r));
+  const closed = requests.filter(isClosed);
 
   const triggerBurst = (key: BurstKey) => {
-    // Avoid spamming the same burst within 30 min
     const prev = lastBurstRef.current;
     if (prev && prev.key === key && Date.now() - prev.ts < 30 * 60 * 1000) return;
     lastBurstRef.current = { key, ts: Date.now() };
@@ -148,44 +207,60 @@ export default function ModelRequestsSection({ modelId, language = "de" }: Props
     const completed = [
       justCompletedAt,
       ...requests
-        .filter((r) => r.model_completed_at)
+        .filter((r) => r.model_completed_at && r.model_status === "done")
         .map((r) => new Date(r.model_completed_at as string)),
     ].sort((a, b) => b.getTime() - a.getTime());
 
-    // 3 in last 30 min
     const last30 = completed.filter((d) => Date.now() - d.getTime() < 30 * 60 * 1000);
-    if (last30.length >= 3) {
-      triggerBurst("streak3");
-      return;
-    }
-    // 5+ today
+    if (last30.length >= 3) { triggerBurst("streak3"); return; }
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
     const today = completed.filter((d) => d >= startOfDay);
-    if (today.length >= 5) {
-      triggerBurst("today5");
-      return;
-    }
-    // Fast turnaround: completed within 30 min of forwarded
+    if (today.length >= 5) { triggerBurst("today5"); return; }
     const recentReq = requests[0];
     if (recentReq?.forwarded_to_model_at) {
       const diff = justCompletedAt.getTime() - new Date(recentReq.forwarded_to_model_at).getTime();
-      if (diff > 0 && diff < 30 * 60 * 1000) {
-        triggerBurst("fast");
-        return;
-      }
+      if (diff > 0 && diff < 30 * 60 * 1000) { triggerBurst("fast"); return; }
     }
-    // Default money burst once per session
     triggerBurst("money");
   };
 
-  const completeRequest = async (req: ModelRequest) => {
+  const startDone = (req: ModelRequest) => {
+    setDoneId(req.id);
+    setDoneLink(req.content_link || "");
+    setDoneComment("");
+    setAskingId(null);
+    setRejectingId(null);
+  };
+
+  const submitDone = async (req: ModelRequest) => {
+    const link = doneLink.trim();
+    if (link && !/^https?:\/\//i.test(link)) {
+      toast.error(lang === "en" ? "Link must start with http(s)://" : "Link muss mit http(s):// beginnen");
+      return;
+    }
     setBusyId(req.id);
     const now = new Date();
     const { error } = await supabase
       .from("model_requests")
-      .update({ model_status: "done", model_completed_at: now.toISOString() })
+      .update({
+        model_status: "done",
+        model_completed_at: now.toISOString(),
+        content_link: link || null,
+      })
       .eq("id", req.id);
+    if (!error && doneComment.trim()) {
+      const { data: u } = await supabase.auth.getUser();
+      if (u.user) {
+        await supabase.from("model_request_messages").insert({
+          request_id: req.id,
+          user_id: u.user.id,
+          sender_role: "model",
+          body: doneComment.trim(),
+          visible_to_chatter: false,
+        });
+      }
+    }
     setBusyId(null);
     if (error) {
       toast.error(lang === "en" ? "Could not save" : "Speichern fehlgeschlagen");
@@ -194,10 +269,50 @@ export default function ModelRequestsSection({ modelId, language = "de" }: Props
     toast.success(lang === "en" ? "Request marked done ✓" : "Anfrage als erledigt markiert ✓");
     setRequests((prev) =>
       prev.map((r) =>
-        r.id === req.id ? { ...r, model_status: "done", model_completed_at: now.toISOString() } : r
+        r.id === req.id
+          ? { ...r, model_status: "done", model_completed_at: now.toISOString(), content_link: link || null }
+          : r
       )
     );
+    setDoneId(null);
+    setDoneLink("");
+    setDoneComment("");
     evaluateSpeed(now);
+  };
+
+  const submitReject = async (req: ModelRequest) => {
+    setBusyId(req.id);
+    const reason = rejectText.trim();
+    const now = new Date();
+    const { error } = await supabase
+      .from("model_requests")
+      .update({ model_status: "rejected", model_completed_at: now.toISOString() })
+      .eq("id", req.id);
+    if (!error && reason) {
+      const { data: u } = await supabase.auth.getUser();
+      if (u.user) {
+        await supabase.from("model_request_messages").insert({
+          request_id: req.id,
+          user_id: u.user.id,
+          sender_role: "model",
+          body: `[Ablehnung] ${reason}`,
+          visible_to_chatter: false,
+        });
+      }
+    }
+    setBusyId(null);
+    if (error) {
+      toast.error(lang === "en" ? "Could not save" : "Speichern fehlgeschlagen");
+      return;
+    }
+    toast.success(lang === "en" ? "Request rejected" : "Anfrage abgelehnt");
+    setRequests((prev) =>
+      prev.map((r) =>
+        r.id === req.id ? { ...r, model_status: "rejected", model_completed_at: now.toISOString() } : r
+      )
+    );
+    setRejectingId(null);
+    setRejectText("");
   };
 
   const sendAsk = async (req: ModelRequest) => {
@@ -214,7 +329,6 @@ export default function ModelRequestsSection({ modelId, language = "de" }: Props
       visible_to_chatter: false,
     });
     if (!error) {
-      // also mark in_progress on first message
       if (req.model_status === "open" || !req.model_status) {
         await supabase
           .from("model_requests")
@@ -272,18 +386,26 @@ export default function ModelRequestsSection({ modelId, language = "de" }: Props
         )}
       </div>
 
-      {open.length === 0 && done.length === 0 ? (
+      {open.length === 0 && closed.length === 0 ? (
         <p className="text-xs text-muted-foreground leading-relaxed">{copy.none}</p>
       ) : (
         <div className="space-y-3">
-          {[...open, ...done.slice(0, 3)].map((req) => {
+          {[...open, ...closed.slice(0, 3)].map((req) => {
             const isDone = req.model_status === "done";
+            const isRejected = req.model_status === "rejected";
+            const closedReq = isDone || isRejected;
             const isAsking = askingId === req.id;
+            const isDoneForm = doneId === req.id;
+            const isRejectForm = rejectingId === req.id;
+            const { platform, cleaned } = parsePlatform(req.description);
+            const ps = platform ? platformStyle(platform) : null;
             const statusLabel = isDone
               ? copy.statusDone
-              : req.model_status === "in_progress"
-                ? copy.statusInProgress
-                : copy.statusOpen;
+              : isRejected
+                ? copy.statusRejected
+                : req.model_status === "in_progress"
+                  ? copy.statusInProgress
+                  : copy.statusOpen;
             return (
               <motion.div
                 key={req.id}
@@ -294,53 +416,79 @@ export default function ModelRequestsSection({ modelId, language = "de" }: Props
                   "glass-card-subtle rounded-xl p-4 space-y-3 border",
                   isDone
                     ? "border-emerald-500/25"
-                    : req.model_status === "in_progress"
-                      ? "border-amber-500/30"
-                      : "border-accent/30"
+                    : isRejected
+                      ? "border-rose-500/25 opacity-80"
+                      : req.model_status === "in_progress"
+                        ? "border-amber-500/30"
+                        : "border-accent/30"
                 )}
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span
-                        className={cn(
-                          "text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full border",
-                          isDone
-                            ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
-                            : req.model_status === "in_progress"
-                              ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
-                              : "bg-accent/15 text-accent border-accent/40"
-                        )}
-                      >
-                        {statusLabel}
-                      </span>
-                      {req.price != null && (
-                        <span className="text-[10px] text-emerald-400 tabular-nums">
-                          {copy.price}: {Number(req.price).toFixed(2)} €
-                        </span>
+                {/* Header row */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  {platform && ps && (
+                    <span
+                      className={cn(
+                        "inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-1 rounded-lg border",
+                        ps.bg, ps.text, ps.border
                       )}
-                    </div>
-                    <p className="text-sm text-foreground mt-2 leading-relaxed whitespace-pre-wrap break-words">
-                      {req.description}
-                    </p>
-                    <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-2 text-[10px] text-muted-foreground">
-                      <span className="inline-flex items-center gap-1">
-                        <Clock className="h-3 w-3" /> {copy.receivedAt}: {fmtDate(req.forwarded_to_model_at || req.created_at)}
-                      </span>
-                      {req.customer_name && (
-                        <span>{copy.customer}: {req.customer_name}</span>
-                      )}
-                      {isDone && req.model_completed_at && (
-                        <span className="text-emerald-400 inline-flex items-center gap-1">
-                          <CheckCircle2 className="h-3 w-3" />
-                          {copy.completedAt}: {fmtDate(req.model_completed_at)}
-                        </span>
-                      )}
-                    </div>
-                  </div>
+                    >
+                      <Layers className="h-3 w-3" />
+                      {platform}
+                    </span>
+                  )}
+                  <span
+                    className={cn(
+                      "text-[10px] uppercase tracking-wider px-2 py-0.5 rounded-full border",
+                      isDone
+                        ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+                        : isRejected
+                          ? "bg-rose-500/15 text-rose-400 border-rose-500/30"
+                          : req.model_status === "in_progress"
+                            ? "bg-amber-500/15 text-amber-400 border-amber-500/30"
+                            : "bg-accent/15 text-accent border-accent/40"
+                    )}
+                  >
+                    {statusLabel}
+                  </span>
+                  {req.price != null && (
+                    <span className="text-[10px] text-emerald-400 tabular-nums">
+                      {copy.price}: {Number(req.price).toFixed(2)} €
+                    </span>
+                  )}
                 </div>
 
-                {!isDone && (
+                <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap break-words">
+                  {cleaned}
+                </p>
+
+                <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-muted-foreground">
+                  <span className="inline-flex items-center gap-1">
+                    <Clock className="h-3 w-3" /> {copy.receivedAt}: {fmtDate(req.forwarded_to_model_at || req.created_at)}
+                  </span>
+                  {req.customer_name && (
+                    <span>{copy.customer}: {req.customer_name}</span>
+                  )}
+                  {isDone && req.model_completed_at && (
+                    <span className="text-emerald-400 inline-flex items-center gap-1">
+                      <CheckCircle2 className="h-3 w-3" />
+                      {copy.completedAt}: {fmtDate(req.model_completed_at)}
+                    </span>
+                  )}
+                </div>
+
+                {isDone && req.content_link && (
+                  <a
+                    href={req.content_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs text-emerald-300 hover:text-emerald-200 underline underline-offset-2 break-all"
+                  >
+                    <Link2 className="h-3 w-3 shrink-0" />
+                    {copy.contentLink}: {req.contentLink ?? req.content_link}
+                  </a>
+                )}
+
+                {!closedReq && (
                   <>
                     {isAsking ? (
                       <div className="space-y-2">
@@ -350,32 +498,74 @@ export default function ModelRequestsSection({ modelId, language = "de" }: Props
                           placeholder={copy.askPlaceholder}
                           className="bg-background/40 border-border/40 text-sm min-h-[80px]"
                         />
-                        <p className="text-[10px] text-muted-foreground/80 leading-relaxed">
-                          {copy.askInfo}
-                        </p>
+                        <p className="text-[10px] text-muted-foreground/80 leading-relaxed">{copy.askInfo}</p>
                         <div className="flex gap-2 justify-end">
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => {
-                              setAskingId(null);
-                              setAskText("");
-                            }}
-                          >
-                            {lang === "en" ? "Cancel" : "Abbrechen"}
+                          <Button size="sm" variant="ghost" onClick={() => { setAskingId(null); setAskText(""); }}>
+                            {copy.cancel}
+                          </Button>
+                          <Button size="sm" disabled={!askText.trim() || busyId === req.id} onClick={() => sendAsk(req)} className="gap-1.5">
+                            {busyId === req.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
+                            {busyId === req.id ? copy.sending : copy.send}
+                          </Button>
+                        </div>
+                      </div>
+                    ) : isDoneForm ? (
+                      <div className="space-y-2 rounded-lg border border-emerald-500/25 bg-emerald-500/5 p-3">
+                        <label className="text-[11px] font-medium text-emerald-300 flex items-center gap-1.5">
+                          <Link2 className="h-3 w-3" /> {copy.linkLabel}
+                        </label>
+                        <Input
+                          value={doneLink}
+                          onChange={(e) => setDoneLink(e.target.value)}
+                          placeholder={copy.linkPlaceholder}
+                          className="bg-background/40 border-border/40 text-sm h-9"
+                          inputMode="url"
+                        />
+                        <label className="text-[11px] font-medium text-muted-foreground flex items-center gap-1.5 pt-1">
+                          <MessageCircle className="h-3 w-3" /> {copy.commentLabel}
+                        </label>
+                        <Textarea
+                          value={doneComment}
+                          onChange={(e) => setDoneComment(e.target.value)}
+                          placeholder={copy.commentPlaceholder}
+                          className="bg-background/40 border-border/40 text-sm min-h-[60px]"
+                        />
+                        <div className="flex gap-2 justify-end pt-1">
+                          <Button size="sm" variant="ghost" onClick={() => { setDoneId(null); setDoneLink(""); setDoneComment(""); }}>
+                            {copy.cancel}
                           </Button>
                           <Button
                             size="sm"
-                            disabled={!askText.trim() || busyId === req.id}
-                            onClick={() => sendAsk(req)}
-                            className="gap-1.5"
+                            disabled={busyId === req.id}
+                            onClick={() => submitDone(req)}
+                            className="gap-1.5 bg-emerald-500/20 text-emerald-200 hover:bg-emerald-500/30 border border-emerald-500/40"
                           >
-                            {busyId === req.id ? (
-                              <Loader2 className="h-3 w-3 animate-spin" />
-                            ) : (
-                              <Send className="h-3 w-3" />
-                            )}
-                            {busyId === req.id ? copy.sending : copy.send}
+                            {busyId === req.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <CheckCircle2 className="h-3 w-3" />}
+                            {copy.save}
+                          </Button>
+                        </div>
+                      </div>
+                    ) : isRejectForm ? (
+                      <div className="space-y-2 rounded-lg border border-rose-500/25 bg-rose-500/5 p-3">
+                        <p className="text-[11px] font-medium text-rose-300">{copy.confirmReject}</p>
+                        <Textarea
+                          value={rejectText}
+                          onChange={(e) => setRejectText(e.target.value)}
+                          placeholder={copy.rejectPlaceholder}
+                          className="bg-background/40 border-border/40 text-sm min-h-[60px]"
+                        />
+                        <div className="flex gap-2 justify-end">
+                          <Button size="sm" variant="ghost" onClick={() => { setRejectingId(null); setRejectText(""); }}>
+                            {copy.cancel}
+                          </Button>
+                          <Button
+                            size="sm"
+                            disabled={busyId === req.id}
+                            onClick={() => submitReject(req)}
+                            className="gap-1.5 bg-rose-500/20 text-rose-200 hover:bg-rose-500/30 border border-rose-500/40"
+                          >
+                            {busyId === req.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <XCircle className="h-3 w-3" />}
+                            {copy.reject}
                           </Button>
                         </div>
                       </div>
@@ -383,28 +573,30 @@ export default function ModelRequestsSection({ modelId, language = "de" }: Props
                       <div className="flex gap-2 flex-wrap">
                         <Button
                           size="sm"
-                          onClick={() => completeRequest(req)}
+                          onClick={() => startDone(req)}
                           disabled={busyId === req.id}
                           className="gap-1.5 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25 border border-emerald-500/30"
                         >
-                          {busyId === req.id ? (
-                            <Loader2 className="h-3 w-3 animate-spin" />
-                          ) : (
-                            <CheckCircle2 className="h-3 w-3" />
-                          )}
+                          <CheckCircle2 className="h-3 w-3" />
                           {copy.done}
                         </Button>
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={() => {
-                            setAskingId(req.id);
-                            setAskText("");
-                          }}
+                          onClick={() => { setAskingId(req.id); setAskText(""); setDoneId(null); setRejectingId(null); }}
                           className="gap-1.5 text-muted-foreground hover:text-foreground"
                         >
                           <MessageCircle className="h-3 w-3" />
                           {copy.askBack}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => { setRejectingId(req.id); setRejectText(""); setDoneId(null); setAskingId(null); }}
+                          className="gap-1.5 text-rose-300/80 hover:text-rose-200 hover:bg-rose-500/10 ml-auto"
+                        >
+                          <XCircle className="h-3 w-3" />
+                          {copy.reject}
                         </Button>
                       </div>
                     )}
@@ -428,7 +620,6 @@ export default function ModelRequestsSection({ modelId, language = "de" }: Props
             className="fixed left-1/2 -translate-x-1/2 bottom-24 z-[60] pointer-events-none"
           >
             <div className="relative">
-              {/* Sparkle ring */}
               {[...Array(8)].map((_, i) => {
                 const angle = (i / 8) * Math.PI * 2;
                 const x = Math.cos(angle) * 70;
@@ -448,10 +639,8 @@ export default function ModelRequestsSection({ modelId, language = "de" }: Props
               <div
                 className="glass-card rounded-2xl px-5 py-3.5 flex items-center gap-3 relative overflow-hidden"
                 style={{
-                  background:
-                    "linear-gradient(120deg, hsl(43 70% 18% / 0.95), hsl(340 50% 20% / 0.85))",
-                  boxShadow:
-                    "0 0 40px hsl(43 80% 50% / 0.35), 0 0 20px hsl(340 70% 60% / 0.25), inset 0 0 0 1px hsl(43 70% 60% / 0.4)",
+                  background: "linear-gradient(120deg, hsl(43 70% 18% / 0.95), hsl(340 50% 20% / 0.85))",
+                  boxShadow: "0 0 40px hsl(43 80% 50% / 0.35), 0 0 20px hsl(340 70% 60% / 0.25), inset 0 0 0 1px hsl(43 70% 60% / 0.4)",
                 }}
               >
                 <motion.div
@@ -462,12 +651,8 @@ export default function ModelRequestsSection({ modelId, language = "de" }: Props
                   <BurstIcon className="h-7 w-7 text-accent drop-shadow-[0_0_10px_hsl(43_80%_55%/0.9)]" />
                 </motion.div>
                 <div className="min-w-0">
-                  <p className="text-sm font-bold text-foreground leading-tight">
-                    {burstData.title}
-                  </p>
-                  <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">
-                    {burstData.body}
-                  </p>
+                  <p className="text-sm font-bold text-foreground leading-tight">{burstData.title}</p>
+                  <p className="text-[11px] text-muted-foreground leading-tight mt-0.5">{burstData.body}</p>
                 </div>
               </div>
             </div>
