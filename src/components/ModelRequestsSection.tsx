@@ -484,7 +484,7 @@ export default function ModelRequestsSection({ modelId, language = "de" }: Props
                     className="inline-flex items-center gap-1.5 text-xs text-emerald-300 hover:text-emerald-200 underline underline-offset-2 break-all"
                   >
                     <Link2 className="h-3 w-3 shrink-0" />
-                    {copy.contentLink}: {req.contentLink ?? req.content_link}
+                    {copy.contentLink}: {req.content_link}
                   </a>
                 )}
 
