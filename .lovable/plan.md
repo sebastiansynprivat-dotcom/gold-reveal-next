@@ -1,95 +1,75 @@
-## Was geändert wird
+## Per-model rows in Chatter Report download
 
-Die bisherigen Content-Pläne für **Marketer** im Social-Media-Bereich werden auf eine einfache Listen-Logik umgestellt:
+Change the download report in **Admin → Reports** so each chatter is split into one row per assigned model. Per-model rows pull revenue **and** chat metrics (Mass DM, Unread, Oldest) from `accounts_data`, since those are per-account fields.
 
-- **Keine Tage / Wochen / Tag-1-bis-30-Editor mehr** im Marketer-Tab.
-- Admin legt eine **Liste** an (Titel, optionale Beschreibung, beliebig viele Aufgaben) und ordnet ihr **ein oder mehrere Models** zu.
-- Marketer sehen pro Model immer **eine aktive Liste**. Sobald alle Aufgaben abgehakt sind, ist die Liste erledigt – und falls Admin bereits eine weitere Liste für dasselbe Model hinterlegt hat, erscheint sie automatisch.
-- Wird keine Folgeliste hinterlegt, sieht der Marketer einen freundlichen „Alle Listen abgearbeitet"-Status, bis Admin eine neue erstellt.
+### Scope
 
-Der „Für Models"-Tab im Social-Media-Content-Plans-Bereich bleibt unverändert.
+- File: `src/components/admin/ChatterReportsTab.tsx`
+- Only the download payload (`buildReport` + the data it needs) changes. The on-screen table stays as is.
 
-## Neue Tabellen (Backend)
+### New row shape
 
-```text
-marketer_lists
-  id uuid PK
-  title text
-  description text
-  model_id uuid (fanvue_models.id)   -- 1 Liste = 1 Model
-  position int                       -- Reihenfolge in der Warteschlange
-  status text  ('open' | 'done')
-  completed_at timestamptz null
-  created_by uuid, created_at timestamptz
+Today: one row per chatter × platform, `Models` column joins names with commas.
 
-marketer_list_items
-  id uuid PK
-  list_id uuid (marketer_lists.id, cascade)
-  position int
-  title text
-  reference_url text null
-  notes text null
-  done boolean default false
-  done_by uuid null
-  done_at timestamptz null
-  created_at timestamptz
+New: **one row per chatter × model**. Columns:
+
+```
+Date | Name | Telegram ID | Platform | Model |
+Yesterday Revenue | Goal | Streak |
+Last Week Revenue | Last Month Revenue | All Time Revenue |
+Mass DM | Unread Chats | Oldest Chat | Notes | Start Date
 ```
 
-RLS:
-- Admin/Super-Admin: voller Zugriff (`is_admin()`).
-- Marketer (`socialmedia_marketer`): SELECT auf Listen + Items, deren `model_id` ihm via `marketer_model_assignments` zugewiesen ist; UPDATE nur auf `marketer_list_items.done/done_by/done_at` (zum Abhaken).
+- Chatters with no assigned model still produce one row (`Model = "Unassigned"`, falls back to chatter-level numbers from `profiles_data`).
+- `Goal`, `Streak`, `Start Date` stay chatter-level (no per-model concept exists). Repeated on each model row of the chatter.
 
-Die alte Mechanik (`content_plans.target_type = 'marketer'`, `content_plan_assignments.marketer_user_id`, `content_plan_days`, `content_plan_week_feedback`) bleibt in der DB unverändert – sie wird nur **im UI nicht mehr verwendet**. Kein Datenverlust.
+### Per-model data source — `accounts_data`
 
-## Admin-UI (`src/pages/SocialMediaContentPlans.tsx`)
+`accounts_data` is per-account-per-day and contains:
 
-Im Tab **„Für Marketer"** wird der bisherige Tages-Editor ersetzt:
+- `total` (revenue)
+- `mass_dms`, `unread_chats`, `oldest_chat`
 
-- Übersicht: Listen gruppiert nach Model (Suchfeld nach Model-Name/Username). Pro Model: aktive Liste oben, dann Warteschlange, dann erledigte (einklappbar).
-- „Neue Liste" Dialog:
-  - Titel, Beschreibung
-  - Auswahl: Models (Multi-Select, alle Fanvue-Models). Pro gewähltem Model wird **eine eigene Liste** mit denselben Items angelegt (Kopie pro Model).
-  - Aufgaben-Editor: einfache Liste mit Titel, optionalem Referenz-Link, optionalen Notizen – Hinzufügen / Entfernen / per Drag-Handle umsortieren.
-- Aktionen pro Liste: bearbeiten, duplizieren (in Warteschlange einreihen), löschen.
-- Fortschrittsanzeige (`X / Y erledigt`) pro Liste.
+For each chatter × model row:
 
-Der Tab „Für Models" und die bestehende Tages-Logik dort werden nicht angefasst.
+1. Determine the chatter's assigned accounts for that model (re-use existing `assignments + accounts` join, group `account_id` by the model display name).
+2. Fetch `accounts_data` rows for those `account_id`s, respecting the chatter's `account_assignments` window per account (see `AccountStatsRows.tsx` pattern: only count `date` inside any assignment window).
+3. Compute per range:
+   - `Yesterday Revenue` = sum of `total` on the day before the selected date
+   - `Last Week Revenue`, `Last Month Revenue`, `All Time Revenue` = sum of `total` over the existing ranges
+4. Chat metrics from the latest in-window `accounts_data` row across the model's accounts:
+   - `Mass DM` = sum of `mass_dms` across the model's accounts on their latest in-window date
+   - `Unread Chats` = sum of `unread_chats` likewise
+   - `Oldest Chat` = max of `oldest_chat` likewise (days, biggest = oldest)
 
-## Marketer-UI (`src/components/MarketerContentPlans.tsx`)
+Numbers rounded to integers (consistent with `AccountStatsRows`).
 
-Komplette Umstellung:
+### Data fetch addition
 
-- Quelle: `marketer_model_assignments` für den eingeloggten Marketer → daraus die Models bestimmen.
-- Für jedes zugewiesene Model: hole `marketer_lists` mit `model_id = X AND status = 'open'`, sortiert nach `position, created_at`. Zeige die **erste** Liste (= aktive). Zusätzlich Hinweis „+N weitere in Warteschlange".
-- Items zum Abhaken (Checkbox). Server-Update setzt `done`, `done_by = auth.uid()`, `done_at = now()`.
-- Wenn alle Items einer Liste `done = true` sind: Client ruft Edge Function / RPC auf, die `marketer_lists.status = 'done'`, `completed_at = now()` setzt. Anschließend lädt das UI neu und zeigt automatisch die nächste offene Liste für das Model.
-- Realtime-Subscription auf `marketer_lists` (für das Model) sodass neu vom Admin hinterlegte Listen sofort erscheinen, sobald die aktuelle erledigt ist.
-- Leerzustand pro Model: „Alle Listen abgearbeitet – warte auf neue Vorgaben." mit dezenter Animation.
+One extra batched query in the existing `useEffect`, running in parallel with current fetches:
 
-## Wegfallendes UI
+```ts
+supabase
+  .from("accounts_data")
+  .select("account_id,date,total,mass_dms,unread_chats,oldest_chat")
+  .in("account_id", allAssignedAccountIds)
+  .lte("date", selISO)
+```
 
-- Im Marketer-Tab des Admin-Bereichs: 30-Tage-Editor, „Tag X"-Akkordeons, Wochen-Feedback-Anzeige bei Marketer-Plänen.
-- Im Marketer-Dashboard (`MarketerContentPlans`): Tage, Wochen, Start-Datum-Berechnung, Wochentage.
+Paginated in 1000-row pages, chunked by 100 account ids — same pattern as the existing `profiles_data` loader.
 
-Die Komponente bleibt im selben Mount-Punkt, sodass nichts im `MarketerDashboard.tsx` umverdrahtet werden muss außer ggf. dem Titel.
+Aggregation happens client-side per chatter × model using the in-window filter from `AccountStatsRows.tsx`.
 
-## Migration
+### Filename
 
-Eine SQL-Migration erstellt die zwei neuen Tabellen mit GRANTs, RLS und Policies, plus zwei Helper:
+`{platform}_Chatter_Report_by_Model_{date}.{xlsx|csv}`
 
-- `complete_marketer_list(p_list_id uuid)` – SECURITY DEFINER, prüft Marketer-Zugehörigkeit, setzt `status='done'`.
-- Index `(model_id, status, position)` für schnelles „nächste offene Liste".
+### Fallback for chatters without assigned accounts
 
-## Files
+If the chatter has no `accounts_data` (no assigned accounts, or all empty), the single "Unassigned" model row keeps using the existing chatter-level numbers from `profiles_data` so the report doesn't go blank.
 
-- **Neu**: SQL-Migration für `marketer_lists` + `marketer_list_items` + RLS + RPC.
-- **Geändert**: `src/pages/SocialMediaContentPlans.tsx` (Marketer-Tab Editor + Listenübersicht).
-- **Ersetzt**: `src/components/MarketerContentPlans.tsx` (neue, einfache Listen-Ansicht).
-- Keine Änderungen an `SocialMediaModelDashboard.tsx`, `MarketerDashboard.tsx`-Layout, Model-Plänen.
+### Out of scope
 
-## Offene Frage vor Umsetzung
-
-1. Soll eine Liste **pro Model genau eine Kopie** sein (so wie oben skizziert), oder soll dieselbe Liste mehreren Models zugleich zugeordnet werden (n:m, geteilter Fortschritt nur sinnvoll wenn Marketer pro Model unterschiedlich abhaken)?  
-   – Empfehlung: **eine Liste = ein Model** (Kopie pro Model bei Mehrfachauswahl im Dialog). Macht Fortschritt + Warteschlange-Logik glasklar.
-
-Bei Zustimmung setze ich genau das so um.
+- On-screen table layout
+- Per-model goal / streak (not tracked per model)
+- New UI controls — the download just emits the new shape

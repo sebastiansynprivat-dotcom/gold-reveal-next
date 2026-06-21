@@ -101,12 +101,24 @@ function GoalCell({ value, onSave }: { value: number; onSave: (next: number) => 
   );
 }
 
+type AccountDataPoint = { date: string; total: number; mass_dms: number; unread_chats: number; oldest_chat: number };
+type AssignmentWindow = { start_date: string | null; end_date: string | null };
+
 export default function ChatterReportsTab({ chatters }: Props) {
   const [date, setDate] = useState<Date>(new Date());
   const [search, setSearch] = useState("");
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(false);
   const [reportFor, setReportFor] = useState<Row | null>(null);
+
+  // Per-model report data — populated alongside `rows`, consumed by buildReport.
+  // profileId -> platform -> model display -> Set<accountId>
+  const modelAccountsRef = useRef<Map<string, Map<string, Map<string, Set<string>>>>>(new Map());
+  // `${profileId}|${accountId}` -> assignment windows
+  const windowsRef = useRef<Map<string, AssignmentWindow[]>>(new Map());
+  // accountId -> daily rows (any order)
+  const accountsDataRef = useRef<Map<string, AccountDataPoint[]>>(new Map());
+
 
   useEffect(() => {
     let cancelled = false;
@@ -141,11 +153,12 @@ export default function ChatterReportsTab({ chatters }: Props) {
 
       // ----- Fire independent fetches in parallel -----
       const asgByUserP = userIds.length > 0
-        ? supabase.from("account_assignments").select("account_id,user_id,profile_id").in("user_id", userIds).is("end_date", null)
+        ? supabase.from("account_assignments").select("account_id,user_id,profile_id,start_date,end_date").in("user_id", userIds).is("end_date", null)
         : Promise.resolve({ data: [] as any[] });
       const asgByProfileP = profileIds.length > 0
-        ? supabase.from("account_assignments").select("account_id,user_id,profile_id").in("profile_id", profileIds).is("end_date", null)
+        ? supabase.from("account_assignments").select("account_id,user_id,profile_id,start_date,end_date").in("profile_id", profileIds).is("end_date", null)
         : Promise.resolve({ data: [] as any[] });
+
       const profsP = profileIds.length > 0
         ? supabase.from("profiles").select("id,user_id,start_date,created_at,daily_goal").in("id", profileIds)
         : Promise.resolve({ data: [] as any[] });
@@ -185,13 +198,34 @@ export default function ChatterReportsTab({ chatters }: Props) {
         ...((asgByProfileRes as any).data ?? []),
       ];
 
-      // ----- accounts in parallel chunks -----
+      // ----- accounts + accounts_data in parallel chunks -----
       const accountIds = Array.from(new Set(asgRows.map((a) => a.account_id)));
       const accountChunks: string[][] = [];
       for (let i = 0; i < accountIds.length; i += 100) accountChunks.push(accountIds.slice(i, i + 100));
-      const accsResults = await Promise.all(accountChunks.map((slice) =>
+      const accsP = Promise.all(accountChunks.map((slice) =>
         supabase.from("accounts").select("id,platform,username,account_email").in("id", slice)
       ));
+      const ADPAGE = 1000;
+      const accountsDataP = Promise.all(accountChunks.map(async (slice) => {
+        const collected: any[] = [];
+        let from = 0;
+        // eslint-disable-next-line no-constant-condition
+        while (true) {
+          const { data, error } = await supabase
+            .from("accounts_data")
+            .select("account_id,date,total,mass_dms,unread_chats,oldest_chat")
+            .in("account_id", slice)
+            .lte("date", selISO)
+            .order("date", { ascending: false })
+            .range(from, from + ADPAGE - 1);
+          if (error || !data || data.length === 0) break;
+          collected.push(...data);
+          if (data.length < ADPAGE) break;
+          from += ADPAGE;
+        }
+        return collected;
+      }));
+      const [accsResults, accountsDataChunks] = await Promise.all([accsP, accountsDataP]);
       if (cancelled) return;
       const platformByAccount = new Map<string, string>();
       const displayByAccount = new Map<string, string>();
@@ -206,9 +240,30 @@ export default function ChatterReportsTab({ chatters }: Props) {
         });
       }
 
+      // accounts_data by account_id
+      const accountsDataByAccount = new Map<string, AccountDataPoint[]>();
+      for (const chunk of accountsDataChunks) {
+        for (const r of chunk) {
+          const arr = accountsDataByAccount.get(r.account_id) ?? [];
+          arr.push({
+            date: r.date,
+            total: Number(r.total || 0),
+            mass_dms: Number(r.mass_dms || 0),
+            unread_chats: Number(r.unread_chats || 0),
+            oldest_chat: Number(r.oldest_chat || 0),
+          });
+          accountsDataByAccount.set(r.account_id, arr);
+        }
+      }
+      accountsDataRef.current = accountsDataByAccount;
+
       // Resolve each assignment to a chatter (by user_id OR profile_id)
       const platformsByChatter = new Map<string, Set<string>>();
       const modelsByChatter = new Map<string, Set<string>>();
+      // profileId -> platform -> model -> Set<accountId>
+      const modelAccounts = new Map<string, Map<string, Map<string, Set<string>>>>();
+      // `${profileId}|${accountId}` -> windows
+      const windows = new Map<string, AssignmentWindow[]>();
       const chatterByUser = new Map<string, any>();
       const chatterByProfile = new Map<string, any>();
       for (const c of eligible) {
@@ -226,8 +281,20 @@ export default function ChatterReportsTab({ chatters }: Props) {
         if (display) {
           if (!modelsByChatter.has(c.id)) modelsByChatter.set(c.id, new Set());
           modelsByChatter.get(c.id)!.add(display);
+          if (!modelAccounts.has(c.id)) modelAccounts.set(c.id, new Map());
+          const byPlat = modelAccounts.get(c.id)!;
+          if (!byPlat.has(p)) byPlat.set(p, new Map());
+          const byModel = byPlat.get(p)!;
+          if (!byModel.has(display)) byModel.set(display, new Set());
+          byModel.get(display)!.add(a.account_id);
+          const wkey = `${c.id}|${a.account_id}`;
+          const arr = windows.get(wkey) ?? [];
+          arr.push({ start_date: a.start_date ?? null, end_date: a.end_date ?? null });
+          windows.set(wkey, arr);
         }
       }
+      modelAccountsRef.current = modelAccounts;
+      windowsRef.current = windows;
 
       // ----- profiles_data -> map by telegram_id -----
       const dataByTelegram = new Map<string, any[]>();
@@ -384,35 +451,95 @@ export default function ChatterReportsTab({ chatters }: Props) {
 
   const buildReport = () => {
     const headers = [
-      "Date", "Name", "Telegram ID", "Models",
+      "Date", "Name", "Telegram ID", "Platform", "Model",
       "Yesterday Revenue", "Goal", "Streak",
       "Last Week Revenue", "Last Month Revenue", "All Time Revenue",
       "Mass DM", "Unread Chats", "Oldest Chat",
       "Notes", "Start Date",
     ];
     const dateStr = format(date, "yyyy-MM-dd");
-    const rowsOut: (string | number)[][] = filtered.map((r) => {
-      const yesterday = r.daily && r.daily.length >= 2
-        ? r.daily[r.daily.length - 2].total
-        : 0;
-      return [
-        dateStr,
-        r.name,
-        r.telegram_id ?? "",
-        (r.models ?? []).join(", "),
-        yesterday,
-        r.goal,
-        r.streak,
-        r.week,
-        r.month,
-        r.all_time,
-        r.mass_dms,
-        r.unread,
-        r.oldest,
-        "",
-        r.start_date ? format(new Date(r.start_date), "yyyy-MM-dd") : "",
-      ];
-    });
+    const selISO = iso(date);
+    const yISO = iso(addDays(date, -1));
+    const wsISO = iso(startOfWeek(subWeeks(date, 1), { weekStartsOn: 1 }));
+    const weISO = iso(endOfWeek(subWeeks(date, 1), { weekStartsOn: 1 }));
+    const msISO = iso(startOfMonth(subMonths(date, 1)));
+    const meISO = iso(endOfMonth(subMonths(date, 1)));
+
+    // Aggregate accounts_data for a set of accountIds in this chatter's assignment windows
+    const aggregate = (profileId: string, accountIds: string[]) => {
+      let yesterday = 0, week = 0, month = 0, allTime = 0;
+      let massDM = 0, unread = 0, oldest = 0;
+      const inWindow = (accId: string, d: string) => {
+        const ws = windowsRef.current.get(`${profileId}|${accId}`) ?? [];
+        if (ws.length === 0) return true;
+        for (const w of ws) {
+          const s = w.start_date ?? "0000-01-01";
+          const e = w.end_date ?? selISO;
+          if (d >= s && d <= e && d <= selISO) return true;
+        }
+        return false;
+      };
+      for (const accId of accountIds) {
+        const rows = accountsDataRef.current.get(accId) ?? [];
+        let latestDate = "";
+        let latestRow: AccountDataPoint | null = null;
+        for (const r of rows) {
+          if (r.date > selISO) continue;
+          if (!inWindow(accId, r.date)) continue;
+          allTime += r.total;
+          if (r.date >= msISO && r.date <= meISO) month += r.total;
+          if (r.date >= wsISO && r.date <= weISO) week += r.total;
+          if (r.date === yISO) yesterday += r.total;
+          if (!latestDate || r.date > latestDate) {
+            latestDate = r.date;
+            latestRow = r;
+          }
+        }
+        if (latestRow) {
+          massDM += latestRow.mass_dms;
+          unread += latestRow.unread_chats;
+          if (latestRow.oldest_chat > oldest) oldest = latestRow.oldest_chat;
+        }
+      }
+      return {
+        yesterday: Math.round(yesterday),
+        week: Math.round(week),
+        month: Math.round(month),
+        allTime: Math.round(allTime),
+        massDM, unread, oldest,
+      };
+    };
+
+    const rowsOut: (string | number)[][] = [];
+    for (const r of filtered) {
+      const startStr = r.start_date ? format(new Date(r.start_date), "yyyy-MM-dd") : "";
+      const platformModels = modelAccountsRef.current.get(r.profile_id)?.get(r.platform);
+      const modelEntries = platformModels ? Array.from(platformModels.entries()) : [];
+
+      if (modelEntries.length === 0) {
+        // No per-model breakdown available — fall back to chatter-level numbers
+        const yesterdayFallback = r.daily && r.daily.length >= 2 ? r.daily[r.daily.length - 2].total : 0;
+        rowsOut.push([
+          dateStr, r.name, r.telegram_id ?? "", r.platform, "Unassigned",
+          Math.round(yesterdayFallback), r.goal, r.streak,
+          Math.round(r.week), Math.round(r.month), Math.round(r.all_time),
+          r.mass_dms, r.unread, r.oldest, "", startStr,
+        ]);
+        continue;
+      }
+
+      // One row per model, sorted alphabetically for stable output
+      modelEntries.sort((a, b) => a[0].localeCompare(b[0]));
+      for (const [modelName, accSet] of modelEntries) {
+        const agg = aggregate(r.profile_id, Array.from(accSet));
+        rowsOut.push([
+          dateStr, r.name, r.telegram_id ?? "", r.platform, modelName,
+          agg.yesterday, r.goal, r.streak,
+          agg.week, agg.month, agg.allTime,
+          agg.massDM, agg.unread, agg.oldest, "", startStr,
+        ]);
+      }
+    }
     return { headers, rows: rowsOut, dateStr };
   };
 
@@ -420,7 +547,7 @@ export default function ChatterReportsTab({ chatters }: Props) {
     const { headers, rows: rowsOut, dateStr } = buildReport();
     const platformName = activePlatform || "All";
     const safePlatform = platformName.replace(/\s+/g, "_");
-    const filename = `${safePlatform}_Chatter_Report_${dateStr}.${fmtKind}`;
+    const filename = `${safePlatform}_Chatter_Report_by_Model_${dateStr}.${fmtKind}`;
 
     if (fmtKind === "xlsx") {
       const ws = XLSX.utils.aoa_to_sheet([headers, ...rowsOut]);
