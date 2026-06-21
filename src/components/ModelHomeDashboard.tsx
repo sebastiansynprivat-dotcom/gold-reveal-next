@@ -577,11 +577,22 @@ export default function ModelHomeDashboard({
         let est = maloum + brezzels + fourbased;
         // Fallback: if payout_revenue has no data yet for the current
         // in-progress month, derive an estimate from the live accounts_data
-        // revenue × the model's commission percentage. Ensures the model
-        // never sees an empty estimation while data is still syncing.
+        // revenue × the model's commission percentage. Uses the same smart
+        // blended monthly projection (history × run-rate) so the payout
+        // forecast isn't anchored down to almost zero in the first days of
+        // the month.
         if (est <= 0 && year === curYear && month === curMonth) {
           const pct = Number(commissionPct || platformPcts.fallback || 0) / 100;
-          est = Number(monthRevenue || 0) * pct;
+          const now2 = new Date();
+          const dom = now2.getDate();
+          const tdays = new Date(now2.getFullYear(), now2.getMonth() + 1, 0).getDate();
+          const linear = dom > 0 ? (Number(monthRevenue || 0) / dom) * tdays : 0;
+          const weight = Math.min(1, dom / 14);
+          const blended = historicalMonthlyAvg > 0
+            ? linear * weight + historicalMonthlyAvg * (1 - weight)
+            : linear;
+          const projected = Math.max(blended, linear, Number(monthRevenue || 0));
+          est = projected * pct;
         }
         out[keyOf(year, month)] = est;
       }
@@ -589,7 +600,7 @@ export default function ModelHomeDashboard({
       if (!cancelled) setEstimatedPayouts(out);
     })();
     return () => { cancelled = true; };
-  }, [modelId, inProgressMonths, platformPcts, monthRevenue, commissionPct]);
+  }, [modelId, inProgressMonths, platformPcts, monthRevenue, historicalMonthlyAvg, commissionPct]);
 
 
 
