@@ -313,7 +313,8 @@ export default function ModelDashboardTab() {
   const [loading, setLoading] = useState(true);
   const [showDuplicatesOnly, setShowDuplicatesOnly] = useState(false);
   const [agencyFilter, setAgencyFilter] = useState<"all" | "shex" | "syn">("all");
-  const [steckbriefFilter, setSteckbriefFilter] = useState<"all" | "filled" | "empty">("all");
+  const [steckbriefFilter, setSteckbriefFilter] = useState<"all" | "filled" | "empty" | "confirmed" | "unconfirmed">("all");
+  const [sortMode, setSortMode] = useState<"name" | "newest">("name");
   const [agencyBilling, setAgencyBilling] = useState<Record<string, boolean>>({ shex: false, syn: false });
 
   // Load global per-agency billing-in-progress flags
@@ -515,6 +516,16 @@ export default function ModelDashboardTab() {
   // Steckbrief / Model Profile
   const [modelProfile, setModelProfile] = useState<import("@/lib/modelProfilePdf").ModelProfileData | null>(null);
   const [filledProfileIds, setFilledProfileIds] = useState<Set<string>>(new Set());
+  type ProfileMeta = { confirmed_at: string | null; submitted_at: string | null; last_change_at: string | null; has_snapshot: boolean };
+  const [profileMeta, setProfileMeta] = useState<Map<string, ProfileMeta>>(new Map());
+  const profileStatusOf = (id: string): "confirmed" | "pending_new" | "pending_change" | "none" => {
+    const m = profileMeta.get(id);
+    if (!m) return "none";
+    if (m.confirmed_at) return "confirmed";
+    if (m.has_snapshot) return "pending_change";
+    if (m.submitted_at) return "pending_new";
+    return "none";
+  };
   // PWA install + Push notification status per model
   const [pwaInstalledModelIds, setPwaInstalledModelIds] = useState<Set<string>>(new Set());
   const [pushEnabledModelIds, setPushEnabledModelIds] = useState<Set<string>>(new Set());
@@ -1025,13 +1036,26 @@ export default function ModelDashboardTab() {
       .then(({ data }) => setModelProfile((data as any) || null));
   }, [selectedModelId]);
 
-  // Load list of model_ids that have a profile (for the list badge)
+  // Load profile meta (status + timestamps) for the list filters/sort
   useEffect(() => {
     supabase
       .from("model_profiles" as any)
-      .select("model_id")
+      .select("model_id, confirmed_at, submitted_at, last_change_at, approved_snapshot")
       .then(({ data }) => {
-        if (data) setFilledProfileIds(new Set((data as any[]).map((r) => r.model_id)));
+        if (!data) return;
+        const ids = new Set<string>();
+        const map = new Map<string, ProfileMeta>();
+        (data as any[]).forEach((r) => {
+          ids.add(r.model_id);
+          map.set(r.model_id, {
+            confirmed_at: r.confirmed_at || null,
+            submitted_at: r.submitted_at || null,
+            last_change_at: r.last_change_at || null,
+            has_snapshot: !!r.approved_snapshot,
+          });
+        });
+        setFilledProfileIds(ids);
+        setProfileMeta(map);
       });
   }, [selectedModelId]);
 
@@ -1077,7 +1101,7 @@ export default function ModelDashboardTab() {
 
 
 
-  // ─── Filter models ───
+  // ─── Filter + sort models ───
   const filteredModels = useMemo(() => {
     let list = models;
     if (agencyFilter !== "all") {
@@ -1086,10 +1110,27 @@ export default function ModelDashboardTab() {
     if (showDuplicatesOnly) list = list.filter((m) => duplicateModelIds.has(m.id));
     if (steckbriefFilter === "filled") list = list.filter((m) => filledProfileIds.has(m.id));
     else if (steckbriefFilter === "empty") list = list.filter((m) => !filledProfileIds.has(m.id));
-    if (!searchQuery) return list;
-    const q = searchQuery.toLowerCase();
-    return list.filter((m) => m.name.toLowerCase().includes(q) || (m.username || "").toLowerCase().includes(q));
-  }, [models, searchQuery, showDuplicatesOnly, duplicateModelIds, agencyFilter, steckbriefFilter, filledProfileIds]);
+    else if (steckbriefFilter === "confirmed") list = list.filter((m) => profileStatusOf(m.id) === "confirmed");
+    else if (steckbriefFilter === "unconfirmed")
+      list = list.filter((m) => {
+        const s = profileStatusOf(m.id);
+        return s === "pending_new" || s === "pending_change";
+      });
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter((m) => m.name.toLowerCase().includes(q) || (m.username || "").toLowerCase().includes(q));
+    }
+    if (sortMode === "newest") {
+      const ts = (id: string) => {
+        const m = profileMeta.get(id);
+        if (!m) return 0;
+        const t = m.last_change_at || m.submitted_at || m.confirmed_at;
+        return t ? new Date(t).getTime() : 0;
+      };
+      list = [...list].sort((a, b) => ts(b.id) - ts(a.id));
+    }
+    return list;
+  }, [models, searchQuery, showDuplicatesOnly, duplicateModelIds, agencyFilter, steckbriefFilter, filledProfileIds, profileMeta, sortMode]);
 
 
 
@@ -1754,18 +1795,33 @@ export default function ModelDashboardTab() {
             ))}
           </div>
           <div
-            className="inline-flex rounded-lg border border-border bg-secondary/40 p-0.5"
+            className="inline-flex rounded-lg border border-border bg-secondary/40 p-0.5 flex-wrap"
             title="Steckbrief-Status filtern"
           >
-            {(["all", "filled", "empty"] as const).map((s) => {
+            {(["all", "filled", "empty", "confirmed", "unconfirmed"] as const).map((s) => {
               const count =
                 s === "all"
                   ? models.length
                   : s === "filled"
                     ? models.filter((m) => filledProfileIds.has(m.id)).length
-                    : models.filter((m) => !filledProfileIds.has(m.id)).length;
+                    : s === "empty"
+                      ? models.filter((m) => !filledProfileIds.has(m.id)).length
+                      : s === "confirmed"
+                        ? models.filter((m) => profileStatusOf(m.id) === "confirmed").length
+                        : models.filter((m) => {
+                            const st = profileStatusOf(m.id);
+                            return st === "pending_new" || st === "pending_change";
+                          }).length;
               const label =
-                s === "all" ? "Steckbrief" : s === "filled" ? "✓ Vorhanden" : "✗ Fehlt";
+                s === "all"
+                  ? "Steckbrief"
+                  : s === "filled"
+                    ? "✓ Vorhanden"
+                    : s === "empty"
+                      ? "✗ Fehlt"
+                      : s === "confirmed"
+                        ? "✓ Bestätigt"
+                        : "⏳ Unbestätigt";
               return (
                 <button
                   key={s}
@@ -1774,11 +1830,13 @@ export default function ModelDashboardTab() {
                   className={cn(
                     "px-2.5 py-1 rounded-md text-[11px] font-semibold tracking-wider transition-colors flex items-center gap-1",
                     steckbriefFilter === s
-                      ? s === "filled"
+                      ? s === "filled" || s === "confirmed"
                         ? "bg-emerald-500/20 text-emerald-300"
                         : s === "empty"
                           ? "bg-rose-500/20 text-rose-300"
-                          : "bg-accent text-accent-foreground"
+                          : s === "unconfirmed"
+                            ? "bg-amber-500/20 text-amber-300"
+                            : "bg-accent text-accent-foreground"
                       : "text-muted-foreground hover:text-foreground",
                   )}
                 >
@@ -1787,6 +1845,21 @@ export default function ModelDashboardTab() {
                 </button>
               );
             })}
+          </div>
+          <div className="inline-flex rounded-lg border border-border bg-secondary/40 p-0.5" title="Sortierung">
+            {(["name", "newest"] as const).map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setSortMode(s)}
+                className={cn(
+                  "px-2.5 py-1 rounded-md text-[11px] font-semibold tracking-wider transition-colors",
+                  sortMode === s ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {s === "name" ? "A–Z" : "Neueste"}
+              </button>
+            ))}
           </div>
           <Button
             type="button"
@@ -2063,13 +2136,17 @@ export default function ModelDashboardTab() {
                 const isFilled = filledFields > 0;
                 const submittedAt = (profile as any)?.submitted_at as string | null | undefined;
                 const confirmedAt = (profile as any)?.confirmed_at as string | null | undefined;
-                const status: "confirmed" | "pending" | "draft" | "empty" = confirmedAt
+                const approvedSnapshot = (profile as any)?.approved_snapshot as any;
+                const hasSnapshot = !!approvedSnapshot;
+                const status: "confirmed" | "pending" | "pending_change" | "draft" | "empty" = confirmedAt
                   ? "confirmed"
-                  : submittedAt
-                    ? "pending"
-                    : isFilled
-                      ? "draft"
-                      : "empty";
+                  : hasSnapshot
+                    ? "pending_change"
+                    : submittedAt
+                      ? "pending"
+                      : isFilled
+                        ? "draft"
+                        : "empty";
                 const username = selectedModel?.username?.trim() || "";
 
 
@@ -2089,7 +2166,40 @@ export default function ModelDashboardTab() {
                     return;
                   }
                   setModelProfile({ ...(profile as any), confirmed_at: nowIso, confirmed_by: u?.user?.id, approved_snapshot: snapshot } as any);
+                  setProfileMeta((prev) => {
+                    const next = new Map(prev);
+                    const cur = next.get(selectedModelId) || { confirmed_at: null, submitted_at: null, last_change_at: null, has_snapshot: false };
+                    next.set(selectedModelId, { ...cur, confirmed_at: nowIso, has_snapshot: true });
+                    return next;
+                  });
                   toast.success("Steckbrief bestätigt — jetzt im Chatter-Dashboard sichtbar");
+                };
+
+                const rejectChange = async () => {
+                  if (!profile || !selectedModelId || !approvedSnapshot) return;
+                  const { data: u } = await supabase.auth.getUser();
+                  const nowIso = new Date().toISOString();
+                  const restored = { ...approvedSnapshot, model_id: selectedModelId };
+                  const { error } = await (supabase.from("model_profiles" as any) as any)
+                    .update({
+                      ...restored,
+                      confirmed_at: nowIso,
+                      confirmed_by: u?.user?.id,
+                      approved_snapshot: approvedSnapshot,
+                      last_change_at: nowIso,
+                    })
+                    .eq("model_id", selectedModelId);
+                  if (error) {
+                    toast.error("Ablehnung fehlgeschlagen");
+                    return;
+                  }
+                  setModelProfile({ ...restored, confirmed_at: nowIso, approved_snapshot: approvedSnapshot, last_change_at: nowIso } as any);
+                  setProfileMeta((prev) => {
+                    const next = new Map(prev);
+                    next.set(selectedModelId, { confirmed_at: nowIso, submitted_at: (restored as any).submitted_at || null, last_change_at: nowIso, has_snapshot: true });
+                    return next;
+                  });
+                  toast.success("Änderung abgelehnt — vorheriger Stand wiederhergestellt");
                 };
 
                 const revokeConfirmation = async () => {
@@ -2102,6 +2212,12 @@ export default function ModelDashboardTab() {
                     return;
                   }
                   setModelProfile({ ...(profile as any), confirmed_at: null, confirmed_by: null } as any);
+                  setProfileMeta((prev) => {
+                    const next = new Map(prev);
+                    const cur = next.get(selectedModelId);
+                    if (cur) next.set(selectedModelId, { ...cur, confirmed_at: null });
+                    return next;
+                  });
                   toast.success("Bestätigung zurückgezogen");
                 };
 
@@ -2117,6 +2233,11 @@ export default function ModelDashboardTab() {
                       {status === "pending" && (
                         <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider px-2 py-1 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">
                           <Clock className="h-3 w-3" /> Prüfung läuft
+                        </span>
+                      )}
+                      {status === "pending_change" && (
+                        <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider px-2 py-1 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">
+                          <Clock className="h-3 w-3" /> Änderung wartet auf Freigabe
                         </span>
                       )}
                       {status === "draft" && (
@@ -2188,14 +2309,24 @@ export default function ModelDashboardTab() {
                         <Eye className="h-3 w-3" />
                         Als Model ansehen
                       </Button>
-                      {status === "pending" && (
+                      {(status === "pending" || status === "pending_change") && (
                         <Button
                           size="sm"
                           onClick={confirmProfile}
                           className="text-xs gap-1.5 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-[0_0_12px_-2px_hsl(142_76%_45%/0.6)] hover:scale-[1.02] transition-all"
                         >
                           <ShieldCheck className="h-3 w-3" />
-                          Steckbrief bestätigen
+                          {status === "pending_change" ? "Änderung freigeben" : "Steckbrief bestätigen"}
+                        </Button>
+                      )}
+                      {status === "pending_change" && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={rejectChange}
+                          className="text-xs gap-1.5 border-rose-500/40 text-rose-300 hover:bg-rose-500/10"
+                        >
+                          Änderung ablehnen
                         </Button>
                       )}
                       {status === "confirmed" && (
