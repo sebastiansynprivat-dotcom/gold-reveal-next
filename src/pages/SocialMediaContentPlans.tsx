@@ -339,11 +339,19 @@ export default function SocialMediaContentPlans() {
               </button>
             ))}
           </div>
-          <Button onClick={openCreate} className="bg-accent text-accent-foreground hover:bg-accent/90">
-            <Plus className="h-4 w-4 mr-1.5" />
-            {activeTab === "model" ? "Neuer Plan (Models)" : "Neuer Plan (Marketer)"}
-          </Button>
+          {activeTab === "model" && (
+            <Button onClick={openCreate} className="bg-accent text-accent-foreground hover:bg-accent/90">
+              <Plus className="h-4 w-4 mr-1.5" /> Neuer Plan (Models)
+            </Button>
+          )}
         </div>
+
+        {activeTab === "marketer" ? (
+          <MarketerListsAdmin />
+        ) : (<></>)}
+
+        {activeTab === "model" && (<></>)}
+        {activeTab === "model" && (
 
         {(() => {
           const filteredPlans = plans.filter((p) => p.target_type === activeTab);
