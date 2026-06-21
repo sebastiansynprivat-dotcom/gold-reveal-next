@@ -109,6 +109,10 @@ const COPY = {
     confirmReject: "Really reject this request?",
     save: "Save",
     cancel: "Cancel",
+    historyTitle: "History",
+    historyEmpty: "No completed requests yet.",
+    historyShow: "Show history",
+    historyHide: "Hide history",
   },
 } as const;
 
