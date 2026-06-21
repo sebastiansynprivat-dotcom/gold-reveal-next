@@ -105,7 +105,7 @@ export default function SteckbriefImporter({
               className="text-[11px] h-7 gap-1.5 bg-gradient-to-r from-accent to-accent/80 text-accent-foreground hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               title={
                 hasDriveFolder
-                  ? "Sucht im hinterlegten Drive-Ordner nach einer .docx / Google Doc"
+                  ? "Sucht im hinterlegten Drive-Ordner nach einer .docx, Google Doc oder .pdf"
                   : "Kein Drive-Ordner am Model hinterlegt"
               }
             >
