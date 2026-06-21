@@ -101,12 +101,24 @@ function GoalCell({ value, onSave }: { value: number; onSave: (next: number) => 
   );
 }
 
+type AccountDataPoint = { date: string; total: number; mass_dms: number; unread_chats: number; oldest_chat: number };
+type AssignmentWindow = { start_date: string | null; end_date: string | null };
+
 export default function ChatterReportsTab({ chatters }: Props) {
   const [date, setDate] = useState<Date>(new Date());
   const [search, setSearch] = useState("");
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(false);
   const [reportFor, setReportFor] = useState<Row | null>(null);
+
+  // Per-model report data — populated alongside `rows`, consumed by buildReport.
+  // profileId -> platform -> model display -> Set<accountId>
+  const modelAccountsRef = useRef<Map<string, Map<string, Map<string, Set<string>>>>>(new Map());
+  // `${profileId}|${accountId}` -> assignment windows
+  const windowsRef = useRef<Map<string, AssignmentWindow[]>>(new Map());
+  // accountId -> daily rows (any order)
+  const accountsDataRef = useRef<Map<string, AccountDataPoint[]>>(new Map());
+
 
   useEffect(() => {
     let cancelled = false;
