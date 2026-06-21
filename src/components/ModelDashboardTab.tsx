@@ -516,6 +516,16 @@ export default function ModelDashboardTab() {
   // Steckbrief / Model Profile
   const [modelProfile, setModelProfile] = useState<import("@/lib/modelProfilePdf").ModelProfileData | null>(null);
   const [filledProfileIds, setFilledProfileIds] = useState<Set<string>>(new Set());
+  type ProfileMeta = { confirmed_at: string | null; submitted_at: string | null; last_change_at: string | null; has_snapshot: boolean };
+  const [profileMeta, setProfileMeta] = useState<Map<string, ProfileMeta>>(new Map());
+  const profileStatusOf = (id: string): "confirmed" | "pending_new" | "pending_change" | "none" => {
+    const m = profileMeta.get(id);
+    if (!m) return "none";
+    if (m.confirmed_at) return "confirmed";
+    if (m.has_snapshot) return "pending_change";
+    if (m.submitted_at) return "pending_new";
+    return "none";
+  };
   // PWA install + Push notification status per model
   const [pwaInstalledModelIds, setPwaInstalledModelIds] = useState<Set<string>>(new Set());
   const [pushEnabledModelIds, setPushEnabledModelIds] = useState<Set<string>>(new Set());
