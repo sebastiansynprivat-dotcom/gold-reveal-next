@@ -440,7 +440,7 @@ export default function SocialMediaModelDashboard() {
     planRows.forEach((pr) => {
       const allDays = dayRowsByPlan[pr.plan_id] || [];
       const visible = visibleDaysForAssignment(pr.start_date);
-      const start = mondayOf(new Date(pr.start_date));
+      const start = planStart(pr.start_date);
       allDays.forEach((d) => {
         d.items.forEach((_, idx) => {
           total += 1;
