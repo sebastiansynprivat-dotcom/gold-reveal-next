@@ -79,6 +79,34 @@ export default function SteckbriefImporter({
     );
   };
 
+  const onPickImage = () => imageRef.current?.click();
+
+  const onImageChosen = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const f = e.target.files?.[0];
+    e.target.value = "";
+    if (!f) return;
+    if (!f.type.startsWith("image/")) {
+      toast.error("Bitte ein Bild wählen (JPG, PNG, WEBP)");
+      return;
+    }
+    if (f.size > 8 * 1024 * 1024) {
+      toast.error("Bild ist größer als 8 MB");
+      return;
+    }
+    const buf = await f.arrayBuffer();
+    const bytes = new Uint8Array(buf);
+    let bin = "";
+    const chunk = 0x8000;
+    for (let i = 0; i < bytes.length; i += chunk) {
+      bin += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk) as unknown as number[]);
+    }
+    const b64 = btoa(bin);
+    await callImport(
+      { model_id: modelId, mode: "image", file_base64: `data:${f.type};base64,${b64}`, file_name: f.name },
+      "image"
+    );
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -4 }}
