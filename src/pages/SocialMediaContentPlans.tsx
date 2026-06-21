@@ -61,6 +61,7 @@ export default function SocialMediaContentPlans() {
   const [planTitle, setPlanTitle] = useState("");
   const [planDesc, setPlanDesc] = useState("");
   const [days, setDays] = useState<DayMap>({});
+  const [openDays, setOpenDays] = useState<Set<number>>(new Set([1]));
   const [saving, setSaving] = useState(false);
 
   // Assign dialog
