@@ -75,6 +75,10 @@ const COPY = {
     confirmReject: "Anfrage wirklich ablehnen?",
     save: "Speichern",
     cancel: "Abbrechen",
+    historyTitle: "Verlauf",
+    historyEmpty: "Noch keine erledigten Anfragen.",
+    historyShow: "Verlauf anzeigen",
+    historyHide: "Verlauf ausblenden",
   },
   en: {
     title: "Custom requests",
