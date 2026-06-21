@@ -227,6 +227,95 @@ async function pdfToText(bytes: Uint8Array): Promise<string> {
 }
 
 
+const GERMAN_CITIES = [
+  "Berlin", "Hamburg", "München", "Köln", "Frankfurt am Main", "Stuttgart",
+  "Düsseldorf", "Leipzig", "Dortmund", "Essen", "Bremen", "Dresden",
+  "Hannover", "Nürnberg", "Duisburg", "Bochum", "Wuppertal", "Bielefeld",
+  "Bonn", "Münster", "Mannheim", "Karlsruhe", "Augsburg", "Wiesbaden",
+  "Mönchengladbach", "Kiel", "Aachen", "Braunschweig", "Freiburg im Breisgau",
+  "Mainz", "Lübeck", "Erfurt", "Rostock", "Kassel", "Potsdam", "Heidelberg",
+];
+
+async function aiInventProfileFromImage(imageBase64: string, mimeType: string, modelName: string): Promise<Record<string, string>> {
+  const apiKey = Deno.env.get("LOVABLE_API_KEY");
+  if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
+
+  // Random seeds to keep results diverse across models
+  const shuffledCities = [...GERMAN_CITIES].sort(() => Math.random() - 0.5).slice(0, 10);
+  const seed = crypto.randomUUID();
+
+  const schemaDescription = PROFILE_FIELDS.map((f) => `  - ${f}`).join("\n");
+
+  const systemPrompt = `Du bist ein kreativer Charakter-Designer für ein Creator-Model-Steckbrief.
+Du bekommst ein Foto eines Models und erfindest dazu einen passenden, glaubwürdigen Fantasie-Steckbrief.
+
+Liefere AUSSCHLIESSLICH ein gültiges JSON-Objekt mit folgenden Keys (alle Werte als String, niemals leer außer special_marks/no_gos):
+${schemaDescription}
+
+REGELN — sehr wichtig:
+- Sprache: Deutsch.
+- "city" MUSS eine größere deutsche Stadt sein. Wähle EINE aus dieser Vorschlagsliste (zufällig variiert): ${shuffledCities.join(", ")}.
+- "place_of_birth" darf eine andere deutsche Stadt sein als "city".
+- Alter zwischen 19 und 32, passend zum Foto.
+- Größe in cm (z. B. "168 cm"), Gewicht realistisch (z. B. "56 kg"), Schuhgröße EU (36–41), BH-Größe realistisch (z. B. "75B", "80C").
+- Haarfarbe ("natural_hair") MUSS visuell zum Foto passen.
+- Hobbies: 3–5 abwechslungsreiche Hobbys, Komma-getrennt. KEINE Klischees ständig wiederholen — variiere stark.
+- Beruf ("work" und "occupation" gleicher Wert): kreativer, realistischer Beruf/Studium (z. B. "Mediendesign-Studentin", "Fitnesstrainerin", "Marketing Assistant", "Zahnmedizinische Fachangestellte").
+- "languages": Deutsch + 1–2 weitere Sprachen (z. B. "Deutsch, Englisch, Spanisch").
+- "favorite_color", "favorite_movie", "favorite_food", "favorite_music": konkret, unterschiedlich, NICHT immer dieselben Standardantworten.
+- "dream": ein kurzer, persönlicher Traum (1 Satz).
+- "education": kurzer Bildungsweg.
+- "content_preferences": 2–3 Content-Vorlieben für OnlyFans-ähnliche Plattform, dezent formuliert.
+- "no_gos": 1–2 typische No-Gos.
+- "additional_info": leer lassen oder kurze Notiz.
+- "special_marks": Tattoos/Piercings/Muttermale wenn auf dem Foto sichtbar — sonst leer.
+- "name": Wenn ein Model-Name vorgegeben ist, übernimm diesen. Sonst denk dir einen passenden weiblichen deutschen Vornamen aus.
+- Variation-Seed: ${seed} — Nutze diesen Seed, damit deine Antworten sich von vorherigen unterscheiden. Variiere Stadt, Hobbys, Lieblings-Items, Beruf.
+
+Vorgegebener Model-Name: ${modelName || "(keiner — frei wählen)"}
+
+Keine Markdown-Codeblöcke, kein Kommentar — nur das reine JSON-Objekt.`;
+
+  const res = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash",
+      messages: [
+        { role: "system", content: systemPrompt },
+        {
+          role: "user",
+          content: [
+            { type: "text", text: "Hier ist das Foto des Models. Erstelle den Fantasie-Steckbrief jetzt als JSON." },
+            { type: "image_url", image_url: { url: `data:${mimeType};base64,${imageBase64}` } },
+          ],
+        },
+      ],
+      response_format: { type: "json_object" },
+      temperature: 1.1,
+    }),
+  });
+  if (!res.ok) {
+    const t = await res.text();
+    if (res.status === 429) throw new Error("AI rate limit exceeded — bitte später erneut versuchen");
+    if (res.status === 402) throw new Error("AI credits exhausted — bitte Workspace-Guthaben aufladen");
+    throw new Error(`AI error [${res.status}]: ${t.slice(0, 500)}`);
+  }
+  const data = await res.json();
+  const content = data?.choices?.[0]?.message?.content || "{}";
+  let parsed: Record<string, unknown> = {};
+  try { parsed = JSON.parse(content); } catch {
+    const m = String(content).match(/\{[\s\S]*\}/);
+    if (m) parsed = JSON.parse(m[0]);
+  }
+  const out: Record<string, string> = {};
+  for (const f of PROFILE_FIELDS) {
+    const v = (parsed as any)[f];
+    out[f] = typeof v === "string" ? v.trim() : v != null ? String(v) : "";
+  }
+  return out;
+}
+
 async function aiExtractProfile(rawText: string): Promise<Record<string, string>> {
   const apiKey = Deno.env.get("LOVABLE_API_KEY");
   if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
