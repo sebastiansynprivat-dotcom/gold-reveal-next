@@ -1753,6 +1753,41 @@ export default function ModelDashboardTab() {
               </button>
             ))}
           </div>
+          <div
+            className="inline-flex rounded-lg border border-border bg-secondary/40 p-0.5"
+            title="Steckbrief-Status filtern"
+          >
+            {(["all", "filled", "empty"] as const).map((s) => {
+              const count =
+                s === "all"
+                  ? models.length
+                  : s === "filled"
+                    ? models.filter((m) => filledProfileIds.has(m.id)).length
+                    : models.filter((m) => !filledProfileIds.has(m.id)).length;
+              const label =
+                s === "all" ? "Steckbrief" : s === "filled" ? "✓ Vorhanden" : "✗ Fehlt";
+              return (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setSteckbriefFilter(s)}
+                  className={cn(
+                    "px-2.5 py-1 rounded-md text-[11px] font-semibold tracking-wider transition-colors flex items-center gap-1",
+                    steckbriefFilter === s
+                      ? s === "filled"
+                        ? "bg-emerald-500/20 text-emerald-300"
+                        : s === "empty"
+                          ? "bg-rose-500/20 text-rose-300"
+                          : "bg-accent text-accent-foreground"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {label}
+                  <span className="tabular-nums opacity-70">{count}</span>
+                </button>
+              );
+            })}
+          </div>
           <Button
             type="button"
             size="sm"
