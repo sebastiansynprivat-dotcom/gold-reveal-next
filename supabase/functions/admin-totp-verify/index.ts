@@ -189,7 +189,10 @@ Deno.serve(async (req) => {
     const insRes = await serviceClient.from("admin_2fa_sessions").insert({
       user_id: user.id,
       session_token: sessionToken,
-      expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      // Effectively "until password change" – 10 years. Supabase auth refresh
+      // tokens already auto-rotate indefinitely; this matches that behaviour
+      // for the admin 2FA gate so admins don't have to re-verify periodically.
+      expires_at: new Date(Date.now() + 10 * 365 * 24 * 60 * 60 * 1000).toISOString(),
     });
     if (insRes.error) {
       console.error("[totp-verify] INSERT FAILED", JSON.stringify(insRes.error));
