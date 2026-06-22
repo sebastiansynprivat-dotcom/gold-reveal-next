@@ -25,11 +25,11 @@ export default function SocialMediaLogin() {
   const [submitting, setSubmitting] = useState(false);
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
   const [isModel, setIsModel] = useState<boolean>(false);
-  const [signingOut, setSigningOut] = useState(false);
+  const [redirectHome, setRedirectHome] = useState(false);
   const [showForgot, setShowForgot] = useState(false);
 
   useEffect(() => {
-    if (!user || signingOut) return;
+    if (!user) return;
     supabase
       .from("user_roles")
       .select("role")
@@ -38,14 +38,13 @@ export default function SocialMediaLogin() {
       .then(({ data }) => {
         const roles = (data || []).map((r: any) => r.role);
         if (roles.length === 0) {
-          setSigningOut(true);
-          supabase.auth.signOut().then(() => setSigningOut(false));
+          setRedirectHome(true);
         } else {
           setIsModel(roles.includes("fanvue_model") && !roles.some((r: string) => ["fanvue_partner", "super_admin", "admin"].includes(r)));
           setHasAccess(true);
         }
       });
-  }, [user, signingOut]);
+  }, [user]);
 
   // Mouse particles
   const particlesRef = useRef<{ x: number; y: number; size: number; opacity: number; vx: number; vy: number; life: number }[]>([]);
@@ -94,7 +93,7 @@ export default function SocialMediaLogin() {
     return () => { window.removeEventListener("resize", resize); cancelAnimationFrame(animFrameRef.current); };
   }, []);
 
-  if (loading || signingOut) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
@@ -103,6 +102,7 @@ export default function SocialMediaLogin() {
   }
 
   if (user && hasAccess === true) return <Navigate to={isModel ? "/socialmedia/model" : "/socialmedia/admin"} replace />;
+  if (user && redirectHome) return <Navigate to="/" replace />;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

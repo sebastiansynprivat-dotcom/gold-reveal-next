@@ -58,22 +58,18 @@ export default function ModelLogin() {
   const [submitting, setSubmitting] = useState(false);
   const [isModel, setIsModel] = useState<boolean | null>(null);
   const [showForgot, setShowForgot] = useState(false);
-  const [signingOut, setSigningOut] = useState(false);
+  const [redirectHome, setRedirectHome] = useState(false);
 
-  // If logged in as non-model, sign out automatically so model can log in fresh
+  // If a non-model user is already logged in, DON'T sign them out (that caused
+  // accidental logouts when chatters opened this URL). Instead, send them to "/".
   useEffect(() => {
-    if (!user || signingOut) return;
+    if (!user) return;
     supabase.from("user_roles").select("role").eq("user_id", user.id).eq("role", "model").maybeSingle()
       .then(({ data }) => {
-        if (data) {
-          setIsModel(true);
-        } else {
-          // Not a model – sign out so they can log in as model
-          setSigningOut(true);
-          supabase.auth.signOut().then(() => setSigningOut(false));
-        }
+        if (data) setIsModel(true);
+        else setRedirectHome(true);
       });
-  }, [user, signingOut]);
+  }, [user]);
 
   // Mouse particles
   const particlesRef = useRef<{ x: number; y: number; size: number; opacity: number; vx: number; vy: number; life: number }[]>([]);
@@ -122,7 +118,7 @@ export default function ModelLogin() {
     return () => { window.removeEventListener("resize", resize); cancelAnimationFrame(animFrameRef.current); };
   }, []);
 
-  if (loading || signingOut) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
@@ -131,6 +127,8 @@ export default function ModelLogin() {
   }
 
   if (user && isModel === true) return <Navigate to="/model" replace />;
+  if (user && redirectHome) return <Navigate to="/" replace />;
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
