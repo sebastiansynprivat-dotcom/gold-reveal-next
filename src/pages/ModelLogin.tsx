@@ -118,7 +118,7 @@ export default function ModelLogin() {
     return () => { window.removeEventListener("resize", resize); cancelAnimationFrame(animFrameRef.current); };
   }, []);
 
-  if (loading || signingOut) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
@@ -127,6 +127,8 @@ export default function ModelLogin() {
   }
 
   if (user && isModel === true) return <Navigate to="/model" replace />;
+  if (user && redirectHome) return <Navigate to="/" replace />;
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
