@@ -27,6 +27,7 @@ const Invoice = lazy(() => import("./pages/Invoice"));
 const ModelLogin = lazy(() => import("./pages/ModelLogin"));
 const ModelDashboard = lazy(() => import("./pages/ModelDashboard"));
 const AdminModelView = lazy(() => import("./pages/AdminModelView"));
+const AdminChatterView = lazy(() => import("./pages/AdminChatterView"));
 const Leaderboard = lazy(() => import("./pages/Leaderboard"));
 const SocialMediaLogin = lazy(() => import("./pages/SocialMediaLogin"));
 const SocialMediaDashboard = lazy(() => import("./pages/SocialMediaDashboard"));
