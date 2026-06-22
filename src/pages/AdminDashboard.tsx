@@ -61,6 +61,7 @@ import {
   Pencil,
   MessageCircle,
   FileBarChart,
+  Eye,
 } from "lucide-react";
 import ChatterReportsTab from "@/components/admin/ChatterReportsTab";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -6005,6 +6006,22 @@ export default function AdminDashboard() {
                               </div>
                               {expandedChatter === chatter.rowKey && (
                                 <div className="px-4 pb-4 animate-in fade-in duration-200">
+                                  {chatter.user_id && (
+                                    <div className="mb-3">
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          window.open(`/admin/chatter/${chatter.user_id}/view`, "_blank");
+                                        }}
+                                        className="h-8 text-xs gap-1.5 border-accent/40 text-accent hover:bg-accent/10"
+                                      >
+                                        <Eye className="h-3.5 w-3.5" />
+                                        Als Chatter ansehen
+                                      </Button>
+                                    </div>
+                                  )}
                                   {(chatter.assigned_accounts?.length || 0) >= 1 ? (
                                     /* Account cards – same format for 1 or many */
                                     <div className="space-y-3">
