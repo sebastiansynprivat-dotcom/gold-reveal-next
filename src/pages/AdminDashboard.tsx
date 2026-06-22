@@ -61,6 +61,7 @@ import {
   Pencil,
   MessageCircle,
   FileBarChart,
+  Eye,
 } from "lucide-react";
 import ChatterReportsTab from "@/components/admin/ChatterReportsTab";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
