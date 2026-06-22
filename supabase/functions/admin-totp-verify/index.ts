@@ -189,7 +189,7 @@ Deno.serve(async (req) => {
     const insRes = await serviceClient.from("admin_2fa_sessions").insert({
       user_id: user.id,
       session_token: sessionToken,
-      expires_at: new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString(),
+      expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
     });
     if (insRes.error) {
       console.error("[totp-verify] INSERT FAILED", JSON.stringify(insRes.error));
