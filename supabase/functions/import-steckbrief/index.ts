@@ -235,7 +235,7 @@ const GERMAN_CITIES = [
   "Mainz", "Lübeck", "Erfurt", "Rostock", "Kassel", "Potsdam", "Heidelberg",
 ];
 
-async function aiInventProfileFromImage(imageBase64: string, mimeType: string, modelName: string): Promise<Record<string, string>> {
+async function aiInventProfileFromImage(imageBase64: string, mimeType: string, modelName: string, extraText: string = ""): Promise<Record<string, string>> {
   const apiKey = Deno.env.get("LOVABLE_API_KEY");
   if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
 
