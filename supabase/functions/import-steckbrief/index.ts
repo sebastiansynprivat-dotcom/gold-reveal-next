@@ -270,13 +270,23 @@ REGELN — sehr wichtig:
 - "name": Wenn ein Model-Name vorgegeben ist, übernimm diesen. Sonst denk dir einen passenden weiblichen deutschen Vornamen aus.
 - Variation-Seed: ${seed} — Nutze diesen Seed, damit deine Antworten sich von vorherigen unterscheiden. Variiere Stadt, Hobbys, Lieblings-Items, Beruf.
 ${extraText.trim() ? `
-WICHTIG — ZUSATZ-INFOS DES ADMINS:
-Es liegt bereits ein vom Admin/Creator geschriebener Text mit persönlichen Infos zum Model vor (siehe User-Message).
-- Übernimm ALLE konkreten Fakten aus diesem Text 1:1 (Name, Alter, Stadt, Herkunft, Beruf, Hobbys, Persönlichkeit, Lieblings-Items, besondere Merkmale, Sprachen, etc.).
-- Diese Fakten haben IMMER Vorrang vor dem, was du erfinden würdest.
-- Felder, die im Text NICHT erwähnt werden, erfindest du wie gewohnt passend zum Foto.
-- Persönlichkeit: Wenn der Text Charakter-Hinweise gibt, baue die in "personality" ein (2–3 Sätze, ergänze gerne Vibe aus dem Foto).
+WICHTIG — SO ARBEITEST DU MIT DEN ZUSATZ-INFOS DES ADMINS:
+Es liegt ein vom Admin/Creator geschriebener Text mit persönlichen Infos zum Model vor (siehe User-Message). Dieser Text ist deine WICHTIGSTE Quelle — wichtiger als das Foto.
+
+DEIN VORGEHEN (in dieser Reihenfolge):
+1. LIES den Text gründlich und VERSTEHE die Persönlichkeit dahinter: Wie tickt diese Person? Was ist ihr Vibe? Welche Werte, Energie, Eigenheiten kommen durch?
+2. ÜBERNIMM alle expliziten Fakten (Name, Alter, Stadt, Herkunft, Beruf, Hobbys, Sprachen, Lieblings-Items, Tattoos …) — aber formuliere sie SAUBER und stimmig, nicht stumpf kopiert. Schlechte/holprige Formulierungen darfst und sollst du glätten.
+3. DENKE LOGISCH MIT: Leite aus den gegebenen Infos weitere Felder ab, wenn sich das natürlich ergibt. Beispiele:
+   • "Macht Yoga und liebt Achtsamkeit" → "personality" eher ruhig/zentriert, "favorite_music" eher Chill/Indie, "dream" passend dazu.
+   • "Aus München, arbeitet als Grafikdesignerin" → "education" plausibel ableiten (z. B. Studium Kommunikationsdesign).
+   • "Liebt Reisen nach Asien" → "favorite_food" könnte asiatisch sein, "languages" evtl. Englisch + Grundkenntnisse einer asiatischen Sprache.
+   Das ist KEIN Erfinden ins Blaue — das ist intelligentes Weiterdenken auf Basis der echten Person.
+4. "personality" (2–3 Sätze): Muss die Persönlichkeit aus dem Text WIRKLICH einfangen — Vibe, Eigenheiten, Energie. Kein generisches "verspielt und neugierig", sondern spezifisch zu dieser Person. Foto-Eindruck darf ergänzen, aber Text dominiert.
+5. NUR Felder, für die weder Text noch logische Ableitung etwas hergeben, ergänzt du frei passend zum Foto und zum bereits etablierten Charakter (NICHT zufällig — stimmig zur Persönlichkeit).
+
+Faustregel: Am Ende muss sich der ganze Steckbrief wie EINE konsistente Person anfühlen, deren Kern aus dem Text kommt.
 ` : ""}
+
 Vorgegebener Model-Name: ${modelName || "(keiner — frei wählen)"}
 
 Keine Markdown-Codeblöcke, kein Kommentar — nur das reine JSON-Objekt.`;
@@ -292,8 +302,9 @@ Keine Markdown-Codeblöcke, kein Kommentar — nur das reine JSON-Objekt.`;
           role: "user",
           content: [
             { type: "text", text: extraText.trim()
-              ? `Hier ist das Foto des Models.\n\nZUSATZ-INFOS (vom Admin/Creator bereitgestellt — Fakten daraus 1:1 übernehmen):\n"""\n${extraText.trim().slice(0, 8000)}\n"""\n\nErstelle den Steckbrief jetzt als JSON.`
+              ? `Hier ist das Foto des Models.\n\nZUSATZ-INFOS vom Admin/Creator (deine Hauptquelle — Persönlichkeit verstehen, Fakten sauber übernehmen, logisch weiterdenken, Lücken stimmig füllen):\n"""\n${extraText.trim().slice(0, 8000)}\n"""\n\nErstelle den Steckbrief jetzt als JSON — konsistent zur Persönlichkeit aus dem Text.`
               : "Hier ist das Foto des Models. Erstelle den Fantasie-Steckbrief jetzt als JSON." },
+
             { type: "image_url", image_url: { url: `data:${mimeType};base64,${imageBase64}` } },
           ],
         },
