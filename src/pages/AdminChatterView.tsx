@@ -115,11 +115,6 @@ export default function AdminChatterView() {
         if (sErr) throw sErr;
 
         switchedRef.current = true;
-        // Keep the browser's persisted auth storage on the admin session while
-        // this tab uses the chatter session in memory. That way closing,
-        // refreshing, or leaving the view does not log the admin out globally.
-        preserveAdminStorage();
-        window.setTimeout(preserveAdminStorage, 0);
 
         setChatterEmail(data.email || "");
         setStatus("ready");
@@ -138,16 +133,6 @@ export default function AdminChatterView() {
         }
       }
     })();
-  }, [userId]);
-
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session?.user?.id === userId && (event === "SIGNED_IN" || event === "TOKEN_REFRESHED")) {
-        window.setTimeout(preserveAdminStorage, 0);
-      }
-    });
-
-    return () => subscription.unsubscribe();
   }, [userId]);
 
   useEffect(() => {
