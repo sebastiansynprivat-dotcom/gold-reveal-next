@@ -461,6 +461,10 @@ export default function Dashboard() {
         .eq("user_id", user.id)
         .then();
     }
+
+    return () => {
+      cancelled = true;
+    };
   }, [user, isPwaInstalled]);
   const saveTelegram = async () => {
     if (!user) return;
