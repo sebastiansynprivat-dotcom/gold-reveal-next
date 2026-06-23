@@ -24,7 +24,8 @@ export default function RevenueChart({ userId }: RevenueChartProps) {
       const from = format(subDays(today, 6), "yyyy-MM-dd");
       const to = format(today, "yyyy-MM-dd");
 
-      const { data: rows } = await supabase.rpc("get_chatter_revenue_series", {
+      const { data: rows } = await supabase.rpc("get_chatter_revenue_series_for_user", {
+        p_user_id: userId,
         p_from: from,
         p_to: to,
       });
