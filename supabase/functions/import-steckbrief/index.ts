@@ -496,8 +496,9 @@ Deno.serve(async (req) => {
       const mime = dataUrlMime || (/\.png$/i.test(fileName) ? "image/png" : "image/jpeg");
       const { data: model } = await admin
         .from("models").select("name").eq("id", modelId).maybeSingle();
-      fields = await aiInventProfileFromImage(cleanB64, mime, (model as any)?.name || "");
-      sourceLabel = `KI aus Bild: ${fileName || "Upload"}`;
+      const extraText = (body?.extra_text as string | undefined) || "";
+      fields = await aiInventProfileFromImage(cleanB64, mime, (model as any)?.name || "", extraText);
+      sourceLabel = `KI aus Bild: ${fileName || "Upload"}${extraText.trim() ? " + Text" : ""}`;
     } else {
       const b64 = body?.file_base64 as string | undefined;
       if (!b64) {
