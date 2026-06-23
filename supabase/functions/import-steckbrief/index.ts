@@ -269,7 +269,14 @@ REGELN — sehr wichtig:
 - "special_marks": Tattoos/Piercings/Muttermale wenn auf dem Foto sichtbar — sonst leer.
 - "name": Wenn ein Model-Name vorgegeben ist, übernimm diesen. Sonst denk dir einen passenden weiblichen deutschen Vornamen aus.
 - Variation-Seed: ${seed} — Nutze diesen Seed, damit deine Antworten sich von vorherigen unterscheiden. Variiere Stadt, Hobbys, Lieblings-Items, Beruf.
-
+${extraText.trim() ? `
+WICHTIG — ZUSATZ-INFOS DES ADMINS:
+Es liegt bereits ein vom Admin/Creator geschriebener Text mit persönlichen Infos zum Model vor (siehe User-Message).
+- Übernimm ALLE konkreten Fakten aus diesem Text 1:1 (Name, Alter, Stadt, Herkunft, Beruf, Hobbys, Persönlichkeit, Lieblings-Items, besondere Merkmale, Sprachen, etc.).
+- Diese Fakten haben IMMER Vorrang vor dem, was du erfinden würdest.
+- Felder, die im Text NICHT erwähnt werden, erfindest du wie gewohnt passend zum Foto.
+- Persönlichkeit: Wenn der Text Charakter-Hinweise gibt, baue die in "personality" ein (2–3 Sätze, ergänze gerne Vibe aus dem Foto).
+` : ""}
 Vorgegebener Model-Name: ${modelName || "(keiner — frei wählen)"}
 
 Keine Markdown-Codeblöcke, kein Kommentar — nur das reine JSON-Objekt.`;
