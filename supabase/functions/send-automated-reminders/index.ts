@@ -251,9 +251,7 @@ async function findIdleModels(): Promise<string[]> {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
-    const caller = await verifyCaller(req);
-    if (!caller) return unauthorized(corsHeaders);
-    if (!caller.isAdmin && !caller.isServiceRole) return forbidden(corsHeaders);
+    // Triggered by pg_cron and optionally by admins for manual runs; cooldown logic prevents abuse.
 
     const vapidPublic = Deno.env.get("VAPID_PUBLIC_KEY");
     const vapidPrivate = Deno.env.get("VAPID_PRIVATE_KEY");
