@@ -1734,20 +1734,7 @@ export default function Dashboard() {
         {/* Dashboard Tour Button - moved to header */}
 
 
-        {/* MassDM Generator */}
-        <div data-tour="massdm">
-          <MassDmGenerator />
-        </div>
-
-        {/* Tägliche Aufgaben */}
-        <div data-tour="checklist">
-          <DailyChecklist />
-        </div>
-
-        {/* Brezzels-Profile kommentieren – nur für Chatter mit einem Brezzels-Account */}
-        {assignedAccounts.some((a) => (a.platform || "").toLowerCase() === "brezzels") && (
-          <BrezzelsCommentTargets />
-        )}
+        {/* MassDM Generator, Tägliche Aufgaben und Brezzels wurden weiter nach oben verschoben */}
 
         {/* Bonus Model - alles in einer Karte (nur im Demo-Modus sichtbar) */}
         {isDemoMode() && (
