@@ -30,8 +30,7 @@ const PROFILE_FIELDS = [
   "bra_size",
   "height",
   "weight",
-  "content_preferences",
-  "no_gos",
+  "personality",
   "additional_info",
 ];
 
