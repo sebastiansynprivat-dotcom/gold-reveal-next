@@ -684,18 +684,18 @@ export default function Dashboard() {
 
             {/* Meta pills cluster */}
             <div className="flex flex-1 items-center gap-2 min-w-0 max-w-3xl">
-              {/* Name pill (read-only) */}
-              <div className="relative flex-1 min-w-0 group">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-accent transition-colors" />
-                <div
-                  className={`w-full h-9 flex items-center pl-9 pr-3 rounded-full bg-secondary/60 border border-border text-sm truncate ${
-                    userName ? "text-foreground font-medium" : "text-muted-foreground"
-                  }`}
-                  title={userName || "Name"}
-                >
-                  {userName || (lang === "en" ? "Your Name" : "Dein Name")}
+              {/* Name pill (read-only) – hidden when it duplicates the group name */}
+              {userName && userName.trim().toLowerCase() !== groupName.trim().toLowerCase() && (
+                <div className="relative flex-1 min-w-0 group">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-accent transition-colors" />
+                  <div
+                    className="w-full h-9 flex items-center pl-9 pr-3 rounded-full bg-secondary/60 border border-border text-sm truncate text-foreground font-medium"
+                    title={userName}
+                  >
+                    {userName}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Group name pill – read-only if set, editable fallback if empty */}
               <div className="relative flex-1 min-w-0 group">
