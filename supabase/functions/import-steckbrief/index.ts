@@ -32,6 +32,22 @@ const PROFILE_FIELDS = [
   "weight",
   "personality",
   "additional_info",
+  "content_preferences",
+  "no_gos",
+];
+
+const SHOOTING_PREFS: { key: string; label: string }[] = [
+  { key: "content_anal_fingering", label: "Anales Fingern" },
+  { key: "content_anal_plug", label: "Analplug" },
+  { key: "content_anal_penetration", label: "Anale Penetration" },
+  { key: "content_squirting", label: "Squirten" },
+  { key: "content_orgasm", label: "Orgasmus zeigen" },
+  { key: "content_moaning_name", label: "Stöhnen eines besonderen Namens" },
+  { key: "content_roleplay_costumes", label: "Rollenspiele in Kostümen" },
+  { key: "content_audios_for_chat", label: "Audios für den Chat aufnehmen" },
+  { key: "content_video_speaking", label: "Im Video sprechen" },
+  { key: "content_dick_ratings", label: "Dickratings" },
+  { key: "content_joi", label: "Jerk Off Instructions (JOI / Wichsanleitung)" },
 ];
 
 // ─── Google Drive auth (mirrors share-drive) ──────────────────────────
@@ -143,7 +159,6 @@ async function findSteckbriefInFolder(
     mimeType: string;
   }>;
   if (files.length === 0) return null;
-  // Prefer files matching "steckbrief" / "profile" / "profil"
   const ranked = files
     .map((f) => {
       const n = f.name.toLowerCase();
@@ -163,7 +178,6 @@ async function fetchDocxBytesFromDrive(
   token: string
 ): Promise<Uint8Array> {
   if (file.mimeType === "application/vnd.google-apps.document") {
-    // Export Google Doc to docx
     const url = `https://www.googleapis.com/drive/v3/files/${file.id}/export?mimeType=application/vnd.openxmlformats-officedocument.wordprocessingml.document`;
     const r = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
     if (!r.ok) throw new Error(`Drive export error: ${await r.text()}`);
@@ -190,12 +204,10 @@ async function docxToText(bytes: Uint8Array): Promise<string> {
     const file = zip.file(path);
     if (!file) continue;
     const xml = await file.async("string");
-    // Convert paragraph & table breaks to newlines first
     const withBreaks = xml
       .replace(/<w:p[ >]/g, "\n<w:p ")
       .replace(/<w:tab\/>/g, "\t")
       .replace(/<w:br\/>/g, "\n");
-    // Strip all XML tags, keep text content
     const text = withBreaks
       .replace(/<[^>]+>/g, "")
       .replace(/&amp;/g, "&")
@@ -235,64 +247,130 @@ const GERMAN_CITIES = [
   "Mainz", "Lübeck", "Erfurt", "Rostock", "Kassel", "Potsdam", "Heidelberg",
 ];
 
-async function aiInventProfileFromImage(imageBase64: string, mimeType: string, modelName: string, extraText: string = ""): Promise<Record<string, string>> {
+// ─── Style examples loader ────────────────────────────────────────────
+async function loadStyleExamples(
+  admin: ReturnType<typeof createClient>,
+  excludeModelId: string
+): Promise<string> {
+  try {
+    const { data } = await admin
+      .from("model_profiles")
+      .select(
+        "name,age,city,hobbies,personality,additional_info,content_preferences,no_gos,occupation,dream"
+      )
+      .neq("model_id", excludeModelId)
+      .not("personality", "is", null)
+      .not("confirmed_at", "is", null)
+      .order("confirmed_at", { ascending: false })
+      .limit(4);
+    const rows = (data || []) as Array<Record<string, any>>;
+    const usable = rows.filter(
+      (r) => (r.personality && r.personality.length > 30) || (r.additional_info && r.additional_info.length > 30)
+    );
+    if (usable.length === 0) return "";
+    return usable
+      .slice(0, 3)
+      .map((r, i) => {
+        const parts: string[] = [];
+        if (r.name) parts.push(`Name: ${r.name}`);
+        if (r.age) parts.push(`Alter: ${r.age}`);
+        if (r.city) parts.push(`Stadt: ${r.city}`);
+        if (r.occupation) parts.push(`Beruf: ${r.occupation}`);
+        if (r.hobbies) parts.push(`Hobbys: ${r.hobbies}`);
+        if (r.personality) parts.push(`Personality: ${r.personality}`);
+        if (r.additional_info) parts.push(`Additional Info: ${r.additional_info}`);
+        if (r.content_preferences) parts.push(`Content-Präferenzen: ${r.content_preferences}`);
+        if (r.no_gos) parts.push(`No-Gos: ${r.no_gos}`);
+        if (r.dream) parts.push(`Traum: ${r.dream}`);
+        return `--- Beispiel ${i + 1} (bestätigter Steckbrief) ---\n${parts.join("\n")}`;
+      })
+      .join("\n\n");
+  } catch (e) {
+    console.error("loadStyleExamples failed:", e);
+    return "";
+  }
+}
+
+// ─── Common rules block (tonality + shooting prefs + content sorting) ─
+function rulesBlock(): string {
+  const prefList = SHOOTING_PREFS.map((p) => `  - "${p.key}" → ${p.label}`).join("\n");
+  return `
+TONALITÄT — SEHR WICHTIG (gilt für personality, additional_info, dream):
+- Schreibe IN DER ICH-PERSPEKTIVE der Creatorin selbst, als hätte sie es persönlich aufgeschrieben.
+- Klingt warm, natürlich, authentisch — wie ein echter Mensch, nicht wie KI.
+- Verwende echte, lebendige Sprache mit kleinen Unperfektheiten: kurze Sätze, Mini-Anekdoten, persönliche Ticks ("ich liebe es, wenn…", "ehrlich gesagt…", "am liebsten…").
+- KEINE generischen KI-Floskeln wie "verspielt, neugierig und voller Energie" oder "liebt es, das Leben in vollen Zügen zu genießen".
+- Konkret > abstrakt. Statt "ich bin abenteuerlustig" lieber "samstags packe ich gern spontan den Rucksack und fahre los".
+
+SORTIERUNG VON CONTENT-PRÄFERENZEN AUS DEM TEXT:
+Wenn im Quelltext oder den Zusatz-Infos Content-Themen erwähnt werden, einsortieren in:
+(a) "content_preferences" — alles was die Creatorin gern, gut oder bevorzugt macht (Content-Arten, Settings, Themes, Stimmung). Komma-getrennt oder kurze Sätze, in ICH-Form.
+(b) "no_gos" — alles was sie ausdrücklich nicht macht / ablehnt. Komma-getrennt oder kurze Sätze, in ICH-Form.
+(c) "shooting_preferences" → JSON-Objekt mit folgenden Keys (Wert: true / false / null):
+${prefList}
+  Regeln:
+  - true = ausdrücklich erwähnt als "mache ich" / "gerne" / "kein Problem" / synonym.
+  - false = ausdrücklich abgelehnt / als No-Go genannt / "mache ich nicht".
+  - null = nicht erwähnt → NICHT raten.
+  - Indirekte Hinweise erlaubt (z. B. "ich nehme gerne Audios für Chats auf" → content_audios_for_chat=true; "ich spreche nicht im Video" → content_video_speaking=false).
+`.trim();
+}
+
+async function aiInventProfileFromImage(
+  imageBase64: string,
+  mimeType: string,
+  modelName: string,
+  extraText: string = "",
+  styleExamples: string = ""
+): Promise<{ fields: Record<string, string>; shooting: Record<string, boolean | null> }> {
   const apiKey = Deno.env.get("LOVABLE_API_KEY");
   if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
 
-  // Random seeds to keep results diverse across models
   const shuffledCities = [...GERMAN_CITIES].sort(() => Math.random() - 0.5).slice(0, 10);
   const seed = crypto.randomUUID();
 
   const schemaDescription = PROFILE_FIELDS.map((f) => `  - ${f}`).join("\n");
 
-  const systemPrompt = `Du bist ein kreativer Charakter-Designer für ein Creator-Model-Steckbrief.
-Du bekommst ein Foto eines Models und erfindest dazu einen passenden, glaubwürdigen Fantasie-Steckbrief.
+  const systemPrompt = `Du bist ein kreativer Charakter-Designer für einen Creator-Model-Steckbrief.
+Du bekommst ein Foto eines Models (und optional Zusatz-Text vom Admin/Creator) und erstellst dazu einen authentischen Steckbrief — geschrieben aus Sicht der Creatorin selbst.
 
-Liefere AUSSCHLIESSLICH ein gültiges JSON-Objekt mit folgenden Keys (alle Werte als String, niemals leer außer special_marks/additional_info):
+Liefere AUSSCHLIESSLICH ein gültiges JSON-Objekt mit folgenden Top-Level-Keys:
 ${schemaDescription}
+  - shooting_preferences  (JSON-Objekt, siehe unten)
 
-REGELN — sehr wichtig:
+Alle Textwerte als String. Leere Strings für unbekannte Felder erlaubt, außer "personality" (Pflicht).
+
+REGELN — Faktenbasis:
 - Sprache: Deutsch.
-- "city" MUSS eine größere deutsche Stadt sein. Wähle EINE aus dieser Vorschlagsliste (zufällig variiert): ${shuffledCities.join(", ")}.
-- "place_of_birth" darf eine andere deutsche Stadt sein als "city".
+- "city" MUSS eine größere deutsche Stadt sein. Wähle EINE aus (variieren): ${shuffledCities.join(", ")}.
+- "place_of_birth" darf eine andere deutsche Stadt sein.
 - Alter zwischen 19 und 32, passend zum Foto.
-- Größe in cm (z. B. "168 cm"), Gewicht realistisch (z. B. "56 kg"), Schuhgröße EU (36–41), BH-Größe realistisch (z. B. "75B", "80C").
-- Haarfarbe ("natural_hair") MUSS visuell zum Foto passen.
-- Hobbies: 3–5 abwechslungsreiche Hobbys, Komma-getrennt. KEINE Klischees ständig wiederholen — variiere stark.
-- Beruf ("work" und "occupation" gleicher Wert): kreativer, realistischer Beruf/Studium (z. B. "Mediendesign-Studentin", "Fitnesstrainerin", "Marketing Assistant", "Zahnmedizinische Fachangestellte").
-- "languages": Deutsch + 1–2 weitere Sprachen (z. B. "Deutsch, Englisch, Spanisch").
-- "favorite_color", "favorite_movie", "favorite_food", "favorite_music": konkret, unterschiedlich, NICHT immer dieselben Standardantworten.
-- "dream": ein kurzer, persönlicher Traum (1 Satz).
+- Größe in cm, Gewicht realistisch, Schuhgröße EU 36–41, BH realistisch.
+- "natural_hair" MUSS visuell zum Foto passen.
+- Hobbies: 3–5 abwechslungsreich, Komma-getrennt, KEINE Klischees wiederholen.
+- "work" und "occupation" gleicher Wert: realistischer Beruf/Studium.
+- "languages": Deutsch + 1–2 weitere.
+- "favorite_*": konkret, nicht generisch.
 - "education": kurzer Bildungsweg.
-- "personality": PFLICHTFELD — 2–3 Sätze Charakter-/Persönlichkeitsbeschreibung mit Vibe & Eigenschaften (z. B. "Verspielt, neugierig und mit einer frechen Note. Liebt tiefe Gespräche genauso wie spontane Abenteuer und bringt immer eine warme, einladende Energie mit."). NIEMALS leer lassen.
-- "additional_info": leer lassen oder kurze Notiz.
-- "special_marks": Tattoos/Piercings/Muttermale wenn auf dem Foto sichtbar — sonst leer.
-- "name": Wenn ein Model-Name vorgegeben ist, übernimm diesen. Sonst denk dir einen passenden weiblichen deutschen Vornamen aus.
-- Variation-Seed: ${seed} — Nutze diesen Seed, damit deine Antworten sich von vorherigen unterscheiden. Variiere Stadt, Hobbys, Lieblings-Items, Beruf.
+- "name": Modelname wenn vorgegeben, sonst weiblicher deutscher Vorname.
+- Variation-Seed: ${seed}.
+
+${rulesBlock()}
+
 ${extraText.trim() ? `
-WICHTIG — SO ARBEITEST DU MIT TEXT + FOTO ALS GLEICHWERTIGEM INPUT:
-Du hast ZWEI Quellen: den Admin-Text UND das Foto. Beide musst du KOMBINIEREN — keine dominiert allein.
+WIE DU TEXT + FOTO ZUSAMMEN AUSWERTEST:
+1. FOTO ANALYSIEREN (intern): Aussehen, Style, Vibe, Ausstrahlung, sichtbare Merkmale.
+2. TEXT LESEN: Fakten + Persönlichkeits-Hinweise + erwähnte Content-Themen extrahieren.
+3. PERSON VERSTEHEN: Beides zu einer stimmigen Person verschmelzen — welche Eigenschaften ergeben sich aus der Kombination?
+4. EXPLIZITE FAKTEN AUS DEM TEXT übernehmen, holprige Stellen glätten — aber NICHT umdichten.
+5. CONTENT-THEMEN AUS DEM TEXT sauber in content_preferences / no_gos / shooting_preferences einsortieren (siehe Regeln oben).
+6. LÜCKEN logisch ableiten (Hobbys+Foto → Lieblingsmusik etc.), niemals zufällig.
+7. PERSONALITY in 2–3 Sätzen, in ICH-Form, spezifisch zur kombinierten Person (Charakter aus Text + Vibe aus Foto). Kein KI-Sprech.
+` : `
+PERSONALITY: 2–3 Sätze in ICH-Form, authentisch, konkret zum Foto-Vibe. Kein KI-Sprech.
+`}
 
-DEIN VORGEHEN (in dieser Reihenfolge):
-1. ANALYSIERE DAS FOTO IM HINTERGRUND (nicht im Output, nur als Denkgrundlage):
-   • Aussehen: Haarfarbe, Haarlänge, Augenfarbe, Hauttyp, ungefähres Alter, Statur.
-   • Style & Vibe: Kleidung, Make-up, Setting, Pose, Ausdruck — was sagt das über Lifestyle und Energie aus? (sportlich? elegant? alternativ? girly? natürlich?)
-   • Sichtbare Merkmale: Tattoos, Piercings, Muttermale, Brille usw.
-2. LIES DEN TEXT und extrahiere Fakten + Persönlichkeits-Hinweise (Hobbys, Beruf, Werte, Energie, Sprache).
-3. ERSTELLE INTERN EINE GANZHEITLICHE PERSONENBESCHREIBUNG, die Foto-Eindruck UND Text zu EINER stimmigen Person verschmilzt:
-   • Welche Eigenschaften ergeben sich aus der Kombination? (z. B. Text sagt "Yoga + Reisen" + Foto zeigt natürlichen Look mit sonnengeküsster Haut → entspannte, geerdete Weltenbummlerin.)
-   • Wo bestätigen sich Text und Foto gegenseitig? Wo ergänzen sie sich?
-4. ÜBERNIMM alle expliziten Fakten aus dem Text — sauber formuliert (holprige Stellen glätten), nicht stumpf kopiert.
-5. VISUELLE FELDER kommen IMMER vom Foto (natural_hair, Größe/Statur-Schätzung, special_marks, Alter wenn nicht im Text).
-6. DENKE LOGISCH MIT: Leite aus Text+Foto weitere Felder ab — das ist KEIN zufälliges Erfinden, sondern stimmige Ableitung aus dem Gesamtbild.
-   • Text "Grafikdesignerin" + Foto mit kreativem Style → "education" Kommunikationsdesign, "favorite_music" passend.
-   • Text "liebt Asien-Reisen" + Foto entspannt-natürlich → "favorite_food" asiatisch, "dream" Reise-bezogen.
-7. "personality" (2–3 Sätze): Spiegelt die KOMBINATION wider — Charakter aus dem Text + Vibe/Ausstrahlung aus dem Foto. Spezifisch, nicht generisch.
-8. Felder ohne Anhaltspunkt aus Text ODER Foto: ergänze stimmig zur erarbeiteten Gesamtperson — niemals zufällig.
-
-Faustregel: Foto = Aussehen + visueller Vibe. Text = Fakten + innerer Charakter. Output = eine konsistente Person, in der beides verschmilzt.
-` : ""}
-
+${styleExamples ? `\nSTIL-REFERENZ — so klingen bestätigte Steckbriefe in dieser Agency. Übernimm NICHT die Inhalte, nur Tonfall, Länge und Detailgrad:\n\n${styleExamples}\n` : ""}
 
 Vorgegebener Model-Name: ${modelName || "(keiner — frei wählen)"}
 
@@ -309,15 +387,14 @@ Keine Markdown-Codeblöcke, kein Kommentar — nur das reine JSON-Objekt.`;
           role: "user",
           content: [
             { type: "text", text: extraText.trim()
-              ? `Hier ist das Foto des Models.\n\nZUSATZ-INFOS vom Admin/Creator (deine Hauptquelle — Persönlichkeit verstehen, Fakten sauber übernehmen, logisch weiterdenken, Lücken stimmig füllen):\n"""\n${extraText.trim().slice(0, 8000)}\n"""\n\nErstelle den Steckbrief jetzt als JSON — konsistent zur Persönlichkeit aus dem Text.`
-              : "Hier ist das Foto des Models. Erstelle den Fantasie-Steckbrief jetzt als JSON." },
-
+              ? `Hier ist das Foto. ZUSATZ-INFOS vom Admin:\n"""\n${extraText.trim().slice(0, 8000)}\n"""\n\nErstelle den Steckbrief als JSON, mit Content-Themen korrekt einsortiert.`
+              : "Hier ist das Foto. Erstelle den Steckbrief als JSON." },
             { type: "image_url", image_url: { url: `data:${mimeType};base64,${imageBase64}` } },
           ],
         },
       ],
       response_format: { type: "json_object" },
-      temperature: 1.1,
+      temperature: 1.0,
     }),
   });
   if (!res.ok) {
@@ -328,51 +405,53 @@ Keine Markdown-Codeblöcke, kein Kommentar — nur das reine JSON-Objekt.`;
   }
   const data = await res.json();
   const content = data?.choices?.[0]?.message?.content || "{}";
-  let parsed: Record<string, unknown> = {};
-  try { parsed = JSON.parse(content); } catch {
-    const m = String(content).match(/\{[\s\S]*\}/);
-    if (m) parsed = JSON.parse(m[0]);
-  }
-  const out: Record<string, string> = {};
-  for (const f of PROFILE_FIELDS) {
-    const v = (parsed as any)[f];
-    out[f] = typeof v === "string" ? v.trim() : v != null ? String(v) : "";
-  }
-  return out;
+  return parseProfileResponse(content);
 }
 
-async function aiExtractProfile(rawText: string): Promise<Record<string, string>> {
+async function aiExtractProfile(
+  rawText: string,
+  styleExamples: string = ""
+): Promise<{ fields: Record<string, string>; shooting: Record<string, boolean | null> }> {
   const apiKey = Deno.env.get("LOVABLE_API_KEY");
   if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
 
   const schemaDescription = PROFILE_FIELDS.map((f) => `  - ${f}`).join("\n");
 
-  const systemPrompt = `Du extrahierst Steckbrief-Daten eines Female-Creator-Models aus einem Word-Dokument (SheX "Biographie"-Vorlage).
-Liefere AUSSCHLIESSLICH ein gültiges JSON-Objekt mit folgenden Keys (alle Werte als String, leerer String wenn unbekannt):
+  const systemPrompt = `Du extrahierst Steckbrief-Daten eines Female-Creator-Models aus einem Word/PDF-Dokument (SheX "Biographie"-Vorlage).
+Liefere AUSSCHLIESSLICH ein gültiges JSON-Objekt mit folgenden Top-Level-Keys:
 ${schemaDescription}
+  - shooting_preferences  (JSON-Objekt, siehe Regeln)
 
-Feld-Mapping (SheX Biographie-Tabelle → JSON-Key):
+Alle Textwerte als String (leerer String wenn unbekannt).
+
+Feld-Mapping (SheX-Tabelle → JSON-Key):
 - "Name" → name
-- "Age" → age  (falls "birthday" zusätzlich vorhanden ist, kombiniere als "25 — 07.03.01")
-- "height" → height
-- "cup size" / "BH" → bra_size
-- "city" → city
-- "work" → work UND occupation (gleicher Wert)
+- "Age"/"birthday" → age
+- "height" → height, "cup size"/"BH" → bra_size
+- "city" → city, "Origin" → place_of_birth + languages
+- "work" → work UND occupation
 - "Hobbies" → hobbies (Komma-getrennt)
-- "Origin" → place_of_birth (Land/Ort) und languages (Sprachen, Komma-getrennt) — Origin enthält oft beides
-- "Account name on 4based" → additional_info ("4based Account: <Wert>")
-- Charakter/Persönlichkeit/Vibe/"How would you describe yourself" → personality (2–3 Sätze, falls nicht explizit im Dokument: leite eine plausible Beschreibung aus Hobbies, Beruf und Origin ab — dieses Feld sollte möglichst NICHT leer bleiben)
-- natürliche Haarfarbe → natural_hair
-- Lieblingsfarbe/-film/-essen/-musik → favorite_color / favorite_movie / favorite_food / favorite_music
-- Schuhgröße → shoe_size, Gewicht → weight, Ausbildung → education, besondere Merkmale → special_marks, Traum → dream
-- "What content do you prefer doing" und "No Go's" → IGNORIEREN (nicht extrahieren)
+- "Account name on 4based" → additional_info
+- Charakter / Persönlichkeit / "How would you describe yourself" → personality (Pflichtfeld)
+- Lieblingsfarbe/-film/-essen/-musik → favorite_*
+- Schuhgröße/Gewicht/Ausbildung/besondere Merkmale/Traum → entsprechende Felder
+- "What content do you prefer doing" → content_preferences UND shooting_preferences (gemäß Regeln unten)
+- "No Go's" / "No-Gos" → no_gos UND ggf. shooting_preferences=false
 
-Regeln:
+${rulesBlock()}
+
+REGELN — Quelltreue + Tonalität:
 - Behalte die Sprache der Quelle bei.
-- Erfinde NICHTS. Wenn ein Feld nicht im Dokument steht: leerer String. AUSNAHME: "personality" darf aus Hobbies/Beruf/Origin abgeleitet werden, wenn keine explizite Beschreibung vorliegt.
+- Erfinde NICHTS. Wenn ein Feld nicht im Dokument steht: leerer String. AUSNAHMEN:
+  • "personality": falls keine explizite Beschreibung vorliegt, aus Hobbys/Beruf/Origin/Content-Antworten ableiten — IMMER in ICH-Form, authentisch, nicht generisch.
+  • "additional_info": darf um sympathische, persönliche Ergänzungen erweitert werden (in ICH-Form), basierend auf den Angaben.
 - Bei mehreren Werten in einer Zelle: Komma-getrennt.
-- Listen / Tabellen-Zellen sauber zusammenführen, keine Spaltentitel als Werte übernehmen.
-- Keine Markdown-Codeblöcke, kein Kommentar — nur das reine JSON.`;
+- Tabellen-Zellen sauber zusammenführen, keine Spaltentitel als Werte übernehmen.
+- Holprige Formulierungen darfst du leicht glätten, ohne den Inhalt zu verändern.
+
+${styleExamples ? `\nSTIL-REFERENZ — so klingen bestätigte Steckbriefe. Übernimm NUR Tonfall/Länge/Detailgrad, nicht die Inhalte:\n\n${styleExamples}\n` : ""}
+
+Keine Markdown-Codeblöcke, kein Kommentar — nur das reine JSON.`;
 
   const userPrompt = `Hier ist der extrahierte Text des Steckbriefs:\n\n"""\n${rawText.slice(0, 30000)}\n"""`;
 
@@ -399,6 +478,13 @@ Regeln:
   }
   const data = await res.json();
   const content = data?.choices?.[0]?.message?.content || "{}";
+  return parseProfileResponse(content);
+}
+
+function parseProfileResponse(content: string): {
+  fields: Record<string, string>;
+  shooting: Record<string, boolean | null>;
+} {
   let parsed: Record<string, unknown> = {};
   try {
     parsed = JSON.parse(content);
@@ -406,12 +492,20 @@ Regeln:
     const m = String(content).match(/\{[\s\S]*\}/);
     if (m) parsed = JSON.parse(m[0]);
   }
-  const out: Record<string, string> = {};
+  const fields: Record<string, string> = {};
   for (const f of PROFILE_FIELDS) {
     const v = (parsed as any)[f];
-    out[f] = typeof v === "string" ? v.trim() : v != null ? String(v) : "";
+    fields[f] = typeof v === "string" ? v.trim() : v != null ? String(v) : "";
   }
-  return out;
+  const shooting: Record<string, boolean | null> = {};
+  const sp = (parsed as any).shooting_preferences || {};
+  for (const p of SHOOTING_PREFS) {
+    const v = sp[p.key];
+    if (v === true || v === "true") shooting[p.key] = true;
+    else if (v === false || v === "false") shooting[p.key] = false;
+    else shooting[p.key] = null;
+  }
+  return { fields, shooting };
 }
 
 Deno.serve(async (req) => {
@@ -463,9 +557,11 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    const styleExamples = await loadStyleExamples(admin, modelId);
+
     let rawText = "";
     let sourceLabel = "";
-    let fields: Record<string, string> | null = null;
+    let result: { fields: Record<string, string>; shooting: Record<string, boolean | null> } | null = null;
 
     if (mode === "drive") {
       const { data: model } = await admin
@@ -515,7 +611,7 @@ Deno.serve(async (req) => {
       const { data: model } = await admin
         .from("models").select("name").eq("id", modelId).maybeSingle();
       const extraText = (body?.extra_text as string | undefined) || "";
-      fields = await aiInventProfileFromImage(cleanB64, mime, (model as any)?.name || "", extraText);
+      result = await aiInventProfileFromImage(cleanB64, mime, (model as any)?.name || "", extraText, styleExamples);
       sourceLabel = `KI aus Bild: ${fileName || "Upload"}${extraText.trim() ? " + Text" : ""}`;
     } else {
       const b64 = body?.file_base64 as string | undefined;
@@ -550,9 +646,11 @@ Deno.serve(async (req) => {
       );
     }
 
-    if (!fields) fields = await aiExtractProfile(rawText);
+    if (!result) result = await aiExtractProfile(rawText, styleExamples);
+    const { fields, shooting } = result;
     const nonEmpty = Object.values(fields).filter((v) => v && v.length > 0).length;
-    if (nonEmpty === 0) {
+    const shootingSet = Object.values(shooting).filter((v) => v !== null).length;
+    if (nonEmpty === 0 && shootingSet === 0) {
       return new Response(
         JSON.stringify({
           error:
@@ -569,8 +667,7 @@ Deno.serve(async (req) => {
       .eq("model_id", modelId)
       .maybeSingle();
 
-    const payload: Record<string, unknown> = { ...fields, model_id: modelId };
-    // Auto-mark as submitted so the admin view shows "Prüfung läuft" instead of "Steckbrief leer"
+    const payload: Record<string, unknown> = { ...fields, ...shooting, model_id: modelId };
     if (!(existing as any)?.submitted_at) {
       payload.submitted_at = new Date().toISOString();
     }
@@ -596,8 +693,9 @@ Deno.serve(async (req) => {
       JSON.stringify({
         success: true,
         source: sourceLabel,
-        filled_fields: nonEmpty,
+        filled_fields: nonEmpty + shootingSet,
         fields,
+        shooting_preferences: shooting,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
