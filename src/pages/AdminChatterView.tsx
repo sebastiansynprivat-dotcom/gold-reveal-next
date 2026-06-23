@@ -18,7 +18,7 @@ type AdminSessionBackup = {
   saved_at: number;
 };
 
-const findAuthStorageSnapshot = (accessToken: string) => {
+const findAuthStorageSnapshot = (accessToken: string): { authStorageKey?: string; rawStorageValue?: string } => {
   if (typeof window === "undefined") return {};
 
   const keys = Object.keys(window.localStorage).filter(
