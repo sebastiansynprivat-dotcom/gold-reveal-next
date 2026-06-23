@@ -270,22 +270,29 @@ REGELN — sehr wichtig:
 - "name": Wenn ein Model-Name vorgegeben ist, übernimm diesen. Sonst denk dir einen passenden weiblichen deutschen Vornamen aus.
 - Variation-Seed: ${seed} — Nutze diesen Seed, damit deine Antworten sich von vorherigen unterscheiden. Variiere Stadt, Hobbys, Lieblings-Items, Beruf.
 ${extraText.trim() ? `
-WICHTIG — SO ARBEITEST DU MIT DEN ZUSATZ-INFOS DES ADMINS:
-Es liegt ein vom Admin/Creator geschriebener Text mit persönlichen Infos zum Model vor (siehe User-Message). Dieser Text ist deine WICHTIGSTE Quelle — wichtiger als das Foto.
+WICHTIG — SO ARBEITEST DU MIT TEXT + FOTO ALS GLEICHWERTIGEM INPUT:
+Du hast ZWEI Quellen: den Admin-Text UND das Foto. Beide musst du KOMBINIEREN — keine dominiert allein.
 
 DEIN VORGEHEN (in dieser Reihenfolge):
-1. LIES den Text gründlich und VERSTEHE die Persönlichkeit dahinter: Wie tickt diese Person? Was ist ihr Vibe? Welche Werte, Energie, Eigenheiten kommen durch?
-2. ÜBERNIMM alle expliziten Fakten (Name, Alter, Stadt, Herkunft, Beruf, Hobbys, Sprachen, Lieblings-Items, Tattoos …) — aber formuliere sie SAUBER und stimmig, nicht stumpf kopiert. Schlechte/holprige Formulierungen darfst und sollst du glätten.
-3. DENKE LOGISCH MIT: Leite aus den gegebenen Infos weitere Felder ab, wenn sich das natürlich ergibt. Beispiele:
-   • "Macht Yoga und liebt Achtsamkeit" → "personality" eher ruhig/zentriert, "favorite_music" eher Chill/Indie, "dream" passend dazu.
-   • "Aus München, arbeitet als Grafikdesignerin" → "education" plausibel ableiten (z. B. Studium Kommunikationsdesign).
-   • "Liebt Reisen nach Asien" → "favorite_food" könnte asiatisch sein, "languages" evtl. Englisch + Grundkenntnisse einer asiatischen Sprache.
-   Das ist KEIN Erfinden ins Blaue — das ist intelligentes Weiterdenken auf Basis der echten Person.
-4. "personality" (2–3 Sätze): Muss die Persönlichkeit aus dem Text WIRKLICH einfangen — Vibe, Eigenheiten, Energie. Kein generisches "verspielt und neugierig", sondern spezifisch zu dieser Person. Foto-Eindruck darf ergänzen, aber Text dominiert.
-5. NUR Felder, für die weder Text noch logische Ableitung etwas hergeben, ergänzt du frei passend zum Foto und zum bereits etablierten Charakter (NICHT zufällig — stimmig zur Persönlichkeit).
+1. ANALYSIERE DAS FOTO IM HINTERGRUND (nicht im Output, nur als Denkgrundlage):
+   • Aussehen: Haarfarbe, Haarlänge, Augenfarbe, Hauttyp, ungefähres Alter, Statur.
+   • Style & Vibe: Kleidung, Make-up, Setting, Pose, Ausdruck — was sagt das über Lifestyle und Energie aus? (sportlich? elegant? alternativ? girly? natürlich?)
+   • Sichtbare Merkmale: Tattoos, Piercings, Muttermale, Brille usw.
+2. LIES DEN TEXT und extrahiere Fakten + Persönlichkeits-Hinweise (Hobbys, Beruf, Werte, Energie, Sprache).
+3. ERSTELLE INTERN EINE GANZHEITLICHE PERSONENBESCHREIBUNG, die Foto-Eindruck UND Text zu EINER stimmigen Person verschmilzt:
+   • Welche Eigenschaften ergeben sich aus der Kombination? (z. B. Text sagt "Yoga + Reisen" + Foto zeigt natürlichen Look mit sonnengeküsster Haut → entspannte, geerdete Weltenbummlerin.)
+   • Wo bestätigen sich Text und Foto gegenseitig? Wo ergänzen sie sich?
+4. ÜBERNIMM alle expliziten Fakten aus dem Text — sauber formuliert (holprige Stellen glätten), nicht stumpf kopiert.
+5. VISUELLE FELDER kommen IMMER vom Foto (natural_hair, Größe/Statur-Schätzung, special_marks, Alter wenn nicht im Text).
+6. DENKE LOGISCH MIT: Leite aus Text+Foto weitere Felder ab — das ist KEIN zufälliges Erfinden, sondern stimmige Ableitung aus dem Gesamtbild.
+   • Text "Grafikdesignerin" + Foto mit kreativem Style → "education" Kommunikationsdesign, "favorite_music" passend.
+   • Text "liebt Asien-Reisen" + Foto entspannt-natürlich → "favorite_food" asiatisch, "dream" Reise-bezogen.
+7. "personality" (2–3 Sätze): Spiegelt die KOMBINATION wider — Charakter aus dem Text + Vibe/Ausstrahlung aus dem Foto. Spezifisch, nicht generisch.
+8. Felder ohne Anhaltspunkt aus Text ODER Foto: ergänze stimmig zur erarbeiteten Gesamtperson — niemals zufällig.
 
-Faustregel: Am Ende muss sich der ganze Steckbrief wie EINE konsistente Person anfühlen, deren Kern aus dem Text kommt.
+Faustregel: Foto = Aussehen + visueller Vibe. Text = Fakten + innerer Charakter. Output = eine konsistente Person, in der beides verschmilzt.
 ` : ""}
+
 
 Vorgegebener Model-Name: ${modelName || "(keiner — frei wählen)"}
 
