@@ -8,6 +8,52 @@ import { toast } from "@/hooks/use-toast";
 const Dashboard = lazy(() => import("./Dashboard"));
 
 const ADMIN_SESSION_KEY = "admin_impersonation_origin_session";
+const ADMIN_SESSION_BACKUP_KEY = "admin_impersonation_origin_session_backup";
+
+type AdminSessionBackup = {
+  access_token: string;
+  refresh_token: string;
+  auth_storage_key?: string;
+  raw_storage_value?: string;
+  saved_at: number;
+};
+
+const findAuthStorageSnapshot = (accessToken: string): { authStorageKey?: string; rawStorageValue?: string } => {
+  if (typeof window === "undefined") return {};
+
+  const keys = Object.keys(window.localStorage).filter(
+    (key) => key.startsWith("sb-") && key.endsWith("-auth-token"),
+  );
+  const matchingKey = keys.find((key) => window.localStorage.getItem(key)?.includes(accessToken));
+  const authStorageKey = matchingKey || keys[0];
+  const rawStorageValue = authStorageKey ? window.localStorage.getItem(authStorageKey) || undefined : undefined;
+
+  return { authStorageKey, rawStorageValue };
+};
+
+const readAdminBackup = (): AdminSessionBackup | null => {
+  if (typeof window === "undefined") return null;
+  const raw = window.sessionStorage.getItem(ADMIN_SESSION_KEY) || window.localStorage.getItem(ADMIN_SESSION_BACKUP_KEY);
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    if (!parsed?.access_token || !parsed?.refresh_token) return null;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
+const preserveAdminStorage = () => {
+  const backup = readAdminBackup();
+  if (!backup?.auth_storage_key || !backup.raw_storage_value) return;
+  window.localStorage.setItem(backup.auth_storage_key, backup.raw_storage_value);
+};
+
+const clearAdminBackup = () => {
+  window.sessionStorage.removeItem(ADMIN_SESSION_KEY);
+  window.localStorage.removeItem(ADMIN_SESSION_BACKUP_KEY);
+};
 
 /**
  * Admin "Login als Chatter"-Modus:
@@ -25,6 +71,7 @@ export default function AdminChatterView() {
   const [errorMsg, setErrorMsg] = useState<string>("");
   const [chatterEmail, setChatterEmail] = useState<string>("");
   const startedRef = useRef(false);
+  const switchedRef = useRef(false);
 
   useEffect(() => {
     if (!userId || startedRef.current) return;
@@ -39,10 +86,18 @@ export default function AdminChatterView() {
           setStatus("error");
           return;
         }
-        sessionStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify({
+
+        const snapshot = findAuthStorageSnapshot(adminSession.access_token);
+        const adminBackup: AdminSessionBackup = {
           access_token: adminSession.access_token,
           refresh_token: adminSession.refresh_token,
-        }));
+          auth_storage_key: snapshot.authStorageKey,
+          raw_storage_value: snapshot.rawStorageValue,
+          saved_at: Date.now(),
+        };
+        const serializedBackup = JSON.stringify(adminBackup);
+        sessionStorage.setItem(ADMIN_SESSION_KEY, serializedBackup);
+        localStorage.setItem(ADMIN_SESSION_BACKUP_KEY, serializedBackup);
 
         // 2. Ask edge function to mint a session for the target chatter.
         const { data, error } = await supabase.functions.invoke("admin-impersonate-user", {
@@ -59,6 +114,8 @@ export default function AdminChatterView() {
         });
         if (sErr) throw sErr;
 
+        switchedRef.current = true;
+
         setChatterEmail(data.email || "");
         setStatus("ready");
       } catch (e: any) {
@@ -71,19 +128,34 @@ export default function AdminChatterView() {
           try {
             const s = JSON.parse(saved);
             await supabase.auth.setSession(s);
+            preserveAdminStorage();
           } catch {}
         }
       }
     })();
   }, [userId]);
 
+  useEffect(() => {
+    const preserveBeforeLeaving = () => preserveAdminStorage();
+    window.addEventListener("pagehide", preserveBeforeLeaving);
+    window.addEventListener("beforeunload", preserveBeforeLeaving);
+    return () => {
+      window.removeEventListener("pagehide", preserveBeforeLeaving);
+      window.removeEventListener("beforeunload", preserveBeforeLeaving);
+    };
+  }, []);
+
   const restoreAdmin = async (redirect: string = "/admin") => {
-    const saved = sessionStorage.getItem(ADMIN_SESSION_KEY);
-    sessionStorage.removeItem(ADMIN_SESSION_KEY);
+    const saved = readAdminBackup();
     if (saved) {
       try {
-        const s = JSON.parse(saved);
-        await supabase.auth.setSession(s);
+        preserveAdminStorage();
+        await supabase.auth.setSession({
+          access_token: saved.access_token,
+          refresh_token: saved.refresh_token,
+        });
+        preserveAdminStorage();
+        clearAdminBackup();
       } catch (e) {
         console.error("[restore admin]", e);
         toast({ title: "Admin-Session konnte nicht wiederhergestellt werden", variant: "destructive" });
@@ -95,12 +167,17 @@ export default function AdminChatterView() {
   // Make sure we always restore on unmount (e.g. user navigates away via menu)
   useEffect(() => {
     return () => {
-      const saved = sessionStorage.getItem(ADMIN_SESSION_KEY);
+      if (!switchedRef.current) return;
+      const saved = readAdminBackup();
       if (saved) {
         try {
-          const s = JSON.parse(saved);
-          supabase.auth.setSession(s).finally(() => {
-            sessionStorage.removeItem(ADMIN_SESSION_KEY);
+          preserveAdminStorage();
+          supabase.auth.setSession({
+            access_token: saved.access_token,
+            refresh_token: saved.refresh_token,
+          }).finally(() => {
+            preserveAdminStorage();
+            clearAdminBackup();
           });
         } catch {}
       }

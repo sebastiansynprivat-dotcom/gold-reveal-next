@@ -13,6 +13,38 @@ interface AuthContextType {
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const ADMIN_SESSION_KEY = "admin_impersonation_origin_session";
+const ADMIN_SESSION_BACKUP_KEY = "admin_impersonation_origin_session_backup";
+
+const restorePendingAdminSession = async () => {
+  if (typeof window === "undefined") return;
+  if (window.location.pathname.startsWith("/admin/chatter/")) return;
+
+  const raw = window.sessionStorage.getItem(ADMIN_SESSION_KEY) || window.localStorage.getItem(ADMIN_SESSION_BACKUP_KEY);
+  if (!raw) return;
+
+  try {
+    const backup = JSON.parse(raw);
+    if (!backup?.access_token || !backup?.refresh_token) return;
+
+    if (backup.auth_storage_key && backup.raw_storage_value) {
+      window.localStorage.setItem(backup.auth_storage_key, backup.raw_storage_value);
+    }
+
+    const { error } = await supabase.auth.setSession({
+      access_token: backup.access_token,
+      refresh_token: backup.refresh_token,
+    });
+
+    if (!error) {
+      window.sessionStorage.removeItem(ADMIN_SESSION_KEY);
+      window.localStorage.removeItem(ADMIN_SESSION_BACKUP_KEY);
+    }
+  } catch {
+    // If the backup is malformed, leave normal auth handling untouched.
+  }
+};
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
@@ -49,7 +81,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setLoading(false);
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    restorePendingAdminSession().finally(() => supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -65,7 +97,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           // ignore – we'll keep the existing session in state
         });
       }
-    });
+    }));
 
     return () => subscription.unsubscribe();
   }, []);
