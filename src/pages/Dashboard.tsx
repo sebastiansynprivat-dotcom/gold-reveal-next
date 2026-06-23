@@ -684,18 +684,18 @@ export default function Dashboard() {
 
             {/* Meta pills cluster */}
             <div className="flex flex-1 items-center gap-2 min-w-0 max-w-3xl">
-              {/* Name pill (read-only) */}
-              <div className="relative flex-1 min-w-0 group">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-accent transition-colors" />
-                <div
-                  className={`w-full h-9 flex items-center pl-9 pr-3 rounded-full bg-secondary/60 border border-border text-sm truncate ${
-                    userName ? "text-foreground font-medium" : "text-muted-foreground"
-                  }`}
-                  title={userName || "Name"}
-                >
-                  {userName || (lang === "en" ? "Your Name" : "Dein Name")}
+              {/* Name pill (read-only) – hidden when it duplicates the group name */}
+              {userName && userName.trim().toLowerCase() !== groupName.trim().toLowerCase() && (
+                <div className="relative flex-1 min-w-0 group">
+                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-accent transition-colors" />
+                  <div
+                    className="w-full h-9 flex items-center pl-9 pr-3 rounded-full bg-secondary/60 border border-border text-sm truncate text-foreground font-medium"
+                    title={userName}
+                  >
+                    {userName}
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Group name pill – read-only if set, editable fallback if empty */}
               <div className="relative flex-1 min-w-0 group">
@@ -820,13 +820,15 @@ export default function Dashboard() {
               </Badge>
             </div>
 
-            {/* Row 1b: Name */}
-            <div className="flex items-center gap-1.5">
-              <User className="h-3.5 w-3.5 text-accent shrink-0" />
-              <span className={`text-xs font-medium truncate ${userName ? "text-foreground" : "text-muted-foreground"}`}>
-                {userName || "Name"}
-              </span>
-            </div>
+            {/* Row 1b: Name – hidden when it duplicates the group name */}
+            {userName && userName.trim().toLowerCase() !== groupName.trim().toLowerCase() && (
+              <div className="flex items-center gap-1.5">
+                <User className="h-3.5 w-3.5 text-accent shrink-0" />
+                <span className="text-xs font-medium truncate text-foreground">
+                  {userName}
+                </span>
+              </div>
+            )}
 
             {/* Row 2: Gruppenname – read-only if set, editable fallback if empty */}
             <div className="flex items-center gap-2">
@@ -1082,7 +1084,22 @@ export default function Dashboard() {
             : "* Die angezeigten Zahlen können von den tatsächlichen Werten abweichen und sind nicht zwingend zu 100 % korrekt. Bitte prüfe die Daten immer anhand der offiziellen Plattformstatistiken. Diese Angaben dienen ausschließlich zur Orientierung — die finale Abrechnung basiert einzig und allein auf den Statistiken der jeweiligen Plattformen."}
         </p>
 
-        {/* Neue Content Drops vom Model */}
+        {/* 1. Tägliche Aufgaben */}
+        <div data-tour="checklist">
+          <DailyChecklist />
+        </div>
+
+        {/* Brezzels-Profile kommentieren – direkt unter den täglichen Aufgaben für Brezzels-Chatter */}
+        {assignedAccounts.some((a) => (a.platform || "").toLowerCase() === "brezzels") && (
+          <BrezzelsCommentTargets />
+        )}
+
+        {/* 2. Mass-DM Generator */}
+        <div data-tour="massdm">
+          <MassDmGenerator />
+        </div>
+
+        {/* 3. Neue Content Drops vom Model */}
         <ContentDropsWidget />
         {/* Anfrage an das Model */}
         <motion.section
@@ -1717,20 +1734,7 @@ export default function Dashboard() {
         {/* Dashboard Tour Button - moved to header */}
 
 
-        {/* MassDM Generator */}
-        <div data-tour="massdm">
-          <MassDmGenerator />
-        </div>
-
-        {/* Tägliche Aufgaben */}
-        <div data-tour="checklist">
-          <DailyChecklist />
-        </div>
-
-        {/* Brezzels-Profile kommentieren – nur für Chatter mit einem Brezzels-Account */}
-        {assignedAccounts.some((a) => (a.platform || "").toLowerCase() === "brezzels") && (
-          <BrezzelsCommentTargets />
-        )}
+        {/* MassDM Generator, Tägliche Aufgaben und Brezzels wurden weiter nach oben verschoben */}
 
         {/* Bonus Model - alles in einer Karte (nur im Demo-Modus sichtbar) */}
         {isDemoMode() && (

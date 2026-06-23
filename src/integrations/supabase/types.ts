@@ -3105,6 +3105,13 @@ export type Database = {
           total: number
         }[]
       }
+      get_chatter_revenue_series_for_user: {
+        Args: { p_from: string; p_to: string; p_user_id: string }
+        Returns: {
+          date: string
+          total: number
+        }[]
+      }
       get_credit_note_seq: { Args: never; Returns: number }
       get_free_account_counts: {
         Args: never
