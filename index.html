@@ -39,11 +39,19 @@
           manifestHref = '/manifest-admin.webmanifest';
           title = 'SheX Admin';
           shortName = 'SheX Admin';
+        } else if (lower.startsWith('/socialmedia/model')) {
+          manifestHref = '/manifest-socialmedia-model.webmanifest';
+          title = 'SheX Model';
+          shortName = 'SheX Model';
+        } else if (lower.startsWith('/socialmedia')) {
+          manifestHref = '/manifest-socialmedia-admin.webmanifest';
+          title = 'SheX Social Media';
+          shortName = 'SheX SM';
         } else if (lower.startsWith('/model')) {
           manifestHref = '/manifest-model.webmanifest';
           title = 'SheX Model';
           shortName = 'SheX Model';
-        } else if (lower.startsWith('/marketer') || lower.startsWith('/socialmedia')) {
+        } else if (lower.startsWith('/marketer')) {
           manifestHref = '/manifest-marketer.webmanifest';
           title = 'SheX Marketer';
           shortName = 'SheX Marketer';
