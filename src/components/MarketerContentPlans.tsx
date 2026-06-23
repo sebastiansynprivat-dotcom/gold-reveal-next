@@ -190,9 +190,6 @@ export default function MarketerContentPlans() {
                   </div>
                   {active ? (
                     <>
-                      <p className="text-xs text-accent/90 mt-1 truncate">
-                        Aktive Liste: <span className="font-semibold">{active.title}</span>
-                      </p>
                       <div className="mt-2 flex items-center gap-3">
                         <div className="flex-1 h-1.5 rounded-full bg-background/60 overflow-hidden">
                           <div className="h-full bg-gradient-to-r from-accent to-yellow-400 transition-all" style={{ width: `${pct}%` }} />
