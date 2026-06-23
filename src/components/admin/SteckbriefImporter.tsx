@@ -103,7 +103,7 @@ export default function SteckbriefImporter({
     }
     const b64 = btoa(bin);
     await callImport(
-      { model_id: modelId, mode: "image", file_base64: `data:${f.type};base64,${b64}`, file_name: f.name },
+      { model_id: modelId, mode: "image", file_base64: `data:${f.type};base64,${b64}`, file_name: f.name, extra_text: extraText.trim() || undefined },
       "image"
     );
   };
