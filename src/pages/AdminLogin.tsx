@@ -57,6 +57,30 @@ const AdminLogin = () => {
     checkAdmin();
   }, [user, loginCompleted]);
 
+  // If the admin session was restored after a chatter-login view, continue
+  // straight back into the admin area when the 2FA session is still valid.
+  useEffect(() => {
+    if (!user || loginCompleted) return;
+    let cancelled = false;
+
+    const continueExistingAdminSession = async () => {
+      const token = localStorage.getItem("admin_2fa_token");
+      if (!token) return;
+
+      const [{ data: adminOk }, { data: twoFaValid }] = await Promise.all([
+        supabase.rpc("is_admin"),
+        supabase.rpc("validate_admin_2fa_session", { p_token: token }),
+      ]);
+
+      if (!cancelled && adminOk === true && twoFaValid === true) {
+        navigate("/admin", { replace: true });
+      }
+    };
+
+    continueExistingAdminSession();
+    return () => { cancelled = true; };
+  }, [user, loginCompleted, navigate]);
+
   // If admin verified TOTP, redirect
   useEffect(() => {
     if (totpVerified) {
