@@ -333,12 +333,12 @@ Feld-Mapping (SheX Biographie-Tabelle → JSON-Key):
 - "work" → work UND occupation (gleicher Wert)
 - "Hobbies" → hobbies (Komma-getrennt)
 - "Origin" → place_of_birth (Land/Ort) und languages (Sprachen, Komma-getrennt) — Origin enthält oft beides
-- "What content do you prefer doing" → content_preferences
-- "No Go's" / "No Gos" → no_gos
 - "Account name on 4based" → additional_info ("4based Account: <Wert>")
+- Charakter/Persönlichkeit/Vibe/"How would you describe yourself" → personality (2–3 Sätze, falls nicht explizit im Dokument: leite eine plausible Beschreibung aus Hobbies, Beruf und Origin ab — dieses Feld sollte möglichst NICHT leer bleiben)
 - natürliche Haarfarbe → natural_hair
 - Lieblingsfarbe/-film/-essen/-musik → favorite_color / favorite_movie / favorite_food / favorite_music
 - Schuhgröße → shoe_size, Gewicht → weight, Ausbildung → education, besondere Merkmale → special_marks, Traum → dream
+- "What content do you prefer doing" und "No Go's" → IGNORIEREN (nicht extrahieren)
 
 Regeln:
 - Behalte die Sprache der Quelle bei.
