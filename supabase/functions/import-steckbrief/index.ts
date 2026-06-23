@@ -342,7 +342,7 @@ Feld-Mapping (SheX Biographie-Tabelle → JSON-Key):
 
 Regeln:
 - Behalte die Sprache der Quelle bei.
-- Erfinde NICHTS. Wenn ein Feld nicht im Dokument steht: leerer String.
+- Erfinde NICHTS. Wenn ein Feld nicht im Dokument steht: leerer String. AUSNAHME: "personality" darf aus Hobbies/Beruf/Origin abgeleitet werden, wenn keine explizite Beschreibung vorliegt.
 - Bei mehreren Werten in einer Zelle: Komma-getrennt.
 - Listen / Tabellen-Zellen sauber zusammenführen, keine Spaltentitel als Werte übernehmen.
 - Keine Markdown-Codeblöcke, kein Kommentar — nur das reine JSON.`;
