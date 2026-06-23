@@ -1084,7 +1084,22 @@ export default function Dashboard() {
             : "* Die angezeigten Zahlen können von den tatsächlichen Werten abweichen und sind nicht zwingend zu 100 % korrekt. Bitte prüfe die Daten immer anhand der offiziellen Plattformstatistiken. Diese Angaben dienen ausschließlich zur Orientierung — die finale Abrechnung basiert einzig und allein auf den Statistiken der jeweiligen Plattformen."}
         </p>
 
-        {/* Neue Content Drops vom Model */}
+        {/* 1. Tägliche Aufgaben */}
+        <div data-tour="checklist">
+          <DailyChecklist />
+        </div>
+
+        {/* Brezzels-Profile kommentieren – direkt unter den täglichen Aufgaben für Brezzels-Chatter */}
+        {assignedAccounts.some((a) => (a.platform || "").toLowerCase() === "brezzels") && (
+          <BrezzelsCommentTargets />
+        )}
+
+        {/* 2. Mass-DM Generator */}
+        <div data-tour="massdm">
+          <MassDmGenerator />
+        </div>
+
+        {/* 3. Neue Content Drops vom Model */}
         <ContentDropsWidget />
         {/* Anfrage an das Model */}
         <motion.section
