@@ -820,13 +820,15 @@ export default function Dashboard() {
               </Badge>
             </div>
 
-            {/* Row 1b: Name */}
-            <div className="flex items-center gap-1.5">
-              <User className="h-3.5 w-3.5 text-accent shrink-0" />
-              <span className={`text-xs font-medium truncate ${userName ? "text-foreground" : "text-muted-foreground"}`}>
-                {userName || "Name"}
-              </span>
-            </div>
+            {/* Row 1b: Name – hidden when it duplicates the group name */}
+            {userName && userName.trim().toLowerCase() !== groupName.trim().toLowerCase() && (
+              <div className="flex items-center gap-1.5">
+                <User className="h-3.5 w-3.5 text-accent shrink-0" />
+                <span className="text-xs font-medium truncate text-foreground">
+                  {userName}
+                </span>
+              </div>
+            )}
 
             {/* Row 2: Gruppenname – read-only if set, editable fallback if empty */}
             <div className="flex items-center gap-2">
