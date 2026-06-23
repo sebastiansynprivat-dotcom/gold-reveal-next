@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 type Drop = {
   id: string;
+  model_id: string | null;
   model_name: string;
   content_link: string;
   message: string;
@@ -24,10 +25,33 @@ export default function ContentDropsWidget() {
     const since = new Date();
     since.setDate(since.getDate() - 30);
 
+    // Only show drops for models the user is CURRENTLY assigned to
+    // (open assignment = end_date IS NULL).
+    const { data: activeAssignments } = await supabase
+      .from("account_assignments")
+      .select("account_id, accounts!inner(model_id)")
+      .eq("user_id", user.id)
+      .is("end_date", null);
+
+    const activeModelIds = Array.from(
+      new Set(
+        (activeAssignments || [])
+          .map((a: any) => a?.accounts?.model_id)
+          .filter(Boolean) as string[]
+      )
+    );
+
+    if (activeModelIds.length === 0) {
+      setDrops([]);
+      setReadIds(new Set());
+      return;
+    }
+
     const [{ data: dropsData }, { data: readsData }] = await Promise.all([
       supabase
         .from("content_drops")
-        .select("id, model_name, content_link, message, created_at")
+        .select("id, model_id, model_name, content_link, message, created_at")
+        .in("model_id", activeModelIds)
         .gte("created_at", since.toISOString())
         .order("created_at", { ascending: false })
         .limit(20),
