@@ -828,21 +828,58 @@ export default function Dashboard() {
               </span>
             </div>
 
-            {/* Row 2: Gruppenname (read-only) */}
+            {/* Row 2: Gruppenname – read-only if set, editable fallback if empty */}
             <div className="flex items-center gap-2">
               <Users className="h-3.5 w-3.5 text-accent shrink-0" />
-              <span className={`text-xs font-medium truncate flex-1 min-w-0 ${groupName ? "text-foreground" : "text-muted-foreground"}`}>
-                {groupName || (lang === "en" ? "Group Name" : "Gruppenname")}
-              </span>
+              {groupName ? (
+                <span className="text-xs font-medium truncate flex-1 min-w-0 text-foreground">
+                  {groupName}
+                </span>
+              ) : (
+                <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                  <Input
+                    value={groupName}
+                    onChange={(e) => setGroupName(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter" && groupName.trim()) saveGroupName(); }}
+                    placeholder={lang === "en" ? "Group Name" : "Gruppenname"}
+                    className="h-7 text-xs flex-1 min-w-0"
+                  />
+                  {groupName.trim() && (
+                    <Button size="sm" className="h-7 px-2 text-xs" onClick={saveGroupName}>
+                      {lang === "en" ? "Save" : "Speichern"}
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
 
-            {/* Row 3: Telegram + Umsatz side by side (read-only) */}
+            {/* Row 3: Telegram (editable fallback) + Umsatz */}
             <div className="flex items-center gap-2">
               <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                {telegramId && <CheckCircle2 className="h-3.5 w-3.5 text-accent shrink-0" />}
-                <span className={`text-xs font-medium truncate ${telegramId ? "text-foreground" : "text-muted-foreground"}`}>
-                  {telegramId || "Telegram ID"}
-                </span>
+                {telegramId && telegramSaved ? (
+                  <>
+                    <CheckCircle2 className="h-3.5 w-3.5 text-accent shrink-0" />
+                    <span className="text-xs font-medium truncate text-foreground">
+                      {telegramId}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <MessageSquare className="h-3.5 w-3.5 text-accent shrink-0" />
+                    <Input
+                      value={telegramId}
+                      onChange={(e) => { setTelegramId(e.target.value); setTelegramSaved(false); }}
+                      onKeyDown={(e) => { if (e.key === "Enter" && telegramId.trim()) saveTelegram(); }}
+                      placeholder="Telegram ID"
+                      className="h-7 text-xs flex-1 min-w-0"
+                    />
+                    {telegramId.trim() && (
+                      <Button size="sm" className="h-7 px-2 text-xs" onClick={saveTelegram}>
+                        {lang === "en" ? "Save" : "Speichern"}
+                      </Button>
+                    )}
+                  </>
+                )}
               </div>
               <div className="shrink-0 flex items-center gap-1" data-tour="revenue-input">
                 <Zap className="h-3 w-3 text-accent" />
