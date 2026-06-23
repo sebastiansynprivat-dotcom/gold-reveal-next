@@ -248,7 +248,7 @@ async function aiInventProfileFromImage(imageBase64: string, mimeType: string, m
   const systemPrompt = `Du bist ein kreativer Charakter-Designer für ein Creator-Model-Steckbrief.
 Du bekommst ein Foto eines Models und erfindest dazu einen passenden, glaubwürdigen Fantasie-Steckbrief.
 
-Liefere AUSSCHLIESSLICH ein gültiges JSON-Objekt mit folgenden Keys (alle Werte als String, niemals leer außer special_marks/no_gos):
+Liefere AUSSCHLIESSLICH ein gültiges JSON-Objekt mit folgenden Keys (alle Werte als String, niemals leer außer special_marks/additional_info):
 ${schemaDescription}
 
 REGELN — sehr wichtig:
@@ -264,8 +264,7 @@ REGELN — sehr wichtig:
 - "favorite_color", "favorite_movie", "favorite_food", "favorite_music": konkret, unterschiedlich, NICHT immer dieselben Standardantworten.
 - "dream": ein kurzer, persönlicher Traum (1 Satz).
 - "education": kurzer Bildungsweg.
-- "content_preferences": 2–3 Content-Vorlieben für OnlyFans-ähnliche Plattform, dezent formuliert.
-- "no_gos": 1–2 typische No-Gos.
+- "personality": PFLICHTFELD — 2–3 Sätze Charakter-/Persönlichkeitsbeschreibung mit Vibe & Eigenschaften (z. B. "Verspielt, neugierig und mit einer frechen Note. Liebt tiefe Gespräche genauso wie spontane Abenteuer und bringt immer eine warme, einladende Energie mit."). NIEMALS leer lassen.
 - "additional_info": leer lassen oder kurze Notiz.
 - "special_marks": Tattoos/Piercings/Muttermale wenn auf dem Foto sichtbar — sonst leer.
 - "name": Wenn ein Model-Name vorgegeben ist, übernimm diesen. Sonst denk dir einen passenden weiblichen deutschen Vornamen aus.
