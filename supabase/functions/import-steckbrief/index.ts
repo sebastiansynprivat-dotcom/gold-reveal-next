@@ -291,7 +291,9 @@ Keine Markdown-Codeblöcke, kein Kommentar — nur das reine JSON-Objekt.`;
         {
           role: "user",
           content: [
-            { type: "text", text: "Hier ist das Foto des Models. Erstelle den Fantasie-Steckbrief jetzt als JSON." },
+            { type: "text", text: extraText.trim()
+              ? `Hier ist das Foto des Models.\n\nZUSATZ-INFOS (vom Admin/Creator bereitgestellt — Fakten daraus 1:1 übernehmen):\n"""\n${extraText.trim().slice(0, 8000)}\n"""\n\nErstelle den Steckbrief jetzt als JSON.`
+              : "Hier ist das Foto des Models. Erstelle den Fantasie-Steckbrief jetzt als JSON." },
             { type: "image_url", image_url: { url: `data:${mimeType};base64,${imageBase64}` } },
           ],
         },
