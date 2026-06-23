@@ -30,8 +30,7 @@ const PROFILE_FIELDS = [
   "bra_size",
   "height",
   "weight",
-  "content_preferences",
-  "no_gos",
+  "personality",
   "additional_info",
 ];
 
@@ -249,7 +248,7 @@ async function aiInventProfileFromImage(imageBase64: string, mimeType: string, m
   const systemPrompt = `Du bist ein kreativer Charakter-Designer für ein Creator-Model-Steckbrief.
 Du bekommst ein Foto eines Models und erfindest dazu einen passenden, glaubwürdigen Fantasie-Steckbrief.
 
-Liefere AUSSCHLIESSLICH ein gültiges JSON-Objekt mit folgenden Keys (alle Werte als String, niemals leer außer special_marks/no_gos):
+Liefere AUSSCHLIESSLICH ein gültiges JSON-Objekt mit folgenden Keys (alle Werte als String, niemals leer außer special_marks/additional_info):
 ${schemaDescription}
 
 REGELN — sehr wichtig:
@@ -265,8 +264,7 @@ REGELN — sehr wichtig:
 - "favorite_color", "favorite_movie", "favorite_food", "favorite_music": konkret, unterschiedlich, NICHT immer dieselben Standardantworten.
 - "dream": ein kurzer, persönlicher Traum (1 Satz).
 - "education": kurzer Bildungsweg.
-- "content_preferences": 2–3 Content-Vorlieben für OnlyFans-ähnliche Plattform, dezent formuliert.
-- "no_gos": 1–2 typische No-Gos.
+- "personality": PFLICHTFELD — 2–3 Sätze Charakter-/Persönlichkeitsbeschreibung mit Vibe & Eigenschaften (z. B. "Verspielt, neugierig und mit einer frechen Note. Liebt tiefe Gespräche genauso wie spontane Abenteuer und bringt immer eine warme, einladende Energie mit."). NIEMALS leer lassen.
 - "additional_info": leer lassen oder kurze Notiz.
 - "special_marks": Tattoos/Piercings/Muttermale wenn auf dem Foto sichtbar — sonst leer.
 - "name": Wenn ein Model-Name vorgegeben ist, übernimm diesen. Sonst denk dir einen passenden weiblichen deutschen Vornamen aus.
@@ -335,16 +333,16 @@ Feld-Mapping (SheX Biographie-Tabelle → JSON-Key):
 - "work" → work UND occupation (gleicher Wert)
 - "Hobbies" → hobbies (Komma-getrennt)
 - "Origin" → place_of_birth (Land/Ort) und languages (Sprachen, Komma-getrennt) — Origin enthält oft beides
-- "What content do you prefer doing" → content_preferences
-- "No Go's" / "No Gos" → no_gos
 - "Account name on 4based" → additional_info ("4based Account: <Wert>")
+- Charakter/Persönlichkeit/Vibe/"How would you describe yourself" → personality (2–3 Sätze, falls nicht explizit im Dokument: leite eine plausible Beschreibung aus Hobbies, Beruf und Origin ab — dieses Feld sollte möglichst NICHT leer bleiben)
 - natürliche Haarfarbe → natural_hair
 - Lieblingsfarbe/-film/-essen/-musik → favorite_color / favorite_movie / favorite_food / favorite_music
 - Schuhgröße → shoe_size, Gewicht → weight, Ausbildung → education, besondere Merkmale → special_marks, Traum → dream
+- "What content do you prefer doing" und "No Go's" → IGNORIEREN (nicht extrahieren)
 
 Regeln:
 - Behalte die Sprache der Quelle bei.
-- Erfinde NICHTS. Wenn ein Feld nicht im Dokument steht: leerer String.
+- Erfinde NICHTS. Wenn ein Feld nicht im Dokument steht: leerer String. AUSNAHME: "personality" darf aus Hobbies/Beruf/Origin abgeleitet werden, wenn keine explizite Beschreibung vorliegt.
 - Bei mehreren Werten in einer Zelle: Komma-getrennt.
 - Listen / Tabellen-Zellen sauber zusammenführen, keine Spaltentitel als Werte übernehmen.
 - Keine Markdown-Codeblöcke, kein Kommentar — nur das reine JSON.`;
