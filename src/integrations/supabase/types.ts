@@ -416,6 +416,27 @@ export type Database = {
         }
         Relationships: []
       }
+      automated_reminder_log: {
+        Row: {
+          id: string
+          reminder_type: string
+          sent_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          reminder_type: string
+          sent_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          reminder_type?: string
+          sent_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       bot_messages: {
         Row: {
           account_id: string | null
