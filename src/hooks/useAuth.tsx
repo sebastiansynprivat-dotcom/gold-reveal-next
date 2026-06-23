@@ -27,13 +27,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-
-      if (session?.user) {
-        trackVisit(session.user.id);
+      // Only clear the user on EXPLICIT sign-out. Supabase can briefly emit
+      // null sessions on TOKEN_REFRESHED races / transient network blips, and
+      // those would otherwise kick the user back to /auth and wipe context.
+      if (event === "SIGNED_OUT") {
+        setSession(null);
+        setUser(null);
+        setLoading(false);
+        return;
       }
+
+      if (session) {
+        setSession(session);
+        setUser(session.user ?? null);
+        if (session.user) trackVisit(session.user.id);
+      } else if (event === "INITIAL_SESSION") {
+        // Genuinely no session at startup – go to login.
+        setSession(null);
+        setUser(null);
+      }
+      setLoading(false);
     });
 
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -43,6 +56,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       if (session?.user) {
         trackVisit(session.user.id);
+      }
+
+      // If we have a session, proactively refresh it so an expired/near-expired
+      // token doesn't silently cause queries to return empty data later.
+      if (session) {
+        supabase.auth.refreshSession().catch(() => {
+          // ignore – we'll keep the existing session in state
+        });
       }
     });
 
