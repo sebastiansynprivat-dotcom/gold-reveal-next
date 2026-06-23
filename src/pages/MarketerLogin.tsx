@@ -47,7 +47,7 @@ export default function MarketerLogin() {
   }
 
   if (user && hasAccess === true) return <Navigate to="/marketer" replace />;
-  if (user && redirectHome) return <Navigate to="/" replace />;
+  // If signed in without marketer role, stay on login page (avoid redirect to chatter dashboard).
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

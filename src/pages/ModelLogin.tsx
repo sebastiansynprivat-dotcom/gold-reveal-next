@@ -127,7 +127,8 @@ export default function ModelLogin() {
   }
 
   if (user && isModel === true) return <Navigate to="/model" replace />;
-  if (user && redirectHome) return <Navigate to="/" replace />;
+  // If signed in without model role, stay on login page so user can sign in with the right account
+  // (do NOT redirect to "/" — that lands on the chatter dashboard).
 
 
   const handleSubmit = async (e: React.FormEvent) => {

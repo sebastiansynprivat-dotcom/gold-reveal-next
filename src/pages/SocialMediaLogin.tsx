@@ -102,7 +102,7 @@ export default function SocialMediaLogin() {
   }
 
   if (user && hasAccess === true) return <Navigate to={isModel ? "/socialmedia/model" : "/socialmedia/admin"} replace />;
-  if (user && redirectHome) return <Navigate to="/" replace />;
+  // If signed in without social media role, stay on login page (avoid redirect to chatter dashboard).
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
