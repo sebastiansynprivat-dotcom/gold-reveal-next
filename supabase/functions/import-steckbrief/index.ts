@@ -235,7 +235,7 @@ const GERMAN_CITIES = [
   "Mainz", "Lübeck", "Erfurt", "Rostock", "Kassel", "Potsdam", "Heidelberg",
 ];
 
-async function aiInventProfileFromImage(imageBase64: string, mimeType: string, modelName: string): Promise<Record<string, string>> {
+async function aiInventProfileFromImage(imageBase64: string, mimeType: string, modelName: string, extraText: string = ""): Promise<Record<string, string>> {
   const apiKey = Deno.env.get("LOVABLE_API_KEY");
   if (!apiKey) throw new Error("LOVABLE_API_KEY not configured");
 
@@ -269,7 +269,14 @@ REGELN — sehr wichtig:
 - "special_marks": Tattoos/Piercings/Muttermale wenn auf dem Foto sichtbar — sonst leer.
 - "name": Wenn ein Model-Name vorgegeben ist, übernimm diesen. Sonst denk dir einen passenden weiblichen deutschen Vornamen aus.
 - Variation-Seed: ${seed} — Nutze diesen Seed, damit deine Antworten sich von vorherigen unterscheiden. Variiere Stadt, Hobbys, Lieblings-Items, Beruf.
-
+${extraText.trim() ? `
+WICHTIG — ZUSATZ-INFOS DES ADMINS:
+Es liegt bereits ein vom Admin/Creator geschriebener Text mit persönlichen Infos zum Model vor (siehe User-Message).
+- Übernimm ALLE konkreten Fakten aus diesem Text 1:1 (Name, Alter, Stadt, Herkunft, Beruf, Hobbys, Persönlichkeit, Lieblings-Items, besondere Merkmale, Sprachen, etc.).
+- Diese Fakten haben IMMER Vorrang vor dem, was du erfinden würdest.
+- Felder, die im Text NICHT erwähnt werden, erfindest du wie gewohnt passend zum Foto.
+- Persönlichkeit: Wenn der Text Charakter-Hinweise gibt, baue die in "personality" ein (2–3 Sätze, ergänze gerne Vibe aus dem Foto).
+` : ""}
 Vorgegebener Model-Name: ${modelName || "(keiner — frei wählen)"}
 
 Keine Markdown-Codeblöcke, kein Kommentar — nur das reine JSON-Objekt.`;
@@ -284,7 +291,9 @@ Keine Markdown-Codeblöcke, kein Kommentar — nur das reine JSON-Objekt.`;
         {
           role: "user",
           content: [
-            { type: "text", text: "Hier ist das Foto des Models. Erstelle den Fantasie-Steckbrief jetzt als JSON." },
+            { type: "text", text: extraText.trim()
+              ? `Hier ist das Foto des Models.\n\nZUSATZ-INFOS (vom Admin/Creator bereitgestellt — Fakten daraus 1:1 übernehmen):\n"""\n${extraText.trim().slice(0, 8000)}\n"""\n\nErstelle den Steckbrief jetzt als JSON.`
+              : "Hier ist das Foto des Models. Erstelle den Fantasie-Steckbrief jetzt als JSON." },
             { type: "image_url", image_url: { url: `data:${mimeType};base64,${imageBase64}` } },
           ],
         },
@@ -487,8 +496,9 @@ Deno.serve(async (req) => {
       const mime = dataUrlMime || (/\.png$/i.test(fileName) ? "image/png" : "image/jpeg");
       const { data: model } = await admin
         .from("models").select("name").eq("id", modelId).maybeSingle();
-      fields = await aiInventProfileFromImage(cleanB64, mime, (model as any)?.name || "");
-      sourceLabel = `KI aus Bild: ${fileName || "Upload"}`;
+      const extraText = (body?.extra_text as string | undefined) || "";
+      fields = await aiInventProfileFromImage(cleanB64, mime, (model as any)?.name || "", extraText);
+      sourceLabel = `KI aus Bild: ${fileName || "Upload"}${extraText.trim() ? " + Text" : ""}`;
     } else {
       const b64 = body?.file_base64 as string | undefined;
       if (!b64) {

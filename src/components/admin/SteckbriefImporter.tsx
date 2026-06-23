@@ -17,6 +17,7 @@ export default function SteckbriefImporter({
   onImported,
 }: Props) {
   const [busy, setBusy] = useState<null | "drive" | "upload" | "image">(null);
+  const [extraText, setExtraText] = useState("");
   const fileRef = useRef<HTMLInputElement | null>(null);
   const imageRef = useRef<HTMLInputElement | null>(null);
 
@@ -102,7 +103,7 @@ export default function SteckbriefImporter({
     }
     const b64 = btoa(bin);
     await callImport(
-      { model_id: modelId, mode: "image", file_base64: `data:${f.type};base64,${b64}`, file_name: f.name },
+      { model_id: modelId, mode: "image", file_base64: `data:${f.type};base64,${b64}`, file_name: f.name, extra_text: extraText.trim() || undefined },
       "image"
     );
   };
@@ -187,6 +188,19 @@ export default function SteckbriefImporter({
               accept="image/*"
               onChange={onImageChosen}
               className="hidden"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-[10px] text-muted-foreground leading-snug block">
+              Optionale Zusatz-Infos für die KI (Persönlichkeit, Hobbys, Herkunft …) — wird zusammen mit dem Foto ausgewertet
+            </label>
+            <textarea
+              value={extraText}
+              onChange={(e) => setExtraText(e.target.value)}
+              disabled={busy !== null}
+              placeholder="z. B. Lisa, 24, aus Hamburg. Sehr verspielt und sportlich. Liebt Yoga, Reisen und Kaffee. Arbeitet als Grafikdesignerin…"
+              rows={3}
+              className="w-full text-[11px] rounded-md border border-fuchsia-400/30 bg-background/40 px-2 py-1.5 placeholder:text-muted-foreground/60 focus:outline-none focus:ring-1 focus:ring-fuchsia-400/50 resize-y disabled:opacity-50"
             />
           </div>
           <AnimatePresence>
