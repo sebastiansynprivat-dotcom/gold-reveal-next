@@ -697,31 +697,61 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Group name pill (read-only) */}
+              {/* Group name pill – read-only if set, editable fallback if empty */}
               <div className="relative flex-1 min-w-0 group">
                 <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
-                <div
-                  className={`w-full h-9 flex items-center pl-9 pr-3 rounded-full bg-secondary/60 border border-border text-sm truncate ${
-                    groupName ? "text-foreground font-medium" : "text-muted-foreground"
-                  }`}
-                  title={groupName || (lang === "en" ? "Group Name" : "Gruppenname")}
-                >
-                  <span className="truncate">{groupName || (lang === "en" ? "Group Name" : "Gruppenname")}</span>
-                </div>
+                {groupName ? (
+                  <div
+                    className="w-full h-9 flex items-center pl-9 pr-3 rounded-full bg-secondary/60 border border-border text-sm truncate text-foreground font-medium"
+                    title={groupName}
+                  >
+                    <span className="truncate">{groupName}</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5">
+                    <Input
+                      value={groupName}
+                      onChange={(e) => setGroupName(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter" && groupName.trim()) saveGroupName(); }}
+                      placeholder={lang === "en" ? "Group Name" : "Gruppenname"}
+                      className="h-9 pl-9 pr-3 rounded-full bg-secondary/60 border-border text-sm"
+                    />
+                    {groupName.trim() && (
+                      <Button size="sm" className="h-9 px-3" onClick={saveGroupName}>
+                        {lang === "en" ? "Save" : "Speichern"}
+                      </Button>
+                    )}
+                  </div>
+                )}
               </div>
 
-              {/* Telegram ID pill (read-only) */}
+              {/* Telegram ID pill – read-only if set, editable fallback if empty */}
               <div className="relative flex-1 min-w-0 group">
                 <MessageSquare className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" />
-                <div
-                  className={`w-full h-9 flex items-center pl-9 pr-3 rounded-full bg-secondary/60 border border-border text-sm truncate ${
-                    telegramId ? "text-foreground font-medium" : "text-muted-foreground"
-                  }`}
-                  title={telegramId || "Telegram ID"}
-                >
-                  {telegramId && <CheckCircle2 className="h-3.5 w-3.5 text-accent shrink-0 mr-1.5" />}
-                  <span className="truncate">{telegramId || "Telegram ID"}</span>
-                </div>
+                {telegramId && telegramSaved ? (
+                  <div
+                    className="w-full h-9 flex items-center pl-9 pr-3 rounded-full bg-secondary/60 border border-border text-sm truncate text-foreground font-medium"
+                    title={telegramId}
+                  >
+                    <CheckCircle2 className="h-3.5 w-3.5 text-accent shrink-0 mr-1.5" />
+                    <span className="truncate">{telegramId}</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5">
+                    <Input
+                      value={telegramId}
+                      onChange={(e) => { setTelegramId(e.target.value); setTelegramSaved(false); }}
+                      onKeyDown={(e) => { if (e.key === "Enter" && telegramId.trim()) saveTelegram(); }}
+                      placeholder="Telegram ID"
+                      className="h-9 pl-9 pr-3 rounded-full bg-secondary/60 border-border text-sm"
+                    />
+                    {telegramId.trim() && (
+                      <Button size="sm" className="h-9 px-3" onClick={saveTelegram}>
+                        {lang === "en" ? "Save" : "Speichern"}
+                      </Button>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
