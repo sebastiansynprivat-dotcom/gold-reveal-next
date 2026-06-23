@@ -223,28 +223,39 @@ export default function MarketerContentPlans() {
                       {active.description && (
                         <p className="text-xs text-muted-foreground mb-3 whitespace-pre-wrap">{active.description}</p>
                       )}
-                      <div className="space-y-1.5">
+                      <div className="space-y-2">
                         {items.map((it) => (
-                          <div key={it.id} className="flex items-start gap-2 p-2 rounded hover:bg-background/40">
-                            <button onClick={() => toggleItem(it)} className="shrink-0 mt-0.5">
-                              {it.done
-                                ? <CheckCircle2 className="h-4 w-4 text-accent" />
-                                : <Circle className="h-4 w-4 text-muted-foreground" />}
-                            </button>
-                            <div className="flex-1 min-w-0">
-                              <p className={`text-sm ${it.done ? "line-through text-muted-foreground" : "text-foreground"}`}>
-                                {it.title}
-                              </p>
-                              {it.notes && <p className="text-[11px] text-muted-foreground mt-0.5 whitespace-pre-wrap break-words">{it.notes}</p>}
-                              {it.reference_url && (
-                                <a
-                                  href={it.reference_url.startsWith("http") ? it.reference_url : `https://${it.reference_url}`}
-                                  target="_blank" rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 text-[11px] text-accent hover:text-accent/80 mt-1"
-                                >
-                                  <ExternalLink className="h-3 w-3" /> Referenz öffnen
-                                </a>
-                              )}
+                          <div
+                            key={it.id}
+                            className={`rounded-lg border p-3 transition-colors ${it.done ? "border-emerald-500/40 bg-emerald-500/5" : "border-accent/20 bg-accent/5"}`}
+                          >
+                            <div className="flex items-start gap-2.5">
+                              <button
+                                onClick={() => toggleItem(it)}
+                                className="shrink-0 mt-[2px]"
+                                aria-label="Erledigt"
+                              >
+                                {it.done
+                                  ? <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+                                  : <Circle className="h-5 w-5 text-muted-foreground hover:text-accent transition-colors" />}
+                              </button>
+                              <div className="flex-1 min-w-0 space-y-2">
+                                <div className={`text-sm font-semibold leading-snug ${it.done ? "line-through text-muted-foreground" : "text-foreground"}`}>
+                                  {it.title}
+                                </div>
+                                {it.reference_url && (
+                                  <a
+                                    href={it.reference_url.startsWith("http") ? it.reference_url : `https://${it.reference_url}`}
+                                    target="_blank" rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1.5 text-xs text-accent hover:underline leading-none"
+                                  >
+                                    <ExternalLink className="h-3 w-3 shrink-0" /> Referenz ansehen
+                                  </a>
+                                )}
+                                {it.notes && (
+                                  <div className="text-[11px] text-muted-foreground whitespace-pre-wrap leading-relaxed">{it.notes}</div>
+                                )}
+                              </div>
                             </div>
                           </div>
                         ))}
