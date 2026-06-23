@@ -361,27 +361,51 @@ export default function Dashboard() {
     return () => mql.removeEventListener("change", onChange);
   }, []);
 
-  // Load profile data
+  // Load profile data – retry once on transient auth races so we don't
+  // briefly render an "empty" header (no name / group / telegram) for users
+  // whose session is still warming up.
   useEffect(() => {
     if (!user) return;
-    supabase
-      .from("profiles")
-      .select("telegram_id, group_name, offer, name")
-      .eq("user_id", user.id)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data?.telegram_id) {
-          setTelegramId(data.telegram_id);
-          setTelegramSaved(true);
+    let cancelled = false;
+
+    const loadProfile = async (attempt = 0): Promise<void> => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("telegram_id, group_name, offer, name")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (cancelled) return;
+
+      if (error) {
+        console.warn("[Dashboard] profile load error", error);
+        if (attempt < 2) {
+          setTimeout(() => loadProfile(attempt + 1), 600 * (attempt + 1));
+          return;
         }
-        if (data?.group_name) {
-          setGroupName(data.group_name);
-          setGroupNameSaved(true);
-        }
-        if ((data as any)?.name) setUserName((data as any).name);
-        if (data?.offer) setOffer(data.offer);
-        setTelegramLoading(false);
-      });
+      }
+
+      // If the row is missing AND we have no cached values yet, retry once –
+      // this can happen during a brief session-restore race after a refresh.
+      if (!data && attempt < 2) {
+        setTimeout(() => loadProfile(attempt + 1), 600 * (attempt + 1));
+        return;
+      }
+
+      if (data?.telegram_id) {
+        setTelegramId(data.telegram_id);
+        setTelegramSaved(true);
+      }
+      if (data?.group_name) {
+        setGroupName(data.group_name);
+        setGroupNameSaved(true);
+      }
+      if ((data as any)?.name) setUserName((data as any).name);
+      if (data?.offer) setOffer(data.offer);
+      setTelegramLoading(false);
+    };
+
+    loadProfile();
 
     // Load all assigned accounts (+ resolve model names for the request dialog)
     supabase
