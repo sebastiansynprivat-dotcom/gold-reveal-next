@@ -201,6 +201,18 @@ export default function ContentDropsWidget() {
                     Gelesen
                   </button>
                 </div>
+
+                {d.model_agency === "syn" ? (
+                  <p className="mt-2.5 text-[11px] text-muted-foreground/80 leading-relaxed">
+                    <span className="text-accent/90 font-semibold">Hinweis (SYN):</span>{" "}
+                    Die Models sollen in den Content-Link schauen, der ihnen per Chat mitgeteilt wurde.
+                  </p>
+                ) : (
+                  <p className="mt-2.5 text-[11px] text-muted-foreground/80 leading-relaxed">
+                    <span className="text-accent/90 font-semibold">Hinweis (SHE-X):</span>{" "}
+                    Der Content liegt im Drive. Die Models können sich diesen dort selbst ansehen und hochladen. Falls es Probleme beim Hochladen gibt, sollen sie sich melden.
+                  </p>
+                )}
               </div>
             </motion.div>
           ))}
