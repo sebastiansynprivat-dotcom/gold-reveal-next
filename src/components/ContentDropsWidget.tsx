@@ -12,6 +12,7 @@ type Drop = {
   content_link: string;
   message: string;
   created_at: string;
+  model_agency?: string | null;
 };
 
 export default function ContentDropsWidget() {
@@ -41,11 +42,20 @@ export default function ContentDropsWidget() {
       )
     );
 
+    // Load agency info for each active model so we can show the right hint.
+    const { data: modelAgencies } = await supabase
+      .from("models")
+      .select("id, model_agency")
+      .in("id", activeModelIds);
+
     if (activeModelIds.length === 0) {
       setDrops([]);
       setReadIds(new Set());
       return;
     }
+
+    const agencyMap = new Map<string, string | null>();
+    (modelAgencies || []).forEach((m: any) => agencyMap.set(m.id, m.model_agency));
 
     const [{ data: dropsData }, { data: readsData }] = await Promise.all([
       supabase
@@ -60,7 +70,12 @@ export default function ContentDropsWidget() {
         .select("drop_id")
         .eq("user_id", user.id),
     ]);
-    setDrops((dropsData as Drop[]) || []);
+
+    const enrichedDrops = ((dropsData as Drop[]) || []).map((drop) => ({
+      ...drop,
+      model_agency: drop.model_id ? agencyMap.get(drop.model_id) ?? null : null,
+    }));
+    setDrops(enrichedDrops);
     setReadIds(new Set((readsData || []).map((r: any) => r.drop_id)));
   };
 
@@ -186,6 +201,18 @@ export default function ContentDropsWidget() {
                     Gelesen
                   </button>
                 </div>
+
+                {d.model_agency === "syn" ? (
+                  <p className="mt-2.5 text-[11px] text-muted-foreground/80 leading-relaxed">
+                    <span className="text-accent/90 font-semibold">Hinweis (SYN):</span>{" "}
+                    Die Models sollen in den Content-Link schauen, der ihnen per Chat mitgeteilt wurde.
+                  </p>
+                ) : (
+                  <p className="mt-2.5 text-[11px] text-muted-foreground/80 leading-relaxed">
+                    <span className="text-accent/90 font-semibold">Hinweis (SHE-X):</span>{" "}
+                    Der Content liegt im Drive. Die Models können sich diesen dort selbst ansehen und hochladen. Falls es Probleme beim Hochladen gibt, sollen sie sich melden.
+                  </p>
+                )}
               </div>
             </motion.div>
           ))}
