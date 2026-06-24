@@ -12,6 +12,7 @@ type Drop = {
   content_link: string;
   message: string;
   created_at: string;
+  model_agency?: string | null;
 };
 
 export default function ContentDropsWidget() {
