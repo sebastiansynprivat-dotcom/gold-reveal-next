@@ -42,6 +42,12 @@ export default function ContentDropsWidget() {
       )
     );
 
+    // Load agency info for each active model so we can show the right hint.
+    const { data: modelAgencies } = await supabase
+      .from("models")
+      .select("id, model_agency")
+      .in("id", activeModelIds);
+
     if (activeModelIds.length === 0) {
       setDrops([]);
       setReadIds(new Set());
