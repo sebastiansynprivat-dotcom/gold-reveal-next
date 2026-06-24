@@ -54,6 +54,9 @@ export default function ContentDropsWidget() {
       return;
     }
 
+    const agencyMap = new Map<string, string | null>();
+    (modelAgencies || []).forEach((m: any) => agencyMap.set(m.id, m.model_agency));
+
     const [{ data: dropsData }, { data: readsData }] = await Promise.all([
       supabase
         .from("content_drops")
@@ -67,7 +70,12 @@ export default function ContentDropsWidget() {
         .select("drop_id")
         .eq("user_id", user.id),
     ]);
-    setDrops((dropsData as Drop[]) || []);
+
+    const enrichedDrops = ((dropsData as Drop[]) || []).map((drop) => ({
+      ...drop,
+      model_agency: drop.model_id ? agencyMap.get(drop.model_id) ?? null : null,
+    }));
+    setDrops(enrichedDrops);
     setReadIds(new Set((readsData || []).map((r: any) => r.drop_id)));
   };
 
