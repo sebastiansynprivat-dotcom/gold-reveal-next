@@ -30,7 +30,22 @@ export default function SteckbriefImporter({
       const { data, error } = await supabase.functions.invoke("import-steckbrief", {
         body,
       });
-      if (error) throw error;
+      if (error) {
+        // Try to surface the real server-side message instead of the generic
+        // "Edge Function returned a non-2xx status code"
+        let serverMsg = "";
+        try {
+          const ctx = (error as any)?.context;
+          if (ctx && typeof ctx.json === "function") {
+            const j = await ctx.json();
+            serverMsg = j?.error || j?.message || "";
+          } else if (ctx && typeof ctx.text === "function") {
+            const t = await ctx.text();
+            try { serverMsg = JSON.parse(t)?.error || t; } catch { serverMsg = t; }
+          }
+        } catch { /* ignore */ }
+        throw new Error(serverMsg || (error as any)?.message || "Unbekannter Fehler");
+      }
       if ((data as any)?.error) throw new Error((data as any).error);
       const filled = (data as any)?.filled_fields ?? 0;
       const source = (data as any)?.source ?? "";
@@ -38,7 +53,7 @@ export default function SteckbriefImporter({
       onImported(filled, source);
     } catch (e: any) {
       const msg = e?.message || String(e);
-      toast.error(msg.slice(0, 200));
+      toast.error(msg.slice(0, 300));
     } finally {
       setBusy(null);
     }
