@@ -1279,6 +1279,9 @@ export default function Dashboard() {
                         </div>
                       </div>
                     )}
+                    <ModelProfilePreviewCards
+                      models={allModels.map((m) => ({ id: m.id, name: m.name }))}
+                    />
                     <ModelRequestDialog
                       onSubmitted={loadMyRequests}
                       editData={editRequest}
