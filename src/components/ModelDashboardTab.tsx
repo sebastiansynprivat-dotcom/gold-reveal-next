@@ -1382,9 +1382,10 @@ export default function ModelDashboardTab() {
   };
 
   // ─── Save model ───
-  const saveModel = async () => {
+  const saveModel = async (opts?: { silent?: boolean }) => {
     if (!selectedModelId) return;
-    setSaving(true);
+    const silent = !!opts?.silent;
+    if (!silent) setSaving(true);
     const { error } = await (supabase.from("models") as any)
       .update({
         name: modelForm.name,
@@ -1428,13 +1429,49 @@ export default function ModelDashboardTab() {
         })
         .eq("model_id", selectedModelId);
     }
-    if (error) toast.error(error.message);
-    else {
-      toast.success("Gespeichert ✅");
+    if (error) {
+      toast.error(error.message);
+    } else {
+      if (!silent) toast.success("Gespeichert ✅");
       await loadModels();
     }
-    setSaving(false);
+    if (!silent) setSaving(false);
+    return !error;
   };
+
+  // ─── Autosave: persist any change to the model form after a short debounce ───
+  const lastSavedFormRef = useRef<string>("");
+  const autosaveModelIdRef = useRef<string>("");
+  const [autosaving, setAutosaving] = useState(false);
+  // Reset baseline whenever the selected model changes / fresh data is loaded
+  useEffect(() => {
+    if (!selectedModelId) {
+      lastSavedFormRef.current = "";
+      autosaveModelIdRef.current = "";
+      return;
+    }
+    if (autosaveModelIdRef.current !== selectedModelId) {
+      // Wait until the form has populated with the newly selected model before snapshotting
+      if ((modelForm as any)?.id !== selectedModelId) return;
+      autosaveModelIdRef.current = selectedModelId;
+      lastSavedFormRef.current = JSON.stringify(modelForm);
+    }
+  }, [selectedModelId, modelForm]);
+
+  useEffect(() => {
+    if (!selectedModelId) return;
+    if (autosaveModelIdRef.current !== selectedModelId) return;
+    const snapshot = JSON.stringify(modelForm);
+    if (snapshot === lastSavedFormRef.current) return;
+    const t = setTimeout(async () => {
+      setAutosaving(true);
+      const ok = await saveModel({ silent: true });
+      if (ok) lastSavedFormRef.current = JSON.stringify(modelForm);
+      setAutosaving(false);
+    }, 700);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modelForm, selectedModelId]);
 
   // ─── Contract upload ───
   const handleContractUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -4031,7 +4068,7 @@ export default function ModelDashboardTab() {
               className="space-y-2"
             >
               <Button
-                onClick={saveModel}
+                onClick={() => saveModel()}
                 disabled={saving}
                 className="w-full gap-2 h-11 text-sm font-semibold bg-accent hover:bg-accent/90 text-accent-foreground transition-all hover:scale-[1.01] active:scale-[0.99] gold-glow"
               >
