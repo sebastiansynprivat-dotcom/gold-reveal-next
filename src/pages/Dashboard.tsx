@@ -78,6 +78,7 @@ import RequestMediaList from "@/components/RequestMediaList";
 import RevenueChart from "@/components/RevenueChart";
 import MonthSummaryWidget from "@/components/MonthSummaryWidget";
 import ContentDropsWidget from "@/components/ContentDropsWidget";
+import ModelProfilePreviewCards from "@/components/ModelProfilePreviewCards";
 import QuickActionBar from "@/components/QuickActionBar";
 import InspirationLibrary from "@/components/InspirationLibrary";
 import ThirtyDayChallenge from "@/components/ThirtyDayChallenge";
@@ -1278,6 +1279,9 @@ export default function Dashboard() {
                         </div>
                       </div>
                     )}
+                    <ModelProfilePreviewCards
+                      models={allModels.map((m) => ({ id: m.id, name: m.name }))}
+                    />
                     <ModelRequestDialog
                       onSubmitted={loadMyRequests}
                       editData={editRequest}
