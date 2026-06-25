@@ -161,7 +161,7 @@ async function findSteckbriefInFolder(
         `https://www.googleapis.com/drive/v3/files?q=${q}` +
         `&fields=nextPageToken,files(id,name,mimeType,modifiedTime,shortcutDetails(targetId,targetMimeType))` +
         `&orderBy=folder,modifiedTime desc&pageSize=100` +
-        `&supportsAllDrives=true&includeItemsFromAllDrives=true` +
+        `&supportsAllDrives=true&includeItemsFromAllDrives=true&corpora=allDrives` +
         (pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : "");
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
@@ -207,6 +207,10 @@ async function findSteckbriefInFolder(
     }
   }
 
+  console.info(
+    `Drive Steckbrief scan finished: folders=${seenFolders.size}, candidates=${candidates.length}`
+  );
+
   const byModifiedDesc = (a: DriveFile, b: DriveFile) =>
     String(b.modifiedTime || "").localeCompare(String(a.modifiedTime || ""));
 
@@ -216,35 +220,6 @@ async function findSteckbriefInFolder(
     candidates.filter((f) => f.mimeType === pdfMime).sort(byModifiedDesc)[0] ||
     null
   );
-
-  const listByMimes = async (mimes: string[]) => {
-    const q = encodeURIComponent(
-      `'${folderId}' in parents and trashed=false and (${mimes
-        .map((m) => `mimeType='${m}'`)
-        .join(" or ")})`
-    );
-    const url =
-      `https://www.googleapis.com/drive/v3/files?q=${q}` +
-      `&fields=files(id,name,mimeType,modifiedTime)` +
-      `&orderBy=modifiedTime desc&pageSize=10` +
-      `&supportsAllDrives=true&includeItemsFromAllDrives=true`;
-    const res = await fetch(url, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (!res.ok) throw new Error(`Drive list error: ${await res.text()}`);
-    const data = await res.json();
-    return (data.files || []) as Array<{
-      id: string;
-      name: string;
-      mimeType: string;
-    }>;
-  };
-
-  const docxFiles = await listByMimes([docxMime]);
-  if (docxFiles.length > 0) return docxFiles[0];
-
-  const fallbackFiles = await listByMimes(fallbackMimes);
-  return fallbackFiles[0] || null;
 }
 
 async function fetchDocxBytesFromDrive(
