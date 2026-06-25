@@ -88,8 +88,7 @@ export default function ModelBiographyDialog({ open, onOpenChange, modelId, mode
             </div>
           ) : data?.reason === "not_found" || !data?.html ? (
             <div className="rounded-lg border border-border/40 bg-secondary/30 p-4 text-sm text-muted-foreground">
-              Keine Biographie-Datei im Drive-Ordner gefunden. Sie sollte „Biographie" im Dateinamen
-              enthalten.
+              Keine .docx- oder Google-Doc-Datei im Drive-Ordner gefunden.
             </div>
           ) : (
             <div
