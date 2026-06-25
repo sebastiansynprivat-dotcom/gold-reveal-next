@@ -92,15 +92,20 @@ async function getAccessToken(): Promise<string> {
 }
 
 async function findBiographyFile(folderId: string, token: string) {
-  // Search docx files in the folder whose name contains "iograph"
+  // Search by file type only. Each model folder is expected to contain one biography DOCX,
+  // so the filename should not determine whether it can be found.
+  const mimes = [
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.google-apps.document",
+  ];
   const q = [
     `'${folderId}' in parents`,
     `trashed = false`,
-    `(name contains 'iograph' or name contains 'iografi' or name contains 'iograf')`,
+    `(${mimes.map((mime) => `mimeType='${mime}'`).join(" or ")})`,
   ].join(" and ");
   const url =
     `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}` +
-    `&fields=files(id,name,mimeType,modifiedTime)&pageSize=10` +
+    `&fields=files(id,name,mimeType,modifiedTime)&pageSize=10&orderBy=modifiedTime desc` +
     `&supportsAllDrives=true&includeItemsFromAllDrives=true`;
   const res = await fetch(url, {
     headers: { Authorization: `Bearer ${token}` },
@@ -108,7 +113,7 @@ async function findBiographyFile(folderId: string, token: string) {
   if (!res.ok) throw new Error(`Drive list error: ${await res.text()}`);
   const data = await res.json();
   const files: any[] = data.files || [];
-  // Prefer docx; fall back to first match
+  // Prefer a real DOCX; fall back to a Google Doc export if present.
   return (
     files.find((f) =>
       f.mimeType ===
