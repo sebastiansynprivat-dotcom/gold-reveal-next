@@ -500,10 +500,10 @@ function parseProfileResponse(content: string): {
     const v = (parsed as any)[f];
     fields[f] = typeof v === "string" ? v.trim() : v != null ? String(v) : "";
   }
-  // Hard safeguard: never allow under-21 ages from the AI
+  // Hard safeguard: never allow under-18 ages from the AI
   const ageNum = parseInt(fields.age, 10);
-  if (!isNaN(ageNum) && ageNum < 21) {
-    fields.age = String(21 + Math.floor(Math.random() * 6)); // 21–26
+  if (!isNaN(ageNum) && ageNum < 18) {
+    fields.age = String(18 + Math.floor(Math.random() * 6)); // 18–23
   }
   const shooting: Record<string, boolean | null> = {};
   const sp = (parsed as any).shooting_preferences || {};
