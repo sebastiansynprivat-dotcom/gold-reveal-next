@@ -408,39 +408,74 @@ export default function Dashboard() {
     loadProfile();
 
     // Load all assigned accounts (+ resolve model names for the request dialog)
-    supabase
-      .from("accounts")
-      .select(
-        "id, account_email, account_password, account_domain, platform, assigned_at, drive_folder_id, model_language, model_active, model_id",
-      )
-      .eq("assigned_to", user.id)
-      .order("created_at", { ascending: true })
-      .then(async ({ data }) => {
-        const accounts = data || [];
-        const modelIds = Array.from(new Set(accounts.map((a: any) => a.model_id).filter(Boolean)));
-        const metaById: Record<string, { name?: string; lang?: string }> = {};
-        if (modelIds.length > 0) {
-          const { data: models } = await supabase
-            .from("models")
-            .select("id, name, model_language")
-            .in("id", modelIds as string[]);
-          (models || []).forEach((m: any) => {
-            metaById[m.id] = { name: m.name, lang: m.model_language };
-          });
+    // We need accounts assigned via BOTH paths:
+    //   1. accounts.assigned_to = user.id (normal post-claim state)
+    //   2. open account_assignments rows linked to this user's profile_id
+    //      (pre-create profiles whose account row was never updated with assigned_to)
+    (async () => {
+      // 1) directly-assigned accounts
+      const { data: direct } = await supabase
+        .from("accounts")
+        .select(
+          "id, account_email, account_password, account_domain, platform, assigned_at, drive_folder_id, model_language, model_active, model_id",
+        )
+        .eq("assigned_to", user.id)
+        .order("created_at", { ascending: true });
+
+      // 2) account_assignments via profile_id (covers pre-create handoffs)
+      const { data: myProfile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      let viaAssignments: any[] = [];
+      if (myProfile?.id) {
+        const { data: aa } = await supabase
+          .from("account_assignments")
+          .select("account_id")
+          .or(`user_id.eq.${user.id},profile_id.eq.${myProfile.id}`)
+          .is("end_date", null);
+        const ids = Array.from(new Set((aa || []).map((r: any) => r.account_id))).filter(Boolean);
+        const directIds = new Set((direct || []).map((a: any) => a.id));
+        const missing = ids.filter((id) => !directIds.has(id));
+        if (missing.length > 0) {
+          const { data: extra } = await supabase
+            .from("accounts")
+            .select(
+              "id, account_email, account_password, account_domain, platform, assigned_at, drive_folder_id, model_language, model_active, model_id",
+            )
+            .in("id", missing as string[]);
+          viaAssignments = extra || [];
         }
-        setAssignedAccounts(
-          accounts.map((a: any) => {
-            const meta = a.model_id ? metaById[a.model_id] : undefined;
-            return {
-              ...a,
-              model_name: meta?.name,
-              // Prefer the models table (source of truth) over accounts.model_language,
-              // which can be stale if the model's language was changed later.
-              model_language: meta?.lang || a.model_language || "de",
-            };
-          }),
-        );
-      });
+      }
+
+      const accounts = [...(direct || []), ...viaAssignments];
+      const modelIds = Array.from(new Set(accounts.map((a: any) => a.model_id).filter(Boolean)));
+      const metaById: Record<string, { name?: string; lang?: string }> = {};
+      if (modelIds.length > 0) {
+        const { data: models } = await supabase
+          .from("models")
+          .select("id, name, model_language")
+          .in("id", modelIds as string[]);
+        (models || []).forEach((m: any) => {
+          metaById[m.id] = { name: m.name, lang: m.model_language };
+        });
+      }
+      setAssignedAccounts(
+        accounts.map((a: any) => {
+          const meta = a.model_id ? metaById[a.model_id] : undefined;
+          return {
+            ...a,
+            model_name: meta?.name,
+            // Prefer the models table (source of truth) over accounts.model_language,
+            // which can be stale if the model's language was changed later.
+            model_language: meta?.lang || a.model_language || "de",
+          };
+        }),
+      );
+    })();
+
 
     // Check if first login
     supabase
