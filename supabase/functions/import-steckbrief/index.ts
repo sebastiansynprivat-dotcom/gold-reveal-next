@@ -139,7 +139,83 @@ async function findSteckbriefInFolder(
 ): Promise<{ id: string; name: string; mimeType: string } | null> {
   const docxMime =
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-  const fallbackMimes = ["application/vnd.google-apps.document", "application/pdf"];
+  const googleDocMime = "application/vnd.google-apps.document";
+  const pdfMime = "application/pdf";
+  const folderMime = "application/vnd.google-apps.folder";
+  const shortcutMime = "application/vnd.google-apps.shortcut";
+  const supportedFileMimes = [docxMime, googleDocMime, pdfMime];
+  type DriveFile = {
+    id: string;
+    name: string;
+    mimeType: string;
+    modifiedTime?: string;
+    shortcutDetails?: { targetId?: string; targetMimeType?: string };
+  };
+
+  const listChildren = async (parentId: string): Promise<DriveFile[]> => {
+    const files: DriveFile[] = [];
+    let pageToken = "";
+    do {
+      const q = encodeURIComponent(`'${parentId}' in parents and trashed=false`);
+      const url =
+        `https://www.googleapis.com/drive/v3/files?q=${q}` +
+        `&fields=nextPageToken,files(id,name,mimeType,modifiedTime,shortcutDetails(targetId,targetMimeType))` +
+        `&orderBy=folder,modifiedTime desc&pageSize=100` +
+        `&supportsAllDrives=true&includeItemsFromAllDrives=true` +
+        (pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : "");
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error(`Drive list error: ${await res.text()}`);
+      const data = await res.json();
+      files.push(...((data.files || []) as DriveFile[]));
+      pageToken = data.nextPageToken || "";
+    } while (pageToken);
+    return files;
+  };
+
+  const toTargetFile = (file: DriveFile): DriveFile => {
+    if (file.mimeType !== shortcutMime) return file;
+    return {
+      id: file.shortcutDetails?.targetId || file.id,
+      name: file.name,
+      mimeType: file.shortcutDetails?.targetMimeType || file.mimeType,
+      modifiedTime: file.modifiedTime,
+    };
+  };
+
+  const queue: Array<{ id: string; depth: number }> = [{ id: folderId, depth: 0 }];
+  const seenFolders = new Set<string>();
+  const candidates: DriveFile[] = [];
+  const maxDepth = 5;
+
+  while (queue.length > 0) {
+    const current = queue.shift()!;
+    if (seenFolders.has(current.id) || current.depth > maxDepth) continue;
+    seenFolders.add(current.id);
+
+    const children = await listChildren(current.id);
+    for (const child of children) {
+      const file = toTargetFile(child);
+      if (file.mimeType === folderMime && file.id && !seenFolders.has(file.id)) {
+        queue.push({ id: file.id, depth: current.depth + 1 });
+        continue;
+      }
+      if (supportedFileMimes.includes(file.mimeType)) {
+        candidates.push(file);
+      }
+    }
+  }
+
+  const byModifiedDesc = (a: DriveFile, b: DriveFile) =>
+    String(b.modifiedTime || "").localeCompare(String(a.modifiedTime || ""));
+
+  return (
+    candidates.filter((f) => f.mimeType === docxMime).sort(byModifiedDesc)[0] ||
+    candidates.filter((f) => f.mimeType === googleDocMime).sort(byModifiedDesc)[0] ||
+    candidates.filter((f) => f.mimeType === pdfMime).sort(byModifiedDesc)[0] ||
+    null
+  );
 
   const listByMimes = async (mimes: string[]) => {
     const q = encodeURIComponent(
