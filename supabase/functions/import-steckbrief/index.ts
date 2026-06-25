@@ -344,7 +344,7 @@ REGELN — Faktenbasis (DEUTSCHES BRANDING):
 - Sprache: Deutsch.
 - "city" MUSS eine größere deutsche Stadt sein. Wähle EINE aus (variieren): ${shuffledCities.join(", ")}.
 - "place_of_birth" darf eine andere deutsche Stadt sein.
-- Alter ZWINGEND zwischen 21 und 32 (NIEMALS unter 21, auch wenn das Foto jünger wirkt — wir brauchen rechtlich klar erwachsene Personen). Passe das Alter ggf. nach oben an.
+- Alter ZWINGEND zwischen 18 und 32 (NIEMALS unter 18, auch wenn das Foto jünger wirkt — wir brauchen rechtlich klar erwachsene Personen). Passe das Alter ggf. nach oben an.
 - Größe in cm, Gewicht realistisch, Schuhgröße EU 36–41, BH realistisch.
 - "natural_hair" MUSS visuell zum Foto passen.
 - Hobbies: 3–5 abwechslungsreich, Komma-getrennt, KEINE Klischees wiederholen. Bevorzugt mit deutschem Bezug (z. B. Wandern in den Alpen, Brunchen, Yoga, Wakeboarden am Baggersee, Festivals wie Tomorrowland/Parookaville, Städtetrips).
