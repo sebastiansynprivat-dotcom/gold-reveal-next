@@ -60,7 +60,7 @@ export default function ModelProfilePreviewCards({ models }: { models: ModelInpu
 
   return (
     <>
-      <div className="px-4 py-4 lg:px-6 lg:py-5 space-y-3">
+      <div className="space-y-3">
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-accent" />
           <h3 className="text-sm font-semibold text-foreground">
