@@ -591,7 +591,7 @@ Deno.serve(async (req) => {
         return new Response(
           JSON.stringify({
             error:
-              "Im Drive-Ordner wurde kein Word-/Google-Doc Steckbrief gefunden. Bitte lade die Datei manuell hoch.",
+              "Im Drive-Ordner wurde keine .docx-, Google-Doc- oder PDF-Datei gefunden. Bitte lade die Datei manuell hoch.",
           }),
           { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
