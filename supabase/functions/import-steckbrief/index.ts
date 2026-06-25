@@ -340,19 +340,22 @@ ${schemaDescription}
 
 Alle Textwerte als String. Leere Strings für unbekannte Felder erlaubt, außer "personality" (Pflicht).
 
-REGELN — Faktenbasis:
+REGELN — Faktenbasis (DEUTSCHES BRANDING):
 - Sprache: Deutsch.
 - "city" MUSS eine größere deutsche Stadt sein. Wähle EINE aus (variieren): ${shuffledCities.join(", ")}.
 - "place_of_birth" darf eine andere deutsche Stadt sein.
-- Alter zwischen 19 und 32, passend zum Foto.
+- Alter ZWINGEND zwischen 21 und 32 (NIEMALS unter 21, auch wenn das Foto jünger wirkt — wir brauchen rechtlich klar erwachsene Personen). Passe das Alter ggf. nach oben an.
 - Größe in cm, Gewicht realistisch, Schuhgröße EU 36–41, BH realistisch.
 - "natural_hair" MUSS visuell zum Foto passen.
-- Hobbies: 3–5 abwechslungsreich, Komma-getrennt, KEINE Klischees wiederholen.
-- "work" und "occupation" gleicher Wert: realistischer Beruf/Studium.
-- "languages": Deutsch + 1–2 weitere.
-- "favorite_*": konkret, nicht generisch.
-- "education": kurzer Bildungsweg.
-- "name": Modelname wenn vorgegeben, sonst weiblicher deutscher Vorname.
+- Hobbies: 3–5 abwechslungsreich, Komma-getrennt, KEINE Klischees wiederholen. Bevorzugt mit deutschem Bezug (z. B. Wandern in den Alpen, Brunchen, Yoga, Wakeboarden am Baggersee, Festivals wie Tomorrowland/Parookaville, Städtetrips).
+- "work" und "occupation" gleicher Wert: realistischer Beruf/Studium (gerne typisch deutsche Berufe: Marketing, Pflege, Erzieherin, Studentin BWL/Soziale Arbeit, Friseurin, Influencerin, Office Management …).
+- "languages": Deutsch zuerst, dann 1–2 weitere (typisch: Englisch, manchmal Französisch/Spanisch/Türkisch).
+- "favorite_movie": MUSS ein in Deutschland bekannter, eher weiblich konnotierter Film sein. NIEMALS Pulp Fiction, Fight Club, Scarface, Goodfellas, Inception oder andere Männer-/Gangster-/Action-Klassiker. Wähle aus typischen Frauen-Lieblingsfilmen, die in DE laufen: "Fack ju Göhte", "Keinohrhasen", "Honig im Kopf", "Bibi & Tina", "Die Eiskönigin", "Pretty Woman", "Bridget Jones", "Notting Hill", "Tatsächlich Liebe", "Dirty Dancing", "Twilight", "Harry Potter", "Sex and the City", "Mamma Mia", "Ziemlich beste Freunde", "Türkisch für Anfänger", "Barbie", "La La Land", "Wie ein einziger Tag", "Greys Anatomy" (Serie). Variiere stark!
+- "favorite_music": deutsche oder in DE sehr populäre, eher weiblich konnotierte Acts. Z. B. Ayliva, Shirin David, Loredana, Helene Fischer, Lea, Nina Chuba, Wincent Weiss, Mark Forster, Apache 207, Cro, Sarah Connor, Beyoncé, Taylor Swift, Billie Eilish, Dua Lipa, Ariana Grande, Rihanna, Sido (light), Adele, Pink, Schlager-Mix. Variiere stark, KEINE Hardrock/Metal/Gangsta-Rap-Klischees.
+- "favorite_food": typisch deutsch oder beliebt in DE (Sushi, Pizza, Pasta, Döner, Schnitzel mit Pommes, Käsespätzle, Currywurst, Salat-Bowls, Mamas Lasagne, Sonntagsbraten, Frühstücksbrunch).
+- "favorite_color": konkret, nicht generisch.
+- "education": kurzer realistischer deutscher Bildungsweg (Abitur, Realschule + Ausbildung, Studium …).
+- "name": Modelname wenn vorgegeben, sonst weiblicher deutscher Vorname (gerne moderne: Mia, Lea, Emma, Lara, Hannah, Lena, Sophia, Marie, Pia, Jana, Anna-Lena, Vivien, Chiara).
 - Variation-Seed: ${seed}.
 
 ${rulesBlock()}
