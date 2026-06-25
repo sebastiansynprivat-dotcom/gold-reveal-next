@@ -4067,7 +4067,7 @@ export default function ModelDashboardTab() {
               className="space-y-2"
             >
               <Button
-                onClick={saveModel}
+                onClick={() => saveModel()}
                 disabled={saving}
                 className="w-full gap-2 h-11 text-sm font-semibold bg-accent hover:bg-accent/90 text-accent-foreground transition-all hover:scale-[1.01] active:scale-[0.99] gold-glow"
               >
