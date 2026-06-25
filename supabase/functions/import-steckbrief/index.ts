@@ -344,7 +344,7 @@ REGELN — Faktenbasis (DEUTSCHES BRANDING):
 - Sprache: Deutsch.
 - "city" MUSS eine größere deutsche Stadt sein. Wähle EINE aus (variieren): ${shuffledCities.join(", ")}.
 - "place_of_birth" darf eine andere deutsche Stadt sein.
-- Alter ZWINGEND zwischen 21 und 32 (NIEMALS unter 21, auch wenn das Foto jünger wirkt — wir brauchen rechtlich klar erwachsene Personen). Passe das Alter ggf. nach oben an.
+- Alter ZWINGEND zwischen 18 und 32 (NIEMALS unter 18, auch wenn das Foto jünger wirkt — wir brauchen rechtlich klar erwachsene Personen). Passe das Alter ggf. nach oben an.
 - Größe in cm, Gewicht realistisch, Schuhgröße EU 36–41, BH realistisch.
 - "natural_hair" MUSS visuell zum Foto passen.
 - Hobbies: 3–5 abwechslungsreich, Komma-getrennt, KEINE Klischees wiederholen. Bevorzugt mit deutschem Bezug (z. B. Wandern in den Alpen, Brunchen, Yoga, Wakeboarden am Baggersee, Festivals wie Tomorrowland/Parookaville, Städtetrips).
@@ -500,10 +500,10 @@ function parseProfileResponse(content: string): {
     const v = (parsed as any)[f];
     fields[f] = typeof v === "string" ? v.trim() : v != null ? String(v) : "";
   }
-  // Hard safeguard: never allow under-21 ages from the AI
+  // Hard safeguard: never allow under-18 ages from the AI
   const ageNum = parseInt(fields.age, 10);
-  if (!isNaN(ageNum) && ageNum < 21) {
-    fields.age = String(21 + Math.floor(Math.random() * 6)); // 21–26
+  if (!isNaN(ageNum) && ageNum < 18) {
+    fields.age = String(18 + Math.floor(Math.random() * 6)); // 18–23
   }
   const shooting: Record<string, boolean | null> = {};
   const sp = (parsed as any).shooting_preferences || {};
