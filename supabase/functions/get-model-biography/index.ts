@@ -92,35 +92,84 @@ async function getAccessToken(): Promise<string> {
 }
 
 async function findBiographyFile(folderId: string, token: string) {
-  // Search by file type only. Each model folder is expected to contain one biography DOCX,
-  // so the filename should not determine whether it can be found.
-  const mimes = [
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "application/vnd.google-apps.document",
-  ];
-  const q = [
-    `'${folderId}' in parents`,
-    `trashed = false`,
-    `(${mimes.map((mime) => `mimeType='${mime}'`).join(" or ")})`,
-  ].join(" and ");
-  const url =
-    `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}` +
-    `&fields=files(id,name,mimeType,modifiedTime)&pageSize=10&orderBy=modifiedTime desc` +
-    `&supportsAllDrives=true&includeItemsFromAllDrives=true`;
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  if (!res.ok) throw new Error(`Drive list error: ${await res.text()}`);
-  const data = await res.json();
-  const files: any[] = data.files || [];
-  // Prefer a real DOCX; fall back to a Google Doc export if present.
+  const docxMime = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+  const googleDocMime = "application/vnd.google-apps.document";
+  const folderMime = "application/vnd.google-apps.folder";
+  const shortcutMime = "application/vnd.google-apps.shortcut";
+
+  type DriveFile = {
+    id: string;
+    name: string;
+    mimeType: string;
+    modifiedTime?: string;
+    shortcutDetails?: { targetId?: string; targetMimeType?: string };
+  };
+
+  const listChildren = async (parentId: string): Promise<DriveFile[]> => {
+    const files: DriveFile[] = [];
+    let pageToken = "";
+    do {
+      const q = encodeURIComponent(`'${parentId}' in parents and trashed=false`);
+      const url =
+        `https://www.googleapis.com/drive/v3/files?q=${q}` +
+        `&fields=nextPageToken,files(id,name,mimeType,modifiedTime,shortcutDetails(targetId,targetMimeType))` +
+        `&pageSize=100&orderBy=folder,modifiedTime desc` +
+        `&supportsAllDrives=true&includeItemsFromAllDrives=true&corpora=allDrives` +
+        (pageToken ? `&pageToken=${encodeURIComponent(pageToken)}` : "");
+      const res = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error(`Drive list error: ${await res.text()}`);
+      const data = await res.json();
+      files.push(...((data.files || []) as DriveFile[]));
+      pageToken = data.nextPageToken || "";
+    } while (pageToken);
+    return files;
+  };
+
+  const toTargetFile = (file: DriveFile): DriveFile =>
+    file.mimeType === shortcutMime
+      ? {
+          id: file.shortcutDetails?.targetId || file.id,
+          name: file.name,
+          mimeType: file.shortcutDetails?.targetMimeType || file.mimeType,
+          modifiedTime: file.modifiedTime,
+        }
+      : file;
+
+  const queue: Array<{ id: string; depth: number }> = [{ id: folderId, depth: 0 }];
+  const seenFolders = new Set<string>();
+  const candidates: DriveFile[] = [];
+  const maxDepth = 5;
+
+  while (queue.length > 0) {
+    const current = queue.shift()!;
+    if (seenFolders.has(current.id) || current.depth > maxDepth) continue;
+    seenFolders.add(current.id);
+
+    const children = await listChildren(current.id);
+    for (const child of children) {
+      const file = toTargetFile(child);
+      if (file.mimeType === folderMime && file.id && !seenFolders.has(file.id)) {
+        queue.push({ id: file.id, depth: current.depth + 1 });
+        continue;
+      }
+      if (file.mimeType === docxMime || file.mimeType === googleDocMime) {
+        candidates.push(file);
+      }
+    }
+  }
+
+  console.info(
+    `Drive biography scan finished: folders=${seenFolders.size}, candidates=${candidates.length}`
+  );
+
+  const byModifiedDesc = (a: DriveFile, b: DriveFile) =>
+    String(b.modifiedTime || "").localeCompare(String(a.modifiedTime || ""));
+
   return (
-    files.find((f) =>
-      f.mimeType ===
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-    ) ||
-    files.find((f) => f.mimeType === "application/vnd.google-apps.document") ||
-    files[0] ||
+    candidates.filter((f) => f.mimeType === docxMime).sort(byModifiedDesc)[0] ||
+    candidates.filter((f) => f.mimeType === googleDocMime).sort(byModifiedDesc)[0] ||
     null
   );
 }
