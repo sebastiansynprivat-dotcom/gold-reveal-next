@@ -474,7 +474,7 @@ export default function Dashboard() {
       setTelegramHelpOpen(true);
       return;
     }
-    const { error } = await supabase.from("profiles").update({ telegram_id: trimmed }).eq("user_id", user.id);
+    const { error } = await supabase.from("profiles").upsert({ user_id: user.id, telegram_id: trimmed }, { onConflict: "user_id" });
     if (error) {
       toast.error("Fehler beim Speichern");
       return;
