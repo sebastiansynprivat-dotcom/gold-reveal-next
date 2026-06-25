@@ -137,40 +137,38 @@ async function findSteckbriefInFolder(
   folderId: string,
   token: string
 ): Promise<{ id: string; name: string; mimeType: string } | null> {
-  const mimes = [
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "application/vnd.google-apps.document",
-    "application/pdf",
-  ];
-  const q = encodeURIComponent(
-    `'${folderId}' in parents and trashed=false and (${mimes
-      .map((m) => `mimeType='${m}'`)
-      .join(" or ")})`
-  );
-  const url = `https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name,mimeType,modifiedTime)&orderBy=modifiedTime desc&pageSize=50`;
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  if (!res.ok) throw new Error(`Drive list error: ${await res.text()}`);
-  const data = await res.json();
-  const files = (data.files || []) as Array<{
-    id: string;
-    name: string;
-    mimeType: string;
-  }>;
-  if (files.length === 0) return null;
-  const ranked = files
-    .map((f) => {
-      const n = f.name.toLowerCase();
-      let score = 0;
-      if (n.includes("steckbrief")) score += 10;
-      if (n.includes("profil")) score += 6;
-      if (n.includes("profile")) score += 6;
-      if (n.includes("info")) score += 2;
-      return { ...f, score };
-    })
-    .sort((a, b) => b.score - a.score);
-  return ranked[0];
+  const docxMime =
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+  const fallbackMimes = ["application/vnd.google-apps.document", "application/pdf"];
+
+  const listByMimes = async (mimes: string[]) => {
+    const q = encodeURIComponent(
+      `'${folderId}' in parents and trashed=false and (${mimes
+        .map((m) => `mimeType='${m}'`)
+        .join(" or ")})`
+    );
+    const url =
+      `https://www.googleapis.com/drive/v3/files?q=${q}` +
+      `&fields=files(id,name,mimeType,modifiedTime)` +
+      `&orderBy=modifiedTime desc&pageSize=10` +
+      `&supportsAllDrives=true&includeItemsFromAllDrives=true`;
+    const res = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) throw new Error(`Drive list error: ${await res.text()}`);
+    const data = await res.json();
+    return (data.files || []) as Array<{
+      id: string;
+      name: string;
+      mimeType: string;
+    }>;
+  };
+
+  const docxFiles = await listByMimes([docxMime]);
+  if (docxFiles.length > 0) return docxFiles[0];
+
+  const fallbackFiles = await listByMimes(fallbackMimes);
+  return fallbackFiles[0] || null;
 }
 
 async function fetchDocxBytesFromDrive(
@@ -183,7 +181,7 @@ async function fetchDocxBytesFromDrive(
     if (!r.ok) throw new Error(`Drive export error: ${await r.text()}`);
     return new Uint8Array(await r.arrayBuffer());
   }
-  const url = `https://www.googleapis.com/drive/v3/files/${file.id}?alt=media`;
+  const url = `https://www.googleapis.com/drive/v3/files/${file.id}?alt=media&supportsAllDrives=true`;
   const r = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
   if (!r.ok) throw new Error(`Drive download error: ${await r.text()}`);
   return new Uint8Array(await r.arrayBuffer());
@@ -593,7 +591,7 @@ Deno.serve(async (req) => {
         return new Response(
           JSON.stringify({
             error:
-              "Im Drive-Ordner wurde kein Word-/Google-Doc Steckbrief gefunden. Bitte lade die Datei manuell hoch.",
+              "Im Drive-Ordner wurde keine .docx-, Google-Doc- oder PDF-Datei gefunden. Bitte lade die Datei manuell hoch.",
           }),
           { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
