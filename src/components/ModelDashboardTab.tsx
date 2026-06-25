@@ -1451,7 +1451,8 @@ export default function ModelDashboardTab() {
       return;
     }
     if (autosaveModelIdRef.current !== selectedModelId) {
-      // New model selected → wait for the form to populate, then snapshot it
+      // Wait until the form has populated with the newly selected model before snapshotting
+      if ((modelForm as any)?.id !== selectedModelId) return;
       autosaveModelIdRef.current = selectedModelId;
       lastSavedFormRef.current = JSON.stringify(modelForm);
     }
