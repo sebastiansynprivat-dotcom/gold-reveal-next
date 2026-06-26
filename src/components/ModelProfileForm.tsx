@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
@@ -281,6 +281,28 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
     }
     setTimeout(() => setSavedAt(null), 2500);
   };
+
+  // Debounced autosave — kicks in after the form is loaded and user makes a change.
+  // Disabled during the initial submission flow (which requires an explicit submit click).
+  const lastSavedRef = useRef<string>("");
+  useEffect(() => {
+    if (loading) return;
+    // Seed baseline on first run after load so we don't autosave the freshly fetched state.
+    if (!lastSavedRef.current) {
+      lastSavedRef.current = JSON.stringify(profile);
+      return;
+    }
+    const snapshot = JSON.stringify(profile);
+    if (snapshot === lastSavedRef.current) return;
+    if (isInitialSubmission) return;
+    const t = setTimeout(() => {
+      lastSavedRef.current = snapshot;
+      handleSave(false);
+    }, 800);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [profile, loading, isInitialSubmission]);
+
 
   if (loading) {
     return (
