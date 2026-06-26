@@ -237,6 +237,31 @@ export default function Dashboard() {
   const { user } = useAuth();
   const { lang } = useUILanguage();
 
+  // Role-guard: if this user isn't a chatter (e.g. a fanvue_model who installed
+  // the PWA from the root manifest and landed on /dashboard), redirect them to
+  // their correct dashboard instead of rendering the chatter UI.
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id);
+      if (cancelled || !data) return;
+      const roles = data.map((r: any) => r.role);
+      // Chatters have no special role row — anyone with a role row that maps
+      // to another dashboard gets redirected.
+      if (roles.includes("fanvue_model")) navigate("/socialmedia/model", { replace: true });
+      else if (roles.includes("model")) navigate("/model", { replace: true });
+      else if (roles.includes("socialmedia_marketer")) navigate("/marketer", { replace: true });
+      else if (roles.includes("fanvue_partner")) navigate("/socialmedia/admin", { replace: true });
+    })();
+    return () => { cancelled = true; };
+  }, [user, navigate]);
+
+
+
   const [telegramId, setTelegramId] = useState("");
   const [telegramSaved, setTelegramSaved] = useState(false);
   const [telegramLoading, setTelegramLoading] = useState(true);
