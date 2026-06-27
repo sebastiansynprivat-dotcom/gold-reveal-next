@@ -173,7 +173,7 @@ export default function ChatterPushEngineTab() {
 
   async function loadLogs() {
     setLoading(true);
-    const { data } = await supabase
+    const { data } = await (supabase as any)
       .from("chatter_push_log")
       .select("id,user_id,trigger_key,title,body,context,sent_at")
       .order("sent_at", { ascending: false })
