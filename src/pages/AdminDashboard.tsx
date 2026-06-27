@@ -62,8 +62,10 @@ import {
   MessageCircle,
   FileBarChart,
   Eye,
+  Zap,
 } from "lucide-react";
 import ChatterReportsTab from "@/components/admin/ChatterReportsTab";
+import ChatterPushEngineTab from "@/components/admin/ChatterPushEngineTab";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import AdminModelReplyApprovals from "@/components/AdminModelReplyApprovals";
 import { Button } from "@/components/ui/button";
@@ -4068,7 +4070,7 @@ export default function AdminDashboard() {
     return c?.group_name || c?.telegram_id || userId.slice(0, 8);
   };
 
-  const SUPER_ADMIN_TABS = new Set(["notifications", "kiprompt", "platzhalter", "gdrive", "settings", "admin_mgmt", "socialmedia", "deleted"]);
+  const SUPER_ADMIN_TABS = new Set(["notifications", "kiprompt", "platzhalter", "gdrive", "settings", "admin_mgmt", "socialmedia", "deleted", "push_engine"]);
 
   const allTabItems = [
     { key: "einnahmen" as const, label: "Einnahmen", icon: TrendingUp, onClick: () => { setActiveTab("einnahmen"); setTimeFilter("heute"); } },
@@ -4153,6 +4155,12 @@ export default function AdminDashboard() {
       label: "Social Media Dashboard",
       icon: Star,
       onClick: () => { window.location.assign("/socialmedia/admin"); },
+    },
+    {
+      key: "push_engine" as const,
+      label: "Push-Engine",
+      icon: Zap,
+      onClick: () => setActiveTab("push_engine"),
     },
     {
       key: "deleted" as const,
@@ -9644,6 +9652,7 @@ export default function AdminDashboard() {
                 </div>
               )}
 
+              {activeTab === "push_engine" && <ChatterPushEngineTab />}
               {activeTab === "deleted" && <DeletedRecordsTab />}
             </motion.div>
           </AnimatePresence>

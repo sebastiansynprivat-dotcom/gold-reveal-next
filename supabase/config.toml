@@ -81,3 +81,9 @@ verify_jwt = false
 
 [functions.admin-impersonate-user]
 verify_jwt = false
+
+[functions.chatter-pulse-pushes]
+verify_jwt = false
+
+[functions.chatter-dopamine-pushes]
+verify_jwt = false

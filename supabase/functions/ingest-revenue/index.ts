@@ -258,6 +258,21 @@ Deno.serve(async (req) => {
           chatterBatch.get(ch.user_id)!.sales.push(s.amount);
         }
 
+        // ===== NEW: dopamine push engine (structured, logged, per-chatter only) =====
+        try {
+          const dopUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/chatter-dopamine-pushes`;
+          for (const [uid, info] of chatterBatch.entries()) {
+            const biggestSale = Math.max(...info.sales);
+            const modelOfBiggest =
+              pendingSales.find((s) => s.amount === biggestSale && chatterMap.get(`${s.platform}|${s.model.toLowerCase()}`)?.user_id === uid)?.model ?? "";
+            fetch(dopUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${serviceKey}` },
+              body: JSON.stringify({ user_id: uid, delta: biggestSale, model_name: modelOfBiggest }),
+            }).catch(() => {});
+          }
+        } catch (e) { console.error("dopamine push error", e); }
+
         // Combo / streak push per chatter: ≥3 sales in 15 min, 20 min cooldown
         const BURST_WINDOW_MIN = 15;
         const BURST_THRESHOLD = 3;
