@@ -4155,6 +4155,12 @@ export default function AdminDashboard() {
       onClick: () => { window.location.assign("/socialmedia/admin"); },
     },
     {
+      key: "push_engine" as const,
+      label: "Push-Engine",
+      icon: Zap,
+      onClick: () => setActiveTab("push_engine"),
+    },
+    {
       key: "deleted" as const,
       label: "Archiv (Gelöscht)",
       icon: Trash2,
