@@ -9652,6 +9652,7 @@ export default function AdminDashboard() {
                 </div>
               )}
 
+              {activeTab === "push_engine" && <ChatterPushEngineTab />}
               {activeTab === "deleted" && <DeletedRecordsTab />}
             </motion.div>
           </AnimatePresence>
