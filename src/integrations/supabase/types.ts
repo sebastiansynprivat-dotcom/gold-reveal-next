@@ -578,6 +578,36 @@ export type Database = {
         }
         Relationships: []
       }
+      chatter_push_log: {
+        Row: {
+          body: string
+          context: Json
+          id: string
+          sent_at: string
+          title: string
+          trigger_key: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          context?: Json
+          id?: string
+          sent_at?: string
+          title: string
+          trigger_key: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          context?: Json
+          id?: string
+          sent_at?: string
+          title?: string
+          trigger_key?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       chatter_summaries: {
         Row: {
           created_at: string
