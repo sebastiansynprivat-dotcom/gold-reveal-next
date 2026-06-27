@@ -182,7 +182,7 @@ export default function ChatterPushEngineTab() {
     setLoading(false);
   }
   async function loadChatters() {
-    const { data } = await supabase
+    const { data } = await (supabase as any)
       .from("profiles")
       .select("user_id,name,group_name,role")
       .eq("role", "chatter")
