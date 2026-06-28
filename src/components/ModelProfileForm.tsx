@@ -329,7 +329,9 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
       className="space-y-5"
+      onBlur={handleFieldBlur}
     >
+
       {/* Header */}
       <div className="glass-card rounded-xl p-5 flex items-start gap-4">
         <div className="h-12 w-12 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
