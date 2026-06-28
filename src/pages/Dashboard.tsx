@@ -535,7 +535,24 @@ export default function Dashboard() {
       setTelegramHelpOpen(true);
       return;
     }
-    const { error } = await supabase.from("profiles").upsert({ user_id: user.id, telegram_id: trimmed }, { onConflict: "user_id" });
+    let { error } = await supabase
+      .from("profiles")
+      .upsert({ user_id: user.id, telegram_id: trimmed }, { onConflict: "user_id" });
+
+    // Unique-violation: a pre-create profile already owns this telegram_id.
+    // Reclaim it server-side and retry once.
+    if (error && (error as any).code === "23505") {
+      const { error: rpcErr } = await (supabase as any).rpc("claim_pre_create_by_telegram", {
+        p_telegram_id: trimmed,
+      });
+      if (!rpcErr) {
+        const retry = await supabase
+          .from("profiles")
+          .upsert({ user_id: user.id, telegram_id: trimmed }, { onConflict: "user_id" });
+        error = retry.error;
+      }
+    }
+
     if (error) {
       toast.error("Fehler beim Speichern");
       return;
