@@ -282,26 +282,37 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
     setTimeout(() => setSavedAt(null), 2500);
   };
 
-  // Debounced autosave — kicks in after the form is loaded and user makes a change.
-  // Disabled during the initial submission flow (which requires an explicit submit click).
+  // Blur-based autosave — only fires when the user leaves a field, so typing is
+  // never interrupted by a re-render mid-sentence.
   const lastSavedRef = useRef<string>("");
+  const dirtyRef = useRef(false);
   useEffect(() => {
     if (loading) return;
-    // Seed baseline on first run after load so we don't autosave the freshly fetched state.
     if (!lastSavedRef.current) {
       lastSavedRef.current = JSON.stringify(profile);
       return;
     }
     const snapshot = JSON.stringify(profile);
-    if (snapshot === lastSavedRef.current) return;
-    if (isInitialSubmission) return;
-    const t = setTimeout(() => {
-      lastSavedRef.current = snapshot;
-      handleSave(false);
-    }, 800);
-    return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [profile, loading, isInitialSubmission]);
+    if (snapshot !== lastSavedRef.current) {
+      dirtyRef.current = true;
+    }
+  }, [profile, loading]);
+
+  const handleFieldBlur = (e: React.FocusEvent<HTMLDivElement>) => {
+    if (loading || isInitialSubmission) return;
+    // Ignore blurs that just move focus between fields inside this form —
+    // we only save when the value has actually changed.
+    if (!dirtyRef.current) return;
+    const snapshot = JSON.stringify(profile);
+    if (snapshot === lastSavedRef.current) {
+      dirtyRef.current = false;
+      return;
+    }
+    lastSavedRef.current = snapshot;
+    dirtyRef.current = false;
+    handleSave(false);
+  };
+
 
 
   if (loading) {
@@ -318,7 +329,9 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
       className="space-y-5"
+      onBlur={handleFieldBlur}
     >
+
       {/* Header */}
       <div className="glass-card rounded-xl p-5 flex items-start gap-4">
         <div className="h-12 w-12 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
