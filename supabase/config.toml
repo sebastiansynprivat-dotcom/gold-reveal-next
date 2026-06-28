@@ -87,3 +87,7 @@ verify_jwt = false
 
 [functions.chatter-dopamine-pushes]
 verify_jwt = false
+
+[functions.verify-telegram-id]
+verify_jwt = false
+
