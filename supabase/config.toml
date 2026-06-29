@@ -95,5 +95,5 @@ verify_jwt = false
 [functions.process-email-queue]
 verify_jwt = true
 
-[functions._oneoff_reset_sandra]
+[functions.oneoff-reset-sandra]
 verify_jwt = false
