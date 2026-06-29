@@ -91,3 +91,6 @@ verify_jwt = false
 [functions.verify-telegram-id]
 verify_jwt = false
 
+
+[functions.process-email-queue]
+verify_jwt = true
