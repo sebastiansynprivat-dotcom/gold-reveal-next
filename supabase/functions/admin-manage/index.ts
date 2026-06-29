@@ -148,6 +148,54 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (action === "reset_password") {
+      const normalizedEmail = String(email || "").toLowerCase().trim();
+      if (!normalizedEmail) {
+        return new Response(JSON.stringify({ error: "E-Mail erforderlich" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      let targetUser = null;
+      let page = 1;
+      const perPage = 1000;
+      while (!targetUser) {
+        const { data: { users }, error: listErr } = await serviceClient.auth.admin.listUsers({ page, perPage });
+        if (listErr || !users || users.length === 0) break;
+        targetUser = users.find(u => u.email?.toLowerCase() === normalizedEmail) || null;
+        if (users.length < perPage) break;
+        page++;
+      }
+
+      if (!targetUser) {
+        return new Response(JSON.stringify({ error: "User not found" }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const newPassword = generatePassword(14);
+      const { error: updErr } = await serviceClient.auth.admin.updateUserById(targetUser.id, {
+        password: newPassword,
+        email_confirm: true,
+      });
+      if (updErr) {
+        return new Response(JSON.stringify({ error: updErr.message }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      console.log("admin-manage: password reset", { admin: user.id, target: targetUser.id, email: normalizedEmail });
+
+      return new Response(JSON.stringify({ success: true, email: normalizedEmail, new_password: newPassword }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+
+
 
 
     if (action === "add") {
