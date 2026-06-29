@@ -30,6 +30,7 @@ Deno.serve(async (req) => {
       "platform",
       "account_email",
       "account_password",
+      "username",
       "model_language",
       "model_active",
       "model_agency",
