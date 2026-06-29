@@ -38,11 +38,56 @@ Deno.serve(async (req) => {
   const isWeekend = dow === "Sat" || dow === "Sun";
 
   try {
-    // 1. Find all chatters with an active assignment.
-    const { data: assignments } = await admin
+    // 1. Find all active assignments (no FK embed — relation is missing).
+    const { data: assignments, error: aaErr } = await admin
       .from("account_assignments")
-      .select("user_id, profile_id, account_id, accounts:account_id(model_id, models:model_id(name))")
+      .select("user_id, profile_id, account_id")
       .is("end_date", null);
+    if (aaErr) throw aaErr;
+
+    // Resolve missing user_id via profile_id -> profiles.user_id
+    const profileIds = Array.from(
+      new Set(
+        (assignments ?? [])
+          .filter((a: any) => !a.user_id && a.profile_id)
+          .map((a: any) => a.profile_id),
+      ),
+    );
+    const profileUserMap = new Map<string, string>();
+    if (profileIds.length > 0) {
+      const { data: prows } = await admin
+        .from("profiles")
+        .select("id, user_id")
+        .in("id", profileIds);
+      for (const p of (prows ?? []) as any[]) {
+        if (p.user_id) profileUserMap.set(p.id, p.user_id);
+      }
+    }
+
+    // Fetch account -> model_id map, then models -> name
+    const accountIds = Array.from(
+      new Set((assignments ?? []).map((a: any) => a.account_id).filter(Boolean)),
+    );
+    const accountModelMap = new Map<string, string | null>();
+    const modelIds = new Set<string>();
+    if (accountIds.length > 0) {
+      const { data: accs } = await admin
+        .from("accounts")
+        .select("id, model_id")
+        .in("id", accountIds);
+      for (const a of (accs ?? []) as any[]) {
+        accountModelMap.set(a.id, a.model_id ?? null);
+        if (a.model_id) modelIds.add(a.model_id);
+      }
+    }
+    const modelNameMap = new Map<string, string>();
+    if (modelIds.size > 0) {
+      const { data: mods } = await admin
+        .from("models")
+        .select("id, name")
+        .in("id", Array.from(modelIds));
+      for (const m of (mods ?? []) as any[]) modelNameMap.set(m.id, m.name);
+    }
 
     type ChatterCtx = {
       user_id: string;
@@ -51,12 +96,13 @@ Deno.serve(async (req) => {
     };
     const byUser = new Map<string, ChatterCtx>();
     for (const a of (assignments ?? []) as any[]) {
-      const uid = a.user_id;
+      const uid = a.user_id || (a.profile_id ? profileUserMap.get(a.profile_id) : undefined);
       if (!uid) continue;
       if (!byUser.has(uid)) byUser.set(uid, { user_id: uid, account_ids: [], model_names: [] });
       const c = byUser.get(uid)!;
       if (a.account_id) c.account_ids.push(a.account_id);
-      const mn = a?.accounts?.models?.name;
+      const modelId = a.account_id ? accountModelMap.get(a.account_id) : null;
+      const mn = modelId ? modelNameMap.get(modelId) : undefined;
       if (mn) c.model_names.push(mn);
     }
 
@@ -65,6 +111,7 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
 
     const userIds = Array.from(byUser.keys());
 
