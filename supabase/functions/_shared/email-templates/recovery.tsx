@@ -8,10 +8,24 @@ import {
   Container,
   Head,
   Heading,
+  Hr,
   Html,
   Preview,
+  Section,
   Text,
 } from 'npm:@react-email/components@0.0.22'
+
+import {
+  main,
+  outerContainer,
+  card,
+  brandBar,
+  brandText,
+  h1,
+  text,
+  button,
+  footer,
+} from './_shared-styles.ts'
 
 interface RecoveryEmailProps {
   siteName: string
@@ -22,50 +36,32 @@ export const RecoveryEmail = ({
   siteName,
   confirmationUrl,
 }: RecoveryEmailProps) => (
-  <Html lang="en" dir="ltr">
+  <Html lang="de" dir="ltr">
     <Head />
-    <Preview>Reset your password for {siteName}</Preview>
+    <Preview>Passwort zurücksetzen für {siteName}</Preview>
     <Body style={main}>
-      <Container style={container}>
-        <Heading style={h1}>Reset your password</Heading>
-        <Text style={text}>
-          We received a request to reset your password for {siteName}. Click
-          the button below to choose a new password.
-        </Text>
-        <Button style={button} href={confirmationUrl}>
-          Reset Password
-        </Button>
-        <Text style={footer}>
-          If you didn't request a password reset, you can safely ignore this
-          email. Your password will not be changed.
-        </Text>
+      <Container style={outerContainer}>
+        <Section style={brandBar}>
+          <Text style={brandText}>SHEX DASHBOARD</Text>
+        </Section>
+        <Section style={card}>
+          <Heading style={h1}>Passwort zurücksetzen</Heading>
+          <Text style={text}>
+            Wir haben eine Anfrage erhalten, dein Passwort zurückzusetzen.
+            Klicke auf den Button unten, um ein neues Passwort zu wählen.
+          </Text>
+          <Button style={button} href={confirmationUrl}>
+            Neues Passwort wählen
+          </Button>
+          <Hr style={{ borderColor: '#2A2410', margin: '32px 0 16px' }} />
+          <Text style={footer}>
+            Du hast keine Zurücksetzung angefordert? Dann ignoriere diese E-Mail
+            einfach – dein Passwort bleibt unverändert.
+          </Text>
+        </Section>
       </Container>
     </Body>
   </Html>
 )
 
 export default RecoveryEmail
-
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px' }
-const h1 = {
-  fontSize: '22px',
-  fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 20px',
-}
-const text = {
-  fontSize: '14px',
-  color: '#55575d',
-  lineHeight: '1.5',
-  margin: '0 0 25px',
-}
-const button = {
-  backgroundColor: '#000000',
-  color: '#ffffff',
-  fontSize: '14px',
-  borderRadius: '8px',
-  padding: '12px 20px',
-  textDecoration: 'none',
-}
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
