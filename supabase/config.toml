@@ -1,97 +1,67 @@
 project_id = "acznyhzgbkdcmnbqvptt"
 
-[functions.assign-accounts]
-verify_jwt = false
-
-[functions.subscribe-push]
-verify_jwt = false
-
-[functions.send-notification]
-verify_jwt = false
-
-[functions.get-vapid-key]
-verify_jwt = false
-
-[functions.chat]
-verify_jwt = false
-
-[functions.admin-totp-setup]
-verify_jwt = false
-
-[functions.admin-totp-verify]
-verify_jwt = false
-
-[functions.admin-manage]
-verify_jwt = false
-
-[functions.generate-chatter-summary]
-verify_jwt = false
-
-[functions.share-drive]
-verify_jwt = false
-
-[functions.unshare-drive]
-verify_jwt = false
-
-[functions.notify-account-assigned]
-verify_jwt = false
-
-[functions.create-model-login]
-verify_jwt = false
-
-[functions.update-account]
-verify_jwt = false
-
-[functions.assign-chatter-accounts]
-verify_jwt = false
-
-[functions.send-admin-push]
-verify_jwt = false
-
-[functions.accounts-with-chatters]
-verify_jwt = false
-
-[functions.translate-batch]
-verify_jwt = false
-
-[functions.create-fanvue-model-login]
-verify_jwt = false
-
-[functions.scrape-instagram-followers]
-verify_jwt = false
-
-[functions.ingest-account-data]
-verify_jwt = false
-
-[functions.update-account-metrics]
-verify_jwt = false
-
-
-[functions.update-profile-names]
-verify_jwt = false
-
-[functions.ingest-bot-notifications]
-verify_jwt = false
-
-[functions.ingest-profiles-data]
-verify_jwt = false
-
-[functions.scrape-instagram-posts]
-verify_jwt = false
-
-[functions.admin-impersonate-user]
-verify_jwt = false
-
-[functions.chatter-pulse-pushes]
-verify_jwt = false
-
-[functions.chatter-dopamine-pushes]
-verify_jwt = false
-
-[functions.verify-telegram-id]
-verify_jwt = false
-
-
-[functions.process-email-queue]
-verify_jwt = true
-
+[functions]
+  [functions.accounts-with-chatters]
+    verify_jwt = false
+  [functions.admin-impersonate-user]
+    verify_jwt = false
+  [functions.admin-manage]
+    verify_jwt = false
+  [functions.admin-totp-setup]
+    verify_jwt = false
+  [functions.admin-totp-verify]
+    verify_jwt = false
+  [functions.assign-accounts]
+    verify_jwt = false
+  [functions.assign-chatter-accounts]
+    verify_jwt = false
+  [functions.auth-email-hook]
+    verify_jwt = false
+  [functions.chat]
+    verify_jwt = false
+  [functions.chatter-dopamine-pushes]
+    verify_jwt = false
+  [functions.chatter-pulse-pushes]
+    verify_jwt = false
+  [functions.create-fanvue-model-login]
+    verify_jwt = false
+  [functions.create-model-login]
+    verify_jwt = false
+  [functions.generate-chatter-summary]
+    verify_jwt = false
+  [functions.get-vapid-key]
+    verify_jwt = false
+  [functions.ingest-account-data]
+    verify_jwt = false
+  [functions.ingest-bot-notifications]
+    verify_jwt = false
+  [functions.ingest-profiles-data]
+    verify_jwt = false
+  [functions.notify-account-assigned]
+    verify_jwt = false
+  [functions.process-email-queue]
+    verify_jwt = true
+  [functions.scrape-instagram-followers]
+    verify_jwt = false
+  [functions.scrape-instagram-posts]
+    verify_jwt = false
+  [functions.send-admin-push]
+    verify_jwt = false
+  [functions.send-notification]
+    verify_jwt = false
+  [functions.share-drive]
+    verify_jwt = false
+  [functions.subscribe-push]
+    verify_jwt = false
+  [functions.translate-batch]
+    verify_jwt = false
+  [functions.unshare-drive]
+    verify_jwt = false
+  [functions.update-account]
+    verify_jwt = false
+  [functions.update-account-metrics]
+    verify_jwt = false
+  [functions.update-profile-names]
+    verify_jwt = false
+  [functions.verify-telegram-id]
+    verify_jwt = false
