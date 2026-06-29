@@ -1,20 +1,30 @@
-## New Edge Function: `verify-telegram-id`
+## Modify `verify-telegram-id` edge function
 
-Public edge function that checks if a given Telegram ID exists in the `profiles` table. Auth is gated by a shared secret header.
+Extend the function to return assigned accounts for a Telegram ID.
 
-### Behavior
-- **Method:** `POST` (plus `OPTIONS` for CORS)
-- **Auth:** Request must include header `x-api-key: <CHAT_AI_TOOL>` matching the `CHAT_AI_TOOL` secret. Mismatch → `401`.
-- **Input:** JSON body `{ "telegram_id": "<string>" }` (validated with Zod; non-empty string, trimmed).
-- **Logic:** Use service-role Supabase client to `select id from profiles where telegram_id = $1 limit 1`.
-- **Output:** `{ "exists": true | false }` with `200`. Errors return `{ error }` with proper status.
-- **Config:** `verify_jwt = false` in `supabase/config.toml` (since auth is via custom header).
+### New response shape
+```json
+{
+  "exists": true,
+  "telegram_id": "<normalized>",
+  "models": [
+    { "username": "...", "platform": "...", "email": "..." }
+  ]
+}
+```
+Not found → `{ "exists": false, "telegram_id": "<input>", "models": [] }`.
 
-### Secret
-- `CHAT_AI_TOOL` — request via `add_secret` tool; user will paste the value.
+### Logic
+1. Auth (`x-api-key` vs `CHAT_AI_TOOL`) — unchanged.
+2. Validate `telegram_id` (non-empty string, trim, strip leading `@`).
+3. Look up profile via `ilike` on `telegram_id` (case + `@`-tolerant). Select `id, user_id`.
+4. If no profile → return `exists:false` with empty `models`.
+5. Fetch open assignments from `account_assignments` where `unassigned_at IS NULL` AND (`user_id = profile.user_id` OR `profile_id = profile.id`). Also include `accounts.assigned_to = profile.user_id` for parity with `accounts-with-chatters`. Dedupe account IDs.
+6. Fetch `username, platform, account_email` from `accounts` for those IDs.
+7. Return `models` as `[{ username, platform, email: account_email }]`, deduped.
 
 ### Files
-- `supabase/functions/verify-telegram-id/index.ts` (new)
-- `supabase/config.toml` (append `[functions.verify-telegram-id] verify_jwt = false`)
+- `supabase/functions/verify-telegram-id/index.ts` — only file touched. No DB or config changes.
 
-No database changes.
+### Verification
+- `supabase--curl_edge_functions` with a known Telegram ID to confirm shape and account list.
