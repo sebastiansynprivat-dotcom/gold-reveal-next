@@ -3378,10 +3378,12 @@ export default function AdminDashboard() {
       setSetupStatusFilter("alle");
       setSetupPlatform("all");
       setSetupSearch("");
-      setSetupPage(1);
+      // Jump directly to the page containing this account (filters were just reset).
+      const idx = accounts.findIndex((a) => a.id === accountId);
+      const targetPage = idx >= 0 ? Math.floor(idx / SETUP_PAGE_SIZE) + 1 : 1;
+      setSetupPage(targetPage);
       setExpandedBot(accountId);
       let tries = 0;
-      let pageBumps = 0;
       const tryScroll = () => {
         const el = document.getElementById(`setup-row-${accountId}`);
         if (el) {
@@ -3390,16 +3392,11 @@ export default function AdminDashboard() {
           setTimeout(() => {
             el.classList.remove("ring-2", "ring-accent", "ring-offset-2", "ring-offset-background");
           }, 2200);
-        } else if (tries++ < 25) {
-          // Every 5 unsuccessful tries, advance the page in case the account lies further down
-          if (tries % 5 === 0 && pageBumps < 20) {
-            pageBumps++;
-            setSetupPage((p) => p + 1);
-          }
+        } else if (tries++ < 30) {
           setTimeout(tryScroll, 180);
         }
       };
-      setTimeout(tryScroll, 250);
+      setTimeout(tryScroll, 300);
     };
     window.addEventListener("setup-attention-focus", handler);
     return () => window.removeEventListener("setup-attention-focus", handler);
