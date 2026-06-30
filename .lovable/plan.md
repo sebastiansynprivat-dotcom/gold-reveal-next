@@ -1,26 +1,51 @@
 ## Goal
-Make each row in the Setup Attention popup clickable. Clicking jumps to the matching account in the Setup list, opens (expands) it, and visually highlights it.
+Add client-side pagination to three heavy admin lists. No backend / data-loading changes — pagination is purely a slice of the already-filtered arrays plus Prev/Next controls.
+
+## Page sizes
+- Setup list (Admin Dashboard → Setup tab): **50 / page**
+- Model dashboard list (`ModelDashboardTab`): **50 / page**
+- Chatter list (`ChatterDashboardTab`): **10 / page**
 
 ## Changes
 
-### 1. `src/components/admin/SetupAttentionAlert.tsx`
-- Make each row a `<button>`-like clickable element (cursor-pointer, hover state). Keep the green check toggle as a nested button with `stopPropagation` so toggling resolved status doesn't trigger navigation.
-- On row click:
-  - Close the dialog.
-  - Dispatch `window.dispatchEvent(new CustomEvent("setup-attention-focus", { detail: { accountId, type } }))`.
+### 1. `src/pages/AdminDashboard.tsx` — Setup list
+- Add `const [setupPage, setSetupPage] = useState(1)` and `const SETUP_PAGE_SIZE = 50`.
+- Where `filteredSetupAccounts` is computed (~line 7904), derive:
+  - `totalPages = Math.max(1, Math.ceil(filteredSetupAccounts.length / 50))`
+  - `pagedAccounts = filteredSetupAccounts.slice((setupPage-1)*50, setupPage*50)`
+- Render `.map` over `pagedAccounts` instead of `filteredSetupAccounts` (line 7959).
+- Reset `setupPage` to 1 whenever the existing setup filters/search change (single `useEffect` watching those state deps).
+- When the `setup-attention-focus` listener expands a target row, also jump to the page that contains it (compute index in filtered list → page).
+- Append a Prev/Next bar below the list: "Seite X / Y", « Zurück / Weiter », disabled at bounds. Hidden when only 1 page.
 
-### 2. `src/pages/AdminDashboard.tsx`
-- Add a `useEffect` (top-level in the dashboard component) that listens for `setup-attention-focus`:
-  1. `setActiveTab("setup")` (or whatever value the Setup tab uses — confirm from line 4091 area).
-  2. Reset filters that could hide the row: `setSetupStatusFilter("alle")`, `setSetupPlatform("all")`, `setSetupSearch("")`.
-  3. `setExpandedBot(accountId)` to auto-open the row.
-  4. After a short timeout (so the tab/list renders), find the row element via `document.getElementById(\`setup-row-${accountId}\`)`, `scrollIntoView({ behavior: "smooth", block: "center" })`, and apply a temporary gold ring highlight class (~2s) using the existing `sectionHighlight` helper if compatible, else a local class toggle.
-- Add `id={\`setup-row-${acc.id}\`}` to the row wrapper at line 7966 (the outer `<div key={acc.id}>`).
+### 2. `src/components/ModelDashboardTab.tsx` — Model list
+- Add `const [modelPage, setModelPage] = useState(1)`; `PAGE_SIZE = 50`.
+- After `filteredModels` memo (line 1105), compute `pagedModels` slice + `totalPages`.
+- Replace the existing `filteredModels.map(...)` render with `pagedModels.map(...)`.
+- `useEffect(() => setModelPage(1), [searchQuery, agencyFilter, steckbriefFilter, showDuplicatesOnly, sortMode])`.
+- Prev/Next footer identical pattern.
 
-### 3. No DB / edge function changes
-Pure UI wiring. `setup_attention` schema and refresh logic stay untouched.
+### 3. `src/components/ChatterDashboardTab.tsx` — Chatter list
+- Add `chatterPage` state, `PAGE_SIZE = 10`.
+- Slice `filteredChatters` for the render at line 479; keep the count badge (line 575) showing the full filtered total.
+- Reset page on filter/search change.
+- Prev/Next footer.
 
-## Acceptance
-- Clicking any row in the ATTENTION popup closes it, switches to the Setup tab, scrolls the matching account into view, expands it, and briefly highlights it.
-- Clicking the green ✓ still toggles resolved without navigating.
-- If the account is filtered out, filters are reset so it appears.
+## Shared pagination footer
+Inline tiny component in each file (no new file) so we avoid touching shared UI:
+
+```tsx
+<div className="flex items-center justify-between mt-3 text-xs">
+  <span className="text-muted-foreground">Seite {page} / {totalPages}</span>
+  <div className="flex gap-1">
+    <Button size="sm" variant="outline" disabled={page<=1} onClick={() => setPage(p=>p-1)}>Zurück</Button>
+    <Button size="sm" variant="outline" disabled={page>=totalPages} onClick={() => setPage(p=>p+1)}>Weiter</Button>
+  </div>
+</div>
+```
+
+## Safety / non-regression
+- Filtering, sorting, search, autosave, approval workflow, setup-attention navigation, realtime updates all operate on the full filtered arrays — only the final `.map` uses the paged slice.
+- No DB, edge function, RLS, or API change.
+- Reset-to-page-1 effects prevent landing on an empty page after filter change.
+- Expanded rows / open dialogs remain controlled by their own ids; switching pages just unmounts off-screen rows (same behavior as scroll virtualization would have).
