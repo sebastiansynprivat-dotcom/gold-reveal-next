@@ -284,13 +284,31 @@ export default function SetupAttentionAlert() {
             ) : (
               filtered.map((r) => {
                 const a = accounts[r.account_id];
+                const handleNavigate = () => {
+                  setOpen(false);
+                  window.dispatchEvent(
+                    new CustomEvent("setup-attention-focus", {
+                      detail: { accountId: r.account_id, type: r.type },
+                    }),
+                  );
+                };
                 return (
                   <div
                     key={r.id}
+                    onClick={handleNavigate}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        handleNavigate();
+                      }
+                    }}
                     className={cn(
-                      "grid grid-cols-[80px_1fr_70px_1.4fr_110px_30px] gap-2 px-3 py-2 items-center text-[11px] border-b border-border/30 hover:bg-accent/5 transition-colors",
+                      "grid grid-cols-[80px_1fr_70px_1.4fr_110px_30px] gap-2 px-3 py-2 items-center text-[11px] border-b border-border/30 cursor-pointer hover:bg-accent/10 transition-colors",
                       r.resolved_by_user && "opacity-60",
                     )}
+                    title="Im Setup öffnen"
                   >
                     <span className="text-[10px] font-bold text-accent/90 uppercase tracking-wider truncate">
                       {a?.platform || "—"}
@@ -318,7 +336,10 @@ export default function SetupAttentionAlert() {
                       {r.resolved_by_name || "—"}
                     </span>
                     <button
-                      onClick={() => toggleResolved(r)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleResolved(r);
+                      }}
                       className={cn(
                         "h-5 w-5 rounded flex items-center justify-center border transition-colors",
                         r.resolved_by_user
@@ -333,6 +354,7 @@ export default function SetupAttentionAlert() {
                   </div>
                 );
               })
+
             )}
           </div>
         </DialogContent>

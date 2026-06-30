@@ -1173,6 +1173,10 @@ export default function AdminDashboard() {
     })();
   }, [expandedBot, accounts]);
 
+
+
+
+
   const [savedBotState, setSavedBotState] = useState<
     Record<string, { message: string; followUp: string; isActive: boolean }>
   >({});
@@ -3359,6 +3363,39 @@ export default function AdminDashboard() {
     if (data) setSetupDashboards(data);
     setSetupDashboardsLoaded(true);
   };
+
+  // Focus a specific account in the Setup list when triggered from the Attention popup
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail || {};
+      const accountId: string | undefined = detail.accountId;
+      if (!accountId) return;
+      setActiveTab("botdms");
+      if (!setupDashboardsLoaded) loadSetupDashboards();
+      setSetupStatusFilter("alle");
+      setSetupPlatform("all");
+      setSetupSearch("");
+      setExpandedBot(accountId);
+      let tries = 0;
+      const tryScroll = () => {
+        const el = document.getElementById(`setup-row-${accountId}`);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+          el.classList.add("ring-2", "ring-accent", "ring-offset-2", "ring-offset-background", "rounded-md");
+          setTimeout(() => {
+            el.classList.remove("ring-2", "ring-accent", "ring-offset-2", "ring-offset-background");
+          }, 2200);
+        } else if (tries++ < 25) {
+          setTimeout(tryScroll, 150);
+        }
+      };
+      setTimeout(tryScroll, 250);
+    };
+    window.addEventListener("setup-attention-focus", handler);
+    return () => window.removeEventListener("setup-attention-focus", handler);
+  }, [setupDashboardsLoaded]);
+
+
 
   const changeAdminRole = async (targetUserId: string, newRole: string) => {
     try {
@@ -7963,7 +8000,7 @@ export default function AdminDashboard() {
                             );
 
                             return (
-                              <div key={acc.id}>
+                              <div key={acc.id} id={`setup-row-${acc.id}`}>
                                 {/* Row */}
                                 <div
                                   className={cn(
