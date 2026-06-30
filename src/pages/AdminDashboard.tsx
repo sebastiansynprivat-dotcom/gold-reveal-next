@@ -1191,6 +1191,9 @@ export default function AdminDashboard() {
   const [setupStatusFilter, setSetupStatusFilter] = useState<
     "alle" | "botdm_missing" | "setup_missing" | "welcome_missing" | "feedfolder_missing" | "feedbot_missing"
   >("alle");
+  const [setupPage, setSetupPage] = useState(1);
+  const SETUP_PAGE_SIZE = 50;
+  useEffect(() => { setSetupPage(1); }, [setupSearch, setupPlatform, setupStatusFilter]);
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("heute");
   const timeFilterRef = useRef<TimeFilter>("heute");
   const revenueFilterBusyRef = useRef(false);
@@ -3375,8 +3378,10 @@ export default function AdminDashboard() {
       setSetupStatusFilter("alle");
       setSetupPlatform("all");
       setSetupSearch("");
+      setSetupPage(1);
       setExpandedBot(accountId);
       let tries = 0;
+      let pageBumps = 0;
       const tryScroll = () => {
         const el = document.getElementById(`setup-row-${accountId}`);
         if (el) {
@@ -3386,7 +3391,12 @@ export default function AdminDashboard() {
             el.classList.remove("ring-2", "ring-accent", "ring-offset-2", "ring-offset-background");
           }, 2200);
         } else if (tries++ < 25) {
-          setTimeout(tryScroll, 150);
+          // Every 5 unsuccessful tries, advance the page in case the account lies further down
+          if (tries % 5 === 0 && pageBumps < 20) {
+            pageBumps++;
+            setSetupPage((p) => p + 1);
+          }
+          setTimeout(tryScroll, 180);
         }
       };
       setTimeout(tryScroll, 250);
@@ -7954,9 +7964,16 @@ export default function AdminDashboard() {
                         );
                       }
 
+                      const setupTotalPages = Math.max(1, Math.ceil(filteredSetupAccounts.length / SETUP_PAGE_SIZE));
+                      const safePage = Math.min(setupPage, setupTotalPages);
+                      const pagedSetupAccounts = filteredSetupAccounts.slice(
+                        (safePage - 1) * SETUP_PAGE_SIZE,
+                        safePage * SETUP_PAGE_SIZE
+                      );
+
                       return (
                         <div className="divide-y divide-border/30">
-                          {filteredSetupAccounts.map((acc, i) => {
+                          {pagedSetupAccounts.map((acc, i) => {
                             const dash = getDash(acc.id);
                             const s = computeStates(acc);
                             const isExpanded = expandedBot === acc.id;
@@ -8452,6 +8469,17 @@ export default function AdminDashboard() {
                               </div>
                             );
                           })}
+                          {setupTotalPages > 1 && (
+                            <div className="px-3 py-2 flex items-center justify-between gap-2 flex-wrap bg-secondary/10">
+                              <span className="text-[10px] text-muted-foreground">
+                                Seite {safePage} / {setupTotalPages} · {filteredSetupAccounts.length} Accounts
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <Button size="sm" variant="outline" className="h-7 px-2 text-[10px]" disabled={safePage <= 1} onClick={() => setSetupPage((p) => Math.max(1, p - 1))}>Zurück</Button>
+                                <Button size="sm" variant="outline" className="h-7 px-2 text-[10px]" disabled={safePage >= setupTotalPages} onClick={() => setSetupPage((p) => p + 1)}>Weiter</Button>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       );
                     })()}

@@ -253,6 +253,18 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
     });
   }, [chatters, searchQuery, roleFilter]);
 
+  const CHATTER_PAGE_SIZE = 10;
+  const [chatterPage, setChatterPage] = useState(1);
+  useEffect(() => { setChatterPage(1); }, [searchQuery, roleFilter]);
+  const chatterTotalPages = Math.max(1, Math.ceil(filteredChatters.length / CHATTER_PAGE_SIZE));
+  const pagedChatters = useMemo(
+    () => filteredChatters.slice((chatterPage - 1) * CHATTER_PAGE_SIZE, chatterPage * CHATTER_PAGE_SIZE),
+    [filteredChatters, chatterPage]
+  );
+  useEffect(() => {
+    if (chatterPage > chatterTotalPages) setChatterPage(chatterTotalPages);
+  }, [chatterPage, chatterTotalPages]);
+
   const totalRevenue = useMemo(() => {
     if (!selected) return 0;
     return (selected.fourbasedRevenue || 0) + (selected.maloumRevenue || 0) + (selected.brezzelsRevenue || 0) + (selected.customRevenue || 0);
@@ -476,7 +488,7 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
 
               {/* Rows */}
               <div>
-                {filteredChatters.map((c, i) => {
+                {pagedChatters.map((c, i) => {
                   const total = (c.fourbasedRevenue || 0) + (c.maloumRevenue || 0) + (c.brezzelsRevenue || 0);
                   const earnings = getVerdienst(c);
                   const isHourlyRow = c.compensationType === "hourly";
@@ -571,8 +583,15 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
               </div>
 
               {/* Footer */}
-              <div className="px-3 py-1.5 bg-secondary/20 border-t border-border/30">
+              <div className="px-3 py-1.5 bg-secondary/20 border-t border-border/30 flex items-center justify-between gap-2 flex-wrap">
                 <span className="text-[10px] text-muted-foreground">{filteredChatters.length} Einträge</span>
+                {chatterTotalPages > 1 && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-muted-foreground">Seite {chatterPage} / {chatterTotalPages}</span>
+                    <Button size="sm" variant="outline" className="h-6 px-2 text-[10px]" disabled={chatterPage <= 1} onClick={() => setChatterPage(p => p - 1)}>Zurück</Button>
+                    <Button size="sm" variant="outline" className="h-6 px-2 text-[10px]" disabled={chatterPage >= chatterTotalPages} onClick={() => setChatterPage(p => p + 1)}>Weiter</Button>
+                  </div>
+                )}
               </div>
             </div>
           ) : chatters.length > 0 ? (
