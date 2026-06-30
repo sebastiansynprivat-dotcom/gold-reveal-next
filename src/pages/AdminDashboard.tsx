@@ -1192,7 +1192,7 @@ export default function AdminDashboard() {
     "alle" | "botdm_missing" | "setup_missing" | "welcome_missing" | "feedfolder_missing" | "feedbot_missing"
   >("alle");
   const [setupPage, setSetupPage] = useState(1);
-  const SETUP_PAGE_SIZE = 50;
+  const SETUP_PAGE_SIZE = 20;
   useEffect(() => { setSetupPage(1); }, [setupSearch, setupPlatform, setupStatusFilter]);
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("heute");
   const timeFilterRef = useRef<TimeFilter>("heute");

@@ -1132,7 +1132,7 @@ export default function ModelDashboardTab() {
     return list;
   }, [models, searchQuery, showDuplicatesOnly, duplicateModelIds, agencyFilter, steckbriefFilter, filledProfileIds, profileMeta, sortMode]);
 
-  const MODEL_PAGE_SIZE = 50;
+  const MODEL_PAGE_SIZE = 20;
   const [modelPage, setModelPage] = useState(1);
   useEffect(() => { setModelPage(1); }, [searchQuery, showDuplicatesOnly, agencyFilter, steckbriefFilter, sortMode]);
   const modelTotalPages = Math.max(1, Math.ceil(filteredModels.length / MODEL_PAGE_SIZE));
