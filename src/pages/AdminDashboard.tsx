@@ -8469,6 +8469,17 @@ export default function AdminDashboard() {
                               </div>
                             );
                           })}
+                          {setupTotalPages > 1 && (
+                            <div className="px-3 py-2 flex items-center justify-between gap-2 flex-wrap bg-secondary/10">
+                              <span className="text-[10px] text-muted-foreground">
+                                Seite {safePage} / {setupTotalPages} · {filteredSetupAccounts.length} Accounts
+                              </span>
+                              <div className="flex items-center gap-2">
+                                <Button size="sm" variant="outline" className="h-7 px-2 text-[10px]" disabled={safePage <= 1} onClick={() => setSetupPage((p) => Math.max(1, p - 1))}>Zurück</Button>
+                                <Button size="sm" variant="outline" className="h-7 px-2 text-[10px]" disabled={safePage >= setupTotalPages} onClick={() => setSetupPage((p) => p + 1)}>Weiter</Button>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       );
                     })()}
