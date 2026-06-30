@@ -241,16 +241,27 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
     (!confirmedAt || (lastChangeAt && confirmedAt && new Date(lastChangeAt) > new Date(confirmedAt)));
   const isApproved = !!confirmedAt && !pendingReapproval;
 
-  const handleSave = async (submit = false) => {
-    setSaving(true);
+  const lastSavedRef = useRef<string>("");
+  const dirtyRef = useRef(false);
+  const latestProfileRef = useRef(profile);
+  const autosaveInFlightRef = useRef(false);
+  const autosaveQueuedRef = useRef(false);
+
+  const handleSave = async (
+    submit = false,
+    options: { background?: boolean; savedSnapshot?: string } = {},
+  ) => {
+    const isBackgroundSave = !!options.background;
+    if (!isBackgroundSave) setSaving(true);
     const nowIso = new Date().toISOString();
+    const currentProfile = latestProfileRef.current;
     const payload: any = {
-      ...profile,
+      ...currentProfile,
       source_language: lang,
       last_change_at: nowIso,
     };
     if (submit || autoSubmitOnSave) {
-      payload.submitted_at = (profile as any).submitted_at || nowIso;
+      payload.submitted_at = (currentProfile as any).submitted_at || nowIso;
     }
     // If model edits an already-approved profile, clear confirmation so admin re-approves
     if (!autoSubmitOnSave && (confirmedAt || hasApprovedSnapshot)) {
@@ -261,14 +272,25 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
     const { error } = await supabase
       .from("model_profiles")
       .upsert(payload, { onConflict: "model_id" });
-    setSaving(false);
+    if (!isBackgroundSave) setSaving(false);
     if (error) {
       toast.error(copy.saveError);
-      return;
+      return false;
     }
     if (payload.confirmed_at === null) setConfirmedAt(null);
     setLastChangeAt(nowIso);
     setSavedAt(Date.now());
+    const savedSnapshot = options.savedSnapshot ?? JSON.stringify(currentProfile);
+    lastSavedRef.current = savedSnapshot;
+    if (JSON.stringify(latestProfileRef.current) === savedSnapshot) {
+      dirtyRef.current = false;
+    }
+
+    if (isBackgroundSave) {
+      setTimeout(() => setSavedAt(null), 2500);
+      return true;
+    }
+
     if (submit) {
       toast.success(copy.submittedToast);
       onSubmitted?.();
@@ -280,13 +302,13 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
       if (autoSubmitOnSave) onSubmitted?.();
     }
     setTimeout(() => setSavedAt(null), 2500);
+    return true;
   };
 
   // Blur-based autosave — only fires when the user leaves a field, so typing is
   // never interrupted by a re-render mid-sentence.
-  const lastSavedRef = useRef<string>("");
-  const dirtyRef = useRef(false);
   useEffect(() => {
+    latestProfileRef.current = profile;
     if (loading) return;
     if (!lastSavedRef.current) {
       lastSavedRef.current = JSON.stringify(profile);
@@ -298,19 +320,45 @@ export default function ModelProfileForm({ modelId, defaultAccountName, isInitia
     }
   }, [profile, loading]);
 
-  const handleFieldBlur = (e: React.FocusEvent<HTMLDivElement>) => {
-    if (loading || isInitialSubmission) return;
-    // Ignore blurs that just move focus between fields inside this form —
-    // we only save when the value has actually changed.
-    if (!dirtyRef.current) return;
-    const snapshot = JSON.stringify(profile);
+  const runBackgroundSave = async () => {
+    if (autosaveInFlightRef.current) {
+      autosaveQueuedRef.current = true;
+      return;
+    }
+
+    const snapshot = JSON.stringify(latestProfileRef.current);
     if (snapshot === lastSavedRef.current) {
       dirtyRef.current = false;
       return;
     }
-    lastSavedRef.current = snapshot;
+
+    autosaveInFlightRef.current = true;
     dirtyRef.current = false;
-    handleSave(false);
+    const ok = await handleSave(false, { background: true, savedSnapshot: snapshot });
+    autosaveInFlightRef.current = false;
+
+    if (!ok) {
+      dirtyRef.current = true;
+      return;
+    }
+
+    const latestSnapshot = JSON.stringify(latestProfileRef.current);
+    if (autosaveQueuedRef.current || latestSnapshot !== lastSavedRef.current) {
+      autosaveQueuedRef.current = false;
+      dirtyRef.current = true;
+      void runBackgroundSave();
+    }
+  };
+
+  const handleFieldBlur = () => {
+    if (loading || isInitialSubmission) return;
+    if (!dirtyRef.current) return;
+    const snapshot = JSON.stringify(latestProfileRef.current);
+    if (snapshot === lastSavedRef.current) {
+      dirtyRef.current = false;
+      return;
+    }
+    void runBackgroundSave();
   };
 
 
