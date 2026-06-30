@@ -253,6 +253,18 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
     });
   }, [chatters, searchQuery, roleFilter]);
 
+  const CHATTER_PAGE_SIZE = 10;
+  const [chatterPage, setChatterPage] = useState(1);
+  useEffect(() => { setChatterPage(1); }, [searchQuery, roleFilter]);
+  const chatterTotalPages = Math.max(1, Math.ceil(filteredChatters.length / CHATTER_PAGE_SIZE));
+  const pagedChatters = useMemo(
+    () => filteredChatters.slice((chatterPage - 1) * CHATTER_PAGE_SIZE, chatterPage * CHATTER_PAGE_SIZE),
+    [filteredChatters, chatterPage]
+  );
+  useEffect(() => {
+    if (chatterPage > chatterTotalPages) setChatterPage(chatterTotalPages);
+  }, [chatterPage, chatterTotalPages]);
+
   const totalRevenue = useMemo(() => {
     if (!selected) return 0;
     return (selected.fourbasedRevenue || 0) + (selected.maloumRevenue || 0) + (selected.brezzelsRevenue || 0) + (selected.customRevenue || 0);
