@@ -2099,8 +2099,15 @@ export default function ModelDashboardTab() {
             )}
           </ScrollArea>
 
-          <div className="px-3 py-1.5 bg-secondary/20 border-t border-border/30">
+          <div className="px-3 py-1.5 bg-secondary/20 border-t border-border/30 flex items-center justify-between gap-2 flex-wrap">
             <span className="text-[10px] text-muted-foreground">{filteredModels.length} Models</span>
+            {modelTotalPages > 1 && (
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] text-muted-foreground">Seite {modelPage} / {modelTotalPages}</span>
+                <Button size="sm" variant="outline" className="h-6 px-2 text-[10px]" disabled={modelPage <= 1} onClick={() => setModelPage(p => p - 1)}>Zurück</Button>
+                <Button size="sm" variant="outline" className="h-6 px-2 text-[10px]" disabled={modelPage >= modelTotalPages} onClick={() => setModelPage(p => p + 1)}>Weiter</Button>
+              </div>
+            )}
           </div>
         </div>
       </motion.section>
