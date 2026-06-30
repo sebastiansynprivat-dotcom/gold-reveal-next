@@ -1132,6 +1132,18 @@ export default function ModelDashboardTab() {
     return list;
   }, [models, searchQuery, showDuplicatesOnly, duplicateModelIds, agencyFilter, steckbriefFilter, filledProfileIds, profileMeta, sortMode]);
 
+  const MODEL_PAGE_SIZE = 50;
+  const [modelPage, setModelPage] = useState(1);
+  useEffect(() => { setModelPage(1); }, [searchQuery, showDuplicatesOnly, agencyFilter, steckbriefFilter, sortMode]);
+  const modelTotalPages = Math.max(1, Math.ceil(filteredModels.length / MODEL_PAGE_SIZE));
+  const pagedModels = useMemo(
+    () => filteredModels.slice((modelPage - 1) * MODEL_PAGE_SIZE, modelPage * MODEL_PAGE_SIZE),
+    [filteredModels, modelPage]
+  );
+  useEffect(() => {
+    if (modelPage > modelTotalPages) setModelPage(modelTotalPages);
+  }, [modelPage, modelTotalPages]);
+
 
 
   // ─── Live FX rates: any per-account currency → model base currency ───
