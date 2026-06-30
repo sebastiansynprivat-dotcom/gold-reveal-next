@@ -97,7 +97,7 @@ async function getAccessToken(): Promise<string> {
     .replace(/-----BEGIN PRIVATE KEY-----/g, "")
     .replace(/-----END PRIVATE KEY-----/g, "")
     .replace(/[\s\r\n]/g, "");
-  console.log("PEM extracted length:", pemContents.length, "first 20:", pemContents.substring(0, 20));
+  
 
   const binaryKey = decodeBase64(pemContents);
 

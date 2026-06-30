@@ -63,39 +63,9 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
 
-    // Fetch existing rows for these (account_id, date) pairs
-    const accountIds = Array.from(new Set(aggregated.map((r) => r.account_id)));
-    const dates = Array.from(new Set(aggregated.map((r) => r.date)));
-
-    const { data: existing, error: fetchError } = await supabase
-      .from("message_reports")
-      .select("account_id, date, main, follow")
-      .in("account_id", accountIds)
-      .in("date", dates);
-
-    if (fetchError) {
-      console.error("Fetch error:", fetchError);
-      return json({ error: fetchError.message }, 500);
-    }
-
-    const existingMap = new Map<string, { main: number; follow: number }>();
-    for (const e of existing ?? []) {
-      existingMap.set(`${e.account_id}|${e.date}`, {
-        main: Number(e.main) || 0,
-        follow: Number(e.follow) || 0,
-      });
-    }
-
-    // Sum incoming with existing
-    const toUpsert = aggregated.map((r) => {
-      const prev = existingMap.get(`${r.account_id}|${r.date}`) ?? { main: 0, follow: 0 };
-      return {
-        account_id: r.account_id,
-        date: r.date,
-        main: prev.main + r.main,
-        follow: prev.follow + r.follow,
-      };
-    });
+    // Absolute overwrite per (account_id, date) — matches sister endpoints (post_reports, accounts-data).
+    // Prevents double-counting if the same batch is replayed.
+    const toUpsert = aggregated;
 
     const { data, error } = await supabase
       .from("message_reports")

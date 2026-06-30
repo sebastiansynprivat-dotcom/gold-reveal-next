@@ -748,7 +748,7 @@ export default function SocialMediaDashboard() {
                       <h3 className="font-bold text-foreground truncate">{m.name || "—"}</h3>
                       {m.username && <p className="text-xs text-muted-foreground truncate">@{m.username}</p>}
                     </div>
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                    <div className="flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shrink-0">
                       <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => openEdit(m)} title="Bearbeiten">
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
