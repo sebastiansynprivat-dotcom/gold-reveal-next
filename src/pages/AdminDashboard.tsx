@@ -3378,8 +3378,10 @@ export default function AdminDashboard() {
       setSetupStatusFilter("alle");
       setSetupPlatform("all");
       setSetupSearch("");
+      setSetupPage(1);
       setExpandedBot(accountId);
       let tries = 0;
+      let pageBumps = 0;
       const tryScroll = () => {
         const el = document.getElementById(`setup-row-${accountId}`);
         if (el) {
@@ -3389,7 +3391,12 @@ export default function AdminDashboard() {
             el.classList.remove("ring-2", "ring-accent", "ring-offset-2", "ring-offset-background");
           }, 2200);
         } else if (tries++ < 25) {
-          setTimeout(tryScroll, 150);
+          // Every 5 unsuccessful tries, advance the page in case the account lies further down
+          if (tries % 5 === 0 && pageBumps < 20) {
+            pageBumps++;
+            setSetupPage((p) => p + 1);
+          }
+          setTimeout(tryScroll, 180);
         }
       };
       setTimeout(tryScroll, 250);
