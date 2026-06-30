@@ -1191,6 +1191,9 @@ export default function AdminDashboard() {
   const [setupStatusFilter, setSetupStatusFilter] = useState<
     "alle" | "botdm_missing" | "setup_missing" | "welcome_missing" | "feedfolder_missing" | "feedbot_missing"
   >("alle");
+  const [setupPage, setSetupPage] = useState(1);
+  const SETUP_PAGE_SIZE = 50;
+  useEffect(() => { setSetupPage(1); }, [setupSearch, setupPlatform, setupStatusFilter]);
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("heute");
   const timeFilterRef = useRef<TimeFilter>("heute");
   const revenueFilterBusyRef = useRef(false);
