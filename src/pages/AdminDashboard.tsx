@@ -7964,9 +7964,16 @@ export default function AdminDashboard() {
                         );
                       }
 
+                      const setupTotalPages = Math.max(1, Math.ceil(filteredSetupAccounts.length / SETUP_PAGE_SIZE));
+                      const safePage = Math.min(setupPage, setupTotalPages);
+                      const pagedSetupAccounts = filteredSetupAccounts.slice(
+                        (safePage - 1) * SETUP_PAGE_SIZE,
+                        safePage * SETUP_PAGE_SIZE
+                      );
+
                       return (
                         <div className="divide-y divide-border/30">
-                          {filteredSetupAccounts.map((acc, i) => {
+                          {pagedSetupAccounts.map((acc, i) => {
                             const dash = getDash(acc.id);
                             const s = computeStates(acc);
                             const isExpanded = expandedBot === acc.id;
