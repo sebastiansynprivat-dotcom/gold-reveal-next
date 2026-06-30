@@ -583,8 +583,15 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
               </div>
 
               {/* Footer */}
-              <div className="px-3 py-1.5 bg-secondary/20 border-t border-border/30">
+              <div className="px-3 py-1.5 bg-secondary/20 border-t border-border/30 flex items-center justify-between gap-2 flex-wrap">
                 <span className="text-[10px] text-muted-foreground">{filteredChatters.length} Einträge</span>
+                {chatterTotalPages > 1 && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-muted-foreground">Seite {chatterPage} / {chatterTotalPages}</span>
+                    <Button size="sm" variant="outline" className="h-6 px-2 text-[10px]" disabled={chatterPage <= 1} onClick={() => setChatterPage(p => p - 1)}>Zurück</Button>
+                    <Button size="sm" variant="outline" className="h-6 px-2 text-[10px]" disabled={chatterPage >= chatterTotalPages} onClick={() => setChatterPage(p => p + 1)}>Weiter</Button>
+                  </div>
+                )}
               </div>
             </div>
           ) : chatters.length > 0 ? (
