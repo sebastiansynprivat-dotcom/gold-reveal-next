@@ -8000,7 +8000,7 @@ export default function AdminDashboard() {
                             );
 
                             return (
-                              <div key={acc.id}>
+                              <div key={acc.id} id={`setup-row-${acc.id}`}>
                                 {/* Row */}
                                 <div
                                   className={cn(
