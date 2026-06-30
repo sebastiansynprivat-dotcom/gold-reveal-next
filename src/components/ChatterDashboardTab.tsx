@@ -488,7 +488,7 @@ export default function ChatterDashboardTab({ isSuperAdmin = false, adminEmails 
 
               {/* Rows */}
               <div>
-                {filteredChatters.map((c, i) => {
+                {pagedChatters.map((c, i) => {
                   const total = (c.fourbasedRevenue || 0) + (c.maloumRevenue || 0) + (c.brezzelsRevenue || 0);
                   const earnings = getVerdienst(c);
                   const isHourlyRow = c.compensationType === "hourly";
