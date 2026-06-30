@@ -2001,7 +2001,7 @@ export default function ModelDashboardTab() {
                 {models.length === 0 ? "Noch keine Models angelegt." : "Keine Models gefunden."}
               </p>
             ) : (
-              filteredModels.map((model, i) => {
+              pagedModels.map((model, i) => {
                 const isSelected = model.id === selectedModelId;
                 return (
                   <div
