@@ -3029,6 +3029,56 @@ export type Database = {
         }
         Relationships: []
       }
+      setup_attention: {
+        Row: {
+          account_id: string
+          created_at: string
+          date: string
+          id: string
+          reason: string
+          resolved_at: string | null
+          resolved_by_name: string | null
+          resolved_by_user: boolean
+          resolved_by_user_id: string | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          date?: string
+          id?: string
+          reason: string
+          resolved_at?: string | null
+          resolved_by_name?: string | null
+          resolved_by_user?: boolean
+          resolved_by_user_id?: string | null
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          date?: string
+          id?: string
+          reason?: string
+          resolved_at?: string | null
+          resolved_by_name?: string | null
+          resolved_by_user?: boolean
+          resolved_by_user_id?: string | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "setup_attention_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       socialmedia_marketer_applications: {
         Row: {
           created_at: string
@@ -3327,6 +3377,7 @@ export type Database = {
         }[]
       }
       refresh_profiles_data_today: { Args: never; Returns: number }
+      refresh_setup_attention: { Args: never; Returns: number }
       set_credit_note_seq: { Args: { new_val: number }; Returns: undefined }
       validate_admin_2fa_session: {
         Args: { p_token: string }
