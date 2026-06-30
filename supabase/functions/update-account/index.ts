@@ -1,5 +1,14 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+function timingSafeEqual(a: string, b: string): boolean {
+  const ab = new TextEncoder().encode(a);
+  const bb = new TextEncoder().encode(b);
+  if (ab.length !== bb.length) return false;
+  let diff = 0;
+  for (let i = 0; i < ab.length; i++) diff |= ab[i] ^ bb[i];
+  return diff === 0;
+}
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-api-key",
@@ -66,9 +75,9 @@ Deno.serve(async (req) => {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
   try {
-    const apiKey = req.headers.get("x-api-key");
-    const expected = Deno.env.get("ACCOUNTS_SECRET_KEY");
-    if (!expected || apiKey !== expected) return json({ error: "Unauthorized" }, 401);
+    const apiKey = req.headers.get("x-api-key") ?? "";
+    const expected = Deno.env.get("ACCOUNTS_SECRET_KEY") ?? "";
+    if (!expected || !timingSafeEqual(apiKey, expected)) return json({ error: "Unauthorized" }, 401);
 
     const body = await req.json();
 
