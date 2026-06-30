@@ -3400,7 +3400,7 @@ export default function AdminDashboard() {
     };
     window.addEventListener("setup-attention-focus", handler);
     return () => window.removeEventListener("setup-attention-focus", handler);
-  }, [setupDashboardsLoaded]);
+  }, [setupDashboardsLoaded, accounts]);
 
 
 
