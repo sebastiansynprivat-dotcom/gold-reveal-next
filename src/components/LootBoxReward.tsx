@@ -7,13 +7,9 @@ import goldenBox from "@/assets/golden-lootbox.png";
 import { isDemoMode } from "@/lib/demoMode";
 
 const MILESTONES = [
-  { amount: 500, tier: "Bronze", emoji: "🥉", rate: "21%" },
-  { amount: 1000, tier: "Silber", emoji: "🥈", rate: "22%" },
-  { amount: 1500, tier: "Gold", emoji: "🏆", rate: "23%" },
-  { amount: 2000, tier: "Platin", emoji: "💠", rate: "24%" },
-  { amount: 3000, tier: "Diamond", emoji: "💎", rate: "25%" },
-  { amount: 50000, tier: "Titan", emoji: "🔱", rate: "35%" },
+  { amount: 3000, tier: "Elite", emoji: "💎", rate: "25%" },
 ];
+
 
 function getStorageKey() {
   const now = new Date();
