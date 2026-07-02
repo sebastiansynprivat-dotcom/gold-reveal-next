@@ -2758,6 +2758,7 @@ export type Database = {
           group_name: string
           id: string
           language: string
+          last_billed_month: string | null
           name: string | null
           offer: string | null
           pre_create: boolean
@@ -2778,6 +2779,7 @@ export type Database = {
           group_name?: string
           id?: string
           language?: string
+          last_billed_month?: string | null
           name?: string | null
           offer?: string | null
           pre_create?: boolean
@@ -2798,6 +2800,7 @@ export type Database = {
           group_name?: string
           id?: string
           language?: string
+          last_billed_month?: string | null
           name?: string | null
           offer?: string | null
           pre_create?: boolean
