@@ -168,23 +168,41 @@ export default function PreChattersDialog({ open, onOpenChange, freeAccounts }: 
     }
     setSaving(true);
     try {
-      // 0) Guard: there must not already be a real (non pre-create) profile with this Telegram-ID.
-      //    Otherwise the pre-create row stays orphaned and is never matched on login.
-      const { data: existing, error: existErr } = await supabase
-        .from("profiles")
-        .select("id, group_name, pre_create, user_id")
-        .eq("telegram_id", telegram.trim())
-        .eq("pre_create", false)
-        .limit(1);
-      if (existErr) throw existErr;
-      if (existing && existing.length > 0) {
-        const name = (existing[0] as any).group_name || "Chatter";
+      // 0) Guard: there must not already be ANY profile (real OR pre-create) with a
+      //    normalized-matching Telegram-ID. Otherwise we create an unreachable orphan.
+      const normalized = telegram.trim().replace(/^@/, "");
+
+      const { data: takenReal, error: takenErr } = await (supabase as any).rpc(
+        "is_telegram_id_taken",
+        { p_telegram_id: normalized },
+      );
+      if (takenErr) throw takenErr;
+      if (takenReal === true) {
         toast.error(
-          `Es gibt bereits einen registrierten Chatter mit dieser Telegram-ID (${name}). Bitte Accounts direkt diesem Chatter zuweisen.`,
+          `Es gibt bereits einen registrierten Chatter mit dieser Telegram-ID. Bitte Accounts direkt diesem Chatter zuweisen.`,
         );
         setSaving(false);
         return;
       }
+
+      // Also block if another pre-create already exists with the same normalized id.
+      const { data: preDup, error: preErr } = await supabase
+        .from("profiles")
+        .select("id, group_name, name")
+        .ilike("telegram_id", normalized)
+        .eq("pre_create", true)
+        .limit(1);
+      if (preErr) throw preErr;
+      if (preDup && preDup.length > 0) {
+        const label =
+          (preDup[0] as any).group_name || (preDup[0] as any).name || "Vormerkung";
+        toast.error(
+          `Für diese Telegram-ID existiert bereits eine Vormerkung (${label}). Bitte diese bearbeiten statt neu anzulegen.`,
+        );
+        setSaving(false);
+        return;
+      }
+
 
       // 1) Create pre-create profile
       const { data: prof, error: profErr } = await supabase

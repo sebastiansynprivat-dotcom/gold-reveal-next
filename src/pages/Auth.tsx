@@ -115,63 +115,89 @@ const Auth = () => {
       const updates: Record<string, string> = {};
       if (pendingId) updates.telegram_id = pendingId;
       if (pendingOffer) updates.offer = pendingOffer;
-      supabase
-        .from("profiles")
-        .update(updates)
-        .eq("user_id", user.id)
-        .then(async () => {
-          localStorage.removeItem("pending_telegram_id");
-          localStorage.removeItem("pending_offer");
+      (async () => {
+        // 1) Try the update
+        let { error: updErr } = await supabase
+          .from("profiles")
+          .update(updates)
+          .eq("user_id", user.id);
 
-          if (pendingOffer) {
-            await new Promise((r) => setTimeout(r, 2000));
-            const { data: assignedAccounts } = await supabase
-              .from("accounts")
-              .select("id, drive_folder_id")
-              .eq("assigned_to", user.id);
+        // 2) On unique-violation, a pre-create profile already owns this telegram_id.
+        //    Reclaim it server-side (transfers assignments + deletes the orphan), then retry.
+        if (updErr && (updErr as any).code === "23505" && pendingId) {
+          const { error: rpcErr } = await (supabase as any).rpc(
+            "claim_pre_create_by_telegram",
+            { p_telegram_id: pendingId },
+          );
+          if (!rpcErr) {
+            const retry = await supabase
+              .from("profiles")
+              .update(updates)
+              .eq("user_id", user.id);
+            updErr = retry.error;
+          }
+        }
 
-            const withDrive = (assignedAccounts || []).filter((a) => a.drive_folder_id);
-            for (const acc of withDrive) {
-              try {
-                const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-                await fetch(
-                  `https://${projectId}.supabase.co/functions/v1/share-drive`,
-                  {
-                    method: "POST",
-                    headers: {
-                      "Content-Type": "application/json",
-                      apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-                      Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-                    },
-                    body: JSON.stringify({ folder_id: acc.drive_folder_id, email: user.email }),
-                  }
-                );
-              } catch (err) {
-                console.error("Auto drive share failed:", err);
-              }
-            }
+        if (updErr) {
+          // Preserve pending values so the next login can try again.
+          console.error("Post-auth sync failed:", updErr);
+          return;
+        }
 
+        localStorage.removeItem("pending_telegram_id");
+        localStorage.removeItem("pending_offer");
+
+
+        if (pendingOffer) {
+          await new Promise((r) => setTimeout(r, 2000));
+          const { data: assignedAccounts } = await supabase
+            .from("accounts")
+            .select("id, drive_folder_id")
+            .eq("assigned_to", user.id);
+
+          const withDrive = (assignedAccounts || []).filter((a) => a.drive_folder_id);
+          for (const acc of withDrive) {
             try {
               const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-              const session = (await supabase.auth.getSession()).data.session;
               await fetch(
-                `https://${projectId}.supabase.co/functions/v1/notify-account-assigned`,
+                `https://${projectId}.supabase.co/functions/v1/share-drive`,
                 {
                   method: "POST",
                   headers: {
                     "Content-Type": "application/json",
                     apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
-                    Authorization: `Bearer ${session?.access_token ?? ""}`,
+                    Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
                   },
-                  body: JSON.stringify({ user_id: user.id }),
+                  body: JSON.stringify({ folder_id: acc.drive_folder_id, email: user.email }),
                 }
               );
             } catch (err) {
-              console.error("Account assignment notification failed:", err);
+              console.error("Auto drive share failed:", err);
             }
           }
-        });
+
+          try {
+            const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+            const session = (await supabase.auth.getSession()).data.session;
+            await fetch(
+              `https://${projectId}.supabase.co/functions/v1/notify-account-assigned`,
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+                  Authorization: `Bearer ${session?.access_token ?? ""}`,
+                },
+                body: JSON.stringify({ user_id: user.id }),
+              }
+            );
+          } catch (err) {
+            console.error("Account assignment notification failed:", err);
+          }
+        }
+      })();
     }
+
   }, [user]);
 
   if (loading) {
