@@ -78,6 +78,7 @@ import RequestMediaList from "@/components/RequestMediaList";
 import RevenueChart from "@/components/RevenueChart";
 import MonthSummaryWidget from "@/components/MonthSummaryWidget";
 import ContentDropsWidget from "@/components/ContentDropsWidget";
+import ChatterFaqWidget from "@/components/ChatterFaqWidget";
 import ModelProfilePreviewCards from "@/components/ModelProfilePreviewCards";
 import QuickActionBar from "@/components/QuickActionBar";
 import InspirationLibrary from "@/components/InspirationLibrary";
@@ -1828,6 +1829,9 @@ export default function Dashboard() {
             umsatz={umsatz}
           />
         )}
+
+        {/* FAQ */}
+        <ChatterFaqWidget />
 
         {/* Billing countdown + Invoice button */}
         <DashboardBillingInfo
