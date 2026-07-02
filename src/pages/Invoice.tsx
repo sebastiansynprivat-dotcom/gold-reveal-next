@@ -516,18 +516,43 @@ Mein Gruppenname ist: ${groupName || "[Bitte Gruppenname im Dashboard eintragen]
 };
 
 function BillingCountdown({ onUnlock }: { onUnlock: (v: boolean) => void }) {
+  const { user } = useAuth();
+  const [createdAt, setCreatedAt] = useState<Date | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("created_at")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.created_at) setCreatedAt(new Date(data.created_at));
+      });
+  }, [user]);
+
   const now = new Date();
-  const deadline = endOfMonth(addMonths(now, 1));
-  const totalDays = differenceInDays(deadline, new Date(now.getFullYear(), now.getMonth(), 1));
-  const daysLeft = differenceInDays(deadline, now);
-  const progressPct = Math.round(((totalDays - daysLeft) / totalDays) * 100);
-  const isUnlocked = daysLeft <= 0;
+  const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+  const hasBillablePrev = createdAt ? createdAt <= previousMonthEnd : false;
 
-  const unlocked = isUnlocked;
+  const periodStart = hasBillablePrev
+    ? new Date(now.getFullYear(), now.getMonth() - 1, 1)
+    : new Date(now.getFullYear(), now.getMonth(), 1);
+  const periodEnd = hasBillablePrev
+    ? previousMonthEnd
+    : new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const unlockDate = new Date(periodEnd.getFullYear(), periodEnd.getMonth() + 1, 20);
+  const unlocked = createdAt ? now >= unlockDate : false;
+  const daysLeft = Math.max(0, differenceInDays(unlockDate, now));
+  const totalDays = Math.max(1, differenceInDays(unlockDate, periodStart));
+  const progressPct = Math.min(
+    100,
+    Math.max(0, Math.round(((totalDays - daysLeft) / totalDays) * 100)),
+  );
 
-  useEffect(() => { onUnlock(unlocked); }, [unlocked, onUnlock]);
-
-  const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+  useEffect(() => {
+    onUnlock(unlocked);
+  }, [unlocked, onUnlock]);
 
   return (
     <Card className="glass-card-subtle border-border">
@@ -547,20 +572,27 @@ function BillingCountdown({ onUnlock }: { onUnlock: (v: boolean) => void }) {
 
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-0.5">
-            <p className="text-[10px] text-muted-foreground">Startdatum</p>
-            <p className="text-sm font-semibold text-foreground">{format(startDate, "dd. MMMM yyyy", { locale: de })}</p>
+            <p className="text-[10px] text-muted-foreground">Zeitraum</p>
+            <p className="text-sm font-semibold text-foreground">
+              {format(periodStart, "dd. MMM", { locale: de })} –{" "}
+              {format(periodEnd, "dd. MMM yyyy", { locale: de })}
+            </p>
           </div>
           <div className="space-y-0.5">
-            <p className="text-[10px] text-muted-foreground">Deine erste Abrechnung</p>
-            <p className="text-sm font-semibold text-gold-gradient">{format(deadline, "dd. MMMM yyyy", { locale: de })}</p>
+            <p className="text-[10px] text-muted-foreground">
+              {unlocked ? "Anfragbar seit" : "Anfragbar ab"}
+            </p>
+            <p className="text-sm font-semibold text-gold-gradient">
+              {format(unlockDate, "dd. MMMM yyyy", { locale: de })}
+            </p>
           </div>
         </div>
 
         {!unlocked && (
           <div className="space-y-1.5">
             <div className="flex justify-between text-[10px] text-muted-foreground">
-              <span>Noch {daysLeft} Tage bis zur Abrechnung</span>
-              <span>{format(deadline, "dd.MM.yyyy")}</span>
+              <span>Noch {daysLeft} Tage bis zur Freischaltung</span>
+              <span>{format(unlockDate, "dd.MM.yyyy")}</span>
             </div>
             <div className="w-full h-2 rounded-full bg-secondary overflow-hidden">
               <div
@@ -568,7 +600,18 @@ function BillingCountdown({ onUnlock }: { onUnlock: (v: boolean) => void }) {
                 style={{ width: `${progressPct}%` }}
               />
             </div>
+            <p className="text-[10px] text-muted-foreground leading-relaxed pt-1">
+              💡 Rechnungen können <strong>ab dem 20. des Folgemonats</strong> gestellt werden.
+              Empfohlen ab einem Auszahlungsbetrag von <strong>50&nbsp;€</strong> – darunter fällt
+              eine Auszahlungsgebühr von 5&nbsp;€ an. Warte ggf. bis zum nächsten Monat.
+            </p>
           </div>
+        )}
+        {unlocked && (
+          <p className="text-[10px] text-muted-foreground leading-relaxed">
+            💡 Empfohlen ab einem Auszahlungsbetrag von <strong>50&nbsp;€</strong>. Liegst du darunter,
+            verschiebe die Auszahlung auf den nächsten Monat, um die Gebühr von 5&nbsp;€ zu sparen.
+          </p>
         )}
       </CardContent>
     </Card>

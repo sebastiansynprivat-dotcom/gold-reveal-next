@@ -1830,7 +1830,12 @@ export default function Dashboard() {
         )}
 
         {/* Billing countdown + Invoice button */}
-        <DashboardBillingInfo onNavigate={() => navigate("/rechnung")} groupName={groupName} />
+        <DashboardBillingInfo
+          onNavigate={() => navigate("/rechnung")}
+          groupName={groupName}
+          userId={user?.id ?? ""}
+          rate={rate}
+        />
       </main>
 
       <DashboardChat externalOpen={chatOpen} onExternalOpenChange={setChatOpen} />
@@ -2177,13 +2182,66 @@ function BonusModelSection({
 }
 const REFERRAL_LINKEDIN_URL = "https://app.youform.com/forms/tcrienu8";
 
-function DashboardBillingInfo({ onNavigate, groupName }: { onNavigate: () => void; groupName: string }) {
+function DashboardBillingInfo({
+  onNavigate,
+  groupName,
+  userId,
+  rate,
+}: {
+  onNavigate: () => void;
+  groupName: string;
+  userId: string;
+  rate: number;
+}) {
+  const [createdAt, setCreatedAt] = useState<Date | null>(null);
+  const [prevMonthRevenue, setPrevMonthRevenue] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!userId) return;
+    (async () => {
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("created_at")
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (prof?.created_at) setCreatedAt(new Date(prof.created_at));
+
+      const now = new Date();
+      const from = format(new Date(now.getFullYear(), now.getMonth() - 1, 1), "yyyy-MM-dd");
+      const to = format(new Date(now.getFullYear(), now.getMonth(), 0), "yyyy-MM-dd");
+      const { data } = await supabase.rpc("get_chatter_revenue_series", { p_from: from, p_to: to });
+      if (data) {
+        const sum = (data as { total: number | string }[]).reduce(
+          (s, r) => s + Number(r.total),
+          0,
+        );
+        setPrevMonthRevenue(sum);
+      } else {
+        setPrevMonthRevenue(0);
+      }
+    })();
+  }, [userId]);
+
   const now = new Date();
-  const deadline = endOfMonth(addMonths(now, 1));
-  const daysLeft = differenceInDays(deadline, now);
-  const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-  const totalDays = differenceInDays(deadline, startDate);
-  const progressPct = Math.round(((totalDays - daysLeft) / totalDays) * 100);
+  const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+  const hasBillablePrev = createdAt ? createdAt <= previousMonthEnd : false;
+
+  const periodStart = hasBillablePrev
+    ? new Date(now.getFullYear(), now.getMonth() - 1, 1)
+    : new Date(now.getFullYear(), now.getMonth(), 1);
+  const periodEnd = hasBillablePrev
+    ? previousMonthEnd
+    : new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+  // Auszahlung anfragbar ab 20. des Folgemonats des Abrechnungszeitraums
+  const unlockDate = new Date(periodEnd.getFullYear(), periodEnd.getMonth() + 1, 20);
+  const finalCommDate = new Date(periodEnd.getFullYear(), periodEnd.getMonth() + 1, 0); // Ende Folgemonat
+  const unlocked = now >= unlockDate;
+  const daysToUnlock = Math.max(0, differenceInDays(unlockDate, now));
+
+  const revenueKnown = hasBillablePrev && prevMonthRevenue !== null;
+  const payout = revenueKnown ? (prevMonthRevenue || 0) * rate : null;
+  const meets50 = payout !== null ? payout >= 50 : true;
 
   const referralText = `Hey! Ich arbeite als Chatter und verdiene damit richtig gutes Geld. Wenn du Lust hast, bewirb dich hier!\n\nWichtig: Gib bei der Bewerbung meinen Gruppennamen „${groupName}" an – das ist nötig, damit es zugeordnet werden kann!\n\nLink zum Bewerben: ${REFERRAL_LINKEDIN_URL}`;
 
@@ -2196,6 +2254,9 @@ function DashboardBillingInfo({ onNavigate, groupName }: { onNavigate: () => voi
     }
   };
 
+  const nlFmt = (v: number) =>
+    v.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
   return (
     <div className="space-y-3">
       <div className="glass-card-subtle rounded-xl p-4 space-y-3">
@@ -2206,37 +2267,120 @@ function DashboardBillingInfo({ onNavigate, groupName }: { onNavigate: () => voi
           </div>
           <BillingAudioDialog />
         </div>
+
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-0.5">
-            <p className="text-[10px] text-muted-foreground">Startdatum</p>
-            <p className="text-xs font-semibold text-foreground">{format(startDate, "dd. MMM yyyy", { locale: de })}</p>
+            <p className="text-[10px] text-muted-foreground">Zeitraum</p>
+            <p className="text-xs font-semibold text-foreground">
+              {format(periodStart, "dd. MMM", { locale: de })} –{" "}
+              {format(periodEnd, "dd. MMM yyyy", { locale: de })}
+            </p>
           </div>
           <div className="space-y-0.5">
-            <p className="text-[10px] text-muted-foreground">Nächste Abrechnung</p>
+            <p className="text-[10px] text-muted-foreground">
+              {unlocked ? "Anfragbar seit" : "Anfragbar ab"}
+            </p>
             <p className="text-xs font-semibold text-gold-gradient">
-              {format(deadline, "dd. MMM yyyy", { locale: de })}
+              {format(unlockDate, "dd. MMM yyyy", { locale: de })}
             </p>
           </div>
         </div>
-        <div className="space-y-1">
-          <div className="flex justify-between text-[10px] text-muted-foreground">
-            <span>
-              Noch <span className="text-accent font-semibold">{daysLeft}</span> Tage
-            </span>
-            <span>{format(deadline, "dd.MM.yyyy")}</span>
+
+        {!unlocked && (
+          <div className="space-y-1">
+            <div className="flex justify-between text-[10px] text-muted-foreground">
+              <span>
+                Noch <span className="text-accent font-semibold">{daysToUnlock}</span> Tage
+              </span>
+              <span>Auszahlung Ende {format(finalCommDate, "MMM", { locale: de })}</span>
+            </div>
+            <div className="w-full h-1.5 rounded-full bg-secondary overflow-hidden shimmer-bar">
+              <div
+                className="h-full rounded-full bg-accent transition-all"
+                style={{
+                  width: `${Math.min(
+                    100,
+                    Math.max(
+                      0,
+                      Math.round(
+                        ((differenceInDays(now, periodStart) + 1) /
+                          Math.max(1, differenceInDays(unlockDate, periodStart))) *
+                          100,
+                      ),
+                    ),
+                  )}%`,
+                }}
+              />
+            </div>
           </div>
-          <div className="w-full h-1.5 rounded-full bg-secondary overflow-hidden shimmer-bar">
-            <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${progressPct}%` }} />
-          </div>
+        )}
+
+        {/* Payout transparency */}
+        <div className="rounded-lg border border-border/70 bg-background/40 p-3 space-y-2">
+          <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+            Dein Auszahlungsbetrag
+          </p>
+          {revenueKnown ? (
+            <>
+              <div className="flex items-baseline justify-between">
+                <div>
+                  <p className="text-[10px] text-muted-foreground">
+                    Umsatz {format(periodStart, "MMM", { locale: de })}
+                  </p>
+                  <p className="text-sm font-semibold text-foreground">
+                    {nlFmt(prevMonthRevenue || 0)} €
+                  </p>
+                </div>
+                <div className="text-muted-foreground text-xs">×&nbsp;{Math.round(rate * 100)}%</div>
+                <div className="text-right">
+                  <p className="text-[10px] text-muted-foreground">Auszahlung</p>
+                  <p className="text-lg font-bold text-gold-gradient">
+                    {nlFmt(payout || 0)} €
+                  </p>
+                </div>
+              </div>
+              <p className="text-[10px] text-muted-foreground leading-relaxed">
+                Du erhältst deinen prozentualen Anteil ({Math.round(rate * 100)}%) vom
+                Gesamtumsatz – nicht den vollen Umsatz deines Accounts.
+              </p>
+            </>
+          ) : (
+            <p className="text-xs text-muted-foreground">
+              Dein Auszahlungsbetrag für den aktuellen Zeitraum wird nach Monatsende berechnet.
+            </p>
+          )}
         </div>
+
+        {/* Fee / threshold hint */}
+        {revenueKnown && !meets50 && (
+          <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 space-y-1">
+            <p className="text-xs font-semibold text-amber-300">
+              ⚠️ Empfehlung: Auszahlung erst ab 50&nbsp;€
+            </p>
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              Dein aktueller Auszahlungsbetrag liegt unter 50&nbsp;€. Lässt du ihn im nächsten
+              Monat mit auszahlen, sparst du dir die <strong>Auszahlungsgebühr von 5&nbsp;€</strong>,
+              die sonst fällig wird.
+            </p>
+          </div>
+        )}
+        {revenueKnown && meets50 && (
+          <div className="rounded-lg border border-accent/30 bg-accent/5 p-3">
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
+              ✅ Du liegst über der 50&nbsp;€-Grenze – du kannst deine Auszahlung im
+              regulären Zeitraum ohne Gebühr anfragen.
+            </p>
+          </div>
+        )}
       </div>
 
       <Button
         onClick={onNavigate}
-        className="w-full h-11 bg-gradient-to-r from-accent to-accent/80 text-accent-foreground hover:brightness-110 transition-all"
+        disabled={!unlocked}
+        className="w-full h-11 bg-gradient-to-r from-accent to-accent/80 text-accent-foreground hover:brightness-110 transition-all disabled:opacity-60"
       >
         <FileText className="mr-2 h-4 w-4" />
-        Rechnung erstellen
+        {unlocked ? "Rechnung erstellen" : `Freigeschaltet ab ${format(unlockDate, "dd.MM.")}`}
       </Button>
 
       {/* Referral Card */}
