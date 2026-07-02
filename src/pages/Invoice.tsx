@@ -97,7 +97,7 @@ const Invoice = () => {
     bankName.trim() && iban.trim() && bic.trim() && invoiceNumber.trim() && invoiceDate &&
     periodFrom.trim() && periodTo.trim() && description.trim() && amount.trim() && vatNote.trim();
 
-  const generatePDF = () => {
+  const generatePDF = async () => {
     if (!allFieldsFilled) {
       toast({
         title: "Fehlende Angaben",
@@ -106,6 +106,7 @@ const Invoice = () => {
       });
       return;
     }
+
 
     const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
     const pageWidth = 210;
