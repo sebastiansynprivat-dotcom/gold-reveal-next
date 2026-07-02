@@ -1830,7 +1830,12 @@ export default function Dashboard() {
         )}
 
         {/* Billing countdown + Invoice button */}
-        <DashboardBillingInfo onNavigate={() => navigate("/rechnung")} groupName={groupName} />
+        <DashboardBillingInfo
+          onNavigate={() => navigate("/rechnung")}
+          groupName={groupName}
+          userId={user?.id ?? ""}
+          rate={rate}
+        />
       </main>
 
       <DashboardChat externalOpen={chatOpen} onExternalOpenChange={setChatOpen} />
