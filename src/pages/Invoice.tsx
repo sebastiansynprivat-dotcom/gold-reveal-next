@@ -531,7 +531,7 @@ Mein Gruppenname ist: ${groupName || "[Bitte Gruppenname im Dashboard eintragen]
           Die Rechnung wird lokal erstellt – keine Daten werden gespeichert.
         </p>
       </div>
-      <DashboardChat />
+      <DashboardChat externalOpen={invoiceChatOpen} onExternalOpenChange={setInvoiceChatOpen} />
     </div>
   );
 };
