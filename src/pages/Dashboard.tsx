@@ -1830,9 +1830,6 @@ export default function Dashboard() {
           />
         )}
 
-        {/* FAQ */}
-        <ChatterFaqWidget />
-
         {/* Billing countdown + Invoice button */}
         <DashboardBillingInfo
           onNavigate={() => navigate("/rechnung")}
@@ -1840,6 +1837,9 @@ export default function Dashboard() {
           userId={user?.id ?? ""}
           rate={rate}
         />
+
+        {/* FAQ – ganz unten als allgemeine Hilfe */}
+        <ChatterFaqWidget onOpenChat={() => setChatOpen(true)} />
       </main>
 
       <DashboardChat externalOpen={chatOpen} onExternalOpenChange={setChatOpen} />

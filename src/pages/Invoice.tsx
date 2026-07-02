@@ -15,7 +15,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { format, endOfMonth, addMonths, differenceInDays } from "date-fns";
 import { de } from "date-fns/locale";
-import { CalendarIcon, FileDown, ArrowLeft, Clock, AlertCircle } from "lucide-react";
+import { CalendarIcon, FileDown, ArrowLeft, Clock, AlertCircle, MessageCircle } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -60,6 +60,7 @@ const Invoice = () => {
 
   const [senderName, setSenderName] = useState(savedData?.senderName || "");
   const [billingUnlocked, setBillingUnlocked] = useState(false);
+  const [invoiceChatOpen, setInvoiceChatOpen] = useState(false);
   const [senderAddress, setSenderAddress] = useState(savedData?.senderAddress || "");
   const [senderCity, setSenderCity] = useState(savedData?.senderCity || "");
   const [taxId, setTaxId] = useState(savedData?.taxId || "");
@@ -243,6 +244,26 @@ const Invoice = () => {
 
         {/* Countdown section */}
         <BillingCountdown onUnlock={setBillingUnlocked} />
+
+        {/* Chat-Assistant Hinweis */}
+        <button
+          type="button"
+          onClick={() => setInvoiceChatOpen(true)}
+          className="w-full flex items-center gap-3 rounded-xl border border-accent/30 bg-accent/5 p-3 text-left transition-colors hover:bg-accent/10"
+        >
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent/20">
+            <MessageCircle className="h-4 w-4 text-accent" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold text-foreground">
+              Fragen zur Rechnung oder Auszahlung?
+            </p>
+            <p className="text-[10px] text-muted-foreground leading-snug">
+              Frag den Chat-Assistant im Dashboard – er kennt das komplette FAQ und antwortet dir sofort.
+            </p>
+          </div>
+          <span className="text-[10px] font-semibold text-accent whitespace-nowrap">Chat öffnen →</span>
+        </button>
 
         {/* Gewerbe To-Do */}
         {(() => {
@@ -510,7 +531,7 @@ Mein Gruppenname ist: ${groupName || "[Bitte Gruppenname im Dashboard eintragen]
           Die Rechnung wird lokal erstellt – keine Daten werden gespeichert.
         </p>
       </div>
-      <DashboardChat />
+      <DashboardChat externalOpen={invoiceChatOpen} onExternalOpenChange={setInvoiceChatOpen} />
     </div>
   );
 };
