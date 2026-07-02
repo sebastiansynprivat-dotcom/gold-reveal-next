@@ -2198,53 +2198,99 @@ function DashboardBillingInfo({
   rate: number;
 }) {
   const [createdAt, setCreatedAt] = useState<Date | null>(null);
-  const [prevMonthRevenue, setPrevMonthRevenue] = useState<number | null>(null);
+  const [lastBilledMonth, setLastBilledMonth] = useState<Date | null>(null); // last day of the month that was already billed
+  // openMonths: closed months since last_billed_month with their revenue
+  const [openMonths, setOpenMonths] = useState<{ monthStart: Date; total: number }[] | null>(
+    null,
+  );
 
   useEffect(() => {
     if (!userId) return;
     (async () => {
       const { data: prof } = await supabase
         .from("profiles")
-        .select("created_at")
+        .select("created_at, last_billed_month")
         .eq("user_id", userId)
         .maybeSingle();
-      if (prof?.created_at) setCreatedAt(new Date(prof.created_at));
+
+      const created = prof?.created_at ? new Date(prof.created_at) : null;
+      if (created) setCreatedAt(created);
+      const lbm = (prof as { last_billed_month?: string | null } | null)?.last_billed_month
+        ? new Date((prof as { last_billed_month: string }).last_billed_month)
+        : null;
+      setLastBilledMonth(lbm);
 
       const now = new Date();
-      const from = format(new Date(now.getFullYear(), now.getMonth() - 1, 1), "yyyy-MM-dd");
-      const to = format(new Date(now.getFullYear(), now.getMonth(), 0), "yyyy-MM-dd");
-      const { data } = await supabase.rpc("get_chatter_revenue_series", { p_from: from, p_to: to });
-      if (data) {
-        const sum = (data as { total: number | string }[]).reduce(
-          (s, r) => s + Number(r.total),
-          0,
-        );
-        setPrevMonthRevenue(sum);
-      } else {
-        setPrevMonthRevenue(0);
+      const lastClosedMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+      if (!created || created > lastClosedMonthEnd) {
+        setOpenMonths([]);
+        return;
       }
+
+      // Determine first open month: month after last_billed_month, or month of created_at
+      const firstOpen = lbm
+        ? new Date(lbm.getFullYear(), lbm.getMonth() + 1, 1)
+        : new Date(created.getFullYear(), created.getMonth(), 1);
+
+      if (firstOpen > lastClosedMonthEnd) {
+        setOpenMonths([]);
+        return;
+      }
+
+      const fromStr = format(firstOpen, "yyyy-MM-dd");
+      const toStr = format(lastClosedMonthEnd, "yyyy-MM-dd");
+      const { data } = await supabase.rpc("get_chatter_revenue_series", {
+        p_from: fromStr,
+        p_to: toStr,
+      });
+
+      // Bucket revenue by month
+      const buckets = new Map<string, number>();
+      const cursor = new Date(firstOpen);
+      while (cursor <= lastClosedMonthEnd) {
+        const key = `${cursor.getFullYear()}-${cursor.getMonth()}`;
+        buckets.set(key, 0);
+        cursor.setMonth(cursor.getMonth() + 1);
+      }
+      (data as { date: string; total: number | string }[] | null)?.forEach((row) => {
+        const d = new Date(row.date);
+        const key = `${d.getFullYear()}-${d.getMonth()}`;
+        buckets.set(key, (buckets.get(key) || 0) + Number(row.total));
+      });
+
+      const months: { monthStart: Date; total: number }[] = [];
+      buckets.forEach((total, key) => {
+        const [y, m] = key.split("-").map(Number);
+        months.push({ monthStart: new Date(y, m, 1), total });
+      });
+      months.sort((a, b) => a.monthStart.getTime() - b.monthStart.getTime());
+      setOpenMonths(months);
     })();
   }, [userId]);
 
   const now = new Date();
-  const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
-  const hasBillablePrev = createdAt ? createdAt <= previousMonthEnd : false;
+  const lastClosedMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+  const hasBillablePrev = createdAt ? createdAt <= lastClosedMonthEnd : false;
 
-  const periodStart = hasBillablePrev
-    ? new Date(now.getFullYear(), now.getMonth() - 1, 1)
-    : new Date(now.getFullYear(), now.getMonth(), 1);
+  const openTotal = (openMonths || []).reduce((s, m) => s + m.total, 0);
+  const revenueKnown = hasBillablePrev && openMonths !== null && openMonths.length > 0;
+
+  // Period displayed: from first open month → last closed month
+  const periodStart =
+    openMonths && openMonths.length > 0
+      ? openMonths[0].monthStart
+      : new Date(now.getFullYear(), now.getMonth(), 1);
   const periodEnd = hasBillablePrev
-    ? previousMonthEnd
+    ? lastClosedMonthEnd
     : new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
-  // Auszahlung anfragbar ab 20. des Folgemonats des Abrechnungszeitraums
+  // Freischaltung: 20. des Monats nach dem zuletzt abgeschlossenen Monat
   const unlockDate = new Date(periodEnd.getFullYear(), periodEnd.getMonth() + 1, 20);
-  const finalCommDate = new Date(periodEnd.getFullYear(), periodEnd.getMonth() + 1, 0); // Ende Folgemonat
-  const unlocked = now >= unlockDate;
+  const finalCommDate = new Date(periodEnd.getFullYear(), periodEnd.getMonth() + 1, 0);
+  const unlocked = now >= unlockDate && revenueKnown;
   const daysToUnlock = Math.max(0, differenceInDays(unlockDate, now));
 
-  const revenueKnown = hasBillablePrev && prevMonthRevenue !== null;
-  const payout = revenueKnown ? (prevMonthRevenue || 0) * rate : null;
+  const payout = revenueKnown ? openTotal * rate : null;
   const meets50 = payout !== null ? payout >= 50 : true;
 
   const referralText = `Hey! Ich arbeite als Chatter und verdiene damit richtig gutes Geld. Wenn du Lust hast, bewirb dich hier!\n\nWichtig: Gib bei der Bewerbung meinen Gruppennamen „${groupName}" an – das ist nötig, damit es zugeordnet werden kann!\n\nLink zum Bewerben: ${REFERRAL_LINKEDIN_URL}`;
@@ -2261,6 +2307,11 @@ function DashboardBillingInfo({
   const nlFmt = (v: number) =>
     v.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+  const monthsBreakdown =
+    openMonths && openMonths.length > 0
+      ? openMonths.map((m) => `${format(m.monthStart, "MMM", { locale: de })} ${nlFmt(m.total)} €`).join(" + ")
+      : "";
+
   return (
     <div className="space-y-3">
       <div className="glass-card-subtle rounded-xl p-4 space-y-3">
@@ -2274,7 +2325,9 @@ function DashboardBillingInfo({
 
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-0.5">
-            <p className="text-[10px] text-muted-foreground">Zeitraum</p>
+            <p className="text-[10px] text-muted-foreground">
+              {openMonths && openMonths.length > 1 ? "Offener Zeitraum" : "Zeitraum"}
+            </p>
             <p className="text-xs font-semibold text-foreground">
               {format(periodStart, "dd. MMM", { locale: de })} –{" "}
               {format(periodEnd, "dd. MMM yyyy", { locale: de })}
@@ -2290,7 +2343,7 @@ function DashboardBillingInfo({
           </div>
         </div>
 
-        {!unlocked && (
+        {!unlocked && hasBillablePrev && (
           <div className="space-y-1">
             <div className="flex justify-between text-[10px] text-muted-foreground">
               <span>
@@ -2319,30 +2372,31 @@ function DashboardBillingInfo({
           </div>
         )}
 
-        {/* Payout transparency */}
+        {/* Offener Umsatz / Payout transparency */}
         <div className="rounded-lg border border-border/70 bg-background/40 p-3 space-y-2">
           <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
-            Dein Auszahlungsbetrag
+            {openMonths && openMonths.length > 1 ? "Offener Umsatz (aufgelaufen)" : "Dein Auszahlungsbetrag"}
           </p>
           {revenueKnown ? (
             <>
               <div className="flex items-baseline justify-between">
                 <div>
                   <p className="text-[10px] text-muted-foreground">
-                    Umsatz {format(periodStart, "MMM", { locale: de })}
+                    {openMonths && openMonths.length > 1
+                      ? `${openMonths.length} offene Monate`
+                      : `Umsatz ${format(periodStart, "MMM", { locale: de })}`}
                   </p>
-                  <p className="text-sm font-semibold text-foreground">
-                    {nlFmt(prevMonthRevenue || 0)} €
-                  </p>
+                  <p className="text-sm font-semibold text-foreground">{nlFmt(openTotal)} €</p>
                 </div>
                 <div className="text-muted-foreground text-xs">×&nbsp;{Math.round(rate * 100)}%</div>
                 <div className="text-right">
                   <p className="text-[10px] text-muted-foreground">Auszahlung</p>
-                  <p className="text-lg font-bold text-gold-gradient">
-                    {nlFmt(payout || 0)} €
-                  </p>
+                  <p className="text-lg font-bold text-gold-gradient">{nlFmt(payout || 0)} €</p>
                 </div>
               </div>
+              {openMonths && openMonths.length > 1 && (
+                <p className="text-[10px] text-muted-foreground/80 italic">{monthsBreakdown}</p>
+              )}
               <p className="text-[10px] text-muted-foreground leading-relaxed">
                 Du erhältst deinen prozentualen Anteil ({Math.round(rate * 100)}%) vom
                 Gesamtumsatz – nicht den vollen Umsatz deines Accounts.
@@ -2350,7 +2404,9 @@ function DashboardBillingInfo({
             </>
           ) : (
             <p className="text-xs text-muted-foreground">
-              Dein Auszahlungsbetrag für den aktuellen Zeitraum wird nach Monatsende berechnet.
+              {lastBilledMonth
+                ? "Kein offener Umsatz – alles Bisherige wurde bereits abgerechnet."
+                : "Dein Auszahlungsbetrag für den aktuellen Zeitraum wird nach Monatsende berechnet."}
             </p>
           )}
         </div>
@@ -2362,21 +2418,21 @@ function DashboardBillingInfo({
               ⚠️ Empfehlung: Auszahlung erst ab 50&nbsp;€
             </p>
             <p className="text-[11px] text-muted-foreground leading-relaxed">
-              Dein aktueller Auszahlungsbetrag liegt unter 50&nbsp;€. Lässt du ihn im nächsten
-              Monat mit auszahlen, sparst du dir die <strong>Auszahlungsgebühr von 5&nbsp;€</strong>,
-              die sonst fällig wird.
+              Dein offener Auszahlungsbetrag liegt unter 50&nbsp;€. Warte einfach den nächsten
+              Monat ab – dein Umsatz wird weiter aufsummiert und du sparst dir die
+              <strong> Auszahlungsgebühr von 5&nbsp;€</strong>.
             </p>
           </div>
         )}
         {revenueKnown && meets50 && (
           <div className="rounded-lg border border-accent/30 bg-accent/5 p-3">
             <p className="text-[11px] text-muted-foreground leading-relaxed">
-              ✅ Du liegst über der 50&nbsp;€-Grenze – du kannst deine Auszahlung im
-              regulären Zeitraum ohne Gebühr anfragen.
+              ✅ Du liegst über der 50&nbsp;€-Grenze – du kannst deine Auszahlung ohne Gebühr anfragen.
             </p>
           </div>
         )}
       </div>
+
 
       <Button
         onClick={onNavigate}
