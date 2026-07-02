@@ -59,6 +59,8 @@ project_id = "acznyhzgbkdcmnbqvptt"
     verify_jwt = false
   [functions.update-account]
     verify_jwt = false
+  [functions.update-chatter-presence]
+    verify_jwt = false
   [functions.update-account-metrics]
     verify_jwt = false
   [functions.update-profile-names]
