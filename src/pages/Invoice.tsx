@@ -60,6 +60,7 @@ const Invoice = () => {
 
   const [senderName, setSenderName] = useState(savedData?.senderName || "");
   const [billingUnlocked, setBillingUnlocked] = useState(false);
+  const [invoiceChatOpen, setInvoiceChatOpen] = useState(false);
   const [senderAddress, setSenderAddress] = useState(savedData?.senderAddress || "");
   const [senderCity, setSenderCity] = useState(savedData?.senderCity || "");
   const [taxId, setTaxId] = useState(savedData?.taxId || "");
