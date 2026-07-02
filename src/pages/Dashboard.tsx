@@ -1830,6 +1830,9 @@ export default function Dashboard() {
           />
         )}
 
+        {/* FAQ */}
+        <ChatterFaqWidget />
+
         {/* Billing countdown + Invoice button */}
         <DashboardBillingInfo
           onNavigate={() => navigate("/rechnung")}
