@@ -115,13 +115,38 @@ const Auth = () => {
       const updates: Record<string, string> = {};
       if (pendingId) updates.telegram_id = pendingId;
       if (pendingOffer) updates.offer = pendingOffer;
-      supabase
-        .from("profiles")
-        .update(updates)
-        .eq("user_id", user.id)
-        .then(async () => {
-          localStorage.removeItem("pending_telegram_id");
-          localStorage.removeItem("pending_offer");
+      (async () => {
+        // 1) Try the update
+        let { error: updErr } = await supabase
+          .from("profiles")
+          .update(updates)
+          .eq("user_id", user.id);
+
+        // 2) On unique-violation, a pre-create profile already owns this telegram_id.
+        //    Reclaim it server-side (transfers assignments + deletes the orphan), then retry.
+        if (updErr && (updErr as any).code === "23505" && pendingId) {
+          const { error: rpcErr } = await (supabase as any).rpc(
+            "claim_pre_create_by_telegram",
+            { p_telegram_id: pendingId },
+          );
+          if (!rpcErr) {
+            const retry = await supabase
+              .from("profiles")
+              .update(updates)
+              .eq("user_id", user.id);
+            updErr = retry.error;
+          }
+        }
+
+        if (updErr) {
+          // Preserve pending values so the next login can try again.
+          console.error("Post-auth sync failed:", updErr);
+          return;
+        }
+
+        localStorage.removeItem("pending_telegram_id");
+        localStorage.removeItem("pending_offer");
+
 
           if (pendingOffer) {
             await new Promise((r) => setTimeout(r, 2000));
