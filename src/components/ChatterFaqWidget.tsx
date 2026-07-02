@@ -136,7 +136,7 @@ function renderAnswer(text: string) {
   );
 }
 
-export default function ChatterFaqWidget() {
+export default function ChatterFaqWidget({ onOpenChat }: { onOpenChat?: () => void } = {}) {
   const [query, setQuery] = useState("");
 
   const filtered = useMemo(() => {
