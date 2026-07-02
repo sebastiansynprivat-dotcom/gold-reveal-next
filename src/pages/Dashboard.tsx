@@ -536,12 +536,22 @@ export default function Dashboard() {
       setTelegramHelpOpen(true);
       return;
     }
+    // Proactively claim any pre-create profile that already owns this
+    // telegram_id BEFORE we try to upsert – avoids the unique-index race
+    // for users whose auth profile row doesn't exist yet.
+    const { data: claimData, error: claimErr } = await (supabase as any).rpc(
+      "claim_pre_create_by_telegram",
+      { p_telegram_id: trimmed }
+    );
+    if (claimErr) {
+      console.warn("[saveTelegram] claim RPC failed", claimErr);
+    }
+
     let { error } = await supabase
       .from("profiles")
       .upsert({ user_id: user.id, telegram_id: trimmed }, { onConflict: "user_id" });
 
-    // Unique-violation: a pre-create profile already owns this telegram_id.
-    // Reclaim it server-side and retry once.
+    // Fallback: if the upsert still hits a unique-violation, retry the claim + upsert once more.
     if (error && (error as any).code === "23505") {
       const { error: rpcErr } = await (supabase as any).rpc("claim_pre_create_by_telegram", {
         p_telegram_id: trimmed,
@@ -551,15 +561,23 @@ export default function Dashboard() {
           .from("profiles")
           .upsert({ user_id: user.id, telegram_id: trimmed }, { onConflict: "user_id" });
         error = retry.error;
+      } else {
+        console.warn("[saveTelegram] second claim RPC failed", rpcErr);
       }
     }
 
     if (error) {
-      toast.error("Fehler beim Speichern");
+      console.error("[saveTelegram] upsert failed", error);
+      const msg = (error as any)?.message || (error as any)?.code || "Unbekannter Fehler";
+      toast.error(`Fehler beim Speichern: ${msg}`);
       return;
     }
+    if (claimData && (claimData as any).merged) {
+      toast.success("Telegram-ID gespeichert & bestehende Daten übernommen!");
+    } else {
+      toast.success("Telegram-ID gespeichert!");
+    }
     setTelegramSaved(true);
-    toast.success("Telegram-ID gespeichert!");
   };
 
   const saveGroupName = async () => {
