@@ -2762,6 +2762,7 @@ export type Database = {
           name: string | null
           offer: string | null
           pre_create: boolean
+          presence: Json
           pwa_installed: boolean
           start_date: string | null
           telegram_id: string | null
@@ -2783,6 +2784,7 @@ export type Database = {
           name?: string | null
           offer?: string | null
           pre_create?: boolean
+          presence?: Json
           pwa_installed?: boolean
           start_date?: string | null
           telegram_id?: string | null
@@ -2804,6 +2806,7 @@ export type Database = {
           name?: string | null
           offer?: string | null
           pre_create?: boolean
+          presence?: Json
           pwa_installed?: boolean
           start_date?: string | null
           telegram_id?: string | null

@@ -1,51 +1,61 @@
 ## Goal
-Add client-side pagination to three heavy admin lists. No backend / data-loading changes — pagination is purely a slice of the already-filtered arrays plus Prev/Next controls.
+Track per-platform presence state for each chatter on `profiles.presence` (JSONB), updated via a new edge function.
 
-## Page sizes
-- Setup list (Admin Dashboard → Setup tab): **50 / page**
-- Model dashboard list (`ModelDashboardTab`): **50 / page**
-- Chatter list (`ChatterDashboardTab`): **10 / page**
+## Schema
+Migration on `public.profiles`:
+- Add `presence jsonb NOT NULL DEFAULT '{}'::jsonb`
 
-## Changes
+No RLS changes needed (existing profile policies cover it). Edge function uses service role, so client visibility is unchanged.
 
-### 1. `src/pages/AdminDashboard.tsx` — Setup list
-- Add `const [setupPage, setSetupPage] = useState(1)` and `const SETUP_PAGE_SIZE = 50`.
-- Where `filteredSetupAccounts` is computed (~line 7904), derive:
-  - `totalPages = Math.max(1, Math.ceil(filteredSetupAccounts.length / 50))`
-  - `pagedAccounts = filteredSetupAccounts.slice((setupPage-1)*50, setupPage*50)`
-- Render `.map` over `pagedAccounts` instead of `filteredSetupAccounts` (line 7959).
-- Reset `setupPage` to 1 whenever the existing setup filters/search change (single `useEffect` watching those state deps).
-- When the `setup-attention-focus` listener expands a target row, also jump to the page that contains it (compute index in filtered list → page).
-- Append a Prev/Next bar below the list: "Seite X / Y", « Zurück / Weiter », disabled at bounds. Hidden when only 1 page.
+## Edge Function: `update-chatter-presence`
 
-### 2. `src/components/ModelDashboardTab.tsx` — Model list
-- Add `const [modelPage, setModelPage] = useState(1)`; `PAGE_SIZE = 50`.
-- After `filteredModels` memo (line 1105), compute `pagedModels` slice + `totalPages`.
-- Replace the existing `filteredModels.map(...)` render with `pagedModels.map(...)`.
-- `useEffect(() => setModelPage(1), [searchQuery, agencyFilter, steckbriefFilter, showDuplicatesOnly, sortMode])`.
-- Prev/Next footer identical pattern.
+**Auth:** `x-api-key` header compared (timing-safe) against `CHAT_AI_TOOL` secret — matches `verify-telegram-id` pattern.
 
-### 3. `src/components/ChatterDashboardTab.tsx` — Chatter list
-- Add `chatterPage` state, `PAGE_SIZE = 10`.
-- Slice `filteredChatters` for the render at line 479; keep the count badge (line 575) showing the full filtered total.
-- Reset page on filter/search change.
-- Prev/Next footer.
-
-## Shared pagination footer
-Inline tiny component in each file (no new file) so we avoid touching shared UI:
-
-```tsx
-<div className="flex items-center justify-between mt-3 text-xs">
-  <span className="text-muted-foreground">Seite {page} / {totalPages}</span>
-  <div className="flex gap-1">
-    <Button size="sm" variant="outline" disabled={page<=1} onClick={() => setPage(p=>p-1)}>Zurück</Button>
-    <Button size="sm" variant="outline" disabled={page>=totalPages} onClick={() => setPage(p=>p+1)}>Weiter</Button>
-  </div>
-</div>
+**Request body:**
+```json
+{
+  "telegram_id": "@handle",
+  "platform": "maloum",
+  "username": "…",
+  "email": "…",
+  "state": "online",
+  "message": "…"
+}
 ```
 
-## Safety / non-regression
-- Filtering, sorting, search, autosave, approval workflow, setup-attention navigation, realtime updates all operate on the full filtered arrays — only the final `.map` uses the paged slice.
-- No DB, edge function, RLS, or API change.
-- Reset-to-page-1 effects prevent landing on an empty page after filter change.
-- Expanded rows / open dialogs remain controlled by their own ids; switching pages just unmounts off-screen rows (same behavior as scroll virtualization would have).
+**Validation:**
+- `telegram_id` (required, non-empty string)
+- `platform` (required, non-empty string; used as JSONB key)
+- `username`, `email`, `state`, `message` optional strings
+
+**Logic:**
+1. Normalize `telegram_id` (trim, strip leading `@`, lowercase).
+2. Find profile via `ilike` on normalized telegram_id (same match logic as `verify-telegram-id`), first match wins.
+3. If not found → `404 {exists:false}`.
+4. Build entry:
+   ```json
+   {
+     "username": ...,
+     "email": ...,
+     "state": ...,
+     "message": ...,
+     "updated_at": "<ISO now>"
+   }
+   ```
+   Only include provided fields (undefined skipped).
+5. Merge into existing `presence` JSONB: `presence[platform] = entry` (server-side read-modify-write to preserve other platforms).
+6. Update row, return `{ ok: true, profile_id, platform, entry }`.
+
+**CORS + config:**
+- Standard CORS block (allow `x-api-key`, `content-type`, `authorization`, `apikey`).
+- Handle `OPTIONS`.
+- Add `[functions.update-chatter-presence] verify_jwt = false` in `supabase/config.toml`.
+
+## Files touched
+- Migration: add `presence` column.
+- New: `supabase/functions/update-chatter-presence/index.ts`
+- Edit: `supabase/config.toml`
+
+## Out of scope
+- No UI changes.
+- No consumer/reader code — just storage + ingest endpoint.
