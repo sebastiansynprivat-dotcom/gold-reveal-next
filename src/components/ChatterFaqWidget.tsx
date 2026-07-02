@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { HelpCircle, Search, ExternalLink } from "lucide-react";
+import { HelpCircle, Search, ExternalLink, MessageCircle } from "lucide-react";
 import {
   Accordion,
   AccordionContent,
