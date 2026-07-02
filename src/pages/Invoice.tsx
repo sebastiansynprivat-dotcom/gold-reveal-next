@@ -97,7 +97,7 @@ const Invoice = () => {
     bankName.trim() && iban.trim() && bic.trim() && invoiceNumber.trim() && invoiceDate &&
     periodFrom.trim() && periodTo.trim() && description.trim() && amount.trim() && vatNote.trim();
 
-  const generatePDF = () => {
+  const generatePDF = async () => {
     if (!allFieldsFilled) {
       toast({
         title: "Fehlende Angaben",
@@ -106,6 +106,7 @@ const Invoice = () => {
       });
       return;
     }
+
 
     const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
     const pageWidth = 210;
@@ -218,11 +219,32 @@ const Invoice = () => {
 
     doc.save(`Rechnung_${invoiceNumber}.pdf`);
 
+    // Merken, welcher Monat abgerechnet wurde → beim nächsten Öffnen des Dashboards
+    // wird der offene Umsatz auf 0 gesetzt und ab dem Folgemonat neu aufgebaut.
+    try {
+      const m = periodTo.match(/(\d{1,2})\.(\d{1,2})\.(\d{4})/);
+      if (m && user) {
+        const [, , mmStr, yyyyStr] = m;
+        const mm = parseInt(mmStr, 10);
+        const yyyy = parseInt(yyyyStr, 10);
+        // Letzter Tag des Monats aus periodTo
+        const lastDay = new Date(yyyy, mm, 0);
+        const iso = `${lastDay.getFullYear()}-${String(lastDay.getMonth() + 1).padStart(2, "0")}-${String(lastDay.getDate()).padStart(2, "0")}`;
+        await supabase
+          .from("profiles")
+          .update({ last_billed_month: iso })
+          .eq("user_id", user.id);
+      }
+    } catch (e) {
+      console.warn("last_billed_month update failed", e);
+    }
+
     toast({
       title: "PDF erstellt! ✅",
       description: `Rechnung ${invoiceNumber} wurde heruntergeladen.`,
     });
   };
+
 
   return (
     <div className="min-h-screen p-4 sm:p-8">
