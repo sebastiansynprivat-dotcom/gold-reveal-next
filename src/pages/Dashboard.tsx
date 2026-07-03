@@ -1850,7 +1850,7 @@ export default function Dashboard() {
 
         {/* Billing countdown + Invoice button */}
         <DashboardBillingInfo
-          onNavigate={() => navigate("/rechnung")}
+          onNavigate={(monthISO) => navigate(`/rechnung?month=${monthISO}`)}
           groupName={groupName}
           userId={user?.id ?? ""}
           rate={rate}
@@ -2210,106 +2210,96 @@ function DashboardBillingInfo({
   userId,
   rate,
 }: {
-  onNavigate: () => void;
+  onNavigate: (monthISO: string) => void;
   groupName: string;
   userId: string;
   rate: number;
 }) {
   const [createdAt, setCreatedAt] = useState<Date | null>(null);
-  const [lastBilledMonth, setLastBilledMonth] = useState<Date | null>(null); // last day of the month that was already billed
-  // openMonths: closed months since last_billed_month with their revenue
-  const [openMonths, setOpenMonths] = useState<{ monthStart: Date; total: number }[] | null>(
-    null,
-  );
+  const [selectedMonth, setSelectedMonth] = useState<Date>(() => {
+    const n = new Date();
+    // Suggested = previous full month (e.g. on July 20 → June)
+    return new Date(n.getFullYear(), n.getMonth() - 1, 1);
+  });
+  const [revenue, setRevenue] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!userId) return;
-    (async () => {
-      const { data: prof } = await supabase
-        .from("profiles")
-        .select("created_at, last_billed_month")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      const created = prof?.created_at ? new Date(prof.created_at) : null;
-      if (created) setCreatedAt(created);
-      const lbm = (prof as { last_billed_month?: string | null } | null)?.last_billed_month
-        ? new Date((prof as { last_billed_month: string }).last_billed_month)
-        : null;
-      setLastBilledMonth(lbm);
-
-      const now = new Date();
-      const lastClosedMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
-      if (!created || created > lastClosedMonthEnd) {
-        setOpenMonths([]);
-        return;
-      }
-
-      // Determine first open month: month after last_billed_month, or month of created_at
-      const firstOpen = lbm
-        ? new Date(lbm.getFullYear(), lbm.getMonth() + 1, 1)
-        : new Date(created.getFullYear(), created.getMonth(), 1);
-
-      if (firstOpen > lastClosedMonthEnd) {
-        setOpenMonths([]);
-        return;
-      }
-
-      const fromStr = format(firstOpen, "yyyy-MM-dd");
-      const toStr = format(lastClosedMonthEnd, "yyyy-MM-dd");
-      const { data } = await supabase.rpc("get_chatter_revenue_series", {
-        p_from: fromStr,
-        p_to: toStr,
+    supabase
+      .from("profiles")
+      .select("created_at")
+      .eq("user_id", userId)
+      .maybeSingle()
+      .then(({ data }) => {
+        const created = data?.created_at ? new Date(data.created_at) : null;
+        if (created) {
+          setCreatedAt(created);
+          // If user has no billable previous month yet → default to current month for preview
+          const now = new Date();
+          const lastClosedMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+          if (created > lastClosedMonthEnd) {
+            setSelectedMonth(new Date(now.getFullYear(), now.getMonth(), 1));
+          }
+        }
       });
-
-      // Bucket revenue by month
-      const buckets = new Map<string, number>();
-      const cursor = new Date(firstOpen);
-      while (cursor <= lastClosedMonthEnd) {
-        const key = `${cursor.getFullYear()}-${cursor.getMonth()}`;
-        buckets.set(key, 0);
-        cursor.setMonth(cursor.getMonth() + 1);
-      }
-      (data as { date: string; total: number | string }[] | null)?.forEach((row) => {
-        const d = new Date(row.date);
-        const key = `${d.getFullYear()}-${d.getMonth()}`;
-        buckets.set(key, (buckets.get(key) || 0) + Number(row.total));
-      });
-
-      const months: { monthStart: Date; total: number }[] = [];
-      buckets.forEach((total, key) => {
-        const [y, m] = key.split("-").map(Number);
-        months.push({ monthStart: new Date(y, m, 1), total });
-      });
-      months.sort((a, b) => a.monthStart.getTime() - b.monthStart.getTime());
-      setOpenMonths(months);
-    })();
   }, [userId]);
 
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+    setLoading(true);
+    const from = format(selectedMonth, "yyyy-MM-dd");
+    const to = format(
+      new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 0),
+      "yyyy-MM-dd",
+    );
+    supabase
+      .rpc("get_chatter_revenue_series", { p_from: from, p_to: to })
+      .then(({ data }) => {
+        if (cancelled) return;
+        const total = (data as { total: number | string }[] | null)?.reduce(
+          (s, r) => s + Number(r.total || 0),
+          0,
+        ) ?? 0;
+        setRevenue(total);
+      })
+      .then(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [userId, selectedMonth]);
+
   const now = new Date();
-  const lastClosedMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
-  const hasBillablePrev = createdAt ? createdAt <= lastClosedMonthEnd : false;
+  const monthEnd = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 0);
+  const unlockDate = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + 1, 20);
+  const unlocked = now >= unlockDate;
+  const isCurrent =
+    selectedMonth.getFullYear() === now.getFullYear() &&
+    selectedMonth.getMonth() === now.getMonth();
 
-  const openTotal = (openMonths || []).reduce((s, m) => s + m.total, 0);
-  const revenueKnown = hasBillablePrev && openMonths !== null && openMonths.length > 0;
+  const earliestMonth = createdAt
+    ? new Date(createdAt.getFullYear(), createdAt.getMonth(), 1)
+    : null;
+  const latestMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const canPrev = !earliestMonth || selectedMonth > earliestMonth;
+  const canNext = selectedMonth < latestMonth;
 
-  // Period displayed: from first open month → last closed month
-  const periodStart =
-    openMonths && openMonths.length > 0
-      ? openMonths[0].monthStart
-      : new Date(now.getFullYear(), now.getMonth(), 1);
-  const periodEnd = hasBillablePrev
-    ? lastClosedMonthEnd
-    : new Date(now.getFullYear(), now.getMonth() + 1, 0);
-
-  // Freischaltung: 20. des Monats nach dem zuletzt abgeschlossenen Monat
-  const unlockDate = new Date(periodEnd.getFullYear(), periodEnd.getMonth() + 1, 20);
-  const finalCommDate = new Date(periodEnd.getFullYear(), periodEnd.getMonth() + 1, 0);
-  const unlocked = now >= unlockDate && revenueKnown;
   const daysToUnlock = Math.max(0, differenceInDays(unlockDate, now));
+  const payout = revenue !== null && rate > 0 ? revenue * rate : null;
 
-  const payout = revenueKnown ? openTotal * rate : null;
-  const meets50 = payout !== null ? payout >= 50 : true;
+  const nlFmt = (v: number) =>
+    v.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  const monthLabel = format(selectedMonth, "MMMM yyyy", { locale: de });
+  const periodStr = `${format(selectedMonth, "dd. MMM", { locale: de })} – ${format(monthEnd, "dd. MMM yyyy", { locale: de })}`;
+
+  const shiftMonth = (delta: number) =>
+    setSelectedMonth(new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + delta, 1));
+
+  const goInvoice = () => onNavigate(format(selectedMonth, "yyyy-MM"));
 
   const referralText = `Hey! Ich arbeite als Chatter und verdiene damit richtig gutes Geld. Wenn du Lust hast, bewirb dich hier!\n\nWichtig: Gib bei der Bewerbung meinen Gruppennamen „${groupName}" an – das ist nötig, damit es zugeordnet werden kann!\n\nLink zum Bewerben: ${REFERRAL_LINKEDIN_URL}`;
 
@@ -2322,14 +2312,6 @@ function DashboardBillingInfo({
     }
   };
 
-  const nlFmt = (v: number) =>
-    v.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-  const monthsBreakdown =
-    openMonths && openMonths.length > 0
-      ? openMonths.map((m) => `${format(m.monthStart, "MMM", { locale: de })} ${nlFmt(m.total)} €`).join(" + ")
-      : "";
-
   return (
     <div className="space-y-3">
       <div className="glass-card-subtle rounded-xl p-4 space-y-3">
@@ -2341,15 +2323,36 @@ function DashboardBillingInfo({
           <BillingAudioDialog />
         </div>
 
+        {/* Month selector */}
+        <div className="flex items-center justify-between rounded-lg border border-border/70 bg-background/40 px-2 py-1.5">
+          <button
+            type="button"
+            onClick={() => canPrev && shiftMonth(-1)}
+            disabled={!canPrev}
+            aria-label="Vorheriger Monat"
+            className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-accent/10 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <div className="text-center">
+            <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Monat wählen</p>
+            <p className="text-sm font-bold text-foreground capitalize">{monthLabel}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => canNext && shiftMonth(1)}
+            disabled={!canNext}
+            aria-label="Nächster Monat"
+            className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-accent/10 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-0.5">
-            <p className="text-[10px] text-muted-foreground">
-              {openMonths && openMonths.length > 1 ? "Offener Zeitraum" : "Zeitraum"}
-            </p>
-            <p className="text-xs font-semibold text-foreground">
-              {format(periodStart, "dd. MMM", { locale: de })} –{" "}
-              {format(periodEnd, "dd. MMM yyyy", { locale: de })}
-            </p>
+            <p className="text-[10px] text-muted-foreground">Zeitraum</p>
+            <p className="text-xs font-semibold text-foreground">{periodStr}</p>
           </div>
           <div className="space-y-0.5">
             <p className="text-[10px] text-muted-foreground">
@@ -2361,13 +2364,13 @@ function DashboardBillingInfo({
           </div>
         </div>
 
-        {!unlocked && hasBillablePrev && (
+        {!unlocked && !isCurrent && (
           <div className="space-y-1">
             <div className="flex justify-between text-[10px] text-muted-foreground">
               <span>
-                Noch <span className="text-accent font-semibold">{daysToUnlock}</span> Tage
+                Noch <span className="text-accent font-semibold">{daysToUnlock}</span> Tage bis Freischaltung
               </span>
-              <span>Auszahlung Ende {format(finalCommDate, "MMM", { locale: de })}</span>
+              <span>{format(unlockDate, "dd.MM.")}</span>
             </div>
             <div className="w-full h-1.5 rounded-full bg-secondary overflow-hidden shimmer-bar">
               <div
@@ -2378,8 +2381,8 @@ function DashboardBillingInfo({
                     Math.max(
                       0,
                       Math.round(
-                        ((differenceInDays(now, periodStart) + 1) /
-                          Math.max(1, differenceInDays(unlockDate, periodStart))) *
+                        ((differenceInDays(now, selectedMonth) + 1) /
+                          Math.max(1, differenceInDays(unlockDate, selectedMonth))) *
                           100,
                       ),
                     ),
@@ -2390,21 +2393,40 @@ function DashboardBillingInfo({
           </div>
         )}
 
-        {/* Offener Umsatz / Payout transparency */}
+        {isCurrent && (
+          <div className="rounded-lg border border-accent/20 bg-accent/5 p-2.5 text-[11px] text-muted-foreground leading-relaxed">
+            📊 Der aktuelle Monat läuft noch – die Werte sind eine Vorschau und aktualisieren sich täglich.
+          </div>
+        )}
+
+        {/* Revenue + expected payout */}
         <div className="rounded-lg border border-border/70 bg-background/40 p-3 space-y-2">
           <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
-            {openMonths && openMonths.length > 1 ? "Offener Umsatz (aufgelaufen)" : "Dein Auszahlungsbetrag"}
+            Voraussichtliche Auszahlung
           </p>
-          {revenueKnown ? (
+          {loading ? (
+            <p className="text-xs text-muted-foreground">Lädt …</p>
+          ) : revenue === null || revenue === 0 ? (
+            <p className="text-xs text-muted-foreground">
+              Für {monthLabel} liegt uns noch kein Umsatz vor.
+            </p>
+          ) : rate <= 0 ? (
+            <div className="flex items-baseline justify-between gap-3">
+              <div>
+                <p className="text-[10px] text-muted-foreground">Umsatz</p>
+                <p className="text-sm font-semibold text-foreground">{nlFmt(revenue)} €</p>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] text-muted-foreground">Anteil</p>
+                <p className="text-xs text-muted-foreground">Wird bald zugewiesen</p>
+              </div>
+            </div>
+          ) : (
             <>
-              <div className="flex items-baseline justify-between">
+              <div className="flex items-baseline justify-between gap-3">
                 <div>
-                  <p className="text-[10px] text-muted-foreground">
-                    {openMonths && openMonths.length > 1
-                      ? `${openMonths.length} offene Monate`
-                      : `Umsatz ${format(periodStart, "MMM", { locale: de })}`}
-                  </p>
-                  <p className="text-sm font-semibold text-foreground">{nlFmt(openTotal)} €</p>
+                  <p className="text-[10px] text-muted-foreground">Umsatz</p>
+                  <p className="text-sm font-semibold text-foreground">{nlFmt(revenue)} €</p>
                 </div>
                 <div className="text-muted-foreground text-xs">×&nbsp;{Math.round(rate * 100)}%</div>
                 <div className="text-right">
@@ -2412,40 +2434,18 @@ function DashboardBillingInfo({
                   <p className="text-lg font-bold text-gold-gradient">{nlFmt(payout || 0)} €</p>
                 </div>
               </div>
-              {openMonths && openMonths.length > 1 && (
-                <p className="text-[10px] text-muted-foreground/80 italic">{monthsBreakdown}</p>
-              )}
               <p className="text-[10px] text-muted-foreground leading-relaxed">
-                Du erhältst deinen prozentualen Anteil ({Math.round(rate * 100)}%) vom
-                Gesamtumsatz – nicht den vollen Umsatz deines Accounts.
+                Das ist der Betrag, den du für <span className="capitalize">{monthLabel}</span> ungefähr in Rechnung stellen kannst.
               </p>
             </>
-          ) : (
-            <p className="text-xs text-muted-foreground">
-              {lastBilledMonth
-                ? "Kein offener Umsatz – alles Bisherige wurde bereits abgerechnet."
-                : "Dein Auszahlungsbetrag für den aktuellen Zeitraum wird nach Monatsende berechnet."}
-            </p>
           )}
         </div>
 
-        {/* Fee / threshold hint */}
-        {revenueKnown && !meets50 && (
+        {payout !== null && payout > 0 && payout < 50 && !isCurrent && (
           <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 space-y-1">
-            <p className="text-xs font-semibold text-amber-300">
-              ⚠️ Empfehlung: Auszahlung erst ab 50&nbsp;€
-            </p>
+            <p className="text-xs font-semibold text-amber-300">⚠️ Empfehlung: Auszahlung erst ab 50&nbsp;€</p>
             <p className="text-[11px] text-muted-foreground leading-relaxed">
-              Dein offener Auszahlungsbetrag liegt unter 50&nbsp;€. Warte einfach den nächsten
-              Monat ab – dein Umsatz wird weiter aufsummiert und du sparst dir die
-              <strong> Auszahlungsgebühr von 5&nbsp;€</strong>.
-            </p>
-          </div>
-        )}
-        {revenueKnown && meets50 && (
-          <div className="rounded-lg border border-accent/30 bg-accent/5 p-3">
-            <p className="text-[11px] text-muted-foreground leading-relaxed">
-              ✅ Du liegst über der 50&nbsp;€-Grenze – du kannst deine Auszahlung ohne Gebühr anfragen.
+              Unter 50&nbsp;€ fällt eine Auszahlungsgebühr von <strong>5&nbsp;€</strong> an – warte ggf. den nächsten Monat ab.
             </p>
           </div>
         )}
@@ -2453,12 +2453,13 @@ function DashboardBillingInfo({
 
 
       <Button
-        onClick={onNavigate}
-        disabled={!unlocked}
-        className="w-full h-11 bg-gradient-to-r from-accent to-accent/80 text-accent-foreground hover:brightness-110 transition-all disabled:opacity-60"
+        onClick={goInvoice}
+        className="w-full h-11 bg-gradient-to-r from-accent to-accent/80 text-accent-foreground hover:brightness-110 transition-all"
       >
         <FileText className="mr-2 h-4 w-4" />
-        {unlocked ? "Rechnung erstellen" : `Freigeschaltet ab ${format(unlockDate, "dd.MM.")}`}
+        {unlocked
+          ? `Rechnung für ${monthLabel} erstellen`
+          : `Rechnungsvorschau ${monthLabel} öffnen`}
       </Button>
 
       {/* Referral Card */}

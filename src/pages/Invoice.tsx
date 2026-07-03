@@ -15,9 +15,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { format, endOfMonth, addMonths, differenceInDays } from "date-fns";
 import { de } from "date-fns/locale";
-import { CalendarIcon, FileDown, ArrowLeft, Clock, AlertCircle, MessageCircle } from "lucide-react";
+import { CalendarIcon, FileDown, ArrowLeft, Clock, AlertCircle, MessageCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import jsPDF from "jspdf";
 
@@ -32,9 +32,23 @@ const DEFAULT_DESCRIPTION = "Verwaltung und Vertrieb von digitalen Inhalten";
 
 const Invoice = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const { user } = useAuth();
   const [groupName, setGroupName] = useState("");
+
+  // Selected billing month (from ?month=YYYY-MM, default = previous full month)
+  const selectedMonth = (() => {
+    const raw = searchParams.get("month");
+    if (raw) {
+      const m = raw.match(/^(\d{4})-(\d{1,2})$/);
+      if (m) return new Date(parseInt(m[1], 10), parseInt(m[2], 10) - 1, 1);
+    }
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  })();
+  const selectedMonthEnd = endOfMonth(selectedMonth);
+  const selectedMonthLabel = format(selectedMonth, "MMMM yyyy", { locale: de });
 
   useEffect(() => {
     if (!user) return;
@@ -87,8 +101,8 @@ const Invoice = () => {
   }, [saveData, senderName, senderAddress, senderCity, taxId, bankName, iban, bic]);
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [invoiceDate, setInvoiceDate] = useState<Date | undefined>(new Date());
-  const [periodFrom, setPeriodFrom] = useState("");
-  const [periodTo, setPeriodTo] = useState("");
+  const [periodFrom, setPeriodFrom] = useState(format(selectedMonth, "dd.MM.yyyy"));
+  const [periodTo, setPeriodTo] = useState(format(selectedMonthEnd, "dd.MM.yyyy"));
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState(DEFAULT_DESCRIPTION);
   const [vatNote, setVatNote] = useState("Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.");
@@ -265,7 +279,7 @@ const Invoice = () => {
         </div>
 
         {/* Countdown section */}
-        <BillingCountdown onUnlock={setBillingUnlocked} />
+        <BillingCountdown onUnlock={setBillingUnlocked} selectedMonth={selectedMonth} monthLabel={selectedMonthLabel} onChangeMonth={(iso) => navigate(`/rechnung?month=${iso}`)} />
 
         {/* Chat-Assistant Hinweis */}
         <button
@@ -348,9 +362,13 @@ const Invoice = () => {
 
         {!billingUnlocked && (
           <Card className="glass-card-subtle border-border">
-            <CardContent className="p-4 text-center space-y-2">
-              <p className="text-sm text-muted-foreground">
-                Das Rechnungsformular wird freigeschaltet, sobald dein Abrechnungszeitraum erreicht ist.
+            <CardContent className="p-4 space-y-2">
+              <p className="text-sm text-foreground font-semibold">
+                🔍 Vorschau-Modus für {selectedMonthLabel}
+              </p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Du kannst dir die Abrechnung schon anschauen und alle Rechnungsdaten hinterlegen. Der{" "}
+                <strong>PDF-Download</strong> wird automatisch freigeschaltet, sobald der Abrechnungszeitraum erreicht ist (ab dem 20. des Folgemonats).
               </p>
             </CardContent>
           </Card>
@@ -410,7 +428,7 @@ Mein Gruppenname ist: ${groupName || "[Bitte Gruppenname im Dashboard eintragen]
           </Card>
         )}
 
-        <div className={!billingUnlocked ? "opacity-40 pointer-events-none select-none space-y-6" : "space-y-6"}>
+        <div className="space-y-6">
           {/* Sender */}
           <Card className="glass-card border-border">
             <CardHeader className="pb-3">
@@ -540,12 +558,12 @@ Mein Gruppenname ist: ${groupName || "[Bitte Gruppenname im Dashboard eintragen]
           {/* Generate button */}
           <Button
             onClick={generatePDF}
-            disabled={!allFieldsFilled}
+            disabled={!allFieldsFilled || !billingUnlocked}
             className="w-full h-12 text-base font-bold gold-glow disabled:opacity-50 disabled:cursor-not-allowed"
             size="lg"
           >
             <FileDown className="mr-2 h-5 w-5" />
-            Rechnung als PDF herunterladen
+            {billingUnlocked ? "Rechnung als PDF herunterladen" : `PDF-Download noch gesperrt (Vorschau ${selectedMonthLabel})`}
           </Button>
         </div>
 
@@ -558,7 +576,17 @@ Mein Gruppenname ist: ${groupName || "[Bitte Gruppenname im Dashboard eintragen]
   );
 };
 
-function BillingCountdown({ onUnlock }: { onUnlock: (v: boolean) => void }) {
+function BillingCountdown({
+  onUnlock,
+  selectedMonth,
+  monthLabel,
+  onChangeMonth,
+}: {
+  onUnlock: (v: boolean) => void;
+  selectedMonth: Date;
+  monthLabel: string;
+  onChangeMonth: (iso: string) => void;
+}) {
   const { user } = useAuth();
   const [createdAt, setCreatedAt] = useState<Date | null>(null);
 
@@ -575,23 +603,27 @@ function BillingCountdown({ onUnlock }: { onUnlock: (v: boolean) => void }) {
   }, [user]);
 
   const now = new Date();
-  const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
-  const hasBillablePrev = createdAt ? createdAt <= previousMonthEnd : false;
-
-  const periodStart = hasBillablePrev
-    ? new Date(now.getFullYear(), now.getMonth() - 1, 1)
-    : new Date(now.getFullYear(), now.getMonth(), 1);
-  const periodEnd = hasBillablePrev
-    ? previousMonthEnd
-    : new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const periodStart = selectedMonth;
+  const periodEnd = endOfMonth(selectedMonth);
   const unlockDate = new Date(periodEnd.getFullYear(), periodEnd.getMonth() + 1, 20);
-  const unlocked = createdAt ? now >= unlockDate : false;
+  const unlocked = now >= unlockDate;
   const daysLeft = Math.max(0, differenceInDays(unlockDate, now));
   const totalDays = Math.max(1, differenceInDays(unlockDate, periodStart));
   const progressPct = Math.min(
     100,
     Math.max(0, Math.round(((totalDays - daysLeft) / totalDays) * 100)),
   );
+
+  const earliestMonth = createdAt
+    ? new Date(createdAt.getFullYear(), createdAt.getMonth(), 1)
+    : null;
+  const latestMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const canPrev = !earliestMonth || selectedMonth > earliestMonth;
+  const canNext = selectedMonth < latestMonth;
+  const shiftMonth = (delta: number) => {
+    const next = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + delta, 1);
+    onChangeMonth(format(next, "yyyy-MM"));
+  };
 
   useEffect(() => {
     onUnlock(unlocked);
@@ -611,6 +643,32 @@ function BillingCountdown({ onUnlock }: { onUnlock: (v: boolean) => void }) {
             )}
           </div>
           {!unlocked && <BillingAudioDialog />}
+        </div>
+
+        {/* Month selector */}
+        <div className="flex items-center justify-between rounded-lg border border-border/70 bg-background/40 px-2 py-1.5">
+          <button
+            type="button"
+            onClick={() => canPrev && shiftMonth(-1)}
+            disabled={!canPrev}
+            aria-label="Vorheriger Monat"
+            className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-accent/10 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <div className="text-center">
+            <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Monat wählen</p>
+            <p className="text-sm font-bold text-foreground capitalize">{monthLabel}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => canNext && shiftMonth(1)}
+            disabled={!canNext}
+            aria-label="Nächster Monat"
+            className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-accent/10 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
