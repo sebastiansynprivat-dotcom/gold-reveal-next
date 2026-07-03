@@ -237,6 +237,26 @@ export default function ModelGroupsPanel({
     });
   }, [models, selected]);
 
+  const filteredGroupModels = useMemo(() => {
+    const q = modelSearch.trim().toLowerCase();
+    if (!q) return groupModels;
+    return groupModels.filter((m) =>
+      [m.name, m.username, m.referrer_tag, m.referral_source]
+        .filter(Boolean)
+        .some((v) => String(v).toLowerCase().includes(q)),
+    );
+  }, [groupModels, modelSearch]);
+
+  const filteredGroups = useMemo(() => {
+    const q = groupSearch.trim().toLowerCase();
+    if (!q) return groups;
+    return groups.filter((g) =>
+      [g.name, g.slug, g.referral_source, g.notes]
+        .filter(Boolean)
+        .some((v) => String(v).toLowerCase().includes(q)),
+    );
+  }, [groups, groupSearch]);
+
   // One-click: persist auto-matched models into the group (sets group_id on all matches)
   const syncByTag = async () => {
     if (!selected) return;
