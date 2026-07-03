@@ -248,11 +248,11 @@ export default function ModelGroupsPanel({
     const q = modelSearch.trim().toLowerCase();
     if (!q) return groupModels;
     return groupModels.filter((m) =>
-      [m.name, m.username, m.referrer_tag, m.referral_source]
+      [m.name, m.username, m.referrer_tag, m.referral_source, ...(emailsByModel[m.id] || [])]
         .filter(Boolean)
         .some((v) => String(v).toLowerCase().includes(q)),
     );
-  }, [groupModels, modelSearch]);
+  }, [groupModels, modelSearch, emailsByModel]);
 
   const filteredGroups = useMemo(() => {
     const q = groupSearch.trim().toLowerCase();
