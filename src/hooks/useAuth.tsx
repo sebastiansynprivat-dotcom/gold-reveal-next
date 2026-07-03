@@ -16,6 +16,13 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 const ADMIN_SESSION_KEY = "admin_impersonation_origin_session";
 const ADMIN_SESSION_BACKUP_KEY = "admin_impersonation_origin_session_backup";
 
+const clearAdminBackupStorage = () => {
+  try {
+    window.sessionStorage.removeItem(ADMIN_SESSION_KEY);
+    window.localStorage.removeItem(ADMIN_SESSION_BACKUP_KEY);
+  } catch {}
+};
+
 const restorePendingAdminSession = async () => {
   if (typeof window === "undefined") return;
   if (window.location.pathname.startsWith("/admin/chatter/")) return;
@@ -23,9 +30,33 @@ const restorePendingAdminSession = async () => {
   const raw = window.sessionStorage.getItem(ADMIN_SESSION_KEY) || window.localStorage.getItem(ADMIN_SESSION_BACKUP_KEY);
   if (!raw) return;
 
+  // Only ever restore inside the same tab that started the impersonation.
+  // Without a sessionStorage marker this is a stale backup left over from a
+  // previous impersonation — using it would clobber the current (valid)
+  // session with an expired refresh_token and log the user out on every
+  // reload. Clean it up and bail.
+  const hasTabMarker = !!window.sessionStorage.getItem(ADMIN_SESSION_KEY);
+  if (!hasTabMarker) {
+    clearAdminBackupStorage();
+    return;
+  }
+
+  // If there is already a valid session in this browser, don't overwrite it
+  // with the backup. Just discard the backup so future reloads are stable.
+  try {
+    const { data: { session: currentSession } } = await supabase.auth.getSession();
+    if (currentSession?.access_token) {
+      clearAdminBackupStorage();
+      return;
+    }
+  } catch {}
+
   try {
     const backup = JSON.parse(raw);
-    if (!backup?.access_token || !backup?.refresh_token) return;
+    if (!backup?.access_token || !backup?.refresh_token) {
+      clearAdminBackupStorage();
+      return;
+    }
 
     if (backup.auth_storage_key && backup.raw_storage_value) {
       window.localStorage.setItem(backup.auth_storage_key, backup.raw_storage_value);
@@ -36,12 +67,15 @@ const restorePendingAdminSession = async () => {
       refresh_token: backup.refresh_token,
     });
 
-    if (!error) {
-      window.sessionStorage.removeItem(ADMIN_SESSION_KEY);
-      window.localStorage.removeItem(ADMIN_SESSION_BACKUP_KEY);
+    // Always clear the backup after an attempt so we never re-apply it on a
+    // later reload — successful or not.
+    clearAdminBackupStorage();
+    if (error) {
+      // Backup was stale/expired; nothing else to do, normal auth flow will
+      // pick up whatever session is still valid (or send to /auth).
     }
   } catch {
-    // If the backup is malformed, leave normal auth handling untouched.
+    clearAdminBackupStorage();
   }
 };
 
