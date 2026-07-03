@@ -740,13 +740,27 @@ export default function ModelGroupsPanel({
 
 
               <div className="pr-2">
+                <div className="relative mb-3">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                  <Input
+                    value={modelSearch}
+                    onChange={(e) => setModelSearch(e.target.value)}
+                    placeholder="Model suchen (Name, @username, Tag)…"
+                    className="h-8 pl-8 text-xs bg-muted/30 border-accent/15"
+                  />
+                </div>
                 <div className="space-y-2">
                   {groupModels.length === 0 && (
                     <p className="text-center text-sm text-muted-foreground py-8">
                       Keine Models in dieser Gruppe. Setze die Gruppe beim Anlegen oder Bearbeiten eines Models.
                     </p>
                   )}
-                  {groupModels.map((m) => {
+                  {groupModels.length > 0 && filteredGroupModels.length === 0 && (
+                    <p className="text-center text-sm text-muted-foreground py-8">
+                      Keine Treffer für „{modelSearch}".
+                    </p>
+                  )}
+                  {filteredGroupModels.map((m) => {
                     const baseDefault =
                       m.commission_override != null && Number(m.commission_override) !== 0
                         ? Number(m.commission_override)
