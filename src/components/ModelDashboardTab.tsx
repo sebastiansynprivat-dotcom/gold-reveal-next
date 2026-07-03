@@ -4230,15 +4230,36 @@ export default function ModelDashboardTab() {
                 autoApplyTrigger={calcTrigger}
                 onInvoiceCreated={async ({ creditNoteNumber, netAmount, servicePeriodStart, servicePeriodEnd }) => {
                   if (!selectedModelId || !servicePeriodStart || !servicePeriodEnd) return;
-                  // Compute all (year, month) pairs covered by the invoice service period
-                  const start = new Date(servicePeriodStart);
-                  const end = new Date(servicePeriodEnd);
-                  const pairs: Array<{ y: number; m: number }> = [];
-                  const cur = new Date(start.getFullYear(), start.getMonth(), 1);
-                  while (cur <= end) {
-                    pairs.push({ y: cur.getFullYear(), m: cur.getMonth() + 1 });
-                    cur.setMonth(cur.getMonth() + 1);
+                  // Authoritative source: main fetch month + all extraBillings with data.
+                  // This guarantees every unbilled month bundled into this invoice gets
+                  // marked as billed, independent of any timezone parsing of the period strings.
+                  const pairSet = new Set<string>();
+                  const addPair = (y: number, m: number) => pairSet.add(`${y}-${m}`);
+                  addPair(fetchYear, fetchMonth);
+                  for (const eb of extraBillings) {
+                    if (eb.data) addPair(eb.year, eb.month);
                   }
+                  // Also derive pairs from the service period range (parsed as local dates)
+                  // as a defensive fallback in case additional unbilled months exist between
+                  // the earliest and latest selected month (e.g. no-revenue placeholders).
+                  const parseYmd = (s: string): [number, number, number] | null => {
+                    const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+                    return m ? [parseInt(m[1], 10), parseInt(m[2], 10), parseInt(m[3], 10)] : null;
+                  };
+                  const sp = parseYmd(servicePeriodStart);
+                  const ep = parseYmd(servicePeriodEnd);
+                  if (sp && ep) {
+                    const cur = new Date(sp[0], sp[1] - 1, 1);
+                    const endD = new Date(ep[0], ep[1] - 1, 1);
+                    while (cur <= endD) {
+                      addPair(cur.getFullYear(), cur.getMonth() + 1);
+                      cur.setMonth(cur.getMonth() + 1);
+                    }
+                  }
+                  const pairs: Array<{ y: number; m: number }> = Array.from(pairSet).map((k) => {
+                    const [y, m] = k.split("-").map(Number);
+                    return { y, m };
+                  });
                   if (pairs.length === 0) return;
                   const nowIso = new Date().toISOString();
                   const invoiceCurrency = (modelForm as any).invoice_currency || modelForm.currency || "EUR";
@@ -4291,10 +4312,12 @@ export default function ModelDashboardTab() {
                       })
                       .eq("model_id", selectedModelId)
                       .eq("last_fetched_month", m)
-                      .eq("last_fetched_year", y);
+                      .eq("last_fetched_year", y)
+                      .is("billed_at", null);
                   }));
                   setBillingHistoryTick((t) => t + 1);
-                  toast.success(`${pairs.length} Monat${pairs.length === 1 ? "" : "e"} als abgerechnet markiert`);
+                  const markedCount = rows.filter((r) => r.row).length;
+                  toast.success(`${markedCount} Monat${markedCount === 1 ? "" : "e"} als abgerechnet markiert`);
                 }}
 
                 suggestedAmount={verdienst}
