@@ -1104,6 +1104,37 @@ export default function ModelDashboardTab() {
 
 
 
+  // ─── Load current-month 4Based revenue (USD) for the "payout missing (>$50)" filter ───
+  useEffect(() => {
+    if (!only4BMissingPayout) return;
+    let cancelled = false;
+    (async () => {
+      const now = new Date();
+      const month = now.getMonth() + 1;
+      const year = now.getFullYear();
+      const ids = models.map((m) => m.id);
+      if (ids.length === 0) return;
+      // Chunk to keep URL sane
+      const chunkSize = 200;
+      const map: Record<string, number> = {};
+      for (let i = 0; i < ids.length; i += chunkSize) {
+        const chunk = ids.slice(i, i + chunkSize);
+        const { data } = await (supabase as any)
+          .from("payout_revenue")
+          .select("model_id, fourbased_revenue")
+          .in("model_id", chunk)
+          .eq("last_fetched_month", month)
+          .eq("last_fetched_year", year);
+        ((data as any[]) || []).forEach((r) => {
+          const v = Number(r.fourbased_revenue);
+          if (Number.isFinite(v)) map[r.model_id] = Math.max(map[r.model_id] || 0, v);
+        });
+      }
+      if (!cancelled) setFbRevenueByModel(map);
+    })();
+    return () => { cancelled = true; };
+  }, [only4BMissingPayout, models]);
+
   // ─── Filter + sort models ───
   const filteredModels = useMemo(() => {
     let list = models;
@@ -1111,6 +1142,9 @@ export default function ModelDashboardTab() {
       list = list.filter((m) => String((m as any).model_agency || "shex").toLowerCase() === agencyFilter);
     }
     if (showDuplicatesOnly) list = list.filter((m) => duplicateModelIds.has(m.id));
+    if (only4BMissingPayout) {
+      list = list.filter((m) => !m.fourbased_payout_configured && (fbRevenueByModel[m.id] || 0) > 50);
+    }
     if (steckbriefFilter === "filled") list = list.filter((m) => filledProfileIds.has(m.id));
     else if (steckbriefFilter === "empty") list = list.filter((m) => !filledProfileIds.has(m.id));
     else if (steckbriefFilter === "confirmed") list = list.filter((m) => profileStatusOf(m.id) === "confirmed");
@@ -1133,11 +1167,11 @@ export default function ModelDashboardTab() {
       list = [...list].sort((a, b) => ts(b.id) - ts(a.id));
     }
     return list;
-  }, [models, searchQuery, showDuplicatesOnly, duplicateModelIds, agencyFilter, steckbriefFilter, filledProfileIds, profileMeta, sortMode]);
+  }, [models, searchQuery, showDuplicatesOnly, duplicateModelIds, agencyFilter, steckbriefFilter, filledProfileIds, profileMeta, sortMode, only4BMissingPayout, fbRevenueByModel]);
 
   const MODEL_PAGE_SIZE = 20;
   const [modelPage, setModelPage] = useState(1);
-  useEffect(() => { setModelPage(1); }, [searchQuery, showDuplicatesOnly, agencyFilter, steckbriefFilter, sortMode]);
+  useEffect(() => { setModelPage(1); }, [searchQuery, showDuplicatesOnly, agencyFilter, steckbriefFilter, sortMode, only4BMissingPayout]);
   const modelTotalPages = Math.max(1, Math.ceil(filteredModels.length / MODEL_PAGE_SIZE));
   const pagedModels = useMemo(
     () => filteredModels.slice((modelPage - 1) * MODEL_PAGE_SIZE, modelPage * MODEL_PAGE_SIZE),
