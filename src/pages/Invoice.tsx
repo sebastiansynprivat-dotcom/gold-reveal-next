@@ -362,9 +362,13 @@ const Invoice = () => {
 
         {!billingUnlocked && (
           <Card className="glass-card-subtle border-border">
-            <CardContent className="p-4 text-center space-y-2">
-              <p className="text-sm text-muted-foreground">
-                Das Rechnungsformular wird freigeschaltet, sobald dein Abrechnungszeitraum erreicht ist.
+            <CardContent className="p-4 space-y-2">
+              <p className="text-sm text-foreground font-semibold">
+                🔍 Vorschau-Modus für {selectedMonthLabel}
+              </p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Du kannst dir die Abrechnung schon anschauen und alle Rechnungsdaten hinterlegen. Der{" "}
+                <strong>PDF-Download</strong> wird automatisch freigeschaltet, sobald der Abrechnungszeitraum erreicht ist (ab dem 20. des Folgemonats).
               </p>
             </CardContent>
           </Card>
