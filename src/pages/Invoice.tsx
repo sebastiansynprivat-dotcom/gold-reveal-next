@@ -279,7 +279,7 @@ const Invoice = () => {
         </div>
 
         {/* Countdown section */}
-        <BillingCountdown onUnlock={setBillingUnlocked} />
+        <BillingCountdown onUnlock={setBillingUnlocked} selectedMonth={selectedMonth} monthLabel={selectedMonthLabel} onChangeMonth={(iso) => navigate(`/rechnung?month=${iso}`)} />
 
         {/* Chat-Assistant Hinweis */}
         <button
