@@ -760,15 +760,39 @@ export default function ModelGroupsPanel({
 
 
               <div className="pr-2">
-                <div className="relative mb-3">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-                  <Input
-                    value={modelSearch}
-                    onChange={(e) => setModelSearch(e.target.value)}
-                    placeholder="Model suchen (Name, @username, Tag, E-Mail)…"
-                    className="h-8 pl-8 text-xs bg-muted/30 border-accent/15"
-                  />
+                <div className="mb-3 space-y-2">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                    <Input
+                      value={modelSearch}
+                      onChange={(e) => setModelSearch(e.target.value)}
+                      placeholder="Model suchen (Name, @username, Tag, E-Mail)…"
+                      className="h-8 pl-8 text-xs bg-muted/30 border-accent/15"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setOnlyMissingFbPayout((v) => !v)}
+                    className={
+                      "w-full text-left text-[11px] rounded-md border px-2.5 py-1.5 transition-colors " +
+                      (onlyMissingFbPayout
+                        ? "border-amber-500/50 bg-amber-500/10 text-amber-300"
+                        : "border-accent/15 bg-muted/20 text-muted-foreground hover:text-foreground")
+                    }
+                    title="Nur 4Based-Models mit >$50 Umsatz ohne aktivierten Auszahlungs-Haken"
+                  >
+                    <span className="inline-flex items-center gap-1.5">
+                      <span
+                        className={
+                          "inline-block h-2 w-2 rounded-full " +
+                          (onlyMissingFbPayout ? "bg-amber-400" : "bg-muted-foreground/50")
+                        }
+                      />
+                      4Based-Auszahlung fehlt (Umsatz &gt; $50)
+                    </span>
+                  </button>
                 </div>
+
                 <div className="space-y-2">
                   {groupModels.length === 0 && (
                     <p className="text-center text-sm text-muted-foreground py-8">
