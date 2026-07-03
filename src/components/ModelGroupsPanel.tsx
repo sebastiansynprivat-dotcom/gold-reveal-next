@@ -204,7 +204,7 @@ export default function ModelGroupsPanel({
       supabase
         .from("models")
         .select(
-          "id, name, username, group_id, commission_override, commission_override_fourbased, commission_override_maloum, commission_override_brezzels, referral_source, referrer_tag, revenue_percentage, currency, crypto_address, payment_method, bank_name, bank_iban, bank_bic, bank_account_holder, provider_name_override, provider_address, provider_is_business, provider_vat_id"
+          "id, name, username, group_id, commission_override, commission_override_fourbased, commission_override_maloum, commission_override_brezzels, referral_source, referrer_tag, revenue_percentage, currency, crypto_address, payment_method, bank_name, bank_iban, bank_bic, bank_account_holder, provider_name_override, provider_address, provider_is_business, provider_vat_id, fourbased_payout_configured"
         )
         .order("name"),
       supabase.from("accounts").select("model_id, platform, account_email, account_domain").not("model_id", "is", null),
