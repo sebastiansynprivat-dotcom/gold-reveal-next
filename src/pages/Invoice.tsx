@@ -645,6 +645,32 @@ function BillingCountdown({
           {!unlocked && <BillingAudioDialog />}
         </div>
 
+        {/* Month selector */}
+        <div className="flex items-center justify-between rounded-lg border border-border/70 bg-background/40 px-2 py-1.5">
+          <button
+            type="button"
+            onClick={() => canPrev && shiftMonth(-1)}
+            disabled={!canPrev}
+            aria-label="Vorheriger Monat"
+            className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-accent/10 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <div className="text-center">
+            <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Monat wählen</p>
+            <p className="text-sm font-bold text-foreground capitalize">{monthLabel}</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => canNext && shiftMonth(1)}
+            disabled={!canNext}
+            aria-label="Nächster Monat"
+            className="h-8 w-8 flex items-center justify-center rounded-md hover:bg-accent/10 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-0.5">
             <p className="text-[10px] text-muted-foreground">Zeitraum</p>
