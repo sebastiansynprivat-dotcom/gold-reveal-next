@@ -24,6 +24,7 @@ import {
   X,
   FileDown,
   Download,
+  Search,
 
 } from "lucide-react";
 import { generateProviderInvoicePdf, downloadPdf } from "@/lib/providerInvoicePdf";
@@ -105,6 +106,8 @@ export default function ModelGroupsPanel({
   const [billingLoading, setBillingLoading] = useState(false);
   const [fetchAllProgress, setFetchAllProgress] = useState<{ done: number; total: number } | null>(null);
   const [revenueByModel, setRevenueByModel] = useState<Record<string, { fb: number | null; ml: number | null; br: number | null; fetched_at: string | null }>>({});
+  const [groupSearch, setGroupSearch] = useState("");
+  const [modelSearch, setModelSearch] = useState("");
 
   const loadRevenueForPeriod = async () => {
     if (!selected) return;
@@ -233,6 +236,26 @@ export default function ModelGroupsPanel({
       return false;
     });
   }, [models, selected]);
+
+  const filteredGroupModels = useMemo(() => {
+    const q = modelSearch.trim().toLowerCase();
+    if (!q) return groupModels;
+    return groupModels.filter((m) =>
+      [m.name, m.username, m.referrer_tag, m.referral_source]
+        .filter(Boolean)
+        .some((v) => String(v).toLowerCase().includes(q)),
+    );
+  }, [groupModels, modelSearch]);
+
+  const filteredGroups = useMemo(() => {
+    const q = groupSearch.trim().toLowerCase();
+    if (!q) return groups;
+    return groups.filter((g) =>
+      [g.name, g.slug, g.referral_source, g.notes]
+        .filter(Boolean)
+        .some((v) => String(v).toLowerCase().includes(q)),
+    );
+  }, [groups, groupSearch]);
 
   // One-click: persist auto-matched models into the group (sets group_id on all matches)
   const syncByTag = async () => {
@@ -717,13 +740,27 @@ export default function ModelGroupsPanel({
 
 
               <div className="pr-2">
+                <div className="relative mb-3">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                  <Input
+                    value={modelSearch}
+                    onChange={(e) => setModelSearch(e.target.value)}
+                    placeholder="Model suchen (Name, @username, Tag)…"
+                    className="h-8 pl-8 text-xs bg-muted/30 border-accent/15"
+                  />
+                </div>
                 <div className="space-y-2">
                   {groupModels.length === 0 && (
                     <p className="text-center text-sm text-muted-foreground py-8">
                       Keine Models in dieser Gruppe. Setze die Gruppe beim Anlegen oder Bearbeiten eines Models.
                     </p>
                   )}
-                  {groupModels.map((m) => {
+                  {groupModels.length > 0 && filteredGroupModels.length === 0 && (
+                    <p className="text-center text-sm text-muted-foreground py-8">
+                      Keine Treffer für „{modelSearch}".
+                    </p>
+                  )}
+                  {filteredGroupModels.map((m) => {
                     const baseDefault =
                       m.commission_override != null && Number(m.commission_override) !== 0
                         ? Number(m.commission_override)
@@ -882,10 +919,19 @@ export default function ModelGroupsPanel({
           ) : (
             // ── Group list ──
             <div className="space-y-3">
-              <div className="flex justify-end">
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                  <Input
+                    value={groupSearch}
+                    onChange={(e) => setGroupSearch(e.target.value)}
+                    placeholder="Gruppe suchen (Name, Tag, Notiz)…"
+                    className="h-9 pl-8 text-xs bg-muted/30 border-accent/15"
+                  />
+                </div>
                 <Button
                   size="sm"
-                  className="bg-accent text-accent-foreground gold-glow"
+                  className="bg-accent text-accent-foreground gold-glow shrink-0"
                   onClick={() => {
                     resetForm();
                     setCreateOpen(true);
@@ -898,9 +944,13 @@ export default function ModelGroupsPanel({
                 <p className="text-center text-sm text-muted-foreground py-12">
                   Noch keine Gruppen. Lege z. B. "Opus" oder "DI" an.
                 </p>
+              ) : filteredGroups.length === 0 ? (
+                <p className="text-center text-sm text-muted-foreground py-12">
+                  Keine Treffer für „{groupSearch}".
+                </p>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {groups.map((g) => {
+                  {filteredGroups.map((g) => {
                     const tag = (g.referral_source || "").trim().toLowerCase();
                     const count = models.filter(
                       (m) =>
