@@ -17,7 +17,7 @@ import { format, endOfMonth, addMonths, differenceInDays } from "date-fns";
 import { de } from "date-fns/locale";
 import { CalendarIcon, FileDown, ArrowLeft, Clock, AlertCircle, MessageCircle } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import jsPDF from "jspdf";
 
