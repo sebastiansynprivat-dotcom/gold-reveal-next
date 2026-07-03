@@ -752,7 +752,7 @@ export default function ModelGroupsPanel({
                   <Input
                     value={modelSearch}
                     onChange={(e) => setModelSearch(e.target.value)}
-                    placeholder="Model suchen (Name, @username, Tag)…"
+                    placeholder="Model suchen (Name, @username, Tag, E-Mail)…"
                     className="h-8 pl-8 text-xs bg-muted/30 border-accent/15"
                   />
                 </div>
