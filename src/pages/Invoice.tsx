@@ -576,7 +576,17 @@ Mein Gruppenname ist: ${groupName || "[Bitte Gruppenname im Dashboard eintragen]
   );
 };
 
-function BillingCountdown({ onUnlock }: { onUnlock: (v: boolean) => void }) {
+function BillingCountdown({
+  onUnlock,
+  selectedMonth,
+  monthLabel,
+  onChangeMonth,
+}: {
+  onUnlock: (v: boolean) => void;
+  selectedMonth: Date;
+  monthLabel: string;
+  onChangeMonth: (iso: string) => void;
+}) {
   const { user } = useAuth();
   const [createdAt, setCreatedAt] = useState<Date | null>(null);
 
@@ -593,23 +603,27 @@ function BillingCountdown({ onUnlock }: { onUnlock: (v: boolean) => void }) {
   }, [user]);
 
   const now = new Date();
-  const previousMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
-  const hasBillablePrev = createdAt ? createdAt <= previousMonthEnd : false;
-
-  const periodStart = hasBillablePrev
-    ? new Date(now.getFullYear(), now.getMonth() - 1, 1)
-    : new Date(now.getFullYear(), now.getMonth(), 1);
-  const periodEnd = hasBillablePrev
-    ? previousMonthEnd
-    : new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  const periodStart = selectedMonth;
+  const periodEnd = endOfMonth(selectedMonth);
   const unlockDate = new Date(periodEnd.getFullYear(), periodEnd.getMonth() + 1, 20);
-  const unlocked = createdAt ? now >= unlockDate : false;
+  const unlocked = now >= unlockDate;
   const daysLeft = Math.max(0, differenceInDays(unlockDate, now));
   const totalDays = Math.max(1, differenceInDays(unlockDate, periodStart));
   const progressPct = Math.min(
     100,
     Math.max(0, Math.round(((totalDays - daysLeft) / totalDays) * 100)),
   );
+
+  const earliestMonth = createdAt
+    ? new Date(createdAt.getFullYear(), createdAt.getMonth(), 1)
+    : null;
+  const latestMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const canPrev = !earliestMonth || selectedMonth > earliestMonth;
+  const canNext = selectedMonth < latestMonth;
+  const shiftMonth = (delta: number) => {
+    const next = new Date(selectedMonth.getFullYear(), selectedMonth.getMonth() + delta, 1);
+    onChangeMonth(format(next, "yyyy-MM"));
+  };
 
   useEffect(() => {
     onUnlock(unlocked);
