@@ -24,6 +24,7 @@ import {
   X,
   FileDown,
   Download,
+  Search,
 
 } from "lucide-react";
 import { generateProviderInvoicePdf, downloadPdf } from "@/lib/providerInvoicePdf";
