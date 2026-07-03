@@ -428,7 +428,7 @@ Mein Gruppenname ist: ${groupName || "[Bitte Gruppenname im Dashboard eintragen]
           </Card>
         )}
 
-        <div className={!billingUnlocked ? "opacity-40 pointer-events-none select-none space-y-6" : "space-y-6"}>
+        <div className="space-y-6">
           {/* Sender */}
           <Card className="glass-card border-border">
             <CardHeader className="pb-3">
