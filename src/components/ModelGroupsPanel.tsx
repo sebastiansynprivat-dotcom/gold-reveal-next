@@ -64,7 +64,9 @@ type ModelLite = {
   provider_address: string;
   provider_is_business: boolean;
   provider_vat_id: string;
+  fourbased_payout_configured?: boolean | null;
 };
+
 
 type LineItem = {
   model_id: string;
