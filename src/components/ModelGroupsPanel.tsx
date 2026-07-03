@@ -129,21 +129,25 @@ export default function ModelGroupsPanel({
     if (ids.length === 0) { setRevenueByModel({}); return; }
     const { data } = await (supabase as any)
       .from("payout_revenue")
-      .select("model_id, fourbased_revenue, maloum_revenue, brezzels_revenue, last_fetched_at")
+      .select("model_id, fourbased_revenue, maloum_revenue, brezzels_revenue, last_fetched_at, raw_response")
       .in("model_id", ids)
       .eq("last_fetched_month", month)
       .eq("last_fetched_year", year);
     const map: Record<string, any> = {};
     ((data as any[]) || []).forEach((r) => {
+      const raw = r.raw_response || {};
+      const errs = Array.isArray(raw.errors) ? raw.errors : [];
       map[r.model_id] = {
         fb: r.fourbased_revenue == null ? null : Number(r.fourbased_revenue),
         ml: r.maloum_revenue == null ? null : Number(r.maloum_revenue),
         br: r.brezzels_revenue == null ? null : Number(r.brezzels_revenue),
         fetched_at: r.last_fetched_at,
+        errors: errs,
       };
     });
     setRevenueByModel(map);
   };
+
 
   const fetchAllInGroup = async () => {
     if (!selected || groupModels.length === 0) return;
