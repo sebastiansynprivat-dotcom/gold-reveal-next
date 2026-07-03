@@ -316,6 +316,9 @@ export default function ModelDashboardTab() {
   const [steckbriefFilter, setSteckbriefFilter] = useState<"all" | "filled" | "empty" | "confirmed" | "unconfirmed">("all");
   const [sortMode, setSortMode] = useState<"name" | "newest">("name");
   const [agencyBilling, setAgencyBilling] = useState<Record<string, boolean>>({ shex: false, syn: false });
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [only4BMissingPayout, setOnly4BMissingPayout] = useState(false);
+  const [fbRevenueByModel, setFbRevenueByModel] = useState<Record<string, number>>({});
 
   // Load global per-agency billing-in-progress flags
   useEffect(() => {
