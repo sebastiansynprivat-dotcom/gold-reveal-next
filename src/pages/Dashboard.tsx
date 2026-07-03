@@ -1850,7 +1850,7 @@ export default function Dashboard() {
 
         {/* Billing countdown + Invoice button */}
         <DashboardBillingInfo
-          onNavigate={() => navigate("/rechnung")}
+          onNavigate={(monthISO) => navigate(`/rechnung?month=${monthISO}`)}
           groupName={groupName}
           userId={user?.id ?? ""}
           rate={rate}
