@@ -64,7 +64,9 @@ type ModelLite = {
   provider_address: string;
   provider_is_business: boolean;
   provider_vat_id: string;
+  fourbased_payout_configured?: boolean | null;
 };
+
 
 type LineItem = {
   model_id: string;
@@ -109,6 +111,8 @@ export default function ModelGroupsPanel({
   const [revenueByModel, setRevenueByModel] = useState<Record<string, { fb: number | null; ml: number | null; br: number | null; fetched_at: string | null }>>({});
   const [groupSearch, setGroupSearch] = useState("");
   const [modelSearch, setModelSearch] = useState("");
+  const [onlyMissingFbPayout, setOnlyMissingFbPayout] = useState(false);
+
 
   const loadRevenueForPeriod = async () => {
     if (!selected) return;
@@ -200,7 +204,7 @@ export default function ModelGroupsPanel({
       supabase
         .from("models")
         .select(
-          "id, name, username, group_id, commission_override, commission_override_fourbased, commission_override_maloum, commission_override_brezzels, referral_source, referrer_tag, revenue_percentage, currency, crypto_address, payment_method, bank_name, bank_iban, bank_bic, bank_account_holder, provider_name_override, provider_address, provider_is_business, provider_vat_id"
+          "id, name, username, group_id, commission_override, commission_override_fourbased, commission_override_maloum, commission_override_brezzels, referral_source, referrer_tag, revenue_percentage, currency, crypto_address, payment_method, bank_name, bank_iban, bank_bic, bank_account_holder, provider_name_override, provider_address, provider_is_business, provider_vat_id, fourbased_payout_configured"
         )
         .order("name"),
       supabase.from("accounts").select("model_id, platform, account_email, account_domain").not("model_id", "is", null),
@@ -246,13 +250,22 @@ export default function ModelGroupsPanel({
 
   const filteredGroupModels = useMemo(() => {
     const q = modelSearch.trim().toLowerCase();
-    if (!q) return groupModels;
-    return groupModels.filter((m) =>
+    let list = groupModels;
+    if (onlyMissingFbPayout) {
+      list = list.filter((m) => {
+        const has4B = (platformsByModel[m.id] || []).some((p) => String(p).toLowerCase() === "4based");
+        const fbUsd = Number(revenueByModel[m.id]?.fb || 0);
+        return has4B && fbUsd > 50 && !m.fourbased_payout_configured;
+      });
+    }
+    if (!q) return list;
+    return list.filter((m) =>
       [m.name, m.username, m.referrer_tag, m.referral_source, ...(emailsByModel[m.id] || [])]
         .filter(Boolean)
         .some((v) => String(v).toLowerCase().includes(q)),
     );
-  }, [groupModels, modelSearch, emailsByModel]);
+  }, [groupModels, modelSearch, emailsByModel, onlyMissingFbPayout, platformsByModel, revenueByModel]);
+
 
   const filteredGroups = useMemo(() => {
     const q = groupSearch.trim().toLowerCase();
@@ -747,15 +760,39 @@ export default function ModelGroupsPanel({
 
 
               <div className="pr-2">
-                <div className="relative mb-3">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
-                  <Input
-                    value={modelSearch}
-                    onChange={(e) => setModelSearch(e.target.value)}
-                    placeholder="Model suchen (Name, @username, Tag, E-Mail)…"
-                    className="h-8 pl-8 text-xs bg-muted/30 border-accent/15"
-                  />
+                <div className="mb-3 space-y-2">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                    <Input
+                      value={modelSearch}
+                      onChange={(e) => setModelSearch(e.target.value)}
+                      placeholder="Model suchen (Name, @username, Tag, E-Mail)…"
+                      className="h-8 pl-8 text-xs bg-muted/30 border-accent/15"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setOnlyMissingFbPayout((v) => !v)}
+                    className={
+                      "w-full text-left text-[11px] rounded-md border px-2.5 py-1.5 transition-colors " +
+                      (onlyMissingFbPayout
+                        ? "border-amber-500/50 bg-amber-500/10 text-amber-300"
+                        : "border-accent/15 bg-muted/20 text-muted-foreground hover:text-foreground")
+                    }
+                    title="Nur 4Based-Models mit >$50 Umsatz ohne aktivierten Auszahlungs-Haken"
+                  >
+                    <span className="inline-flex items-center gap-1.5">
+                      <span
+                        className={
+                          "inline-block h-2 w-2 rounded-full " +
+                          (onlyMissingFbPayout ? "bg-amber-400" : "bg-muted-foreground/50")
+                        }
+                      />
+                      4Based-Auszahlung fehlt (Umsatz &gt; $50)
+                    </span>
+                  </button>
                 </div>
+
                 <div className="space-y-2">
                   {groupModels.length === 0 && (
                     <p className="text-center text-sm text-muted-foreground py-8">
