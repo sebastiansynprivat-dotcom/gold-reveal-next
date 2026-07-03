@@ -558,12 +558,12 @@ Mein Gruppenname ist: ${groupName || "[Bitte Gruppenname im Dashboard eintragen]
           {/* Generate button */}
           <Button
             onClick={generatePDF}
-            disabled={!allFieldsFilled}
+            disabled={!allFieldsFilled || !billingUnlocked}
             className="w-full h-12 text-base font-bold gold-glow disabled:opacity-50 disabled:cursor-not-allowed"
             size="lg"
           >
             <FileDown className="mr-2 h-5 w-5" />
-            Rechnung als PDF herunterladen
+            {billingUnlocked ? "Rechnung als PDF herunterladen" : `PDF-Download noch gesperrt (Vorschau ${selectedMonthLabel})`}
           </Button>
         </div>
 
