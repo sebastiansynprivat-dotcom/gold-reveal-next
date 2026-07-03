@@ -919,10 +919,19 @@ export default function ModelGroupsPanel({
           ) : (
             // ── Group list ──
             <div className="space-y-3">
-              <div className="flex justify-end">
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                  <Input
+                    value={groupSearch}
+                    onChange={(e) => setGroupSearch(e.target.value)}
+                    placeholder="Gruppe suchen (Name, Tag, Notiz)…"
+                    className="h-9 pl-8 text-xs bg-muted/30 border-accent/15"
+                  />
+                </div>
                 <Button
                   size="sm"
-                  className="bg-accent text-accent-foreground gold-glow"
+                  className="bg-accent text-accent-foreground gold-glow shrink-0"
                   onClick={() => {
                     resetForm();
                     setCreateOpen(true);
@@ -935,9 +944,13 @@ export default function ModelGroupsPanel({
                 <p className="text-center text-sm text-muted-foreground py-12">
                   Noch keine Gruppen. Lege z. B. "Opus" oder "DI" an.
                 </p>
+              ) : filteredGroups.length === 0 ? (
+                <p className="text-center text-sm text-muted-foreground py-12">
+                  Keine Treffer für „{groupSearch}".
+                </p>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {groups.map((g) => {
+                  {filteredGroups.map((g) => {
                     const tag = (g.referral_source || "").trim().toLowerCase();
                     const count = models.filter(
                       (m) =>
