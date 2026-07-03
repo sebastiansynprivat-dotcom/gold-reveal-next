@@ -108,10 +108,13 @@ export default function ModelGroupsPanel({
   });
   const [billingLoading, setBillingLoading] = useState(false);
   const [fetchAllProgress, setFetchAllProgress] = useState<{ done: number; total: number } | null>(null);
-  const [revenueByModel, setRevenueByModel] = useState<Record<string, { fb: number | null; ml: number | null; br: number | null; fetched_at: string | null }>>({});
+  const [revenueByModel, setRevenueByModel] = useState<Record<string, { fb: number | null; ml: number | null; br: number | null; fetched_at: string | null; errors: Array<{ platform?: string; message?: string; code?: string }> }>>({});
+  const [retryingModels, setRetryingModels] = useState<Record<string, { until: number; platforms: string[] }>>({});
+  const [retryTick, setRetryTick] = useState(0);
   const [groupSearch, setGroupSearch] = useState("");
   const [modelSearch, setModelSearch] = useState("");
   const [onlyMissingFbPayout, setOnlyMissingFbPayout] = useState(false);
+
 
 
   const loadRevenueForPeriod = async () => {
@@ -126,20 +129,65 @@ export default function ModelGroupsPanel({
     if (ids.length === 0) { setRevenueByModel({}); return; }
     const { data } = await (supabase as any)
       .from("payout_revenue")
-      .select("model_id, fourbased_revenue, maloum_revenue, brezzels_revenue, last_fetched_at")
+      .select("model_id, fourbased_revenue, maloum_revenue, brezzels_revenue, last_fetched_at, raw_response")
       .in("model_id", ids)
       .eq("last_fetched_month", month)
       .eq("last_fetched_year", year);
     const map: Record<string, any> = {};
     ((data as any[]) || []).forEach((r) => {
+      const raw = r.raw_response || {};
+      const errs = Array.isArray(raw.errors) ? raw.errors : [];
       map[r.model_id] = {
         fb: r.fourbased_revenue == null ? null : Number(r.fourbased_revenue),
         ml: r.maloum_revenue == null ? null : Number(r.maloum_revenue),
         br: r.brezzels_revenue == null ? null : Number(r.brezzels_revenue),
         fetched_at: r.last_fetched_at,
+        errors: errs,
       };
     });
     setRevenueByModel(map);
+  };
+
+
+  const retryModelFetch = async (modelId: string, modelName: string) => {
+    const ref = new Date(billingPeriod.from || new Date().toISOString().slice(0, 10));
+    const month = ref.getMonth() + 1;
+    const year = ref.getFullYear();
+    try {
+      const { data, error } = await supabase.functions.invoke("fetch-model-revenue", {
+        body: { model_id: modelId, month, year },
+      });
+      if (error) throw new Error(error.message);
+      if ((data as any)?.error) throw new Error((data as any).error);
+      await loadRevenueForPeriod();
+      const errs = ((data as any)?.errors ?? []) as Array<{ code?: string; platform?: string; message?: string }>;
+      const stillLimited = errs.some((e) => e.code === "RATE_LIMITED");
+      setRetryingModels((prev) => {
+        const next = { ...prev };
+        delete next[modelId];
+        return next;
+      });
+      if (stillLimited) {
+        toast.warning(`${modelName}: erneut rate-limitiert — bitte manuell nachfetchen.`);
+      } else if (errs.length === 0) {
+        toast.success(`${modelName}: Umsatz aktualisiert ✅`);
+      }
+    } catch (err: any) {
+      setRetryingModels((prev) => {
+        const next = { ...prev };
+        delete next[modelId];
+        return next;
+      });
+      toast.error(`${modelName}: Retry fehlgeschlagen — ${err?.message || "Unbekannter Fehler"}`);
+    }
+  };
+
+  const scheduleRetry = (modelId: string, modelName: string, platforms: string[], delayMs: number) => {
+    const until = Date.now() + delayMs;
+    setRetryingModels((prev) => ({ ...prev, [modelId]: { until, platforms } }));
+    window.setTimeout(() => {
+      retryModelFetch(modelId, modelName);
+    }, delayMs);
   };
 
   const fetchAllInGroup = async () => {
@@ -153,7 +201,8 @@ export default function ModelGroupsPanel({
       return;
     }
     setFetchAllProgress({ done: 0, total: targets.length });
-    const allErrors: Array<{ model: string; platform?: string; message?: string }> = [];
+    const allErrors: Array<{ model: string; platform?: string; message?: string; code?: string }> = [];
+    const rateLimitedByModel: Record<string, { name: string; platforms: Set<string> }> = {};
     let successCount = 0;
     for (let i = 0; i < targets.length; i++) {
       const m = targets[i];
@@ -163,9 +212,15 @@ export default function ModelGroupsPanel({
         });
         if (error) throw new Error(error.message);
         if ((data as any)?.error) throw new Error((data as any).error);
-        const errs = ((data as any)?.errors ?? []) as Array<{ platform?: string; message?: string }>;
+        const errs = ((data as any)?.errors ?? []) as Array<{ code?: string; platform?: string; message?: string }>;
         if (errs.length > 0) {
-          errs.forEach((e) => allErrors.push({ model: m.name, platform: e.platform, message: e.message }));
+          errs.forEach((e) => {
+            allErrors.push({ model: m.name, platform: e.platform, message: e.message, code: e.code });
+            if (e.code === "RATE_LIMITED") {
+              const bucket = (rateLimitedByModel[m.id] ||= { name: m.name, platforms: new Set() });
+              if (e.platform) bucket.platforms.add(e.platform);
+            }
+          });
         } else {
           successCount++;
         }
@@ -176,16 +231,36 @@ export default function ModelGroupsPanel({
     }
     setFetchAllProgress(null);
     await loadRevenueForPeriod();
-    if (allErrors.length > 0) {
-      toast.error(`Fetch abgeschlossen — ${successCount}/${targets.length} ok, ${allErrors.length} Fehler`, {
-        description: allErrors.map((e) => `${e.model}${e.platform ? ` (${e.platform})` : ""}: ${e.message ?? "Unbekannter Fehler"}`).join("\n"),
+
+    // Schedule auto-retry for rate-limited models after 120s (respects backend self-throttle window)
+    const rlEntries = Object.entries(rateLimitedByModel);
+    if (rlEntries.length > 0) {
+      const delayMs = 120_000;
+      rlEntries.forEach(([id, info]) => {
+        scheduleRetry(id, info.name, Array.from(info.platforms), delayMs);
+      });
+      toast.warning(
+        `${rlEntries.length} Model(s) rate-limitiert — automatischer Retry in 2 Min.`,
+        {
+          description: rlEntries.map(([, info]) => `${info.name} (${Array.from(info.platforms).join(", ") || "?"})`).join("\n"),
+          duration: 10000,
+          style: { whiteSpace: "pre-line" },
+        },
+      );
+    }
+
+    const nonRateErrors = allErrors.filter((e) => e.code !== "RATE_LIMITED");
+    if (nonRateErrors.length > 0) {
+      toast.error(`Fetch abgeschlossen — ${successCount}/${targets.length} ok, ${nonRateErrors.length} Fehler`, {
+        description: nonRateErrors.map((e) => `${e.model}${e.platform ? ` (${e.platform})` : ""}: ${e.message ?? "Unbekannter Fehler"}`).join("\n"),
         duration: 12000,
         style: { whiteSpace: "pre-line" },
       });
-    } else {
+    } else if (rlEntries.length === 0) {
       toast.success(`Umsatz für ${targets.length} Models aktualisiert ✅ (${String(month).padStart(2, "0")}/${year})`);
     }
   };
+
 
 
   const [form, setForm] = useState({
@@ -236,6 +311,14 @@ export default function ModelGroupsPanel({
     if (open && selected) loadRevenueForPeriod();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected?.id, billingPeriod.from, models.length]);
+
+  // Tick every second while there are pending retries, so countdowns re-render
+  useEffect(() => {
+    if (Object.keys(retryingModels).length === 0) return;
+    const t = window.setInterval(() => setRetryTick((v) => v + 1), 1000);
+    return () => window.clearInterval(t);
+  }, [retryingModels]);
+
 
   // Auto-pull: include models explicitly in the group OR matching by referrer_tag (case-insensitive)
   const groupModels = useMemo(() => {
@@ -885,40 +968,99 @@ export default function ModelGroupsPanel({
                         </div>
                         {(() => {
                           const rev = revenueByModel[m.id];
+                          const retry = retryingModels[m.id];
+                          const secondsLeft = retry ? Math.max(0, Math.ceil((retry.until - Date.now()) / 1000)) : 0;
+                          const errs = rev?.errors || [];
+                          const rateLimitedPlatforms = Array.from(
+                            new Set(errs.filter((e) => e.code === "RATE_LIMITED" && e.platform).map((e) => e.platform as string)),
+                          );
+                          const otherErrs = errs.filter((e) => e.code !== "RATE_LIMITED");
+
                           if (!rev) {
                             return (
-                              <p className="text-[10px] text-muted-foreground/60 italic">
-                                Noch nicht gefetcht für diesen Zeitraum
-                              </p>
+                              <div className="space-y-1">
+                                <p className="text-[10px] text-muted-foreground/60 italic">
+                                  Noch nicht gefetcht für diesen Zeitraum
+                                </p>
+                                {retry && (
+                                  <div className="text-[10px] px-2 py-1 rounded-md border border-amber-500/40 bg-amber-500/10 text-amber-300">
+                                    ⏳ Rate-limitiert — automatischer Retry in {secondsLeft}s
+                                  </div>
+                                )}
+                              </div>
                             );
                           }
                           const fmt = (v: number | null, suffix = "€") =>
                             v == null ? "—" : `${suffix === "$" ? "$" : ""}${v.toLocaleString("de-DE", { maximumFractionDigits: 2 })}${suffix === "€" ? " €" : ""}`;
                           const total = (rev.fb ?? 0) + (rev.ml ?? 0) + (rev.br ?? 0);
                           return (
-                            <div className="flex flex-wrap items-center gap-1.5 p-2 rounded-md bg-accent/5 border border-accent/15">
-                              <span className="text-[9px] uppercase tracking-wider text-muted-foreground mr-1">Umsatz:</span>
-                              {rev.fb != null && (
-                                <Badge variant="outline" className="border-accent/30 text-accent text-[10px] px-1.5 py-0 h-5">
-                                  4Based {fmt(rev.fb, "$")}
-                                </Badge>
+                            <div className="space-y-1.5">
+                              <div className="flex flex-wrap items-center gap-1.5 p-2 rounded-md bg-accent/5 border border-accent/15">
+                                <span className="text-[9px] uppercase tracking-wider text-muted-foreground mr-1">Umsatz:</span>
+                                {rev.fb != null && (
+                                  <Badge variant="outline" className="border-accent/30 text-accent text-[10px] px-1.5 py-0 h-5">
+                                    4Based {fmt(rev.fb, "$")}
+                                  </Badge>
+                                )}
+                                {rev.ml != null && (
+                                  <Badge variant="outline" className="border-accent/30 text-accent text-[10px] px-1.5 py-0 h-5">
+                                    Maloum {fmt(rev.ml)}
+                                  </Badge>
+                                )}
+                                {rev.br != null && (
+                                  <Badge variant="outline" className="border-accent/30 text-accent text-[10px] px-1.5 py-0 h-5">
+                                    Brezzels {fmt(rev.br)}
+                                  </Badge>
+                                )}
+                                <span className="ml-auto text-[10px] text-accent font-semibold">
+                                  Σ {total.toLocaleString("de-DE", { maximumFractionDigits: 2 })}
+                                </span>
+                              </div>
+
+                              {(rateLimitedPlatforms.length > 0 || otherErrs.length > 0) && (
+                                <div className="flex flex-wrap items-center gap-1.5 p-2 rounded-md border border-amber-500/40 bg-amber-500/[0.08]">
+                                  <span className="text-[9px] uppercase tracking-wider text-amber-400/90 font-semibold">
+                                    ⚠ Scrape-Fehler:
+                                  </span>
+                                  {rateLimitedPlatforms.map((p) => (
+                                    <Badge
+                                      key={`rl-${p}`}
+                                      variant="outline"
+                                      className="border-amber-500/50 text-amber-300 bg-amber-500/10 text-[10px] px-1.5 py-0 h-5"
+                                      title="Externer Scraper hat sich selbst gedrosselt — wird automatisch erneut versucht"
+                                    >
+                                      {p} · rate-limited
+                                    </Badge>
+                                  ))}
+                                  {otherErrs.map((e, i) => (
+                                    <Badge
+                                      key={`err-${i}`}
+                                      variant="outline"
+                                      className="border-rose-500/50 text-rose-300 bg-rose-500/10 text-[10px] px-1.5 py-0 h-5"
+                                      title={e.message || ""}
+                                    >
+                                      {e.platform || "Fehler"}: {(e.message || "").slice(0, 40)}
+                                    </Badge>
+                                  ))}
+                                  {retry ? (
+                                    <span className="ml-auto text-[10px] text-amber-300 font-medium">
+                                      Retry in {secondsLeft}s
+                                    </span>
+                                  ) : rateLimitedPlatforms.length > 0 ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => scheduleRetry(m.id, m.name, rateLimitedPlatforms, 5_000)}
+                                      className="ml-auto text-[10px] text-amber-300 hover:text-amber-200 font-medium underline underline-offset-2"
+                                    >
+                                      Jetzt neu versuchen
+                                    </button>
+                                  ) : null}
+                                </div>
                               )}
-                              {rev.ml != null && (
-                                <Badge variant="outline" className="border-accent/30 text-accent text-[10px] px-1.5 py-0 h-5">
-                                  Maloum {fmt(rev.ml)}
-                                </Badge>
-                              )}
-                              {rev.br != null && (
-                                <Badge variant="outline" className="border-accent/30 text-accent text-[10px] px-1.5 py-0 h-5">
-                                  Brezzels {fmt(rev.br)}
-                                </Badge>
-                              )}
-                              <span className="ml-auto text-[10px] text-accent font-semibold">
-                                Σ {total.toLocaleString("de-DE", { maximumFractionDigits: 2 })}
-                              </span>
                             </div>
                           );
                         })()}
+
                         <div className="grid grid-cols-4 gap-2">
                           <div className="space-y-0.5">
                             <Label className="text-[9px] text-muted-foreground">Default Override</Label>
