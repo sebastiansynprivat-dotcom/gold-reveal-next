@@ -111,6 +111,8 @@ export default function ModelGroupsPanel({
   const [revenueByModel, setRevenueByModel] = useState<Record<string, { fb: number | null; ml: number | null; br: number | null; fetched_at: string | null }>>({});
   const [groupSearch, setGroupSearch] = useState("");
   const [modelSearch, setModelSearch] = useState("");
+  const [onlyMissingFbPayout, setOnlyMissingFbPayout] = useState(false);
+
 
   const loadRevenueForPeriod = async () => {
     if (!selected) return;
