@@ -968,40 +968,99 @@ export default function ModelGroupsPanel({
                         </div>
                         {(() => {
                           const rev = revenueByModel[m.id];
+                          const retry = retryingModels[m.id];
+                          const secondsLeft = retry ? Math.max(0, Math.ceil((retry.until - Date.now()) / 1000)) : 0;
+                          const errs = rev?.errors || [];
+                          const rateLimitedPlatforms = Array.from(
+                            new Set(errs.filter((e) => e.code === "RATE_LIMITED" && e.platform).map((e) => e.platform as string)),
+                          );
+                          const otherErrs = errs.filter((e) => e.code !== "RATE_LIMITED");
+
                           if (!rev) {
                             return (
-                              <p className="text-[10px] text-muted-foreground/60 italic">
-                                Noch nicht gefetcht für diesen Zeitraum
-                              </p>
+                              <div className="space-y-1">
+                                <p className="text-[10px] text-muted-foreground/60 italic">
+                                  Noch nicht gefetcht für diesen Zeitraum
+                                </p>
+                                {retry && (
+                                  <div className="text-[10px] px-2 py-1 rounded-md border border-amber-500/40 bg-amber-500/10 text-amber-300">
+                                    ⏳ Rate-limitiert — automatischer Retry in {secondsLeft}s
+                                  </div>
+                                )}
+                              </div>
                             );
                           }
                           const fmt = (v: number | null, suffix = "€") =>
                             v == null ? "—" : `${suffix === "$" ? "$" : ""}${v.toLocaleString("de-DE", { maximumFractionDigits: 2 })}${suffix === "€" ? " €" : ""}`;
                           const total = (rev.fb ?? 0) + (rev.ml ?? 0) + (rev.br ?? 0);
                           return (
-                            <div className="flex flex-wrap items-center gap-1.5 p-2 rounded-md bg-accent/5 border border-accent/15">
-                              <span className="text-[9px] uppercase tracking-wider text-muted-foreground mr-1">Umsatz:</span>
-                              {rev.fb != null && (
-                                <Badge variant="outline" className="border-accent/30 text-accent text-[10px] px-1.5 py-0 h-5">
-                                  4Based {fmt(rev.fb, "$")}
-                                </Badge>
+                            <div className="space-y-1.5">
+                              <div className="flex flex-wrap items-center gap-1.5 p-2 rounded-md bg-accent/5 border border-accent/15">
+                                <span className="text-[9px] uppercase tracking-wider text-muted-foreground mr-1">Umsatz:</span>
+                                {rev.fb != null && (
+                                  <Badge variant="outline" className="border-accent/30 text-accent text-[10px] px-1.5 py-0 h-5">
+                                    4Based {fmt(rev.fb, "$")}
+                                  </Badge>
+                                )}
+                                {rev.ml != null && (
+                                  <Badge variant="outline" className="border-accent/30 text-accent text-[10px] px-1.5 py-0 h-5">
+                                    Maloum {fmt(rev.ml)}
+                                  </Badge>
+                                )}
+                                {rev.br != null && (
+                                  <Badge variant="outline" className="border-accent/30 text-accent text-[10px] px-1.5 py-0 h-5">
+                                    Brezzels {fmt(rev.br)}
+                                  </Badge>
+                                )}
+                                <span className="ml-auto text-[10px] text-accent font-semibold">
+                                  Σ {total.toLocaleString("de-DE", { maximumFractionDigits: 2 })}
+                                </span>
+                              </div>
+
+                              {(rateLimitedPlatforms.length > 0 || otherErrs.length > 0) && (
+                                <div className="flex flex-wrap items-center gap-1.5 p-2 rounded-md border border-amber-500/40 bg-amber-500/[0.08]">
+                                  <span className="text-[9px] uppercase tracking-wider text-amber-400/90 font-semibold">
+                                    ⚠ Scrape-Fehler:
+                                  </span>
+                                  {rateLimitedPlatforms.map((p) => (
+                                    <Badge
+                                      key={`rl-${p}`}
+                                      variant="outline"
+                                      className="border-amber-500/50 text-amber-300 bg-amber-500/10 text-[10px] px-1.5 py-0 h-5"
+                                      title="Externer Scraper hat sich selbst gedrosselt — wird automatisch erneut versucht"
+                                    >
+                                      {p} · rate-limited
+                                    </Badge>
+                                  ))}
+                                  {otherErrs.map((e, i) => (
+                                    <Badge
+                                      key={`err-${i}`}
+                                      variant="outline"
+                                      className="border-rose-500/50 text-rose-300 bg-rose-500/10 text-[10px] px-1.5 py-0 h-5"
+                                      title={e.message || ""}
+                                    >
+                                      {e.platform || "Fehler"}: {(e.message || "").slice(0, 40)}
+                                    </Badge>
+                                  ))}
+                                  {retry ? (
+                                    <span className="ml-auto text-[10px] text-amber-300 font-medium">
+                                      Retry in {secondsLeft}s
+                                    </span>
+                                  ) : rateLimitedPlatforms.length > 0 ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => scheduleRetry(m.id, m.name, rateLimitedPlatforms, 5_000)}
+                                      className="ml-auto text-[10px] text-amber-300 hover:text-amber-200 font-medium underline underline-offset-2"
+                                    >
+                                      Jetzt neu versuchen
+                                    </button>
+                                  ) : null}
+                                </div>
                               )}
-                              {rev.ml != null && (
-                                <Badge variant="outline" className="border-accent/30 text-accent text-[10px] px-1.5 py-0 h-5">
-                                  Maloum {fmt(rev.ml)}
-                                </Badge>
-                              )}
-                              {rev.br != null && (
-                                <Badge variant="outline" className="border-accent/30 text-accent text-[10px] px-1.5 py-0 h-5">
-                                  Brezzels {fmt(rev.br)}
-                                </Badge>
-                              )}
-                              <span className="ml-auto text-[10px] text-accent font-semibold">
-                                Σ {total.toLocaleString("de-DE", { maximumFractionDigits: 2 })}
-                              </span>
                             </div>
                           );
                         })()}
+
                         <div className="grid grid-cols-4 gap-2">
                           <div className="space-y-0.5">
                             <Label className="text-[9px] text-muted-foreground">Default Override</Label>
