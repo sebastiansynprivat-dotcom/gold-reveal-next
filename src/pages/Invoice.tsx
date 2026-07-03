@@ -32,9 +32,23 @@ const DEFAULT_DESCRIPTION = "Verwaltung und Vertrieb von digitalen Inhalten";
 
 const Invoice = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const { user } = useAuth();
   const [groupName, setGroupName] = useState("");
+
+  // Selected billing month (from ?month=YYYY-MM, default = previous full month)
+  const selectedMonth = (() => {
+    const raw = searchParams.get("month");
+    if (raw) {
+      const m = raw.match(/^(\d{4})-(\d{1,2})$/);
+      if (m) return new Date(parseInt(m[1], 10), parseInt(m[2], 10) - 1, 1);
+    }
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  })();
+  const selectedMonthEnd = endOfMonth(selectedMonth);
+  const selectedMonthLabel = format(selectedMonth, "MMMM yyyy", { locale: de });
 
   useEffect(() => {
     if (!user) return;
