@@ -316,6 +316,9 @@ export default function ModelDashboardTab() {
   const [steckbriefFilter, setSteckbriefFilter] = useState<"all" | "filled" | "empty" | "confirmed" | "unconfirmed">("all");
   const [sortMode, setSortMode] = useState<"name" | "newest">("name");
   const [agencyBilling, setAgencyBilling] = useState<Record<string, boolean>>({ shex: false, syn: false });
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [only4BMissingPayout, setOnly4BMissingPayout] = useState(false);
+  const [fbRevenueByModel, setFbRevenueByModel] = useState<Record<string, number>>({});
 
   // Load global per-agency billing-in-progress flags
   useEffect(() => {
@@ -1101,6 +1104,37 @@ export default function ModelDashboardTab() {
 
 
 
+  // ─── Load current-month 4Based revenue (USD) for the "payout missing (>$50)" filter ───
+  useEffect(() => {
+    if (!only4BMissingPayout) return;
+    let cancelled = false;
+    (async () => {
+      const now = new Date();
+      const month = now.getMonth() + 1;
+      const year = now.getFullYear();
+      const ids = models.map((m) => m.id);
+      if (ids.length === 0) return;
+      // Chunk to keep URL sane
+      const chunkSize = 200;
+      const map: Record<string, number> = {};
+      for (let i = 0; i < ids.length; i += chunkSize) {
+        const chunk = ids.slice(i, i + chunkSize);
+        const { data } = await (supabase as any)
+          .from("payout_revenue")
+          .select("model_id, fourbased_revenue")
+          .in("model_id", chunk)
+          .eq("last_fetched_month", month)
+          .eq("last_fetched_year", year);
+        ((data as any[]) || []).forEach((r) => {
+          const v = Number(r.fourbased_revenue);
+          if (Number.isFinite(v)) map[r.model_id] = Math.max(map[r.model_id] || 0, v);
+        });
+      }
+      if (!cancelled) setFbRevenueByModel(map);
+    })();
+    return () => { cancelled = true; };
+  }, [only4BMissingPayout, models]);
+
   // ─── Filter + sort models ───
   const filteredModels = useMemo(() => {
     let list = models;
@@ -1108,6 +1142,9 @@ export default function ModelDashboardTab() {
       list = list.filter((m) => String((m as any).model_agency || "shex").toLowerCase() === agencyFilter);
     }
     if (showDuplicatesOnly) list = list.filter((m) => duplicateModelIds.has(m.id));
+    if (only4BMissingPayout) {
+      list = list.filter((m) => !m.fourbased_payout_configured && (fbRevenueByModel[m.id] || 0) > 50);
+    }
     if (steckbriefFilter === "filled") list = list.filter((m) => filledProfileIds.has(m.id));
     else if (steckbriefFilter === "empty") list = list.filter((m) => !filledProfileIds.has(m.id));
     else if (steckbriefFilter === "confirmed") list = list.filter((m) => profileStatusOf(m.id) === "confirmed");
@@ -1130,11 +1167,11 @@ export default function ModelDashboardTab() {
       list = [...list].sort((a, b) => ts(b.id) - ts(a.id));
     }
     return list;
-  }, [models, searchQuery, showDuplicatesOnly, duplicateModelIds, agencyFilter, steckbriefFilter, filledProfileIds, profileMeta, sortMode]);
+  }, [models, searchQuery, showDuplicatesOnly, duplicateModelIds, agencyFilter, steckbriefFilter, filledProfileIds, profileMeta, sortMode, only4BMissingPayout, fbRevenueByModel]);
 
   const MODEL_PAGE_SIZE = 20;
   const [modelPage, setModelPage] = useState(1);
-  useEffect(() => { setModelPage(1); }, [searchQuery, showDuplicatesOnly, agencyFilter, steckbriefFilter, sortMode]);
+  useEffect(() => { setModelPage(1); }, [searchQuery, showDuplicatesOnly, agencyFilter, steckbriefFilter, sortMode, only4BMissingPayout]);
   const modelTotalPages = Math.max(1, Math.ceil(filteredModels.length / MODEL_PAGE_SIZE));
   const pagedModels = useMemo(
     () => filteredModels.slice((modelPage - 1) * MODEL_PAGE_SIZE, modelPage * MODEL_PAGE_SIZE),
@@ -1783,7 +1820,7 @@ export default function ModelDashboardTab() {
         </div>
       </motion.div>
 
-      {/* ── Search + Duplikate-Filter ── */}
+      {/* ── Search + collapsible Filter/Aktionen ── */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
         <div className="flex items-center gap-2">
           <div className="relative flex-1 min-w-0">
@@ -1797,146 +1834,228 @@ export default function ModelDashboardTab() {
               />
             </div>
           </div>
-          <Button
-            type="button"
-            variant={showDuplicatesOnly ? "default" : "outline"}
-            size="sm"
-            onClick={() => setShowDuplicatesOnly((v) => !v)}
-            className={cn(
-              "h-9 gap-1.5 shrink-0 text-xs",
-              showDuplicatesOnly
-                ? "bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30"
-                : duplicateModelIds.size > 0
-                  ? "border-amber-500/40 text-amber-300 hover:bg-amber-500/10"
-                  : "",
-            )}
-            title="Models anzeigen, die eine E-Mail+Plattform mit einem anderen Model teilen"
-          >
-            <AlertTriangle className="h-3.5 w-3.5" />
-            Duplikate
-            {duplicateModelIds.size > 0 && (
-              <Badge
+          {(() => {
+            const activeCount =
+              (showDuplicatesOnly ? 1 : 0) +
+              (only4BMissingPayout ? 1 : 0) +
+              (agencyFilter !== "all" ? 1 : 0) +
+              (steckbriefFilter !== "all" ? 1 : 0) +
+              (sortMode !== "name" ? 1 : 0) +
+              (agencyBilling.syn ? 1 : 0) +
+              (agencyBilling.shex ? 1 : 0);
+            return (
+              <Button
+                type="button"
                 variant="outline"
-                className="ml-1 h-4 px-1.5 text-[10px] border-amber-500/40 text-amber-300 tabular-nums"
-              >
-                {duplicateModelIds.size}
-              </Badge>
-            )}
-          </Button>
-        </div>
-        {/* Agency filter + global per-agency billing toggle */}
-        <div className="mt-2 flex flex-wrap items-center gap-2">
-          <div className="inline-flex rounded-lg border border-border bg-secondary/40 p-0.5">
-            {(["all", "shex", "syn"] as const).map((a) => (
-              <button
-                key={a}
-                type="button"
-                onClick={() => setAgencyFilter(a)}
+                size="sm"
+                onClick={() => setFiltersOpen((v) => !v)}
                 className={cn(
-                  "px-2.5 py-1 rounded-md text-[11px] font-semibold uppercase tracking-wider transition-colors",
-                  agencyFilter === a
-                    ? "bg-accent text-accent-foreground"
-                    : "text-muted-foreground hover:text-foreground",
+                  "h-9 gap-1.5 shrink-0 text-xs",
+                  activeCount > 0 && "border-accent/40 text-accent hover:bg-accent/10",
                 )}
+                title="Filter & Aktionen ein-/ausklappen"
               >
-                {a === "all" ? "Alle" : a === "shex" ? "sheX" : "SYN"}
-              </button>
-            ))}
-          </div>
-          <div
-            className="inline-flex rounded-lg border border-border bg-secondary/40 p-0.5 flex-wrap"
-            title="Steckbrief-Status filtern"
-          >
-            {(["all", "filled", "empty", "confirmed", "unconfirmed"] as const).map((s) => {
-              const count =
-                s === "all"
-                  ? models.length
-                  : s === "filled"
-                    ? models.filter((m) => filledProfileIds.has(m.id)).length
-                    : s === "empty"
-                      ? models.filter((m) => !filledProfileIds.has(m.id)).length
-                      : s === "confirmed"
-                        ? models.filter((m) => profileStatusOf(m.id) === "confirmed").length
-                        : models.filter((m) => {
-                            const st = profileStatusOf(m.id);
-                            return st === "pending_new" || st === "pending_change";
-                          }).length;
-              const label =
-                s === "all"
-                  ? "Steckbrief"
-                  : s === "filled"
-                    ? "✓ Vorhanden"
-                    : s === "empty"
-                      ? "✗ Fehlt"
-                      : s === "confirmed"
-                        ? "✓ Bestätigt"
-                        : "⏳ Unbestätigt";
-              return (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => setSteckbriefFilter(s)}
+                <FolderTree className="h-3.5 w-3.5" />
+                Filter
+                {activeCount > 0 && (
+                  <Badge
+                    variant="outline"
+                    className="ml-1 h-4 px-1.5 text-[10px] border-accent/40 text-accent tabular-nums"
+                  >
+                    {activeCount}
+                  </Badge>
+                )}
+                <ChevronDown
                   className={cn(
-                    "px-2.5 py-1 rounded-md text-[11px] font-semibold tracking-wider transition-colors flex items-center gap-1",
-                    steckbriefFilter === s
-                      ? s === "filled" || s === "confirmed"
-                        ? "bg-emerald-500/20 text-emerald-300"
-                        : s === "empty"
-                          ? "bg-rose-500/20 text-rose-300"
-                          : s === "unconfirmed"
-                            ? "bg-amber-500/20 text-amber-300"
-                            : "bg-accent text-accent-foreground"
-                      : "text-muted-foreground hover:text-foreground",
+                    "h-3.5 w-3.5 transition-transform",
+                    filtersOpen && "rotate-180",
                   )}
-                >
-                  {label}
-                  <span className="tabular-nums opacity-70">{count}</span>
-                </button>
-              );
-            })}
-          </div>
-          <div className="inline-flex rounded-lg border border-border bg-secondary/40 p-0.5" title="Sortierung">
-            {(["name", "newest"] as const).map((s) => (
-              <button
-                key={s}
-                type="button"
-                onClick={() => setSortMode(s)}
-                className={cn(
-                  "px-2.5 py-1 rounded-md text-[11px] font-semibold tracking-wider transition-colors",
-                  sortMode === s ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {s === "name" ? "A–Z" : "Neueste"}
-              </button>
-            ))}
-          </div>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={() => toggleAgencyBilling("syn")}
-            className={cn(
-              "h-8 gap-1.5 text-[11px]",
-              agencyBilling.syn && "border-amber-500/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20",
-            )}
-            title="Beim Aktivieren: Push an alle SYN-Models + Hinweis im Model-Dashboard. Beim Deaktivieren: Hinweis entfernen (alle durch)."
-          >
-            {agencyBilling.syn ? "✓ SYN läuft – als abgeschlossen markieren" : "SYN-Abrechnung starten"}
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={() => toggleAgencyBilling("shex")}
-            className={cn(
-              "h-8 gap-1.5 text-[11px]",
-              agencyBilling.shex && "border-amber-500/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20",
-            )}
-            title="Beim Aktivieren: Push an alle sheX-Models + Hinweis im Model-Dashboard. Beim Deaktivieren: Hinweis entfernen (alle durch)."
-          >
-            {agencyBilling.shex ? "✓ sheX läuft – als abgeschlossen markieren" : "sheX-Abrechnung starten"}
-          </Button>
+                />
+              </Button>
+            );
+          })()}
         </div>
+
+        <AnimatePresence initial={false}>
+          {filtersOpen && (
+            <motion.div
+              key="filters-panel"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <div className="mt-2 rounded-lg border border-accent/15 bg-secondary/20 p-3 space-y-3">
+                {/* Row 1: Duplikate + 4Based-Auszahlung fehlt */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button
+                    type="button"
+                    variant={showDuplicatesOnly ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setShowDuplicatesOnly((v) => !v)}
+                    className={cn(
+                      "h-8 gap-1.5 text-[11px]",
+                      showDuplicatesOnly
+                        ? "bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30"
+                        : duplicateModelIds.size > 0
+                          ? "border-amber-500/40 text-amber-300 hover:bg-amber-500/10"
+                          : "",
+                    )}
+                    title="Models mit doppelter Plattform-E-Mail"
+                  >
+                    <AlertTriangle className="h-3.5 w-3.5" />
+                    Duplikate
+                    {duplicateModelIds.size > 0 && (
+                      <Badge
+                        variant="outline"
+                        className="ml-1 h-4 px-1.5 text-[10px] border-amber-500/40 text-amber-300 tabular-nums"
+                      >
+                        {duplicateModelIds.size}
+                      </Badge>
+                    )}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={only4BMissingPayout ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setOnly4BMissingPayout((v) => !v)}
+                    className={cn(
+                      "h-8 gap-1.5 text-[11px]",
+                      only4BMissingPayout
+                        ? "bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30"
+                        : "",
+                    )}
+                    title="Nur Models mit 4Based-Umsatz > $50 (aktueller Monat), bei denen der Auszahlungs-Haken noch nicht gesetzt ist"
+                  >
+                    <Wallet className="h-3.5 w-3.5" />
+                    4Based-Auszahlung fehlt (&gt;$50)
+                  </Button>
+                </div>
+
+                {/* Row 2: Agency + Steckbrief + Sort pills */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="inline-flex rounded-lg border border-border bg-secondary/40 p-0.5">
+                    {(["all", "shex", "syn"] as const).map((a) => (
+                      <button
+                        key={a}
+                        type="button"
+                        onClick={() => setAgencyFilter(a)}
+                        className={cn(
+                          "px-2.5 py-1 rounded-md text-[11px] font-semibold uppercase tracking-wider transition-colors",
+                          agencyFilter === a
+                            ? "bg-accent text-accent-foreground"
+                            : "text-muted-foreground hover:text-foreground",
+                        )}
+                      >
+                        {a === "all" ? "Alle" : a === "shex" ? "sheX" : "SYN"}
+                      </button>
+                    ))}
+                  </div>
+                  <div
+                    className="inline-flex rounded-lg border border-border bg-secondary/40 p-0.5 flex-wrap"
+                    title="Steckbrief-Status filtern"
+                  >
+                    {(["all", "filled", "empty", "confirmed", "unconfirmed"] as const).map((s) => {
+                      const count =
+                        s === "all"
+                          ? models.length
+                          : s === "filled"
+                            ? models.filter((m) => filledProfileIds.has(m.id)).length
+                            : s === "empty"
+                              ? models.filter((m) => !filledProfileIds.has(m.id)).length
+                              : s === "confirmed"
+                                ? models.filter((m) => profileStatusOf(m.id) === "confirmed").length
+                                : models.filter((m) => {
+                                    const st = profileStatusOf(m.id);
+                                    return st === "pending_new" || st === "pending_change";
+                                  }).length;
+                      const label =
+                        s === "all"
+                          ? "Steckbrief"
+                          : s === "filled"
+                            ? "✓ Vorhanden"
+                            : s === "empty"
+                              ? "✗ Fehlt"
+                              : s === "confirmed"
+                                ? "✓ Bestätigt"
+                                : "⏳ Unbestätigt";
+                      return (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => setSteckbriefFilter(s)}
+                          className={cn(
+                            "px-2.5 py-1 rounded-md text-[11px] font-semibold tracking-wider transition-colors flex items-center gap-1",
+                            steckbriefFilter === s
+                              ? s === "filled" || s === "confirmed"
+                                ? "bg-emerald-500/20 text-emerald-300"
+                                : s === "empty"
+                                  ? "bg-rose-500/20 text-rose-300"
+                                  : s === "unconfirmed"
+                                    ? "bg-amber-500/20 text-amber-300"
+                                    : "bg-accent text-accent-foreground"
+                              : "text-muted-foreground hover:text-foreground",
+                          )}
+                        >
+                          {label}
+                          <span className="tabular-nums opacity-70">{count}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="inline-flex rounded-lg border border-border bg-secondary/40 p-0.5" title="Sortierung">
+                    {(["name", "newest"] as const).map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setSortMode(s)}
+                        className={cn(
+                          "px-2.5 py-1 rounded-md text-[11px] font-semibold tracking-wider transition-colors",
+                          sortMode === s ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground",
+                        )}
+                      >
+                        {s === "name" ? "A–Z" : "Neueste"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Row 3: Agency-wide billing actions */}
+                <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-accent/10">
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground w-full sm:w-auto">Agency-Abrechnung</span>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => toggleAgencyBilling("syn")}
+                    className={cn(
+                      "h-8 gap-1.5 text-[11px]",
+                      agencyBilling.syn && "border-amber-500/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20",
+                    )}
+                    title="Beim Aktivieren: Push an alle SYN-Models + Hinweis im Model-Dashboard. Beim Deaktivieren: Hinweis entfernen (alle durch)."
+                  >
+                    {agencyBilling.syn ? "✓ SYN läuft – als abgeschlossen markieren" : "SYN-Abrechnung starten"}
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => toggleAgencyBilling("shex")}
+                    className={cn(
+                      "h-8 gap-1.5 text-[11px]",
+                      agencyBilling.shex && "border-amber-500/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20",
+                    )}
+                    title="Beim Aktivieren: Push an alle sheX-Models + Hinweis im Model-Dashboard. Beim Deaktivieren: Hinweis entfernen (alle durch)."
+                  >
+                    {agencyBilling.shex ? "✓ sheX läuft – als abgeschlossen markieren" : "sheX-Abrechnung starten"}
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
 
         {showDuplicatesOnly && duplicateGroups.size > 0 && (
           <div className="mt-2 glass-card rounded-lg border border-amber-500/30 bg-amber-500/5 px-3 py-2 text-[11px] text-amber-200/90 space-y-1">
