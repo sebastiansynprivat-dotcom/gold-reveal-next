@@ -4312,10 +4312,12 @@ export default function ModelDashboardTab() {
                       })
                       .eq("model_id", selectedModelId)
                       .eq("last_fetched_month", m)
-                      .eq("last_fetched_year", y);
+                      .eq("last_fetched_year", y)
+                      .is("billed_at", null);
                   }));
                   setBillingHistoryTick((t) => t + 1);
-                  toast.success(`${pairs.length} Monat${pairs.length === 1 ? "" : "e"} als abgerechnet markiert`);
+                  const markedCount = rows.filter((r) => r.row).length;
+                  toast.success(`${markedCount} Monat${markedCount === 1 ? "" : "e"} als abgerechnet markiert`);
                 }}
 
                 suggestedAmount={verdienst}
