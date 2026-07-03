@@ -1276,12 +1276,17 @@ export default function ModelGroupsPanel({
                       </tr>
                     </thead>
                     <tbody>
-                      {billingItems.map((i) => (
+                      {billingItems.map((i) => {
+                        const uniquePcts = Array.from(new Set((i.breakdown || []).map((b) => Number(b.pct)))).filter((n) => !Number.isNaN(n));
+                        const pctLabel = uniquePcts.length > 0
+                          ? uniquePcts.map((p) => `${p}%`).join(" / ")
+                          : `${Math.round(i.commission_pct)}%`;
+                        return (
                         <tr key={i.model_id} className="border-b border-accent/5">
                           <td className="py-2 text-foreground">{i.model_name}</td>
                           <td className="text-muted-foreground">{i.referral_source || "—"}</td>
                           <td className="text-right num">€{i.gross.toFixed(2)}</td>
-                          <td className="text-right text-accent num">{i.commission_pct}%</td>
+                          <td className="text-right text-accent num">{pctLabel}</td>
                           <td className="text-right num">€{i.commission_amount.toFixed(2)}</td>
                           <td className="text-right num font-semibold text-accent">
                             €{i.net_payout.toFixed(2)}
@@ -1302,7 +1307,8 @@ export default function ModelGroupsPanel({
                             </Button>
                           </td>
                         </tr>
-                      ))}
+                        );
+                      })}
                     </tbody>
                     <tfoot className="border-t border-accent/20">
                       <tr>
