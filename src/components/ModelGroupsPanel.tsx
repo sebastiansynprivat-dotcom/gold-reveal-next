@@ -250,13 +250,22 @@ export default function ModelGroupsPanel({
 
   const filteredGroupModels = useMemo(() => {
     const q = modelSearch.trim().toLowerCase();
-    if (!q) return groupModels;
-    return groupModels.filter((m) =>
+    let list = groupModels;
+    if (onlyMissingFbPayout) {
+      list = list.filter((m) => {
+        const has4B = (platformsByModel[m.id] || []).some((p) => String(p).toLowerCase() === "4based");
+        const fbUsd = Number(revenueByModel[m.id]?.fb || 0);
+        return has4B && fbUsd > 50 && !m.fourbased_payout_configured;
+      });
+    }
+    if (!q) return list;
+    return list.filter((m) =>
       [m.name, m.username, m.referrer_tag, m.referral_source, ...(emailsByModel[m.id] || [])]
         .filter(Boolean)
         .some((v) => String(v).toLowerCase().includes(q)),
     );
-  }, [groupModels, modelSearch, emailsByModel]);
+  }, [groupModels, modelSearch, emailsByModel, onlyMissingFbPayout, platformsByModel, revenueByModel]);
+
 
   const filteredGroups = useMemo(() => {
     const q = groupSearch.trim().toLowerCase();
