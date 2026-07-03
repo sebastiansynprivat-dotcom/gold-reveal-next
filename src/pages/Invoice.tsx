@@ -101,8 +101,8 @@ const Invoice = () => {
   }, [saveData, senderName, senderAddress, senderCity, taxId, bankName, iban, bic]);
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [invoiceDate, setInvoiceDate] = useState<Date | undefined>(new Date());
-  const [periodFrom, setPeriodFrom] = useState("");
-  const [periodTo, setPeriodTo] = useState("");
+  const [periodFrom, setPeriodFrom] = useState(format(selectedMonth, "dd.MM.yyyy"));
+  const [periodTo, setPeriodTo] = useState(format(selectedMonthEnd, "dd.MM.yyyy"));
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState(DEFAULT_DESCRIPTION);
   const [vatNote, setVatNote] = useState("Gemäß § 19 UStG wird keine Umsatzsteuer berechnet.");
