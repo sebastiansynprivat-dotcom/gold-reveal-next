@@ -312,6 +312,14 @@ export default function ModelGroupsPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selected?.id, billingPeriod.from, models.length]);
 
+  // Tick every second while there are pending retries, so countdowns re-render
+  useEffect(() => {
+    if (Object.keys(retryingModels).length === 0) return;
+    const t = window.setInterval(() => setRetryTick((v) => v + 1), 1000);
+    return () => window.clearInterval(t);
+  }, [retryingModels]);
+
+
   // Auto-pull: include models explicitly in the group OR matching by referrer_tag (case-insensitive)
   const groupModels = useMemo(() => {
     if (!selected) return [];
