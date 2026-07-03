@@ -149,6 +149,47 @@ export default function ModelGroupsPanel({
   };
 
 
+  const retryModelFetch = async (modelId: string, modelName: string) => {
+    const ref = new Date(billingPeriod.from || new Date().toISOString().slice(0, 10));
+    const month = ref.getMonth() + 1;
+    const year = ref.getFullYear();
+    try {
+      const { data, error } = await supabase.functions.invoke("fetch-model-revenue", {
+        body: { model_id: modelId, month, year },
+      });
+      if (error) throw new Error(error.message);
+      if ((data as any)?.error) throw new Error((data as any).error);
+      await loadRevenueForPeriod();
+      const errs = ((data as any)?.errors ?? []) as Array<{ code?: string; platform?: string; message?: string }>;
+      const stillLimited = errs.some((e) => e.code === "RATE_LIMITED");
+      setRetryingModels((prev) => {
+        const next = { ...prev };
+        delete next[modelId];
+        return next;
+      });
+      if (stillLimited) {
+        toast.warning(`${modelName}: erneut rate-limitiert — bitte manuell nachfetchen.`);
+      } else if (errs.length === 0) {
+        toast.success(`${modelName}: Umsatz aktualisiert ✅`);
+      }
+    } catch (err: any) {
+      setRetryingModels((prev) => {
+        const next = { ...prev };
+        delete next[modelId];
+        return next;
+      });
+      toast.error(`${modelName}: Retry fehlgeschlagen — ${err?.message || "Unbekannter Fehler"}`);
+    }
+  };
+
+  const scheduleRetry = (modelId: string, modelName: string, platforms: string[], delayMs: number) => {
+    const until = Date.now() + delayMs;
+    setRetryingModels((prev) => ({ ...prev, [modelId]: { until, platforms } }));
+    window.setTimeout(() => {
+      retryModelFetch(modelId, modelName);
+    }, delayMs);
+  };
+
   const fetchAllInGroup = async () => {
     if (!selected || groupModels.length === 0) return;
     const ref = new Date(billingPeriod.from || new Date().toISOString().slice(0, 10));
@@ -160,7 +201,8 @@ export default function ModelGroupsPanel({
       return;
     }
     setFetchAllProgress({ done: 0, total: targets.length });
-    const allErrors: Array<{ model: string; platform?: string; message?: string }> = [];
+    const allErrors: Array<{ model: string; platform?: string; message?: string; code?: string }> = [];
+    const rateLimitedByModel: Record<string, { name: string; platforms: Set<string> }> = {};
     let successCount = 0;
     for (let i = 0; i < targets.length; i++) {
       const m = targets[i];
@@ -170,9 +212,15 @@ export default function ModelGroupsPanel({
         });
         if (error) throw new Error(error.message);
         if ((data as any)?.error) throw new Error((data as any).error);
-        const errs = ((data as any)?.errors ?? []) as Array<{ platform?: string; message?: string }>;
+        const errs = ((data as any)?.errors ?? []) as Array<{ code?: string; platform?: string; message?: string }>;
         if (errs.length > 0) {
-          errs.forEach((e) => allErrors.push({ model: m.name, platform: e.platform, message: e.message }));
+          errs.forEach((e) => {
+            allErrors.push({ model: m.name, platform: e.platform, message: e.message, code: e.code });
+            if (e.code === "RATE_LIMITED") {
+              const bucket = (rateLimitedByModel[m.id] ||= { name: m.name, platforms: new Set() });
+              if (e.platform) bucket.platforms.add(e.platform);
+            }
+          });
         } else {
           successCount++;
         }
@@ -183,16 +231,36 @@ export default function ModelGroupsPanel({
     }
     setFetchAllProgress(null);
     await loadRevenueForPeriod();
-    if (allErrors.length > 0) {
-      toast.error(`Fetch abgeschlossen — ${successCount}/${targets.length} ok, ${allErrors.length} Fehler`, {
-        description: allErrors.map((e) => `${e.model}${e.platform ? ` (${e.platform})` : ""}: ${e.message ?? "Unbekannter Fehler"}`).join("\n"),
+
+    // Schedule auto-retry for rate-limited models after 120s (respects backend self-throttle window)
+    const rlEntries = Object.entries(rateLimitedByModel);
+    if (rlEntries.length > 0) {
+      const delayMs = 120_000;
+      rlEntries.forEach(([id, info]) => {
+        scheduleRetry(id, info.name, Array.from(info.platforms), delayMs);
+      });
+      toast.warning(
+        `${rlEntries.length} Model(s) rate-limitiert — automatischer Retry in 2 Min.`,
+        {
+          description: rlEntries.map(([, info]) => `${info.name} (${Array.from(info.platforms).join(", ") || "?"})`).join("\n"),
+          duration: 10000,
+          style: { whiteSpace: "pre-line" },
+        },
+      );
+    }
+
+    const nonRateErrors = allErrors.filter((e) => e.code !== "RATE_LIMITED");
+    if (nonRateErrors.length > 0) {
+      toast.error(`Fetch abgeschlossen — ${successCount}/${targets.length} ok, ${nonRateErrors.length} Fehler`, {
+        description: nonRateErrors.map((e) => `${e.model}${e.platform ? ` (${e.platform})` : ""}: ${e.message ?? "Unbekannter Fehler"}`).join("\n"),
         duration: 12000,
         style: { whiteSpace: "pre-line" },
       });
-    } else {
+    } else if (rlEntries.length === 0) {
       toast.success(`Umsatz für ${targets.length} Models aktualisiert ✅ (${String(month).padStart(2, "0")}/${year})`);
     }
   };
+
 
 
   const [form, setForm] = useState({
