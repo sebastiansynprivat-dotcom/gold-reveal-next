@@ -594,6 +594,76 @@ export default function ModelGroupsPanel({
     toast.success("Abrechnung in Zwischenablage kopiert");
   };
 
+  const downloadBillingSummaryPdf = async () => {
+    if (!selected || billingItems.length === 0) return;
+    const { default: jsPDF } = await import("jspdf");
+    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+    const pw = 210, ph = 297, m = 14, rCol = pw - m;
+    const black: [number, number, number] = [15, 15, 15];
+    const gold: [number, number, number] = [212, 175, 55];
+    const goldLight: [number, number, number] = [232, 205, 115];
+    const white: [number, number, number] = [255, 255, 255];
+    const muted: [number, number, number] = [160, 160, 160];
+
+    doc.setFillColor(...black); doc.rect(0, 0, pw, ph, "F");
+    doc.setFillColor(...gold); doc.rect(0, 0, pw, 1.5, "F");
+
+    let y = 18;
+    doc.setFont("helvetica", "bold"); doc.setFontSize(14); doc.setTextColor(...gold);
+    doc.text(`Abrechnung – ${selected.name}`, m, y);
+    doc.setFont("helvetica", "normal"); doc.setFontSize(9); doc.setTextColor(...muted);
+    doc.text(`${billingPeriod.from}  →  ${billingPeriod.to}`, rCol, y, { align: "right" });
+    y += 3; doc.setDrawColor(...gold); doc.setLineWidth(0.3); doc.line(m, y, rCol, y); y += 7;
+
+    // Header row
+    doc.setFillColor(30, 30, 30); doc.rect(m, y - 4, pw - 2 * m, 7, "F");
+    doc.setFont("helvetica", "bold"); doc.setFontSize(8); doc.setTextColor(...gold);
+    doc.text("Model", m + 2, y);
+    doc.text("Referral", m + 55, y);
+    doc.text("Gross", m + 95, y, { align: "right" });
+    doc.text("%", m + 118, y, { align: "right" });
+    doc.text("Commission", m + 150, y, { align: "right" });
+    doc.text("Net Payout", rCol - 2, y, { align: "right" });
+    y += 6;
+
+    doc.setFont("helvetica", "normal"); doc.setFontSize(8);
+    billingItems.forEach((i, idx) => {
+      if (y > ph - 30) { doc.addPage(); doc.setFillColor(...black); doc.rect(0, 0, pw, ph, "F"); y = 18; }
+      const bg: [number, number, number] = idx % 2 === 0 ? [20, 20, 20] : [25, 25, 25];
+      doc.setFillColor(...bg); doc.rect(m, y - 4, pw - 2 * m, 6, "F");
+      const uniquePcts = Array.from(new Set((i.breakdown || []).map((b) => Number(b.pct)))).filter((n) => !Number.isNaN(n));
+      const pctLabel = uniquePcts.length > 0 ? uniquePcts.map((p) => `${p}%`).join(" / ") : `${Math.round(i.commission_pct)}%`;
+      doc.setTextColor(...white); doc.text(i.model_name.slice(0, 30), m + 2, y);
+      doc.setTextColor(...muted); doc.text((i.referral_source || "—").slice(0, 20), m + 55, y);
+      doc.setTextColor(...white); doc.text(`€${i.gross.toFixed(2)}`, m + 95, y, { align: "right" });
+      doc.setTextColor(...goldLight); doc.text(pctLabel, m + 118, y, { align: "right" });
+      doc.setTextColor(...white); doc.text(`€${i.commission_amount.toFixed(2)}`, m + 150, y, { align: "right" });
+      doc.setTextColor(...gold); doc.setFont("helvetica", "bold");
+      doc.text(`€${i.net_payout.toFixed(2)}`, rCol - 2, y, { align: "right" });
+      doc.setFont("helvetica", "normal");
+      y += 6;
+    });
+
+    const totals = billingItems.reduce(
+      (a, i) => ({ g: a.g + i.gross, c: a.c + i.commission_amount, n: a.n + i.net_payout }),
+      { g: 0, c: 0, n: 0 }
+    );
+    y += 2; doc.setDrawColor(...gold); doc.setLineWidth(0.4); doc.line(m, y, rCol, y); y += 6;
+    doc.setFont("helvetica", "bold"); doc.setFontSize(9); doc.setTextColor(...gold);
+    doc.text("Total", m + 2, y);
+    doc.setTextColor(...white); doc.text(`€${totals.g.toFixed(2)}`, m + 95, y, { align: "right" });
+    doc.text(`€${totals.c.toFixed(2)}`, m + 150, y, { align: "right" });
+    doc.setTextColor(...gold); doc.text(`€${totals.n.toFixed(2)}`, rCol - 2, y, { align: "right" });
+
+    doc.setFillColor(...gold); doc.rect(0, ph - 1.5, pw, 1.5, "F");
+    doc.setFontSize(6); doc.setTextColor(120, 120, 120);
+    doc.text(`Abrechnungsübersicht – nicht als Rechnung gültig`, pw / 2, ph - 4, { align: "center" });
+
+    const fname = `Abrechnung_${selected.name.replace(/\s+/g, "_")}_${billingPeriod.from}_${billingPeriod.to}.pdf`;
+    downloadPdf(doc as any, fname);
+  };
+
+
   const [invoiceLoading, setInvoiceLoading] = useState<string | null>(null);
 
   const generateInvoice = async (item: LineItem) => {
