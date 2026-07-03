@@ -95,6 +95,7 @@ export default function ModelGroupsPanel({
   const [groups, setGroups] = useState<Group[]>([]);
   const [models, setModels] = useState<ModelLite[]>([]);
   const [platformsByModel, setPlatformsByModel] = useState<Record<string, string[]>>({});
+  const [emailsByModel, setEmailsByModel] = useState<Record<string, string[]>>({});
   const [selected, setSelected] = useState<Group | null>(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [billingOpen, setBillingOpen] = useState(false);
