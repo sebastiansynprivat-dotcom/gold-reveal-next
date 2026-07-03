@@ -20,7 +20,7 @@ const ISSUER_DEFAULTS = {
 
 const issuerSettingsTable = () => (supabase.from as any)("issuer_settings");
 
-const CRYPTO_NETWORKS = ["TRC20", "ERC20", "BEP20", "SOL", "BTC", "LTC"];
+const CRYPTO_NETWORKS = ["TRC20", "ERC20", "BEP20", "SOL", "BTC", "LTC", "TON"];
 
 const CRYPTO_COINS = ["USDT", "USDC", "BTC", "ETH", "SOL", "BNB", "XRP", "TRX", "LTC"];
 
