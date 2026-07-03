@@ -108,10 +108,13 @@ export default function ModelGroupsPanel({
   });
   const [billingLoading, setBillingLoading] = useState(false);
   const [fetchAllProgress, setFetchAllProgress] = useState<{ done: number; total: number } | null>(null);
-  const [revenueByModel, setRevenueByModel] = useState<Record<string, { fb: number | null; ml: number | null; br: number | null; fetched_at: string | null }>>({});
+  const [revenueByModel, setRevenueByModel] = useState<Record<string, { fb: number | null; ml: number | null; br: number | null; fetched_at: string | null; errors: Array<{ platform?: string; message?: string; code?: string }> }>>({});
+  const [retryingModels, setRetryingModels] = useState<Record<string, { until: number; platforms: string[] }>>({});
+  const [retryTick, setRetryTick] = useState(0);
   const [groupSearch, setGroupSearch] = useState("");
   const [modelSearch, setModelSearch] = useState("");
   const [onlyMissingFbPayout, setOnlyMissingFbPayout] = useState(false);
+
 
 
   const loadRevenueForPeriod = async () => {
