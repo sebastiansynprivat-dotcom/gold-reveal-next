@@ -202,17 +202,23 @@ export default function ModelGroupsPanel({
           "id, name, username, group_id, commission_override, commission_override_fourbased, commission_override_maloum, commission_override_brezzels, referral_source, referrer_tag, revenue_percentage, currency, crypto_address, payment_method, bank_name, bank_iban, bank_bic, bank_account_holder, provider_name_override, provider_address, provider_is_business, provider_vat_id"
         )
         .order("name"),
-      supabase.from("accounts").select("model_id, platform").not("model_id", "is", null),
+      supabase.from("accounts").select("model_id, platform, account_email, account_domain").not("model_id", "is", null),
     ]);
     setGroups((gs as any) || []);
     setModels((ms as any) || []);
     const map: Record<string, Set<string>> = {};
+    const emailMap: Record<string, Set<string>> = {};
     ((accs as any[]) || []).forEach((a) => {
-      if (!a.model_id || !a.platform) return;
-      (map[a.model_id] ||= new Set()).add(String(a.platform));
+      if (!a.model_id) return;
+      if (a.platform) (map[a.model_id] ||= new Set()).add(String(a.platform));
+      if (a.account_email) (emailMap[a.model_id] ||= new Set()).add(String(a.account_email));
+      if (a.account_domain) (emailMap[a.model_id] ||= new Set()).add(String(a.account_domain));
     });
     setPlatformsByModel(
       Object.fromEntries(Object.entries(map).map(([k, v]) => [k, Array.from(v).sort()])),
+    );
+    setEmailsByModel(
+      Object.fromEntries(Object.entries(emailMap).map(([k, v]) => [k, Array.from(v)])),
     );
     setLoading(false);
   };
