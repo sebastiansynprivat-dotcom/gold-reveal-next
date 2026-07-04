@@ -994,6 +994,38 @@ export default function ModelDashboardTab() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedModelId, fetchRevenueTick, billingHistoryTick]);
 
+  // ─── Auto-include previously fetched but STILL unbilled prior months ───
+  // Ensures that if June was fetched but never invoiced, then July gets fetched,
+  // June is automatically added as an extra billing so both are bundled into the
+  // same provider invoice. Only re-runs on model change / fresh fetch, so manual
+  // removals by the user still stick within a session.
+  const autoBundleKeyRef = useRef<string>("");
+  useEffect(() => {
+    if (!selectedModelId) return;
+    if (billingHistory.length === 0) return;
+    const sig = `${selectedModelId}|${fetchYear}-${fetchMonth}|${fetchRevenueTick}|${billingHistoryTick}`;
+    if (autoBundleKeyRef.current === sig) return;
+    autoBundleKeyRef.current = sig;
+    const mainKey = fetchYear * 12 + (fetchMonth - 1);
+    const priorUnbilled = billingHistory
+      .filter((r) => !r.billed_at && r.year * 12 + (r.month - 1) < mainKey)
+      .map<ExtraBilling>((r) => ({
+        uid: crypto.randomUUID(),
+        month: r.month,
+        year: r.year,
+        fetching: false,
+        data: {
+          fourbased: Number(r.fourbased_revenue) || 0,
+          maloum: Number(r.maloum_revenue) || 0,
+          brezzels: Number(r.brezzels_revenue) || 0,
+        },
+        billedAt: null,
+        billedNumber: null,
+        errors: {},
+      }));
+    setExtraBillings(priorUnbilled);
+  }, [selectedModelId, fetchYear, fetchMonth, fetchRevenueTick, billingHistoryTick, billingHistory]);
+
 
 
 
@@ -4251,6 +4283,29 @@ export default function ModelDashboardTab() {
 
             {/* ── Credit Note ── */}
             <Section icon={FileDown} title="Provider Invoice erstellen" delay={0.35}>
+              {(() => {
+                const mainRow = billingHistory.find(
+                  (r) => r.month === fetchMonth && r.year === fetchYear,
+                );
+                if (!mainRow?.billed_at) return null;
+                const label = new Date(fetchYear, fetchMonth - 1, 1)
+                  .toLocaleDateString("de-DE", { month: "long", year: "numeric" });
+                return (
+                  <div className="mb-3 rounded-xl border-2 border-destructive/60 bg-destructive/10 p-3 flex items-start gap-2">
+                    <span className="text-destructive text-lg leading-none">⚠️</span>
+                    <div className="text-xs">
+                      <p className="font-bold text-destructive mb-0.5">
+                        Achtung: {label} wurde bereits abgerechnet
+                      </p>
+                      <p className="text-destructive/80">
+                        Rechnung {mainRow.billed_credit_note_number || "—"} vom{" "}
+                        {mainRow.billed_at ? new Date(mainRow.billed_at).toLocaleDateString("de-DE") : "—"}.
+                        Wechsle oben den Monat und fetche zuerst die neuen Zahlen, bevor du erneut abrechnest.
+                      </p>
+                    </div>
+                  </div>
+                );
+              })()}
               <CreditNoteForm
                 key={selectedModelId}
                 autoApplyTrigger={calcTrigger}
