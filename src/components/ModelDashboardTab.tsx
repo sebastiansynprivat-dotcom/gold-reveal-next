@@ -4283,6 +4283,29 @@ export default function ModelDashboardTab() {
 
             {/* ── Credit Note ── */}
             <Section icon={FileDown} title="Provider Invoice erstellen" delay={0.35}>
+              {(() => {
+                const mainRow = billingHistory.find(
+                  (r) => r.month === fetchMonth && r.year === fetchYear,
+                );
+                if (!mainRow?.billed_at) return null;
+                const label = new Date(fetchYear, fetchMonth - 1, 1)
+                  .toLocaleDateString("de-DE", { month: "long", year: "numeric" });
+                return (
+                  <div className="mb-3 rounded-xl border-2 border-destructive/60 bg-destructive/10 p-3 flex items-start gap-2">
+                    <span className="text-destructive text-lg leading-none">⚠️</span>
+                    <div className="text-xs">
+                      <p className="font-bold text-destructive mb-0.5">
+                        Achtung: {label} wurde bereits abgerechnet
+                      </p>
+                      <p className="text-destructive/80">
+                        Rechnung {mainRow.billed_credit_note_number || "—"} vom{" "}
+                        {mainRow.billed_at ? new Date(mainRow.billed_at).toLocaleDateString("de-DE") : "—"}.
+                        Wechsle oben den Monat und fetche zuerst die neuen Zahlen, bevor du erneut abrechnest.
+                      </p>
+                    </div>
+                  </div>
+                );
+              })()}
               <CreditNoteForm
                 key={selectedModelId}
                 autoApplyTrigger={calcTrigger}
