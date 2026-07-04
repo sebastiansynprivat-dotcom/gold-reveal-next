@@ -1024,7 +1024,7 @@ export default function ModelDashboardTab() {
         errors: {},
       }));
     setExtraBillings(priorUnbilled);
-  }, [selectedModelId, fetchYear, fetchMonth, fetchRevenueTick, billingHistory]);
+  }, [selectedModelId, fetchYear, fetchMonth, fetchRevenueTick, billingHistoryTick, billingHistory]);
 
 
 
