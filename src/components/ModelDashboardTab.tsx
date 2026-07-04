@@ -3032,6 +3032,29 @@ export default function ModelDashboardTab() {
                       </span>
                     )}
                   </div>
+                  {(() => {
+                    const alreadyBilled = billingHistory.find(
+                      (r) => r.month === fetchMonth && r.year === fetchYear && r.billed_at,
+                    );
+                    if (!alreadyBilled) return null;
+                    const label = new Date(fetchYear, fetchMonth - 1, 1)
+                      .toLocaleDateString("de-DE", { month: "long", year: "numeric" });
+                    return (
+                      <div className="rounded-lg border-2 border-destructive/60 bg-destructive/10 p-2.5 flex items-start gap-2">
+                        <span className="text-destructive text-base leading-none">⚠️</span>
+                        <div className="text-[11px] leading-snug">
+                          <p className="font-bold text-destructive mb-0.5">
+                            {label} wurde bereits abgerechnet
+                          </p>
+                          <p className="text-destructive/80">
+                            Rechnung {alreadyBilled.billed_credit_note_number || "—"} vom{" "}
+                            {new Date(alreadyBilled.billed_at!).toLocaleDateString("de-DE")}.
+                            Wähle einen anderen Monat, sonst wird der Payout doppelt ausgezahlt.
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })()}
                   <div className="flex items-center gap-2">
                     <Select value={String(fetchMonth)} onValueChange={(v) => setFetchMonth(Number(v))}>
                       <SelectTrigger className="w-[130px] h-9 text-sm bg-secondary/40 border-border/40">
