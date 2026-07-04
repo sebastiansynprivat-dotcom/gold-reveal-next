@@ -2268,6 +2268,20 @@ export default function ModelDashboardTab() {
                   {selectedModel.username && `@${selectedModel.username} · `}
                   {modelAccounts.length} Plattform-Account{modelAccounts.length !== 1 ? "s" : ""}
                 </p>
+                <button
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(selectedModel.id);
+                      toast.success("ID kopiert");
+                    } catch {
+                      toast.error("Kopieren fehlgeschlagen");
+                    }
+                  }}
+                  className="mt-0.5 inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:text-accent transition-colors"
+                >
+                  <Copy className="h-3 w-3" />
+                  ID kopieren
+                </button>
               </div>
               <div className="flex gap-1.5 shrink-0">
                 <Button

@@ -1,61 +1,28 @@
-## Goal
-Track per-platform presence state for each chatter on `profiles.presence` (JSONB), updated via a new edge function.
+## Plan: Add "Copy ID" Button in Admin Model Dashboard Tab
 
-## Schema
-Migration on `public.profiles`:
-- Add `presence jsonb NOT NULL DEFAULT '{}'::jsonb`
+### Where
+- **File:** `src/components/ModelDashboardTab.tsx`
+- **Location:** In the model detail header (lines ~2246–2271), directly beneath the username line.
 
-No RLS changes needed (existing profile policies cover it). Edge function uses service role, so client visibility is unchanged.
-
-## Edge Function: `update-chatter-presence`
-
-**Auth:** `x-api-key` header compared (timing-safe) against `CHAT_AI_TOOL` secret — matches `verify-telegram-id` pattern.
-
-**Request body:**
-```json
-{
-  "telegram_id": "@handle",
-  "platform": "maloum",
-  "username": "…",
-  "email": "…",
-  "state": "online",
-  "message": "…"
-}
+### Current UI
+```
+[Avatar]  Model Name                              [Buttons]
+          @username · 3 Plattform-Accounts
 ```
 
-**Validation:**
-- `telegram_id` (required, non-empty string)
-- `platform` (required, non-empty string; used as JSONB key)
-- `username`, `email`, `state`, `message` optional strings
+### Target UI
+```
+[Avatar]  Model Name                              [Buttons]
+          @username · 3 Plattform-Accounts
+          [Copy icon] Copy ID
+```
 
-**Logic:**
-1. Normalize `telegram_id` (trim, strip leading `@`, lowercase).
-2. Find profile via `ilike` on normalized telegram_id (same match logic as `verify-telegram-id`), first match wins.
-3. If not found → `404 {exists:false}`.
-4. Build entry:
-   ```json
-   {
-     "username": ...,
-     "email": ...,
-     "state": ...,
-     "message": ...,
-     "updated_at": "<ISO now>"
-   }
-   ```
-   Only include provided fields (undefined skipped).
-5. Merge into existing `presence` JSONB: `presence[platform] = entry` (server-side read-modify-write to preserve other platforms).
-6. Update row, return `{ ok: true, profile_id, platform, entry }`.
+### Implementation
+1. In the model header block (inside the `flex-1 min-w-0` column), add a new row directly below the `<p>` that shows `@username · X Plattform-Accounts`.
+2. Add a small button or clickable text element with a `Copy` icon and the label **"ID kopieren"** / **"Copy ID"**.
+3. On click: `navigator.clipboard.writeText(selectedModel.id)`.
+4. Provide 1.5s feedback (swap icon to `Check`, or use `sonner` toast).
+5. Keep styling minimal — `text-xs text-muted-foreground` with hover state, so it doesn't compete with primary actions.
 
-**CORS + config:**
-- Standard CORS block (allow `x-api-key`, `content-type`, `authorization`, `apikey`).
-- Handle `OPTIONS`.
-- Add `[functions.update-chatter-presence] verify_jwt = false` in `supabase/config.toml`.
-
-## Files touched
-- Migration: add `presence` column.
-- New: `supabase/functions/update-chatter-presence/index.ts`
-- Edit: `supabase/config.toml`
-
-## Out of scope
-- No UI changes.
-- No consumer/reader code — just storage + ingest endpoint.
+### No backend changes required.
+This is a purely presentational frontend change using the already-available `selectedModel.id`.
