@@ -1003,7 +1003,7 @@ export default function ModelDashboardTab() {
   useEffect(() => {
     if (!selectedModelId) return;
     if (billingHistory.length === 0) return;
-    const sig = `${selectedModelId}|${fetchYear}-${fetchMonth}|${fetchRevenueTick}`;
+    const sig = `${selectedModelId}|${fetchYear}-${fetchMonth}|${fetchRevenueTick}|${billingHistoryTick}`;
     if (autoBundleKeyRef.current === sig) return;
     autoBundleKeyRef.current = sig;
     const mainKey = fetchYear * 12 + (fetchMonth - 1);
