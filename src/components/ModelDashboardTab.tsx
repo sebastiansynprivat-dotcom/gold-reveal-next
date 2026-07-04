@@ -994,37 +994,26 @@ export default function ModelDashboardTab() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedModelId, fetchRevenueTick, billingHistoryTick]);
 
-  // ─── Auto-include previously fetched but STILL unbilled prior months ───
-  // Ensures that if June was fetched but never invoiced, then July gets fetched,
-  // June is automatically added as an extra billing so both are bundled into the
-  // same provider invoice. Only re-runs on model change / fresh fetch, so manual
-  // removals by the user still stick within a session.
-  const autoBundleKeyRef = useRef<string>("");
+  // ─── Reset invoice context whenever the selected model / fetch month / year changes ───
+  // This ensures the invoice form (service period, payment date, extra billing months)
+  // never carries stale values from a previously selected month. Extras are only added
+  // manually via the "Weitere Monate abrechnen" button.
+  const invoiceResetKeyRef = useRef<string>("");
   useEffect(() => {
     if (!selectedModelId) return;
-    if (billingHistory.length === 0) return;
-    const sig = `${selectedModelId}|${fetchYear}-${fetchMonth}|${fetchRevenueTick}|${billingHistoryTick}`;
-    if (autoBundleKeyRef.current === sig) return;
-    autoBundleKeyRef.current = sig;
-    const mainKey = fetchYear * 12 + (fetchMonth - 1);
-    const priorUnbilled = billingHistory
-      .filter((r) => !r.billed_at && r.year * 12 + (r.month - 1) < mainKey)
-      .map<ExtraBilling>((r) => ({
-        uid: crypto.randomUUID(),
-        month: r.month,
-        year: r.year,
-        fetching: false,
-        data: {
-          fourbased: Number(r.fourbased_revenue) || 0,
-          maloum: Number(r.maloum_revenue) || 0,
-          brezzels: Number(r.brezzels_revenue) || 0,
-        },
-        billedAt: null,
-        billedNumber: null,
-        errors: {},
-      }));
-    setExtraBillings(priorUnbilled);
-  }, [selectedModelId, fetchYear, fetchMonth, fetchRevenueTick, billingHistoryTick, billingHistory]);
+    const sig = `${selectedModelId}|${fetchYear}-${fetchMonth}`;
+    if (invoiceResetKeyRef.current === sig) return;
+    invoiceResetKeyRef.current = sig;
+    setExtraBillings([]);
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    setModelForm((prev: any) => ({
+      ...prev,
+      invoice_payment_date: todayStr,
+      invoice_service_period_start: null,
+      invoice_service_period_end: null,
+    }));
+  }, [selectedModelId, fetchYear, fetchMonth]);
 
 
 
@@ -3043,6 +3032,29 @@ export default function ModelDashboardTab() {
                       </span>
                     )}
                   </div>
+                  {(() => {
+                    const alreadyBilled = billingHistory.find(
+                      (r) => r.month === fetchMonth && r.year === fetchYear && r.billed_at,
+                    );
+                    if (!alreadyBilled) return null;
+                    const label = new Date(fetchYear, fetchMonth - 1, 1)
+                      .toLocaleDateString("de-DE", { month: "long", year: "numeric" });
+                    return (
+                      <div className="rounded-lg border-2 border-destructive/60 bg-destructive/10 p-2.5 flex items-start gap-2">
+                        <span className="text-destructive text-base leading-none">⚠️</span>
+                        <div className="text-[11px] leading-snug">
+                          <p className="font-bold text-destructive mb-0.5">
+                            {label} wurde bereits abgerechnet
+                          </p>
+                          <p className="text-destructive/80">
+                            Rechnung {alreadyBilled.billed_credit_note_number || "—"} vom{" "}
+                            {new Date(alreadyBilled.billed_at!).toLocaleDateString("de-DE")}.
+                            Wähle einen anderen Monat, sonst wird der Payout doppelt ausgezahlt.
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })()}
                   <div className="flex items-center gap-2">
                     <Select value={String(fetchMonth)} onValueChange={(v) => setFetchMonth(Number(v))}>
                       <SelectTrigger className="w-[130px] h-9 text-sm bg-secondary/40 border-border/40">
