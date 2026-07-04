@@ -994,6 +994,38 @@ export default function ModelDashboardTab() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedModelId, fetchRevenueTick, billingHistoryTick]);
 
+  // ─── Auto-include previously fetched but STILL unbilled prior months ───
+  // Ensures that if June was fetched but never invoiced, then July gets fetched,
+  // June is automatically added as an extra billing so both are bundled into the
+  // same provider invoice. Only re-runs on model change / fresh fetch, so manual
+  // removals by the user still stick within a session.
+  const autoBundleKeyRef = useRef<string>("");
+  useEffect(() => {
+    if (!selectedModelId) return;
+    if (billingHistory.length === 0) return;
+    const sig = `${selectedModelId}|${fetchYear}-${fetchMonth}|${fetchRevenueTick}`;
+    if (autoBundleKeyRef.current === sig) return;
+    autoBundleKeyRef.current = sig;
+    const mainKey = fetchYear * 12 + (fetchMonth - 1);
+    const priorUnbilled = billingHistory
+      .filter((r) => !r.billed_at && r.year * 12 + (r.month - 1) < mainKey)
+      .map<ExtraBilling>((r) => ({
+        uid: crypto.randomUUID(),
+        month: r.month,
+        year: r.year,
+        fetching: false,
+        data: {
+          fourbased: Number(r.fourbased_revenue) || 0,
+          maloum: Number(r.maloum_revenue) || 0,
+          brezzels: Number(r.brezzels_revenue) || 0,
+        },
+        billedAt: null,
+        billedNumber: null,
+        errors: {},
+      }));
+    setExtraBillings(priorUnbilled);
+  }, [selectedModelId, fetchYear, fetchMonth, fetchRevenueTick, billingHistory]);
+
 
 
 
