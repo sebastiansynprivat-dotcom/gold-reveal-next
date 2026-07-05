@@ -68,6 +68,25 @@ const extractDriveFolderId = (input: string): string => {
   return match ? match[1] : input;
 };
 
+const toYmd = (date: Date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+
+const todayYmd = () => toYmd(new Date());
+
+const servicePeriodForMonths = (months: Array<{ year: number; month: number }>) => {
+  const keys = months.map(({ year, month }) => year * 12 + (month - 1));
+  const minKey = Math.min(...keys);
+  const maxKey = Math.max(...keys);
+  const minYear = Math.floor(minKey / 12);
+  const minMonth = (minKey % 12) + 1;
+  const maxYear = Math.floor(maxKey / 12);
+  const maxMonth = (maxKey % 12) + 1;
+  return {
+    start: toYmd(new Date(minYear, minMonth - 1, 1)),
+    end: toYmd(new Date(maxYear, maxMonth, 0)),
+  };
+};
+
 // ─── Referrer Tag combobox (free-text + suggestions from prior tags) ───
 function ReferrerTagInput({
   value,
