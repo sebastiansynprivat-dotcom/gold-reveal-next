@@ -3134,17 +3134,14 @@ export default function ModelDashboardTab() {
                           await loadModelAccounts(selectedModelId);
                           setLastFetchInfo({ at: new Date().toISOString(), month: fetchMonth, year: fetchYear });
                           setFetchRevenueTick(t => t + 1);
-                          // Reset invoice context to the freshly fetched month:
-                          // drop previous extra billing months, refresh payment date to today,
-                          // and clear stale service period so the share-calc effect can rewrite it.
+                          // Reset invoice context immediately to the freshly fetched month.
                           setExtraBillings([]);
-                          const today = new Date();
-                          const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
+                          const period = servicePeriodForMonths([{ year: fetchYear, month: fetchMonth }]);
                           setModelForm((prev: any) => ({
                             ...prev,
-                            invoice_payment_date: todayStr,
-                            invoice_service_period_start: null,
-                            invoice_service_period_end: null,
+                            invoice_payment_date: todayYmd(),
+                            invoice_service_period_start: period.start,
+                            invoice_service_period_end: period.end,
                           }));
                         } catch (err: any) {
                           toast.error(err.message || "Umsatz konnte nicht abgerufen werden");
