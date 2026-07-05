@@ -68,6 +68,25 @@ const extractDriveFolderId = (input: string): string => {
   return match ? match[1] : input;
 };
 
+const toYmd = (date: Date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+
+const todayYmd = () => toYmd(new Date());
+
+const servicePeriodForMonths = (months: Array<{ year: number; month: number }>) => {
+  const keys = months.map(({ year, month }) => year * 12 + (month - 1));
+  const minKey = Math.min(...keys);
+  const maxKey = Math.max(...keys);
+  const minYear = Math.floor(minKey / 12);
+  const minMonth = (minKey % 12) + 1;
+  const maxYear = Math.floor(maxKey / 12);
+  const maxMonth = (maxKey % 12) + 1;
+  return {
+    start: toYmd(new Date(minYear, minMonth - 1, 1)),
+    end: toYmd(new Date(maxYear, maxMonth, 0)),
+  };
+};
+
 // ─── Referrer Tag combobox (free-text + suggestions from prior tags) ───
 function ReferrerTagInput({
   value,
@@ -1005,13 +1024,14 @@ export default function ModelDashboardTab() {
     if (invoiceResetKeyRef.current === sig) return;
     invoiceResetKeyRef.current = sig;
     setExtraBillings([]);
-    const today = new Date();
-    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    const period = servicePeriodForMonths([{ year: fetchYear, month: fetchMonth }]);
     setModelForm((prev: any) => ({
       ...prev,
-      invoice_payment_date: todayStr,
-      invoice_service_period_start: null,
-      invoice_service_period_end: null,
+      invoice_net_amount: 0,
+      invoice_currency: prev.currency || "EUR",
+      invoice_payment_date: todayYmd(),
+      invoice_service_period_start: period.start,
+      invoice_service_period_end: period.end,
     }));
   }, [selectedModelId, fetchYear, fetchMonth]);
 
@@ -1023,9 +1043,19 @@ export default function ModelDashboardTab() {
     if (!selectedModelId) return;
     const model = models.find((m) => m.id === selectedModelId);
     if (model) {
-      setModelForm({ ...model });
+      const period = servicePeriodForMonths([{ year: fetchYear, month: fetchMonth }]);
+      setModelForm({
+        ...model,
+        invoice_net_amount: 0,
+        invoice_currency: model.currency || "EUR",
+        invoice_payment_date: todayYmd(),
+        invoice_service_period_start: period.start,
+        invoice_service_period_end: period.end,
+      } as any);
       loadModelAccounts(selectedModelId);
     }
+    // Keep this scoped to model changes; month changes are handled by the invoice reset effect above.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedModelId, models, loadModelAccounts]);
 
   // Auto-load model login when selected model changes
@@ -1279,26 +1309,19 @@ export default function ModelDashboardTab() {
     setPayoutRevenueForMonth({ fourbased: fbTotal, maloum: mlTotal, brezzels: brTotal });
     setShareCalculated(true);
 
-    // Service period spans from earliest to latest selected month (main + extras with data)
-    const allPairs = [
-      { y: fetchYear, m: fetchMonth },
-      ...extraBillings.filter((e) => e.data).map((e) => ({ y: e.year, m: e.month })),
-    ];
-    const keys = allPairs.map((p) => p.y * 12 + (p.m - 1));
-    const minKey = Math.min(...keys);
-    const maxKey = Math.max(...keys);
-    const minY = Math.floor(minKey / 12); const minM = (minKey % 12) + 1;
-    const maxY = Math.floor(maxKey / 12); const maxM = (maxKey % 12) + 1;
-    const startD = new Date(minY, minM - 1, 1);
-    const endD = new Date(maxY, maxM, 0);
-    const fmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+    // Service period spans from earliest to latest selected month (main + fetched extras).
+    const period = servicePeriodForMonths([
+      { year: fetchYear, month: fetchMonth },
+      ...extraBillings.filter((e) => e.data).map((e) => ({ year: e.year, month: e.month })),
+    ]);
     setModelForm((prev: any) => ({
       ...prev,
       invoice_net_amount: calculated,
       invoice_description: prev.invoice_description || "Creator revenue share for digital content",
       invoice_currency: prev.currency || "EUR",
-      invoice_service_period_start: fmt(startD),
-      invoice_service_period_end: fmt(endD),
+      invoice_service_period_start: period.start,
+      invoice_service_period_end: period.end,
+      invoice_payment_date: todayYmd(),
     }));
   }, [fetchedPayoutRevenue, extraBillings, modelForm.revenue_percentage, modelForm.revenue_percentage_fourbased, modelForm.revenue_percentage_maloum, modelForm.revenue_percentage_brezzels, customPlatforms, convertToBase, fetchYear, fetchMonth]);
 
@@ -3113,20 +3136,25 @@ export default function ModelDashboardTab() {
                           } else {
                             toast.success(`Umsatz für ${String(fetchMonth).padStart(2,"0")}/${fetchYear} aktualisiert ✅`);
                           }
+                          const savedRow = (data as any)?.row || {};
+                          setFetchedPayoutRevenue({
+                            fourbased: Number(savedRow.fourbased_revenue) || 0,
+                            maloum: Number(savedRow.maloum_revenue) || 0,
+                            brezzels: Number(savedRow.brezzels_revenue) || 0,
+                          });
                           await loadModelAccounts(selectedModelId);
                           setLastFetchInfo({ at: new Date().toISOString(), month: fetchMonth, year: fetchYear });
                           setFetchRevenueTick(t => t + 1);
-                          // Reset invoice context to the freshly fetched month:
-                          // drop previous extra billing months, refresh payment date to today,
-                          // and clear stale service period so the share-calc effect can rewrite it.
+                          // Reset invoice context immediately to the freshly fetched month.
                           setExtraBillings([]);
-                          const today = new Date();
-                          const todayStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,"0")}-${String(today.getDate()).padStart(2,"0")}`;
+                          const period = servicePeriodForMonths([{ year: fetchYear, month: fetchMonth }]);
                           setModelForm((prev: any) => ({
                             ...prev,
-                            invoice_payment_date: todayStr,
-                            invoice_service_period_start: null,
-                            invoice_service_period_end: null,
+                            invoice_net_amount: 0,
+                            invoice_currency: prev.currency || "EUR",
+                            invoice_payment_date: todayYmd(),
+                            invoice_service_period_start: period.start,
+                            invoice_service_period_end: period.end,
                           }));
                         } catch (err: any) {
                           toast.error(err.message || "Umsatz konnte nicht abgerufen werden");
