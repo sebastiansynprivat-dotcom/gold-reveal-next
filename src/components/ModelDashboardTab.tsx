@@ -1024,13 +1024,12 @@ export default function ModelDashboardTab() {
     if (invoiceResetKeyRef.current === sig) return;
     invoiceResetKeyRef.current = sig;
     setExtraBillings([]);
-    const today = new Date();
-    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+    const period = servicePeriodForMonths([{ year: fetchYear, month: fetchMonth }]);
     setModelForm((prev: any) => ({
       ...prev,
-      invoice_payment_date: todayStr,
-      invoice_service_period_start: null,
-      invoice_service_period_end: null,
+      invoice_payment_date: todayYmd(),
+      invoice_service_period_start: period.start,
+      invoice_service_period_end: period.end,
     }));
   }, [selectedModelId, fetchYear, fetchMonth]);
 
