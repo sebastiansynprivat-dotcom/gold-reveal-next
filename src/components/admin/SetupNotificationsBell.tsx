@@ -138,15 +138,15 @@ export default function SetupNotificationsBell() {
 
   const clearActive = async () => {
     if (!filtered.length) return;
-    const ids = items.filter((n) => n.type === active).map((n) => n.id);
+    const count = items.filter((n) => n.type === active).length;
     const prev = items;
     setItems((p) => p.filter((n) => n.type !== active));
-    const { error } = await supabase.from("bot_notifications").delete().in("id", ids);
+    const { error } = await supabase.from("bot_notifications").delete().eq("type", active);
     if (error) {
       setItems(prev);
       toast.error("Konnte Tab nicht leeren");
     } else {
-      toast.success(`${ids.length} entfernt`);
+      toast.success(`${count} entfernt`);
     }
   };
 
