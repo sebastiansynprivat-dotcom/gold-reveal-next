@@ -1041,9 +1041,17 @@ export default function ModelDashboardTab() {
     if (!selectedModelId) return;
     const model = models.find((m) => m.id === selectedModelId);
     if (model) {
-      setModelForm({ ...model });
+      const period = servicePeriodForMonths([{ year: fetchYear, month: fetchMonth }]);
+      setModelForm({
+        ...model,
+        invoice_payment_date: todayYmd(),
+        invoice_service_period_start: period.start,
+        invoice_service_period_end: period.end,
+      });
       loadModelAccounts(selectedModelId);
     }
+    // Keep this scoped to model changes; month changes are handled by the invoice reset effect above.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedModelId, models, loadModelAccounts]);
 
   // Auto-load model login when selected model changes
