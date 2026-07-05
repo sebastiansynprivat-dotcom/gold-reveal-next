@@ -1027,6 +1027,8 @@ export default function ModelDashboardTab() {
     const period = servicePeriodForMonths([{ year: fetchYear, month: fetchMonth }]);
     setModelForm((prev: any) => ({
       ...prev,
+      invoice_net_amount: 0,
+      invoice_currency: prev.currency || "EUR",
       invoice_payment_date: todayYmd(),
       invoice_service_period_start: period.start,
       invoice_service_period_end: period.end,
@@ -1044,6 +1046,8 @@ export default function ModelDashboardTab() {
       const period = servicePeriodForMonths([{ year: fetchYear, month: fetchMonth }]);
       setModelForm({
         ...model,
+        invoice_net_amount: 0,
+        invoice_currency: model.currency || "EUR",
         invoice_payment_date: todayYmd(),
         invoice_service_period_start: period.start,
         invoice_service_period_end: period.end,
@@ -3132,6 +3136,12 @@ export default function ModelDashboardTab() {
                           } else {
                             toast.success(`Umsatz für ${String(fetchMonth).padStart(2,"0")}/${fetchYear} aktualisiert ✅`);
                           }
+                          const savedRow = (data as any)?.row || {};
+                          setFetchedPayoutRevenue({
+                            fourbased: Number(savedRow.fourbased_revenue) || 0,
+                            maloum: Number(savedRow.maloum_revenue) || 0,
+                            brezzels: Number(savedRow.brezzels_revenue) || 0,
+                          });
                           await loadModelAccounts(selectedModelId);
                           setLastFetchInfo({ at: new Date().toISOString(), month: fetchMonth, year: fetchYear });
                           setFetchRevenueTick(t => t + 1);
@@ -3140,6 +3150,8 @@ export default function ModelDashboardTab() {
                           const period = servicePeriodForMonths([{ year: fetchYear, month: fetchMonth }]);
                           setModelForm((prev: any) => ({
                             ...prev,
+                            invoice_net_amount: 0,
+                            invoice_currency: prev.currency || "EUR",
                             invoice_payment_date: todayYmd(),
                             invoice_service_period_start: period.start,
                             invoice_service_period_end: period.end,
