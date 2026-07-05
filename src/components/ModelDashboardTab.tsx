@@ -1047,7 +1047,7 @@ export default function ModelDashboardTab() {
         invoice_payment_date: todayYmd(),
         invoice_service_period_start: period.start,
         invoice_service_period_end: period.end,
-      });
+      } as any);
       loadModelAccounts(selectedModelId);
     }
     // Keep this scoped to model changes; month changes are handled by the invoice reset effect above.
