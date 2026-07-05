@@ -1305,26 +1305,19 @@ export default function ModelDashboardTab() {
     setPayoutRevenueForMonth({ fourbased: fbTotal, maloum: mlTotal, brezzels: brTotal });
     setShareCalculated(true);
 
-    // Service period spans from earliest to latest selected month (main + extras with data)
-    const allPairs = [
-      { y: fetchYear, m: fetchMonth },
-      ...extraBillings.filter((e) => e.data).map((e) => ({ y: e.year, m: e.month })),
-    ];
-    const keys = allPairs.map((p) => p.y * 12 + (p.m - 1));
-    const minKey = Math.min(...keys);
-    const maxKey = Math.max(...keys);
-    const minY = Math.floor(minKey / 12); const minM = (minKey % 12) + 1;
-    const maxY = Math.floor(maxKey / 12); const maxM = (maxKey % 12) + 1;
-    const startD = new Date(minY, minM - 1, 1);
-    const endD = new Date(maxY, maxM, 0);
-    const fmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
+    // Service period spans from earliest to latest selected month (main + fetched extras).
+    const period = servicePeriodForMonths([
+      { year: fetchYear, month: fetchMonth },
+      ...extraBillings.filter((e) => e.data).map((e) => ({ year: e.year, month: e.month })),
+    ]);
     setModelForm((prev: any) => ({
       ...prev,
       invoice_net_amount: calculated,
       invoice_description: prev.invoice_description || "Creator revenue share for digital content",
       invoice_currency: prev.currency || "EUR",
-      invoice_service_period_start: fmt(startD),
-      invoice_service_period_end: fmt(endD),
+      invoice_service_period_start: period.start,
+      invoice_service_period_end: period.end,
+      invoice_payment_date: todayYmd(),
     }));
   }, [fetchedPayoutRevenue, extraBillings, modelForm.revenue_percentage, modelForm.revenue_percentage_fourbased, modelForm.revenue_percentage_maloum, modelForm.revenue_percentage_brezzels, customPlatforms, convertToBase, fetchYear, fetchMonth]);
 
