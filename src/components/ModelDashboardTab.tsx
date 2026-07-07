@@ -1049,6 +1049,7 @@ export default function ModelDashboardTab() {
     const model = models.find((m) => m.id === selectedModelId);
     if (model) {
       const period = servicePeriodForMonths([{ year: fetchYear, month: fetchMonth }]);
+      lastAutoPeriodRef.current = period;
       setModelForm({
         ...model,
         invoice_net_amount: 0,
