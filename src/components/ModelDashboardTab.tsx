@@ -1018,6 +1018,10 @@ export default function ModelDashboardTab() {
   // never carries stale values from a previously selected month. Extras are only added
   // manually via the "Weitere Monate abrechnen" button.
   const invoiceResetKeyRef = useRef<string>("");
+  // Tracks the last service period the auto-logic set. Used to detect whether
+  // the current form values were auto-computed (safe to overwrite) or manually
+  // edited by the user (must be preserved).
+  const lastAutoPeriodRef = useRef<{ start: string; end: string } | null>(null);
   useEffect(() => {
     if (!selectedModelId) return;
     const sig = `${selectedModelId}|${fetchYear}-${fetchMonth}`;
@@ -1025,6 +1029,7 @@ export default function ModelDashboardTab() {
     invoiceResetKeyRef.current = sig;
     setExtraBillings([]);
     const period = servicePeriodForMonths([{ year: fetchYear, month: fetchMonth }]);
+    lastAutoPeriodRef.current = period;
     setModelForm((prev: any) => ({
       ...prev,
       invoice_net_amount: 0,
