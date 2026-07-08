@@ -234,15 +234,15 @@ export default function CommitmentPrompt() {
 
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-yellow-300 to-yellow-500 bg-clip-text text-transparent">
-              {step === 1 && (de ? "Was dir das bringt" : "What you get")}
+              {step === 1 && (de ? "So verdienst du dir bessere Kunden" : "Earn your way to better clients")}
               {step === 2 && (de ? "Wann bist du heute da?" : "When are you online today?")}
               {step === 3 && (de ? "Dein Tagesziel" : "Your daily goal")}
               {step === 4 && (de ? "Dein Wort für heute" : "Your word for today")}
             </DialogTitle>
             <DialogDescription className="text-white/60">
               {step === 1 && (de
-                ? "Zuverlässige Chatter kommen in den Priority Pool. Das heißt konkret:"
-                : "Reliable chatters enter the Priority Pool. Here's what that means:")}
+                ? "Jeder Tag, an dem du dein Wort hältst, hebt deinen Reliability-Score. Mit jedem Level kommen bessere Accounts, größere Kunden und früherer Zugriff."
+                : "Every day you keep your word raises your reliability score. Each level unlocks better accounts, bigger clients and earlier access.")}
               {step === 2 && (de
                 ? "Wähle die Zeitfenster, in denen du heute chattest."
                 : "Pick the time slots you'll chat in today.")}
@@ -253,44 +253,114 @@ export default function CommitmentPrompt() {
             </DialogDescription>
           </DialogHeader>
 
-          {/* STEP 1: Benefits */}
-          {step === 1 && (
-            <div className="space-y-3 py-2">
-              <BenefitTile
-                icon={Trophy}
-                title={de ? "Priority Pool" : "Priority Pool"}
-                text={de
-                  ? "Neue Top-Models & VIP-Kunden gehen zuerst an zuverlässige Chatter."
-                  : "New top models & VIP clients go to reliable chatters first."}
-              />
-              <BenefitTile
-                icon={TrendingUp}
-                title={de ? "Höhere Tier-Stufen" : "Higher tiers"}
-                text={de
-                  ? "Ab 7 Tagen Streak: schnellerer Aufstieg im Bonus-System."
-                  : "7-day streak: faster climb in the bonus system."}
-              />
-              <BenefitTile
-                icon={Zap}
-                title={de ? "Sofort-Zugriff" : "Early access"}
-                text={de
-                  ? "Content-Drops & neue Accounts siehst du früher als der Rest."
-                  : "Content drops & new accounts land in your hands first."}
-              />
-              {streak > 0 && (
-                <div className="mt-3 flex items-center gap-2 rounded-lg bg-orange-500/10 border border-orange-500/30 p-2.5">
-                  <Flame className="w-4 h-4 text-orange-400" />
-                  <span className="text-xs text-orange-100">
-                    {de ? (
-                      <>Du hast aktuell <b>{streak} Tage Streak</b>. Nicht abreißen lassen.</>
-                    ) : (
-                      <>You're on a <b>{streak}-day streak</b>. Don't break it.</>
-                    )}
-                  </span>
+          {/* STEP 1: Reliability Progress */}
+          {step === 1 && (() => {
+            const t = getTierInfo(streak);
+            return (
+              <div className="space-y-4 py-2">
+                {/* Current tier hero */}
+                <div className="rounded-xl border border-yellow-500/30 bg-gradient-to-br from-yellow-500/10 via-black/40 to-yellow-600/5 p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div>
+                      <div className="text-[10px] uppercase tracking-widest text-white/40">
+                        {de ? "Dein Level" : "Your level"}
+                      </div>
+                      <div className={cn("text-2xl font-bold", t.current.color)} style={{ textShadow: `0 0 20px ${t.current.glow}` }}>
+                        {de ? t.current.de : t.current.en}
+                      </div>
+                      <div className="text-xs text-white/60 mt-0.5">
+                        {de ? t.current.perk_de : t.current.perk_en}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="flex items-center gap-1 justify-end">
+                        <Flame className={cn("w-4 h-4", streak >= 3 ? "text-orange-400" : "text-yellow-400/60")} />
+                        <span className="text-xl font-bold text-white">{streak}</span>
+                      </div>
+                      <div className="text-[10px] uppercase tracking-widest text-white/40">
+                        {de ? "Tage Streak" : "Day streak"}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Progress to next tier */}
+                  {t.next ? (
+                    <>
+                      <div className="flex items-center justify-between text-[11px] mb-1">
+                        <span className="text-white/50">
+                          {de ? "Nächstes Level" : "Next level"}: <span className={cn("font-semibold", t.next.color)}>{de ? t.next.de : t.next.en}</span>
+                        </span>
+                        <span className="text-white/60 font-semibold">
+                          {t.daysToNext} {de ? (t.daysToNext === 1 ? "Tag" : "Tage") : t.daysToNext === 1 ? "day" : "days"}
+                        </span>
+                      </div>
+                      <div className="h-2.5 rounded-full bg-white/5 overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${t.progress}%` }}
+                          transition={{ duration: 0.9, ease: "easeOut" }}
+                          className="h-full rounded-full bg-gradient-to-r from-yellow-400 to-yellow-500"
+                          style={{ boxShadow: "0 0 12px rgba(234,179,8,0.6)" }}
+                        />
+                      </div>
+                      <div className="text-[11px] text-white/50 mt-1.5">
+                        {de
+                          ? <>Halte dein Wort noch <b className="text-yellow-300">{t.daysToNext} {t.daysToNext === 1 ? "Tag" : "Tage"}</b> → freischalten: <b className={t.next.color}>{de ? t.next.perk_de : t.next.perk_en}</b></>
+                          : <>Keep your word for <b className="text-yellow-300">{t.daysToNext} more {t.daysToNext === 1 ? "day" : "days"}</b> → unlock: <b className={t.next.color}>{t.next.perk_en}</b></>}
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-xs text-fuchsia-300 font-semibold">
+                      {de ? "Höchste Stufe erreicht. Erste Wahl bei allem." : "Top tier reached. First pick, always."}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
-          )}
+
+                {/* Tier ladder */}
+                <div className="rounded-lg border border-white/10 bg-white/[0.02] p-3">
+                  <div className="text-[10px] uppercase tracking-widest text-white/40 mb-2">
+                    {de ? "Reliability-Leiter" : "Reliability ladder"}
+                  </div>
+                  <div className="space-y-1.5">
+                    {TIERS.map((tier, i) => {
+                      const reached = streak >= tier.min;
+                      const isCurrent = tier.key === t.current.key;
+                      return (
+                        <div
+                          key={tier.key}
+                          className={cn(
+                            "flex items-center justify-between text-xs rounded-md px-2 py-1.5 transition-all",
+                            isCurrent && "bg-yellow-500/10 border border-yellow-500/40",
+                            !isCurrent && reached && "opacity-70",
+                            !reached && "opacity-40",
+                          )}
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className={cn("w-5 text-center font-mono", reached ? tier.color : "text-white/40")}>
+                              {reached ? "✓" : i + 1}
+                            </span>
+                            <span className={cn("font-semibold", reached ? tier.color : "text-white/60")}>
+                              {de ? tier.de : tier.en}
+                            </span>
+                            <span className="text-white/40">· {tier.min}d</span>
+                          </div>
+                          <span className="text-white/50 text-[11px]">
+                            {de ? tier.perk_de : tier.perk_en}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <p className="text-[11px] text-white/40 text-center leading-relaxed px-2">
+                  {de
+                    ? "Kein Zufall. Wer dranbleibt, bekommt die besseren Karten."
+                    : "Not luck. Whoever stays consistent gets the better hand."}
+                </p>
+              </div>
+            );
+          })()}
 
           {/* STEP 2: Slots */}
           {step === 2 && (
