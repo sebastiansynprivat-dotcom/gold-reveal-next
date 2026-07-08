@@ -6,6 +6,7 @@ import { useUILanguage } from "@/hooks/useUILanguage";
 import { isCommitmentTester } from "@/lib/commitmentFlag";
 import { getCurrentStreak, getTodayRevenue, berlinDate } from "@/lib/commitmentStreak";
 import { getQuoteForToday } from "@/lib/commitmentQuotes";
+import { getTierInfo } from "@/lib/commitmentTiers";
 import { cn } from "@/lib/utils";
 
 const SLOT_LABELS: Record<string, { de: string; en: string }> = {
