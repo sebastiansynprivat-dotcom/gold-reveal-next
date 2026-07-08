@@ -679,20 +679,3 @@ export default function CommitmentPrompt() {
   );
 }
 
-function BenefitTile({ icon: Icon, title, text }: { icon: any; title: string; text: string }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: -8 }}
-      animate={{ opacity: 1, x: 0 }}
-      className="flex items-start gap-3 rounded-xl border border-yellow-500/20 bg-gradient-to-r from-yellow-500/5 to-transparent p-3"
-    >
-      <div className="rounded-lg bg-yellow-500/15 p-2 shrink-0">
-        <Icon className="w-5 h-5 text-yellow-400" />
-      </div>
-      <div>
-        <div className="text-sm font-semibold text-yellow-100">{title}</div>
-        <div className="text-xs text-white/60 leading-snug mt-0.5">{text}</div>
-      </div>
-    </motion.div>
-  );
-}
