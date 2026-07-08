@@ -39,13 +39,18 @@ export default function CommitmentDebugPanel() {
     window.location.href = url.toString();
   };
   const resetToday = async () => {
-    const { error } = await supabase
+    const { error, count } = await supabase
       .from("chatter_daily_commitment" as any)
-      .delete()
+      .delete({ count: "exact" })
       .eq("user_id", userId)
       .eq("date", berlinDate());
-    if (error) return toast.error("Reset fehlgeschlagen");
-    toast.success("Heutiger Commitment-Eintrag gelöscht");
+    if (error) return toast.error("Reset fehlgeschlagen: " + error.message);
+    toast.success(`Reset ok (${count ?? 0} Zeile). Öffne Morgen-Dialog neu…`);
+    // direkt Morgen-Dialog forcieren, damit man den Reset sofort sieht
+    const url = new URL(window.location.href);
+    url.searchParams.set("commit", "1");
+    url.searchParams.delete("checkin");
+    setTimeout(() => (window.location.href = url.toString()), 400);
   };
   const triggerPulse = async () => {
     try {
