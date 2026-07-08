@@ -353,6 +353,18 @@ export default function CommitmentPrompt() {
                   </div>
                 </div>
 
+                {/* How to keep your level */}
+                <div className="rounded-lg border border-yellow-500/20 bg-yellow-500/[0.05] p-3">
+                  <div className="flex items-start gap-2">
+                    <ShieldCheck className="w-4 h-4 text-yellow-400 mt-0.5 shrink-0" />
+                    <p className="text-[11px] text-white/70 leading-relaxed">
+                      {de
+                        ? <>So bleibst du im Level: <b className="text-yellow-300">Morgens deine Verfügbarkeit angeben</b> + <b className="text-yellow-300">abends ehrlich bestätigen</b>, ob du da warst. Ein ehrliches „Nein, heute nicht" zählt nicht gegen dich — aber fehlt oder stimmt nicht, bricht die Streak.</>
+                        : <>How to stay in your level: <b className="text-yellow-300">State your availability in the morning</b> + <b className="text-yellow-300">honestly confirm in the evening</b> whether you were there. An honest "No, not today" doesn't count against you — but missing or dishonest breaks the streak.</>}
+                    </p>
+                  </div>
+                </div>
+
                 <p className="text-[11px] text-white/40 text-center leading-relaxed px-2">
                   {de
                     ? "Kein Zufall. Wer dranbleibt, bekommt die besseren Karten."
