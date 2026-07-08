@@ -6,6 +6,7 @@ import { useUILanguage } from "@/hooks/useUILanguage";
 import { isCommitmentTester } from "@/lib/commitmentFlag";
 import { getCurrentStreak, getTodayRevenue, berlinDate } from "@/lib/commitmentStreak";
 import { getQuoteForToday } from "@/lib/commitmentQuotes";
+import { getTierInfo } from "@/lib/commitmentTiers";
 import { cn } from "@/lib/utils";
 
 const SLOT_LABELS: Record<string, { de: string; en: string }> = {
@@ -140,6 +141,45 @@ export default function CommitmentCard() {
           </span>
         )}
       </div>
+
+      {/* Reliability tier progress */}
+      {(() => {
+        const t = getTierInfo(streak);
+        return (
+          <div className="mb-3 rounded-lg border border-white/10 bg-white/[0.03] p-2.5">
+            <div className="flex items-center justify-between text-[11px] mb-1.5">
+              <span className="text-white/50 uppercase tracking-widest text-[10px]">
+                {de ? "Reliability" : "Reliability"}
+              </span>
+              <span className={cn("font-bold", t.current.color)} style={{ textShadow: `0 0 10px ${t.current.glow}` }}>
+                {de ? t.current.de : t.current.en}
+              </span>
+            </div>
+            <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${t.progress}%` }}
+                transition={{ duration: 0.9, ease: "easeOut" }}
+                className="h-full rounded-full bg-gradient-to-r from-yellow-400 to-yellow-500"
+                style={{ boxShadow: "0 0 10px rgba(234,179,8,0.5)" }}
+              />
+            </div>
+            {t.next ? (
+              <div className="text-[10px] text-white/45 mt-1.5 leading-tight">
+                {de ? (
+                  <>Noch <b className="text-yellow-300">{t.daysToNext} {t.daysToNext === 1 ? "Tag" : "Tage"}</b> bis <b className={t.next.color}>{t.next.de}</b> — {t.next.perk_de}</>
+                ) : (
+                  <>{t.daysToNext} more {t.daysToNext === 1 ? "day" : "days"} to <b className={t.next.color}>{t.next.en}</b> — {t.next.perk_en}</>
+                )}
+              </div>
+            ) : (
+              <div className="text-[10px] text-fuchsia-300 mt-1.5 font-semibold">
+                {de ? "Max-Level. Erste Wahl bei allem." : "Max level. First pick, always."}
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* Progress */}
       {goal > 0 && (
