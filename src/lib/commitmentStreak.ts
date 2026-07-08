@@ -18,7 +18,7 @@ export async function getCurrentStreak(userId: string): Promise<number> {
     .order("date", { ascending: false })
     .limit(60);
 
-  const rows = (data as { date: string; confirmed_by_user: boolean | null }[] | null) ?? [];
+  const rows = ((data as unknown) as { date: string; confirmed_by_user: boolean | null }[] | null) ?? [];
   const map = new Map(rows.map((r) => [r.date, r.confirmed_by_user]));
 
   let streak = 0;
