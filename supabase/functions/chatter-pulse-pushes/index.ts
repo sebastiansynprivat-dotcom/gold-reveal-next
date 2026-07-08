@@ -262,7 +262,7 @@ Deno.serve(async (req) => {
       }
 
       // ---- honesty sweep (23:00 Berlin) ----
-      if (force || hour === 23) {
+      if (isCommitmentTester(uid) && (force || hour === 23)) {
         const { data: cRow } = await admin
           .from("chatter_daily_commitment")
           .select("id, slots, confirmed_by_user, honesty_verdict")
