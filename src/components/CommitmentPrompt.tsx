@@ -377,6 +377,13 @@ export default function CommitmentPrompt() {
           {/* STEP 2: Slots */}
           {step === 2 && (
             <div className="space-y-3 py-2">
+              <div className="rounded-lg border border-yellow-500/20 bg-yellow-500/[0.05] p-3">
+                <p className="text-[11px] text-white/70 leading-relaxed">
+                  {de
+                    ? <>Grobe Angabe reicht — du musst nicht den ganzen Slot durchgehend online sein. <b className="text-yellow-300">Wer mehr Slots abdeckt, bekommt stärkeren Push.</b></>
+                    : <>A rough estimate is enough — you don't need to be online the entire slot. <b className="text-yellow-300">The more slots you cover, the stronger the push.</b></>}
+                </p>
+              </div>
               <div className="grid grid-cols-2 gap-3">
                 {SLOT_META.map(({ key, icon: Icon, de: dl, en: el, hint }) => {
                   const active = selectedSlots.includes(key);
