@@ -394,6 +394,8 @@ const Auth = () => {
               setEmail("");
               setPassword("");
               setGroupName("");
+              setFirstName("");
+              setLastName("");
             }}
             className="mt-3 text-sm text-primary hover:text-primary/80 transition-colors underline underline-offset-2"
           >
