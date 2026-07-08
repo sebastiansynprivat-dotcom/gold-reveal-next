@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { isCommitmentTester } from "@/lib/commitmentFlag";
 import { toast } from "sonner";
-import { Sparkles, Sun, Moon, RotateCcw, Zap, Flame } from "lucide-react";
+import { Sparkles, Sun, Moon, RotateCcw, Zap, Flame, Undo2 } from "lucide-react";
 
 function berlinDate(): string {
   return new Date().toLocaleDateString("en-CA", { timeZone: "Europe/Berlin" });
