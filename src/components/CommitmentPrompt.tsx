@@ -441,41 +441,97 @@ export default function CommitmentPrompt() {
           )}
 
           {/* STEP 3: Goal */}
-          {step === 3 && (
-            <div className="py-4 space-y-5">
-              <div className="text-center">
-                <div className="text-5xl font-bold bg-gradient-to-r from-yellow-300 to-yellow-500 bg-clip-text text-transparent">
-                  {goal}€
-                </div>
-                <div className="text-sm text-white/50 mt-1">{de ? "Tagesziel" : "Daily goal"}</div>
-              </div>
-              <Slider
-                value={[goal]}
-                onValueChange={(v) => setGoal(v[0])}
-                min={50}
-                max={1000}
-                step={10}
-              />
-              {avg7d > 0 && (
-                <div className="rounded-lg bg-white/5 border border-white/10 p-3 text-center">
-                  <div className="text-xs text-white/50">
-                    {de ? "Dein Ø der letzten 7 Tage" : "Your 7-day average"}
+          {step === 3 && (() => {
+            const roundTo5 = (n: number) => Math.max(5, Math.round(n / 5) * 5);
+            const recommended = avg7d > 0 ? roundTo5(avg7d * 1.15) : 30;
+            const sliderMax = Math.max(500, roundTo5(Math.max(avg7d * 2, goal + 100)));
+            return (
+              <div className="py-4 space-y-4">
+                <div className="text-center">
+                  <div className="text-5xl font-bold bg-gradient-to-r from-yellow-300 to-yellow-500 bg-clip-text text-transparent">
+                    {goal}€
                   </div>
-                  <div className="text-lg font-semibold text-white/90">{avg7d}€</div>
-                  {goalVsAvg === "ambitious" && (
-                    <div className="text-xs text-yellow-300 mt-1">
-                      {de ? "Ambitioniert 💪" : "Ambitious 💪"}
-                    </div>
-                  )}
-                  {goalVsAvg === "safe" && (
-                    <div className="text-xs text-emerald-300 mt-1">
-                      {de ? "Sicher & solide ✅" : "Safe & solid ✅"}
-                    </div>
-                  )}
+                  <div className="text-sm text-white/50 mt-1">{de ? "Tagesziel" : "Daily goal"}</div>
                 </div>
-              )}
-            </div>
-          )}
+
+                <Slider
+                  value={[Math.min(goal, sliderMax)]}
+                  onValueChange={(v) => setGoal(v[0])}
+                  min={5}
+                  max={sliderMax}
+                  step={5}
+                />
+
+                {/* Quick presets + manual input */}
+                <div className="flex flex-wrap items-center gap-2 justify-center">
+                  <button
+                    type="button"
+                    onClick={() => { setGoal(recommended); playCheckSound(); }}
+                    className="rounded-full border border-yellow-400/60 bg-yellow-500/10 px-3 py-1 text-xs font-semibold text-yellow-200 hover:bg-yellow-500/20 transition"
+                  >
+                    {de ? "Empfehlung" : "Recommended"}: {recommended}€
+                  </button>
+                  {[5, 20, 50, 100].map((v) => (
+                    <button
+                      key={v}
+                      type="button"
+                      onClick={() => { setGoal(v); playCheckSound(); }}
+                      className={cn(
+                        "rounded-full border px-3 py-1 text-xs transition",
+                        goal === v
+                          ? "border-yellow-400 bg-yellow-500/15 text-yellow-200"
+                          : "border-white/10 bg-white/5 text-white/70 hover:border-white/20",
+                      )}
+                    >
+                      {v}€
+                    </button>
+                  ))}
+                  <div className="flex items-center gap-1 text-xs text-white/60">
+                    <span>{de ? "eigener Wert:" : "custom:"}</span>
+                    <input
+                      type="number"
+                      min={5}
+                      value={goal}
+                      onChange={(e) => {
+                        const n = parseInt(e.target.value, 10);
+                        if (!isNaN(n) && n >= 5) setGoal(n);
+                      }}
+                      className="w-20 rounded-md bg-white/5 border border-white/10 px-2 py-1 text-white text-sm text-right focus:outline-none focus:border-yellow-400"
+                    />
+                    <span>€</span>
+                  </div>
+                </div>
+
+                {avg7d > 0 && (
+                  <div className="rounded-lg bg-white/5 border border-white/10 p-3 text-center">
+                    <div className="text-xs text-white/50">
+                      {de ? "Dein Ø der letzten 7 Tage" : "Your 7-day average"}
+                    </div>
+                    <div className="text-lg font-semibold text-white/90">{avg7d}€</div>
+                    {goalVsAvg === "ambitious" && (
+                      <div className="text-xs text-yellow-300 mt-1">
+                        {de ? "Ambitioniert 💪" : "Ambitious 💪"}
+                      </div>
+                    )}
+                    {goalVsAvg === "safe" && (
+                      <div className="text-xs text-emerald-300 mt-1">
+                        {de ? "Sicher & solide ✅" : "Safe & solid ✅"}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="rounded-lg border border-yellow-500/20 bg-yellow-500/[0.05] p-3">
+                  <p className="text-[11px] text-white/75 leading-relaxed">
+                    {de
+                      ? <>Setz dir ein Ziel, das <b className="text-yellow-300">knapp über deinem Schnitt</b> liegt. Kleine Steigerungen jede Woche = am Monatsende deutlich mehr Umsatz (und mehr Provision für dich). Minimum sind <b className="text-yellow-300">5€</b> — starte klein, wenn du unsicher bist. Nach oben gibt's <b className="text-yellow-300">kein Limit</b>.</>
+                      : <>Set a goal <b className="text-yellow-300">slightly above your average</b>. Small weekly bumps = way more revenue by month-end (and more commission for you). Minimum is <b className="text-yellow-300">€5</b> — start small if you're unsure. <b className="text-yellow-300">No upper limit.</b></>}
+                  </p>
+                </div>
+              </div>
+            );
+          })()}
+
 
           {/* STEP 4: Dein Wort */}
           {step === 4 && (
