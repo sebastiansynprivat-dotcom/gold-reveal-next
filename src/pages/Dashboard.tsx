@@ -765,6 +765,7 @@ export default function Dashboard() {
         waitForDismiss={!homescreenDismissed}
       />
       <PushNotificationDialog />
+      <CommitmentPrompt />
       <FrageMemoDialog open={showFrageMemo} onOpenChange={setShowFrageMemo} />
       {/* Header with Telegram + Umsatz inline */}
       <header className="header-gradient-border">
