@@ -26,14 +26,19 @@ export default function CommitmentDebugPanel() {
 
   if (!userId) return null;
 
+  const ensureDashboard = (url: URL) => {
+    // Dialog ist nur auf /dashboard gemountet — dahin umleiten, falls wir woanders sind.
+    if (!url.pathname.startsWith("/dashboard")) url.pathname = "/dashboard";
+    return url;
+  };
   const goMorning = () => {
-    const url = new URL(window.location.href);
+    const url = ensureDashboard(new URL(window.location.href));
     url.searchParams.set("commit", "1");
     url.searchParams.delete("checkin");
     window.location.href = url.toString();
   };
   const goEvening = () => {
-    const url = new URL(window.location.href);
+    const url = ensureDashboard(new URL(window.location.href));
     url.searchParams.set("checkin", "1");
     url.searchParams.delete("commit");
     window.location.href = url.toString();
@@ -47,11 +52,12 @@ export default function CommitmentDebugPanel() {
     if (error) return toast.error("Reset fehlgeschlagen: " + error.message);
     toast.success(`Reset ok (${count ?? 0} Zeile). Öffne Morgen-Dialog neu…`);
     // direkt Morgen-Dialog forcieren, damit man den Reset sofort sieht
-    const url = new URL(window.location.href);
+    const url = ensureDashboard(new URL(window.location.href));
     url.searchParams.set("commit", "1");
     url.searchParams.delete("checkin");
     setTimeout(() => (window.location.href = url.toString()), 400);
   };
+
   const triggerPulse = async () => {
     try {
       const { data, error } = await supabase.functions.invoke("chatter-pulse-pushes", {
