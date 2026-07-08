@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { isCommitmentTester } from "@/lib/commitmentFlag";
 import { toast } from "sonner";
-import { Sparkles, Sun, Moon, RotateCcw, Zap } from "lucide-react";
+import { Sparkles, Sun, Moon, RotateCcw, Zap, Flame } from "lucide-react";
 
 function berlinDate(): string {
   return new Date().toLocaleDateString("en-CA", { timeZone: "Europe/Berlin" });
@@ -59,6 +59,27 @@ export default function CommitmentDebugPanel() {
       toast.error("Pulse-Trigger fehlgeschlagen: " + (e?.message ?? "unknown"));
     }
   };
+  const simulateStreak = async (days: number) => {
+    const rows = [];
+    for (let i = 1; i <= days; i++) {
+      const d = new Date();
+      d.setUTCDate(d.getUTCDate() - i);
+      const date = d.toLocaleDateString("en-CA", { timeZone: "Europe/Berlin" });
+      rows.push({
+        user_id: userId,
+        date,
+        slots: ["morning", "noon", "evening"],
+        daily_goal: 150,
+        confirmed_by_user: true,
+        confirmed_at: new Date().toISOString(),
+      });
+    }
+    const { error } = await supabase
+      .from("chatter_daily_commitment" as any)
+      .upsert(rows, { onConflict: "user_id,date" });
+    if (error) return toast.error("Streak-Simulation fehlgeschlagen");
+    toast.success(`${days} Tage Fake-Streak angelegt — Seite neu laden`);
+  };
 
   return (
     <div className="fixed bottom-4 right-4 z-[9999]">
@@ -94,6 +115,9 @@ export default function CommitmentDebugPanel() {
             </Button>
             <Button size="sm" variant="outline" onClick={triggerPulse} className="justify-start border-white/20 bg-white/5 text-white/80 hover:bg-white/10">
               <Zap className="w-4 h-4 mr-2" /> Pulse-Push jetzt
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => simulateStreak(6)} className="justify-start border-white/20 bg-white/5 text-white/80 hover:bg-white/10">
+              <Flame className="w-4 h-4 mr-2" /> Streak +6 simulieren
             </Button>
           </div>
           <p className="text-[10px] text-white/40 mt-2 leading-snug">
