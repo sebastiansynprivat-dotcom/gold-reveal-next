@@ -13,6 +13,7 @@ import { useSoundEffects } from "@/hooks/useSoundEffects";
 import { isCommitmentTester } from "@/lib/commitmentFlag";
 import { getCurrentStreak, get7dAvgRevenue, berlinDate } from "@/lib/commitmentStreak";
 import { getQuoteForToday } from "@/lib/commitmentQuotes";
+import { getTierInfo, TIERS } from "@/lib/commitmentTiers";
 
 type Slot = "morning" | "noon" | "evening" | "night";
 type Step = 1 | 2 | 3 | 4;
