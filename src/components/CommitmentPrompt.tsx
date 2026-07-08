@@ -59,7 +59,7 @@ export default function CommitmentPrompt() {
         .eq("user_id", user.id)
         .eq("date", berlinDate())
         .maybeSingle();
-      const row = data as Row | null;
+      const row = (data as unknown) as Row | null;
       setToday(row);
 
       // Fetch daily_goal default
