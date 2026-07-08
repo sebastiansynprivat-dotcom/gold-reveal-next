@@ -216,8 +216,8 @@ const Auth = () => {
     setError("");
 
     if (isSignUp) {
-      if (!name.trim()) {
-        setError(t("auth.error.nameRequired") || "Bitte gib deinen Namen ein.");
+      if (!firstName.trim() || !lastName.trim()) {
+        setError(t("auth.error.nameRequired") || "Bitte gib deinen Vor- und Nachnamen ein.");
         return;
       }
       if (!groupName.trim()) {
