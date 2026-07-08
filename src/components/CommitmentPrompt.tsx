@@ -241,7 +241,7 @@ export default function CommitmentPrompt() {
             </DialogTitle>
             <DialogDescription className="text-white/60">
               {step === 1 && (de
-                ? "Jeder Tag, an dem du dein Wort hältst, hebt deinen Reliability-Score. Mit jedem Level kommen bessere Accounts, größere Kunden und früherer Zugriff."
+                ? "Jeder Tag, an dem du dein Wort hältst, hebt deinen Zuverlässigkeits-Score. Mit jedem Level kommen bessere Accounts, größere Kunden und früherer Zugriff."
                 : "Every day you keep your word raises your reliability score. Each level unlocks better accounts, bigger clients and earlier access.")}
               {step === 2 && (de
                 ? "Wähle die Zeitfenster, in denen du heute chattest."
