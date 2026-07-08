@@ -768,6 +768,7 @@ export default function Dashboard() {
       />
       <PushNotificationDialog />
       <CommitmentPrompt />
+      <CommitmentDebugPanel />
       <FrageMemoDialog open={showFrageMemo} onOpenChange={setShowFrageMemo} />
       {/* Header with Telegram + Umsatz inline */}
       <header className="header-gradient-border">
