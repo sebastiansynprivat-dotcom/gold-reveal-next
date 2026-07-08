@@ -1,46 +1,95 @@
-# Content Hub Uploads Edge Function
+# Daily Commitment Ritual – v3 (Honesty-Framing im Evening Prompt)
 
-Create a new edge function `content-hub-uploads` that returns AES-256-GCM encrypted credentials for all accounts belonging to a given model.
+Rest des Plans (Morgen-Push, 3-Step Dialog, Slot-Chips, Streak-Tiers, Priority-Framing, Admin-Panel, Auto-Confirm via Revenue-Event) bleibt wie in v2. **Neu: das Evening-Confirm-Popup bekommt einen Honesty-Layer.**
 
-## Secrets (you'll add via the secure form)
-- `CONTENT_HUB_AUTH` — shared secret sent by the caller in the `x-api-key` header.
-- `CONTENT_HUB_AES_KEY` — 32-byte AES key, provided as hex (64 chars) or base64.
+---
 
-## Endpoint
-- Path: `/content-hub-uploads`
-- Method: `POST`
-- `verify_jwt = false` (auth is the shared secret)
-- Header: `x-api-key: <CONTENT_HUB_AUTH>`
-- Body: `{ "model_id": "<uuid>" }`
+## Warum
 
-## Behavior
-1. Validate `x-api-key` against `CONTENT_HUB_AUTH` → 401 on mismatch.
-2. Validate `model_id` (uuid) via zod → 400 on failure.
-3. Query `accounts` (service role) where `model_id = :model_id`, selecting `platform, account_email, account_password`.
-4. For each account: build plaintext `"<account_email>|++|<account_password>"`, encrypt with AES-256-GCM using a fresh 12-byte IV; output is base64(`iv || ciphertext || authTag`) (Web Crypto returns ciphertext with the 16-byte tag appended, so the final blob is `iv(12) || ciphertext+tag`).
-5. Group by platform into arrays.
-6. Respond:
-   ```json
-   {
-     "model_id": "...",
-     "count": 3,
-     "accounts": {
-       "onlyfans": ["<b64>", "<b64>"],
-       "fansly":   ["<b64>"]
-     }
-   }
-   ```
+Wenn die Ja/Nein-Frage rein selbst-deklariert wirkt, ist die Versuchung zu lügen zu groß. Wir brauchen einen sanften Hinweis, dass wir **stichprobenartig gegenchecken** – ohne dass es nach Überwachung oder Drohung klingt. Ehrliches "Nein" darf keinen Schaden anrichten, unehrliches "Ja" muss teurer sein als ein ehrliches "Nein".
 
-## Decryption reference (for your consumer)
-- Key: raw 32 bytes from `CONTENT_HUB_AES_KEY` (hex or base64).
-- Split blob: `iv = bytes[0..12]`, `rest = bytes[12..]` → AES-256-GCM decrypt with 128-bit tag.
-- UTF-8 decode → split on `|++|` → `[email, password]`.
+Psychologisch nutzen wir zwei Effekte:
+- **Observer-Effekt / Honor-Code** (Mazar-Amir-Ariely 2008): Schon der bloße Hinweis auf mögliche Kontrolle senkt Lügen-Rate massiv, ohne dass wirklich flächendeckend geprüft werden muss.
+- **Asymmetrische Konsequenz**: Ehrlich "Nein" = neutral. Unehrlich "Ja" = deutlicher Tier-Rückschritt. Das macht Ehrlichkeit zur dominanten Strategie.
 
-## Files
-- `supabase/functions/content-hub-uploads/index.ts` — implementation (CORS, zod input validation, key parsing helper, Web Crypto AES-GCM, service-role Supabase client).
-- `supabase/config.toml` — add `[functions.content-hub-uploads] verify_jwt = false`.
+---
 
-## After plan approval
-1. Request the two secrets via `add_secret` (`CONTENT_HUB_AUTH`, `CONTENT_HUB_AES_KEY`).
-2. Create the function + config entry.
-3. Deploy and smoke-test with `curl_edge_functions` using a real `model_id` (encrypted output only; no plaintext logged).
+## Neues Evening-Confirm-Popup (21:30)
+
+**Layout:** Glass-Card, gold-akzentuiert. 3 Elemente:
+
+1. **Frage (fett):** *"Warst du heute wie versprochen für deine Models da?"*
+2. **Sub-Text (klein, gold-transparent):**
+   > *"Kurze Info: Wir gleichen deine Antwort automatisch mit Login- und Sale-Aktivität ab. Ehrliches „Nein" kostet dich nichts – dein Streak pausiert einfach. Ein „Ja", das nicht passt, kostet dich eine Tier-Stufe. Ehrlichkeit lohnt sich hier immer."*
+3. **Zwei CTAs:**
+   - ✅ *"Ja, war ich"* (gold, primary)
+   - 😔 *"Heute nicht geschafft"* (glass, secondary — bewusst nicht negativ formuliert)
+
+Kein "Vielleicht", kein "Später". Bewusst binär.
+
+---
+
+## Honesty-Check-Logik (Backend)
+
+Läuft in `chatter-pulse-pushes` (23:00 Berlin) für alle "Ja"-Antworten des Tages:
+
+**Signal-Aggregation pro Chatter für den heutigen Tag:**
+- Login-Events im Slot-Fenster (aus `login_events` / `app_install_status.last_active_at`)
+- Revenue-Events im Slot-Fenster (aus `accounts_data` / `ingest-revenue`)
+- Push-Opens (aus `chatter_push_log` + Delivery-Tracking, falls vorhanden)
+
+**Klassifikation:**
+
+| Beweislage | Klassifikation | Konsequenz |
+|---|---|---|
+| Mindestens ein Signal im Slot-Fenster | ✅ Ja bestätigt | Streak +1, Tier bleibt / steigt |
+| Kein Signal, aber Login irgendwann heute | ⚠️ Unklar | Streak +1 (Benefit of the doubt), aber intern `honesty_flag=soft` |
+| Kein Signal, kein Login den ganzen Tag | ❌ Ja widerlegt | Streak reset **und** Tier -1 Stufe. Push: *"Deine heutige Bestätigung passt nicht zur Aktivität. Ehrlichkeit hätte deinen Tier gehalten."* |
+| Antwort war "Nein" | ➖ Ehrlich | Streak pausiert (kein Reset), Tier bleibt. Push: *"Danke für die Ehrlichkeit — morgen gehts weiter."* |
+| 3× `honesty_flag=soft` in 14 Tagen | ⚠️ Muster | Tier -1, Push: *"Uns fallen Muster auf. Kurze Ehrlichkeit hilft dir mehr als knappe Jas."* |
+
+**Wichtig:** Widerlegung nur bei **null Signalen den ganzen Tag** — das ist objektiv und unstreitbar. So können wir nie fälschlich jemanden bestrafen, der wirklich da war (weil dann garantiert ein Login existiert).
+
+---
+
+## Was sich in Plan v2 konkret ändert
+
+- **Evening-Push-Template** (`commitment_evening_recap`): Body ergänzt um Verifizierungs-Hinweis in einer Zeile: *"Wir gleichen kurz mit deiner Aktivität ab — Ehrlichkeit lohnt sich."*
+- **Neue Push-Templates:**
+  - `commitment_honesty_confirmed` (nur bei widerlegtem Ja) — gold-warnend, nicht aggressiv
+  - `commitment_honest_no_thanks` (bei ehrlichem Nein) — kurz, positiv
+  - `commitment_pattern_warning` (bei 3× soft flag) — sichtbar, aber nicht zerstörerisch
+- **DB-Felder in `chatter_daily_commitment`:**
+  - `confirmed_by_user boolean` (true/false/null)
+  - `honesty_verdict text` — `confirmed` / `soft_unclear` / `disproved` / `honest_no` / null
+  - `signal_snapshot jsonb` — `{ logins: [...], sales: [...], slots: [...] }` für Nachvollziehbarkeit
+- **Neuer Cron-Trigger** in `chatter-pulse-pushes` um 23:00 Berlin: `verifyHonesty()`-Sweep über den heutigen Tag.
+- **Admin-Panel** bekommt einen "Honesty-Log"-Tab: pro Chatter die letzten 30 Tage mit Verdict + Signal-Snapshot. Read-only, dient nur der Admin-Übersicht.
+
+---
+
+## Was bewusst NICHT passiert
+
+- Keine öffentliche Bloßstellung. Verdict ist nur für den Chatter selbst + Admins sichtbar.
+- Kein Ban, kein Account-Verlust — maximal Tier -1.
+- Kein Rechtsstreit mit dem Chatter: Wir sagen im Popup transparent, dass wir abgleichen. Wer trotzdem "Ja" klickt ohne da gewesen zu sein, weiß was er tut.
+- Kein Perfektionsdruck: "Unklar"-Fälle gehen zu Gunsten des Chatters.
+
+---
+
+## Umsetzungs-Reihenfolge (leicht ergänzt)
+
+1. DB + Streak-RPC + Push-Templates (inkl. neue Honesty-Templates).
+2. Commitment-Dialog + Morgen-Push + Deep-Link.
+3. Streak-Widget + Tier-System + **Evening-Confirm-Prompt mit Honesty-Framing**.
+4. **Honesty-Sweep-Cron (23:00) + Signal-Snapshot-Speicherung.**
+5. Auto-Confirm via Revenue-Event (Bonus-Signal fürs Honesty-Log).
+6. Admin-Panel + Honesty-Log-Tab + optionale Priority-Assignment-Sortierung.
+
+---
+
+## Offene Fragen (unverändert von v2)
+
+1. **Slot-Struktur:** feste 4 Chips (Morgen/Mittag/Abend/Nacht), freier Slider, oder beides?
+2. **Tier-Namen:** Consistent / Reliable / Priority Chatter / Elite okay – oder andere?
+3. **"Heute Pause"-Button** im Morgen-Dialog erlauben (1× pro Woche ohne Streak-Schaden) oder ganz weglassen?
