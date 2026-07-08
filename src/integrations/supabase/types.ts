@@ -578,6 +578,63 @@ export type Database = {
         }
         Relationships: []
       }
+      chatter_daily_commitment: {
+        Row: {
+          auto_confirmed_by_revenue: boolean
+          committed_at: string
+          confirmed_at: string | null
+          confirmed_by_user: boolean | null
+          created_at: string
+          daily_goal: number | null
+          date: string
+          honesty_verdict: string | null
+          id: string
+          signal_snapshot: Json
+          slots: string[]
+          streak_snapshot: number | null
+          tier_snapshot: string | null
+          updated_at: string
+          user_id: string
+          verified_at: string | null
+        }
+        Insert: {
+          auto_confirmed_by_revenue?: boolean
+          committed_at?: string
+          confirmed_at?: string | null
+          confirmed_by_user?: boolean | null
+          created_at?: string
+          daily_goal?: number | null
+          date: string
+          honesty_verdict?: string | null
+          id?: string
+          signal_snapshot?: Json
+          slots?: string[]
+          streak_snapshot?: number | null
+          tier_snapshot?: string | null
+          updated_at?: string
+          user_id: string
+          verified_at?: string | null
+        }
+        Update: {
+          auto_confirmed_by_revenue?: boolean
+          committed_at?: string
+          confirmed_at?: string | null
+          confirmed_by_user?: boolean | null
+          created_at?: string
+          daily_goal?: number | null
+          date?: string
+          honesty_verdict?: string | null
+          id?: string
+          signal_snapshot?: Json
+          slots?: string[]
+          streak_snapshot?: number | null
+          tier_snapshot?: string | null
+          updated_at?: string
+          user_id?: string
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
       chatter_push_log: {
         Row: {
           body: string
@@ -3320,6 +3377,13 @@ export type Database = {
         Returns: {
           date: string
           total: number
+        }[]
+      }
+      get_commitment_streak: {
+        Args: { p_user_id: string }
+        Returns: {
+          streak: number
+          tier: string
         }[]
       }
       get_credit_note_seq: { Args: never; Returns: number }

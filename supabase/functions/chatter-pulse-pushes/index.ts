@@ -226,6 +226,101 @@ Deno.serve(async (req) => {
         });
         if (r.sent) sentCount++;
       }
+
+      // ---- commitment_morning (08:30–09:30 Berlin) ----
+      if (force || hour === 8 || hour === 9) {
+        // Only if no commitment row yet for today
+        const { data: existingC } = await admin
+          .from("chatter_daily_commitment")
+          .select("id")
+          .eq("user_id", uid)
+          .eq("date", today)
+          .maybeSingle();
+        if (!existingC) {
+          const r = await sendChatterPush(admin, {
+            user_id: uid, trigger_key: "commitment_morning", lang, ctx: {},
+          });
+          if (r.sent) sentCount++;
+        }
+      }
+
+      // ---- commitment_evening_recap (21:00 Berlin) ----
+      if (force || hour === 21) {
+        const { data: cRow } = await admin
+          .from("chatter_daily_commitment")
+          .select("id, confirmed_by_user")
+          .eq("user_id", uid)
+          .eq("date", today)
+          .maybeSingle();
+        if (cRow && cRow.confirmed_by_user === null) {
+          const r = await sendChatterPush(admin, {
+            user_id: uid, trigger_key: "commitment_evening_recap", lang, ctx: {},
+          });
+          if (r.sent) sentCount++;
+        }
+      }
+
+      // ---- honesty sweep (23:00 Berlin) ----
+      if (force || hour === 23) {
+        const { data: cRow } = await admin
+          .from("chatter_daily_commitment")
+          .select("id, slots, confirmed_by_user, honesty_verdict")
+          .eq("user_id", uid)
+          .eq("date", today)
+          .maybeSingle();
+        if (cRow && !cRow.honesty_verdict) {
+          // Collect signals for today (in Berlin day boundaries — approximate via UTC day)
+          const dayStart = new Date(today + "T00:00:00Z").toISOString();
+          const dayEnd = new Date(today + "T23:59:59Z").toISOString();
+
+          const { data: logins } = await admin
+            .from("login_events")
+            .select("created_at")
+            .eq("user_id", uid)
+            .gte("created_at", dayStart)
+            .lte("created_at", dayEnd);
+          const loginCount = (logins ?? []).length;
+
+          const totalToday = totals.get(today) ?? 0;
+          const anySignal = loginCount > 0 || totalToday > 0;
+
+          let verdict: string;
+          const auto_confirmed = totalToday > 0;
+          let userAnswer = cRow.confirmed_by_user;
+
+          if (userAnswer === false) {
+            verdict = "honest_no";
+            await sendChatterPush(admin, {
+              user_id: uid, trigger_key: "commitment_honest_no_thanks", lang, ctx: {}, skipCooldown: true,
+            });
+          } else if (userAnswer === true) {
+            // verify
+            if (auto_confirmed || loginCount > 2) {
+              verdict = "confirmed";
+            } else if (loginCount > 0) {
+              verdict = "soft_unclear";
+            } else {
+              verdict = "disproved";
+              await sendChatterPush(admin, {
+                user_id: uid, trigger_key: "commitment_honesty_confirmed", lang, ctx: {}, skipCooldown: true,
+              });
+            }
+          } else {
+            // no answer at all — treat as soft (streak paused effectively)
+            verdict = anySignal ? "soft_unclear" : "honest_no";
+          }
+
+          await admin
+            .from("chatter_daily_commitment")
+            .update({
+              honesty_verdict: verdict,
+              verified_at: new Date().toISOString(),
+              auto_confirmed_by_revenue: auto_confirmed,
+              signal_snapshot: { login_count: loginCount, revenue_total: totalToday },
+            })
+            .eq("id", cRow.id);
+        }
+      }
     }
 
     return new Response(
