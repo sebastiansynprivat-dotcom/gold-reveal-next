@@ -133,6 +133,9 @@ export default function CommitmentDebugPanel() {
             <Button size="sm" variant="outline" onClick={() => simulateStreak(6)} className="justify-start border-white/20 bg-white/5 text-white/80 hover:bg-white/10">
               <Flame className="w-4 h-4 mr-2" /> Streak +6 simulieren
             </Button>
+            <Button size="sm" variant="outline" onClick={resetToLevel1} className="justify-start border-fuchsia-400/40 bg-fuchsia-500/10 text-fuchsia-100 hover:bg-fuchsia-500/20">
+              <Undo2 className="w-4 h-4 mr-2" /> Zurück auf Level 1
+            </Button>
           </div>
           <p className="text-[10px] text-white/40 mt-2 leading-snug">
             Nur du siehst das. Abend-Dialog braucht einen vorhandenen Morgen-Eintrag.
