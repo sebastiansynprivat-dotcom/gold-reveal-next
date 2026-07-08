@@ -144,6 +144,7 @@ export const dict: Dict = {
   "auth.signup.subtitle": { de: "Erstelle dein kostenloses Konto, um deinen Account zu bekommen und damit Geld zu verdienen.", en: "Create your free account to get set up and start earning." },
   "auth.signin.title": { de: "Willkommen zurück", en: "Welcome back" },
   "auth.signin.subtitle": { de: "Melde dich an, um weiterzumachen", en: "Sign in to continue" },
+  "auth.placeholder.name": { de: "Dein Name", en: "Your name" },
   "auth.placeholder.groupName": { de: "Gruppenname (Beispiel: Max Mustermann)", en: "Group name (e.g. John Doe)" },
   "auth.placeholder.telegramId": { de: "Telegram-ID", en: "Telegram ID" },
   "auth.placeholder.email": { de: "E-Mail Adresse", en: "Email address" },
