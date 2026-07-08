@@ -28,7 +28,8 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [groupName, setGroupName] = useState("");
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [telegramId, setTelegramId] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
