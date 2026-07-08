@@ -8,6 +8,7 @@ import { Sun, CloudSun, Moon, Star, ShieldCheck, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useUILanguage } from "@/hooks/useUILanguage";
+import { isCommitmentTester } from "@/lib/commitmentFlag";
 
 type Slot = "morning" | "noon" | "evening" | "night";
 
@@ -52,6 +53,7 @@ export default function CommitmentPrompt() {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+      if (!isCommitmentTester(user.id)) return;
       setUserId(user.id);
       const { data } = await supabase
         .from("chatter_daily_commitment" as any)
