@@ -28,7 +28,8 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [groupName, setGroupName] = useState("");
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [telegramId, setTelegramId] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -215,8 +216,8 @@ const Auth = () => {
     setError("");
 
     if (isSignUp) {
-      if (!name.trim()) {
-        setError(t("auth.error.nameRequired") || "Bitte gib deinen Namen ein.");
+      if (!firstName.trim() || !lastName.trim()) {
+        setError(t("auth.error.nameRequired") || "Bitte gib deinen Vor- und Nachnamen ein.");
         return;
       }
       if (!groupName.trim()) {
@@ -262,7 +263,7 @@ const Auth = () => {
   const handleConfirmSignUp = async () => {
     setShowTelegramConfirm(false);
     setSubmitting(true);
-    const { error } = await signUp(email, password, { group_name: groupName.trim(), name: name.trim() });
+    const { error } = await signUp(email, password, { group_name: groupName.trim(), name: `${firstName.trim()} ${lastName.trim()}`.trim() });
     if (error) {
       setError(translateError(error.message, t));
     } else {
@@ -393,6 +394,8 @@ const Auth = () => {
               setEmail("");
               setPassword("");
               setGroupName("");
+              setFirstName("");
+              setLastName("");
             }}
             className="mt-3 text-sm text-primary hover:text-primary/80 transition-colors underline underline-offset-2"
           >
@@ -415,16 +418,29 @@ const Auth = () => {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignUp && (
-              <div>
+              <div className="grid grid-cols-2 gap-3">
                 <div className="input-gold-shimmer rounded-xl">
                   <input
                     type="text"
-                    name="name"
-                    id="signup-name"
-                    autoComplete="name"
-                    placeholder={t("auth.placeholder.name") || "Dein Name"}
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    name="first_name"
+                    id="signup-first-name"
+                    autoComplete="given-name"
+                    placeholder={t("auth.placeholder.firstName") || "Dein Vorname"}
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    required
+                    className={inputClass}
+                  />
+                </div>
+                <div className="input-gold-shimmer rounded-xl">
+                  <input
+                    type="text"
+                    name="last_name"
+                    id="signup-last-name"
+                    autoComplete="family-name"
+                    placeholder={t("auth.placeholder.lastName") || "Nachname"}
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
                     required
                     className={inputClass}
                   />
