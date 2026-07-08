@@ -80,7 +80,7 @@ import RequestMediaPicker, { type RequestAttachment } from "@/components/Request
 import RequestMediaList from "@/components/RequestMediaList";
 import RevenueChart from "@/components/RevenueChart";
 import MonthSummaryWidget from "@/components/MonthSummaryWidget";
-import ContentDropsWidget from "@/components/ContentDropsWidget";
+
 import ChatterFaqWidget from "@/components/ChatterFaqWidget";
 import ModelProfilePreviewCards from "@/components/ModelProfilePreviewCards";
 import QuickActionBar from "@/components/QuickActionBar";
@@ -1204,8 +1204,6 @@ export default function Dashboard() {
           <MassDmGenerator />
         </div>
 
-        {/* 3. Neue Content Drops vom Model */}
-        <ContentDropsWidget />
         {/* Anfrage an das Model */}
         <motion.section
           variants={sectionVariants}
