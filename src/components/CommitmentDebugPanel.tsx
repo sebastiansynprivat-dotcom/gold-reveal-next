@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { isCommitmentTester } from "@/lib/commitmentFlag";
 import { toast } from "sonner";
-import { Sparkles, Sun, Moon, RotateCcw, Zap, Flame } from "lucide-react";
+import { Sparkles, Sun, Moon, RotateCcw, Zap, Flame, Undo2 } from "lucide-react";
 
 function berlinDate(): string {
   return new Date().toLocaleDateString("en-CA", { timeZone: "Europe/Berlin" });
@@ -85,6 +85,15 @@ export default function CommitmentDebugPanel() {
     if (error) return toast.error("Streak-Simulation fehlgeschlagen");
     toast.success(`${days} Tage Fake-Streak angelegt — Seite neu laden`);
   };
+  const resetToLevel1 = async () => {
+    const { error, count } = await supabase
+      .from("chatter_daily_commitment" as any)
+      .delete({ count: "exact" })
+      .eq("user_id", userId);
+    if (error) return toast.error("Level-Reset fehlgeschlagen: " + error.message);
+    toast.success(`Zurück auf Level 1 (${count ?? 0} Zeilen gelöscht) — lade neu…`);
+    setTimeout(() => window.location.reload(), 600);
+  };
 
   return (
     <div className="fixed bottom-4 right-4 z-[9999]">
@@ -123,6 +132,9 @@ export default function CommitmentDebugPanel() {
             </Button>
             <Button size="sm" variant="outline" onClick={() => simulateStreak(6)} className="justify-start border-white/20 bg-white/5 text-white/80 hover:bg-white/10">
               <Flame className="w-4 h-4 mr-2" /> Streak +6 simulieren
+            </Button>
+            <Button size="sm" variant="outline" onClick={resetToLevel1} className="justify-start border-fuchsia-400/40 bg-fuchsia-500/10 text-fuchsia-100 hover:bg-fuchsia-500/20">
+              <Undo2 className="w-4 h-4 mr-2" /> Zurück auf Level 1
             </Button>
           </div>
           <p className="text-[10px] text-white/40 mt-2 leading-snug">
