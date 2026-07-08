@@ -15,7 +15,7 @@ export const TIERS: Tier[] = [
   {
     key: "rookie",
     min: 0,
-    de: "Rookie",
+    de: "Neuling",
     en: "Rookie",
     perk_de: "Standard-Pool",
     perk_en: "Standard pool",
@@ -25,7 +25,7 @@ export const TIERS: Tier[] = [
   {
     key: "trusted",
     min: 3,
-    de: "Trusted",
+    de: "Verlässlich",
     en: "Trusted",
     perk_de: "Content-Drops früher",
     perk_en: "Early content drops",
