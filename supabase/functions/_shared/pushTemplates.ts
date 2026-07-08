@@ -207,6 +207,72 @@ export const PUSH_TEMPLATES: Record<string, PushTemplate> = {
     de: { title: "📭 Inbox = 0", body: "Kein offener Chat bei {model}. Sauber." },
     en: { title: "📭 Inbox = 0", body: "Zero open chats on {model}. Clean." },
   },
+  // ===== C: COMMITMENT / HONESTY =====
+  commitment_morning: {
+    key: "commitment_morning",
+    category: "pull",
+    cooldown_hours: 20,
+    de: {
+      title: "Wann bist du heute für deine Models da? ⏰",
+      body: "1 Klick — Slots wählen, Streak sichern, Priority-Chatter werden.",
+    },
+    en: {
+      title: "When are you online for your models today? ⏰",
+      body: "One tap — pick your slots, keep your streak, unlock priority.",
+    },
+  },
+  commitment_evening_recap: {
+    key: "commitment_evening_recap",
+    category: "pull",
+    cooldown_hours: 12,
+    de: {
+      title: "Kurz bestätigen 🌙",
+      body: "Warst du heute in deinen Slots da? Wir gleichen kurz mit deiner Aktivität ab — Ehrlichkeit lohnt sich.",
+    },
+    en: {
+      title: "Quick check-in 🌙",
+      body: "Were you online in your slots today? We cross-check with activity — honesty always pays.",
+    },
+  },
+  commitment_honesty_confirmed: {
+    key: "commitment_honesty_confirmed",
+    category: "pull",
+    cooldown_hours: 0,
+    de: {
+      title: "Bestätigung passt nicht ⚠️",
+      body: "Deine heutige Bestätigung passt nicht zur Aktivität. Ehrlichkeit hätte deinen Tier gehalten.",
+    },
+    en: {
+      title: "Confirmation mismatch ⚠️",
+      body: "Today's check-in doesn't match your activity. Honesty would have kept your tier.",
+    },
+  },
+  commitment_honest_no_thanks: {
+    key: "commitment_honest_no_thanks",
+    category: "pull",
+    cooldown_hours: 0,
+    de: {
+      title: "Danke für die Ehrlichkeit 🙏",
+      body: "Kein Streak-Bruch — morgen gehts weiter.",
+    },
+    en: {
+      title: "Thanks for being honest 🙏",
+      body: "No streak reset — fresh start tomorrow.",
+    },
+  },
+  commitment_pattern_warning: {
+    key: "commitment_pattern_warning",
+    category: "pull",
+    cooldown_hours: 24,
+    de: {
+      title: "Muster bemerkt 👀",
+      body: "Uns fallen Muster auf. Kurze Ehrlichkeit hilft dir mehr als knappe Jas.",
+    },
+    en: {
+      title: "Pattern noticed 👀",
+      body: "We're seeing a pattern. Honesty helps you more than empty 'yes' answers.",
+    },
+  },
 };
 
 export function formatTemplate(tpl: string, ctx: Record<string, unknown>): string {
