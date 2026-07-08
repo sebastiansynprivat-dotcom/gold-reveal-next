@@ -416,16 +416,29 @@ const Auth = () => {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {isSignUp && (
-              <div>
+              <div className="grid grid-cols-2 gap-3">
                 <div className="input-gold-shimmer rounded-xl">
                   <input
                     type="text"
-                    name="name"
-                    id="signup-name"
-                    autoComplete="name"
-                    placeholder={t("auth.placeholder.name") || "Dein Name"}
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    name="first_name"
+                    id="signup-first-name"
+                    autoComplete="given-name"
+                    placeholder={t("auth.placeholder.firstName") || "Dein Vorname"}
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    required
+                    className={inputClass}
+                  />
+                </div>
+                <div className="input-gold-shimmer rounded-xl">
+                  <input
+                    type="text"
+                    name="last_name"
+                    id="signup-last-name"
+                    autoComplete="family-name"
+                    placeholder={t("auth.placeholder.lastName") || "Nachname"}
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
                     required
                     className={inputClass}
                   />
