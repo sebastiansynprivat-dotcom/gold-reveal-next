@@ -319,7 +319,7 @@ export default function CommitmentPrompt() {
                 {/* Tier ladder */}
                 <div className="rounded-lg border border-white/10 bg-white/[0.02] p-3">
                   <div className="text-[10px] uppercase tracking-widest text-white/40 mb-2">
-                    {de ? "Reliability-Leiter" : "Reliability ladder"}
+                    {de ? "Zuverlässigkeits-Leiter" : "Reliability ladder"}
                   </div>
                   <div className="space-y-1.5">
                     {TIERS.map((tier, i) => {
