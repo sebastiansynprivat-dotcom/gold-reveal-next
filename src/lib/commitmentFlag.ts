@@ -7,7 +7,7 @@
 // oder im Admin unter Chatter → Detailansicht → User-ID kopieren.
 
 export const COMMITMENT_ALLOWLIST: string[] = [
-  // "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+  "d559bb8e-7883-48cc-bfa2-168225a96708", // sebastianpushtest@gmail.com
 ];
 
 export const COMMITMENT_RELEASE_TO_ALL = false;
