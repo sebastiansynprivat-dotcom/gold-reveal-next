@@ -37,8 +37,8 @@ type Row = {
 };
 
 export default function CommitmentPrompt() {
-  const { language } = useUILanguage();
-  const de = language !== "en";
+  const { lang } = useUILanguage();
+  const de = lang !== "en";
   const [userId, setUserId] = useState<string | null>(null);
   const [today, setToday] = useState<Row | null>(null);
   const [showCommit, setShowCommit] = useState(false);
