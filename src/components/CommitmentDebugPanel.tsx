@@ -85,6 +85,15 @@ export default function CommitmentDebugPanel() {
     if (error) return toast.error("Streak-Simulation fehlgeschlagen");
     toast.success(`${days} Tage Fake-Streak angelegt — Seite neu laden`);
   };
+  const resetToLevel1 = async () => {
+    const { error, count } = await supabase
+      .from("chatter_daily_commitment" as any)
+      .delete({ count: "exact" })
+      .eq("user_id", userId);
+    if (error) return toast.error("Level-Reset fehlgeschlagen: " + error.message);
+    toast.success(`Zurück auf Level 1 (${count ?? 0} Zeilen gelöscht) — lade neu…`);
+    setTimeout(() => window.location.reload(), 600);
+  };
 
   return (
     <div className="fixed bottom-4 right-4 z-[9999]">
