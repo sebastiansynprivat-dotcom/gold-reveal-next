@@ -1,0 +1,1 @@
+CREATE POLICY "Chatters delete own commitment" ON public.chatter_daily_commitment FOR DELETE USING (user_id = auth.uid());
