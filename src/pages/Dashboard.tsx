@@ -71,6 +71,7 @@ import { de } from "date-fns/locale";
 import HomescreenTutorial from "@/components/HomescreenTutorial";
 import PushNotificationDialog from "@/components/PushNotificationDialog";
 import CommitmentPrompt from "@/components/CommitmentPrompt";
+import CommitmentDebugPanel from "@/components/CommitmentDebugPanel";
 import LootBoxReward from "@/components/LootBoxReward";
 import FrageMemoDialog from "@/components/FrageMemoDialog";
 import ModelRequestDialog, { EditRequestData } from "@/components/ModelRequestDialog";
@@ -767,6 +768,7 @@ export default function Dashboard() {
       />
       <PushNotificationDialog />
       <CommitmentPrompt />
+      <CommitmentDebugPanel />
       <FrageMemoDialog open={showFrageMemo} onOpenChange={setShowFrageMemo} />
       {/* Header with Telegram + Umsatz inline */}
       <header className="header-gradient-border">
