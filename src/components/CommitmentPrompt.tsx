@@ -3,14 +3,19 @@ import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { motion } from "framer-motion";
-import { Sun, CloudSun, Moon, Star, ShieldCheck, Sparkles } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Sun, CloudSun, Moon, Star, ShieldCheck, Sparkles, Trophy, TrendingUp, Zap, Flame } from "lucide-react";
 import { toast } from "sonner";
+import confetti from "canvas-confetti";
 import { cn } from "@/lib/utils";
 import { useUILanguage } from "@/hooks/useUILanguage";
+import { useSoundEffects } from "@/hooks/useSoundEffects";
 import { isCommitmentTester } from "@/lib/commitmentFlag";
+import { getCurrentStreak, get7dAvgRevenue, berlinDate } from "@/lib/commitmentStreak";
+import { getQuoteForToday } from "@/lib/commitmentQuotes";
 
 type Slot = "morning" | "noon" | "evening" | "night";
+type Step = 1 | 2 | 3 | 4;
 
 const SLOT_META: { key: Slot; icon: any; de: string; en: string; hint: string }[] = [
   { key: "morning", icon: Sun, de: "Morgens", en: "Morning", hint: "06–11" },
@@ -19,13 +24,10 @@ const SLOT_META: { key: Slot; icon: any; de: string; en: string; hint: string }[
   { key: "night", icon: Moon, de: "Nachts", en: "Night", hint: "22–06" },
 ];
 
-function berlinDate(): string {
-  return new Date().toLocaleDateString("en-CA", { timeZone: "Europe/Berlin" });
-}
 function berlinHour(): number {
   return parseInt(
     new Date().toLocaleString("en-US", { hour: "2-digit", hour12: false, timeZone: "Europe/Berlin" }),
-    10
+    10,
   );
 }
 
@@ -37,17 +39,64 @@ type Row = {
   confirmed_by_user: boolean | null;
 };
 
+function fireBurst() {
+  confetti({
+    particleCount: 80,
+    spread: 65,
+    startVelocity: 45,
+    origin: { y: 0.7 },
+    colors: ["#fde047", "#f59e0b", "#facc15", "#ffffff"],
+  });
+}
+
+function fireBigBurst() {
+  confetti({
+    particleCount: 150,
+    spread: 100,
+    startVelocity: 55,
+    origin: { y: 0.6 },
+    colors: ["#fde047", "#f59e0b", "#facc15", "#ffffff", "#34d399"],
+  });
+  setTimeout(
+    () =>
+      confetti({
+        particleCount: 100,
+        spread: 120,
+        startVelocity: 40,
+        origin: { y: 0.65, x: 0.3 },
+        colors: ["#fde047", "#f59e0b"],
+      }),
+    200,
+  );
+  setTimeout(
+    () =>
+      confetti({
+        particleCount: 100,
+        spread: 120,
+        startVelocity: 40,
+        origin: { y: 0.65, x: 0.7 },
+        colors: ["#fde047", "#f59e0b"],
+      }),
+    400,
+  );
+}
+
 export default function CommitmentPrompt() {
   const { lang } = useUILanguage();
   const de = lang !== "en";
+  const { playCheckSound, playStreakSound, playLevelUpSound } = useSoundEffects();
+
   const [userId, setUserId] = useState<string | null>(null);
   const [today, setToday] = useState<Row | null>(null);
   const [showCommit, setShowCommit] = useState(false);
   const [showEvening, setShowEvening] = useState(false);
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<Step>(1);
   const [selectedSlots, setSelectedSlots] = useState<Slot[]>([]);
   const [goal, setGoal] = useState<number>(150);
   const [saving, setSaving] = useState(false);
+  const [streak, setStreak] = useState<number>(0);
+  const [avg7d, setAvg7d] = useState<number>(0);
+  const [rewardScreen, setRewardScreen] = useState<null | "yes" | "no">(null);
 
   useEffect(() => {
     (async () => {
@@ -55,6 +104,7 @@ export default function CommitmentPrompt() {
       if (!user) return;
       if (!isCommitmentTester(user.id)) return;
       setUserId(user.id);
+
       const { data } = await supabase
         .from("chatter_daily_commitment" as any)
         .select("id, date, slots, daily_goal, confirmed_by_user")
@@ -64,13 +114,19 @@ export default function CommitmentPrompt() {
       const row = (data as unknown) as Row | null;
       setToday(row);
 
-      // Fetch daily_goal default
       const { data: prof } = await supabase
         .from("profiles")
         .select("daily_goal")
         .eq("user_id", user.id)
         .maybeSingle();
       if (prof?.daily_goal) setGoal(Number(prof.daily_goal));
+
+      const [s, avg] = await Promise.all([
+        getCurrentStreak(user.id),
+        get7dAvgRevenue(user.id),
+      ]);
+      setStreak(s);
+      setAvg7d(avg);
 
       const params = new URLSearchParams(window.location.search);
       const forceCommit = params.get("commit") === "1";
@@ -97,7 +153,7 @@ export default function CommitmentPrompt() {
           slots: selectedSlots,
           daily_goal: goal,
         },
-        { onConflict: "user_id,date" }
+        { onConflict: "user_id,date" },
       )
       .select("id, date, slots, daily_goal, confirmed_by_user")
       .single();
@@ -108,8 +164,9 @@ export default function CommitmentPrompt() {
     }
     setToday(data as any);
     setShowCommit(false);
+    fireBurst();
+    playLevelUpSound();
     toast.success(de ? "Commitment gesichert 🔥" : "Commitment locked in 🔥");
-    // clean URL
     const url = new URL(window.location.href);
     url.searchParams.delete("commit");
     window.history.replaceState({}, "", url.toString());
@@ -130,68 +187,172 @@ export default function CommitmentPrompt() {
       toast.error(de ? "Fehler" : "Error");
       return;
     }
-    setShowEvening(false);
     if (confirmed) {
-      toast.success(de ? "Bestätigt — Streak sichert sich um 23 Uhr." : "Confirmed — streak locks at 11 PM.");
+      const newStreak = streak + 1;
+      setStreak(newStreak);
+      setRewardScreen("yes");
+      if ([3, 7, 14, 30].includes(newStreak)) {
+        fireBigBurst();
+        playLevelUpSound();
+      } else {
+        fireBurst();
+        playStreakSound();
+      }
     } else {
-      toast(de ? "Danke für die Ehrlichkeit — kein Streak-Bruch." : "Thanks for being honest — no streak reset.");
+      setRewardScreen("no");
+      playCheckSound();
     }
   }
 
   const toggleSlot = (s: Slot) =>
     setSelectedSlots((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
 
+  const reliabilityScore = Math.round((selectedSlots.length / 4) * 100);
+  const fullCommitter = selectedSlots.length === 4;
+  const quote = getQuoteForToday(de ? "de" : "en");
+
+  const goalVsAvg = avg7d > 0 ? (goal > avg7d ? "ambitious" : "safe") : null;
+
   return (
     <>
       {/* MORGEN: Commitment-Dialog */}
       <Dialog open={showCommit} onOpenChange={setShowCommit}>
-        <DialogContent className="max-w-md bg-black/95 border border-yellow-500/30 shadow-[0_0_60px_-15px_rgba(234,179,8,0.5)]">
+        <DialogContent className="max-w-md bg-black/95 border border-yellow-500/30 shadow-[0_0_60px_-15px_rgba(234,179,8,0.5)] max-h-[90vh] overflow-y-auto">
+          {/* Step indicator */}
+          <div className="flex gap-1 mb-1">
+            {[1, 2, 3, 4].map((n) => (
+              <div
+                key={n}
+                className={cn(
+                  "h-1 flex-1 rounded-full transition-colors",
+                  n <= step ? "bg-yellow-400" : "bg-white/10",
+                )}
+              />
+            ))}
+          </div>
+
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-yellow-300 to-yellow-500 bg-clip-text text-transparent">
-              {step === 1 && (de ? "Wann bist du heute da?" : "When are you online today?")}
-              {step === 2 && (de ? "Dein Tagesziel" : "Your daily goal")}
-              {step === 3 && (de ? "Bereit?" : "Ready?")}
+              {step === 1 && (de ? "Was dir das bringt" : "What you get")}
+              {step === 2 && (de ? "Wann bist du heute da?" : "When are you online today?")}
+              {step === 3 && (de ? "Dein Tagesziel" : "Your daily goal")}
+              {step === 4 && (de ? "Dein Wort für heute" : "Your word for today")}
             </DialogTitle>
             <DialogDescription className="text-white/60">
               {step === 1 && (de
-                ? "Wähle deine Slots. Zuverlässige Chatter kommen in den Priority-Pool."
-                : "Pick your slots. Reliable chatters unlock the priority pool.")}
-              {step === 2 && (de ? "Nur du — dein Ziel." : "Just you — your goal.")}
-              {step === 3 && (de
-                ? "Am Abend fragen wir kurz nach. 1 Klick — dein Streak wächst."
-                : "We'll ask you tonight. One tap — your streak grows.")}
+                ? "Zuverlässige Chatter kommen in den Priority Pool. Das heißt konkret:"
+                : "Reliable chatters enter the Priority Pool. Here's what that means:")}
+              {step === 2 && (de
+                ? "Wähle die Zeitfenster, in denen du heute chattest."
+                : "Pick the time slots you'll chat in today.")}
+              {step === 3 && (de ? "Setz ein Ziel, das dich zieht." : "Set a goal that pulls you.")}
+              {step === 4 && (de
+                ? "Um 21 Uhr fragen wir kurz — 1 Klick, dein Streak wächst."
+                : "We'll ask you at 9 PM — one tap, your streak grows.")}
             </DialogDescription>
           </DialogHeader>
 
+          {/* STEP 1: Benefits */}
           {step === 1 && (
-            <div className="grid grid-cols-2 gap-3 py-4">
-              {SLOT_META.map(({ key, icon: Icon, de: dl, en: el, hint }) => {
-                const active = selectedSlots.includes(key);
-                return (
-                  <motion.button
-                    key={key}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => toggleSlot(key)}
-                    className={cn(
-                      "flex flex-col items-center gap-1 rounded-xl p-4 border-2 transition-all",
-                      active
-                        ? "border-yellow-400 bg-yellow-500/10 shadow-[0_0_20px_-5px_rgba(234,179,8,0.6)]"
-                        : "border-white/10 bg-white/5 hover:border-white/20"
+            <div className="space-y-3 py-2">
+              <BenefitTile
+                icon={Trophy}
+                title={de ? "Priority Pool" : "Priority Pool"}
+                text={de
+                  ? "Neue Top-Models & VIP-Kunden gehen zuerst an zuverlässige Chatter."
+                  : "New top models & VIP clients go to reliable chatters first."}
+              />
+              <BenefitTile
+                icon={TrendingUp}
+                title={de ? "Höhere Tier-Stufen" : "Higher tiers"}
+                text={de
+                  ? "Ab 7 Tagen Streak: schnellerer Aufstieg im Bonus-System."
+                  : "7-day streak: faster climb in the bonus system."}
+              />
+              <BenefitTile
+                icon={Zap}
+                title={de ? "Sofort-Zugriff" : "Early access"}
+                text={de
+                  ? "Content-Drops & neue Accounts siehst du früher als der Rest."
+                  : "Content drops & new accounts land in your hands first."}
+              />
+              {streak > 0 && (
+                <div className="mt-3 flex items-center gap-2 rounded-lg bg-orange-500/10 border border-orange-500/30 p-2.5">
+                  <Flame className="w-4 h-4 text-orange-400" />
+                  <span className="text-xs text-orange-100">
+                    {de ? (
+                      <>Du hast aktuell <b>{streak} Tage Streak</b>. Nicht abreißen lassen.</>
+                    ) : (
+                      <>You're on a <b>{streak}-day streak</b>. Don't break it.</>
                     )}
-                  >
-                    <Icon className={cn("w-6 h-6", active ? "text-yellow-400" : "text-white/60")} />
-                    <span className={cn("font-semibold", active ? "text-yellow-300" : "text-white/80")}>
-                      {de ? dl : el}
-                    </span>
-                    <span className="text-xs text-white/40">{hint}</span>
-                  </motion.button>
-                );
-              })}
+                  </span>
+                </div>
+              )}
             </div>
           )}
 
+          {/* STEP 2: Slots */}
           {step === 2 && (
-            <div className="py-6 space-y-6">
+            <div className="space-y-3 py-2">
+              <div className="grid grid-cols-2 gap-3">
+                {SLOT_META.map(({ key, icon: Icon, de: dl, en: el, hint }) => {
+                  const active = selectedSlots.includes(key);
+                  return (
+                    <motion.button
+                      key={key}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => {
+                        toggleSlot(key);
+                        playCheckSound();
+                      }}
+                      className={cn(
+                        "flex flex-col items-center gap-1 rounded-xl p-4 border-2 transition-all",
+                        active
+                          ? "border-yellow-400 bg-yellow-500/10 shadow-[0_0_20px_-5px_rgba(234,179,8,0.6)]"
+                          : "border-white/10 bg-white/5 hover:border-white/20",
+                      )}
+                    >
+                      <Icon className={cn("w-6 h-6", active ? "text-yellow-400" : "text-white/60")} />
+                      <span className={cn("font-semibold", active ? "text-yellow-300" : "text-white/80")}>
+                        {de ? dl : el}
+                      </span>
+                      <span className="text-xs text-white/40">{hint}</span>
+                    </motion.button>
+                  );
+                })}
+              </div>
+              {selectedSlots.length > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={cn(
+                    "rounded-lg border p-3 flex items-center justify-between",
+                    fullCommitter
+                      ? "border-yellow-400 bg-yellow-500/10 shadow-[0_0_15px_-5px_rgba(234,179,8,0.5)]"
+                      : "border-emerald-500/30 bg-emerald-500/5",
+                  )}
+                >
+                  <div className="text-sm">
+                    <div className={cn("font-semibold", fullCommitter ? "text-yellow-300" : "text-emerald-300")}>
+                      {fullCommitter
+                        ? de ? "🔥 Vollzeit-Committer" : "🔥 Full-time committer"
+                        : de ? `${selectedSlots.length} von 4 Slots` : `${selectedSlots.length} of 4 slots`}
+                    </div>
+                    <div className="text-xs text-white/60">
+                      {de ? "Zuverlässigkeits-Score" : "Reliability score"}: <b>{reliabilityScore}%</b>
+                    </div>
+                  </div>
+                  <div className={cn("text-2xl font-bold", fullCommitter ? "text-yellow-300" : "text-emerald-300")}>
+                    {reliabilityScore}
+                  </div>
+                </motion.div>
+              )}
+            </div>
+          )}
+
+          {/* STEP 3: Goal */}
+          {step === 3 && (
+            <div className="py-4 space-y-5">
               <div className="text-center">
                 <div className="text-5xl font-bold bg-gradient-to-r from-yellow-300 to-yellow-500 bg-clip-text text-transparent">
                   {goal}€
@@ -205,32 +366,78 @@ export default function CommitmentPrompt() {
                 max={1000}
                 step={10}
               />
+              {avg7d > 0 && (
+                <div className="rounded-lg bg-white/5 border border-white/10 p-3 text-center">
+                  <div className="text-xs text-white/50">
+                    {de ? "Dein Ø der letzten 7 Tage" : "Your 7-day average"}
+                  </div>
+                  <div className="text-lg font-semibold text-white/90">{avg7d}€</div>
+                  {goalVsAvg === "ambitious" && (
+                    <div className="text-xs text-yellow-300 mt-1">
+                      {de ? "Ambitioniert 💪" : "Ambitious 💪"}
+                    </div>
+                  )}
+                  {goalVsAvg === "safe" && (
+                    <div className="text-xs text-emerald-300 mt-1">
+                      {de ? "Sicher & solide ✅" : "Safe & solid ✅"}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
-          {step === 3 && (
-            <div className="py-6 space-y-4 text-center">
-              <Sparkles className="w-12 h-12 mx-auto text-yellow-400" />
-              <p className="text-white/80 leading-relaxed">
+          {/* STEP 4: Dein Wort */}
+          {step === 4 && (
+            <div className="py-4 space-y-4 text-center">
+              <motion.div
+                initial={{ scale: 0.6, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 200 }}
+                className="flex flex-col items-center gap-1"
+              >
+                <div className="relative">
+                  <Flame
+                    className={cn(
+                      "w-16 h-16",
+                      streak >= 3
+                        ? "text-orange-400 drop-shadow-[0_0_20px_rgba(251,146,60,0.8)]"
+                        : "text-yellow-400 drop-shadow-[0_0_15px_rgba(234,179,8,0.6)]",
+                    )}
+                  />
+                </div>
+                <div className="text-5xl font-bold bg-gradient-to-r from-yellow-300 to-yellow-500 bg-clip-text text-transparent">
+                  {streak}
+                </div>
+                <div className="text-xs text-white/50 uppercase tracking-widest">
+                  {de ? (streak === 1 ? "Tag Streak" : "Tage Streak") : streak === 1 ? "Day streak" : "Day streak"}
+                </div>
+              </motion.div>
+
+              <div className="rounded-lg bg-yellow-500/5 border border-yellow-500/20 p-3">
+                <p className="text-sm italic text-yellow-100/90 leading-snug">"{quote}"</p>
+              </div>
+
+              <p className="text-xs text-white/50 leading-relaxed">
                 {de
-                  ? "Du bist commited für heute. Zuverlässigkeit über mehrere Tage → bessere Accounts, größere Kunden."
-                  : "You're committed for today. Reliability over time → better accounts, bigger clients."}
+                  ? "Sag dein Wort — halte es. Zuverlässigkeit über Tage → bessere Accounts, größere Kunden."
+                  : "Give your word — keep it. Reliability over days → better accounts, bigger clients."}
               </p>
             </div>
           )}
 
           <div className="flex justify-between gap-2 pt-2">
             {step > 1 ? (
-              <Button variant="ghost" onClick={() => setStep((s) => (s - 1) as any)}>
+              <Button variant="ghost" onClick={() => setStep((s) => (s - 1) as Step)}>
                 {de ? "Zurück" : "Back"}
               </Button>
             ) : (
               <div />
             )}
-            {step < 3 ? (
+            {step < 4 ? (
               <Button
-                onClick={() => setStep((s) => (s + 1) as any)}
-                disabled={step === 1 && selectedSlots.length === 0}
+                onClick={() => setStep((s) => (s + 1) as Step)}
+                disabled={step === 2 && selectedSlots.length === 0}
                 className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-black font-bold hover:from-yellow-400 hover:to-yellow-500"
               >
                 {de ? "Weiter" : "Next"}
@@ -249,54 +456,172 @@ export default function CommitmentPrompt() {
       </Dialog>
 
       {/* ABEND: Honesty-Check-in */}
-      <Dialog open={showEvening} onOpenChange={setShowEvening}>
+      <Dialog
+        open={showEvening}
+        onOpenChange={(o) => {
+          setShowEvening(o);
+          if (!o) setRewardScreen(null);
+        }}
+      >
         <DialogContent className="max-w-md bg-black/95 border border-yellow-500/30 shadow-[0_0_60px_-15px_rgba(234,179,8,0.5)]">
-          <DialogHeader>
-            <DialogTitle className="text-2xl font-bold text-white">
-              {de ? "Warst du heute wie versprochen für deine Models da?" : "Were you there for your models today as promised?"}
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="py-4">
-            <div className="flex items-start gap-3 rounded-lg bg-yellow-500/5 border border-yellow-500/20 p-3">
-              <ShieldCheck className="w-5 h-5 text-yellow-400 shrink-0 mt-0.5" />
-              <p className="text-xs text-yellow-100/70 leading-relaxed">
-                {de ? (
-                  <>
-                    Kurze Info: Wir gleichen deine Antwort automatisch mit Login- und Sale-Aktivität ab.{" "}
-                    <span className="text-yellow-300">Ehrliches „Nein" kostet dich nichts</span> — dein Streak pausiert.{" "}
-                    Ein „Ja", das nicht passt, kostet eine Tier-Stufe. Ehrlichkeit lohnt sich hier immer.
-                  </>
-                ) : (
-                  <>
-                    Heads up: we cross-check your answer with login and sale activity.{" "}
-                    <span className="text-yellow-300">An honest "No" costs nothing</span> — your streak just pauses.
-                    A "Yes" that doesn't match costs a tier. Honesty always wins here.
-                  </>
+          <AnimatePresence mode="wait">
+            {rewardScreen === "yes" && (
+              <motion.div
+                key="yes-reward"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0 }}
+                className="py-6 text-center space-y-4"
+              >
+                <motion.div
+                  initial={{ scale: 0.4, rotate: -20 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ type: "spring", stiffness: 200 }}
+                  className="flex justify-center"
+                >
+                  <Flame className="w-20 h-20 text-orange-400 drop-shadow-[0_0_25px_rgba(251,146,60,0.8)]" />
+                </motion.div>
+                <div>
+                  <div className="text-6xl font-bold bg-gradient-to-r from-yellow-300 to-orange-400 bg-clip-text text-transparent">
+                    {streak}
+                  </div>
+                  <div className="text-sm text-white/60 mt-1">
+                    {de ? "Tage in Folge" : "days in a row"}
+                  </div>
+                </div>
+                {[3, 7, 14, 30].includes(streak) && (
+                  <div className="rounded-lg bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-400/40 p-3">
+                    <div className="text-yellow-200 font-bold">
+                      {de ? `🏆 ${streak}-Tage-Meilenstein!` : `🏆 ${streak}-day milestone!`}
+                    </div>
+                    <div className="text-xs text-yellow-100/70 mt-1">
+                      {de ? "Du bist offiziell im Priority Pool oben." : "You're officially top of the Priority Pool."}
+                    </div>
+                  </div>
                 )}
-              </p>
-            </div>
-          </div>
+                <p className="text-sm text-white/70">
+                  {de ? "Streak gesichert um 23 Uhr. Morgen weiter." : "Streak locks at 11 PM. See you tomorrow."}
+                </p>
+                <Button
+                  onClick={() => {
+                    setShowEvening(false);
+                    setRewardScreen(null);
+                    const url = new URL(window.location.href);
+                    url.searchParams.delete("checkin");
+                    window.history.replaceState({}, "", url.toString());
+                  }}
+                  className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-black font-bold w-full"
+                >
+                  {de ? "Weiter" : "Continue"}
+                </Button>
+              </motion.div>
+            )}
 
-          <div className="grid grid-cols-1 gap-2">
-            <Button
-              onClick={() => answerEvening(true)}
-              disabled={saving}
-              className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-black font-bold hover:from-yellow-400 hover:to-yellow-500 h-12"
-            >
-              ✅ {de ? "Ja, war ich" : "Yes, I was"}
-            </Button>
-            <Button
-              onClick={() => answerEvening(false)}
-              disabled={saving}
-              variant="outline"
-              className="border-white/20 bg-white/5 text-white/80 hover:bg-white/10 h-12"
-            >
-              😔 {de ? "Heute nicht geschafft" : "Didn't make it today"}
-            </Button>
-          </div>
+            {rewardScreen === "no" && (
+              <motion.div
+                key="no-reward"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="py-6 text-center space-y-4"
+              >
+                <div className="text-4xl">🌙</div>
+                <div>
+                  <div className="text-xl font-bold text-white">
+                    {de ? "Danke für die Ehrlichkeit." : "Thanks for the honesty."}
+                  </div>
+                  <p className="text-sm text-white/60 mt-2 leading-relaxed">
+                    {de
+                      ? "Streak pausiert — nicht gebrochen. Morgen ist ein neuer Tag."
+                      : "Streak paused — not broken. Tomorrow is a new day."}
+                  </p>
+                </div>
+                <Button
+                  onClick={() => {
+                    setShowEvening(false);
+                    setRewardScreen(null);
+                    const url = new URL(window.location.href);
+                    url.searchParams.delete("checkin");
+                    window.history.replaceState({}, "", url.toString());
+                  }}
+                  variant="outline"
+                  className="border-white/20 bg-white/5 text-white/80 hover:bg-white/10 w-full"
+                >
+                  {de ? "Schließen" : "Close"}
+                </Button>
+              </motion.div>
+            )}
+
+            {!rewardScreen && (
+              <motion.div key="question" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                <DialogHeader>
+                  <DialogTitle className="text-2xl font-bold text-white">
+                    {de
+                      ? "Warst du heute wie versprochen für deine Models da?"
+                      : "Were you there for your models today as promised?"}
+                  </DialogTitle>
+                </DialogHeader>
+
+                <div className="py-4">
+                  <div className="flex items-start gap-3 rounded-lg bg-yellow-500/5 border border-yellow-500/20 p-3">
+                    <ShieldCheck className="w-5 h-5 text-yellow-400 shrink-0 mt-0.5" />
+                    <p className="text-xs text-yellow-100/70 leading-relaxed">
+                      {de ? (
+                        <>
+                          Kurze Info: Wir gleichen deine Antwort automatisch mit Login- und Sale-Aktivität ab.{" "}
+                          <span className="text-yellow-300">Ehrliches „Nein" kostet dich nichts</span> — dein Streak pausiert.{" "}
+                          Ein „Ja", das nicht passt, kostet eine Tier-Stufe. Ehrlichkeit lohnt sich hier immer.
+                        </>
+                      ) : (
+                        <>
+                          Heads up: we cross-check your answer with login and sale activity.{" "}
+                          <span className="text-yellow-300">An honest "No" costs nothing</span> — your streak just pauses.
+                          A "Yes" that doesn't match costs a tier. Honesty always wins here.
+                        </>
+                      )}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-2">
+                  <Button
+                    onClick={() => answerEvening(true)}
+                    disabled={saving}
+                    className="bg-gradient-to-r from-yellow-500 to-yellow-600 text-black font-bold hover:from-yellow-400 hover:to-yellow-500 h-12"
+                  >
+                    ✅ {de ? "Ja, war ich" : "Yes, I was"}
+                  </Button>
+                  <Button
+                    onClick={() => answerEvening(false)}
+                    disabled={saving}
+                    variant="outline"
+                    className="border-white/20 bg-white/5 text-white/80 hover:bg-white/10 h-12"
+                  >
+                    😔 {de ? "Heute nicht geschafft" : "Didn't make it today"}
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </DialogContent>
       </Dialog>
     </>
+  );
+}
+
+function BenefitTile({ icon: Icon, title, text }: { icon: any; title: string; text: string }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -8 }}
+      animate={{ opacity: 1, x: 0 }}
+      className="flex items-start gap-3 rounded-xl border border-yellow-500/20 bg-gradient-to-r from-yellow-500/5 to-transparent p-3"
+    >
+      <div className="rounded-lg bg-yellow-500/15 p-2 shrink-0">
+        <Icon className="w-5 h-5 text-yellow-400" />
+      </div>
+      <div>
+        <div className="text-sm font-semibold text-yellow-100">{title}</div>
+        <div className="text-xs text-white/60 leading-snug mt-0.5">{text}</div>
+      </div>
+    </motion.div>
   );
 }
