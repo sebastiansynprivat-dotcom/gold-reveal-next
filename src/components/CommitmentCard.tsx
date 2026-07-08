@@ -149,7 +149,7 @@ export default function CommitmentCard() {
           <div className="mb-3 rounded-lg border border-white/10 bg-white/[0.03] p-2.5">
             <div className="flex items-center justify-between text-[11px] mb-1.5">
               <span className="text-white/50 uppercase tracking-widest text-[10px]">
-                {de ? "Reliability" : "Reliability"}
+                {de ? "Zuverlässigkeit" : "Reliability"}
               </span>
               <span className={cn("font-bold", t.current.color)} style={{ textShadow: `0 0 10px ${t.current.glow}` }}>
                 {de ? t.current.de : t.current.en}
