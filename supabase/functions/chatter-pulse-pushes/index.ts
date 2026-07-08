@@ -6,6 +6,7 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { sendChatterPush } from "../_shared/sendChatterPush.ts";
+import { isCommitmentTester } from "../_shared/commitmentFlag.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -228,7 +229,7 @@ Deno.serve(async (req) => {
       }
 
       // ---- commitment_morning (08:30–09:30 Berlin) ----
-      if (force || hour === 8 || hour === 9) {
+      if (isCommitmentTester(uid) && (force || hour === 8 || hour === 9)) {
         // Only if no commitment row yet for today
         const { data: existingC } = await admin
           .from("chatter_daily_commitment")
@@ -245,7 +246,7 @@ Deno.serve(async (req) => {
       }
 
       // ---- commitment_evening_recap (21:00 Berlin) ----
-      if (force || hour === 21) {
+      if (isCommitmentTester(uid) && (force || hour === 21)) {
         const { data: cRow } = await admin
           .from("chatter_daily_commitment")
           .select("id, confirmed_by_user")
@@ -261,7 +262,7 @@ Deno.serve(async (req) => {
       }
 
       // ---- honesty sweep (23:00 Berlin) ----
-      if (force || hour === 23) {
+      if (isCommitmentTester(uid) && (force || hour === 23)) {
         const { data: cRow } = await admin
           .from("chatter_daily_commitment")
           .select("id, slots, confirmed_by_user, honesty_verdict")
