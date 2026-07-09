@@ -3136,6 +3136,7 @@ export default function AdminDashboard() {
           return {
             ...r,
             _messages: msgs,
+            _followups: followupsByReq[r.id] || [],
             _model,
             _agency,
             _modelAccountEmail: matchedAcc?.account_email || null,
