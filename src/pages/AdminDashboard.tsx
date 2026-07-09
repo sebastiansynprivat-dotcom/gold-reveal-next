@@ -3080,14 +3080,25 @@ export default function AdminDashboard() {
     if (data) {
       const ids = data.map((r: any) => r.id);
       let msgsByReq: Record<string, any[]> = {};
+      let followupsByReq: Record<string, any[]> = {};
       if (ids.length > 0) {
-        const { data: msgs } = await supabase
-          .from("model_request_messages")
-          .select("*")
-          .in("request_id", ids)
-          .order("created_at", { ascending: true });
+        const [{ data: msgs }, { data: fups }] = await Promise.all([
+          supabase
+            .from("model_request_messages")
+            .select("*")
+            .in("request_id", ids)
+            .order("created_at", { ascending: true }),
+          (supabase as any)
+            .from("model_request_followups")
+            .select("id, request_id, admin_id, sent_at, note")
+            .in("request_id", ids)
+            .order("sent_at", { ascending: true }),
+        ]);
         (msgs || []).forEach((m: any) => {
           (msgsByReq[m.request_id] ||= []).push(m);
+        });
+        (fups || []).forEach((f: any) => {
+          (followupsByReq[f.request_id] ||= []).push(f);
         });
       }
       const normalizeAgencyVal = (a: any) => {
