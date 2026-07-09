@@ -6552,12 +6552,16 @@ export default function AdminDashboard() {
                         if (!isReqUnreadForMe(r)) return false;
                         if (r.status === "archived" || r.status === "rejected") return false;
                       } else {
-                        if (requestFilter === "all" && (r.status === "rejected" || r.status === "archived")) return false;
-                        if (requestFilter !== "all" && r.status !== requestFilter) return false;
-                        if (requestFilter === "accepted" && contentLinkFilter === "with_link" && !r.content_link)
-                          return false;
-                        if (requestFilter === "accepted" && contentLinkFilter === "without_link" && r.content_link)
-                          return false;
+                        if (requestFilter === "followup_due") {
+                          if (!needsFollowUp(r)) return false;
+                        } else {
+                          if (requestFilter === "all" && (r.status === "rejected" || r.status === "archived")) return false;
+                          if (requestFilter !== "all" && r.status !== requestFilter) return false;
+                          if (requestFilter === "accepted" && contentLinkFilter === "with_link" && !r.content_link)
+                            return false;
+                          if (requestFilter === "accepted" && contentLinkFilter === "without_link" && r.content_link)
+                            return false;
+                        }
                       }
                       if (requestSearchQuery.trim()) {
                         const q = requestSearchQuery.trim().toLowerCase().replace(/^@/, "");
