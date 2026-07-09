@@ -6343,6 +6343,46 @@ export default function AdminDashboard() {
                     })}
                   </div>
 
+                  {/* Follow-up fällig pill */}
+                  {(() => {
+                    const isActive = requestFilter === "followup_due";
+                    return (
+                      <button
+                        onClick={() => {
+                          setRequestFilter(isActive ? "all" : "followup_due");
+                          setContentLinkFilter("all");
+                        }}
+                        className={cn(
+                          "w-full glass-card-subtle rounded-xl px-4 py-3 flex items-center gap-3 transition-all border",
+                          isActive
+                            ? "ring-2 ring-orange-400 border-orange-400/40 shadow-[0_0_16px_-4px_hsl(24_95%_53%/0.5)]"
+                            : "border-orange-400/20 hover:border-orange-400/40",
+                        )}
+                      >
+                        <div className="h-9 w-9 rounded-lg bg-orange-500/15 flex items-center justify-center shrink-0">
+                          <Repeat className={cn("h-4 w-4 text-orange-400", followupDueCount > 0 && "animate-pulse")} />
+                        </div>
+                        <div className="flex-1 text-left">
+                          <p className="text-xs font-bold text-foreground">Follow-up fällig</p>
+                          <p className="text-[10px] text-muted-foreground">
+                            Weitergeleitete Anfragen ohne Reaktion seit ≥ {FOLLOWUP_THRESHOLD_DAYS} Tagen
+                          </p>
+                        </div>
+                        <span
+                          className={cn(
+                            "min-w-[36px] h-9 px-2 rounded-lg flex items-center justify-center text-lg font-bold",
+                            followupDueCount > 0
+                              ? "bg-orange-500/20 text-orange-300 ring-1 ring-orange-400/40"
+                              : "text-muted-foreground",
+                          )}
+                        >
+                          {followupDueCount}
+                        </span>
+                      </button>
+                    );
+                  })()}
+
+
                   <section className="glass-card rounded-xl overflow-hidden">
                     <div className="px-4 sm:px-5 py-4 border-b border-border/50 flex flex-col gap-3 sm:flex-row sm:items-center">
                       <div className="flex items-center gap-3 min-w-0">
