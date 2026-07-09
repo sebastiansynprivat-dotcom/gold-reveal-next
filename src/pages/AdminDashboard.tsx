@@ -7535,7 +7535,7 @@ export default function AdminDashboard() {
 
                                           <div className="flex flex-col sm:flex-row gap-2">
                                             <Input
-                                              placeholder="Notiz (optional, z.B. „per WhatsApp gepingt")"
+                                              placeholder={'Notiz (optional, z.B. „per WhatsApp gepingt")'}
                                               value={followupNoteDraft[req.id] || ""}
                                               onChange={(e) => setFollowupNoteDraft((s) => ({ ...s, [req.id]: e.target.value }))}
                                               className="h-8 text-xs bg-background/60 border-border/60 flex-1"
