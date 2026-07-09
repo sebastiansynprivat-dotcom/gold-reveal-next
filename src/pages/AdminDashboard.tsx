@@ -7479,8 +7479,94 @@ export default function AdminDashboard() {
                                       </div>
                                     )}
 
+                                    {/* Follow-up-Tracking (nur für weitergeleitete/aktive Anfragen) */}
+                                    {FOLLOWUP_ELIGIBLE_STATUSES.has(req.status) && (() => {
+                                      const fups = (req._followups || []) as Array<{ id: string; sent_at: string; admin_id: string | null; note: string | null }>;
+                                      const due = needsFollowUp(req);
+                                      const daysIdle = daysSince(lastActivityAt(req));
+                                      const nextNr = fups.length + 1;
+                                      return (
+                                        <div
+                                          className={cn(
+                                            "rounded-lg border p-3 space-y-2",
+                                            due
+                                              ? "border-orange-400/40 bg-orange-500/5 shadow-[0_0_12px_-4px_hsl(24_95%_53%/0.3)]"
+                                              : "border-border/50 bg-secondary/20",
+                                          )}
+                                        >
+                                          <div className="flex items-center gap-2">
+                                            <Repeat className={cn("h-3.5 w-3.5", due ? "text-orange-400" : "text-muted-foreground")} />
+                                            <p className="text-[10px] font-semibold uppercase tracking-wide text-foreground">
+                                              Follow-ups
+                                            </p>
+                                            {due ? (
+                                              <span className="ml-auto text-[10px] font-bold text-orange-300 px-2 py-0.5 rounded-full bg-orange-500/15 ring-1 ring-orange-400/30">
+                                                {nextNr}. Follow-up fällig · {daysIdle} Tage still
+                                              </span>
+                                            ) : (
+                                              <span className="ml-auto text-[10px] text-muted-foreground">
+                                                Zuletzt Aktivität vor {daysIdle} {daysIdle === 1 ? "Tag" : "Tagen"}
+                                              </span>
+                                            )}
+                                          </div>
+
+                                          {fups.length > 0 && (
+                                            <ul className="space-y-1">
+                                              {fups.map((f, i) => {
+                                                const dt = new Date(f.sent_at);
+                                                const dstr = dt.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit" });
+                                                const tstr = dt.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+                                                const who = f.admin_id ? adminNames[f.admin_id] || "Admin" : "Admin";
+                                                return (
+                                                  <li key={f.id} className="text-[11px] text-muted-foreground flex items-start gap-1.5">
+                                                    <CheckCircle2 className="h-3 w-3 text-emerald-400 mt-0.5 shrink-0" />
+                                                    <span>
+                                                      <span className="text-foreground font-medium">{i + 1}. Follow-up</span>{" "}
+                                                      am {dstr} um {tstr} Uhr · {who}
+                                                      {f.note && !/^\d+\. Follow-up$/.test(f.note) && (
+                                                        <span className="text-muted-foreground/80"> — „{f.note}"</span>
+                                                      )}
+                                                    </span>
+                                                  </li>
+                                                );
+                                              })}
+                                            </ul>
+                                          )}
+
+                                          <div className="flex flex-col sm:flex-row gap-2">
+                                            <Input
+                                              placeholder="Notiz (optional, z.B. „per WhatsApp gepingt")"
+                                              value={followupNoteDraft[req.id] || ""}
+                                              onChange={(e) => setFollowupNoteDraft((s) => ({ ...s, [req.id]: e.target.value }))}
+                                              className="h-8 text-xs bg-background/60 border-border/60 flex-1"
+                                            />
+                                            <Button
+                                              size="sm"
+                                              disabled={!!followupBusy[req.id]}
+                                              onClick={() => sendFollowup(req)}
+                                              className={cn(
+                                                "h-8 text-xs gap-1.5 whitespace-nowrap",
+                                                due
+                                                  ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:opacity-90"
+                                                  : "bg-secondary text-foreground hover:bg-secondary/80",
+                                              )}
+                                            >
+                                              <Check className="h-3.5 w-3.5" />
+                                              {nextNr}. Follow-up abhaken
+                                            </Button>
+                                          </div>
+                                          {due && (
+                                            <p className="text-[10px] text-muted-foreground leading-relaxed">
+                                              Nach dem Abhaken verschwindet die Anfrage für {FOLLOWUP_THRESHOLD_DAYS} Tage aus diesem Filter und meldet sich automatisch wieder, falls weiterhin nichts passiert. Endgültig entfernen: Button „Erledigt".
+                                            </p>
+                                          )}
+                                        </div>
+                                      );
+                                    })()}
+
                                     {/* Action Buttons */}
                                     <div className="flex flex-col gap-2 pt-1">
+
                                       <div className="flex items-center gap-2 flex-wrap">
                                         {req.status === "pending" ? (
                                           <>
