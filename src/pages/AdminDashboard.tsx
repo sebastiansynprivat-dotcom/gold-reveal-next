@@ -953,9 +953,11 @@ export default function AdminDashboard() {
   const adminDataBootstrapRef = useRef(false);
   const [modelRequests, setModelRequests] = useState<any[]>([]);
   const [modelRequestsLoaded, setModelRequestsLoaded] = useState(false);
-  const [requestFilter, setRequestFilter] = useState<"all" | "pending" | "accepted" | "in_progress" | "waiting_feedback" | "rejected" | "archived">(
+  const [requestFilter, setRequestFilter] = useState<"all" | "pending" | "accepted" | "in_progress" | "waiting_feedback" | "rejected" | "archived" | "followup_due">(
     "all",
   );
+  const [followupNoteDraft, setFollowupNoteDraft] = useState<Record<string, string>>({});
+  const [followupBusy, setFollowupBusy] = useState<Record<string, boolean>>({});
   const [contentLinkFilter, setContentLinkFilter] = useState<"all" | "with_link" | "without_link">("all");
   const [requestSearchQuery, setRequestSearchQuery] = useState("");
   const [requestPlatformFilter, setRequestPlatformFilter] = useState<string>("all");
@@ -3078,14 +3080,25 @@ export default function AdminDashboard() {
     if (data) {
       const ids = data.map((r: any) => r.id);
       let msgsByReq: Record<string, any[]> = {};
+      let followupsByReq: Record<string, any[]> = {};
       if (ids.length > 0) {
-        const { data: msgs } = await supabase
-          .from("model_request_messages")
-          .select("*")
-          .in("request_id", ids)
-          .order("created_at", { ascending: true });
+        const [{ data: msgs }, { data: fups }] = await Promise.all([
+          supabase
+            .from("model_request_messages")
+            .select("*")
+            .in("request_id", ids)
+            .order("created_at", { ascending: true }),
+          (supabase as any)
+            .from("model_request_followups")
+            .select("id, request_id, admin_id, sent_at, note")
+            .in("request_id", ids)
+            .order("sent_at", { ascending: true }),
+        ]);
         (msgs || []).forEach((m: any) => {
           (msgsByReq[m.request_id] ||= []).push(m);
+        });
+        (fups || []).forEach((f: any) => {
+          (followupsByReq[f.request_id] ||= []).push(f);
         });
       }
       const normalizeAgencyVal = (a: any) => {
@@ -3123,6 +3136,7 @@ export default function AdminDashboard() {
           return {
             ...r,
             _messages: msgs,
+            _followups: followupsByReq[r.id] || [],
             _model,
             _agency,
             _modelAccountEmail: matchedAcc?.account_email || null,
@@ -3133,6 +3147,56 @@ export default function AdminDashboard() {
     }
     setModelRequestsLoaded(true);
   };
+
+  // ==== Follow-up helpers (Custom Anfragen) ====
+  const FOLLOWUP_THRESHOLD_DAYS = 2;
+  const FOLLOWUP_ELIGIBLE_STATUSES = new Set(["accepted", "in_progress", "waiting_feedback"]);
+  const lastActivityAt = (req: any): number => {
+    const ts: number[] = [];
+    if (req?.created_at) ts.push(new Date(req.created_at).getTime());
+    if (req?.forwarded_to_model_at) ts.push(new Date(req.forwarded_to_model_at).getTime());
+    (req?._messages || []).forEach((m: any) => { if (m?.created_at) ts.push(new Date(m.created_at).getTime()); });
+    (req?._followups || []).forEach((f: any) => { if (f?.sent_at) ts.push(new Date(f.sent_at).getTime()); });
+    return ts.length ? Math.max(...ts) : 0;
+  };
+  const daysSince = (ms: number): number => {
+    if (!ms) return 0;
+    return Math.floor((Date.now() - ms) / (1000 * 60 * 60 * 24));
+  };
+  const needsFollowUp = (req: any): boolean => {
+    if (!FOLLOWUP_ELIGIBLE_STATUSES.has(req?.status)) return false;
+    return daysSince(lastActivityAt(req)) >= FOLLOWUP_THRESHOLD_DAYS;
+  };
+  const followupDueCount = useMemo(
+    () => modelRequests.filter(needsFollowUp).length,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [modelRequests],
+  );
+
+  const sendFollowup = async (req: any) => {
+    if (followupBusy[req.id]) return;
+    setFollowupBusy((s) => ({ ...s, [req.id]: true }));
+    const noteRaw = (followupNoteDraft[req.id] || "").trim();
+    const count = (req._followups?.length || 0) + 1;
+    const note = noteRaw || `${count}. Follow-up`;
+    const { data, error } = await (supabase as any)
+      .from("model_request_followups")
+      .insert({ request_id: req.id, admin_id: user?.id, note })
+      .select()
+      .single();
+    setFollowupBusy((s) => ({ ...s, [req.id]: false }));
+    if (error) {
+      toast.error("Follow-up konnte nicht gespeichert werden");
+      return;
+    }
+    setFollowupNoteDraft((s) => ({ ...s, [req.id]: "" }));
+    setModelRequests((prev) =>
+      prev.map((r) => (r.id === req.id ? { ...r, _followups: [...(r._followups || []), data] } : r)),
+    );
+    toast.success(`${count}. Follow-up notiert`);
+  };
+
+
 
   const toggleModelActive = async (modelId: string, requestId: string, nextActive: boolean) => {
     // Optimistic flip everywhere this model appears
@@ -6279,6 +6343,46 @@ export default function AdminDashboard() {
                     })}
                   </div>
 
+                  {/* Follow-up fällig pill */}
+                  {(() => {
+                    const isActive = requestFilter === "followup_due";
+                    return (
+                      <button
+                        onClick={() => {
+                          setRequestFilter(isActive ? "all" : "followup_due");
+                          setContentLinkFilter("all");
+                        }}
+                        className={cn(
+                          "w-full glass-card-subtle rounded-xl px-4 py-3 flex items-center gap-3 transition-all border",
+                          isActive
+                            ? "ring-2 ring-orange-400 border-orange-400/40 shadow-[0_0_16px_-4px_hsl(24_95%_53%/0.5)]"
+                            : "border-orange-400/20 hover:border-orange-400/40",
+                        )}
+                      >
+                        <div className="h-9 w-9 rounded-lg bg-orange-500/15 flex items-center justify-center shrink-0">
+                          <Repeat className={cn("h-4 w-4 text-orange-400", followupDueCount > 0 && "animate-pulse")} />
+                        </div>
+                        <div className="flex-1 text-left">
+                          <p className="text-xs font-bold text-foreground">Follow-up fällig</p>
+                          <p className="text-[10px] text-muted-foreground">
+                            Weitergeleitete Anfragen ohne Reaktion seit ≥ {FOLLOWUP_THRESHOLD_DAYS} Tagen
+                          </p>
+                        </div>
+                        <span
+                          className={cn(
+                            "min-w-[36px] h-9 px-2 rounded-lg flex items-center justify-center text-lg font-bold",
+                            followupDueCount > 0
+                              ? "bg-orange-500/20 text-orange-300 ring-1 ring-orange-400/40"
+                              : "text-muted-foreground",
+                          )}
+                        >
+                          {followupDueCount}
+                        </span>
+                      </button>
+                    );
+                  })()}
+
+
                   <section className="glass-card rounded-xl overflow-hidden">
                     <div className="px-4 sm:px-5 py-4 border-b border-border/50 flex flex-col gap-3 sm:flex-row sm:items-center">
                       <div className="flex items-center gap-3 min-w-0">
@@ -6448,12 +6552,16 @@ export default function AdminDashboard() {
                         if (!isReqUnreadForMe(r)) return false;
                         if (r.status === "archived" || r.status === "rejected") return false;
                       } else {
-                        if (requestFilter === "all" && (r.status === "rejected" || r.status === "archived")) return false;
-                        if (requestFilter !== "all" && r.status !== requestFilter) return false;
-                        if (requestFilter === "accepted" && contentLinkFilter === "with_link" && !r.content_link)
-                          return false;
-                        if (requestFilter === "accepted" && contentLinkFilter === "without_link" && r.content_link)
-                          return false;
+                        if (requestFilter === "followup_due") {
+                          if (!needsFollowUp(r)) return false;
+                        } else {
+                          if (requestFilter === "all" && (r.status === "rejected" || r.status === "archived")) return false;
+                          if (requestFilter !== "all" && r.status !== requestFilter) return false;
+                          if (requestFilter === "accepted" && contentLinkFilter === "with_link" && !r.content_link)
+                            return false;
+                          if (requestFilter === "accepted" && contentLinkFilter === "without_link" && r.content_link)
+                            return false;
+                        }
                       }
                       if (requestSearchQuery.trim()) {
                         const q = requestSearchQuery.trim().toLowerCase().replace(/^@/, "");
@@ -6493,12 +6601,16 @@ export default function AdminDashboard() {
                               if (!isReqUnreadForMe(r)) return false;
                               if (r.status === "archived" || r.status === "rejected") return false;
                             } else {
-                              if (requestFilter === "all" && (r.status === "rejected" || r.status === "archived")) return false;
-                              if (requestFilter !== "all" && r.status !== requestFilter) return false;
-                              if (requestFilter === "accepted" && contentLinkFilter === "with_link" && !r.content_link)
-                                return false;
-                              if (requestFilter === "accepted" && contentLinkFilter === "without_link" && r.content_link)
-                                return false;
+                              if (requestFilter === "followup_due") {
+                                if (!needsFollowUp(r)) return false;
+                              } else {
+                                if (requestFilter === "all" && (r.status === "rejected" || r.status === "archived")) return false;
+                                if (requestFilter !== "all" && r.status !== requestFilter) return false;
+                                if (requestFilter === "accepted" && contentLinkFilter === "with_link" && !r.content_link)
+                                  return false;
+                                if (requestFilter === "accepted" && contentLinkFilter === "without_link" && r.content_link)
+                                  return false;
+                              }
                             }
                             if (requestSearchQuery.trim()) {
                               const q = requestSearchQuery.trim().toLowerCase().replace(/^@/, "");
@@ -7367,8 +7479,94 @@ export default function AdminDashboard() {
                                       </div>
                                     )}
 
+                                    {/* Follow-up-Tracking (nur für weitergeleitete/aktive Anfragen) */}
+                                    {FOLLOWUP_ELIGIBLE_STATUSES.has(req.status) && (() => {
+                                      const fups = (req._followups || []) as Array<{ id: string; sent_at: string; admin_id: string | null; note: string | null }>;
+                                      const due = needsFollowUp(req);
+                                      const daysIdle = daysSince(lastActivityAt(req));
+                                      const nextNr = fups.length + 1;
+                                      return (
+                                        <div
+                                          className={cn(
+                                            "rounded-lg border p-3 space-y-2",
+                                            due
+                                              ? "border-orange-400/40 bg-orange-500/5 shadow-[0_0_12px_-4px_hsl(24_95%_53%/0.3)]"
+                                              : "border-border/50 bg-secondary/20",
+                                          )}
+                                        >
+                                          <div className="flex items-center gap-2">
+                                            <Repeat className={cn("h-3.5 w-3.5", due ? "text-orange-400" : "text-muted-foreground")} />
+                                            <p className="text-[10px] font-semibold uppercase tracking-wide text-foreground">
+                                              Follow-ups
+                                            </p>
+                                            {due ? (
+                                              <span className="ml-auto text-[10px] font-bold text-orange-300 px-2 py-0.5 rounded-full bg-orange-500/15 ring-1 ring-orange-400/30">
+                                                {nextNr}. Follow-up fällig · {daysIdle} Tage still
+                                              </span>
+                                            ) : (
+                                              <span className="ml-auto text-[10px] text-muted-foreground">
+                                                Zuletzt Aktivität vor {daysIdle} {daysIdle === 1 ? "Tag" : "Tagen"}
+                                              </span>
+                                            )}
+                                          </div>
+
+                                          {fups.length > 0 && (
+                                            <ul className="space-y-1">
+                                              {fups.map((f, i) => {
+                                                const dt = new Date(f.sent_at);
+                                                const dstr = dt.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit" });
+                                                const tstr = dt.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
+                                                const who = f.admin_id ? adminNames[f.admin_id] || "Admin" : "Admin";
+                                                return (
+                                                  <li key={f.id} className="text-[11px] text-muted-foreground flex items-start gap-1.5">
+                                                    <CheckCircle2 className="h-3 w-3 text-emerald-400 mt-0.5 shrink-0" />
+                                                    <span>
+                                                      <span className="text-foreground font-medium">{i + 1}. Follow-up</span>{" "}
+                                                      am {dstr} um {tstr} Uhr · {who}
+                                                      {f.note && !/^\d+\. Follow-up$/.test(f.note) && (
+                                                        <span className="text-muted-foreground/80"> — „{f.note}"</span>
+                                                      )}
+                                                    </span>
+                                                  </li>
+                                                );
+                                              })}
+                                            </ul>
+                                          )}
+
+                                          <div className="flex flex-col sm:flex-row gap-2">
+                                            <Input
+                                              placeholder={'Notiz (optional, z.B. „per WhatsApp gepingt")'}
+                                              value={followupNoteDraft[req.id] || ""}
+                                              onChange={(e) => setFollowupNoteDraft((s) => ({ ...s, [req.id]: e.target.value }))}
+                                              className="h-8 text-xs bg-background/60 border-border/60 flex-1"
+                                            />
+                                            <Button
+                                              size="sm"
+                                              disabled={!!followupBusy[req.id]}
+                                              onClick={() => sendFollowup(req)}
+                                              className={cn(
+                                                "h-8 text-xs gap-1.5 whitespace-nowrap",
+                                                due
+                                                  ? "bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:opacity-90"
+                                                  : "bg-secondary text-foreground hover:bg-secondary/80",
+                                              )}
+                                            >
+                                              <Check className="h-3.5 w-3.5" />
+                                              {nextNr}. Follow-up abhaken
+                                            </Button>
+                                          </div>
+                                          {due && (
+                                            <p className="text-[10px] text-muted-foreground leading-relaxed">
+                                              Nach dem Abhaken verschwindet die Anfrage für {FOLLOWUP_THRESHOLD_DAYS} Tage aus diesem Filter und meldet sich automatisch wieder, falls weiterhin nichts passiert. Endgültig entfernen: Button „Erledigt".
+                                            </p>
+                                          )}
+                                        </div>
+                                      );
+                                    })()}
+
                                     {/* Action Buttons */}
                                     <div className="flex flex-col gap-2 pt-1">
+
                                       <div className="flex items-center gap-2 flex-wrap">
                                         {req.status === "pending" ? (
                                           <>

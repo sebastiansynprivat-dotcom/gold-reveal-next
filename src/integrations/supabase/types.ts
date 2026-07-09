@@ -2246,6 +2246,38 @@ export type Database = {
         }
         Relationships: []
       }
+      model_request_followups: {
+        Row: {
+          admin_id: string | null
+          id: string
+          note: string | null
+          request_id: string
+          sent_at: string
+        }
+        Insert: {
+          admin_id?: string | null
+          id?: string
+          note?: string | null
+          request_id: string
+          sent_at?: string
+        }
+        Update: {
+          admin_id?: string | null
+          id?: string
+          note?: string | null
+          request_id?: string
+          sent_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "model_request_followups_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "model_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       model_request_messages: {
         Row: {
           approved_by_admin: string | null
