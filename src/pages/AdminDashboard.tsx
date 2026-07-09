@@ -3148,6 +3148,56 @@ export default function AdminDashboard() {
     setModelRequestsLoaded(true);
   };
 
+  // ==== Follow-up helpers (Custom Anfragen) ====
+  const FOLLOWUP_THRESHOLD_DAYS = 2;
+  const FOLLOWUP_ELIGIBLE_STATUSES = new Set(["accepted", "in_progress", "waiting_feedback"]);
+  const lastActivityAt = (req: any): number => {
+    const ts: number[] = [];
+    if (req?.created_at) ts.push(new Date(req.created_at).getTime());
+    if (req?.forwarded_to_model_at) ts.push(new Date(req.forwarded_to_model_at).getTime());
+    (req?._messages || []).forEach((m: any) => { if (m?.created_at) ts.push(new Date(m.created_at).getTime()); });
+    (req?._followups || []).forEach((f: any) => { if (f?.sent_at) ts.push(new Date(f.sent_at).getTime()); });
+    return ts.length ? Math.max(...ts) : 0;
+  };
+  const daysSince = (ms: number): number => {
+    if (!ms) return 0;
+    return Math.floor((Date.now() - ms) / (1000 * 60 * 60 * 24));
+  };
+  const needsFollowUp = (req: any): boolean => {
+    if (!FOLLOWUP_ELIGIBLE_STATUSES.has(req?.status)) return false;
+    return daysSince(lastActivityAt(req)) >= FOLLOWUP_THRESHOLD_DAYS;
+  };
+  const followupDueCount = useMemo(
+    () => modelRequests.filter(needsFollowUp).length,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [modelRequests],
+  );
+
+  const sendFollowup = async (req: any) => {
+    if (followupBusy[req.id]) return;
+    setFollowupBusy((s) => ({ ...s, [req.id]: true }));
+    const noteRaw = (followupNoteDraft[req.id] || "").trim();
+    const count = (req._followups?.length || 0) + 1;
+    const note = noteRaw || `${count}. Follow-up`;
+    const { data, error } = await (supabase as any)
+      .from("model_request_followups")
+      .insert({ request_id: req.id, admin_id: user?.id, note })
+      .select()
+      .single();
+    setFollowupBusy((s) => ({ ...s, [req.id]: false }));
+    if (error) {
+      toast.error("Follow-up konnte nicht gespeichert werden");
+      return;
+    }
+    setFollowupNoteDraft((s) => ({ ...s, [req.id]: "" }));
+    setModelRequests((prev) =>
+      prev.map((r) => (r.id === req.id ? { ...r, _followups: [...(r._followups || []), data] } : r)),
+    );
+    toast.success(`${count}. Follow-up notiert`);
+  };
+
+
+
   const toggleModelActive = async (modelId: string, requestId: string, nextActive: boolean) => {
     // Optimistic flip everywhere this model appears
     setModelRequests((prev) =>
