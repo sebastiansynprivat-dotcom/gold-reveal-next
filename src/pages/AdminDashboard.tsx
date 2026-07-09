@@ -953,9 +953,11 @@ export default function AdminDashboard() {
   const adminDataBootstrapRef = useRef(false);
   const [modelRequests, setModelRequests] = useState<any[]>([]);
   const [modelRequestsLoaded, setModelRequestsLoaded] = useState(false);
-  const [requestFilter, setRequestFilter] = useState<"all" | "pending" | "accepted" | "in_progress" | "waiting_feedback" | "rejected" | "archived">(
+  const [requestFilter, setRequestFilter] = useState<"all" | "pending" | "accepted" | "in_progress" | "waiting_feedback" | "rejected" | "archived" | "followup_due">(
     "all",
   );
+  const [followupNoteDraft, setFollowupNoteDraft] = useState<Record<string, string>>({});
+  const [followupBusy, setFollowupBusy] = useState<Record<string, boolean>>({});
   const [contentLinkFilter, setContentLinkFilter] = useState<"all" | "with_link" | "without_link">("all");
   const [requestSearchQuery, setRequestSearchQuery] = useState("");
   const [requestPlatformFilter, setRequestPlatformFilter] = useState<string>("all");
