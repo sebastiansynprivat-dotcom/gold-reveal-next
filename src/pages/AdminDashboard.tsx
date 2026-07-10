@@ -7501,10 +7501,15 @@ export default function AdminDashboard() {
 
                                     {/* Follow-up-Tracking (nur für weitergeleitete/aktive Anfragen) */}
                                     {FOLLOWUP_ELIGIBLE_STATUSES.has(req.status) && (() => {
-                                      const fups = (req._followups || []) as Array<{ id: string; sent_at: string; admin_id: string | null; note: string | null }>;
+                                      const allFups = (req._followups || []) as Array<{ id: string; sent_at: string; admin_id: string | null; note: string | null }>;
+                                      const anchor = followupResetAnchorAt(req);
+                                      const activeFups = anchor
+                                        ? allFups.filter((f) => new Date(f.sent_at).getTime() > anchor)
+                                        : allFups;
+                                      const resetCount = allFups.length - activeFups.length;
                                       const due = needsFollowUp(req);
                                       const daysIdle = daysSince(lastActivityAt(req));
-                                      const nextNr = fups.length + 1;
+                                      const nextNr = activeFups.length + 1;
                                       return (
                                         <div
                                           className={cn(
@@ -7530,9 +7535,15 @@ export default function AdminDashboard() {
                                             )}
                                           </div>
 
-                                          {fups.length > 0 && (
+                                          {resetCount > 0 && (
+                                            <p className="text-[10px] text-muted-foreground/80 italic">
+                                              Zähler zurückgesetzt — {resetCount} älterer{resetCount === 1 ? "" : ""} Follow-up{resetCount === 1 ? "" : "s"} vor letzter Chatter-Nachricht ausgeblendet.
+                                            </p>
+                                          )}
+
+                                          {activeFups.length > 0 && (
                                             <ul className="space-y-1">
-                                              {fups.map((f, i) => {
+                                              {activeFups.map((f, i) => {
                                                 const dt = new Date(f.sent_at);
                                                 const dstr = dt.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit" });
                                                 const tstr = dt.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
@@ -7575,9 +7586,32 @@ export default function AdminDashboard() {
                                               {nextNr}. Follow-up abhaken
                                             </Button>
                                           </div>
+
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              setModelRequests((prev) =>
+                                                prev.map((r) =>
+                                                  r.id === req.id
+                                                    ? { ...r, _editingComment: true, _localComment: r._localComment ?? "" }
+                                                    : r,
+                                                ),
+                                              );
+                                              setTimeout(() => {
+                                                document
+                                                  .querySelector(`[data-req-id="${req.id}"] textarea`)
+                                                  ?.scrollIntoView({ behavior: "smooth", block: "center" });
+                                              }, 50);
+                                            }}
+                                            className="w-full flex items-center justify-center gap-1.5 h-8 text-xs rounded-md border border-accent/30 bg-accent/5 text-accent hover:bg-accent/10 hover:border-accent/50 transition-colors"
+                                          >
+                                            <MessageSquare className="h-3.5 w-3.5" />
+                                            Stattdessen an Chatter zurückmelden (setzt Zähler zurück)
+                                          </button>
+
                                           {due && (
                                             <p className="text-[10px] text-muted-foreground leading-relaxed">
-                                              Nach dem Abhaken verschwindet die Anfrage für {FOLLOWUP_THRESHOLD_DAYS} Tage aus diesem Filter und meldet sich automatisch wieder, falls weiterhin nichts passiert. Endgültig entfernen: Button „Erledigt".
+                                              Nach dem Abhaken verschwindet die Anfrage für {FOLLOWUP_THRESHOLD_DAYS} Tage aus diesem Filter. Beim „Warten auf Rückmeldung" fliegt sie ganz raus — dort wartet der Chatter/das Model aktiv zurück.
                                             </p>
                                           )}
                                         </div>
