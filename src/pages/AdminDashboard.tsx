@@ -3150,7 +3150,8 @@ export default function AdminDashboard() {
 
   // ==== Follow-up helpers (Custom Anfragen) ====
   const FOLLOWUP_THRESHOLD_DAYS = 2;
-  const FOLLOWUP_ELIGIBLE_STATUSES = new Set(["accepted", "in_progress", "waiting_feedback"]);
+  // waiting_feedback ist NICHT eligible — dort wartet aktiv Model/Chatter zurück
+  const FOLLOWUP_ELIGIBLE_STATUSES = new Set(["accepted", "in_progress"]);
   const lastActivityAt = (req: any): number => {
     const ts: number[] = [];
     if (req?.created_at) ts.push(new Date(req.created_at).getTime());
@@ -3158,6 +3159,25 @@ export default function AdminDashboard() {
     (req?._messages || []).forEach((m: any) => { if (m?.created_at) ts.push(new Date(m.created_at).getTime()); });
     (req?._followups || []).forEach((f: any) => { if (f?.sent_at) ts.push(new Date(f.sent_at).getTime()); });
     return ts.length ? Math.max(...ts) : 0;
+  };
+  // Anker: letzte Admin→Chatter-Nachricht setzt die Follow-up-Kette zurück
+  // (danach warten wir auf den Chatter, nicht mehr aufs Model).
+  const followupResetAnchorAt = (req: any): number => {
+    const msgs = (req?._messages || []) as any[];
+    let latest = 0;
+    for (const m of msgs) {
+      if (m?.sender_role === "admin" && m?.created_at) {
+        const t = new Date(m.created_at).getTime();
+        if (t > latest) latest = t;
+      }
+    }
+    return latest;
+  };
+  const activeFollowups = (req: any) => {
+    const anchor = followupResetAnchorAt(req);
+    return ((req?._followups || []) as any[]).filter(
+      (f: any) => !anchor || new Date(f.sent_at).getTime() > anchor,
+    );
   };
   const daysSince = (ms: number): number => {
     if (!ms) return 0;
@@ -3177,7 +3197,7 @@ export default function AdminDashboard() {
     if (followupBusy[req.id]) return;
     setFollowupBusy((s) => ({ ...s, [req.id]: true }));
     const noteRaw = (followupNoteDraft[req.id] || "").trim();
-    const count = (req._followups?.length || 0) + 1;
+    const count = activeFollowups(req).length + 1;
     const note = noteRaw || `${count}. Follow-up`;
     const { data, error } = await (supabase as any)
       .from("model_request_followups")
