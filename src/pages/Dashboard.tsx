@@ -373,6 +373,11 @@ export default function Dashboard() {
         { event: "*", schema: "public", table: "model_request_messages" },
         () => loadMyRequests(),
       )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "model_request_followups" },
+        () => loadMyRequests(),
+      )
       .subscribe();
 
     return () => {
