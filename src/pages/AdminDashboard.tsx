@@ -5319,8 +5319,18 @@ export default function AdminDashboard() {
                       const relevant = activeChatters.filter((c) =>
                         (c.assigned_accounts || []).some((a) => a.platform?.toLowerCase() === pKey),
                       );
-                      const on = relevant.filter((c) => pushUsers.has(c.user_id)).length;
-                      return { key: pKey, label: p.label, color: p.color, total: relevant.length, on, off: relevant.length - on };
+                      const onList = relevant.filter((c) => pushUsers.has(c.user_id));
+                      const offList = relevant.filter((c) => !pushUsers.has(c.user_id));
+                      return {
+                        key: pKey,
+                        label: p.label,
+                        color: p.color,
+                        total: relevant.length,
+                        on: onList.length,
+                        off: offList.length,
+                        onList,
+                        offList,
+                      };
                     }).filter((row) => row.total > 0);
 
                     const freeAccounts = accounts.filter((a) => !a.assigned_to).length;
