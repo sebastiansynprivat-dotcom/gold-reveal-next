@@ -5566,7 +5566,7 @@ export default function AdminDashboard() {
                                       >
                                         <div className="min-w-0">
                                           <p className="text-[11px] font-semibold text-foreground truncate">
-                                            {c.group_name || c.name || "—"}
+                                            {c.group_name || "—"}
                                           </p>
                                           {c.telegram_id && (
                                             <p className="text-[9px] text-muted-foreground truncate">
