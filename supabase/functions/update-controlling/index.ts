@@ -12,17 +12,12 @@ const json = (b: unknown, s = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
-function ddmmyyyy(d: Date): string {
-  const dd = String(d.getUTCDate()).padStart(2, "0");
-  const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
+function todayISO(): string {
+  const d = new Date();
   const yyyy = d.getUTCFullYear();
-  return `${dd}${mm}${yyyy}`;
-}
-
-function ddmmyyyyFromISO(iso: string): string {
-  // iso is YYYY-MM-DD
-  const [y, m, d] = iso.split("-");
-  return `${d}${m}${y}`;
+  const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const dd = String(d.getUTCDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
 }
 
 Deno.serve(async (req) => {
@@ -144,7 +139,7 @@ Deno.serve(async (req) => {
       if (entry && a.account_id) entry.accountIds.add(a.account_id);
     }
 
-    const todayStr = ddmmyyyy(new Date());
+    const todayStr = todayISO();
 
     const result = [] as any[];
     for (const { profile, accountIds: aids } of chatterAccounts.values()) {
@@ -185,7 +180,7 @@ Deno.serve(async (req) => {
       result.push({
         chatter_name: profile.name ?? null,
         telegram_id: profile.telegram_id ?? null,
-        date: latestISO ? ddmmyyyyFromISO(latestISO) : todayStr,
+        date: latestISO ?? todayStr,
         platforms,
       });
     }
