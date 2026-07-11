@@ -24,8 +24,26 @@ type Incoming = {
   platform: string;
   purchase_id?: string;
   amount?: number;
+  time?: string;
+  type?: string;
+  customer?: string;
   metrics: Partial<Record<MetricField, number>>;
 };
+
+function optionalString(
+  obj: Record<string, unknown>,
+  field: string,
+  rowIndex: number,
+): { ok: true; value?: string } | { ok: false; error: Response } {
+  const v = obj[field];
+  if (v === undefined || v === null) return { ok: true };
+  if (typeof v !== "string") {
+    return { ok: false, error: json({ error: `Row ${rowIndex}: ${field} must be a string`, got: v }, 400) };
+  }
+  const trimmed = v.trim();
+  if (!trimmed) return { ok: true };
+  return { ok: true, value: trimmed };
+}
 
 const isInt = (v: unknown): v is number =>
   typeof v === "number" && Number.isFinite(v) && Number.isInteger(v);
