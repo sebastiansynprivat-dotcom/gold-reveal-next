@@ -1592,7 +1592,17 @@ export default function Dashboard() {
                               }>;
                               const hasLegacy =
                                 !!req.admin_comment && !msgs.some((m) => m.body === req.admin_comment);
-                              const allMsgs = [
+                              const fups = (((req as any)._followups || []) as Array<{
+                                id: string;
+                                sent_at: string;
+                                note: string | null;
+                              }>).map((f) => ({
+                                id: `fup-${f.id}`,
+                                sender_role: "followup" as const,
+                                body: f.note || "Erinnerung ans Model geschickt",
+                                created_at: f.sent_at,
+                              }));
+                              const baseMsgs = [
                                 ...(hasLegacy
                                   ? [
                                       {
@@ -1604,7 +1614,12 @@ export default function Dashboard() {
                                     ]
                                   : []),
                                 ...msgs,
+                                ...fups,
                               ];
+                              const allMsgs = baseMsgs.sort(
+                                (a, b) =>
+                                  new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
+                              );
                               const draft = replyDrafts[req.id] ?? "";
                               const draftAttachments = replyAttachments[req.id] ?? [];
                               const sendReply = async () => {
