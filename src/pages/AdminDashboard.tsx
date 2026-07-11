@@ -1001,6 +1001,7 @@ export default function AdminDashboard() {
   const [platformFilters, setPlatformFilters] = useState<Set<string>>(new Set());
   const [filterTelegram, setFilterTelegram] = useState<boolean | null>(null);
   const [filterPush, setFilterPush] = useState<boolean | null>(null);
+  const [pushDrill, setPushDrill] = useState<{ platform: string; mode: "off" | "on" } | null>(null);
   const [filterPwa, setFilterPwa] = useState<boolean | null>(null);
   const [filterAssigned, setFilterAssigned] = useState<boolean | null>(null);
   const [botMessages, setBotMessages] = useState<
@@ -5318,8 +5319,18 @@ export default function AdminDashboard() {
                       const relevant = activeChatters.filter((c) =>
                         (c.assigned_accounts || []).some((a) => a.platform?.toLowerCase() === pKey),
                       );
-                      const on = relevant.filter((c) => pushUsers.has(c.user_id)).length;
-                      return { key: pKey, label: p.label, color: p.color, total: relevant.length, on, off: relevant.length - on };
+                      const onList = relevant.filter((c) => pushUsers.has(c.user_id));
+                      const offList = relevant.filter((c) => !pushUsers.has(c.user_id));
+                      return {
+                        key: pKey,
+                        label: p.label,
+                        color: p.color,
+                        total: relevant.length,
+                        on: onList.length,
+                        off: offList.length,
+                        onList,
+                        offList,
+                      };
                     }).filter((row) => row.total > 0);
 
                     const freeAccounts = accounts.filter((a) => !a.assigned_to).length;
@@ -5459,10 +5470,19 @@ export default function AdminDashboard() {
                           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
                             {pushByPlatform.map((row) => {
                               const pct = row.total > 0 ? Math.round((row.on / row.total) * 100) : 0;
+                              const isDrillOn = pushDrill?.platform === row.key && pushDrill?.mode === "on";
+                              const isDrillOff = pushDrill?.platform === row.key && pushDrill?.mode === "off";
+                              const toggle = (mode: "on" | "off") =>
+                                setPushDrill((prev) =>
+                                  prev?.platform === row.key && prev?.mode === mode ? null : { platform: row.key, mode },
+                                );
                               return (
                                 <div
                                   key={row.key}
-                                  className="rounded-lg border border-border/40 bg-background/40 p-2.5"
+                                  className={cn(
+                                    "rounded-lg border bg-background/40 p-2.5 transition-all",
+                                    isDrillOn || isDrillOff ? "border-accent/60 shadow-[0_0_10px_-2px_hsl(var(--accent)/0.3)]" : "border-border/40",
+                                  )}
                                 >
                                   <div className="flex items-center gap-1.5 mb-1.5">
                                     <span
@@ -5472,25 +5492,98 @@ export default function AdminDashboard() {
                                     <span className="text-[11px] font-semibold text-foreground truncate">
                                       {row.label}
                                     </span>
+                                    <span className="ml-auto text-[9px] text-muted-foreground">{pct}%</span>
                                   </div>
-                                  <div className="flex items-baseline justify-between">
-                                    <span className="text-sm font-bold text-gold-gradient">
-                                      {row.on}
-                                      <span className="text-[10px] text-muted-foreground font-medium">
-                                        /{row.total}
-                                      </span>
-                                    </span>
-                                    <span className="text-[10px] text-muted-foreground">{pct}%</span>
+                                  <div className="grid grid-cols-2 gap-1">
+                                    <button
+                                      onClick={() => toggle("on")}
+                                      className={cn(
+                                        "rounded-md px-1.5 py-1 text-left transition-all border",
+                                        isDrillOn
+                                          ? "bg-accent/15 border-accent/50"
+                                          : "bg-background/40 border-border/30 hover:bg-secondary/30",
+                                      )}
+                                    >
+                                      <p className="text-[8px] uppercase tracking-wide text-muted-foreground">aktiv</p>
+                                      <p className="text-sm font-bold text-gold-gradient leading-tight">{row.on}</p>
+                                    </button>
+                                    <button
+                                      onClick={() => toggle("off")}
+                                      className={cn(
+                                        "rounded-md px-1.5 py-1 text-left transition-all border",
+                                        isDrillOff
+                                          ? "bg-destructive/15 border-destructive/50"
+                                          : "bg-background/40 border-border/30 hover:bg-secondary/30",
+                                        row.off > 0 && !isDrillOff && "ring-1 ring-destructive/20",
+                                      )}
+                                    >
+                                      <p className="text-[8px] uppercase tracking-wide text-muted-foreground">inaktiv</p>
+                                      <p className={cn("text-sm font-bold leading-tight", row.off > 0 ? "text-destructive" : "text-muted-foreground")}>
+                                        {row.off}
+                                      </p>
+                                    </button>
                                   </div>
-                                  {row.off > 0 && (
-                                    <p className="text-[9px] text-destructive/80 mt-0.5">
-                                      {row.off} inaktiv
-                                    </p>
-                                  )}
                                 </div>
                               );
                             })}
                           </div>
+
+                          {pushDrill && (() => {
+                            const row = pushByPlatform.find((r) => r.key === pushDrill.platform);
+                            if (!row) return null;
+                            const list = pushDrill.mode === "on" ? row.onList : row.offList;
+                            return (
+                              <div className="mt-4 rounded-xl border border-border/40 bg-background/40 p-3 animate-in fade-in slide-in-from-top-2 duration-200">
+                                <div className="flex items-center justify-between mb-2">
+                                  <div className="flex items-center gap-2">
+                                    <span
+                                      className="inline-block h-2 w-2 rounded-full"
+                                      style={{ backgroundColor: row.color }}
+                                    />
+                                    <p className="text-[11px] font-semibold text-foreground">
+                                      {row.label} — Push {pushDrill.mode === "on" ? "aktiv" : "inaktiv"}
+                                    </p>
+                                    <span className="text-[10px] text-muted-foreground">({list.length})</span>
+                                  </div>
+                                  <button
+                                    onClick={() => setPushDrill(null)}
+                                    className="text-[10px] text-muted-foreground hover:text-foreground"
+                                  >
+                                    Schließen
+                                  </button>
+                                </div>
+                                {list.length === 0 ? (
+                                  <p className="text-[11px] text-muted-foreground text-center py-3">
+                                    Niemand in dieser Kategorie.
+                                  </p>
+                                ) : (
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1.5 max-h-72 overflow-y-auto pr-1">
+                                    {list.map((c) => (
+                                      <button
+                                        key={c.user_id}
+                                        onClick={() => navigate(`/admin/chatter/${c.user_id}`)}
+                                        className="flex items-center justify-between gap-2 rounded-md border border-border/30 bg-secondary/20 hover:bg-secondary/40 px-2 py-1.5 text-left transition-colors"
+                                      >
+                                        <div className="min-w-0">
+                                          <p className="text-[11px] font-semibold text-foreground truncate">
+                                            {c.group_name || "—"}
+                                          </p>
+                                          {c.telegram_id && (
+                                            <p className="text-[9px] text-muted-foreground truncate">
+                                              TG: {c.telegram_id}
+                                            </p>
+                                          )}
+                                        </div>
+                                        <span className="text-[9px] text-muted-foreground shrink-0">
+                                          {(c.assigned_accounts?.length ?? 0)} Acc
+                                        </span>
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })()}
                         </div>
                       )}
                       </div>
