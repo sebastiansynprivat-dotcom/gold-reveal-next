@@ -1681,36 +1681,61 @@ export default function Dashboard() {
                               };
                               return (
                                 <div className="space-y-1.5 mt-1">
-                                  {allMsgs.map((m) => (
-                                    <div
-                                      key={m.id}
-                                      className={`flex ${m.sender_role === "admin" ? "justify-start" : "justify-end"}`}
-                                    >
+                                  {allMsgs.map((m) => {
+                                    if (m.sender_role === "followup") {
+                                      return (
+                                        <div key={m.id} className="flex justify-center">
+                                          <div className="max-w-[90%] rounded-md px-2.5 py-1.5 bg-orange-500/10 border border-orange-500/30 flex items-center gap-2">
+                                            <span className="text-[10px]">🔔</span>
+                                            <div className="flex-1 min-w-0">
+                                              <p className="text-[9px] text-orange-300/80 uppercase tracking-wide">
+                                                Follow-up ans Model ·{" "}
+                                                {new Date(m.created_at).toLocaleString("de-DE", {
+                                                  day: "2-digit",
+                                                  month: "2-digit",
+                                                  hour: "2-digit",
+                                                  minute: "2-digit",
+                                                })}
+                                              </p>
+                                              <p className="text-[11px] text-orange-100 leading-snug whitespace-pre-wrap">
+                                                {m.body}
+                                              </p>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      );
+                                    }
+                                    return (
                                       <div
-                                        className={`max-w-[85%] rounded-md px-2.5 py-1.5 space-y-1 ${
-                                          m.sender_role === "admin"
-                                            ? "bg-accent/10 border border-accent/20"
-                                            : "bg-secondary/40 border border-border/40"
-                                        }`}
+                                        key={m.id}
+                                        className={`flex ${m.sender_role === "admin" ? "justify-start" : "justify-end"}`}
                                       >
-                                        <p className="text-[9px] text-muted-foreground mb-0.5">
-                                          {m.sender_role === "admin" ? "Admin" : "Du"} ·{" "}
-                                          {new Date(m.created_at).toLocaleString("de-DE", {
-                                            day: "2-digit",
-                                            month: "2-digit",
-                                            hour: "2-digit",
-                                            minute: "2-digit",
-                                          })}
-                                        </p>
-                                        <p className="text-[11px] text-foreground leading-relaxed whitespace-pre-wrap">
-                                          {m.body}
-                                        </p>
-                                        {Array.isArray((m as any).attachments) && (m as any).attachments.length > 0 && (
-                                          <RequestMediaList attachments={(m as any).attachments} size="sm" />
-                                        )}
+                                        <div
+                                          className={`max-w-[85%] rounded-md px-2.5 py-1.5 space-y-1 ${
+                                            m.sender_role === "admin"
+                                              ? "bg-accent/10 border border-accent/20"
+                                              : "bg-secondary/40 border border-border/40"
+                                          }`}
+                                        >
+                                          <p className="text-[9px] text-muted-foreground mb-0.5">
+                                            {m.sender_role === "admin" ? "Admin" : "Du"} ·{" "}
+                                            {new Date(m.created_at).toLocaleString("de-DE", {
+                                              day: "2-digit",
+                                              month: "2-digit",
+                                              hour: "2-digit",
+                                              minute: "2-digit",
+                                            })}
+                                          </p>
+                                          <p className="text-[11px] text-foreground leading-relaxed whitespace-pre-wrap">
+                                            {m.body}
+                                          </p>
+                                          {Array.isArray((m as any).attachments) && (m as any).attachments.length > 0 && (
+                                            <RequestMediaList attachments={(m as any).attachments} size="sm" />
+                                          )}
+                                        </div>
                                       </div>
-                                    </div>
-                                  ))}
+                                    );
+                                  })}
                                   <div className="space-y-1.5 pt-1">
                                     <div className="flex gap-1.5">
                                       <Textarea
