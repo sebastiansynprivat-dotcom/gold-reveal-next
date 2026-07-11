@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Send, Pencil, ChevronRight } from "lucide-react";
+import { Send, Pencil, ChevronRight, Info } from "lucide-react";
 import { motion } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -59,6 +59,7 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage:
     typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`,
   );
   const [loading, setLoading] = useState(false);
+  const [inactiveInfoOpen, setInactiveInfoOpen] = useState(false);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
 
   const hasModelList = !!availableModels && availableModels.length > 0;
@@ -349,6 +350,25 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage:
                               ? lang === "en" ? "Inactive" : "Inaktiv"
                               : lang === "en" ? "Active" : "Aktiv"}
                           </span>
+                          {inactive && (
+                            <span
+                              role="button"
+                              tabIndex={0}
+                              aria-label={lang === "en" ? "Why inactive?" : "Warum inaktiv?"}
+                              onPointerDown={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                              }}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setInactiveInfoOpen(true);
+                              }}
+                              className="inline-flex items-center justify-center h-4 w-4 rounded-full text-muted-foreground hover:text-accent transition-colors cursor-pointer"
+                            >
+                              <Info className="h-3.5 w-3.5" />
+                            </span>
+                          )}
                         </span>
                       </SelectItem>
                     );
@@ -507,6 +527,37 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage:
           </Button>
         </div>
       </DialogContent>
+
+      <Dialog open={inactiveInfoOpen} onOpenChange={setInactiveInfoOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">
+              {lang === "en" ? "Model currently inactive" : "Model momentan inaktiv"}
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              {lang === "en"
+                ? "This model told us that they currently can't take on new requests. That's the latest status we have."
+                : "Dein Model hat uns mitgeteilt, dass sie aktuell keine neuen Anfragen entgegennehmen kann. Das ist der letzte Stand, den wir haben."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="rounded-lg border border-accent/20 bg-accent/5 p-4">
+            <p className="text-sm text-foreground">
+              {lang === "en" ? (
+                <>
+                  <strong>You can still earn great money!</strong> There is already plenty of content on
+                  the account for you to keep working with. Use the existing content to drive revenue.
+                </>
+              ) : (
+                <>
+                  <strong>Trotzdem kann gutes Geld verdient werden!</strong> Es ist bereits genug Content
+                  auf dem Account vorhanden, mit dem du weiterarbeiten kannst. Nutze den vorhandenen
+                  Content, um Umsatz zu machen.
+                </>
+              )}
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 };
