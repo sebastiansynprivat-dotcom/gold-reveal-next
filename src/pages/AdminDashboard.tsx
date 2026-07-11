@@ -7852,18 +7852,53 @@ export default function AdminDashboard() {
                                             >
                                               <MessageCircle className="h-3 w-3 mr-1" /> Warten auf Rückmeldung
                                             </Button>
+                                            <Button
+                                              size="sm"
+                                              variant="outline"
+                                              className="h-7 text-xs border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-500/50"
+                                              onClick={() => {
+                                                setModelRequests((prev) =>
+                                                  prev.map((r) =>
+                                                    r.id === req.id
+                                                      ? { ...r, _showRejectReason: !r._showRejectReason }
+                                                      : r,
+                                                  ),
+                                                );
+                                              }}
+                                            >
+                                              <XCircle className="h-3 w-3 mr-1" /> Ablehnen
+                                            </Button>
                                           </>
                                         )}
                                         {req.status === "in_progress" && (
-                                          <Button
-                                            size="sm"
-                                            variant="outline"
-                                            className="h-7 text-xs border-amber-500/30 text-amber-400 hover:bg-amber-500/10 hover:border-amber-500/50"
-                                            onClick={() => updateRequestStatus(req.id, "waiting_feedback")}
-                                          >
-                                            <MessageCircle className="h-3 w-3 mr-1" /> Warten auf Rückmeldung
-                                          </Button>
+                                          <>
+                                            <Button
+                                              size="sm"
+                                              variant="outline"
+                                              className="h-7 text-xs border-amber-500/30 text-amber-400 hover:bg-amber-500/10 hover:border-amber-500/50"
+                                              onClick={() => updateRequestStatus(req.id, "waiting_feedback")}
+                                            >
+                                              <MessageCircle className="h-3 w-3 mr-1" /> Warten auf Rückmeldung
+                                            </Button>
+                                            <Button
+                                              size="sm"
+                                              variant="outline"
+                                              className="h-7 text-xs border-red-500/30 text-red-400 hover:bg-red-500/10 hover:border-red-500/50"
+                                              onClick={() => {
+                                                setModelRequests((prev) =>
+                                                  prev.map((r) =>
+                                                    r.id === req.id
+                                                      ? { ...r, _showRejectReason: !r._showRejectReason }
+                                                      : r,
+                                                  ),
+                                                );
+                                              }}
+                                            >
+                                              <XCircle className="h-3 w-3 mr-1" /> Ablehnen
+                                            </Button>
+                                          </>
                                         )}
+
                                         {req.status === "waiting_feedback" && (
                                           <>
                                             <Button
