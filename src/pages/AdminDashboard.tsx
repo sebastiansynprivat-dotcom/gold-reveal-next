@@ -5444,6 +5444,54 @@ export default function AdminDashboard() {
                           onClickB={() => setFilterAssigned((p) => toggleFilter(p, false))}
                         />
                       </div>
+
+                      {pushByPlatform.length > 0 && (
+                        <div className="glass-card-subtle rounded-xl p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <p className="text-[10px] font-semibold text-muted-foreground tracking-wide uppercase">
+                              Push pro Plattform
+                            </p>
+                            <p className="text-[10px] text-muted-foreground/70">
+                              nur aktive Chatter
+                            </p>
+                          </div>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+                            {pushByPlatform.map((row) => {
+                              const pct = row.total > 0 ? Math.round((row.on / row.total) * 100) : 0;
+                              return (
+                                <div
+                                  key={row.key}
+                                  className="rounded-lg border border-border/40 bg-background/40 p-2.5"
+                                >
+                                  <div className="flex items-center gap-1.5 mb-1.5">
+                                    <span
+                                      className="inline-block h-2 w-2 rounded-full"
+                                      style={{ backgroundColor: row.color }}
+                                    />
+                                    <span className="text-[11px] font-semibold text-foreground truncate">
+                                      {row.label}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-baseline justify-between">
+                                    <span className="text-sm font-bold text-gold-gradient">
+                                      {row.on}
+                                      <span className="text-[10px] text-muted-foreground font-medium">
+                                        /{row.total}
+                                      </span>
+                                    </span>
+                                    <span className="text-[10px] text-muted-foreground">{pct}%</span>
+                                  </div>
+                                  {row.off > 0 && (
+                                    <p className="text-[9px] text-destructive/80 mt-0.5">
+                                      {row.off} inaktiv
+                                    </p>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                     );
                   })()}
 
