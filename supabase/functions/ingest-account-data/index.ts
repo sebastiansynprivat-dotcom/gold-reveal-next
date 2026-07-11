@@ -177,9 +177,16 @@ Deno.serve(async (req) => {
     }
     console.log(`[${rid}] fetched ${existingRows?.length ?? 0} existing row(s) in ${Date.now() - tSel}ms`);
 
+    type AmountEntry = {
+      purchase_id: string;
+      amount: number;
+      time?: string;
+      type?: string;
+      customer?: string;
+    };
     type ExistingRow = {
       total: number;
-      amounts: Array<{ purchase_id: string; amount: number }>;
+      amounts: Array<AmountEntry>;
       metrics: Partial<Record<MetricField, number>>;
     };
     const existingMap = new Map<string, ExistingRow>();
@@ -204,7 +211,7 @@ Deno.serve(async (req) => {
       const existing = existingMap.get(key) ?? { total: 0, amounts: [], metrics: {} };
       const seen = new Set(existing.amounts.map((a) => a.purchase_id));
 
-      const newEntries: Array<{ purchase_id: string; amount: number }> = [];
+      const newEntries: Array<AmountEntry> = [];
       let addedTotal = 0;
       const groupMetrics: Partial<Record<MetricField, number>> = { ...existing.metrics };
       let metricsChanged = false;
@@ -215,7 +222,11 @@ Deno.serve(async (req) => {
             skipped_duplicates++;
           } else {
             seen.add(it.purchase_id);
-            newEntries.push({ purchase_id: it.purchase_id, amount: it.amount });
+            const entry: AmountEntry = { purchase_id: it.purchase_id, amount: it.amount };
+            if (it.time !== undefined) entry.time = it.time;
+            if (it.type !== undefined) entry.type = it.type;
+            if (it.customer !== undefined) entry.customer = it.customer;
+            newEntries.push(entry);
             addedTotal += it.amount;
           }
         }
