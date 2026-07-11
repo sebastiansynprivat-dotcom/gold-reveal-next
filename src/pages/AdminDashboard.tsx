@@ -5303,12 +5303,24 @@ export default function AdminDashboard() {
                   {(() => {
                     const telegramYes = chatters.filter((c) => c.telegram_id && c.telegram_id.trim() !== "").length;
                     const telegramNo = chatters.length - telegramYes;
-                    const pushYes = chatters.filter((c) => pushUsers.has(c.user_id)).length;
-                    const pushNo = chatters.length - pushYes;
-                    const pwaYes = pwaUsers.size;
-                    const pwaNo = chatters.length - pwaYes;
-                    const assignedYes = chatters.filter((c) => (c.assigned_accounts?.length ?? 0) > 0).length;
+                    // Push/PWA-Tracking nur für Chatter mit aktivem Account
+                    const activeChatters = chatters.filter((c) => (c.assigned_accounts?.length ?? 0) > 0);
+                    const pushYes = activeChatters.filter((c) => pushUsers.has(c.user_id)).length;
+                    const pushNo = activeChatters.length - pushYes;
+                    const pwaYes = activeChatters.filter((c) => pwaUsers.has(c.user_id)).length;
+                    const pwaNo = activeChatters.length - pwaYes;
+                    const assignedYes = activeChatters.length;
                     const assignedNo = chatters.length - assignedYes;
+
+                    // Push-Tracking pro Plattform (nur aktive Chatter, deduped per Chatter+Plattform)
+                    const pushByPlatform = PLATFORMS.map((p) => {
+                      const pKey = p.key.toLowerCase();
+                      const relevant = activeChatters.filter((c) =>
+                        (c.assigned_accounts || []).some((a) => a.platform?.toLowerCase() === pKey),
+                      );
+                      const on = relevant.filter((c) => pushUsers.has(c.user_id)).length;
+                      return { key: pKey, label: p.label, color: p.color, total: relevant.length, on, off: relevant.length - on };
+                    }).filter((row) => row.total > 0);
 
                     const freeAccounts = accounts.filter((a) => !a.assigned_to).length;
 
@@ -5378,6 +5390,7 @@ export default function AdminDashboard() {
                       current === target ? null : target;
 
                     return (
+                      <div className="space-y-3">
                       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                         {/* Chatter gesamt – simple card, vertically centered to match dual cards */}
                         <div className="glass-card-subtle rounded-xl p-4 flex flex-col items-center justify-center">
@@ -5431,6 +5444,55 @@ export default function AdminDashboard() {
                           onClickA={() => setFilterAssigned((p) => toggleFilter(p, true))}
                           onClickB={() => setFilterAssigned((p) => toggleFilter(p, false))}
                         />
+                      </div>
+
+                      {pushByPlatform.length > 0 && (
+                        <div className="glass-card-subtle rounded-xl p-4">
+                          <div className="flex items-center justify-between mb-3">
+                            <p className="text-[10px] font-semibold text-muted-foreground tracking-wide uppercase">
+                              Push pro Plattform
+                            </p>
+                            <p className="text-[10px] text-muted-foreground/70">
+                              nur aktive Chatter
+                            </p>
+                          </div>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+                            {pushByPlatform.map((row) => {
+                              const pct = row.total > 0 ? Math.round((row.on / row.total) * 100) : 0;
+                              return (
+                                <div
+                                  key={row.key}
+                                  className="rounded-lg border border-border/40 bg-background/40 p-2.5"
+                                >
+                                  <div className="flex items-center gap-1.5 mb-1.5">
+                                    <span
+                                      className="inline-block h-2 w-2 rounded-full"
+                                      style={{ backgroundColor: row.color }}
+                                    />
+                                    <span className="text-[11px] font-semibold text-foreground truncate">
+                                      {row.label}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-baseline justify-between">
+                                    <span className="text-sm font-bold text-gold-gradient">
+                                      {row.on}
+                                      <span className="text-[10px] text-muted-foreground font-medium">
+                                        /{row.total}
+                                      </span>
+                                    </span>
+                                    <span className="text-[10px] text-muted-foreground">{pct}%</span>
+                                  </div>
+                                  {row.off > 0 && (
+                                    <p className="text-[9px] text-destructive/80 mt-0.5">
+                                      {row.off} inaktiv
+                                    </p>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
                       </div>
                     );
                   })()}
