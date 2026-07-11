@@ -179,7 +179,7 @@ Deno.serve(async (req) => {
 
       result.push({
         chatter_name: profile.name ?? null,
-        telegram_id: profile.telegram_id ?? null,
+        telegram_id: profile.telegram_id ? String(profile.telegram_id).replace(/^@/, "") : null,
         date: latestISO ?? todayStr,
         platforms,
       });
