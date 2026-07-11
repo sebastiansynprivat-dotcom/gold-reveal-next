@@ -7970,7 +7970,7 @@ export default function AdminDashboard() {
                                           </Button>
                                         )}
                                       </div>
-                                      {req._showRejectReason && req.status === "pending" && (
+                                      {req._showRejectReason && req.status !== "rejected" && req.status !== "archived" && (
                                         <div className="space-y-1.5 animate-in fade-in slide-in-from-top-2 duration-200">
                                           <div className="input-gold-shimmer rounded-lg">
                                             <Textarea
