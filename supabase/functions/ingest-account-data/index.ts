@@ -106,6 +106,19 @@ Deno.serve(async (req) => {
         revAmt = amount;
       }
 
+      let revTime: string | undefined;
+      let revType: string | undefined;
+      let revCustomer: string | undefined;
+      for (const [name, setter] of [
+        ["time", (v?: string) => (revTime = v)],
+        ["type", (v?: string) => (revType = v)],
+        ["customer", (v?: string) => (revCustomer = v)],
+      ] as const) {
+        const res = optionalString(obj, name, i);
+        if (!res.ok) return res.error;
+        setter(res.value);
+      }
+
       const metrics: Partial<Record<MetricField, number>> = {};
       for (const f of METRIC_FIELDS) {
         const v = obj[f];
@@ -124,6 +137,9 @@ Deno.serve(async (req) => {
         platform: platform.trim(),
         purchase_id: revPid,
         amount: revAmt,
+        time: revTime,
+        type: revType,
+        customer: revCustomer,
         metrics,
       });
     }
