@@ -527,6 +527,37 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage:
           </Button>
         </div>
       </DialogContent>
+
+      <Dialog open={inactiveInfoOpen} onOpenChange={setInactiveInfoOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">
+              {lang === "en" ? "Model currently inactive" : "Model momentan inaktiv"}
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              {lang === "en"
+                ? "This model told us that they currently can't take on new requests. That's the latest status we have."
+                : "Dein Model hat uns mitgeteilt, dass sie aktuell keine neuen Anfragen entgegennehmen kann. Das ist der letzte Stand, den wir haben."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="rounded-lg border border-accent/20 bg-accent/5 p-4">
+            <p className="text-sm text-foreground">
+              {lang === "en" ? (
+                <>
+                  <strong>You can still earn great money!</strong> There is already plenty of content on
+                  the account for you to keep working with. Use the existing content to drive revenue.
+                </>
+              ) : (
+                <>
+                  <strong>Trotzdem kann gutes Geld verdient werden!</strong> Es ist bereits genug Content
+                  auf dem Account vorhanden, mit dem du weiterarbeiten kannst. Nutze den vorhandenen
+                  Content, um Umsatz zu machen.
+                </>
+              )}
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 };
