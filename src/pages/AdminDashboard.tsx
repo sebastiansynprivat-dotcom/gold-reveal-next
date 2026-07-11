@@ -5390,6 +5390,7 @@ export default function AdminDashboard() {
                       current === target ? null : target;
 
                     return (
+                      <div className="space-y-3">
                       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                         {/* Chatter gesamt – simple card, vertically centered to match dual cards */}
                         <div className="glass-card-subtle rounded-xl p-4 flex flex-col items-center justify-center">
