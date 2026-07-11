@@ -139,7 +139,7 @@ Deno.serve(async (req) => {
       if (entry && a.account_id) entry.accountIds.add(a.account_id);
     }
 
-    const todayStr = ddmmyyyy(new Date());
+    const todayStr = todayISO();
 
     const result = [] as any[];
     for (const { profile, accountIds: aids } of chatterAccounts.values()) {
