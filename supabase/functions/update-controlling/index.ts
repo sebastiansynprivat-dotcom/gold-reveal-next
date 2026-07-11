@@ -49,23 +49,28 @@ Deno.serve(async (req) => {
       if (p.id) profileIds.add(p.id as string);
     }
 
-    // 2. Open assignments
+    // 2. Open assignments (batched to keep request URL length safe)
     const assignments: { account_id: string; user_id: string | null; profile_id: string | null }[] = [];
-    if (userIds.size > 0) {
+    const ASG_BATCH = 100;
+    const userIdArr = Array.from(userIds);
+    for (let i = 0; i < userIdArr.length; i += ASG_BATCH) {
+      const batch = userIdArr.slice(i, i + ASG_BATCH);
       const { data, error } = await supabase
         .from("account_assignments")
         .select("account_id, user_id, profile_id")
         .is("end_date", null)
-        .in("user_id", Array.from(userIds));
+        .in("user_id", batch);
       if (error) return json({ error: error.message }, 500);
       if (data) assignments.push(...(data as any));
     }
-    if (profileIds.size > 0) {
+    const profileIdArr = Array.from(profileIds);
+    for (let i = 0; i < profileIdArr.length; i += ASG_BATCH) {
+      const batch = profileIdArr.slice(i, i + ASG_BATCH);
       const { data, error } = await supabase
         .from("account_assignments")
         .select("account_id, user_id, profile_id")
         .is("end_date", null)
-        .in("profile_id", Array.from(profileIds));
+        .in("profile_id", batch);
       if (error) return json({ error: error.message }, 500);
       if (data) assignments.push(...(data as any));
     }
