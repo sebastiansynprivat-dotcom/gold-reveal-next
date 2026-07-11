@@ -5303,12 +5303,24 @@ export default function AdminDashboard() {
                   {(() => {
                     const telegramYes = chatters.filter((c) => c.telegram_id && c.telegram_id.trim() !== "").length;
                     const telegramNo = chatters.length - telegramYes;
-                    const pushYes = chatters.filter((c) => pushUsers.has(c.user_id)).length;
-                    const pushNo = chatters.length - pushYes;
-                    const pwaYes = pwaUsers.size;
-                    const pwaNo = chatters.length - pwaYes;
-                    const assignedYes = chatters.filter((c) => (c.assigned_accounts?.length ?? 0) > 0).length;
+                    // Push/PWA-Tracking nur für Chatter mit aktivem Account
+                    const activeChatters = chatters.filter((c) => (c.assigned_accounts?.length ?? 0) > 0);
+                    const pushYes = activeChatters.filter((c) => pushUsers.has(c.user_id)).length;
+                    const pushNo = activeChatters.length - pushYes;
+                    const pwaYes = activeChatters.filter((c) => pwaUsers.has(c.user_id)).length;
+                    const pwaNo = activeChatters.length - pwaYes;
+                    const assignedYes = activeChatters.length;
                     const assignedNo = chatters.length - assignedYes;
+
+                    // Push-Tracking pro Plattform (nur aktive Chatter, deduped per Chatter+Plattform)
+                    const pushByPlatform = PLATFORMS.map((p) => {
+                      const pKey = p.key.toLowerCase();
+                      const relevant = activeChatters.filter((c) =>
+                        (c.assigned_accounts || []).some((a) => a.platform?.toLowerCase() === pKey),
+                      );
+                      const on = relevant.filter((c) => pushUsers.has(c.user_id)).length;
+                      return { key: pKey, label: p.label, color: p.color, total: relevant.length, on, off: relevant.length - on };
+                    }).filter((row) => row.total > 0);
 
                     const freeAccounts = accounts.filter((a) => !a.assigned_to).length;
 
