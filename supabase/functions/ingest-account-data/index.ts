@@ -24,8 +24,26 @@ type Incoming = {
   platform: string;
   purchase_id?: string;
   amount?: number;
+  time?: string;
+  type?: string;
+  customer?: string;
   metrics: Partial<Record<MetricField, number>>;
 };
+
+function optionalString(
+  obj: Record<string, unknown>,
+  field: string,
+  rowIndex: number,
+): { ok: true; value?: string } | { ok: false; error: Response } {
+  const v = obj[field];
+  if (v === undefined || v === null) return { ok: true };
+  if (typeof v !== "string") {
+    return { ok: false, error: json({ error: `Row ${rowIndex}: ${field} must be a string`, got: v }, 400) };
+  }
+  const trimmed = v.trim();
+  if (!trimmed) return { ok: true };
+  return { ok: true, value: trimmed };
+}
 
 const isInt = (v: unknown): v is number =>
   typeof v === "number" && Number.isFinite(v) && Number.isInteger(v);
@@ -88,6 +106,19 @@ Deno.serve(async (req) => {
         revAmt = amount;
       }
 
+      let revTime: string | undefined;
+      let revType: string | undefined;
+      let revCustomer: string | undefined;
+      for (const [name, setter] of [
+        ["time", (v?: string) => (revTime = v)],
+        ["type", (v?: string) => (revType = v)],
+        ["customer", (v?: string) => (revCustomer = v)],
+      ] as const) {
+        const res = optionalString(obj, name, i);
+        if (!res.ok) return res.error;
+        setter(res.value);
+      }
+
       const metrics: Partial<Record<MetricField, number>> = {};
       for (const f of METRIC_FIELDS) {
         const v = obj[f];
@@ -106,6 +137,9 @@ Deno.serve(async (req) => {
         platform: platform.trim(),
         purchase_id: revPid,
         amount: revAmt,
+        time: revTime,
+        type: revType,
+        customer: revCustomer,
         metrics,
       });
     }
@@ -143,9 +177,16 @@ Deno.serve(async (req) => {
     }
     console.log(`[${rid}] fetched ${existingRows?.length ?? 0} existing row(s) in ${Date.now() - tSel}ms`);
 
+    type AmountEntry = {
+      purchase_id: string;
+      amount: number;
+      time?: string;
+      type?: string;
+      customer?: string;
+    };
     type ExistingRow = {
       total: number;
-      amounts: Array<{ purchase_id: string; amount: number }>;
+      amounts: Array<AmountEntry>;
       metrics: Partial<Record<MetricField, number>>;
     };
     const existingMap = new Map<string, ExistingRow>();
@@ -170,7 +211,7 @@ Deno.serve(async (req) => {
       const existing = existingMap.get(key) ?? { total: 0, amounts: [], metrics: {} };
       const seen = new Set(existing.amounts.map((a) => a.purchase_id));
 
-      const newEntries: Array<{ purchase_id: string; amount: number }> = [];
+      const newEntries: Array<AmountEntry> = [];
       let addedTotal = 0;
       const groupMetrics: Partial<Record<MetricField, number>> = { ...existing.metrics };
       let metricsChanged = false;
@@ -181,7 +222,11 @@ Deno.serve(async (req) => {
             skipped_duplicates++;
           } else {
             seen.add(it.purchase_id);
-            newEntries.push({ purchase_id: it.purchase_id, amount: it.amount });
+            const entry: AmountEntry = { purchase_id: it.purchase_id, amount: it.amount };
+            if (it.time !== undefined) entry.time = it.time;
+            if (it.type !== undefined) entry.type = it.type;
+            if (it.customer !== undefined) entry.customer = it.customer;
+            newEntries.push(entry);
             addedTotal += it.amount;
           }
         }
