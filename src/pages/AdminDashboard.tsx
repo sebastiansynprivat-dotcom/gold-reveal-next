@@ -1001,6 +1001,7 @@ export default function AdminDashboard() {
   const [platformFilters, setPlatformFilters] = useState<Set<string>>(new Set());
   const [filterTelegram, setFilterTelegram] = useState<boolean | null>(null);
   const [filterPush, setFilterPush] = useState<boolean | null>(null);
+  const [pushDrill, setPushDrill] = useState<{ platform: string; mode: "off" | "on" } | null>(null);
   const [filterPwa, setFilterPwa] = useState<boolean | null>(null);
   const [filterAssigned, setFilterAssigned] = useState<boolean | null>(null);
   const [botMessages, setBotMessages] = useState<
