@@ -350,6 +350,25 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage:
                               ? lang === "en" ? "Inactive" : "Inaktiv"
                               : lang === "en" ? "Active" : "Aktiv"}
                           </span>
+                          {inactive && (
+                            <span
+                              role="button"
+                              tabIndex={0}
+                              aria-label={lang === "en" ? "Why inactive?" : "Warum inaktiv?"}
+                              onPointerDown={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                              }}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setInactiveInfoOpen(true);
+                              }}
+                              className="inline-flex items-center justify-center h-4 w-4 rounded-full text-muted-foreground hover:text-accent transition-colors cursor-pointer"
+                            >
+                              <Info className="h-3.5 w-3.5" />
+                            </span>
+                          )}
                         </span>
                       </SelectItem>
                     );
