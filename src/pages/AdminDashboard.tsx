@@ -3220,25 +3220,36 @@ export default function AdminDashboard() {
 
 
 
-  const toggleModelActive = async (modelId: string, requestId: string, nextActive: boolean) => {
+  const cycleModelStatus = async (modelId: string, current: "active" | "semi" | "inactive" | undefined) => {
+    const order: Array<"active" | "semi" | "inactive"> = ["active", "semi", "inactive"];
+    const cur = current || "active";
+    const next = order[(order.indexOf(cur) + 1) % order.length];
     // Optimistic flip everywhere this model appears
     setModelRequests((prev) =>
       prev.map((r) =>
-        r._model && r._model.id === modelId ? { ...r, _model: { ...r._model, model_active: nextActive } } : r,
+        r._model && r._model.id === modelId
+          ? { ...r, _model: { ...r._model, model_status: next, model_active: next !== "inactive" } }
+          : r,
       ),
     );
-    const { error } = await supabase.from("models").update({ model_active: nextActive }).eq("id", modelId);
+    const { error } = await (supabase.from("models") as any)
+      .update({ model_status: next, model_active: next !== "inactive" })
+      .eq("id", modelId);
     if (error) {
       toast.error("Status konnte nicht geändert werden");
       setModelRequests((prev) =>
         prev.map((r) =>
-          r._model && r._model.id === modelId ? { ...r, _model: { ...r._model, model_active: !nextActive } } : r,
+          r._model && r._model.id === modelId
+            ? { ...r, _model: { ...r._model, model_status: cur, model_active: cur !== "inactive" } }
+            : r,
         ),
       );
       return;
     }
-    toast.success(nextActive ? "Model auf Aktiv gesetzt" : "Model auf Inaktiv gesetzt");
+    const label = next === "active" ? "Aktiv" : next === "semi" ? "Halbaktiv" : "Inaktiv";
+    toast.success(`Model auf ${label} gesetzt`);
   };
+
 
 
   const updateRequestStatus = async (id: string, status: string) => {
