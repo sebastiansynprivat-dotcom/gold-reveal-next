@@ -3359,6 +3359,7 @@ export type Database = {
       auto_reject_stale_model_requests: {
         Args: never
         Returns: {
+          models_semi: number
           reason_age: number
           reason_followups: number
           rejected_count: number
