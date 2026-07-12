@@ -6987,30 +6987,39 @@ export default function AdminDashboard() {
                                             {req._model?.model_language || req.model_language}
                                           </span>
                                         )}
-                                        {req._model?.id && (
-                                          <button
-                                            type="button"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              toggleModelActive(req._model.id, req.id, !req._model.model_active);
-                                            }}
-                                            className={cn(
-                                              "text-[10px] font-bold uppercase tracking-wide px-1.5 h-4 rounded border flex items-center gap-1 transition-colors",
-                                              req._model.model_active
-                                                ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/25"
-                                                : "bg-red-500/15 text-red-300 border-red-500/40 hover:bg-red-500/25",
-                                            )}
-                                            title="Klicken um Status zu wechseln"
-                                          >
-                                            <span
+                                        {req._model?.id && (() => {
+                                          const st: "active" | "semi" | "inactive" =
+                                            (req._model.model_status as any) ||
+                                            (req._model.model_active === false ? "inactive" : "active");
+                                          const styles =
+                                            st === "active"
+                                              ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/25"
+                                              : st === "semi"
+                                                ? "bg-amber-500/15 text-amber-300 border-amber-500/40 hover:bg-amber-500/25"
+                                                : "bg-red-500/15 text-red-300 border-red-500/40 hover:bg-red-500/25";
+                                          const dotColor =
+                                            st === "active" ? "bg-emerald-400" : st === "semi" ? "bg-amber-400" : "bg-red-400";
+                                          const label =
+                                            st === "active" ? "Aktiv" : st === "semi" ? "Halbaktiv" : "Inaktiv";
+                                          return (
+                                            <button
+                                              type="button"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                cycleModelStatus(req._model.id, st);
+                                              }}
                                               className={cn(
-                                                "h-1.5 w-1.5 rounded-full",
-                                                req._model.model_active ? "bg-emerald-400" : "bg-red-400",
+                                                "text-[10px] font-bold uppercase tracking-wide px-1.5 h-4 rounded border flex items-center gap-1 transition-colors",
+                                                styles,
                                               )}
-                                            />
-                                            {req._model.model_active ? "Aktiv" : "Inaktiv"}
-                                          </button>
-                                        )}
+                                              title="Klicken um Status zu wechseln (Aktiv → Halbaktiv → Inaktiv)"
+                                            >
+                                              <span className={cn("h-1.5 w-1.5 rounded-full", dotColor)} />
+                                              {label}
+                                            </button>
+                                          );
+                                        })()}
+
                                         <span className="text-[10px] text-muted-foreground ml-auto">
                                           {new Date(req.created_at).toLocaleDateString("de-DE", {
                                             day: "2-digit",
