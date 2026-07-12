@@ -288,6 +288,7 @@ export default function Dashboard() {
       drive_folder_id?: string;
       model_language?: string;
       model_active?: boolean;
+      model_status?: "active" | "semi" | "inactive";
       model_id?: string | null;
       model_name?: string;
     }[]
