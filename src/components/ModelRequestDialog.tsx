@@ -30,6 +30,7 @@ export interface AvailableModel {
   language: "de" | "en";
   platforms: string[];
   active?: boolean;
+  status?: "active" | "semi" | "inactive";
 }
 
 interface ModelRequestDialogProps {
