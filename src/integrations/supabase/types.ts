@@ -81,6 +81,7 @@ export type Database = {
           model_agency: string
           model_id: string
           model_language: string
+          model_status: string
           platform: string
           post: boolean
           subfolder_name: string | null
@@ -108,6 +109,7 @@ export type Database = {
           model_agency?: string
           model_id: string
           model_language?: string
+          model_status?: string
           platform?: string
           post?: boolean
           subfolder_name?: string | null
@@ -135,6 +137,7 @@ export type Database = {
           model_agency?: string
           model_id?: string
           model_language?: string
+          model_status?: string
           platform?: string
           post?: boolean
           subfolder_name?: string | null
@@ -2477,6 +2480,7 @@ export type Database = {
           model_active: boolean
           model_agency: string
           model_language: string
+          model_status: string
           name: string
           notes: string | null
           payment_method: string
@@ -2528,6 +2532,7 @@ export type Database = {
           model_active?: boolean
           model_agency?: string
           model_language?: string
+          model_status?: string
           name?: string
           notes?: string | null
           payment_method?: string
@@ -2579,6 +2584,7 @@ export type Database = {
           model_active?: boolean
           model_agency?: string
           model_language?: string
+          model_status?: string
           name?: string
           notes?: string | null
           payment_method?: string
