@@ -3356,6 +3356,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      auto_reject_stale_model_requests: {
+        Args: never
+        Returns: {
+          reason_age: number
+          reason_followups: number
+          rejected_count: number
+        }[]
+      }
       can_access_account: {
         Args: { p_account_id: string; p_user_id: string }
         Returns: boolean
