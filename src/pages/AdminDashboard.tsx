@@ -10547,20 +10547,44 @@ export default function AdminDashboard() {
                           {(acc as any).model_agency === "syn" ? "SYN" : "SheX"}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/20">
-                        <span className="text-[10px] text-muted-foreground">Model aktiv</span>
-                        <Switch
-                          checked={acc.model_active !== false}
-                          onCheckedChange={async (checked) => {
-                            await supabase
-                              .from("accounts")
-                              .update({ model_active: checked } as any)
-                              .eq("id", acc.id);
-                            loadAccounts();
-                            toast.success(checked ? "Model aktiviert" : "Model deaktiviert");
-                          }}
-                        />
+                      <div className="mt-2 pt-2 border-t border-border/20">
+                        <div className="text-[10px] text-muted-foreground mb-1.5">Model-Status</div>
+                        <div className="grid grid-cols-3 gap-1">
+                          {(["active", "semi", "inactive"] as const).map((st) => {
+                            const current: "active" | "semi" | "inactive" =
+                              ((acc as any).model_status as any) ||
+                              (acc.model_active === false ? "inactive" : "active");
+                            const isSel = current === st;
+                            const label = st === "active" ? "Aktiv" : st === "semi" ? "Halbaktiv" : "Inaktiv";
+                            const sel =
+                              st === "active"
+                                ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/50"
+                                : st === "semi"
+                                  ? "bg-amber-500/20 text-amber-300 border-amber-500/50"
+                                  : "bg-red-500/20 text-red-300 border-red-500/50";
+                            return (
+                              <button
+                                key={st}
+                                type="button"
+                                onClick={async () => {
+                                  await (supabase.from("accounts") as any)
+                                    .update({ model_status: st, model_active: st !== "inactive" })
+                                    .eq("id", acc.id);
+                                  loadAccounts();
+                                  toast.success(`Auf ${label} gesetzt`);
+                                }}
+                                className={cn(
+                                  "text-[10px] font-semibold px-1.5 py-1 rounded border transition-colors",
+                                  isSel ? sel : "border-border/40 text-muted-foreground hover:bg-secondary/40",
+                                )}
+                              >
+                                {label}
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
+
                     </div>
                   ));
                 })()}
