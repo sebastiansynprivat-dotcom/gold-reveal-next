@@ -470,7 +470,7 @@ export default function Dashboard() {
       const { data: direct } = await supabase
         .from("accounts")
         .select(
-          "id, account_email, account_password, account_domain, platform, assigned_at, drive_folder_id, model_language, model_active, model_id",
+          "id, account_email, account_password, account_domain, platform, assigned_at, drive_folder_id, model_language, model_active, model_status, model_id",
         )
         .eq("assigned_to", user.id)
         .order("created_at", { ascending: true });
@@ -496,7 +496,7 @@ export default function Dashboard() {
           const { data: extra } = await supabase
             .from("accounts")
             .select(
-              "id, account_email, account_password, account_domain, platform, assigned_at, drive_folder_id, model_language, model_active, model_id",
+              "id, account_email, account_password, account_domain, platform, assigned_at, drive_folder_id, model_language, model_active, model_status, model_id",
             )
             .in("id", missing as string[]);
           viaAssignments = extra || [];
