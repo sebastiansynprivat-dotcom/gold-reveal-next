@@ -309,7 +309,7 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage:
         </DialogHeader>
 
         <div className="space-y-4 pt-2">
-          {hasModelList && (availableModels!.length > 1 || availableModels!.some((m) => m.active === false)) ? (
+          {hasModelList && (availableModels!.length > 1 || availableModels!.some((m) => m.active === false || m.status === "semi")) ? (
             <div className="space-y-2">
               <Label className="text-xs text-foreground">
                 {lang === "en" ? "Which model is this request for? *" : "Für welches Model ist diese Anfrage? *"}
@@ -318,7 +318,7 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage:
                 value={selectedModelId || ""}
                 onValueChange={(val) => {
                   const m = availableModels!.find((x) => x.id === val);
-                  if (!m || m.active === false) return;
+                  if (!m || m.active === false || m.status === "inactive") return;
                   setSelectedModelId(m.id);
                   setModelName(m.name);
                 }}
@@ -328,7 +328,22 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage:
                 </SelectTrigger>
                 <SelectContent className="z-[100]">
                   {availableModels!.map((m) => {
-                    const inactive = m.active === false;
+                    const status: "active" | "semi" | "inactive" =
+                      m.status || (m.active === false ? "inactive" : "active");
+                    const inactive = status === "inactive";
+                    const semi = status === "semi";
+                    const badgeClasses =
+                      status === "inactive"
+                        ? "bg-destructive/15 text-destructive"
+                        : status === "semi"
+                          ? "bg-amber-500/15 text-amber-400"
+                          : "bg-emerald-500/15 text-emerald-400";
+                    const badgeLabel =
+                      status === "inactive"
+                        ? (lang === "en" ? "Inactive" : "Inaktiv")
+                        : status === "semi"
+                          ? (lang === "en" ? "Half-active" : "Halbaktiv")
+                          : (lang === "en" ? "Active" : "Aktiv");
                     return (
                       <SelectItem
                         key={m.id}
@@ -341,22 +356,18 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage:
                           <span className="text-[10px] opacity-70">
                             {m.language === "en" ? "🇬🇧 EN" : "🇩🇪 DE"}
                           </span>
-                          <span
-                            className={`text-[10px] px-1.5 py-0.5 rounded ${
-                              inactive
-                                ? "bg-destructive/15 text-destructive"
-                                : "bg-emerald-500/15 text-emerald-400"
-                            }`}
-                          >
-                            {inactive
-                              ? lang === "en" ? "Inactive" : "Inaktiv"
-                              : lang === "en" ? "Active" : "Aktiv"}
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded ${badgeClasses}`}>
+                            {badgeLabel}
                           </span>
-                          {inactive && (
+                          {(inactive || semi) && (
                             <span
                               role="button"
                               tabIndex={0}
-                              aria-label={lang === "en" ? "Why inactive?" : "Warum inaktiv?"}
+                              aria-label={
+                                semi
+                                  ? (lang === "en" ? "What does half-active mean?" : "Was heißt halbaktiv?")
+                                  : (lang === "en" ? "Why inactive?" : "Warum inaktiv?")
+                              }
                               onPointerDown={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
@@ -364,7 +375,8 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage:
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                setInactiveInfoOpen(true);
+                                if (semi) setSemiInfoOpen(true);
+                                else setInactiveInfoOpen(true);
                               }}
                               className="inline-flex items-center justify-center h-4 w-4 rounded-full text-muted-foreground hover:text-accent transition-colors cursor-pointer"
                             >
@@ -378,6 +390,7 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage:
                 </SelectContent>
               </Select>
             </div>
+
           ) : (
             <div className="space-y-1.5">
 
