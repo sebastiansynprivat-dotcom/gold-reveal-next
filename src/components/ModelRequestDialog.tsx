@@ -573,7 +573,43 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage:
           </div>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={semiInfoOpen} onOpenChange={setSemiInfoOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">
+              {lang === "en" ? "Model is currently half-active" : "Model ist momentan halbaktiv"}
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              {lang === "en"
+                ? "This model can occasionally take requests, but is often very busy — so some requests might not get done."
+                : "Dieses Model kann ab und zu Anfragen umsetzen, ist aber oft zeitlich sehr eingespannt — deshalb bleiben manche Anfragen unerledigt."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="rounded-lg border border-amber-500/25 bg-amber-500/10 p-4 space-y-2">
+            <p className="text-sm text-foreground">
+              {lang === "en" ? (
+                <>
+                  <strong>You can still try it!</strong> When she has time, it usually works out. Just don't
+                  count on it 100% — feel free to send the request, but keep expectations realistic.
+                </>
+              ) : (
+                <>
+                  <strong>Du kannst es trotzdem probieren!</strong> Wenn sie Zeit hat, klappt es meistens.
+                  Verlass dich aber nicht fest darauf — schick die Anfrage gerne, aber bleib realistisch.
+                </>
+              )}
+            </p>
+            <p className="text-xs text-amber-100/80">
+              {lang === "en"
+                ? "Communicate carefully with your customers — don't make firm promises or fixed commitments. A good middle ground works best here."
+                : "Kommuniziere das Ganze vorsichtig mit deinen Kunden — mach keine festen Zusagen oder Versprechungen. Ein gutes Mittelmaß funktioniert hier am besten."}
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
+
   );
 };
 
