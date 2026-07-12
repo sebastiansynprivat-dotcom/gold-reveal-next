@@ -2937,7 +2937,7 @@ export default function AdminDashboard() {
 
     const [{ data }, { data: modelsData }] = await Promise.all([
       supabase.from("model_requests").select("*").order("created_at", { ascending: false }),
-      supabase.from("models").select("id, name, username, model_agency, model_language, model_active").range(0, 9999),
+      supabase.from("models").select("id, name, username, model_agency, model_language, model_active, model_status").range(0, 9999),
     ]);
     const normalizeModelKey = (s: any) =>
       String(s || "")
