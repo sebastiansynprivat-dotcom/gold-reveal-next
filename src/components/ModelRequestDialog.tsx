@@ -61,6 +61,7 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage:
   );
   const [loading, setLoading] = useState(false);
   const [inactiveInfoOpen, setInactiveInfoOpen] = useState(false);
+  const [semiInfoOpen, setSemiInfoOpen] = useState(false);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
 
   const hasModelList = !!availableModels && availableModels.length > 0;
