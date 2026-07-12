@@ -30,6 +30,7 @@ export interface AvailableModel {
   language: "de" | "en";
   platforms: string[];
   active?: boolean;
+  status?: "active" | "semi" | "inactive";
 }
 
 interface ModelRequestDialogProps {
@@ -60,6 +61,7 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage:
   );
   const [loading, setLoading] = useState(false);
   const [inactiveInfoOpen, setInactiveInfoOpen] = useState(false);
+  const [semiInfoOpen, setSemiInfoOpen] = useState(false);
   const descriptionRef = useRef<HTMLTextAreaElement>(null);
 
   const hasModelList = !!availableModels && availableModels.length > 0;
@@ -307,7 +309,7 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage:
         </DialogHeader>
 
         <div className="space-y-4 pt-2">
-          {hasModelList && (availableModels!.length > 1 || availableModels!.some((m) => m.active === false)) ? (
+          {hasModelList && (availableModels!.length > 1 || availableModels!.some((m) => m.active === false || m.status === "semi")) ? (
             <div className="space-y-2">
               <Label className="text-xs text-foreground">
                 {lang === "en" ? "Which model is this request for? *" : "Für welches Model ist diese Anfrage? *"}
@@ -316,7 +318,7 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage:
                 value={selectedModelId || ""}
                 onValueChange={(val) => {
                   const m = availableModels!.find((x) => x.id === val);
-                  if (!m || m.active === false) return;
+                  if (!m || m.active === false || m.status === "inactive") return;
                   setSelectedModelId(m.id);
                   setModelName(m.name);
                 }}
@@ -326,7 +328,22 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage:
                 </SelectTrigger>
                 <SelectContent className="z-[100]">
                   {availableModels!.map((m) => {
-                    const inactive = m.active === false;
+                    const status: "active" | "semi" | "inactive" =
+                      m.status || (m.active === false ? "inactive" : "active");
+                    const inactive = status === "inactive";
+                    const semi = status === "semi";
+                    const badgeClasses =
+                      status === "inactive"
+                        ? "bg-destructive/15 text-destructive"
+                        : status === "semi"
+                          ? "bg-amber-500/15 text-amber-400"
+                          : "bg-emerald-500/15 text-emerald-400";
+                    const badgeLabel =
+                      status === "inactive"
+                        ? (lang === "en" ? "Inactive" : "Inaktiv")
+                        : status === "semi"
+                          ? (lang === "en" ? "Half-active" : "Halbaktiv")
+                          : (lang === "en" ? "Active" : "Aktiv");
                     return (
                       <SelectItem
                         key={m.id}
@@ -339,22 +356,18 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage:
                           <span className="text-[10px] opacity-70">
                             {m.language === "en" ? "🇬🇧 EN" : "🇩🇪 DE"}
                           </span>
-                          <span
-                            className={`text-[10px] px-1.5 py-0.5 rounded ${
-                              inactive
-                                ? "bg-destructive/15 text-destructive"
-                                : "bg-emerald-500/15 text-emerald-400"
-                            }`}
-                          >
-                            {inactive
-                              ? lang === "en" ? "Inactive" : "Inaktiv"
-                              : lang === "en" ? "Active" : "Aktiv"}
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded ${badgeClasses}`}>
+                            {badgeLabel}
                           </span>
-                          {inactive && (
+                          {(inactive || semi) && (
                             <span
                               role="button"
                               tabIndex={0}
-                              aria-label={lang === "en" ? "Why inactive?" : "Warum inaktiv?"}
+                              aria-label={
+                                semi
+                                  ? (lang === "en" ? "What does half-active mean?" : "Was heißt halbaktiv?")
+                                  : (lang === "en" ? "Why inactive?" : "Warum inaktiv?")
+                              }
                               onPointerDown={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
@@ -362,7 +375,8 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage:
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                setInactiveInfoOpen(true);
+                                if (semi) setSemiInfoOpen(true);
+                                else setInactiveInfoOpen(true);
                               }}
                               className="inline-flex items-center justify-center h-4 w-4 rounded-full text-muted-foreground hover:text-accent transition-colors cursor-pointer"
                             >
@@ -376,6 +390,7 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage:
                 </SelectContent>
               </Select>
             </div>
+
           ) : (
             <div className="space-y-1.5">
 
@@ -558,7 +573,43 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage:
           </div>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={semiInfoOpen} onOpenChange={setSemiInfoOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-foreground">
+              {lang === "en" ? "Model is currently half-active" : "Model ist momentan halbaktiv"}
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              {lang === "en"
+                ? "This model can occasionally take requests, but is often very busy — so some requests might not get done."
+                : "Dieses Model kann ab und zu Anfragen umsetzen, ist aber oft zeitlich sehr eingespannt — deshalb bleiben manche Anfragen unerledigt."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="rounded-lg border border-amber-500/25 bg-amber-500/10 p-4 space-y-2">
+            <p className="text-sm text-foreground">
+              {lang === "en" ? (
+                <>
+                  <strong>You can still try it!</strong> When she has time, it usually works out. Just don't
+                  count on it 100% — feel free to send the request, but keep expectations realistic.
+                </>
+              ) : (
+                <>
+                  <strong>Du kannst es trotzdem probieren!</strong> Wenn sie Zeit hat, klappt es meistens.
+                  Verlass dich aber nicht fest darauf — schick die Anfrage gerne, aber bleib realistisch.
+                </>
+              )}
+            </p>
+            <p className="text-xs text-amber-100/80">
+              {lang === "en"
+                ? "Communicate carefully with your customers — don't make firm promises or fixed commitments. A good middle ground works best here."
+                : "Kommuniziere das Ganze vorsichtig mit deinen Kunden — mach keine festen Zusagen oder Versprechungen. Ein gutes Mittelmaß funktioniert hier am besten."}
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Dialog>
+
   );
 };
 

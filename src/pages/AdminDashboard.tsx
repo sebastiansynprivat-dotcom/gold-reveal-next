@@ -241,6 +241,7 @@ interface AccountEntry {
   drive_folder_id?: string | null;
   folder_name?: string | null;
   model_active?: boolean;
+  model_status?: "active" | "semi" | "inactive";
   model_language?: string;
   model_agency?: string;
   model_id?: string | null;
@@ -2936,7 +2937,7 @@ export default function AdminDashboard() {
 
     const [{ data }, { data: modelsData }] = await Promise.all([
       supabase.from("model_requests").select("*").order("created_at", { ascending: false }),
-      supabase.from("models").select("id, name, username, model_agency, model_language, model_active").range(0, 9999),
+      supabase.from("models").select("id, name, username, model_agency, model_language, model_active, model_status").range(0, 9999),
     ]);
     const normalizeModelKey = (s: any) =>
       String(s || "")
@@ -3219,25 +3220,36 @@ export default function AdminDashboard() {
 
 
 
-  const toggleModelActive = async (modelId: string, requestId: string, nextActive: boolean) => {
+  const cycleModelStatus = async (modelId: string, current: "active" | "semi" | "inactive" | undefined) => {
+    const order: Array<"active" | "semi" | "inactive"> = ["active", "semi", "inactive"];
+    const cur = current || "active";
+    const next = order[(order.indexOf(cur) + 1) % order.length];
     // Optimistic flip everywhere this model appears
     setModelRequests((prev) =>
       prev.map((r) =>
-        r._model && r._model.id === modelId ? { ...r, _model: { ...r._model, model_active: nextActive } } : r,
+        r._model && r._model.id === modelId
+          ? { ...r, _model: { ...r._model, model_status: next, model_active: next !== "inactive" } }
+          : r,
       ),
     );
-    const { error } = await supabase.from("models").update({ model_active: nextActive }).eq("id", modelId);
+    const { error } = await (supabase.from("models") as any)
+      .update({ model_status: next, model_active: next !== "inactive" })
+      .eq("id", modelId);
     if (error) {
       toast.error("Status konnte nicht geändert werden");
       setModelRequests((prev) =>
         prev.map((r) =>
-          r._model && r._model.id === modelId ? { ...r, _model: { ...r._model, model_active: !nextActive } } : r,
+          r._model && r._model.id === modelId
+            ? { ...r, _model: { ...r._model, model_status: cur, model_active: cur !== "inactive" } }
+            : r,
         ),
       );
       return;
     }
-    toast.success(nextActive ? "Model auf Aktiv gesetzt" : "Model auf Inaktiv gesetzt");
+    const label = next === "active" ? "Aktiv" : next === "semi" ? "Halbaktiv" : "Inaktiv";
+    toast.success(`Model auf ${label} gesetzt`);
   };
+
 
 
   const updateRequestStatus = async (id: string, status: string) => {
@@ -6975,30 +6987,39 @@ export default function AdminDashboard() {
                                             {req._model?.model_language || req.model_language}
                                           </span>
                                         )}
-                                        {req._model?.id && (
-                                          <button
-                                            type="button"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              toggleModelActive(req._model.id, req.id, !req._model.model_active);
-                                            }}
-                                            className={cn(
-                                              "text-[10px] font-bold uppercase tracking-wide px-1.5 h-4 rounded border flex items-center gap-1 transition-colors",
-                                              req._model.model_active
-                                                ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/25"
-                                                : "bg-red-500/15 text-red-300 border-red-500/40 hover:bg-red-500/25",
-                                            )}
-                                            title="Klicken um Status zu wechseln"
-                                          >
-                                            <span
+                                        {req._model?.id && (() => {
+                                          const st: "active" | "semi" | "inactive" =
+                                            (req._model.model_status as any) ||
+                                            (req._model.model_active === false ? "inactive" : "active");
+                                          const styles =
+                                            st === "active"
+                                              ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/25"
+                                              : st === "semi"
+                                                ? "bg-amber-500/15 text-amber-300 border-amber-500/40 hover:bg-amber-500/25"
+                                                : "bg-red-500/15 text-red-300 border-red-500/40 hover:bg-red-500/25";
+                                          const dotColor =
+                                            st === "active" ? "bg-emerald-400" : st === "semi" ? "bg-amber-400" : "bg-red-400";
+                                          const label =
+                                            st === "active" ? "Aktiv" : st === "semi" ? "Halbaktiv" : "Inaktiv";
+                                          return (
+                                            <button
+                                              type="button"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                cycleModelStatus(req._model.id, st);
+                                              }}
                                               className={cn(
-                                                "h-1.5 w-1.5 rounded-full",
-                                                req._model.model_active ? "bg-emerald-400" : "bg-red-400",
+                                                "text-[10px] font-bold uppercase tracking-wide px-1.5 h-4 rounded border flex items-center gap-1 transition-colors",
+                                                styles,
                                               )}
-                                            />
-                                            {req._model.model_active ? "Aktiv" : "Inaktiv"}
-                                          </button>
-                                        )}
+                                              title="Klicken um Status zu wechseln (Aktiv → Halbaktiv → Inaktiv)"
+                                            >
+                                              <span className={cn("h-1.5 w-1.5 rounded-full", dotColor)} />
+                                              {label}
+                                            </button>
+                                          );
+                                        })()}
+
                                         <span className="text-[10px] text-muted-foreground ml-auto">
                                           {new Date(req.created_at).toLocaleDateString("de-DE", {
                                             day: "2-digit",
@@ -10526,20 +10547,44 @@ export default function AdminDashboard() {
                           {(acc as any).model_agency === "syn" ? "SYN" : "SheX"}
                         </span>
                       </div>
-                      <div className="flex items-center justify-between mt-2 pt-2 border-t border-border/20">
-                        <span className="text-[10px] text-muted-foreground">Model aktiv</span>
-                        <Switch
-                          checked={acc.model_active !== false}
-                          onCheckedChange={async (checked) => {
-                            await supabase
-                              .from("accounts")
-                              .update({ model_active: checked } as any)
-                              .eq("id", acc.id);
-                            loadAccounts();
-                            toast.success(checked ? "Model aktiviert" : "Model deaktiviert");
-                          }}
-                        />
+                      <div className="mt-2 pt-2 border-t border-border/20">
+                        <div className="text-[10px] text-muted-foreground mb-1.5">Model-Status</div>
+                        <div className="grid grid-cols-3 gap-1">
+                          {(["active", "semi", "inactive"] as const).map((st) => {
+                            const current: "active" | "semi" | "inactive" =
+                              ((acc as any).model_status as any) ||
+                              (acc.model_active === false ? "inactive" : "active");
+                            const isSel = current === st;
+                            const label = st === "active" ? "Aktiv" : st === "semi" ? "Halbaktiv" : "Inaktiv";
+                            const sel =
+                              st === "active"
+                                ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/50"
+                                : st === "semi"
+                                  ? "bg-amber-500/20 text-amber-300 border-amber-500/50"
+                                  : "bg-red-500/20 text-red-300 border-red-500/50";
+                            return (
+                              <button
+                                key={st}
+                                type="button"
+                                onClick={async () => {
+                                  await (supabase.from("accounts") as any)
+                                    .update({ model_status: st, model_active: st !== "inactive" })
+                                    .eq("id", acc.id);
+                                  loadAccounts();
+                                  toast.success(`Auf ${label} gesetzt`);
+                                }}
+                                className={cn(
+                                  "text-[10px] font-semibold px-1.5 py-1 rounded border transition-colors",
+                                  isSel ? sel : "border-border/40 text-muted-foreground hover:bg-secondary/40",
+                                )}
+                              >
+                                {label}
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
+
                     </div>
                   ));
                 })()}

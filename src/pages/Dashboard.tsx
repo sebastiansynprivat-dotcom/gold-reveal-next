@@ -288,6 +288,7 @@ export default function Dashboard() {
       drive_folder_id?: string;
       model_language?: string;
       model_active?: boolean;
+      model_status?: "active" | "semi" | "inactive";
       model_id?: string | null;
       model_name?: string;
     }[]
@@ -469,7 +470,7 @@ export default function Dashboard() {
       const { data: direct } = await supabase
         .from("accounts")
         .select(
-          "id, account_email, account_password, account_domain, platform, assigned_at, drive_folder_id, model_language, model_active, model_id",
+          "id, account_email, account_password, account_domain, platform, assigned_at, drive_folder_id, model_language, model_active, model_status, model_id",
         )
         .eq("assigned_to", user.id)
         .order("created_at", { ascending: true });
@@ -495,7 +496,7 @@ export default function Dashboard() {
           const { data: extra } = await supabase
             .from("accounts")
             .select(
-              "id, account_email, account_password, account_domain, platform, assigned_at, drive_folder_id, model_language, model_active, model_id",
+              "id, account_email, account_password, account_domain, platform, assigned_at, drive_folder_id, model_language, model_active, model_status, model_id",
             )
             .in("id", missing as string[]);
           viaAssignments = extra || [];
@@ -1270,20 +1271,27 @@ export default function Dashboard() {
 
           {/* Anfrage an das Model – oder Inaktiv-Hinweis */}
           {(() => {
+            type ModelStatus = "active" | "semi" | "inactive";
+            const resolveStatus = (a: any): ModelStatus => {
+              const s = (a?.model_status as ModelStatus | undefined);
+              if (s === "semi" || s === "inactive" || s === "active") return s;
+              return a?.model_active === false ? "inactive" : "active";
+            };
             // Group assigned accounts by model
             const modelsMap = new Map<
               string,
-              { id: string; name: string; language: "de" | "en"; active: boolean; platforms: Set<string> }
+              { id: string; name: string; language: "de" | "en"; status: ModelStatus; platforms: Set<string> }
             >();
             assignedAccounts.forEach((a) => {
               const key = a.model_id || a.model_name || a.platform || a.id;
               if (!key) return;
               const existing = modelsMap.get(key);
-              const isActive = a.model_active !== false;
+              const s = resolveStatus(a);
+              const rank = (x: ModelStatus) => (x === "active" ? 2 : x === "semi" ? 1 : 0);
               if (existing) {
                 if (a.platform) existing.platforms.add(a.platform);
-                // A model counts as active if ANY of its assigned accounts is active
-                if (isActive) existing.active = true;
+                // Best status across the model's accounts wins
+                if (rank(s) > rank(existing.status)) existing.status = s;
                 if (!existing.name && a.model_name) existing.name = a.model_name;
                 if (a.model_language) existing.language = a.model_language as "de" | "en";
               } else {
@@ -1291,17 +1299,18 @@ export default function Dashboard() {
                   id: key,
                   name: a.model_name || "",
                   language: (a.model_language as "de" | "en") || "de",
-                  active: isActive,
+                  status: s,
                   platforms: new Set(a.platform ? [a.platform] : []),
                 });
               }
             });
             const allModels = Array.from(modelsMap.values());
-            const activeModels = allModels.filter((m) => m.active);
-            const hasInactive = allModels.some((m) => !m.active);
-            const allInactive = allModels.length > 0 && activeModels.length === 0;
+            const requestableModels = allModels.filter((m) => m.status !== "inactive");
+            const hasInactive = allModels.some((m) => m.status === "inactive");
+            const hasSemi = allModels.some((m) => m.status === "semi");
+            const allInactive = allModels.length > 0 && requestableModels.length === 0;
             const showInactiveBlocker = demoModelInactive || allInactive;
-            const showEnglishWarning = activeModels.some((m) => m.language === "en");
+            const showEnglishWarning = requestableModels.some((m) => m.language === "en");
 
             return (
               <div className="relative">
@@ -1353,6 +1362,13 @@ export default function Dashboard() {
                           : "Eines deiner Models nimmt aktuell keine Anfragen entgegen. Für deine aktiven Models kannst du unten weiterhin Anfragen stellen."}
                       </div>
                     )}
+                    {hasSemi && (
+                      <div className="rounded-lg border border-amber-500/25 bg-amber-500/10 p-3 text-[11px] text-amber-100/90 leading-relaxed">
+                        {lang === "en"
+                          ? "One of your models is currently only half-active. You can still submit requests, but keep expectations flexible with customers — no firm promises."
+                          : "Eines deiner Models ist aktuell nur halbaktiv. Du kannst weiterhin Anfragen stellen, kommuniziere das Ganze aber vorsichtig mit den Kunden – bitte keine festen Zusagen."}
+                      </div>
+                    )}
                     {showEnglishWarning && (
                       <div className="rounded-lg border border-amber-500/25 bg-amber-500/10 p-3 flex items-start gap-2.5">
                         <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
@@ -1376,16 +1392,13 @@ export default function Dashboard() {
                       editData={editRequest}
                       onEditClear={() => setEditRequest(null)}
                       modelLanguage={
-                        // When the chatter has exactly ONE model, that model's language is
-                        // the source of truth — even if it's inactive. Otherwise prefer the
-                        // first active model, falling back to the first assigned model.
                         (allModels.length === 1
                           ? allModels[0].language
-                          : activeModels[0]?.language || allModels[0]?.language) || "de"
+                          : requestableModels[0]?.language || allModels[0]?.language) || "de"
                       }
                       availablePlatforms={Array.from(
                         new Set(
-                          (activeModels.length > 0 ? activeModels : allModels).flatMap((m) =>
+                          (requestableModels.length > 0 ? requestableModels : allModels).flatMap((m) =>
                             Array.from(m.platforms),
                           ),
                         ),
@@ -1395,7 +1408,8 @@ export default function Dashboard() {
                         name: m.name,
                         language: m.language,
                         platforms: Array.from(m.platforms),
-                        active: m.active,
+                        active: m.status !== "inactive",
+                        status: m.status,
                       }))}
                     />
                   </div>
@@ -1403,6 +1417,7 @@ export default function Dashboard() {
               </div>
             );
           })()}
+
 
 
           {/* Bisherige Anfragen – einklappbar */}
