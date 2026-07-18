@@ -35,6 +35,17 @@ function toB64(bytes: Uint8Array): string {
   return btoa(s);
 }
 
+function getProvidedApiKey(req: Request): string | null {
+  const explicit = req.headers.get("x-api-key")?.trim();
+  if (explicit) return explicit;
+
+  const authorization = req.headers.get("authorization")?.trim();
+  if (!authorization) return null;
+
+  const bearerMatch = authorization.match(/^Bearer\s+(.+)$/i);
+  return (bearerMatch ? bearerMatch[1] : authorization).trim() || null;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
@@ -43,7 +54,7 @@ Deno.serve(async (req) => {
     const rawKey = Deno.env.get("CONTROLLING_CHATS_AES_KEY");
     if (!expectedAuth || !rawKey) return json({ error: "Server not configured" }, 500);
 
-    if (req.headers.get("x-api-key") !== expectedAuth) return json({ error: "Unauthorized" }, 401);
+    if (getProvidedApiKey(req) !== expectedAuth) return json({ error: "Unauthorized" }, 401);
     if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
     const body = await req.json().catch(() => ({}));
