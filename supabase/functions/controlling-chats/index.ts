@@ -22,8 +22,16 @@ function parseKey(raw: string): Uint8Array {
     for (let i = 0; i < 32; i++) out[i] = parseInt(s.slice(i * 2, i * 2 + 2), 16);
     return out;
   }
-  const bin = atob(s);
-  if (bin.length !== 32) throw new Error("CONTROLLING_CHATS_AES_KEY must decode to 32 bytes");
+  // base64 / base64url tolerant
+  let b64 = s.replace(/-/g, "+").replace(/_/g, "/").replace(/\s+/g, "");
+  while (b64.length % 4 !== 0) b64 += "=";
+  let bin: string;
+  try {
+    bin = atob(b64);
+  } catch {
+    throw new Error("CONTROLLING_CHATS_AES_KEY must be 64 hex chars or base64 of 32 bytes");
+  }
+  if (bin.length !== 32) throw new Error("CONTROLLING_CHATS_AES_KEY must decode to 32 bytes (got " + bin.length + ")");
   const out = new Uint8Array(32);
   for (let i = 0; i < 32; i++) out[i] = bin.charCodeAt(i);
   return out;
