@@ -1,53 +1,45 @@
-# New edge function: `update-controlling`
+## New edge function: `controlling-chats`
 
-Public GET endpoint returning, for every profile with a non-empty `telegram_id` (both `pre_create=true` and `false`), their currently-assigned accounts grouped by platform → account username with the most recent metrics.
+Copy of `content-hub-uploads` adapted to resolve a chatter (by telegram_id) into their currently assigned accounts and return encrypted credential tokens per account.
 
-## Auth
+### Auth & secrets
 
-- Header `x-api-key` must equal the `CONTROLLING_DASH` secret (added via `add_secret` before deploy).
-- Mismatch / missing → 401.
-- Uses service role client internally.
+- Header `x-api-key` must equal `CONTROLLING_CHATS_AUTH`.
+- AES-256-GCM key read from `CONTROLLING_CHATS_AES_KEY` (accepts hex-64 or base64 32 bytes, same parser as `content-hub-uploads`).
+- Both secrets requested via `add_secret` before deploy.
+- `supabase/config.toml` gains `[functions.controlling-chats] verify_jwt = false`.
 
-## Response shape
+### Request
+
+- `POST` (also accept `OPTIONS` for CORS).
+- Body: `{ "telegram_id": "..." }` — string, trimmed, leading `@` stripped. 400 if missing/empty.
+
+### Resolution logic
+
+1. Look up `profiles` row by normalized `telegram_id` (case-insensitive, `pre_create` allowed). If not found → `{ telegram_id, tokens: [] }`.
+2. Fetch open `account_assignments` (`end_date IS NULL`) matching `user_id` or `profile_id`.
+3. Load referenced `accounts` (`id, platform, username, account_email, account_password`).
+4. For each account, encrypt `"<email>|++|<password>"` with AES-GCM using a fresh 12-byte IV; token = base64(iv ‖ ciphertext) — identical crypto scheme to `content-hub-uploads`.
+
+### Response
 
 ```json
-[
-  {
-    "chatter_name": "...",         // profiles.name
-    "telegram_id": "...",
-    "date": "11122026",            // ddmmyyyy — most recent accounts_data.date across this chatter's assigned accounts (today if none)
-    "platforms": {
-      "maloum": {
-        "<account.username>": {
-          "amounts": [...],        // accounts_data.amounts jsonb
-          "total": 123.4,
-          "mass_dms": 10,
-          "unread_chats": 3,
-          "oldest_chat": 2
-        }
-      },
-      "brezzels": { "<username>": { ... } }
-    }
-  }
-]
+{
+  "telegram_id": "maxm",
+  "tokens": [
+    { "platform": "maloum", "username": "modelA", "token": "<base64>" },
+    { "platform": "brezzels", "username": "modelX", "token": "<base64>" }
+  ]
+}
 ```
 
-- Account key = `accounts.username` (fallback `account_email` if username empty). Duplicate usernames on the same platform → suffix ` #2`, ` #3`.
-- Missing latest row for an assigned account → zeros / empty amounts.
-- Chatters with no open assignments still returned with `platforms: {}`.
+- `username` falls back to `account_email` when empty.
+- Errors returned as `{ "error": "..." }` with 400 / 401 / 405 / 500.
 
-## Selection logic
+### Files
 
-1. Load `profiles` where `telegram_id` is non-null and non-empty (no `pre_create` filter).
-2. Load open `account_assignments` (`end_date IS NULL`) matching those profiles by `user_id` or `profile_id`.
-3. Load referenced `accounts` (id, platform, username, account_email).
-4. For each account, pull the latest `accounts_data` row (single query ordered by date desc, reduced in code — keeps the max per account_id).
-5. Assemble the nested JSON per chatter, using that account's latest date to compute the per-chatter `date` (max across the chatter's accounts).
+- New: `supabase/functions/controlling-chats/index.ts`
+- Update: `supabase/config.toml`
+- New secrets: `CONTROLLING_CHATS_AUTH`, `CONTROLLING_CHATS_AES_KEY` (requested with `add_secret`; user provides both values).
 
-## Files
-
-- New: `supabase/functions/update-controlling/index.ts`
-- Update: `supabase/config.toml` — add `[functions.update-controlling] verify_jwt = false`
-- Add secret `CONTROLLING_DASH` via `add_secret` before deploy.
-
-No DB migration, no client code, no other functions touched.
+No DB migration, no client changes.
