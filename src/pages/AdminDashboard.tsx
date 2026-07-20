@@ -7360,6 +7360,8 @@ export default function AdminDashboard() {
                                                     const text = `Ein Kommentar vom Chatter:\n\n${m.body}`;
                                                     const encoded = encodeURIComponent(text);
                                                     try { navigator.clipboard?.writeText(text); } catch {}
+                                                    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
                                                     const agencyRaw = String(req._agency || req._model?.model_agency || "").toLowerCase();
                                                     const isSyn = agencyRaw === "syn" || agencyRaw === "simp";
                                                     if (isSyn) {
