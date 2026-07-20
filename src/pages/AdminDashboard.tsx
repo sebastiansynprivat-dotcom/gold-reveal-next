@@ -7355,12 +7355,40 @@ export default function AdminDashboard() {
                                                   const adminName = m.sender_role === "admin" && m.user_id ? adminNames[m.user_id] : undefined;
                                                   const reaction = msgReactions[m.id];
                                                   const isChatter = m.sender_role === "chatter";
+                                                  const handleChatterClick = () => {
+                                                    if (!isChatter) return;
+                                                    const text = `Ein Kommentar vom Chatter:\n\n${m.body}`;
+                                                    const encoded = encodeURIComponent(text);
+                                                    try { navigator.clipboard?.writeText(text); } catch {}
+                                                    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+                                                    const agencyRaw = String(req._agency || req._model?.model_agency || "").toLowerCase();
+                                                    const isSyn = agencyRaw === "syn" || agencyRaw === "simp";
+                                                    if (isSyn) {
+                                                      toast.success("Nachricht kopiert – Kontakt in Telegram wählen.");
+                                                      if (isMobile) {
+                                                        window.location.href = `tg://msg?text=${encoded}`;
+                                                        setTimeout(() => {
+                                                          window.open(`https://t.me/share/url?url=&text=${encoded}`, "_blank");
+                                                        }, 400);
+                                                      } else {
+                                                        window.open(`https://t.me/share/url?url=&text=${encoded}`, "_blank");
+                                                      }
+                                                    } else if (isMobile) {
+                                                      toast.success("Nachricht kopiert – Empfänger in WhatsApp wählen.");
+                                                      window.location.href = `whatsapp://send?text=${encoded}`;
+                                                    } else {
+                                                      toast.success("Nachricht kopiert – Empfänger wählen & einfügen.");
+                                                      window.open(`https://api.whatsapp.com/send?text=${encoded}`, "_blank");
+                                                    }
+                                                  };
                                                   return (
                                                   <div
                                                     key={m.id}
                                                     className={`flex ${m.sender_role === "admin" ? "justify-start" : "justify-end"}`}
                                                   >
                                                     <div
+                                                      onClick={isChatter ? handleChatterClick : undefined}
                                                       onDoubleClick={isChatter ? () => {
                                                         markReqSeen(req);
                                                         setMsgReactions((prev) => {
@@ -7370,11 +7398,11 @@ export default function AdminDashboard() {
                                                           return next;
                                                         });
                                                       } : undefined}
-                                                      title={isChatter ? "Doppelklick: als gelesen markieren + 👍" : undefined}
+                                                      title={isChatter ? "Klick: an WhatsApp/Telegram weiterleiten · Doppelklick: als gelesen markieren + 👍" : undefined}
                                                       className={`relative max-w-[85%] rounded-lg px-3 py-2 ${
                                                         m.sender_role === "admin"
                                                           ? "bg-accent/10 border border-accent/20"
-                                                          : "bg-secondary/40 border border-border/40"
+                                                          : "bg-secondary/40 border border-border/40 cursor-pointer hover:bg-secondary/60 transition-colors"
                                                       }`}
                                                     >
                                                       <p className="text-[10px] text-muted-foreground mb-0.5">
@@ -7401,6 +7429,7 @@ export default function AdminDashboard() {
                                                       )}
                                                     </div>
                                                   </div>
+
                                                 ); })}
                                               </div>
                                             </div>
