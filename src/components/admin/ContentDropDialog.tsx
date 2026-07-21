@@ -13,6 +13,7 @@ type Model = {
   username: string | null;
   model_agency: string | null;
   model_active: boolean;
+  model_status: string | null;
 };
 
 type AccountInfo = {
