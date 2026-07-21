@@ -54,8 +54,8 @@ export default function ContentDropDialog({ open, onOpenChange }: Props) {
     if (!open) return;
     supabase
       .from("models")
-      .select("id, name, username, model_agency, model_active")
-      .eq("model_active", true)
+      .select("id, name, username, model_agency, model_active, model_status")
+      .order("model_active", { ascending: false })
       .order("name", { ascending: true })
       .range(0, 9999)
       .then(({ data }) => setModels((data as Model[]) || []));
