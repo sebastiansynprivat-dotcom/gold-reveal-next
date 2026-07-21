@@ -1,0 +1,1 @@
+UPDATE profiles SET user_id='80e861c1-3bcc-447c-b532-0e417aaca01c' WHERE id='4444314f-614f-40e7-9dfd-ba115ac8bc83' AND user_id IS NULL;
