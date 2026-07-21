@@ -238,11 +238,26 @@ export default function ContentDropDialog({ open, onOpenChange }: Props) {
                             <p className="text-[10px] text-muted-foreground truncate">@{m.username}</p>
                           )}
                         </div>
-                        {m.model_agency && (
-                          <span className="text-[9px] uppercase tracking-wider text-accent/80 px-2 py-0.5 rounded bg-accent/10 shrink-0">
-                            {m.model_agency}
-                          </span>
-                        )}
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {(() => {
+                            const status = m.model_status || (m.model_active ? "active" : "inactive");
+                            if (status === "active") return null;
+                            const label = status === "semi" ? "Halbaktiv" : "Inaktiv";
+                            const cls = status === "semi"
+                              ? "text-yellow-400 bg-yellow-500/10 border-yellow-500/30"
+                              : "text-red-400 bg-red-500/10 border-red-500/30";
+                            return (
+                              <span className={`text-[9px] uppercase tracking-wider px-2 py-0.5 rounded border ${cls}`}>
+                                {label}
+                              </span>
+                            );
+                          })()}
+                          {m.model_agency && (
+                            <span className="text-[9px] uppercase tracking-wider text-accent/80 px-2 py-0.5 rounded bg-accent/10">
+                              {m.model_agency}
+                            </span>
+                          )}
+                        </div>
                       </button>
                     ))}
                   </div>
