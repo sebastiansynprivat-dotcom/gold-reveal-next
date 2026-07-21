@@ -13,6 +13,7 @@ type Model = {
   username: string | null;
   model_agency: string | null;
   model_active: boolean;
+  model_status: string | null;
 };
 
 type AccountInfo = {
@@ -53,8 +54,8 @@ export default function ContentDropDialog({ open, onOpenChange }: Props) {
     if (!open) return;
     supabase
       .from("models")
-      .select("id, name, username, model_agency, model_active")
-      .eq("model_active", true)
+      .select("id, name, username, model_agency, model_active, model_status")
+      .order("model_active", { ascending: false })
       .order("name", { ascending: true })
       .range(0, 9999)
       .then(({ data }) => setModels((data as Model[]) || []));
@@ -237,11 +238,26 @@ export default function ContentDropDialog({ open, onOpenChange }: Props) {
                             <p className="text-[10px] text-muted-foreground truncate">@{m.username}</p>
                           )}
                         </div>
-                        {m.model_agency && (
-                          <span className="text-[9px] uppercase tracking-wider text-accent/80 px-2 py-0.5 rounded bg-accent/10 shrink-0">
-                            {m.model_agency}
-                          </span>
-                        )}
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          {(() => {
+                            const status = m.model_status || (m.model_active ? "active" : "inactive");
+                            if (status === "active") return null;
+                            const label = status === "semi" ? "Halbaktiv" : "Inaktiv";
+                            const cls = status === "semi"
+                              ? "text-yellow-400 bg-yellow-500/10 border-yellow-500/30"
+                              : "text-red-400 bg-red-500/10 border-red-500/30";
+                            return (
+                              <span className={`text-[9px] uppercase tracking-wider px-2 py-0.5 rounded border ${cls}`}>
+                                {label}
+                              </span>
+                            );
+                          })()}
+                          {m.model_agency && (
+                            <span className="text-[9px] uppercase tracking-wider text-accent/80 px-2 py-0.5 rounded bg-accent/10">
+                              {m.model_agency}
+                            </span>
+                          )}
+                        </div>
                       </button>
                     ))}
                   </div>
