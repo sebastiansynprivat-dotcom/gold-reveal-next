@@ -385,12 +385,12 @@ const Invoice = () => {
               </p>
               <button
                 onClick={() => {
-                  navigator.clipboard.writeText("support@basedbuilders.com");
-                  toast({ title: "E-Mail kopiert! ✅", description: "support@basedbuilders.com wurde in die Zwischenablage kopiert." });
+                  navigator.clipboard.writeText("billing@basedbuilders.de");
+                  toast({ title: "E-Mail kopiert! ✅", description: "billing@basedbuilders.de wurde in die Zwischenablage kopiert." });
                 }}
                 className="flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary border border-border hover:border-accent/50 transition-colors group cursor-pointer"
               >
-                <span className="text-sm font-semibold text-accent">support@basedbuilders.com</span>
+                <span className="text-sm font-semibold text-accent">billing@basedbuilders.de</span>
                 <span className="text-[10px] text-muted-foreground group-hover:text-foreground transition-colors">📋 Kopieren</span>
               </button>
 
