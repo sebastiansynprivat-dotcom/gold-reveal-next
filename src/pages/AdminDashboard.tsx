@@ -7355,17 +7355,27 @@ export default function AdminDashboard() {
                                                   const adminName = m.sender_role === "admin" && m.user_id ? adminNames[m.user_id] : undefined;
                                                   const reaction = msgReactions[m.id];
                                                   const isChatter = m.sender_role === "chatter";
+                                                  const detectEnglish = (s: string): boolean => {
+                                                    const t = (s || "").toLowerCase();
+                                                    if (/[äöüß]/.test(t)) return false;
+                                                    const de = (t.match(/\b(und|der|die|das|ist|nicht|mit|für|fuer|auf|ein|eine|kann|bitte|hallo|danke|wäre|waere|könnte|koennte|möchte|moechte|ich|du|wir|habe|hast|hat|schon|noch|auch|sehr|wegen|wann|warum|weil|aber|oder|sein|sind|werden|wurde|meine|dein|sein)\b/g) || []).length;
+                                                    const en = (t.match(/\b(the|and|is|are|would|could|please|hello|hi|hey|thanks|thank|can|you|with|for|have|has|need|want|going|about|when|why|because|but|or|will|been|being|make|from|this|that|there|already|still|also|very)\b/g) || []).length;
+                                                    return en > de;
+                                                  };
                                                   const handleChatterClick = () => {
                                                     if (!isChatter) return;
-                                                    const text = `Ein Kommentar vom Chatter:\n\n${m.body}`;
+                                                    const isEnglish = detectEnglish(m.body);
+                                                    const header = isEnglish ? "A comment from the chatter 👍" : "Ein Kommentar vom Chatter 👍";
+                                                    const text = `${header}\n\n${m.body}`;
                                                     const encoded = encodeURIComponent(text);
                                                     try { navigator.clipboard?.writeText(text); } catch {}
                                                     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
                                                     const agencyRaw = String(req._agency || req._model?.model_agency || "").toLowerCase();
                                                     const isSyn = agencyRaw === "syn" || agencyRaw === "simp";
+                                                    const copiedMsg = isEnglish ? "Message copied" : "Nachricht kopiert";
                                                     if (isSyn) {
-                                                      toast.success("Nachricht kopiert – Kontakt in Telegram wählen.");
+                                                      toast.success(`${copiedMsg} – ${isEnglish ? "pick contact in Telegram." : "Kontakt in Telegram wählen."}`);
                                                       if (isMobile) {
                                                         window.location.href = `tg://msg?text=${encoded}`;
                                                         setTimeout(() => {
@@ -7375,12 +7385,21 @@ export default function AdminDashboard() {
                                                         window.open(`https://t.me/share/url?url=&text=${encoded}`, "_blank");
                                                       }
                                                     } else if (isMobile) {
-                                                      toast.success("Nachricht kopiert – Empfänger in WhatsApp wählen.");
+                                                      toast.success(`${copiedMsg} – ${isEnglish ? "pick contact in WhatsApp." : "Empfänger in WhatsApp wählen."}`);
                                                       window.location.href = `whatsapp://send?text=${encoded}`;
                                                     } else {
-                                                      toast.success("Nachricht kopiert – Empfänger wählen & einfügen.");
+                                                      toast.success(`${copiedMsg} – ${isEnglish ? "pick contact & paste." : "Empfänger wählen & einfügen."}`);
                                                       window.open(`https://api.whatsapp.com/send?text=${encoded}`, "_blank");
                                                     }
+                                                  };
+                                                  const markAsRead = () => {
+                                                    markReqSeen(req);
+                                                    setMsgReactions((prev) => {
+                                                      const next = { ...prev };
+                                                      if (next[m.id] === "👍") delete next[m.id];
+                                                      else next[m.id] = "👍";
+                                                      return next;
+                                                    });
                                                   };
                                                   return (
                                                   <div
@@ -7388,17 +7407,8 @@ export default function AdminDashboard() {
                                                     className={`flex ${m.sender_role === "admin" ? "justify-start" : "justify-end"}`}
                                                   >
                                                     <div
-                                                      onClick={isChatter ? handleChatterClick : undefined}
-                                                      onDoubleClick={isChatter ? () => {
-                                                        markReqSeen(req);
-                                                        setMsgReactions((prev) => {
-                                                          const next = { ...prev };
-                                                          if (next[m.id] === "👍") delete next[m.id];
-                                                          else next[m.id] = "👍";
-                                                          return next;
-                                                        });
-                                                      } : undefined}
-                                                      title={isChatter ? "Klick: an WhatsApp/Telegram weiterleiten · Doppelklick: als gelesen markieren + 👍" : undefined}
+                                                      onClick={isChatter ? markAsRead : undefined}
+                                                      title={isChatter ? "Klick: als gelesen markieren + 👍 · Icon rechts: an WhatsApp/Telegram weiterleiten" : undefined}
                                                       className={`relative max-w-[85%] rounded-lg px-3 py-2 ${
                                                         m.sender_role === "admin"
                                                           ? "bg-accent/10 border border-accent/20"
@@ -7421,6 +7431,16 @@ export default function AdminDashboard() {
                                                         <div className="mt-1.5">
                                                           <RequestMediaList attachments={(m as any).attachments} size="sm" />
                                                         </div>
+                                                      )}
+                                                      {isChatter && (
+                                                        <button
+                                                          type="button"
+                                                          onClick={(e) => { e.stopPropagation(); handleChatterClick(); }}
+                                                          title="An WhatsApp/Telegram weiterleiten"
+                                                          className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-card border border-accent/40 hover:border-accent hover:bg-accent/10 shadow-sm flex items-center justify-center text-accent transition-colors"
+                                                        >
+                                                          <Send className="h-3 w-3" />
+                                                        </button>
                                                       )}
                                                       {reaction && (
                                                         <span className="absolute -bottom-2 -right-1 text-sm bg-card border border-accent/40 rounded-full h-6 w-6 flex items-center justify-center shadow-sm">
