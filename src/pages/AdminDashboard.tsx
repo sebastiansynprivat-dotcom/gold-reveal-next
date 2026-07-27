@@ -63,6 +63,7 @@ import {
   FileBarChart,
   Eye,
   Zap,
+  Send,
 } from "lucide-react";
 import ChatterReportsTab from "@/components/admin/ChatterReportsTab";
 import ChatterPushEngineTab from "@/components/admin/ChatterPushEngineTab";
