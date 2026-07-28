@@ -7407,12 +7407,10 @@ export default function AdminDashboard() {
                                                     className={`flex ${m.sender_role === "admin" ? "justify-start" : "justify-end"}`}
                                                   >
                                                     <div
-                                                      onClick={isChatter ? markAsRead : undefined}
-                                                      title={isChatter ? "Klick: als gelesen markieren + 👍 · Icon rechts: an WhatsApp/Telegram weiterleiten" : undefined}
                                                       className={`relative max-w-[85%] rounded-lg px-3 py-2 ${
                                                         m.sender_role === "admin"
                                                           ? "bg-accent/10 border border-accent/20"
-                                                          : "bg-secondary/40 border border-border/40 cursor-pointer hover:bg-secondary/60 transition-colors"
+                                                          : "bg-secondary/40 border border-border/40"
                                                       }`}
                                                     >
                                                       <p className="text-[10px] text-muted-foreground mb-0.5">
@@ -7433,22 +7431,34 @@ export default function AdminDashboard() {
                                                         </div>
                                                       )}
                                                       {isChatter && (
-                                                        <button
-                                                          type="button"
-                                                          onClick={(e) => { e.stopPropagation(); handleChatterClick(); }}
-                                                          title="An WhatsApp/Telegram weiterleiten"
-                                                          className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-card border border-accent/40 hover:border-accent hover:bg-accent/10 shadow-sm flex items-center justify-center text-accent transition-colors"
-                                                        >
-                                                          <Send className="h-3 w-3" />
-                                                        </button>
-                                                      )}
-                                                      {reaction && (
-                                                        <span className="absolute -bottom-2 -right-1 text-sm bg-card border border-accent/40 rounded-full h-6 w-6 flex items-center justify-center shadow-sm">
-                                                          {reaction}
-                                                        </span>
+                                                        <div className="mt-2 flex items-center gap-1.5 flex-wrap">
+                                                          <button
+                                                            type="button"
+                                                            onClick={(e) => { e.stopPropagation(); markAsRead(); }}
+                                                            title="Als gelesen markieren + 👍"
+                                                            className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium border transition-colors ${
+                                                              reaction === "👍"
+                                                                ? "bg-accent/20 border-accent/60 text-accent"
+                                                                : "bg-card border-border/60 hover:border-accent/50 hover:bg-accent/10 text-muted-foreground hover:text-accent"
+                                                            }`}
+                                                          >
+                                                            <span className="text-sm leading-none">👍</span>
+                                                            <span>{reaction === "👍" ? "Gelesen" : "Gelesen markieren"}</span>
+                                                          </button>
+                                                          <button
+                                                            type="button"
+                                                            onClick={(e) => { e.stopPropagation(); handleChatterClick(); }}
+                                                            title="An WhatsApp/Telegram weiterleiten"
+                                                            className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium border border-accent/40 hover:border-accent hover:bg-accent/10 text-accent transition-colors"
+                                                          >
+                                                            <Send className="h-3 w-3" />
+                                                            <span>Weiterleiten</span>
+                                                          </button>
+                                                        </div>
                                                       )}
                                                     </div>
                                                   </div>
+
 
                                                 ); })}
                                               </div>
