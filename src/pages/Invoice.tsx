@@ -19,6 +19,7 @@ import { CalendarIcon, FileDown, ArrowLeft, Clock, AlertCircle, MessageCircle, C
 import { Switch } from "@/components/ui/switch";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useUILanguage } from "@/hooks/useUILanguage";
 import jsPDF from "jspdf";
 
 const RECIPIENT = {
@@ -35,6 +36,8 @@ const Invoice = () => {
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const { user } = useAuth();
+  const { lang } = useUILanguage();
+  const isEN = lang === "en";
   const [groupName, setGroupName] = useState("");
 
   // Selected billing month (from ?month=YYYY-MM, default = previous full month)
