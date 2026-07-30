@@ -134,9 +134,11 @@ export default function CommitmentPrompt() {
       const forceEvening = params.get("checkin") === "1";
       const hour = berlinHour();
 
-      if (!row && (forceCommit || (hour >= 6 && hour <= 12))) {
+      // Commitment kann den ganzen Tag bis 20 Uhr nachgeholt werden — sonst
+      // verpassen Chatter, die erst nachmittags online kommen, den Tag komplett.
+      if (!row && (forceCommit || hour < 20)) {
         setShowCommit(true);
-      } else if (row && row.confirmed_by_user === null && (forceEvening || hour >= 20)) {
+      } else if (row && row.confirmed_by_user === null && (forceEvening || hour >= 18)) {
         setShowEvening(true);
       }
     })();
