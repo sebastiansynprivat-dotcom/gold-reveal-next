@@ -51,7 +51,7 @@ const Invoice = () => {
     return new Date(now.getFullYear(), now.getMonth() - 1, 1);
   })();
   const selectedMonthEnd = endOfMonth(selectedMonth);
-  const selectedMonthLabel = format(selectedMonth, "MMMM yyyy", { locale: de });
+  const selectedMonthLabel = format(selectedMonth, "MMMM yyyy", isEN ? undefined : { locale: de });
 
   useEffect(() => {
     if (!user) return;
@@ -381,27 +381,40 @@ const Invoice = () => {
           <Card className="glass-card border-accent/30 gold-border-glow">
             <CardContent className="p-4 space-y-3">
               <p className="text-sm font-semibold text-foreground">
-                📩 Deine Abrechnung ist jetzt möglich!
+                {isEN ? "📩 You can request your billing statement now!" : "📩 Deine Abrechnung ist jetzt möglich!"}
               </p>
               <p className="text-xs text-muted-foreground">
-                Schreibe eine E-Mail an die Adresse unten und frage deinen Rechnungsbetrag an. Du kannst die fertige Vorlage direkt kopieren!
+                {isEN
+                  ? "Send an email to the address below and ask for your billing amount. You can copy the ready-made template directly!"
+                  : "Schreibe eine E-Mail an die Adresse unten und frage deinen Rechnungsbetrag an. Du kannst die fertige Vorlage direkt kopieren!"}
               </p>
               <button
                 onClick={() => {
                   navigator.clipboard.writeText("billing@basedbuilders.de");
-                  toast({ title: "E-Mail kopiert! ✅", description: "billing@basedbuilders.de wurde in die Zwischenablage kopiert." });
+                  toast({
+                    title: isEN ? "Email copied! ✅" : "E-Mail kopiert! ✅",
+                    description: isEN
+                      ? "billing@basedbuilders.de was copied to your clipboard."
+                      : "billing@basedbuilders.de wurde in die Zwischenablage kopiert.",
+                  });
                 }}
                 className="flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary border border-border hover:border-accent/50 transition-colors group cursor-pointer"
               >
                 <span className="text-sm font-semibold text-accent">billing@basedbuilders.de</span>
-                <span className="text-[10px] text-muted-foreground group-hover:text-foreground transition-colors">📋 Kopieren</span>
+                <span className="text-[10px] text-muted-foreground group-hover:text-foreground transition-colors">{isEN ? "📋 Copy" : "📋 Kopieren"}</span>
               </button>
 
               {/* Email template */}
               <div className="mt-2 rounded-lg bg-secondary/50 border border-border p-3 space-y-2">
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">📝 E-Mail Vorlage</p>
-                <div className="text-xs text-foreground whitespace-pre-line leading-relaxed bg-background/50 rounded-md p-3 border border-border">
-{`Liebes SheX Team,
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">{isEN ? "📝 Email template" : "📝 E-Mail Vorlage"}</p>
+                <div data-no-translate className="text-xs text-foreground whitespace-pre-line leading-relaxed bg-background/50 rounded-md p-3 border border-border">
+{isEN
+  ? `Dear SheX Team,
+
+my dashboard shows that I can request my billing amount. Could you please send it to me?
+
+My group name is: ${groupName || "[Please enter your group name in the dashboard]"}`
+  : `Liebes SheX Team,
 
 mir wird angezeigt, dass ich meinen Abrechnungsbetrag anfragen kann. Könnt ihr mir den zukommen lassen?
 
@@ -409,24 +422,36 @@ Mein Gruppenname ist: ${groupName || "[Bitte Gruppenname im Dashboard eintragen]
                 </div>
                 <button
                   onClick={() => {
-                    const text = `Liebes SheX Team,\n\nmir wird angezeigt, dass ich meinen Abrechnungsbetrag anfragen kann. Könnt ihr mir den zukommen lassen?\n\nMein Gruppenname ist: ${groupName || "[Bitte Gruppenname im Dashboard eintragen]"}`;
+                    const text = isEN
+                      ? `Dear SheX Team,\n\nmy dashboard shows that I can request my billing amount. Could you please send it to me?\n\nMy group name is: ${groupName || "[Please enter your group name in the dashboard]"}`
+                      : `Liebes SheX Team,\n\nmir wird angezeigt, dass ich meinen Abrechnungsbetrag anfragen kann. Könnt ihr mir den zukommen lassen?\n\nMein Gruppenname ist: ${groupName || "[Bitte Gruppenname im Dashboard eintragen]"}`;
                     navigator.clipboard.writeText(text);
-                    toast({ title: "Vorlage kopiert! ✅", description: "Du kannst den Text jetzt in deine E-Mail einfügen." });
+                    toast({
+                      title: isEN ? "Template copied! ✅" : "Vorlage kopiert! ✅",
+                      description: isEN
+                        ? "You can now paste the text into your email."
+                        : "Du kannst den Text jetzt in deine E-Mail einfügen.",
+                    });
                   }}
                   className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-accent/10 border border-accent/30 hover:bg-accent/20 transition-colors cursor-pointer"
                 >
-                  <span className="text-xs font-semibold text-accent">📋 Vorlage kopieren</span>
+                  <span className="text-xs font-semibold text-accent">{isEN ? "📋 Copy template" : "📋 Vorlage kopieren"}</span>
                 </button>
                 {!groupName && (
                   <p className="text-[10px] text-destructive">
-                    ⚠️ Du hast noch keinen Gruppennamen eingetragen. Gehe ins Dashboard und trage ihn oben ein.
+                    {isEN
+                      ? "⚠️ You haven't entered a group name yet. Go to the dashboard and add it at the top."
+                      : "⚠️ Du hast noch keinen Gruppennamen eingetragen. Gehe ins Dashboard und trage ihn oben ein."}
                   </p>
                 )}
               </div>
 
               <p className="text-xs text-accent font-medium">
-                ⚠️ Wichtig: Erstelle deine Rechnung erst, nachdem du die Abrechnung von uns per E-Mail erhalten hast!
+                {isEN
+                  ? "⚠️ Important: Only create your invoice after you have received the billing statement from us by email!"
+                  : "⚠️ Wichtig: Erstelle deine Rechnung erst, nachdem du die Abrechnung von uns per E-Mail erhalten hast!"}
               </p>
+
             </CardContent>
           </Card>
         )}
