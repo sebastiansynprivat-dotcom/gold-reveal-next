@@ -72,7 +72,7 @@ export default function DashboardChat({ externalOpen, onExternalOpenChange }: Da
     try {
       const session = (await supabase.auth.getSession()).data.session;
       if (!session) {
-        toast.error("Bitte melde dich erneut an.");
+        toast.error(lang === "en" ? "Please sign in again." : "Bitte melde dich erneut an.");
         setIsLoading(false);
         return;
       }
@@ -87,8 +87,8 @@ export default function DashboardChat({ externalOpen, onExternalOpenChange }: Da
       });
 
       if (!resp.ok) {
-        const err = await resp.json().catch(() => ({ error: "Fehler beim Verbinden" }));
-        toast.error(err.error || "Fehler beim Verbinden mit dem KI-Support.");
+        const err = await resp.json().catch(() => ({ error: lang === "en" ? "Connection failed" : "Fehler beim Verbinden" }));
+        toast.error(err.error || (lang === "en" ? "Could not connect to AI support." : "Fehler beim Verbinden mit dem KI-Support."));
         setIsLoading(false);
         return;
       }
@@ -157,7 +157,7 @@ export default function DashboardChat({ externalOpen, onExternalOpenChange }: Da
             key="chat-fab"
             onClick={() => setOpen(true)}
             className="fixed bottom-6 right-6 z-50 h-14 w-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center gold-glow-strong hover:scale-110 transition-transform pulse-glow"
-            aria-label="Chat öffnen"
+            aria-label={lang === "en" ? "Open chat" : "Chat öffnen"}
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
