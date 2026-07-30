@@ -7,33 +7,45 @@ export function berlinDate(offsetDays = 0): string {
 }
 
 /**
- * Zählt consecutive Tage mit confirmed_by_user === true rückwärts ab gestern.
- * Heute wird nicht mitgezählt (noch nicht bestätigt), aber bricht den Streak nicht.
+ * Zählt Tage mit confirmed_by_user === true rückwärts ab gestern.
+ * Heute wird nicht mitgezählt (noch nicht bestätigt), bricht den Streak aber nicht.
+ *
+ * Kulanz: Tage ohne Eintrag oder ohne Antwort (z. B. weil der Chatter gar nicht
+ * gefragt wurde) pausieren den Streak nur — erst 3 solche Tage am Stück brechen ihn.
+ * Ein ehrliches "Nein" (confirmed_by_user === false) pausiert ebenfalls.
  */
+const GRACE_DAYS = 3;
+
 export async function getCurrentStreak(userId: string): Promise<number> {
   const { data } = await supabase
     .from("chatter_daily_commitment" as any)
     .select("date, confirmed_by_user")
     .eq("user_id", userId)
     .order("date", { ascending: false })
-    .limit(60);
+    .limit(120);
 
   const rows = ((data as unknown) as { date: string; confirmed_by_user: boolean | null }[] | null) ?? [];
   const map = new Map(rows.map((r) => [r.date, r.confirmed_by_user]));
 
   let streak = 0;
-  // start counting from yesterday backwards
-  for (let i = 1; i <= 60; i++) {
+  let gap = 0;
+  for (let i = 1; i <= 120; i++) {
     const day = berlinDate(-i);
     const v = map.get(day);
     if (v === true) {
       streak++;
+      gap = 0;
     } else {
-      break;
+      // kein Eintrag, keine Antwort oder ehrliches "Nein" → pausiert
+      gap++;
+      if (gap >= GRACE_DAYS) break;
+      // vor dem ersten bestätigten Tag gibt es nichts zu schützen
+      if (streak === 0 && gap >= GRACE_DAYS) break;
     }
   }
   return streak;
 }
+
 
 /**
  * 7-Tage-Durchschnittsumsatz für Kontext im Goal-Slider.
