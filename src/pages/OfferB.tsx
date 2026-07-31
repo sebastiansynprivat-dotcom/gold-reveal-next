@@ -7,6 +7,7 @@ import exampleMyIdBot from "@/assets/example-myidbot.jpeg";
 import GoldenAudioPlayer from "@/components/GoldenAudioPlayer";
 import StepBadge from "@/components/StepBadge";
 import LoomVideoStep from "@/components/LoomVideoStep";
+import { useCaptureOffer } from "@/hooks/useCaptureOffer";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -84,6 +85,7 @@ const loadCompleted = (): Set<number> => {
 };
 
 const OfferB = () => {
+  useCaptureOffer();
   const [showPopup, setShowPopup] = useState(true);
   const [showHowTo, setShowHowTo] = useState(false);
   const [timeLeft, setTimeLeft] = useState(getTimeLeft);
