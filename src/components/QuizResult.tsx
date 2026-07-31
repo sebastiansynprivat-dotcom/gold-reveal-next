@@ -172,7 +172,9 @@ const WeightedRouteButton = () => {
       if (!available || available.length === 0) {
         // Fallback: no free accounts anywhere, go to first route or default
         if (routes && routes.length > 0) {
-          navigate((routes as any[])[0].target_path);
+          const fallback = (routes as any[])[0];
+          localStorage.setItem("pending_offer", fallback.platform_name);
+          navigate(fallback.target_path);
         } else {
           navigate("/offer-a");
         }
@@ -186,7 +188,7 @@ const WeightedRouteButton = () => {
       // Cumulative Bresenham using free_count as weight
       const totalWeight = available.reduce((sum: number, r: any) => sum + Number(r.free_count), 0);
       const pos = currentCounter % totalWeight;
-      let selectedPath = available[available.length - 1].target_path;
+      let selected: any = available[available.length - 1];
       let cumWeight = 0;
 
       for (const route of available) {
@@ -196,12 +198,14 @@ const WeightedRouteButton = () => {
         const cumCrossed = Math.floor((pos + 1) * cumWeight / totalWeight) > Math.floor(pos * cumWeight / totalWeight);
         const prevCumSame = Math.floor((pos + 1) * prevCum / totalWeight) === Math.floor(pos * prevCum / totalWeight);
         if (cumCrossed && prevCumSame) {
-          selectedPath = route.target_path;
+          selected = route;
           break;
         }
       }
 
-      navigate(selectedPath);
+      // Remember the assigned offer so /auth can persist it into profiles.offer
+      localStorage.setItem("pending_offer", selected.platform_name);
+      navigate(selected.target_path);
     } catch {
       navigate("/offer-a");
     }
