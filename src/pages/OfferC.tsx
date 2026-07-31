@@ -4,6 +4,7 @@ import { Clock, Lock } from "lucide-react";
 import logo from "@/assets/logo.png";
 import GoldenAudioPlayer from "@/components/GoldenAudioPlayer";
 import LoomVideoStep from "@/components/LoomVideoStep";
+import { useCaptureOffer } from "@/hooks/useCaptureOffer";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -52,6 +53,7 @@ const loadCompleted = (): Set<number> => {
 };
 
 const OfferC = () => {
+  useCaptureOffer();
   const [showPopup, setShowPopup] = useState(true);
   
   const [timeLeft, setTimeLeft] = useState(getTimeLeft);

@@ -5,6 +5,7 @@ import logo from "@/assets/logo.png";
 import exampleNotifications from "@/assets/example-notifications.jpeg";
 import exampleMyIdBot from "@/assets/example-myidbot.jpeg";
 import GoldenAudioPlayer from "@/components/GoldenAudioPlayer";
+import { useCaptureOffer } from "@/hooks/useCaptureOffer";
 
 const ease = [0.16, 1, 0.3, 1] as const;
 
@@ -65,6 +66,7 @@ const links = [
 ];
 
 const OfferA = () => {
+  useCaptureOffer();
   const [showPopup, setShowPopup] = useState(true);
   const [showHowTo, setShowHowTo] = useState(false);
   const [timeLeft, setTimeLeft] = useState(getTimeLeft);
