@@ -618,15 +618,18 @@ function BillingCountdown({
   const { user } = useAuth();
   const [createdAt, setCreatedAt] = useState<Date | null>(null);
 
+  const [unlockOverride, setUnlockOverride] = useState(false);
+
   useEffect(() => {
     if (!user) return;
     supabase
       .from("profiles")
-      .select("created_at")
+      .select("created_at, billing_unlock_override")
       .eq("user_id", user.id)
       .maybeSingle()
       .then(({ data }) => {
         if (data?.created_at) setCreatedAt(new Date(data.created_at));
+        if (data?.billing_unlock_override) setUnlockOverride(true);
       });
   }, [user]);
 
@@ -634,7 +637,7 @@ function BillingCountdown({
   const periodStart = selectedMonth;
   const periodEnd = endOfMonth(selectedMonth);
   const unlockDate = new Date(periodEnd.getFullYear(), periodEnd.getMonth() + 1, 20);
-  const unlocked = now >= unlockDate;
+  const unlocked = unlockOverride || now >= unlockDate;
   const daysLeft = Math.max(0, differenceInDays(unlockDate, now));
   const totalDays = Math.max(1, differenceInDays(unlockDate, periodStart));
   const progressPct = Math.min(
