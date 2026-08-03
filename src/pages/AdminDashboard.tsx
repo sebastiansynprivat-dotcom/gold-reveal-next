@@ -3080,29 +3080,35 @@ export default function AdminDashboard() {
     };
 
     if (data) {
-      const ids = data.map((r: any) => r.id);
+      const ids = new Set(data.map((r: any) => String(r.id)));
       let msgsByReq: Record<string, any[]> = {};
       let followupsByReq: Record<string, any[]> = {};
-      if (ids.length > 0) {
-        const [{ data: msgs }, { data: fups }] = await Promise.all([
+      if (ids.size > 0) {
+        // NOTE: never filter with .in(request_id, [hundreds of uuids]) — the resulting
+        // GET URL exceeds the gateway limit (HTTP 400) and silently drops ALL messages.
+        const [{ data: msgs, error: msgsErr }, { data: fups }] = await Promise.all([
           supabase
             .from("model_request_messages")
             .select("*")
-            .in("request_id", ids)
-            .order("created_at", { ascending: true }),
+            .order("created_at", { ascending: true })
+            .range(0, 49999),
           (supabase as any)
             .from("model_request_followups")
             .select("id, request_id, admin_id, sent_at, note")
-            .in("request_id", ids)
-            .order("sent_at", { ascending: true }),
+            .order("sent_at", { ascending: true })
+            .range(0, 49999),
         ]);
+        if (msgsErr) console.error("load request messages failed:", msgsErr);
         (msgs || []).forEach((m: any) => {
+          if (!ids.has(String(m.request_id))) return;
           (msgsByReq[m.request_id] ||= []).push(m);
         });
         (fups || []).forEach((f: any) => {
+          if (!ids.has(String(f.request_id))) return;
           (followupsByReq[f.request_id] ||= []).push(f);
         });
       }
+
       const normalizeAgencyVal = (a: any) => {
         const v = String(a || "").toLowerCase();
         if (v === "simp") return "syn";
