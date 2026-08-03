@@ -1,0 +1,2 @@
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS billing_unlock_override boolean NOT NULL DEFAULT false;
+UPDATE public.profiles SET billing_unlock_override = true WHERE id = '17e6235e-e2db-41da-9b9d-d8744de7d447';

@@ -2847,6 +2847,7 @@ export type Database = {
           account_domain: string | null
           account_email: string | null
           account_password: string | null
+          billing_unlock_override: boolean
           created_at: string
           daily_goal: number
           end_date: string | null
@@ -2869,6 +2870,7 @@ export type Database = {
           account_domain?: string | null
           account_email?: string | null
           account_password?: string | null
+          billing_unlock_override?: boolean
           created_at?: string
           daily_goal?: number
           end_date?: string | null
@@ -2891,6 +2893,7 @@ export type Database = {
           account_domain?: string | null
           account_email?: string | null
           account_password?: string | null
+          billing_unlock_override?: boolean
           created_at?: string
           daily_goal?: number
           end_date?: string | null
