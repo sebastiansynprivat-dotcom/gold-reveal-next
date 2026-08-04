@@ -1003,7 +1003,11 @@ export default function AdminDashboard() {
     name: string;
     telegram: string | null;
     models: Array<{ id: string; name: string; username: string | null; agency: string | null; status: string; platforms: string[] }>;
+    pastModels?: Array<{ id: string; name: string; username: string | null; agency: string | null; status: string; platforms: string[]; unassignedAt?: string | null; successorName?: string | null }>;
+    deleted?: boolean;
+    deletedAt?: string | null;
   } | null>(null);
+
 
   const [platformFilters, setPlatformFilters] = useState<Set<string>>(new Set());
   const [filterTelegram, setFilterTelegram] = useState<boolean | null>(null);
@@ -2969,12 +2973,18 @@ export default function AdminDashboard() {
     const chatterUserIds = Array.from(new Set((data || []).map((r: any) => r.user_id).filter(Boolean)));
     const assignedModelsByUser = new Map<string, Set<string>>();
     const assignedAccountsByUser = new Map<string, Array<{ model_id: string | null; account_email: string | null; platform: string | null }>>();
+    // Former (already unassigned) accounts per chatter — needed so an offboarded
+    // chatter still shows which models they used to handle.
+    const pastAccountsByUser = new Map<string, Array<{ account_id: string; model_id: string | null; account_email: string | null; platform: string | null; unassigned_at: string | null }>>();
+    // account_id -> user_id of the chatter who handles that account NOW
+    const successorByAccount = new Map<string, string>();
     if (chatterUserIds.length > 0) {
       const { data: assignments } = await supabase
         .from("account_assignments")
-        .select("user_id, account_id")
-        .is("unassigned_at", null)
+        .select("user_id, account_id, unassigned_at")
         .in("user_id", chatterUserIds);
+      const activeAssignments = (assignments || []).filter((a: any) => !a.unassigned_at);
+      const pastAssignments = (assignments || []).filter((a: any) => !!a.unassigned_at);
       const accountIds = Array.from(new Set((assignments || []).map((a: any) => a.account_id).filter(Boolean)));
       const accountModelMap = new Map<string, string>();
       const accountInfoMap = new Map<string, { model_id: string | null; account_email: string | null; platform: string | null }>();
@@ -2993,7 +3003,7 @@ export default function AdminDashboard() {
         });
       }
       // chatter user_id -> [{ model_id, account_email, platform }]
-      (assignments || []).forEach((a: any) => {
+      activeAssignments.forEach((a: any) => {
         const info = accountInfoMap.get(String(a.account_id));
         if (info) {
           const list = assignedAccountsByUser.get(a.user_id) || [];
@@ -3006,14 +3016,53 @@ export default function AdminDashboard() {
         set.add(mid);
         assignedModelsByUser.set(a.user_id, set);
       });
+
+      // Historic assignments (only relevant where the chatter has no active one for that account)
+      pastAssignments.forEach((a: any) => {
+        const activeSet = assignedAccountsByUser.get(a.user_id);
+        const info = accountInfoMap.get(String(a.account_id));
+        if (!info) return;
+        if (activeSet?.some((x) => x.account_email && x.account_email === info.account_email && x.platform === info.platform)) return;
+        const list = pastAccountsByUser.get(a.user_id) || [];
+        const existing = list.find((x) => x.account_id === String(a.account_id));
+        if (existing) {
+          if (!existing.unassigned_at || (a.unassigned_at && a.unassigned_at > existing.unassigned_at)) {
+            existing.unassigned_at = a.unassigned_at || null;
+          }
+          return;
+        }
+        list.push({ account_id: String(a.account_id), ...info, unassigned_at: a.unassigned_at || null });
+        pastAccountsByUser.set(a.user_id, list);
+      });
+
+      const pastAccountIds = Array.from(
+        new Set(Array.from(pastAccountsByUser.values()).flat().map((x) => x.account_id)),
+      );
+      if (pastAccountIds.length > 0) {
+        for (let i = 0; i < pastAccountIds.length; i += 150) {
+          const slice = pastAccountIds.slice(i, i + 150);
+          const { data: succ } = await supabase
+            .from("account_assignments")
+            .select("user_id, account_id")
+            .is("unassigned_at", null)
+            .in("account_id", slice);
+          (succ || []).forEach((s: any) => {
+            if (s.user_id) successorByAccount.set(String(s.account_id), String(s.user_id));
+          });
+        }
+      }
     }
 
     // Load the real chatter identity for every request author so the header
     // never falls back to a raw user_id fragment.
-    const chatterInfoByUser = new Map<string, { name: string; telegram_id: string | null; group_name: string | null }>();
-    if (chatterUserIds.length > 0) {
-      for (let i = 0; i < chatterUserIds.length; i += 200) {
-        const slice = chatterUserIds.slice(i, i + 200);
+    const chatterInfoByUser = new Map<
+      string,
+      { name: string; telegram_id: string | null; group_name: string | null; deleted: boolean; deleted_at: string | null }
+    >();
+    const lookupUserIds = Array.from(new Set([...chatterUserIds, ...Array.from(successorByAccount.values())]));
+    if (lookupUserIds.length > 0) {
+      for (let i = 0; i < lookupUserIds.length; i += 200) {
+        const slice = lookupUserIds.slice(i, i + 200);
         const { data: profs } = await supabase
           .from("profiles")
           .select("user_id, name, group_name, telegram_id")
@@ -3029,10 +3078,43 @@ export default function AdminDashboard() {
             name,
             telegram_id: p.telegram_id || null,
             group_name: p.group_name || null,
+            deleted: false,
+            deleted_at: null,
           });
         });
       }
     }
+
+    // Fallback for offboarded chatters: their profile no longer exists, but the
+    // archive still holds name/telegram/group — show that instead of a uuid stub.
+    const missingUserIds = lookupUserIds.filter((id) => !chatterInfoByUser.has(String(id)));
+    if (missingUserIds.length > 0) {
+      const missingSet = new Set(missingUserIds.map(String));
+      const { data: archived } = await (supabase as any)
+        .from("deleted_records")
+        .select("entity_type, original_id, name, telegram_id, group_name, deleted_at, data")
+        .eq("entity_type", "profile")
+        .order("deleted_at", { ascending: false })
+        .range(0, 9999);
+      (archived || []).forEach((rec: any) => {
+        const uid = String(rec?.data?.user_id || "");
+        if (!uid || !missingSet.has(uid) || chatterInfoByUser.has(uid)) return;
+        const name =
+          (rec.name && String(rec.name).trim()) ||
+          (rec?.data?.name && String(rec.data.name).trim()) ||
+          (rec.group_name && String(rec.group_name).trim()) ||
+          (rec.telegram_id && String(rec.telegram_id).trim()) ||
+          "";
+        chatterInfoByUser.set(uid, {
+          name,
+          telegram_id: rec.telegram_id || rec?.data?.telegram_id || null,
+          group_name: rec.group_name || null,
+          deleted: true,
+          deleted_at: rec.deleted_at || null,
+        });
+      });
+    }
+
 
 
 
@@ -3193,6 +3275,35 @@ export default function AdminDashboard() {
               ),
             }))
             .sort((a, b) => a.name.localeCompare(b.name));
+          const pastAccounts = pastAccountsByUser.get(r.user_id) || [];
+          const pastModelList = Array.from(
+            new Map(
+              pastAccounts
+                .filter((a) => a.model_id && modelById.get(a.model_id))
+                .map((a) => [a.model_id as string, a]),
+            ).keys(),
+          )
+            .map((mid) => {
+              const m = modelById.get(mid);
+              const accs = pastAccounts.filter((a) => a.model_id === mid);
+              const successorId = accs.map((a) => successorByAccount.get(a.account_id)).find(Boolean) || null;
+              const lastUnassigned = accs
+                .map((a) => a.unassigned_at)
+                .filter(Boolean)
+                .sort()
+                .pop() || null;
+              return {
+                id: String(m.id),
+                name: m.name || "",
+                username: m.username || null,
+                agency: normalizeAgencyVal(m.model_agency) || null,
+                status: (m.model_status as string) || (m.model_active === false ? "inactive" : "active"),
+                platforms: Array.from(new Set(accs.map((a) => a.platform || "").filter(Boolean))),
+                unassignedAt: lastUnassigned,
+                successorName: successorId ? chatterInfoByUser.get(successorId)?.name || null : null,
+              };
+            })
+            .sort((a, b) => a.name.localeCompare(b.name));
           const _modelVerified = !!(r.model_id && _model && String(_model.id) === String(r.model_id));
           return {
             ...r,
@@ -3208,7 +3319,12 @@ export default function AdminDashboard() {
             _chatterName: info?.name || "",
             _chatterTelegram: info?.telegram_id || null,
             _chatterModels: assignedModelList,
+            _chatterPastModels: pastModelList,
+            _chatterDeleted: !!info?.deleted,
+            _chatterDeletedAt: info?.deleted_at || null,
+            _chatterKnown: !!info,
           };
+
 
         }),
       );
@@ -6994,6 +7110,9 @@ export default function AdminDashboard() {
                                               name: chatterName,
                                               telegram: (req as any)._chatterTelegram || null,
                                               models: (req as any)._chatterModels || [],
+                                              pastModels: (req as any)._chatterPastModels || [],
+                                              deleted: !!(req as any)._chatterDeleted,
+                                              deletedAt: (req as any)._chatterDeletedAt || null,
                                             });
                                           }}
                                           title="Zugeordnete Models anzeigen"
@@ -7001,6 +7120,12 @@ export default function AdminDashboard() {
                                         >
                                           {chatterName}
                                         </button>
+                                        {(req as any)._chatterDeleted && (
+                                          <span className="text-[10px] font-bold uppercase px-1.5 h-4 rounded border border-red-500/40 bg-red-500/15 text-red-300 flex items-center">
+                                            Chatter inaktiv
+                                          </span>
+                                        )}
+
 
                                         <span
                                           className={cn(
@@ -11692,12 +11817,24 @@ export default function AdminDashboard() {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-2">
+            {chatterModelsDialog?.deleted && (
+              <div className="rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-xs text-red-200">
+                Dieser Chatter ist nicht mehr aktiv (Profil archiviert
+                {chatterModelsDialog.deletedAt
+                  ? ` am ${new Date(chatterModelsDialog.deletedAt).toLocaleDateString("de-DE")}`
+                  : ""}
+                ). Die Zuordnungen wurden aufgelöst.
+              </div>
+            )}
             <p className="text-xs uppercase tracking-wider text-muted-foreground">
               Zugeordnete Models ({chatterModelsDialog?.models.length || 0})
             </p>
             {(chatterModelsDialog?.models.length || 0) === 0 ? (
-              <p className="text-sm text-muted-foreground">Keine aktiven Account-Zuordnungen gefunden.</p>
+              <p className="text-sm text-muted-foreground">
+                Aktuell keine aktiven Account-Zuordnungen.
+              </p>
             ) : (
+
               <div className="space-y-2 max-h-[55vh] overflow-y-auto">
                 {chatterModelsDialog?.models.map((m) => (
                   <div key={m.id} className="rounded-lg border border-border/60 bg-card/60 p-3">
@@ -11738,7 +11875,48 @@ export default function AdminDashboard() {
                 ))}
               </div>
             )}
+
+            {(chatterModelsDialog?.pastModels?.length || 0) > 0 && (
+              <div className="pt-2 space-y-2">
+                <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                  Frühere Models ({chatterModelsDialog?.pastModels?.length})
+                </p>
+                <div className="space-y-2 max-h-[35vh] overflow-y-auto">
+                  {chatterModelsDialog?.pastModels?.map((m) => (
+                    <div key={`past-${m.id}`} className="rounded-lg border border-border/40 bg-card/30 p-3 opacity-80">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-semibold text-foreground">{m.name}</span>
+                        {m.username && <span className="text-xs text-muted-foreground">@{m.username}</span>}
+                        <span className="text-[10px] font-bold uppercase px-1.5 h-4 rounded border border-border/50 bg-secondary/40 text-muted-foreground flex items-center">
+                          {m.unassignedAt
+                            ? `entfernt ${new Date(m.unassignedAt).toLocaleDateString("de-DE")}`
+                            : "entfernt"}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground mt-1.5">
+                        {m.successorName
+                          ? `Jetzt betreut von: ${m.successorName}`
+                          : "Aktuell kein Chatter zugeordnet"}
+                      </p>
+                      {m.platforms.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1.5">
+                          {m.platforms.map((p) => (
+                            <span
+                              key={p}
+                              className="text-[10px] uppercase tracking-wide px-1.5 h-4 rounded border border-border/50 bg-secondary/30 text-muted-foreground flex items-center"
+                            >
+                              {p}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
+
         </DialogContent>
       </Dialog>
 
