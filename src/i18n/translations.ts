@@ -260,6 +260,13 @@ export const dict: Dict = {
   "pushBanner.androidInstruction": { de: "Halte das App-Icon gedrückt → App-Info → Benachrichtigungen → aktivieren.", en: "Long-press the app icon → App info → Notifications → enable." },
   "pushBanner.desktopInstruction": { de: "Öffne die Browser-Einstellungen und erlaube Benachrichtigungen für diese Seite.", en: "Open browser settings and allow notifications for this site." },
 
+  // --- Dialog: Push recovery ---
+  "pushRecovery.title": { de: "Benachrichtigungen sind aus", en: "Notifications are off" },
+  "pushRecovery.desc": { de: "Deine Push-Benachrichtigungen wurden deaktiviert – so verpasst du Account-Upgrades, Verkäufe und Team-Updates. Bitte kurz wieder aktivieren.", en: "Your push notifications got disabled – you're missing account upgrades, sales and team updates. Please re-enable them." },
+  "pushRecovery.cta": { de: "Wieder aktivieren 🔔", en: "Re-enable now 🔔" },
+  "pushRecovery.ctaLoading": { de: "Wird aktiviert...", en: "Enabling..." },
+  "pushRecovery.later": { de: "Später erinnern", en: "Remind me later" },
+
   // --- Dialog: Account memo ---
   "accountMemo.title": { de: "Sprachmemo", en: "Voice memo" },
 };

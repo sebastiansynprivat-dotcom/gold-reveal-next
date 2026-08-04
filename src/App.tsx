@@ -46,6 +46,8 @@ const SocialMediaMarketers = lazy(() => import("./pages/SocialMediaMarketers"));
 const SocialMediaMarketerApplications = lazy(() => import("./pages/SocialMediaMarketerApplications"));
 
 import AutoTranslator from "@/components/AutoTranslator";
+import PushHealthGuard from "@/components/PushHealthGuard";
+
 
 const RouteFallback = () => (
   <div className="min-h-screen flex items-center justify-center bg-background">
@@ -236,6 +238,8 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AutoTranslator />
+          <PushHealthGuard />
+
           {/* Language is auto-detected from browser / pre-set profile — no manual toggle. */}
           <Suspense fallback={<RouteFallback />}>
             <Routes>
