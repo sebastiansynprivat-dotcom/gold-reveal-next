@@ -999,6 +999,12 @@ export default function AdminDashboard() {
   const [templateEdits, setTemplateEdits] = useState<Record<string, { title: string; body: string }>>({});
   const [templateSaving, setTemplateSaving] = useState<string | null>(null);
   const [chatterFilter, setChatterFilter] = useState<ChatterFilter>("alle");
+  const [chatterModelsDialog, setChatterModelsDialog] = useState<{
+    name: string;
+    telegram: string | null;
+    models: Array<{ id: string; name: string; username: string | null; agency: string | null; status: string; platforms: string[] }>;
+  } | null>(null);
+
   const [platformFilters, setPlatformFilters] = useState<Set<string>>(new Set());
   const [filterTelegram, setFilterTelegram] = useState<boolean | null>(null);
   const [filterPush, setFilterPush] = useState<boolean | null>(null);
