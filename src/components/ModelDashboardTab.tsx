@@ -1161,9 +1161,8 @@ export default function ModelDashboardTab() {
 
 
 
-  // ─── Load latest known 4Based revenue (USD) per model for the "payout missing (>$50)" filter ───
-  // Uses the most recent payout_revenue row per model (not only the current month), because
-  // revenue is often fetched for an earlier billing month and the current month may be empty.
+  // ─── Load all-time 4Based revenue (USD) per model for the "payout missing (>$50)" filter ───
+  // All-time: the highest 4Based revenue ever recorded in payout_revenue, regardless of month.
   useEffect(() => {
     if (!only4BMissingPayout) return;
     let cancelled = false;
@@ -1173,28 +1172,23 @@ export default function ModelDashboardTab() {
       // Chunk to keep URL sane
       const chunkSize = 200;
       const map: Record<string, number> = {};
-      const seen: Record<string, number> = {}; // model_id -> year*12+month rank
       for (let i = 0; i < ids.length; i += chunkSize) {
         const chunk = ids.slice(i, i + chunkSize);
         const { data } = await (supabase as any)
           .from("payout_revenue")
-          .select("model_id, fourbased_revenue, last_fetched_month, last_fetched_year")
+          .select("model_id, fourbased_revenue")
           .in("model_id", chunk);
         ((data as any[]) || []).forEach((r) => {
           const v = Number(r.fourbased_revenue);
           if (!Number.isFinite(v)) return;
-          const rank = Number(r.last_fetched_year || 0) * 12 + Number(r.last_fetched_month || 0);
-          if (seen[r.model_id] === undefined || rank >= seen[r.model_id]) {
-            // Same period → keep the higher value; newer period → replace
-            map[r.model_id] = rank === seen[r.model_id] ? Math.max(map[r.model_id] || 0, v) : v;
-            seen[r.model_id] = rank;
-          }
+          map[r.model_id] = Math.max(map[r.model_id] || 0, v);
         });
       }
       if (!cancelled) setFbRevenueByModel(map);
     })();
     return () => { cancelled = true; };
   }, [only4BMissingPayout, models]);
+
 
 
   // ─── Filter + sort models ───
@@ -1997,7 +1991,7 @@ export default function ModelDashboardTab() {
                         ? "bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30"
                         : "",
                     )}
-                    title="Nur Models mit 4Based-Umsatz > $50 (letzter erfasster Monat), bei denen der Auszahlungs-Haken noch nicht gesetzt ist"
+                    title="Nur Models mit 4Based-Umsatz > $50 (all time), bei denen der Auszahlungs-Haken noch nicht gesetzt ist"
                   >
                     <Wallet className="h-3.5 w-3.5" />
                     4Based-Auszahlung fehlt (&gt;$50)
