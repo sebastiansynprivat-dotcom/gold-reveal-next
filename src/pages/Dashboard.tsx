@@ -397,6 +397,13 @@ export default function Dashboard() {
         { event: "*", schema: "public", table: "model_requests", filter: `user_id=eq.${user.id}` },
         () => loadMyRequests(),
       )
+      // Übernommene Anfragen (Chatterwechsel): ohne Filter, RLS liefert nur Erlaubtes
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "model_requests" },
+        () => loadMyRequests(),
+      )
+
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "model_request_messages" },
