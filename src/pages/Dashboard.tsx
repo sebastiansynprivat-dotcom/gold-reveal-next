@@ -1407,6 +1407,7 @@ export default function Dashboard() {
                       )}
                       availableModels={allModels.map((m) => ({
                         id: m.id,
+                        modelId: m.modelId,
                         name: m.name,
                         language: m.language,
                         platforms: Array.from(m.platforms),
