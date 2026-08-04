@@ -1991,7 +1991,7 @@ export default function ModelDashboardTab() {
                         ? "bg-amber-500/20 text-amber-300 border-amber-500/40 hover:bg-amber-500/30"
                         : "",
                     )}
-                    title="Nur Models mit 4Based-Umsatz > $50 (letzter erfasster Monat), bei denen der Auszahlungs-Haken noch nicht gesetzt ist"
+                    title="Nur Models mit 4Based-Umsatz > $50 (all time), bei denen der Auszahlungs-Haken noch nicht gesetzt ist"
                   >
                     <Wallet className="h-3.5 w-3.5" />
                     4Based-Auszahlung fehlt (&gt;$50)
