@@ -1886,8 +1886,9 @@ export default function Dashboard() {
                                   </DialogContent>
                                 </Dialog>
                               )}
-                            {/* Bearbeiten Button – nur bei Admin-Kommentar */}
-                            {req.admin_comment && req.status !== "rejected" && (
+                            {/* Bearbeiten Button – nur bei Admin-Kommentar & eigener Anfrage */}
+                            {req.admin_comment && req.status !== "rejected" && !(req as any)._inherited && (
+
                               <button
                                 onClick={() =>
                                   setEditRequest({
