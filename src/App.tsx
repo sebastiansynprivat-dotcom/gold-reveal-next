@@ -236,6 +236,8 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <AutoTranslator />
+          <PushHealthGuard />
+
           {/* Language is auto-detected from browser / pre-set profile — no manual toggle. */}
           <Suspense fallback={<RouteFallback />}>
             <Routes>
