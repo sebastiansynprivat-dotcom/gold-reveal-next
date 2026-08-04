@@ -6877,7 +6877,7 @@ export default function AdminDashboard() {
                             const chatter = chatters.find((c) => c.user_id === req.user_id);
                             const chatterName =
                               (req as any)._chatterName ||
-                              (chatter?.name && String(chatter.name).trim()) ||
+                              ((chatter as any)?.name && String((chatter as any).name).trim()) ||
                               chatter?.group_name ||
                               (req as any)._chatterTelegram ||
                               req.user_id.slice(0, 8);
