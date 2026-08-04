@@ -11875,7 +11875,48 @@ export default function AdminDashboard() {
                 ))}
               </div>
             )}
+
+            {(chatterModelsDialog?.pastModels?.length || 0) > 0 && (
+              <div className="pt-2 space-y-2">
+                <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                  Frühere Models ({chatterModelsDialog?.pastModels?.length})
+                </p>
+                <div className="space-y-2 max-h-[35vh] overflow-y-auto">
+                  {chatterModelsDialog?.pastModels?.map((m) => (
+                    <div key={`past-${m.id}`} className="rounded-lg border border-border/40 bg-card/30 p-3 opacity-80">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-semibold text-foreground">{m.name}</span>
+                        {m.username && <span className="text-xs text-muted-foreground">@{m.username}</span>}
+                        <span className="text-[10px] font-bold uppercase px-1.5 h-4 rounded border border-border/50 bg-secondary/40 text-muted-foreground flex items-center">
+                          {m.unassignedAt
+                            ? `entfernt ${new Date(m.unassignedAt).toLocaleDateString("de-DE")}`
+                            : "entfernt"}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-muted-foreground mt-1.5">
+                        {m.successorName
+                          ? `Jetzt betreut von: ${m.successorName}`
+                          : "Aktuell kein Chatter zugeordnet"}
+                      </p>
+                      {m.platforms.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-1.5">
+                          {m.platforms.map((p) => (
+                            <span
+                              key={p}
+                              className="text-[10px] uppercase tracking-wide px-1.5 h-4 rounded border border-border/50 bg-secondary/30 text-muted-foreground flex items-center"
+                            >
+                              {p}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
+
         </DialogContent>
       </Dialog>
 
