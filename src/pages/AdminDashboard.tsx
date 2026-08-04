@@ -999,6 +999,12 @@ export default function AdminDashboard() {
   const [templateEdits, setTemplateEdits] = useState<Record<string, { title: string; body: string }>>({});
   const [templateSaving, setTemplateSaving] = useState<string | null>(null);
   const [chatterFilter, setChatterFilter] = useState<ChatterFilter>("alle");
+  const [chatterModelsDialog, setChatterModelsDialog] = useState<{
+    name: string;
+    telegram: string | null;
+    models: Array<{ id: string; name: string; username: string | null; agency: string | null; status: string; platforms: string[] }>;
+  } | null>(null);
+
   const [platformFilters, setPlatformFilters] = useState<Set<string>>(new Set());
   const [filterTelegram, setFilterTelegram] = useState<boolean | null>(null);
   const [filterPush, setFilterPush] = useState<boolean | null>(null);
@@ -3002,82 +3008,105 @@ export default function AdminDashboard() {
       });
     }
 
+    // Load the real chatter identity for every request author so the header
+    // never falls back to a raw user_id fragment.
+    const chatterInfoByUser = new Map<string, { name: string; telegram_id: string | null; group_name: string | null }>();
+    if (chatterUserIds.length > 0) {
+      for (let i = 0; i < chatterUserIds.length; i += 200) {
+        const slice = chatterUserIds.slice(i, i + 200);
+        const { data: profs } = await supabase
+          .from("profiles")
+          .select("user_id, name, group_name, telegram_id")
+          .in("user_id", slice);
+        (profs || []).forEach((p: any) => {
+          if (!p.user_id) return;
+          const name =
+            (p.name && String(p.name).trim()) ||
+            (p.group_name && String(p.group_name).trim()) ||
+            (p.telegram_id && String(p.telegram_id).trim()) ||
+            "";
+          chatterInfoByUser.set(String(p.user_id), {
+            name,
+            telegram_id: p.telegram_id || null,
+            group_name: p.group_name || null,
+          });
+        });
+      }
+    }
 
+
+
+
+    // Resolve the model record for a request. IMPORTANT: this must be
+    // deterministic — never "guess" an arbitrary assigned model, otherwise the
+    // displayed model name changes between reloads (Set iteration / assignment
+    // changes). We only return a record when we have a real, defensible match.
     const findModel = (raw: any, contextText?: string, userId?: string) => {
       const assignedSet = userId ? assignedModelsByUser.get(userId) : null;
       const key = normalizeModelKey(raw);
-      // Collect candidates by name match
+      const byId = (a: any, b: any) => String(a.id).localeCompare(String(b.id));
+
+      // 1. Exact name/username match (strongest signal).
+      const exact = key ? modelByName.get(key) : null;
+      if (exact) {
+        // If the chatter has assigned models, prefer an exact match that is
+        // actually assigned to them (handles duplicate model records).
+        if (assignedSet && assignedSet.size > 0 && !assignedSet.has(String(exact.id))) {
+          const assignedExact = Array.from(assignedSet)
+            .map((id) => modelById.get(id))
+            .filter(Boolean)
+            .filter((m: any) => normalizeModelKey(m.name) === key || normalizeModelKey(m.username) === key)
+            .sort(byId);
+          if (assignedExact.length > 0) return assignedExact[0];
+        }
+        return exact;
+      }
+
+      // 2. Fuzzy candidates (substring), sorted deterministically.
       const candidates: any[] = [];
       const seen = new Set<string>();
-      if (key) {
-        if (modelByName.has(key)) {
-          const m = modelByName.get(key);
-          seen.add(m.id);
-          candidates.push(m);
-        }
+      if (key && key.length >= 3) {
         for (const [k, m] of modelByName) {
-          if (k.length >= 3 && key.length >= 3 && (k.includes(key) || key.includes(k))) {
-            if (!seen.has(m.id)) { seen.add(m.id); candidates.push(m); }
+          if (k.length >= 3 && (k.includes(key) || key.includes(k))) {
+            if (!seen.has(String(m.id))) { seen.add(String(m.id)); candidates.push(m); }
           }
         }
+        candidates.sort(byId);
       }
-      // Chatter→Model mapping is the source of truth. If the chatter has any
-      // assigned models, ALWAYS prefer one of those over name-only matches —
-      // this protects against duplicate / mis-configured model records sharing
-      // the same name or email but missing platforms / wrong agency / language.
+
+      // Prefer a fuzzy candidate that is assigned to this chatter.
       if (assignedSet && assignedSet.size > 0) {
-        // 1. Name candidate that is also assigned to the chatter wins.
-        const nameMatch = candidates.find((m) => assignedSet.has(String(m.id)));
+        const nameMatch = candidates.filter((m) => assignedSet.has(String(m.id))).sort(byId)[0];
         if (nameMatch) return nameMatch;
+      }
 
-        // 2. Otherwise resolve via the chatter's assigned models directly.
-        const assignedModels = Array.from(assignedSet)
-          .map((id) => modelById.get(id))
-          .filter(Boolean);
-
-        if (assignedModels.length === 1) return assignedModels[0];
-
-        // 3. Multiple assigned models → disambiguate via context (email / username / name).
+      if (candidates.length === 1) return candidates[0];
+      if (candidates.length > 1) {
         const ctx = normalizeModelKey(contextText || "");
-        const accInfos = userId ? assignedAccountsByUser.get(userId) || [] : [];
-        if (ctx && assignedModels.length > 1) {
-          const scored = assignedModels.map((m) => {
-            const u = normalizeModelKey(m.username);
-            const n = normalizeModelKey(m.name);
-            // also score by account_email prefix of accounts whose model_id == m.id
-            const emailPrefixes = accInfos
-              .filter((a) => a.model_id === String(m.id))
-              .map((a) => normalizeModelKey(String(a.account_email || "").split("@")[0]));
-            let score = 0;
-            if (u && u.length >= 3 && ctx.includes(u)) score += 10;
-            if (n && n.length >= 3 && ctx.includes(n)) score += 5;
-            for (const ep of emailPrefixes) {
-              if (ep && ep.length >= 3 && ctx.includes(ep)) score += 8;
-            }
-            return { m, score };
-          }).sort((a, b) => b.score - a.score);
+        if (ctx) {
+          const scored = candidates
+            .map((m) => {
+              const u = normalizeModelKey(m.username);
+              const n = normalizeModelKey(m.name);
+              let score = 0;
+              if (u && u.length >= 3 && ctx.includes(u)) score += 10;
+              if (n && n.length >= 3 && ctx.includes(n)) score += 5;
+              return { m, score };
+            })
+            .sort((a, b) => b.score - a.score || byId(a.m, b.m));
           if (scored[0].score > 0) return scored[0].m;
         }
-        // Fallback: first assigned model (still guaranteed to be a real chatter-linked record).
-        if (assignedModels.length > 0) return assignedModels[0];
+        return candidates[0];
       }
-      if (candidates.length === 0) return null;
-      if (candidates.length === 1) return candidates[0];
-      // No chatter context — disambiguate via context text only.
-      const ctx = normalizeModelKey(contextText || "");
-      if (ctx) {
-        const scored = candidates.map((m) => {
-          const u = normalizeModelKey(m.username);
-          const n = normalizeModelKey(m.name);
-          let score = 0;
-          if (u && u.length >= 3 && ctx.includes(u)) score += 10;
-          if (n && n.length >= 3 && ctx.includes(n)) score += 5;
-          return { m, score };
-        }).sort((a, b) => b.score - a.score);
-        if (scored[0].score > 0) return scored[0].m;
+
+      // 3. No name match at all: only resolve via assignment when unambiguous.
+      if (assignedSet && assignedSet.size === 1) {
+        const only = modelById.get(Array.from(assignedSet)[0]);
+        if (only) return only;
       }
-      return candidates[0];
+      return null;
     };
+
 
     if (data) {
       const ids = new Set(data.map((r: any) => String(r.id)));
@@ -3134,13 +3163,30 @@ export default function AdminDashboard() {
             chatterAgencyByUser.get(r.user_id) ||
             "";
           const chatterAccounts = assignedAccountsByUser.get(r.user_id) || [];
-          // Pick the assigned account matching the resolved model (if any),
-          // otherwise fall back to the first assigned account so we can still
-          // show platform / email context for disambiguation.
+          // Only show account context that really belongs to the resolved model —
+          // a generic "first assigned account" fallback showed the wrong email.
           const matchedAcc =
-            (_model && chatterAccounts.find((a) => a.model_id && a.model_id === String(_model.id))) ||
-            chatterAccounts[0] ||
-            null;
+            (_model && chatterAccounts.find((a) => a.model_id && a.model_id === String(_model.id))) || null;
+          const info = chatterInfoByUser.get(String(r.user_id));
+          const assignedModelList = Array.from(assignedModelsByUser.get(r.user_id) || [])
+            .map((id) => modelById.get(id))
+            .filter(Boolean)
+            .map((m: any) => ({
+              id: String(m.id),
+              name: m.name || "",
+              username: m.username || null,
+              agency: normalizeAgencyVal(m.model_agency) || null,
+              status: (m.model_status as string) || (m.model_active === false ? "inactive" : "active"),
+              platforms: Array.from(
+                new Set(
+                  chatterAccounts
+                    .filter((a) => a.model_id === String(m.id))
+                    .map((a) => a.platform || "")
+                    .filter(Boolean),
+                ),
+              ),
+            }))
+            .sort((a, b) => a.name.localeCompare(b.name));
           return {
             ...r,
             _messages: msgs,
@@ -3149,7 +3195,11 @@ export default function AdminDashboard() {
             _agency,
             _modelAccountEmail: matchedAcc?.account_email || null,
             _modelAccountPlatform: matchedAcc?.platform || null,
+            _chatterName: info?.name || "",
+            _chatterTelegram: info?.telegram_id || null,
+            _chatterModels: assignedModelList,
           };
+
         }),
       );
     }
@@ -6831,7 +6881,13 @@ export default function AdminDashboard() {
                           })
                           .map((req, idx, arr) => {
                             const chatter = chatters.find((c) => c.user_id === req.user_id);
-                            const chatterName = chatter?.group_name || req.user_id.slice(0, 8);
+                            const chatterName =
+                              (req as any)._chatterName ||
+                              ((chatter as any)?.name && String((chatter as any).name).trim()) ||
+                              chatter?.group_name ||
+                              (req as any)._chatterTelegram ||
+                              req.user_id.slice(0, 8);
+
                             const _platformMatch = (req.description || "").match(/^\[Plattform:\s*([^\]]+)\]\s*/i);
                             const reqPlatform = _platformMatch ? _platformMatch[1].trim() : "";
                             const cleanDescription = _platformMatch
@@ -6920,9 +6976,22 @@ export default function AdminDashboard() {
                                             Neu
                                           </button>
                                         )}
-                                        <span className="text-sm font-semibold text-foreground truncate">
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setChatterModelsDialog({
+                                              name: chatterName,
+                                              telegram: (req as any)._chatterTelegram || null,
+                                              models: (req as any)._chatterModels || [],
+                                            });
+                                          }}
+                                          title="Zugeordnete Models anzeigen"
+                                          className="text-sm font-semibold text-foreground truncate hover:text-accent underline decoration-dotted decoration-accent/40 underline-offset-2 transition-colors"
+                                        >
                                           {chatterName}
-                                        </span>
+                                        </button>
+
                                         <span
                                           className={cn(
                                             "flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full",
@@ -11584,6 +11653,70 @@ export default function AdminDashboard() {
       </Dialog>
 
       <ContentDropDialog open={contentDropOpen} onOpenChange={setContentDropOpen} />
+
+      <Dialog open={!!chatterModelsDialog} onOpenChange={(o) => !o && setChatterModelsDialog(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex flex-col gap-1">
+              <span>{chatterModelsDialog?.name}</span>
+              {chatterModelsDialog?.telegram && (
+                <span className="text-xs font-normal text-muted-foreground">
+                  @{String(chatterModelsDialog.telegram).replace(/^@/, "")}
+                </span>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">
+              Zugeordnete Models ({chatterModelsDialog?.models.length || 0})
+            </p>
+            {(chatterModelsDialog?.models.length || 0) === 0 ? (
+              <p className="text-sm text-muted-foreground">Keine aktiven Account-Zuordnungen gefunden.</p>
+            ) : (
+              <div className="space-y-2 max-h-[55vh] overflow-y-auto">
+                {chatterModelsDialog?.models.map((m) => (
+                  <div key={m.id} className="rounded-lg border border-border/60 bg-card/60 p-3">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-semibold text-foreground">{m.name}</span>
+                      {m.username && <span className="text-xs text-muted-foreground">@{m.username}</span>}
+                      <span
+                        className={cn(
+                          "text-[10px] font-bold uppercase px-1.5 h-4 rounded border flex items-center",
+                          m.status === "active"
+                            ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/40"
+                            : m.status === "semi"
+                              ? "bg-amber-500/15 text-amber-300 border-amber-500/40"
+                              : "bg-red-500/15 text-red-300 border-red-500/40",
+                        )}
+                      >
+                        {m.status === "active" ? "Aktiv" : m.status === "semi" ? "Halbaktiv" : "Inaktiv"}
+                      </span>
+                      {m.agency && (
+                        <span className="text-[10px] font-bold uppercase px-1.5 h-4 rounded border border-border/50 bg-secondary/40 text-foreground/80 flex items-center">
+                          {m.agency === "syn" ? "SYN" : "SheX"}
+                        </span>
+                      )}
+                    </div>
+                    {m.platforms.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1.5">
+                        {m.platforms.map((p) => (
+                          <span
+                            key={p}
+                            className="text-[10px] uppercase tracking-wide px-1.5 h-4 rounded border border-border/50 bg-secondary/30 text-muted-foreground flex items-center"
+                          >
+                            {p}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       
     </div>
   );
