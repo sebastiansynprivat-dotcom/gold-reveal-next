@@ -11817,12 +11817,24 @@ export default function AdminDashboard() {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-2">
+            {chatterModelsDialog?.deleted && (
+              <div className="rounded-lg border border-red-500/40 bg-red-500/10 p-3 text-xs text-red-200">
+                Dieser Chatter ist nicht mehr aktiv (Profil archiviert
+                {chatterModelsDialog.deletedAt
+                  ? ` am ${new Date(chatterModelsDialog.deletedAt).toLocaleDateString("de-DE")}`
+                  : ""}
+                ). Die Zuordnungen wurden aufgelöst.
+              </div>
+            )}
             <p className="text-xs uppercase tracking-wider text-muted-foreground">
               Zugeordnete Models ({chatterModelsDialog?.models.length || 0})
             </p>
             {(chatterModelsDialog?.models.length || 0) === 0 ? (
-              <p className="text-sm text-muted-foreground">Keine aktiven Account-Zuordnungen gefunden.</p>
+              <p className="text-sm text-muted-foreground">
+                Aktuell keine aktiven Account-Zuordnungen.
+              </p>
             ) : (
+
               <div className="space-y-2 max-h-[55vh] overflow-y-auto">
                 {chatterModelsDialog?.models.map((m) => (
                   <div key={m.id} className="rounded-lg border border-border/60 bg-card/60 p-3">
