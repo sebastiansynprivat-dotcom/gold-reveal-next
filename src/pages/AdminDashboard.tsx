@@ -11653,6 +11653,70 @@ export default function AdminDashboard() {
       </Dialog>
 
       <ContentDropDialog open={contentDropOpen} onOpenChange={setContentDropOpen} />
+
+      <Dialog open={!!chatterModelsDialog} onOpenChange={(o) => !o && setChatterModelsDialog(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex flex-col gap-1">
+              <span>{chatterModelsDialog?.name}</span>
+              {chatterModelsDialog?.telegram && (
+                <span className="text-xs font-normal text-muted-foreground">
+                  @{String(chatterModelsDialog.telegram).replace(/^@/, "")}
+                </span>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <p className="text-xs uppercase tracking-wider text-muted-foreground">
+              Zugeordnete Models ({chatterModelsDialog?.models.length || 0})
+            </p>
+            {(chatterModelsDialog?.models.length || 0) === 0 ? (
+              <p className="text-sm text-muted-foreground">Keine aktiven Account-Zuordnungen gefunden.</p>
+            ) : (
+              <div className="space-y-2 max-h-[55vh] overflow-y-auto">
+                {chatterModelsDialog?.models.map((m) => (
+                  <div key={m.id} className="rounded-lg border border-border/60 bg-card/60 p-3">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-semibold text-foreground">{m.name}</span>
+                      {m.username && <span className="text-xs text-muted-foreground">@{m.username}</span>}
+                      <span
+                        className={cn(
+                          "text-[10px] font-bold uppercase px-1.5 h-4 rounded border flex items-center",
+                          m.status === "active"
+                            ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/40"
+                            : m.status === "semi"
+                              ? "bg-amber-500/15 text-amber-300 border-amber-500/40"
+                              : "bg-red-500/15 text-red-300 border-red-500/40",
+                        )}
+                      >
+                        {m.status === "active" ? "Aktiv" : m.status === "semi" ? "Halbaktiv" : "Inaktiv"}
+                      </span>
+                      {m.agency && (
+                        <span className="text-[10px] font-bold uppercase px-1.5 h-4 rounded border border-border/50 bg-secondary/40 text-foreground/80 flex items-center">
+                          {m.agency === "syn" ? "SYN" : "SheX"}
+                        </span>
+                      )}
+                    </div>
+                    {m.platforms.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1.5">
+                        {m.platforms.map((p) => (
+                          <span
+                            key={p}
+                            className="text-[10px] uppercase tracking-wide px-1.5 h-4 rounded border border-border/50 bg-secondary/30 text-muted-foreground flex items-center"
+                          >
+                            {p}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       
     </div>
   );
