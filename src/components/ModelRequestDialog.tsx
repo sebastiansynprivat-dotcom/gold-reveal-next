@@ -26,6 +26,8 @@ export interface EditRequestData {
 
 export interface AvailableModel {
   id: string;
+  /** Real models.id — only set when the assigned account is linked to a model record. */
+  modelId?: string | null;
   name: string;
   language: "de" | "en";
   platforms: string[];
