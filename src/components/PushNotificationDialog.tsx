@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Bell, Sparkles, TrendingUp, Users } from "lucide-react";
-import { subscribeToPush, isPushSubscribed } from "@/lib/pushNotifications";
+import { subscribeToPush, isPushSubscribed, syncPushSubscription } from "@/lib/pushNotifications";
 import { toast } from "sonner";
 import { useUILanguage } from "@/hooks/useUILanguage";
 
@@ -16,6 +16,9 @@ export default function PushNotificationDialog() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    // Always self-heal an existing (but server-side missing/expired) subscription.
+    syncPushSubscription();
+
     const isStandalone =
       window.matchMedia("(display-mode: standalone)").matches ||
       (window.navigator as any).standalone === true;
@@ -23,6 +26,7 @@ export default function PushNotificationDialog() {
 
     const alreadySeen = localStorage.getItem(PUSH_DIALOG_KEY);
     if (alreadySeen) return;
+
 
     isPushSubscribed().then((subscribed) => {
       if (!subscribed) {
