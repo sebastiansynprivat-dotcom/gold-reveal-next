@@ -3372,6 +3372,10 @@ export type Database = {
         Args: { p_account_id: string; p_user_id: string }
         Returns: boolean
       }
+      chatter_can_access_request_model: {
+        Args: { _model_id: string; _user_id: string }
+        Returns: boolean
+      }
       claim_pre_create_by_telegram: {
         Args: { p_telegram_id: string }
         Returns: Json

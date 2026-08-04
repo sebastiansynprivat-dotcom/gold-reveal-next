@@ -314,12 +314,39 @@ export default function Dashboard() {
 
   const loadMyRequests = useCallback(async () => {
     if (!user) return;
-    const { data } = await supabase
-      .from("model_requests")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(100);
+
+    // Models, die dieser Chatter aktuell betreut → er darf auch Anfragen sehen,
+    // die ein früherer Chatter für dieses Model gestellt hat (Chatterwechsel).
+    const { data: myAccounts } = await supabase
+      .from("accounts")
+      .select("model_id")
+      .eq("assigned_to", user.id);
+    const myModelIds = Array.from(
+      new Set((myAccounts || []).map((a: any) => a.model_id).filter(Boolean)),
+    ) as string[];
+
+    const [{ data: ownReqs }, { data: inheritedReqs }] = await Promise.all([
+      supabase
+        .from("model_requests")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(100),
+      myModelIds.length
+        ? supabase
+            .from("model_requests")
+            .select("*")
+            .in("model_id", myModelIds)
+            .neq("user_id", user.id)
+            .order("created_at", { ascending: false })
+            .limit(100)
+        : Promise.resolve({ data: [] as any[] }),
+    ]);
+
+    const data = [
+      ...(ownReqs || []).map((r: any) => ({ ...r, _inherited: false })),
+      ...(inheritedReqs || []).map((r: any) => ({ ...r, _inherited: true })),
+    ].sort((a: any, b: any) => (a.created_at < b.created_at ? 1 : -1));
 
     if (data) {
       const ids = data.map((r: any) => r.id);
@@ -355,6 +382,7 @@ export default function Dashboard() {
     }
   }, [user]);
 
+
   useEffect(() => {
     if (user) loadMyRequests();
   }, [user, loadMyRequests]);
@@ -369,6 +397,13 @@ export default function Dashboard() {
         { event: "*", schema: "public", table: "model_requests", filter: `user_id=eq.${user.id}` },
         () => loadMyRequests(),
       )
+      // Übernommene Anfragen (Chatterwechsel): ohne Filter, RLS liefert nur Erlaubtes
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "model_requests" },
+        () => loadMyRequests(),
+      )
+
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "model_request_messages" },
@@ -1516,7 +1551,13 @@ export default function Dashboard() {
                                   : "border-border/50 bg-secondary/20"
                             }`}
                           >
-
+                            {(req as any)._inherited && (
+                              <div className="rounded-md border border-sky-500/40 bg-sky-500/10 px-2.5 py-1.5 text-[10px] text-sky-200 leading-snug">
+                                <strong className="font-semibold">Übernommene Anfrage.</strong>{" "}
+                                Diese Anfrage wurde von einem früheren Chatter für dieses Model gestellt – du siehst
+                                alle Details und den aktuellen Status, damit du den Kunden informieren kannst.
+                              </div>
+                            )}
                             <div className="flex items-center justify-between gap-2">
                               <div className="flex flex-col">
                                 <span className="text-xs font-medium text-foreground">{req.model_name}</span>
@@ -1531,6 +1572,7 @@ export default function Dashboard() {
                                   </span>
                                 )}
                               </div>
+
                               {(() => {
                                 const statusStyles: Record<string, string> = {
                                   pending: "bg-amber-500/15 text-amber-300 border border-amber-500/40",
@@ -1570,7 +1612,7 @@ export default function Dashboard() {
                               const isLong = desc.length > 120 || desc.includes("\n");
                               return (
                                 <div className="rounded-md border border-border/40 bg-secondary/10 px-2.5 py-2 space-y-1">
-                                  <p className="text-[9px] text-muted-foreground uppercase tracking-wide">Deine Anfrage</p>
+                                  <p className="text-[9px] text-muted-foreground uppercase tracking-wide">{(req as any)._inherited ? "Anfrage (früherer Chatter)" : "Deine Anfrage"}</p>
                                   <p className={`text-[11px] text-foreground/90 leading-relaxed whitespace-pre-wrap ${isExpanded ? "" : "line-clamp-2"}`}>
                                     {desc}
                                   </p>
@@ -1844,8 +1886,9 @@ export default function Dashboard() {
                                   </DialogContent>
                                 </Dialog>
                               )}
-                            {/* Bearbeiten Button – nur bei Admin-Kommentar */}
-                            {req.admin_comment && req.status !== "rejected" && (
+                            {/* Bearbeiten Button – nur bei Admin-Kommentar & eigener Anfrage */}
+                            {req.admin_comment && req.status !== "rejected" && !(req as any)._inherited && (
+
                               <button
                                 onClick={() =>
                                   setEditRequest({
