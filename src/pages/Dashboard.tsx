@@ -1280,7 +1280,7 @@ export default function Dashboard() {
             // Group assigned accounts by model
             const modelsMap = new Map<
               string,
-              { id: string; name: string; language: "de" | "en"; status: ModelStatus; platforms: Set<string> }
+              { id: string; modelId: string | null; name: string; language: "de" | "en"; status: ModelStatus; platforms: Set<string> }
             >();
             assignedAccounts.forEach((a) => {
               const key = a.model_id || a.model_name || a.platform || a.id;
@@ -1293,10 +1293,12 @@ export default function Dashboard() {
                 // Best status across the model's accounts wins
                 if (rank(s) > rank(existing.status)) existing.status = s;
                 if (!existing.name && a.model_name) existing.name = a.model_name;
+                if (!existing.modelId && a.model_id) existing.modelId = String(a.model_id);
                 if (a.model_language) existing.language = a.model_language as "de" | "en";
               } else {
                 modelsMap.set(key, {
                   id: key,
+                  modelId: a.model_id ? String(a.model_id) : null,
                   name: a.model_name || "",
                   language: (a.model_language as "de" | "en") || "de",
                   status: s,
@@ -1405,6 +1407,7 @@ export default function Dashboard() {
                       )}
                       availableModels={allModels.map((m) => ({
                         id: m.id,
+                        modelId: m.modelId,
                         name: m.name,
                         language: m.language,
                         platforms: Array.from(m.platforms),

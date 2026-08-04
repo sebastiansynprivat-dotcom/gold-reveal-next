@@ -26,6 +26,8 @@ export interface EditRequestData {
 
 export interface AvailableModel {
   id: string;
+  /** Real models.id — only set when the assigned account is linked to a model record. */
+  modelId?: string | null;
   name: string;
   language: "de" | "en";
   platforms: string[];
@@ -206,13 +208,18 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage:
     }
 
     const finalDescription = `[Plattform: ${platform}] ${description.trim()}`;
+    // Source of truth: when a model was selected (or auto-selected), always use its
+    // exact record — name AND id — so the admin never has to guess from free text.
+    const resolvedName = (targetModel?.name || modelName).trim();
+    const resolvedModelId = targetModel?.modelId ?? null;
 
     setLoading(true);
 
     if (editData) {
       // Update existing request
       const { error } = await supabase.from("model_requests").update({
-        model_name: modelName.trim(),
+        model_name: resolvedName,
+        ...(resolvedModelId ? { model_id: resolvedModelId } : {}),
         request_type: requestType,
         model_language: modelLanguage,
         price: requestType === "individual" ? parseFloat(price) : null,
@@ -233,7 +240,8 @@ const ModelRequestDialog = ({ onSubmitted, editData, onEditClear, modelLanguage:
       const { error } = await supabase.from("model_requests").insert({
         id: draftRequestId,
         user_id: user.id,
-        model_name: modelName.trim(),
+        model_name: resolvedName,
+        model_id: resolvedModelId,
         request_type: requestType,
         model_language: modelLanguage,
         price: requestType === "individual" ? parseFloat(price) : null,

@@ -3041,7 +3041,13 @@ export default function AdminDashboard() {
     // deterministic — never "guess" an arbitrary assigned model, otherwise the
     // displayed model name changes between reloads (Set iteration / assignment
     // changes). We only return a record when we have a real, defensible match.
-    const findModel = (raw: any, contextText?: string, userId?: string) => {
+    const findModel = (raw: any, contextText?: string, userId?: string, explicitModelId?: any) => {
+      // 0. Hard link: the request carries the real models.id (set at creation).
+      // This is the ONLY 100% reliable signal — never override it with name guesses.
+      if (explicitModelId) {
+        const linked = modelById.get(String(explicitModelId));
+        if (linked) return linked;
+      }
       const assignedSet = userId ? assignedModelsByUser.get(userId) : null;
       const key = normalizeModelKey(raw);
       const byId = (a: any, b: any) => String(a.id).localeCompare(String(b.id));
@@ -3157,7 +3163,7 @@ export default function AdminDashboard() {
         data.map((r: any) => {
           const msgs = msgsByReq[r.id] || [];
           const ctx = [r.description, r.customer_name, ...msgs.map((m: any) => m.body)].filter(Boolean).join(" ");
-          const _model = findModel(r.model_name, ctx, r.user_id);
+          const _model = findModel(r.model_name, ctx, r.user_id, r.model_id);
           const _agency =
             normalizeAgencyVal(_model?.model_agency) ||
             chatterAgencyByUser.get(r.user_id) ||
@@ -3187,11 +3193,15 @@ export default function AdminDashboard() {
               ),
             }))
             .sort((a, b) => a.name.localeCompare(b.name));
+          const _modelVerified = !!(r.model_id && _model && String(_model.id) === String(r.model_id));
           return {
             ...r,
+            // Canonical name wins over the stored free text once the link is verified.
+            model_name: _modelVerified ? (_model.name || r.model_name) : r.model_name,
             _messages: msgs,
             _followups: followupsByReq[r.id] || [],
             _model,
+            _modelVerified,
             _agency,
             _modelAccountEmail: matchedAcc?.account_email || null,
             _modelAccountPlatform: matchedAcc?.platform || null,
@@ -7119,6 +7129,21 @@ export default function AdminDashboard() {
                                       className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group w-full text-left"
                                     >
                                       <span className="text-xl text-foreground font-bold tracking-tight">{req.model_name}</span>
+                                      {req._modelVerified ? (
+                                        <span
+                                          className="shrink-0 text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"
+                                          title="Model eindeutig verknüpft (Model-ID aus der Anfrage)"
+                                        >
+                                          verifiziert
+                                        </span>
+                                      ) : (
+                                        <span
+                                          className="shrink-0 text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-400 border border-amber-500/30"
+                                          title="Keine Model-ID in der Anfrage — Name wurde über Zuordnung/Name aufgelöst. Bitte vor dem Weiterleiten prüfen."
+                                        >
+                                          ungeprüft
+                                        </span>
+                                      )}
                                       <Copy className="h-3 w-3 opacity-0 group-hover:opacity-50 transition-opacity ml-auto shrink-0" />
                                     </button>
 
