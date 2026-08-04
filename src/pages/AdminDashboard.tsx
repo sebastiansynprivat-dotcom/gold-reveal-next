@@ -7110,6 +7110,9 @@ export default function AdminDashboard() {
                                               name: chatterName,
                                               telegram: (req as any)._chatterTelegram || null,
                                               models: (req as any)._chatterModels || [],
+                                              pastModels: (req as any)._chatterPastModels || [],
+                                              deleted: !!(req as any)._chatterDeleted,
+                                              deletedAt: (req as any)._chatterDeletedAt || null,
                                             });
                                           }}
                                           title="Zugeordnete Models anzeigen"
@@ -7117,6 +7120,12 @@ export default function AdminDashboard() {
                                         >
                                           {chatterName}
                                         </button>
+                                        {(req as any)._chatterDeleted && (
+                                          <span className="text-[10px] font-bold uppercase px-1.5 h-4 rounded border border-red-500/40 bg-red-500/15 text-red-300 flex items-center">
+                                            Chatter inaktiv
+                                          </span>
+                                        )}
+
 
                                         <span
                                           className={cn(
