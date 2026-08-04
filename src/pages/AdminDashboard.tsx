@@ -3271,6 +3271,35 @@ export default function AdminDashboard() {
               ),
             }))
             .sort((a, b) => a.name.localeCompare(b.name));
+          const pastAccounts = pastAccountsByUser.get(r.user_id) || [];
+          const pastModelList = Array.from(
+            new Map(
+              pastAccounts
+                .filter((a) => a.model_id && modelById.get(a.model_id))
+                .map((a) => [a.model_id as string, a]),
+            ).keys(),
+          )
+            .map((mid) => {
+              const m = modelById.get(mid);
+              const accs = pastAccounts.filter((a) => a.model_id === mid);
+              const successorId = accs.map((a) => successorByAccount.get(a.account_id)).find(Boolean) || null;
+              const lastUnassigned = accs
+                .map((a) => a.unassigned_at)
+                .filter(Boolean)
+                .sort()
+                .pop() || null;
+              return {
+                id: String(m.id),
+                name: m.name || "",
+                username: m.username || null,
+                agency: normalizeAgencyVal(m.model_agency) || null,
+                status: (m.model_status as string) || (m.model_active === false ? "inactive" : "active"),
+                platforms: Array.from(new Set(accs.map((a) => a.platform || "").filter(Boolean))),
+                unassignedAt: lastUnassigned,
+                successorName: successorId ? chatterInfoByUser.get(successorId)?.name || null : null,
+              };
+            })
+            .sort((a, b) => a.name.localeCompare(b.name));
           const _modelVerified = !!(r.model_id && _model && String(_model.id) === String(r.model_id));
           return {
             ...r,
@@ -3286,7 +3315,12 @@ export default function AdminDashboard() {
             _chatterName: info?.name || "",
             _chatterTelegram: info?.telegram_id || null,
             _chatterModels: assignedModelList,
+            _chatterPastModels: pastModelList,
+            _chatterDeleted: !!info?.deleted,
+            _chatterDeletedAt: info?.deleted_at || null,
+            _chatterKnown: !!info,
           };
+
 
         }),
       );
