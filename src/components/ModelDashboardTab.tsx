@@ -1161,36 +1161,41 @@ export default function ModelDashboardTab() {
 
 
 
-  // ─── Load current-month 4Based revenue (USD) for the "payout missing (>$50)" filter ───
+  // ─── Load latest known 4Based revenue (USD) per model for the "payout missing (>$50)" filter ───
+  // Uses the most recent payout_revenue row per model (not only the current month), because
+  // revenue is often fetched for an earlier billing month and the current month may be empty.
   useEffect(() => {
     if (!only4BMissingPayout) return;
     let cancelled = false;
     (async () => {
-      const now = new Date();
-      const month = now.getMonth() + 1;
-      const year = now.getFullYear();
       const ids = models.map((m) => m.id);
       if (ids.length === 0) return;
       // Chunk to keep URL sane
       const chunkSize = 200;
       const map: Record<string, number> = {};
+      const seen: Record<string, number> = {}; // model_id -> year*12+month rank
       for (let i = 0; i < ids.length; i += chunkSize) {
         const chunk = ids.slice(i, i + chunkSize);
         const { data } = await (supabase as any)
           .from("payout_revenue")
-          .select("model_id, fourbased_revenue")
-          .in("model_id", chunk)
-          .eq("last_fetched_month", month)
-          .eq("last_fetched_year", year);
+          .select("model_id, fourbased_revenue, last_fetched_month, last_fetched_year")
+          .in("model_id", chunk);
         ((data as any[]) || []).forEach((r) => {
           const v = Number(r.fourbased_revenue);
-          if (Number.isFinite(v)) map[r.model_id] = Math.max(map[r.model_id] || 0, v);
+          if (!Number.isFinite(v)) return;
+          const rank = Number(r.last_fetched_year || 0) * 12 + Number(r.last_fetched_month || 0);
+          if (seen[r.model_id] === undefined || rank >= seen[r.model_id]) {
+            // Same period → keep the higher value; newer period → replace
+            map[r.model_id] = rank === seen[r.model_id] ? Math.max(map[r.model_id] || 0, v) : v;
+            seen[r.model_id] = rank;
+          }
         });
       }
       if (!cancelled) setFbRevenueByModel(map);
     })();
     return () => { cancelled = true; };
   }, [only4BMissingPayout, models]);
+
 
   // ─── Filter + sort models ───
   const filteredModels = useMemo(() => {
