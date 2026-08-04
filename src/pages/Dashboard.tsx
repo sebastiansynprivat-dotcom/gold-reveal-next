@@ -1551,7 +1551,13 @@ export default function Dashboard() {
                                   : "border-border/50 bg-secondary/20"
                             }`}
                           >
-
+                            {(req as any)._inherited && (
+                              <div className="rounded-md border border-sky-500/40 bg-sky-500/10 px-2.5 py-1.5 text-[10px] text-sky-200 leading-snug">
+                                <strong className="font-semibold">Übernommene Anfrage.</strong>{" "}
+                                Diese Anfrage wurde von einem früheren Chatter für dieses Model gestellt – du siehst
+                                alle Details und den aktuellen Status, damit du den Kunden informieren kannst.
+                              </div>
+                            )}
                             <div className="flex items-center justify-between gap-2">
                               <div className="flex flex-col">
                                 <span className="text-xs font-medium text-foreground">{req.model_name}</span>
@@ -1566,6 +1572,7 @@ export default function Dashboard() {
                                   </span>
                                 )}
                               </div>
+
                               {(() => {
                                 const statusStyles: Record<string, string> = {
                                   pending: "bg-amber-500/15 text-amber-300 border border-amber-500/40",
