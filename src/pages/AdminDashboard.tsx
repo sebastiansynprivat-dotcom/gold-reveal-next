@@ -1003,7 +1003,11 @@ export default function AdminDashboard() {
     name: string;
     telegram: string | null;
     models: Array<{ id: string; name: string; username: string | null; agency: string | null; status: string; platforms: string[] }>;
+    pastModels?: Array<{ id: string; name: string; username: string | null; agency: string | null; status: string; platforms: string[]; unassignedAt?: string | null; successorName?: string | null }>;
+    deleted?: boolean;
+    deletedAt?: string | null;
   } | null>(null);
+
 
   const [platformFilters, setPlatformFilters] = useState<Set<string>>(new Set());
   const [filterTelegram, setFilterTelegram] = useState<boolean | null>(null);
