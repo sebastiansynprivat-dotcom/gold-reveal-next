@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Bell, Sparkles, TrendingUp, Users } from "lucide-react";
-import { subscribeToPush, isPushSubscribed } from "@/lib/pushNotifications";
+import { subscribeToPush, isPushSubscribed, syncPushSubscription } from "@/lib/pushNotifications";
 import { toast } from "sonner";
 import { useUILanguage } from "@/hooks/useUILanguage";
 
