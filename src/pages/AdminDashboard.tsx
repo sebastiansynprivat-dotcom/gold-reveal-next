@@ -3041,7 +3041,13 @@ export default function AdminDashboard() {
     // deterministic — never "guess" an arbitrary assigned model, otherwise the
     // displayed model name changes between reloads (Set iteration / assignment
     // changes). We only return a record when we have a real, defensible match.
-    const findModel = (raw: any, contextText?: string, userId?: string) => {
+    const findModel = (raw: any, contextText?: string, userId?: string, explicitModelId?: any) => {
+      // 0. Hard link: the request carries the real models.id (set at creation).
+      // This is the ONLY 100% reliable signal — never override it with name guesses.
+      if (explicitModelId) {
+        const linked = modelById.get(String(explicitModelId));
+        if (linked) return linked;
+      }
       const assignedSet = userId ? assignedModelsByUser.get(userId) : null;
       const key = normalizeModelKey(raw);
       const byId = (a: any, b: any) => String(a.id).localeCompare(String(b.id));
