@@ -3157,13 +3157,30 @@ export default function AdminDashboard() {
             chatterAgencyByUser.get(r.user_id) ||
             "";
           const chatterAccounts = assignedAccountsByUser.get(r.user_id) || [];
-          // Pick the assigned account matching the resolved model (if any),
-          // otherwise fall back to the first assigned account so we can still
-          // show platform / email context for disambiguation.
+          // Only show account context that really belongs to the resolved model —
+          // a generic "first assigned account" fallback showed the wrong email.
           const matchedAcc =
-            (_model && chatterAccounts.find((a) => a.model_id && a.model_id === String(_model.id))) ||
-            chatterAccounts[0] ||
-            null;
+            (_model && chatterAccounts.find((a) => a.model_id && a.model_id === String(_model.id))) || null;
+          const info = chatterInfoByUser.get(String(r.user_id));
+          const assignedModelList = Array.from(assignedModelsByUser.get(r.user_id) || [])
+            .map((id) => modelById.get(id))
+            .filter(Boolean)
+            .map((m: any) => ({
+              id: String(m.id),
+              name: m.name || "",
+              username: m.username || null,
+              agency: normalizeAgencyVal(m.model_agency) || null,
+              status: (m.model_status as string) || (m.model_active === false ? "inactive" : "active"),
+              platforms: Array.from(
+                new Set(
+                  chatterAccounts
+                    .filter((a) => a.model_id === String(m.id))
+                    .map((a) => a.platform || "")
+                    .filter(Boolean),
+                ),
+              ),
+            }))
+            .sort((a, b) => a.name.localeCompare(b.name));
           return {
             ...r,
             _messages: msgs,
@@ -3172,7 +3189,11 @@ export default function AdminDashboard() {
             _agency,
             _modelAccountEmail: matchedAcc?.account_email || null,
             _modelAccountPlatform: matchedAcc?.platform || null,
+            _chatterName: info?.name || "",
+            _chatterTelegram: info?.telegram_id || null,
+            _chatterModels: assignedModelList,
           };
+
         }),
       );
     }
