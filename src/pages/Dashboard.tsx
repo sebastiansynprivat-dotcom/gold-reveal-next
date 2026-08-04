@@ -314,12 +314,39 @@ export default function Dashboard() {
 
   const loadMyRequests = useCallback(async () => {
     if (!user) return;
-    const { data } = await supabase
-      .from("model_requests")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
-      .limit(100);
+
+    // Models, die dieser Chatter aktuell betreut → er darf auch Anfragen sehen,
+    // die ein früherer Chatter für dieses Model gestellt hat (Chatterwechsel).
+    const { data: myAccounts } = await supabase
+      .from("accounts")
+      .select("model_id")
+      .eq("assigned_to", user.id);
+    const myModelIds = Array.from(
+      new Set((myAccounts || []).map((a: any) => a.model_id).filter(Boolean)),
+    ) as string[];
+
+    const [{ data: ownReqs }, { data: inheritedReqs }] = await Promise.all([
+      supabase
+        .from("model_requests")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(100),
+      myModelIds.length
+        ? supabase
+            .from("model_requests")
+            .select("*")
+            .in("model_id", myModelIds)
+            .neq("user_id", user.id)
+            .order("created_at", { ascending: false })
+            .limit(100)
+        : Promise.resolve({ data: [] as any[] }),
+    ]);
+
+    const data = [
+      ...(ownReqs || []).map((r: any) => ({ ...r, _inherited: false })),
+      ...(inheritedReqs || []).map((r: any) => ({ ...r, _inherited: true })),
+    ].sort((a: any, b: any) => (a.created_at < b.created_at ? 1 : -1));
 
     if (data) {
       const ids = data.map((r: any) => r.id);
@@ -354,6 +381,7 @@ export default function Dashboard() {
       );
     }
   }, [user]);
+
 
   useEffect(() => {
     if (user) loadMyRequests();
