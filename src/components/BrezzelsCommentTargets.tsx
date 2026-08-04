@@ -104,6 +104,21 @@ export default function BrezzelsCommentTargets() {
               </p>
             </div>
 
+            <div className="rounded-lg border border-accent/25 bg-accent/5 p-3 space-y-1.5">
+              <p className="text-xs font-medium text-accent">Kurz zur Info</p>
+              <ul className="text-xs text-muted-foreground space-y-1 list-disc pl-4">
+                <li>
+                  Um bei einem Creator kommentieren zu können, musst du ihm{" "}
+                  <span className="text-foreground font-medium">kostenlos folgen</span>.
+                </li>
+                <li>
+                  Hat ein Creator einen <span className="text-foreground font-medium">Preis hinterlegt</span>, einfach
+                  überspringen – die Aufgabe gilt nur, wenn es kostenlos ist.
+                </li>
+              </ul>
+            </div>
+
+
             {loading ? (
               <div className="flex justify-center py-6">
                 <div className="w-6 h-6 border-2 border-accent border-t-transparent rounded-full animate-spin" />
