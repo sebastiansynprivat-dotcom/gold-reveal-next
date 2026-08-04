@@ -6970,9 +6970,22 @@ export default function AdminDashboard() {
                                             Neu
                                           </button>
                                         )}
-                                        <span className="text-sm font-semibold text-foreground truncate">
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setChatterModelsDialog({
+                                              name: chatterName,
+                                              telegram: (req as any)._chatterTelegram || null,
+                                              models: (req as any)._chatterModels || [],
+                                            });
+                                          }}
+                                          title="Zugeordnete Models anzeigen"
+                                          className="text-sm font-semibold text-foreground truncate hover:text-accent underline decoration-dotted decoration-accent/40 underline-offset-2 transition-colors"
+                                        >
                                           {chatterName}
-                                        </span>
+                                        </button>
+
                                         <span
                                           className={cn(
                                             "flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full",
