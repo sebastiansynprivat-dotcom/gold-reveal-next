@@ -3002,6 +3002,34 @@ export default function AdminDashboard() {
       });
     }
 
+    // Load the real chatter identity for every request author so the header
+    // never falls back to a raw user_id fragment.
+    const chatterInfoByUser = new Map<string, { name: string; telegram_id: string | null; group_name: string | null }>();
+    if (chatterUserIds.length > 0) {
+      for (let i = 0; i < chatterUserIds.length; i += 200) {
+        const slice = chatterUserIds.slice(i, i + 200);
+        const { data: profs } = await supabase
+          .from("profiles")
+          .select("user_id, name, group_name, telegram_id")
+          .in("user_id", slice);
+        (profs || []).forEach((p: any) => {
+          if (!p.user_id) return;
+          const name =
+            (p.name && String(p.name).trim()) ||
+            (p.group_name && String(p.group_name).trim()) ||
+            (p.telegram_id && String(p.telegram_id).trim()) ||
+            "";
+          chatterInfoByUser.set(String(p.user_id), {
+            name,
+            telegram_id: p.telegram_id || null,
+            group_name: p.group_name || null,
+          });
+        });
+      }
+    }
+
+
+
 
     // Resolve the model record for a request. IMPORTANT: this must be
     // deterministic — never "guess" an arbitrary assigned model, otherwise the
