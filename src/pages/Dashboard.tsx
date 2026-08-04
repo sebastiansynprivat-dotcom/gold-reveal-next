@@ -1612,7 +1612,7 @@ export default function Dashboard() {
                               const isLong = desc.length > 120 || desc.includes("\n");
                               return (
                                 <div className="rounded-md border border-border/40 bg-secondary/10 px-2.5 py-2 space-y-1">
-                                  <p className="text-[9px] text-muted-foreground uppercase tracking-wide">Deine Anfrage</p>
+                                  <p className="text-[9px] text-muted-foreground uppercase tracking-wide">{(req as any)._inherited ? "Anfrage (früherer Chatter)" : "Deine Anfrage"}</p>
                                   <p className={`text-[11px] text-foreground/90 leading-relaxed whitespace-pre-wrap ${isExpanded ? "" : "line-clamp-2"}`}>
                                     {desc}
                                   </p>
