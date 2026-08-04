@@ -89,3 +89,50 @@ export async function isPushSubscribed(): Promise<boolean> {
     return false;
   }
 }
+
+/**
+ * Silent self-healing: browsers rotate/expire push endpoints and the server
+ * prunes dead ones (410). In those cases the user still shows "notifications
+ * allowed" but never receives anything. On every app load we therefore
+ * re-register the current browser subscription (creating one if needed) and
+ * upsert it server-side so the DB row is always present and linked to the user.
+ */
+export async function syncPushSubscription(): Promise<void> {
+  try {
+    if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+    if (!("Notification" in window) || Notification.permission !== "granted") return;
+
+    const registration = await navigator.serviceWorker.ready;
+    let subscription = await registration.pushManager.getSubscription();
+
+    if (!subscription) {
+      const publicKey = await getVapidPublicKey();
+      if (!publicKey) return;
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(publicKey) as any,
+      });
+    }
+
+    const subJson = subscription.toJSON();
+    const { data: { session } } = await supabase.auth.getSession();
+
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+    };
+    if (session?.access_token) {
+      headers["Authorization"] = `Bearer ${session.access_token}`;
+    }
+
+    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+    await fetch(`https://${projectId}.supabase.co/functions/v1/subscribe-push`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ endpoint: subJson.endpoint, keys: subJson.keys }),
+    });
+  } catch (err) {
+    console.warn("Push sync skipped:", err);
+  }
+}
+
