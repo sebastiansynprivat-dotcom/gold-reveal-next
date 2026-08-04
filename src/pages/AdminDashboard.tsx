@@ -3193,11 +3193,15 @@ export default function AdminDashboard() {
               ),
             }))
             .sort((a, b) => a.name.localeCompare(b.name));
+          const _modelVerified = !!(r.model_id && _model && String(_model.id) === String(r.model_id));
           return {
             ...r,
+            // Canonical name wins over the stored free text once the link is verified.
+            model_name: _modelVerified ? (_model.name || r.model_name) : r.model_name,
             _messages: msgs,
             _followups: followupsByReq[r.id] || [],
             _model,
+            _modelVerified,
             _agency,
             _modelAccountEmail: matchedAcc?.account_email || null,
             _modelAccountPlatform: matchedAcc?.platform || null,
