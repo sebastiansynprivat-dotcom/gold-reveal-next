@@ -107,7 +107,8 @@ export default function ModelGroupsPanel({
     to: new Date(new Date().getFullYear(), new Date().getMonth(), 0).toISOString().slice(0, 10),
   });
   const [billingLoading, setBillingLoading] = useState(false);
-  const [fetchAllProgress, setFetchAllProgress] = useState<{ done: number; total: number } | null>(null);
+  const [fetchAllProgress, setFetchAllProgress] = useState<{ done: number; total: number; nextInSec: number } | null>(null);
+  const cancelFetchAllRef = useRef(false);
   const [revenueByModel, setRevenueByModel] = useState<Record<string, { fb: number | null; ml: number | null; br: number | null; fetched_at: string | null; errors: Array<{ platform?: string; message?: string; code?: string }> }>>({});
   const [retryingModels, setRetryingModels] = useState<Record<string, { until: number; platforms: string[] }>>({});
   const [retryTick, setRetryTick] = useState(0);
