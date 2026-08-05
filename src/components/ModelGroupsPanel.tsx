@@ -115,6 +115,8 @@ export default function ModelGroupsPanel({
   const [groupSearch, setGroupSearch] = useState("");
   const [modelSearch, setModelSearch] = useState("");
   const [onlyMissingFbPayout, setOnlyMissingFbPayout] = useState(false);
+  const { playCoinSound } = useSoundEffects();
+
 
 
 
