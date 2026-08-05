@@ -968,14 +968,32 @@ export default function ModelGroupsPanel({
                   disabled={!!fetchAllProgress || groupModels.length === 0}
                   onClick={fetchAllInGroup}
                   className="h-8 bg-gradient-to-r from-accent/90 to-accent text-accent-foreground hover:from-accent hover:to-accent/90 shadow-sm"
-                  title="Umsätze für alle Models der Gruppe für den Monat von 'Zeitraum von' abrufen"
+                  title="Umsätze für alle Models der Gruppe abrufen — max. 2 Abrufe/Min. (schont Backend-IP)"
                 >
                   {fetchAllProgress ? (
-                    <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> {fetchAllProgress.done}/{fetchAllProgress.total}</>
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                      {fetchAllProgress.done}/{fetchAllProgress.total}
+                      {fetchAllProgress.nextInSec > 0 && ` · nächster in ${fetchAllProgress.nextInSec}s`}
+                    </>
                   ) : (
                     <><Download className="h-3.5 w-3.5 mr-1.5" /> Alle fetchen</>
                   )}
                 </Button>
+                {fetchAllProgress && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="h-8"
+                    onClick={() => {
+                      cancelFetchAllRef.current = true;
+                      toast.info("Abbruch nach aktuellem Abruf …");
+                    }}
+                  >
+                    Abbrechen
+                  </Button>
+                )}
               </div>
 
 
