@@ -199,9 +199,9 @@ export default function ModelGroupsPanel({
       if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
       const reg = await navigator.serviceWorker?.getRegistration();
       if (reg) {
-        await reg.showNotification(title, { body, icon: "/icon-192.png", tag: "revenue-fetch-done" });
+        await reg.showNotification(title, { body, icon: "/pwa-192.png", tag: "revenue-fetch-done" });
       } else {
-        new Notification(title, { body, icon: "/icon-192.png" });
+        new Notification(title, { body, icon: "/pwa-192.png" });
       }
     } catch {
       /* notification is best-effort */
