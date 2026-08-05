@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useSoundEffects } from "@/hooks/useSoundEffects";
 import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -107,13 +108,16 @@ export default function ModelGroupsPanel({
     to: new Date(new Date().getFullYear(), new Date().getMonth(), 0).toISOString().slice(0, 10),
   });
   const [billingLoading, setBillingLoading] = useState(false);
-  const [fetchAllProgress, setFetchAllProgress] = useState<{ done: number; total: number } | null>(null);
+  const [fetchAllProgress, setFetchAllProgress] = useState<{ done: number; total: number; nextInSec: number } | null>(null);
+  const cancelFetchAllRef = useRef(false);
   const [revenueByModel, setRevenueByModel] = useState<Record<string, { fb: number | null; ml: number | null; br: number | null; fetched_at: string | null; errors: Array<{ platform?: string; message?: string; code?: string }> }>>({});
   const [retryingModels, setRetryingModels] = useState<Record<string, { until: number; platforms: string[] }>>({});
   const [retryTick, setRetryTick] = useState(0);
   const [groupSearch, setGroupSearch] = useState("");
   const [modelSearch, setModelSearch] = useState("");
   const [onlyMissingFbPayout, setOnlyMissingFbPayout] = useState(false);
+  const { playCoinSound } = useSoundEffects();
+
 
 
 
@@ -182,6 +186,28 @@ export default function ModelGroupsPanel({
     }
   };
 
+  // Max 2 calls per minute → min. 30s between consecutive backend calls
+  const FETCH_INTERVAL_MS = 30_000;
+
+  const notifyFetchDone = async (title: string, body: string) => {
+    try {
+      playCoinSound();
+    } catch {
+      /* ignore */
+    }
+    try {
+      if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+      const reg = await navigator.serviceWorker?.getRegistration();
+      if (reg) {
+        await reg.showNotification(title, { body, icon: "/pwa-192.png", tag: "revenue-fetch-done" });
+      } else {
+        new Notification(title, { body, icon: "/pwa-192.png" });
+      }
+    } catch {
+      /* notification is best-effort */
+    }
+  };
+
   const scheduleRetry = (modelId: string, modelName: string, platforms: string[], delayMs: number) => {
     const until = Date.now() + delayMs;
     setRetryingModels((prev) => ({ ...prev, [modelId]: { until, platforms } }));
@@ -200,12 +226,28 @@ export default function ModelGroupsPanel({
       toast.error("Keine Plattformen in dieser Gruppe hinterlegt.");
       return;
     }
-    setFetchAllProgress({ done: 0, total: targets.length });
+    cancelFetchAllRef.current = false;
+    setFetchAllProgress({ done: 0, total: targets.length, nextInSec: 0 });
+    if (targets.length > 1) {
+      const etaMin = Math.ceil(((targets.length - 1) * FETCH_INTERVAL_MS) / 60_000);
+      toast.info(`Fetch gestartet — max. 2 Abrufe/Min. (ca. ${etaMin} Min. für ${targets.length} Models)`, {
+        description: "Du kannst den Lauf jederzeit abbrechen. Bei Fertigstellung kommt eine Benachrichtigung.",
+        duration: 8000,
+      });
+    }
     const allErrors: Array<{ model: string; platform?: string; message?: string; code?: string }> = [];
     const rateLimitedByModel: Record<string, { name: string; platforms: Set<string> }> = {};
     let successCount = 0;
+    let processed = 0;
+    let cancelled = false;
+
     for (let i = 0; i < targets.length; i++) {
+      if (cancelFetchAllRef.current) {
+        cancelled = true;
+        break;
+      }
       const m = targets[i];
+      const startedAt = Date.now();
       try {
         const { data, error } = await supabase.functions.invoke("fetch-model-revenue", {
           body: { model_id: m.id, month, year },
@@ -227,20 +269,35 @@ export default function ModelGroupsPanel({
       } catch (err: any) {
         allErrors.push({ model: m.name, message: err?.message || "Unbekannter Fehler" });
       }
-      setFetchAllProgress({ done: i + 1, total: targets.length });
+      processed = i + 1;
+      setFetchAllProgress({ done: processed, total: targets.length, nextInSec: 0 });
+
+      // Throttle: wait out the remainder of the 30s window before the next call
+      if (i < targets.length - 1 && !cancelFetchAllRef.current) {
+        let remaining = FETCH_INTERVAL_MS - (Date.now() - startedAt);
+        while (remaining > 0) {
+          if (cancelFetchAllRef.current) break;
+          setFetchAllProgress({ done: processed, total: targets.length, nextInSec: Math.ceil(remaining / 1000) });
+          await new Promise((r) => setTimeout(r, Math.min(1000, remaining)));
+          remaining = FETCH_INTERVAL_MS - (Date.now() - startedAt);
+        }
+        setFetchAllProgress({ done: processed, total: targets.length, nextInSec: 0 });
+      }
     }
+    if (cancelFetchAllRef.current) cancelled = true;
     setFetchAllProgress(null);
+    cancelFetchAllRef.current = false;
     await loadRevenueForPeriod();
 
-    // Schedule auto-retry for rate-limited models after 120s (respects backend self-throttle window)
+    // Schedule auto-retry for rate-limited models, spaced 30s apart to stay within 2 calls/min
     const rlEntries = Object.entries(rateLimitedByModel);
-    if (rlEntries.length > 0) {
-      const delayMs = 120_000;
-      rlEntries.forEach(([id, info]) => {
-        scheduleRetry(id, info.name, Array.from(info.platforms), delayMs);
+    if (rlEntries.length > 0 && !cancelled) {
+      const baseDelay = 120_000;
+      rlEntries.forEach(([id, info], idx) => {
+        scheduleRetry(id, info.name, Array.from(info.platforms), baseDelay + idx * FETCH_INTERVAL_MS);
       });
       toast.warning(
-        `${rlEntries.length} Model(s) rate-limitiert — automatischer Retry in 2 Min.`,
+        `${rlEntries.length} Model(s) rate-limitiert — automatischer Retry in 2 Min. (gestaffelt).`,
         {
           description: rlEntries.map(([, info]) => `${info.name} (${Array.from(info.platforms).join(", ") || "?"})`).join("\n"),
           duration: 10000,
@@ -250,6 +307,12 @@ export default function ModelGroupsPanel({
     }
 
     const nonRateErrors = allErrors.filter((e) => e.code !== "RATE_LIMITED");
+    const periodLabel = `${String(month).padStart(2, "0")}/${year}`;
+    if (cancelled) {
+      toast.info(`Fetch abgebrochen — ${processed}/${targets.length} verarbeitet (${periodLabel})`);
+      await notifyFetchDone("Umsatz-Fetch abgebrochen", `${processed}/${targets.length} verarbeitet · ${periodLabel}`);
+      return;
+    }
     if (nonRateErrors.length > 0) {
       toast.error(`Fetch abgeschlossen — ${successCount}/${targets.length} ok, ${nonRateErrors.length} Fehler`, {
         description: nonRateErrors.map((e) => `${e.model}${e.platform ? ` (${e.platform})` : ""}: ${e.message ?? "Unbekannter Fehler"}`).join("\n"),
@@ -257,8 +320,12 @@ export default function ModelGroupsPanel({
         style: { whiteSpace: "pre-line" },
       });
     } else if (rlEntries.length === 0) {
-      toast.success(`Umsatz für ${targets.length} Models aktualisiert ✅ (${String(month).padStart(2, "0")}/${year})`);
+      toast.success(`Umsatz für ${targets.length} Models aktualisiert ✅ (${periodLabel})`);
     }
+    await notifyFetchDone(
+      "Umsatz-Fetch abgeschlossen",
+      `${successCount}/${targets.length} ok${nonRateErrors.length ? ` · ${nonRateErrors.length} Fehler` : ""}${rlEntries.length ? ` · ${rlEntries.length} rate-limitiert` : ""} · ${periodLabel}`,
+    );
   };
 
 
@@ -901,14 +968,32 @@ export default function ModelGroupsPanel({
                   disabled={!!fetchAllProgress || groupModels.length === 0}
                   onClick={fetchAllInGroup}
                   className="h-8 bg-gradient-to-r from-accent/90 to-accent text-accent-foreground hover:from-accent hover:to-accent/90 shadow-sm"
-                  title="Umsätze für alle Models der Gruppe für den Monat von 'Zeitraum von' abrufen"
+                  title="Umsätze für alle Models der Gruppe abrufen — max. 2 Abrufe/Min. (schont Backend-IP)"
                 >
                   {fetchAllProgress ? (
-                    <><Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> {fetchAllProgress.done}/{fetchAllProgress.total}</>
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                      {fetchAllProgress.done}/{fetchAllProgress.total}
+                      {fetchAllProgress.nextInSec > 0 && ` · nächster in ${fetchAllProgress.nextInSec}s`}
+                    </>
                   ) : (
                     <><Download className="h-3.5 w-3.5 mr-1.5" /> Alle fetchen</>
                   )}
                 </Button>
+                {fetchAllProgress && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="h-8"
+                    onClick={() => {
+                      cancelFetchAllRef.current = true;
+                      toast.info("Abbruch nach aktuellem Abruf …");
+                    }}
+                  >
+                    Abbrechen
+                  </Button>
+                )}
               </div>
 
 
