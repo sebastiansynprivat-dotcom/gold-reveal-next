@@ -89,10 +89,13 @@ export default function ModelGroupsPanel({
   open,
   onOpenChange,
   onChanged,
+  onOpenModel,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   onChanged?: () => void;
+  /** Öffnet die Model-Kartei (z.B. um falsche Passwörter nach fehlgeschlagenem Scraping zu korrigieren) */
+  onOpenModel?: (modelId: string) => void;
 }) {
   const [loading, setLoading] = useState(false);
   const [groups, setGroups] = useState<Group[]>([]);
