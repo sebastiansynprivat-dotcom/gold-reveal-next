@@ -23,7 +23,7 @@ const inputClass =
 
 const Auth = () => {
   const { user, loading, signUp, signIn } = useAuth();
-  const { t } = useUILanguage();
+  const { t, lang } = useUILanguage();
   const [isSignUp, setIsSignUp] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
