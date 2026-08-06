@@ -1485,7 +1485,21 @@ export default function ModelGroupsPanel({
                           : `${Math.round(i.commission_pct)}%`;
                         return (
                         <tr key={i.model_id} className="border-b border-accent/5">
-                          <td className="py-2 text-foreground">{i.model_name}</td>
+                          <td className="py-2 text-foreground">
+                            {onOpenModel ? (
+                              <button
+                                type="button"
+                                onClick={() => onOpenModel(i.model_id)}
+                                title="Model-Kartei öffnen"
+                                className="inline-flex items-center gap-1 hover:text-accent transition-colors"
+                              >
+                                {i.model_name}
+                                <ExternalLink className="h-3 w-3 opacity-60" />
+                              </button>
+                            ) : (
+                              i.model_name
+                            )}
+                          </td>
                           <td className="text-muted-foreground">{i.referral_source || "—"}</td>
                           <td className="text-right num">€{i.gross.toFixed(2)}</td>
                           <td className="text-right text-accent num">{pctLabel}</td>
