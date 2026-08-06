@@ -1112,10 +1112,22 @@ export default function ModelGroupsPanel({
                         <div className="flex items-center justify-between gap-2">
                           <div className="flex items-center gap-2 min-w-0">
                             <div className="min-w-0">
-                              <p className="text-sm font-medium text-foreground truncate">{m.name}</p>
-                              <p className="text-[10px] text-muted-foreground truncate">
-                                @{m.username || "—"} · Tag: {m.referrer_tag || "—"}
-                              </p>
+                              <button
+                                type="button"
+                                onClick={() => onOpenModel?.(m.id)}
+                                disabled={!onOpenModel}
+                                title="Model-Kartei öffnen (Zugangsdaten, Plattformen, Einstellungen)"
+                                className="group/name text-left min-w-0 max-w-full disabled:cursor-default"
+                              >
+                                <p className="text-sm font-medium text-foreground truncate inline-flex items-center gap-1 group-hover/name:text-accent transition-colors">
+                                  {m.name}
+                                  {onOpenModel && <ExternalLink className="h-3 w-3 opacity-0 group-hover/name:opacity-100 transition-opacity shrink-0" />}
+                                </p>
+                                <p className="text-[10px] text-muted-foreground truncate group-hover/name:text-accent/80 transition-colors">
+                                  @{m.username || "—"} · Tag: {m.referrer_tag || "—"}
+                                </p>
+                              </button>
+
                               {(() => {
                                 const plats = platformsByModel[m.id] || [];
                                 if (plats.length === 0) {
