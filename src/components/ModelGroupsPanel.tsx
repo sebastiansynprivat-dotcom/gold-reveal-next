@@ -231,6 +231,19 @@ export default function ModelGroupsPanel({
     }, delayMs);
   };
 
+  // A model needs a re-fetch when the last run errored (Unauthorized, wrong password,
+  // timeout, rate limit, …) or when no revenue data exists at all for the period.
+  const needsRefetch = (modelId: string) => {
+    const rev = revenueByModel[modelId];
+    if (!rev) return true;
+    if ((rev.errors || []).length > 0) return true;
+    return rev.fb == null && rev.ml == null && rev.br == null;
+  };
+
+  const failedCount = groupModels.filter(
+    (m) => (platformsByModel[m.id] || []).length > 0 && needsRefetch(m.id),
+  ).length;
+
   const fetchAllInGroup = async (mode: "all" | "failed" = "all") => {
     if (!selected || groupModels.length === 0) return;
     const ref = new Date(billingPeriod.from || new Date().toISOString().slice(0, 10));
