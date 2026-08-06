@@ -231,14 +231,19 @@ export default function ModelGroupsPanel({
     }, delayMs);
   };
 
-  const fetchAllInGroup = async () => {
+  const fetchAllInGroup = async (mode: "all" | "failed" = "all") => {
     if (!selected || groupModels.length === 0) return;
     const ref = new Date(billingPeriod.from || new Date().toISOString().slice(0, 10));
     const month = ref.getMonth() + 1;
     const year = ref.getFullYear();
-    const targets = groupModels.filter((m) => (platformsByModel[m.id] || []).length > 0);
+    let targets = groupModels.filter((m) => (platformsByModel[m.id] || []).length > 0);
+    if (mode === "failed") targets = targets.filter((m) => needsRefetch(m.id));
     if (targets.length === 0) {
-      toast.error("Keine Plattformen in dieser Gruppe hinterlegt.");
+      toast.error(
+        mode === "failed"
+          ? "Keine fehlerhaften bzw. fehlenden Abrufe in dieser Gruppe."
+          : "Keine Plattformen in dieser Gruppe hinterlegt.",
+      );
       return;
     }
     cancelFetchAllRef.current = false;
