@@ -28,6 +28,7 @@ import {
   Search,
   ExternalLink,
   KeyRound,
+  RefreshCw,
 
 
 } from "lucide-react";
@@ -231,14 +232,29 @@ export default function ModelGroupsPanel({
     }, delayMs);
   };
 
-  const fetchAllInGroup = async () => {
+  // A model needs a re-fetch when the last run errored (Unauthorized, wrong password,
+  // timeout, rate limit, …) or when no revenue data exists at all for the period.
+  const needsRefetch = (modelId: string) => {
+    const rev = revenueByModel[modelId];
+    if (!rev) return true;
+    if ((rev.errors || []).length > 0) return true;
+    return rev.fb == null && rev.ml == null && rev.br == null;
+  };
+
+
+  const fetchAllInGroup = async (mode: "all" | "failed" = "all") => {
     if (!selected || groupModels.length === 0) return;
     const ref = new Date(billingPeriod.from || new Date().toISOString().slice(0, 10));
     const month = ref.getMonth() + 1;
     const year = ref.getFullYear();
-    const targets = groupModels.filter((m) => (platformsByModel[m.id] || []).length > 0);
+    let targets = groupModels.filter((m) => (platformsByModel[m.id] || []).length > 0);
+    if (mode === "failed") targets = targets.filter((m) => needsRefetch(m.id));
     if (targets.length === 0) {
-      toast.error("Keine Plattformen in dieser Gruppe hinterlegt.");
+      toast.error(
+        mode === "failed"
+          ? "Keine fehlerhaften bzw. fehlenden Abrufe in dieser Gruppe."
+          : "Keine Plattformen in dieser Gruppe hinterlegt.",
+      );
       return;
     }
     cancelFetchAllRef.current = false;
@@ -1006,7 +1022,7 @@ export default function ModelGroupsPanel({
                   type="button"
                   size="sm"
                   disabled={!!fetchAllProgress || groupModels.length === 0}
-                  onClick={fetchAllInGroup}
+                  onClick={() => fetchAllInGroup("all")}
                   className="h-8 bg-gradient-to-r from-accent/90 to-accent text-accent-foreground hover:from-accent hover:to-accent/90 shadow-sm"
                   title="Umsätze für alle Models der Gruppe abrufen — max. 2 Abrufe/Min. (schont Backend-IP)"
                 >
@@ -1020,6 +1036,24 @@ export default function ModelGroupsPanel({
                     <><Download className="h-3.5 w-3.5 mr-1.5" /> Alle fetchen</>
                   )}
                 </Button>
+                {(() => {
+                  const failedCount = groupModels.filter(
+                    (m) => (platformsByModel[m.id] || []).length > 0 && needsRefetch(m.id),
+                  ).length;
+                  return (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={!!fetchAllProgress || failedCount === 0}
+                      onClick={() => fetchAllInGroup("failed")}
+                      className="h-8 border-destructive/40 text-destructive hover:bg-destructive/10"
+                      title="Nur Models erneut abrufen, bei denen der letzte Abruf fehlgeschlagen ist (Unauthorized, falsches Passwort, Timeout, Rate-Limit) oder noch keine Zahlen vorliegen"
+                    >
+                      <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Nur Fehler ({failedCount})
+                    </Button>
+                  );
+                })()}
                 {fetchAllProgress && (
                   <Button
                     type="button"
