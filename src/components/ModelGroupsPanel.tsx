@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { generateProviderInvoicePdf, downloadPdf } from "@/lib/providerInvoicePdf";
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
+import { fetchFxRate } from "@/lib/fx";
 
 type Group = {
   id: string;
