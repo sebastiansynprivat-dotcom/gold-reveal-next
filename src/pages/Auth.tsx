@@ -23,7 +23,7 @@ const inputClass =
 
 const Auth = () => {
   const { user, loading, signUp, signIn } = useAuth();
-  const { t } = useUILanguage();
+  const { t, lang } = useUILanguage();
   const [isSignUp, setIsSignUp] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -263,7 +263,7 @@ const Auth = () => {
   const handleConfirmSignUp = async () => {
     setShowTelegramConfirm(false);
     setSubmitting(true);
-    const { error } = await signUp(email, password, { group_name: groupName.trim(), name: `${firstName.trim()} ${lastName.trim()}`.trim() });
+    const { error } = await signUp(email, password, { group_name: groupName.trim(), name: `${firstName.trim()} ${lastName.trim()}`.trim(), language: lang });
     if (error) {
       setError(translateError(error.message, t));
     } else {
