@@ -240,9 +240,6 @@ export default function ModelGroupsPanel({
     return rev.fb == null && rev.ml == null && rev.br == null;
   };
 
-  const failedCount = groupModels.filter(
-    (m) => (platformsByModel[m.id] || []).length > 0 && needsRefetch(m.id),
-  ).length;
 
   const fetchAllInGroup = async (mode: "all" | "failed" = "all") => {
     if (!selected || groupModels.length === 0) return;
