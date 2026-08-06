@@ -609,7 +609,8 @@ export default function ModelGroupsPanel({
         const effectivePct = gross > 0 ? +(commission_amount / gross * 100).toFixed(2) : baseDefault;
         items.push({
           model_id: m.id,
-          model_name: m.name,
+          // Externe Darstellung immer über den Benutzernamen (echter Name nur in der Modelkartei)
+          model_name: m.username || m.name,
           referral_source: m.referrer_tag || m.referral_source || selected.referral_source || "",
           gross: +gross.toFixed(2),
           commission_pct: effectivePct,
