@@ -117,14 +117,17 @@ export function useUILanguage() {
           void supabase.from("profiles").update({ ui_language: dbLang }).eq("user_id", user.id);
         }
       } else {
-        // First sign-in with no language set yet → persist the detected one.
-        const detected = detectBrowserLang();
-        writeCached(detected);
+        // First sign-in with no language on the profile → hard-persist the locked
+        // language from this device (detected once at first visit).
+        const locked = readCached() ?? detectBrowserLang();
+        writeCached(locked);
+        setLangState(locked);
         void supabase
           .from("profiles")
-          .update({ language: detected, ui_language: detected })
+          .update({ language: locked, ui_language: locked })
           .eq("user_id", user.id);
       }
+
     })();
     return () => {
       cancelled = true;
