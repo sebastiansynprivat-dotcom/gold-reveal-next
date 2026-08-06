@@ -544,10 +544,11 @@ export default function Dashboard() {
       if (modelIds.length > 0) {
         const { data: models } = await supabase
           .from("models")
-          .select("id, name, model_language")
+          .select("id, name, username, model_language")
           .in("id", modelIds as string[]);
         (models || []).forEach((m: any) => {
-          metaById[m.id] = { name: m.name, lang: m.model_language };
+          // Chatter sehen immer den Benutzernamen, nie den echten Namen
+          metaById[m.id] = { name: m.username || m.name, lang: m.model_language };
         });
       }
       setAssignedAccounts(
