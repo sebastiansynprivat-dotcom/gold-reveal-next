@@ -263,7 +263,7 @@ const Auth = () => {
   const handleConfirmSignUp = async () => {
     setShowTelegramConfirm(false);
     setSubmitting(true);
-    const { error } = await signUp(email, password, { group_name: groupName.trim(), name: `${firstName.trim()} ${lastName.trim()}`.trim() });
+    const { error } = await signUp(email, password, { group_name: groupName.trim(), name: `${firstName.trim()} ${lastName.trim()}`.trim(), language: lang });
     if (error) {
       setError(translateError(error.message, t));
     } else {
