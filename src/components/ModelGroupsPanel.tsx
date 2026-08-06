@@ -646,20 +646,28 @@ export default function ModelGroupsPanel({
   };
 
   const copyBillingCSV = () => {
-    const header = "Model,Referral,Gross,Commission %,Commission Amount,Net Payout";
-    const rows = billingItems.map(
-      (i) =>
-        `${i.model_name},${i.referral_source},${i.gross.toFixed(2)},${i.commission_pct}%,${i.commission_amount.toFixed(2)},${i.net_payout.toFixed(2)}`
-    );
+    const header = "Model,Plattform,Referral,Gross,Commission %,Commission Amount,Net Payout";
+    const rows: string[] = [];
+    billingItems.forEach((i) => {
+      rows.push(
+        `${i.model_name},GESAMT,${i.referral_source},${i.gross.toFixed(2)},${i.commission_pct}%,${i.commission_amount.toFixed(2)},${i.net_payout.toFixed(2)}`
+      );
+      (i.breakdown || []).forEach((b) => {
+        rows.push(
+          `${i.model_name},${String(b.name).replace(/,/g, ";")},,${Number(b.gross).toFixed(2)},${b.pct}%,${Number(b.commission).toFixed(2)},${Number(b.commission).toFixed(2)}`
+        );
+      });
+    });
     const totals = billingItems.reduce(
       (a, i) => ({ g: a.g + i.gross, c: a.c + i.commission_amount, n: a.n + i.net_payout }),
       { g: 0, c: 0, n: 0 }
     );
     const csv =
-      [header, ...rows, `TOTAL,,${totals.g.toFixed(2)},,${totals.c.toFixed(2)},${totals.n.toFixed(2)}`].join("\n");
+      [header, ...rows, `TOTAL,,,${totals.g.toFixed(2)},,${totals.c.toFixed(2)},${totals.n.toFixed(2)}`].join("\n");
     navigator.clipboard.writeText(csv);
     toast.success("Abrechnung in Zwischenablage kopiert");
   };
+
 
   const downloadBillingSummaryPdf = async () => {
     if (!selected || billingItems.length === 0) return;
