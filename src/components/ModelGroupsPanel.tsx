@@ -1021,7 +1021,7 @@ export default function ModelGroupsPanel({
                   type="button"
                   size="sm"
                   disabled={!!fetchAllProgress || groupModels.length === 0}
-                  onClick={fetchAllInGroup}
+                  onClick={() => fetchAllInGroup("all")}
                   className="h-8 bg-gradient-to-r from-accent/90 to-accent text-accent-foreground hover:from-accent hover:to-accent/90 shadow-sm"
                   title="Umsätze für alle Models der Gruppe abrufen — max. 2 Abrufe/Min. (schont Backend-IP)"
                 >
@@ -1035,6 +1035,24 @@ export default function ModelGroupsPanel({
                     <><Download className="h-3.5 w-3.5 mr-1.5" /> Alle fetchen</>
                   )}
                 </Button>
+                {(() => {
+                  const failedCount = groupModels.filter(
+                    (m) => (platformsByModel[m.id] || []).length > 0 && needsRefetch(m.id),
+                  ).length;
+                  return (
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={!!fetchAllProgress || failedCount === 0}
+                      onClick={() => fetchAllInGroup("failed")}
+                      className="h-8 border-destructive/40 text-destructive hover:bg-destructive/10"
+                      title="Nur Models erneut abrufen, bei denen der letzte Abruf fehlgeschlagen ist (Unauthorized, falsches Passwort, Timeout, Rate-Limit) oder noch keine Zahlen vorliegen"
+                    >
+                      <RefreshCw className="h-3.5 w-3.5 mr-1.5" /> Nur Fehler ({failedCount})
+                    </Button>
+                  );
+                })()}
                 {fetchAllProgress && (
                   <Button
                     type="button"
