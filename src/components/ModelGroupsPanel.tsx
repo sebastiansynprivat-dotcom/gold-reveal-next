@@ -1582,6 +1582,13 @@ export default function ModelGroupsPanel({
             )}
           </DialogContent>
         </Dialog>
+
+        <ModelPasswordDialog
+          open={!!pwModel}
+          onOpenChange={(v) => !v && setPwModel(null)}
+          modelId={pwModel?.id ?? null}
+          modelLabel={pwModel?.label}
+        />
       </DialogContent>
     </Dialog>
   );
