@@ -27,12 +27,20 @@ import {
   Download,
   Search,
   ExternalLink,
+  KeyRound,
 
 
 } from "lucide-react";
 import { generateProviderInvoicePdf, downloadPdf } from "@/lib/providerInvoicePdf";
 import { format, subMonths, startOfMonth, endOfMonth } from "date-fns";
 import { fetchFxRate } from "@/lib/fx";
+import ModelPasswordDialog from "@/components/admin/ModelPasswordDialog";
+
+/** Deutsche Währungsformatierung: 1.234,56 € / $1,234.56 */
+const money = (v: number, cur: "EUR" | "USD" = "EUR") =>
+  cur === "USD"
+    ? `$${v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    : `${v.toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
 
 type Group = {
   id: string;
@@ -123,6 +131,7 @@ export default function ModelGroupsPanel({
   const [modelSearch, setModelSearch] = useState("");
   const [onlyMissingFbPayout, setOnlyMissingFbPayout] = useState(false);
   const { playCoinSound } = useSoundEffects();
+  const [pwModel, setPwModel] = useState<{ id: string; label: string } | null>(null);
 
 
 
@@ -1112,14 +1121,13 @@ export default function ModelGroupsPanel({
                             <div className="min-w-0">
                               <button
                                 type="button"
-                                onClick={() => onOpenModel?.(m.id)}
-                                disabled={!onOpenModel}
-                                title="Model-Kartei öffnen (Zugangsdaten, Plattformen, Einstellungen)"
+                                onClick={() => setPwModel({ id: m.id, label: m.username ? `@${m.username}` : m.name })}
+                                title="Passwörter ansehen / ändern"
                                 className="group/name text-left min-w-0 max-w-full disabled:cursor-default"
                               >
                                 <p className="text-sm font-medium text-foreground truncate inline-flex items-center gap-1 group-hover/name:text-accent transition-colors">
                                   {m.name}
-                                  {onOpenModel && <ExternalLink className="h-3 w-3 opacity-0 group-hover/name:opacity-100 transition-opacity shrink-0" />}
+                                  <KeyRound className="h-3 w-3 opacity-0 group-hover/name:opacity-100 transition-opacity shrink-0" />
                                 </p>
                                 <p className="text-[10px] text-muted-foreground truncate group-hover/name:text-accent/80 transition-colors">
                                   @{m.username || "—"} · Tag: {m.referrer_tag || "—"}
@@ -1189,7 +1197,7 @@ export default function ModelGroupsPanel({
                             );
                           }
                           const fmt = (v: number | null, suffix = "€") =>
-                            v == null ? "—" : `${suffix === "$" ? "$" : ""}${v.toLocaleString("de-DE", { maximumFractionDigits: 2 })}${suffix === "€" ? " €" : ""}`;
+                            v == null ? "—" : money(v, suffix === "$" ? "USD" : "EUR");
                           const total = (rev.fb ?? 0) + (rev.ml ?? 0) + (rev.br ?? 0);
                           return (
                             <div className="space-y-1.5">
@@ -1211,7 +1219,7 @@ export default function ModelGroupsPanel({
                                   </Badge>
                                 )}
                                 <span className="ml-auto text-[10px] text-accent font-semibold">
-                                  Σ {total.toLocaleString("de-DE", { maximumFractionDigits: 2 })}
+                                  Σ {money(total)}
                                 </span>
                               </div>
 
@@ -1482,26 +1490,32 @@ export default function ModelGroupsPanel({
                         return (
                         <tr key={i.model_id} className="border-b border-accent/5">
                           <td className="py-2 text-foreground">
-                            {onOpenModel ? (
+                            <button
+                              type="button"
+                              onClick={() => setPwModel({ id: i.model_id, label: i.model_name })}
+                              title="Passwörter ansehen / ändern"
+                              className="inline-flex items-center gap-1 hover:text-accent transition-colors"
+                            >
+                              {i.model_name}
+                              <KeyRound className="h-3 w-3 opacity-60" />
+                            </button>
+                            {onOpenModel && (
                               <button
                                 type="button"
                                 onClick={() => onOpenModel(i.model_id)}
                                 title="Model-Kartei öffnen"
-                                className="inline-flex items-center gap-1 hover:text-accent transition-colors"
+                                className="ml-1 text-muted-foreground hover:text-accent transition-colors"
                               >
-                                {i.model_name}
-                                <ExternalLink className="h-3 w-3 opacity-60" />
+                                <ExternalLink className="h-3 w-3" />
                               </button>
-                            ) : (
-                              i.model_name
                             )}
                           </td>
                           <td className="text-muted-foreground">{i.referral_source || "—"}</td>
-                          <td className="text-right num">€{i.gross.toFixed(2)}</td>
+                          <td className="text-right num">{money(i.gross)}</td>
                           <td className="text-right text-accent num">{pctLabel}</td>
-                          <td className="text-right num">€{i.commission_amount.toFixed(2)}</td>
+                          <td className="text-right num">{money(i.commission_amount)}</td>
                           <td className="text-right num font-semibold text-accent">
-                            €{i.net_payout.toFixed(2)}
+                            {money(i.net_payout)}
                           </td>
                           <td className="text-right pl-2">
                             <Button
@@ -1528,14 +1542,14 @@ export default function ModelGroupsPanel({
                           Total
                         </td>
                         <td className="text-right num font-semibold">
-                          €{billingItems.reduce((s, i) => s + i.gross, 0).toFixed(2)}
+                          {money(billingItems.reduce((s, i) => s + i.gross, 0))}
                         </td>
                         <td></td>
                         <td className="text-right num font-semibold">
-                          €{billingItems.reduce((s, i) => s + i.commission_amount, 0).toFixed(2)}
+                          {money(billingItems.reduce((s, i) => s + i.commission_amount, 0))}
                         </td>
                         <td className="text-right num font-bold text-accent">
-                          €{billingItems.reduce((s, i) => s + i.net_payout, 0).toFixed(2)}
+                          {money(billingItems.reduce((s, i) => s + i.net_payout, 0))}
                         </td>
                       </tr>
                     </tfoot>
