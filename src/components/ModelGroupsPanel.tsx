@@ -525,15 +525,10 @@ export default function ModelGroupsPanel({
     setBillingLoading(true);
     setBillingOpen(true);
     try {
-      // 4Based revenue is reported in USD → convert to EUR for billing
-      let usdToEur = 0.92;
-      try {
-        const r = await fetch("https://api.frankfurter.app/latest?from=USD&to=EUR");
-        const j = await r.json();
-        if (j?.rates?.EUR) usdToEur = Number(j.rates.EUR);
-      } catch {
-        // keep fallback
-      }
+      // 4Based revenue is reported in USD → convert to EUR for billing.
+      // Uses the 30-day average rate (monthly billing period), falls back to spot.
+      const fxAvg = await fetchFxRate("USD", "EUR");
+      const usdToEur = fxAvg && fxAvg > 0 ? fxAvg : 0.92;
       // Period → month/year used to look up fetched revenue (payout_revenue)
       const ref = new Date(billingPeriod.from || new Date().toISOString().slice(0, 10));
       const periodMonth = ref.getMonth() + 1;
