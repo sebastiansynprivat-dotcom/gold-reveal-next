@@ -68,7 +68,7 @@ serve(async (req) => {
         status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const modelDisplay = (model.name || model.username || "").toString().trim() || "dein Model";
+    const modelDisplay = (model.username || model.name || "").toString().trim() || "dein Model";
 
     // 4. Insert content_drops row
     const { data: drop, error: dropErr } = await admin
