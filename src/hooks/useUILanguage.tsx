@@ -10,16 +10,31 @@ function isLang(value: unknown): value is Lang {
   return value === "de" || value === "en";
 }
 
+// Only the DACH region gets German. Everything else (Spanish, French, African
+// languages, unknown locales, …) falls back to English.
+const DACH_REGIONS = ["DE", "AT", "CH", "LI"];
+
 function detectBrowserLang(): Lang {
-  if (typeof navigator === "undefined") return "de";
-  const langs = [navigator.language, ...(navigator.languages || [])];
-  for (const l of langs) {
-    if (!l) continue;
-    const code = l.toLowerCase();
-    if (code.startsWith("de")) return "de";
-    if (code.startsWith("en")) return "en";
+  if (typeof navigator === "undefined") return "en";
+  const langs = [navigator.language, ...(navigator.languages || [])].filter(Boolean) as string[];
+  for (const raw of langs) {
+    const code = raw.toLowerCase();
+    if (!code.startsWith("de")) continue;
+    const region = raw.split(/[-_]/)[1]?.toUpperCase();
+    // "de" without region → assume DACH; "de-DE/AT/CH/LI" → German; "de-XX" → English.
+    if (!region || DACH_REGIONS.includes(region)) return "de";
   }
-  return "de";
+  // Timezone as a secondary DACH signal (e.g. locale set to English on a DACH phone
+  // is intentional → stays English, so we only use TZ when no locale is exposed).
+  if (langs.length === 0) {
+    try {
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+      if (/^Europe\/(Berlin|Vienna|Zurich|Busingen|Vaduz)$/.test(tz)) return "de";
+    } catch {
+      /* noop */
+    }
+  }
+  return "en";
 }
 
 function readCached(): Lang | null {
@@ -39,9 +54,16 @@ function writeCached(l: Lang) {
   }
 }
 
+// Detect exactly once, then lock the result in localStorage forever. Only an
+// explicit change (setLang) or a language stored on the profile overrides it.
 function initialLang(): Lang {
-  return readCached() ?? detectBrowserLang();
+  const cached = readCached();
+  if (cached) return cached;
+  const detected = detectBrowserLang();
+  writeCached(detected);
+  return detected;
 }
+
 
 export function useUILanguage() {
   const { user } = useAuth();
