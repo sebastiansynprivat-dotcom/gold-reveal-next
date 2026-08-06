@@ -708,7 +708,9 @@ export default function ModelGroupsPanel({
       doc.setFillColor(...bg); doc.rect(m, y - 4, pw - 2 * m, 6, "F");
       const uniquePcts = Array.from(new Set((i.breakdown || []).map((b) => Number(b.pct)))).filter((n) => !Number.isNaN(n));
       const pctLabel = uniquePcts.length > 0 ? uniquePcts.map((p) => `${p}%`).join(" / ") : `${Math.round(i.commission_pct)}%`;
+      doc.setFont("helvetica", "bold");
       doc.setTextColor(...white); doc.text(i.model_name.slice(0, 30), m + 2, y);
+      doc.setFont("helvetica", "normal");
       doc.setTextColor(...muted); doc.text((i.referral_source || "—").slice(0, 20), m + 55, y);
       doc.setTextColor(...white); doc.text(`€${i.gross.toFixed(2)}`, m + 95, y, { align: "right" });
       doc.setTextColor(...goldLight); doc.text(pctLabel, m + 118, y, { align: "right" });
@@ -717,7 +719,26 @@ export default function ModelGroupsPanel({
       doc.text(`€${i.net_payout.toFixed(2)}`, rCol - 2, y, { align: "right" });
       doc.setFont("helvetica", "normal");
       y += 6;
+
+      // Plattform-Aufschlüsselung pro Model
+      (i.breakdown || []).forEach((b) => {
+        if (y > ph - 30) { doc.addPage(); doc.setFillColor(...black); doc.rect(0, 0, pw, ph, "F"); y = 18; }
+        doc.setFillColor(14, 14, 14); doc.rect(m, y - 4, pw - 2 * m, 5.5, "F");
+        doc.setFontSize(7);
+        doc.setTextColor(...muted);
+        doc.text(`– ${String(b.name).slice(0, 40)}`, m + 6, y);
+        doc.text(`€${Number(b.gross).toFixed(2)}`, m + 95, y, { align: "right" });
+        doc.setTextColor(...goldLight);
+        doc.text(`${b.pct}%`, m + 118, y, { align: "right" });
+        doc.setTextColor(...muted);
+        doc.text(`€${Number(b.commission).toFixed(2)}`, m + 150, y, { align: "right" });
+        doc.text(`€${Number(b.commission).toFixed(2)}`, rCol - 2, y, { align: "right" });
+        doc.setFontSize(8);
+        y += 5.5;
+      });
+      if ((i.breakdown || []).length > 0) y += 1.5;
     });
+
 
     const totals = billingItems.reduce(
       (a, i) => ({ g: a.g + i.gross, c: a.c + i.commission_amount, n: a.n + i.net_payout }),
