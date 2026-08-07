@@ -271,6 +271,17 @@ export default function CreditNoteForm({
   const [servicePeriodStart, setServicePeriodStart] = useState(initialInvoiceServicePeriodStart || format(startOfMonth(lastMonth), "yyyy-MM-dd"));
   const [servicePeriodEnd, setServicePeriodEnd] = useState(initialInvoiceServicePeriodEnd || format(endOfMonth(lastMonth), "yyyy-MM-dd"));
 
+  // Keep the service period in sync when the parent recomputes it (e.g. after
+  // additional billing months are selected). Manual edits inside the form are
+  // pushed up to the parent, so props and state converge instead of fighting.
+  useEffect(() => {
+    if (initialInvoiceServicePeriodStart) setServicePeriodStart(initialInvoiceServicePeriodStart);
+  }, [initialInvoiceServicePeriodStart]);
+  useEffect(() => {
+    if (initialInvoiceServicePeriodEnd) setServicePeriodEnd(initialInvoiceServicePeriodEnd);
+  }, [initialInvoiceServicePeriodEnd]);
+
+
   // Line item
   const [description, setDescription] = useState(() => {
     const s = (initialInvoiceDescription || saved.description || "").trim();
