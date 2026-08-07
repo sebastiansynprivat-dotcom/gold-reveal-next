@@ -4516,7 +4516,8 @@ export default function ModelDashboardTab() {
                   invoice_tx_hash: patch.invoiceTxHash,
                   invoice_exchange_rate: patch.invoiceExchangeRate,
                   invoice_receiver_wallet: patch.invoiceReceiverWallet,
-                } as any))}
+                  } as any));
+                }}
                 cryptoAddress={modelForm.crypto_address || ""}
                 revenuePercentage={modelForm.revenue_percentage || 0}
                 currency={modelForm.currency || "EUR"}
