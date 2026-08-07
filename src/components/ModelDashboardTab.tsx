@@ -4489,7 +4489,21 @@ export default function ModelDashboardTab() {
                   provider_is_business: patch.providerIsBusiness,
                   provider_vat_id: patch.providerVatId,
                 } as any))}
-                onInvoiceDataChange={(patch) => setModelForm((prev) => ({
+                onInvoiceDataChange={(patch) => {
+                  const auto = lastAutoPeriodRef.current;
+                  if (
+                    auto &&
+                    patch.invoiceServicePeriodStart &&
+                    patch.invoiceServicePeriodEnd &&
+                    (patch.invoiceServicePeriodStart !== auto.start || patch.invoiceServicePeriodEnd !== auto.end)
+                  ) {
+                    periodManualRef.current = true;
+                    lastAutoPeriodRef.current = {
+                      start: patch.invoiceServicePeriodStart,
+                      end: patch.invoiceServicePeriodEnd,
+                    };
+                  }
+                  setModelForm((prev) => ({
                   ...prev,
                   invoice_description: patch.invoiceDescription,
                   invoice_net_amount: patch.invoiceNetAmount,
