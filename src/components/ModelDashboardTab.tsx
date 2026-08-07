@@ -1314,37 +1314,35 @@ export default function ModelDashboardTab() {
     setPayoutRevenueForMonth({ fourbased: fbTotal, maloum: mlTotal, brezzels: brTotal });
     setShareCalculated(true);
 
-    // Service period spans from earliest to latest selected month (main + ALL
-    // extras that the user added, regardless of whether their revenue has been
-    // fetched yet — the user's month selection is what defines the period).
-    // Manual edits to the period are preserved: we only overwrite when the
-    // current form values match the last value we auto-set.
+    setModelForm((prev: any) => ({
+      ...prev,
+      invoice_net_amount: calculated,
+      invoice_description: prev.invoice_description || "Creator revenue share for digital content",
+      invoice_currency: prev.currency || "EUR",
+      invoice_payment_date: todayYmd(),
+    }));
+  }, [fetchedPayoutRevenue, extraBillings, modelForm.revenue_percentage, modelForm.revenue_percentage_fourbased, modelForm.revenue_percentage_maloum, modelForm.revenue_percentage_brezzels, customPlatforms, convertToBase, fetchYear, fetchMonth]);
+
+  // ─── Service period spans earliest → latest selected month (main + all extras) ───
+  // Runs whenever the month selection changes, independent of fetched revenue.
+  // A manual edit (see periodManualRef) is preserved until the selection changes again.
+  useEffect(() => {
+    if (!selectedModelId) return;
     const period = servicePeriodForMonths([
       { year: fetchYear, month: fetchMonth },
       ...extraBillings.map((e) => ({ year: e.year, month: e.month })),
     ]);
-    setModelForm((prev: any) => {
-      const prevStart = prev.invoice_service_period_start || null;
-      const prevEnd = prev.invoice_service_period_end || null;
-      const auto = lastAutoPeriodRef.current;
-      const userEdited =
-        auto !== null &&
-        (prevStart !== auto.start || prevEnd !== auto.end) &&
-        prevStart !== null && prevEnd !== null;
-      const nextStart = userEdited ? prevStart : period.start;
-      const nextEnd = userEdited ? prevEnd : period.end;
-      if (!userEdited) lastAutoPeriodRef.current = period;
-      return {
-        ...prev,
-        invoice_net_amount: calculated,
-        invoice_description: prev.invoice_description || "Creator revenue share for digital content",
-        invoice_currency: prev.currency || "EUR",
-        invoice_service_period_start: nextStart,
-        invoice_service_period_end: nextEnd,
-        invoice_payment_date: todayYmd(),
-      };
-    });
-  }, [fetchedPayoutRevenue, extraBillings, modelForm.revenue_percentage, modelForm.revenue_percentage_fourbased, modelForm.revenue_percentage_maloum, modelForm.revenue_percentage_brezzels, customPlatforms, convertToBase, fetchYear, fetchMonth]);
+    const auto = lastAutoPeriodRef.current;
+    if (auto && auto.start === period.start && auto.end === period.end) return;
+    lastAutoPeriodRef.current = period;
+    periodManualRef.current = false;
+    setModelForm((prev: any) => ({
+      ...prev,
+      invoice_service_period_start: period.start,
+      invoice_service_period_end: period.end,
+    }));
+  }, [selectedModelId, fetchYear, fetchMonth, extraBillings]);
+
 
 
   // ─── Per-model platform revenue (for selected model) — converted to base currency ───
