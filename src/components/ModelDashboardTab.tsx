@@ -1046,20 +1046,35 @@ export default function ModelDashboardTab() {
 
 
   // ─── Load selected model data into form ───
+  const loadedModelIdRef = useRef<string | null>(null);
   useEffect(() => {
     if (!selectedModelId) return;
     const model = models.find((m) => m.id === selectedModelId);
     if (model) {
-      const period = servicePeriodForMonths([{ year: fetchYear, month: fetchMonth }]);
-      lastAutoPeriodRef.current = period;
-      setModelForm({
+      const isNewModel = loadedModelIdRef.current !== selectedModelId;
+      loadedModelIdRef.current = selectedModelId;
+      const period = servicePeriodForMonths([
+        { year: fetchYear, month: fetchMonth },
+        ...(isNewModel ? [] : extraBillings.map((e) => ({ year: e.year, month: e.month }))),
+      ]);
+      if (isNewModel) {
+        lastAutoPeriodRef.current = period;
+        periodManualRef.current = false;
+      }
+      setModelForm((prev: any) => ({
         ...model,
         invoice_net_amount: 0,
         invoice_currency: model.currency || "EUR",
         invoice_payment_date: todayYmd(),
-        invoice_service_period_start: period.start,
-        invoice_service_period_end: period.end,
-      } as any);
+        // Keep an already-active (auto-spanned or manually edited) period for the
+        // same model — only a model switch resets it.
+        invoice_service_period_start: isNewModel
+          ? period.start
+          : prev.invoice_service_period_start || period.start,
+        invoice_service_period_end: isNewModel
+          ? period.end
+          : prev.invoice_service_period_end || period.end,
+      } as any));
       loadModelAccounts(selectedModelId);
     }
     // Keep this scoped to model changes; month changes are handled by the invoice reset effect above.
