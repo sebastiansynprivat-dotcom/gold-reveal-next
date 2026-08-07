@@ -1022,6 +1022,8 @@ export default function ModelDashboardTab() {
   // the current form values were auto-computed (safe to overwrite) or manually
   // edited by the user (must be preserved).
   const lastAutoPeriodRef = useRef<{ start: string; end: string } | null>(null);
+  // True once the user manually changed the service period for the current selection.
+  const periodManualRef = useRef(false);
   useEffect(() => {
     if (!selectedModelId) return;
     const sig = `${selectedModelId}|${fetchYear}-${fetchMonth}`;
@@ -1044,20 +1046,35 @@ export default function ModelDashboardTab() {
 
 
   // ─── Load selected model data into form ───
+  const loadedModelIdRef = useRef<string | null>(null);
   useEffect(() => {
     if (!selectedModelId) return;
     const model = models.find((m) => m.id === selectedModelId);
     if (model) {
-      const period = servicePeriodForMonths([{ year: fetchYear, month: fetchMonth }]);
-      lastAutoPeriodRef.current = period;
-      setModelForm({
+      const isNewModel = loadedModelIdRef.current !== selectedModelId;
+      loadedModelIdRef.current = selectedModelId;
+      const period = servicePeriodForMonths([
+        { year: fetchYear, month: fetchMonth },
+        ...(isNewModel ? [] : extraBillings.map((e) => ({ year: e.year, month: e.month }))),
+      ]);
+      if (isNewModel) {
+        lastAutoPeriodRef.current = period;
+        periodManualRef.current = false;
+      }
+      setModelForm((prev: any) => ({
         ...model,
         invoice_net_amount: 0,
         invoice_currency: model.currency || "EUR",
         invoice_payment_date: todayYmd(),
-        invoice_service_period_start: period.start,
-        invoice_service_period_end: period.end,
-      } as any);
+        // Keep an already-active (auto-spanned or manually edited) period for the
+        // same model — only a model switch resets it.
+        invoice_service_period_start: isNewModel
+          ? period.start
+          : prev.invoice_service_period_start || period.start,
+        invoice_service_period_end: isNewModel
+          ? period.end
+          : prev.invoice_service_period_end || period.end,
+      } as any));
       loadModelAccounts(selectedModelId);
     }
     // Keep this scoped to model changes; month changes are handled by the invoice reset effect above.
@@ -1314,37 +1331,35 @@ export default function ModelDashboardTab() {
     setPayoutRevenueForMonth({ fourbased: fbTotal, maloum: mlTotal, brezzels: brTotal });
     setShareCalculated(true);
 
-    // Service period spans from earliest to latest selected month (main + ALL
-    // extras that the user added, regardless of whether their revenue has been
-    // fetched yet — the user's month selection is what defines the period).
-    // Manual edits to the period are preserved: we only overwrite when the
-    // current form values match the last value we auto-set.
+    setModelForm((prev: any) => ({
+      ...prev,
+      invoice_net_amount: calculated,
+      invoice_description: prev.invoice_description || "Creator revenue share for digital content",
+      invoice_currency: prev.currency || "EUR",
+      invoice_payment_date: todayYmd(),
+    }));
+  }, [fetchedPayoutRevenue, extraBillings, modelForm.revenue_percentage, modelForm.revenue_percentage_fourbased, modelForm.revenue_percentage_maloum, modelForm.revenue_percentage_brezzels, customPlatforms, convertToBase, fetchYear, fetchMonth]);
+
+  // ─── Service period spans earliest → latest selected month (main + all extras) ───
+  // Runs whenever the month selection changes, independent of fetched revenue.
+  // A manual edit (see periodManualRef) is preserved until the selection changes again.
+  useEffect(() => {
+    if (!selectedModelId) return;
     const period = servicePeriodForMonths([
       { year: fetchYear, month: fetchMonth },
       ...extraBillings.map((e) => ({ year: e.year, month: e.month })),
     ]);
-    setModelForm((prev: any) => {
-      const prevStart = prev.invoice_service_period_start || null;
-      const prevEnd = prev.invoice_service_period_end || null;
-      const auto = lastAutoPeriodRef.current;
-      const userEdited =
-        auto !== null &&
-        (prevStart !== auto.start || prevEnd !== auto.end) &&
-        prevStart !== null && prevEnd !== null;
-      const nextStart = userEdited ? prevStart : period.start;
-      const nextEnd = userEdited ? prevEnd : period.end;
-      if (!userEdited) lastAutoPeriodRef.current = period;
-      return {
-        ...prev,
-        invoice_net_amount: calculated,
-        invoice_description: prev.invoice_description || "Creator revenue share for digital content",
-        invoice_currency: prev.currency || "EUR",
-        invoice_service_period_start: nextStart,
-        invoice_service_period_end: nextEnd,
-        invoice_payment_date: todayYmd(),
-      };
-    });
-  }, [fetchedPayoutRevenue, extraBillings, modelForm.revenue_percentage, modelForm.revenue_percentage_fourbased, modelForm.revenue_percentage_maloum, modelForm.revenue_percentage_brezzels, customPlatforms, convertToBase, fetchYear, fetchMonth]);
+    const auto = lastAutoPeriodRef.current;
+    if (auto && auto.start === period.start && auto.end === period.end) return;
+    lastAutoPeriodRef.current = period;
+    periodManualRef.current = false;
+    setModelForm((prev: any) => ({
+      ...prev,
+      invoice_service_period_start: period.start,
+      invoice_service_period_end: period.end,
+    }));
+  }, [selectedModelId, fetchYear, fetchMonth, extraBillings]);
+
 
 
   // ─── Per-model platform revenue (for selected model) — converted to base currency ───
@@ -4489,7 +4504,21 @@ export default function ModelDashboardTab() {
                   provider_is_business: patch.providerIsBusiness,
                   provider_vat_id: patch.providerVatId,
                 } as any))}
-                onInvoiceDataChange={(patch) => setModelForm((prev) => ({
+                onInvoiceDataChange={(patch) => {
+                  const auto = lastAutoPeriodRef.current;
+                  if (
+                    auto &&
+                    patch.invoiceServicePeriodStart &&
+                    patch.invoiceServicePeriodEnd &&
+                    (patch.invoiceServicePeriodStart !== auto.start || patch.invoiceServicePeriodEnd !== auto.end)
+                  ) {
+                    periodManualRef.current = true;
+                    lastAutoPeriodRef.current = {
+                      start: patch.invoiceServicePeriodStart,
+                      end: patch.invoiceServicePeriodEnd,
+                    };
+                  }
+                  setModelForm((prev) => ({
                   ...prev,
                   invoice_description: patch.invoiceDescription,
                   invoice_net_amount: patch.invoiceNetAmount,
@@ -4502,7 +4531,8 @@ export default function ModelDashboardTab() {
                   invoice_tx_hash: patch.invoiceTxHash,
                   invoice_exchange_rate: patch.invoiceExchangeRate,
                   invoice_receiver_wallet: patch.invoiceReceiverWallet,
-                } as any))}
+                  } as any));
+                }}
                 cryptoAddress={modelForm.crypto_address || ""}
                 revenuePercentage={modelForm.revenue_percentage || 0}
                 currency={modelForm.currency || "EUR"}
