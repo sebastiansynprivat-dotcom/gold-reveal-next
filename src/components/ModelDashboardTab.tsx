@@ -1022,6 +1022,8 @@ export default function ModelDashboardTab() {
   // the current form values were auto-computed (safe to overwrite) or manually
   // edited by the user (must be preserved).
   const lastAutoPeriodRef = useRef<{ start: string; end: string } | null>(null);
+  // True once the user manually changed the service period for the current selection.
+  const periodManualRef = useRef(false);
   useEffect(() => {
     if (!selectedModelId) return;
     const sig = `${selectedModelId}|${fetchYear}-${fetchMonth}`;
