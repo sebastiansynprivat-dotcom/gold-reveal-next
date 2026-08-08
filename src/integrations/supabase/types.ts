@@ -524,6 +524,7 @@ export type Database = {
       }
       brezzels_comment_assignments: {
         Row: {
+          account_id: string | null
           assigned_date: string
           completed: boolean
           completed_at: string | null
@@ -533,6 +534,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          account_id?: string | null
           assigned_date?: string
           completed?: boolean
           completed_at?: string | null
@@ -542,6 +544,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          account_id?: string | null
           assigned_date?: string
           completed?: boolean
           completed_at?: string | null
@@ -551,6 +554,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "brezzels_comment_assignments_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "brezzels_comment_assignments_target_id_fkey"
             columns: ["target_id"]
@@ -3399,6 +3409,17 @@ export type Database = {
         Returns: {
           completed: boolean
           id: string
+          url: string
+        }[]
+      }
+      get_brezzels_comment_targets_by_account: {
+        Args: { p_count?: number }
+        Returns: {
+          account_id: string
+          account_label: string
+          completed: boolean
+          model_name: string
+          target_id: string
           url: string
         }[]
       }
