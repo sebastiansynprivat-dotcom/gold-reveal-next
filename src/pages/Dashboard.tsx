@@ -459,6 +459,8 @@ export default function Dashboard() {
 
 
     return () => {
+      document.removeEventListener("visibilitychange", handleVisible);
+      window.removeEventListener("online", handleOnline);
       supabase.removeChannel(channel);
     };
   }, [user, loadMyRequests]);
