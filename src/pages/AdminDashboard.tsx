@@ -3203,19 +3203,41 @@ export default function AdminDashboard() {
       if (ids.size > 0) {
         // NOTE: never filter with .in(request_id, [hundreds of uuids]) — the resulting
         // GET URL exceeds the gateway limit (HTTP 400) and silently drops ALL messages.
-        const [{ data: msgs, error: msgsErr }, { data: fups }] = await Promise.all([
-          supabase
-            .from("model_request_messages")
-            .select("*")
-            .order("created_at", { ascending: true })
-            .range(0, 49999),
-          (supabase as any)
-            .from("model_request_followups")
-            .select("id, request_id, admin_id, sent_at, note")
-            .order("sent_at", { ascending: true })
-            .range(0, 49999),
+        // NOTE 2: PostgREST caps every response at 1000 rows regardless of .range(),
+        // so we must page through explicitly — otherwise the NEWEST comments vanish.
+        const fetchAllPaged = async (
+          table: string,
+          select: string,
+          orderCol: string,
+        ): Promise<{ rows: any[]; error: any }> => {
+          const PAGE = 1000;
+          const rows: any[] = [];
+          for (let page = 0; page < 200; page++) {
+            const from = page * PAGE;
+            const { data: chunk, error } = await (supabase as any)
+              .from(table)
+              .select(select)
+              .order(orderCol, { ascending: true })
+              .range(from, from + PAGE - 1);
+            if (error) return { rows, error };
+            const list = chunk || [];
+            rows.push(...list);
+            if (list.length < PAGE) break;
+          }
+          return { rows, error: null };
+        };
+
+        const [msgsRes, fupsRes] = await Promise.all([
+          fetchAllPaged("model_request_messages", "*", "created_at"),
+          fetchAllPaged("model_request_followups", "id, request_id, admin_id, sent_at, note", "sent_at"),
         ]);
-        if (msgsErr) console.error("load request messages failed:", msgsErr);
+        const msgs = msgsRes.rows;
+        const msgsErr = msgsRes.error;
+        const fups = fupsRes.rows;
+        if (msgsErr) {
+          console.error("load request messages failed:", msgsErr);
+          toast.error("Kommentare konnten nicht vollständig geladen werden – bitte Seite neu laden.");
+        }
         (msgs || []).forEach((m: any) => {
           if (!ids.has(String(m.request_id))) return;
           (msgsByReq[m.request_id] ||= []).push(m);
@@ -3225,6 +3247,7 @@ export default function AdminDashboard() {
           (followupsByReq[f.request_id] ||= []).push(f);
         });
       }
+
 
       const normalizeAgencyVal = (a: any) => {
         const v = String(a || "").toLowerCase();
@@ -7783,10 +7806,16 @@ export default function AdminDashboard() {
                                                       } as any)
                                                       .select()
                                                       .single();
-                                                    if (error) {
-                                                      toast.error("Fehler beim Speichern");
+                                                    if (error || !ins) {
+                                                      const offline = typeof navigator !== "undefined" && navigator.onLine === false;
+                                                      const msg = offline
+                                                        ? "Keine Internetverbindung – Kommentar wurde NICHT gespeichert. Text bleibt erhalten, bitte erneut senden."
+                                                        : `Kommentar wurde NICHT gespeichert: ${error?.message || "Unbekannter Fehler"}. Text bleibt erhalten – ggf. Seite neu laden (neue Version?) und erneut senden.`;
+                                                      toast.error(msg, { duration: 12000 });
+                                                      console.error("[AdminComment] insert failed", error);
                                                       return;
                                                     }
+
                                                     markReqSeen(req);
 
                                                     const protectedStatuses = ["accepted", "in_progress", "completed", "rejected"];
