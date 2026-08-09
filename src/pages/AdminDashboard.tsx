@@ -7806,10 +7806,16 @@ export default function AdminDashboard() {
                                                       } as any)
                                                       .select()
                                                       .single();
-                                                    if (error) {
-                                                      toast.error("Fehler beim Speichern");
+                                                    if (error || !ins) {
+                                                      const offline = typeof navigator !== "undefined" && navigator.onLine === false;
+                                                      const msg = offline
+                                                        ? "Keine Internetverbindung – Kommentar wurde NICHT gespeichert. Text bleibt erhalten, bitte erneut senden."
+                                                        : `Kommentar wurde NICHT gespeichert: ${error?.message || "Unbekannter Fehler"}. Text bleibt erhalten – ggf. Seite neu laden (neue Version?) und erneut senden.`;
+                                                      toast.error(msg, { duration: 12000 });
+                                                      console.error("[AdminComment] insert failed", error);
                                                       return;
                                                     }
+
                                                     markReqSeen(req);
 
                                                     const protectedStatuses = ["accepted", "in_progress", "completed", "rejected"];
