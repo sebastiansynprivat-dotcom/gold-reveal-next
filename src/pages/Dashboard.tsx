@@ -353,18 +353,47 @@ export default function Dashboard() {
       let msgsByReq: Record<string, any[]> = {};
       let fupsByReq: Record<string, any[]> = {};
       if (ids.length > 0) {
-        const [{ data: msgs }, { data: fups }] = await Promise.all([
-          supabase
-            .from("model_request_messages")
-            .select("*")
-            .in("request_id", ids)
-            .order("created_at", { ascending: true }),
-          supabase
-            .from("model_request_followups")
-            .select("id, request_id, sent_at, note")
-            .in("request_id", ids)
-            .order("sent_at", { ascending: true }),
+        const fetchForRequestIds = async (
+          table: "model_request_messages" | "model_request_followups",
+          select: string,
+          orderColumn: string,
+        ): Promise<{ rows: any[]; error: any }> => {
+          const rows: any[] = [];
+          const ID_BATCH = 40;
+          const PAGE_SIZE = 1000;
+          for (let start = 0; start < ids.length; start += ID_BATCH) {
+            const batch = ids.slice(start, start + ID_BATCH);
+            for (let page = 0; page < 100; page++) {
+              const from = page * PAGE_SIZE;
+              const result = await (supabase as any)
+                .from(table)
+                .select(select)
+                .in("request_id", batch)
+                .order(orderColumn, { ascending: true })
+                .range(from, from + PAGE_SIZE - 1);
+              if (result.error) return { rows, error: result.error };
+              const chunk = result.data || [];
+              rows.push(...chunk);
+              if (chunk.length < PAGE_SIZE) break;
+            }
+          }
+          return { rows, error: null };
+        };
+
+        const [msgsResult, fupsResult] = await Promise.all([
+          fetchForRequestIds("model_request_messages", "*", "created_at"),
+          fetchForRequestIds("model_request_followups", "id, request_id, sent_at, note", "sent_at"),
         ]);
+        const { rows: msgs, error: msgsError } = msgsResult;
+        const { rows: fups, error: fupsError } = fupsResult;
+        if (msgsError) {
+          console.error("[RequestMessages] load failed", msgsError);
+          toast.error(
+            "Kommentare konnten nicht geladen werden. Bitte prüfe deine Verbindung und lade die Seite neu.",
+            { duration: 12000 },
+          );
+        }
+        if (fupsError) console.error("[RequestFollowups] load failed", fupsError);
         (msgs || []).forEach((m: any) => {
           (msgsByReq[m.request_id] ||= []).push(m);
         });
@@ -414,7 +443,14 @@ export default function Dashboard() {
         { event: "*", schema: "public", table: "model_request_followups" },
         () => loadMyRequests(),
       )
-      .subscribe();
+      .subscribe((status) => {
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          toast.error(
+            "Live-Synchronisierung der Kommentare unterbrochen – bitte Seite neu laden.",
+            { duration: 12000 },
+          );
+        }
+      });
 
     return () => {
       supabase.removeChannel(channel);
