@@ -3361,6 +3361,9 @@ export default function AdminDashboard() {
   useEffect(() => {
     if (!user || activeTab !== "anfragen") return;
 
+    // Always catch up on messages that arrived while this tab was closed.
+    void loadModelRequests();
+
     let refreshTimer: ReturnType<typeof setTimeout> | undefined;
     const refreshRequests = () => {
       if (refreshTimer) clearTimeout(refreshTimer);
