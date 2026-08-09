@@ -62,6 +62,7 @@ import NotificationBanner from "@/components/NotificationBanner";
 import { useAuth } from "@/hooks/useAuth";
 import { useUILanguage } from "@/hooks/useUILanguage";
 import { supabase } from "@/integrations/supabase/client";
+import { withWriteRetry } from "@/lib/netRetry";
 import logo from "@/assets/logo.png";
 import GoldParticles from "@/components/GoldParticles";
 import LiveActivityTicker from "@/components/LiveActivityTicker";
@@ -1826,7 +1827,8 @@ export default function Dashboard() {
                               const sendReply = async () => {
                                 const body = draft.trim();
                                 if ((!body && draftAttachments.length === 0) || !user) return;
-                                const { data: ins, error } = await supabase
+                                const { data: ins, error } = await withWriteRetry(() =>
+                                  supabase
                                   .from("model_request_messages")
                                   .insert({
                                     request_id: req.id,
@@ -1837,7 +1839,8 @@ export default function Dashboard() {
                                     visible_to_chatter: true,
                                   } as any)
                                   .select()
-                                  .single();
+                                  .single(),
+                                );
 
                                 if (error || !ins) {
                                   const offline = typeof navigator !== "undefined" && navigator.onLine === false;

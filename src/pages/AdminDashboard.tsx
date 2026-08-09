@@ -101,6 +101,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { withWriteRetry } from "@/lib/netRetry";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
@@ -7846,7 +7847,8 @@ export default function AdminDashboard() {
                                                     const body = (req._localComment ?? "").trim();
                                                     const atts = ((req as any)._localAttachments ?? []) as RequestAttachment[];
                                                     if ((!body && atts.length === 0) || !user) return;
-                                                    const { data: ins, error } = await supabase
+                                                    const { data: ins, error } = await withWriteRetry(() =>
+                                                      supabase
                                                       .from("model_request_messages")
                                                       .insert({
                                                         request_id: req.id,
@@ -7857,7 +7859,8 @@ export default function AdminDashboard() {
                                                          visible_to_chatter: true,
                                                       } as any)
                                                       .select()
-                                                      .single();
+                                                      .single(),
+                                                    );
                                                     if (error || !ins) {
                                                       const offline = typeof navigator !== "undefined" && navigator.onLine === false;
                                                       const msg = offline
