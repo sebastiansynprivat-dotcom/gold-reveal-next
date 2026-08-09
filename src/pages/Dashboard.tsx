@@ -293,7 +293,10 @@ export default function Dashboard() {
       model_name?: string;
     }[]
   >([]);
+  const [perModelMonthly, setPerModelMonthly] = useState<{ name: string; total: number }[]>([]);
+  const [perModelLoaded, setPerModelLoaded] = useState(false);
   const [modelInactiveInfoOpen, setModelInactiveInfoOpen] = useState(false);
+
   const [demoModelInactive, setDemoModelInactive] = useState(false);
   const [myRequests, setMyRequests] = useState<any[]>([]);
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
@@ -738,6 +741,48 @@ export default function Dashboard() {
     loadRevenue();
   }, [user]);
 
+  // Per-model monthly revenue (needed for the 3.000 € Elite rule)
+  useEffect(() => {
+    if (!user || assignedAccounts.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const today = new Date().toISOString().slice(0, 10);
+      const monthStart = today.slice(0, 8) + "01";
+      const ids = assignedAccounts.map((a) => a.id);
+      const { data, error } = await supabase
+        .from("accounts_data")
+        .select("account_id,total,date")
+        .in("account_id", ids)
+        .gte("date", monthStart)
+        .lte("date", today);
+      if (cancelled) return;
+      if (error) {
+        console.error("per-model revenue error", error);
+        return;
+      }
+      const byAccount: Record<string, number> = {};
+      for (const row of (data || []) as any[]) {
+        byAccount[row.account_id] = (byAccount[row.account_id] || 0) + Number(row.total || 0);
+      }
+      const byModel: Record<string, number> = {};
+      for (const acc of assignedAccounts) {
+        const key = acc.model_name || acc.account_email || acc.id;
+        byModel[key] = (byModel[key] || 0) + (byAccount[acc.id] || 0);
+      }
+      setPerModelMonthly(
+        Object.entries(byModel)
+          .map(([name, total]) => ({ name, total: Math.round(total) }))
+          .sort((a, b) => b.total - a.total),
+      );
+      setPerModelLoaded(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user, assignedAccounts]);
+
+
+
 
   // // Save revenue on change (debounced)
   // const saveRevenue = useCallback(async (amount: number) => {
@@ -785,10 +830,19 @@ export default function Dashboard() {
   const FORCED_ELITE_USER_IDS = new Set(["ad822168-efed-495f-b1da-84fdf75538f3"]);
   const CHAMPIONS_LEAGUE_USER_IDS = new Set(["170b30d0-c3a4-4272-ab57-302860e9e025"]); // Philip S
   const isChampionsLeague = !!(user && CHAMPIONS_LEAGUE_USER_IDS.has(user.id));
+
+  // Elite (25%) qualifies only if >= 3.000 € monthly revenue with a SINGLE model
+  const bestModelMonthly = useMemo(
+    () => perModelMonthly.reduce((max, m) => Math.max(max, m.total), 0),
+    [perModelMonthly],
+  );
+  // Until per-model data is loaded, fall back to total monthly revenue (avoids flicker)
+  const tierBasisRevenue = perModelLoaded ? bestModelMonthly : monthlyRevenue;
+
   let currentTier: { name: string; emoji: string; min: number; max: number; rate: number } =
-    getCurrentTier(monthlyRevenue) as any;
+    getCurrentTier(tierBasisRevenue) as any;
   let nextTier: { name: string; emoji: string; min: number; max: number; rate: number } | null =
-    getNextTier(monthlyRevenue) as any;
+    getNextTier(tierBasisRevenue) as any;
   if (isChampionsLeague) {
     currentTier = { name: "Champions League", emoji: "🏆", min: 0, max: Infinity, rate: 30 };
     nextTier = null;
@@ -801,8 +855,9 @@ export default function Dashboard() {
   const verdienst = monthlyRevenue * rate;
   const isTopTier = !nextTier;
   const progressToNext = nextTier
-    ? Math.min(((monthlyRevenue - currentTier.min) / (nextTier.min - currentTier.min)) * 100, 100)
+    ? Math.min(((tierBasisRevenue - currentTier.min) / (nextTier.min - currentTier.min)) * 100, 100)
     : 100;
+
 
   const fireConfetti = useCallback(() => {
     confetti({
@@ -1229,7 +1284,51 @@ export default function Dashboard() {
               </p>
             </motion.div>
           </motion.div>
+
+          {/* Elite-Tracking: 25% gilt nur ab 3.000 € Monatsumsatz mit EINEM Model */}
+          {perModelLoaded && perModelMonthly.length > 0 && !isChampionsLeague && (
+            <div className="glass-card-subtle rounded-xl p-4 card-inner-glow space-y-3">
+              <div>
+                <p className="text-xs font-medium text-foreground">Elite-Rate (25 %) — Fortschritt pro Model</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  Die 25 % gelten erst, wenn du mit <span className="text-foreground font-semibold">einem einzelnen Model</span> mindestens 3.000 € Monatsumsatz erreichst.
+                </p>
+              </div>
+              <div className="space-y-2.5">
+                {perModelMonthly.map((m) => {
+                  const pct = Math.min((m.total / 3000) * 100, 100);
+                  const done = m.total >= 3000;
+                  return (
+                    <div key={m.name} className="space-y-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs text-muted-foreground truncate">{m.name}</span>
+                        <span className={`text-xs font-bold ${done ? "text-gold-gradient" : "text-foreground"}`}>
+                          {m.total.toLocaleString("de-DE")}€ / 3.000€
+                        </span>
+                      </div>
+                      <div className="h-1.5 w-full rounded-full bg-muted/30 overflow-hidden">
+                        <div
+                          className={`h-full rounded-full ${done ? "bg-accent" : "bg-accent/50"}`}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              {!perModelMonthly.some((m) => m.total >= 3000) && (
+                <p className="text-[10px] text-muted-foreground">
+                  Noch{" "}
+                  <span className="text-foreground font-semibold">
+                    {(3000 - bestModelMonthly).toLocaleString("de-DE")}€
+                  </span>{" "}
+                  mit deinem stärksten Model bis zur Elite-Rate.
+                </p>
+              )}
+            </div>
+          )}
         </div>
+
 
         {/* Quick Action Bar */}
         <QuickActionBar
