@@ -1699,10 +1699,18 @@ export default function Dashboard() {
                                   .select()
                                   .single();
 
-                                if (error) {
-                                  toast.error("Fehler beim Senden");
+                                if (error || !ins) {
+                                  const offline = typeof navigator !== "undefined" && navigator.onLine === false;
+                                  toast.error(
+                                    offline
+                                      ? "Keine Internetverbindung – Nachricht wurde NICHT gesendet. Bitte erneut versuchen."
+                                      : `Nachricht wurde NICHT gesendet: ${error?.message || "Unbekannter Fehler"}. Bitte Seite neu laden und erneut senden.`,
+                                    { duration: 12000 },
+                                  );
+                                  console.error("[ChatterReply] insert failed", error);
                                   return;
                                 }
+
                                 setMyRequests((prev) =>
                                   prev.map((r) =>
                                     r.id === req.id
