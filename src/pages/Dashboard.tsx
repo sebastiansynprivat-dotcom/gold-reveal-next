@@ -1284,7 +1284,51 @@ export default function Dashboard() {
               </p>
             </motion.div>
           </motion.div>
+
+          {/* Elite-Tracking: 25% gilt nur ab 3.000 € Monatsumsatz mit EINEM Model */}
+          {perModelLoaded && perModelMonthly.length > 0 && !isChampionsLeague && (
+            <div className="glass-card-subtle rounded-xl p-4 card-inner-glow space-y-3">
+              <div>
+                <p className="text-xs font-medium text-foreground">Elite-Rate (25 %) — Fortschritt pro Model</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">
+                  Die 25 % gelten erst, wenn du mit <span className="text-foreground font-semibold">einem einzelnen Model</span> mindestens 3.000 € Monatsumsatz erreichst.
+                </p>
+              </div>
+              <div className="space-y-2.5">
+                {perModelMonthly.map((m) => {
+                  const pct = Math.min((m.total / 3000) * 100, 100);
+                  const done = m.total >= 3000;
+                  return (
+                    <div key={m.name} className="space-y-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-xs text-muted-foreground truncate">{m.name}</span>
+                        <span className={`text-xs font-bold ${done ? "text-gold-gradient" : "text-foreground"}`}>
+                          {m.total.toLocaleString("de-DE")}€ / 3.000€
+                        </span>
+                      </div>
+                      <div className="h-1.5 w-full rounded-full bg-muted/30 overflow-hidden">
+                        <div
+                          className={`h-full rounded-full ${done ? "bg-accent" : "bg-accent/50"}`}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              {!perModelMonthly.some((m) => m.total >= 3000) && (
+                <p className="text-[10px] text-muted-foreground">
+                  Noch{" "}
+                  <span className="text-foreground font-semibold">
+                    {(3000 - bestModelMonthly).toLocaleString("de-DE")}€
+                  </span>{" "}
+                  mit deinem stärksten Model bis zur Elite-Rate.
+                </p>
+              )}
+            </div>
+          )}
         </div>
+
 
         {/* Quick Action Bar */}
         <QuickActionBar
