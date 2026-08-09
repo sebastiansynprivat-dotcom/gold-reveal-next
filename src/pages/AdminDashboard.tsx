@@ -3384,20 +3384,21 @@ export default function AdminDashboard() {
         { event: "*", schema: "public", table: "model_requests" },
         refreshRequests,
       )
-      .subscribe((status) => {
-        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
-          toast.error("Live-Synchronisierung der Anfragen unterbrochen – bitte Seite neu laden.", {
-            duration: 12000,
-          });
-        }
-      });
+      // Reconnects happen silently – no status toasts. Errors are only surfaced
+      // when an actual send/save fails.
+      .subscribe();
 
     const handleOnline = () => void loadModelRequests();
+    const handleVisible = () => {
+      if (document.visibilityState === "visible") void loadModelRequests();
+    };
     window.addEventListener("online", handleOnline);
+    document.addEventListener("visibilitychange", handleVisible);
 
     return () => {
       if (refreshTimer) clearTimeout(refreshTimer);
       window.removeEventListener("online", handleOnline);
+      document.removeEventListener("visibilitychange", handleVisible);
       void supabase.removeChannel(channel);
     };
     // loadModelRequests intentionally uses the current dashboard state and is
