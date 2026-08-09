@@ -785,10 +785,19 @@ export default function Dashboard() {
   const FORCED_ELITE_USER_IDS = new Set(["ad822168-efed-495f-b1da-84fdf75538f3"]);
   const CHAMPIONS_LEAGUE_USER_IDS = new Set(["170b30d0-c3a4-4272-ab57-302860e9e025"]); // Philip S
   const isChampionsLeague = !!(user && CHAMPIONS_LEAGUE_USER_IDS.has(user.id));
+
+  // Elite (25%) qualifies only if >= 3.000 € monthly revenue with a SINGLE model
+  const bestModelMonthly = useMemo(
+    () => perModelMonthly.reduce((max, m) => Math.max(max, m.total), 0),
+    [perModelMonthly],
+  );
+  // Until per-model data is loaded, fall back to total monthly revenue (avoids flicker)
+  const tierBasisRevenue = perModelLoaded ? bestModelMonthly : monthlyRevenue;
+
   let currentTier: { name: string; emoji: string; min: number; max: number; rate: number } =
-    getCurrentTier(monthlyRevenue) as any;
+    getCurrentTier(tierBasisRevenue) as any;
   let nextTier: { name: string; emoji: string; min: number; max: number; rate: number } | null =
-    getNextTier(monthlyRevenue) as any;
+    getNextTier(tierBasisRevenue) as any;
   if (isChampionsLeague) {
     currentTier = { name: "Champions League", emoji: "🏆", min: 0, max: Infinity, rate: 30 };
     nextTier = null;
@@ -801,8 +810,9 @@ export default function Dashboard() {
   const verdienst = monthlyRevenue * rate;
   const isTopTier = !nextTier;
   const progressToNext = nextTier
-    ? Math.min(((monthlyRevenue - currentTier.min) / (nextTier.min - currentTier.min)) * 100, 100)
+    ? Math.min(((tierBasisRevenue - currentTier.min) / (nextTier.min - currentTier.min)) * 100, 100)
     : 100;
+
 
   const fireConfetti = useCallback(() => {
     confetti({
