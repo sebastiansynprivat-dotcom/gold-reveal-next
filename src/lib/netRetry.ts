@@ -21,14 +21,14 @@ async function waitForOnline(timeoutMs = 8000) {
  * Returns the last result (data/error) so callers keep their existing handling.
  */
 export async function withWriteRetry<T extends { data: any; error: any }>(
-  run: () => Promise<T>,
+  run: () => PromiseLike<T>,
   attempts = 3,
 ): Promise<T> {
   let last: T | undefined;
   for (let i = 0; i < attempts; i++) {
     await waitForOnline();
     try {
-      last = await run();
+      last = (await run()) as T;
     } catch (e: any) {
       last = { data: null, error: e ?? new Error("Netzwerkfehler") } as T;
     }
