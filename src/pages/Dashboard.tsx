@@ -738,6 +738,48 @@ export default function Dashboard() {
     loadRevenue();
   }, [user]);
 
+  // Per-model monthly revenue (needed for the 3.000 € Elite rule)
+  useEffect(() => {
+    if (!user || assignedAccounts.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const today = new Date().toISOString().slice(0, 10);
+      const monthStart = today.slice(0, 8) + "01";
+      const ids = assignedAccounts.map((a) => a.id);
+      const { data, error } = await supabase
+        .from("accounts_data")
+        .select("account_id,total,date")
+        .in("account_id", ids)
+        .gte("date", monthStart)
+        .lte("date", today);
+      if (cancelled) return;
+      if (error) {
+        console.error("per-model revenue error", error);
+        return;
+      }
+      const byAccount: Record<string, number> = {};
+      for (const row of (data || []) as any[]) {
+        byAccount[row.account_id] = (byAccount[row.account_id] || 0) + Number(row.total || 0);
+      }
+      const byModel: Record<string, number> = {};
+      for (const acc of assignedAccounts) {
+        const key = acc.model_name || acc.account_email || acc.id;
+        byModel[key] = (byModel[key] || 0) + (byAccount[acc.id] || 0);
+      }
+      setPerModelMonthly(
+        Object.entries(byModel)
+          .map(([name, total]) => ({ name, total: Math.round(total) }))
+          .sort((a, b) => b.total - a.total),
+      );
+      setPerModelLoaded(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user, assignedAccounts]);
+
+
+
 
   // // Save revenue on change (debounced)
   // const saveRevenue = useCallback(async (amount: number) => {
