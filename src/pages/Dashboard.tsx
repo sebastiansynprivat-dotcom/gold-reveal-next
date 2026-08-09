@@ -353,7 +353,7 @@ export default function Dashboard() {
       let msgsByReq: Record<string, any[]> = {};
       let fupsByReq: Record<string, any[]> = {};
       if (ids.length > 0) {
-        const [{ data: msgs }, { data: fups }] = await Promise.all([
+        const [msgsResult, fupsResult] = await Promise.all([
           supabase
             .from("model_request_messages")
             .select("*")
@@ -365,6 +365,16 @@ export default function Dashboard() {
             .in("request_id", ids)
             .order("sent_at", { ascending: true }),
         ]);
+        const { data: msgs, error: msgsError } = msgsResult;
+        const { data: fups, error: fupsError } = fupsResult;
+        if (msgsError) {
+          console.error("[RequestMessages] load failed", msgsError);
+          toast.error(
+            "Kommentare konnten nicht geladen werden. Bitte prüfe deine Verbindung und lade die Seite neu.",
+            { duration: 12000 },
+          );
+        }
+        if (fupsError) console.error("[RequestFollowups] load failed", fupsError);
         (msgs || []).forEach((m: any) => {
           (msgsByReq[m.request_id] ||= []).push(m);
         });

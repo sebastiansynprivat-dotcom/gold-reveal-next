@@ -3355,6 +3355,53 @@ export default function AdminDashboard() {
     setModelRequestsLoaded(true);
   };
 
+  // Keep the admin request inbox synchronized in both directions. Previously it
+  // only loaded when the tab was opened, so chatter replies that arrived later
+  // stayed invisible until a full page refresh.
+  useEffect(() => {
+    if (!user || activeTab !== "anfragen") return;
+
+    let refreshTimer: ReturnType<typeof setTimeout> | undefined;
+    const refreshRequests = () => {
+      if (refreshTimer) clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(() => {
+        void loadModelRequests();
+      }, 250);
+    };
+
+    const channel = supabase
+      .channel(`admin_request_messages_${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "model_request_messages" },
+        refreshRequests,
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "model_requests" },
+        refreshRequests,
+      )
+      .subscribe((status) => {
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          toast.error("Live-Synchronisierung der Anfragen unterbrochen – bitte Seite neu laden.", {
+            duration: 12000,
+          });
+        }
+      });
+
+    const handleOnline = () => void loadModelRequests();
+    window.addEventListener("online", handleOnline);
+
+    return () => {
+      if (refreshTimer) clearTimeout(refreshTimer);
+      window.removeEventListener("online", handleOnline);
+      void supabase.removeChannel(channel);
+    };
+    // loadModelRequests intentionally uses the current dashboard state and is
+    // invoked only from realtime/online events while this tab is mounted.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab, user]);
+
   // ==== Follow-up helpers (Custom Anfragen) ====
   const FOLLOWUP_THRESHOLD_DAYS = 2;
   // waiting_feedback ist NICHT eligible — dort wartet aktiv Model/Chatter zurück
@@ -7803,6 +7850,7 @@ export default function AdminDashboard() {
                                                         sender_role: "admin",
                                                         body: body || "(Medien angehängt)",
                                                         attachments: atts as any,
+                                                         visible_to_chatter: true,
                                                       } as any)
                                                       .select()
                                                       .single();
