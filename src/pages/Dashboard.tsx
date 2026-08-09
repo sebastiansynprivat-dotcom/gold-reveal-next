@@ -293,7 +293,10 @@ export default function Dashboard() {
       model_name?: string;
     }[]
   >([]);
+  const [perModelMonthly, setPerModelMonthly] = useState<{ name: string; total: number }[]>([]);
+  const [perModelLoaded, setPerModelLoaded] = useState(false);
   const [modelInactiveInfoOpen, setModelInactiveInfoOpen] = useState(false);
+
   const [demoModelInactive, setDemoModelInactive] = useState(false);
   const [myRequests, setMyRequests] = useState<any[]>([]);
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
