@@ -446,14 +446,17 @@ export default function Dashboard() {
         { event: "*", schema: "public", table: "model_request_followups" },
         () => loadMyRequests(),
       )
-      .subscribe((status) => {
-        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
-          toast.error(
-            "Live-Synchronisierung der Kommentare unterbrochen – bitte Seite neu laden.",
-            { duration: 12000 },
-          );
-        }
-      });
+      // Silent reconnects – no status toasts. Problems are only reported when a
+      // send actually fails.
+      .subscribe();
+
+    const handleVisible = () => {
+      if (document.visibilityState === "visible") void loadMyRequests();
+    };
+    const handleOnline = () => void loadMyRequests();
+    document.addEventListener("visibilitychange", handleVisible);
+    window.addEventListener("online", handleOnline);
+
 
     return () => {
       supabase.removeChannel(channel);
