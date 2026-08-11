@@ -710,10 +710,10 @@ export default function Dashboard() {
   const { playCoinSound, playLevelUpSound } = useSoundEffects();
   const prevTierRef = useRef<string | null>(null);
 
-  // Load revenue data from accounts_data (only currently assigned accounts)
-  useEffect(() => {
+  // Load revenue data from accounts_data (only currently assigned accounts).
+  // Keep this callable so ingests and returning from another app refresh the figures.
+  const loadRevenue = useCallback(async () => {
     if (!user) return;
-    const loadRevenue = async () => {
       const today = new Date().toISOString().slice(0, 10);
       const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
       const monthStart = today.slice(0, 8) + "01";
@@ -732,7 +732,7 @@ export default function Dashboard() {
       if (data) {
         const rows = data as { date: string; total: number | string }[];
         const todayEntry = rows.find((d) => d.date === today);
-        if (todayEntry) setUmsatz(Number(todayEntry.total));
+        setUmsatz(todayEntry ? Number(todayEntry.total) : 0);
 
         const yesterdayEntry = rows.find((d) => d.date === yesterday);
         setYesterdayRevenue(yesterdayEntry ? Number(yesterdayEntry.total) : 0);
@@ -743,9 +743,38 @@ export default function Dashboard() {
         const total = rows.reduce((sum, d) => sum + Number(d.total), 0);
         setTotalRevenue(total);
       }
-    };
-    loadRevenue();
   }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    void loadRevenue();
+
+    const channel = supabase
+      .channel(`dashboard_revenue_${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "accounts_data" },
+        () => void loadRevenue(),
+      )
+      .subscribe();
+
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") void loadRevenue();
+    };
+    const refreshWhenOnline = () => void loadRevenue();
+    const refreshInterval = window.setInterval(() => {
+      if (document.visibilityState === "visible") void loadRevenue();
+    }, 30_000);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+    window.addEventListener("online", refreshWhenOnline);
+
+    return () => {
+      window.clearInterval(refreshInterval);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+      window.removeEventListener("online", refreshWhenOnline);
+      supabase.removeChannel(channel);
+    };
+  }, [user, loadRevenue]);
 
   // Per-model monthly revenue (needed for the 3.000 € Elite rule)
   useEffect(() => {
