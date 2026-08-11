@@ -762,10 +762,14 @@ export default function Dashboard() {
       if (document.visibilityState === "visible") void loadRevenue();
     };
     const refreshWhenOnline = () => void loadRevenue();
+    const refreshInterval = window.setInterval(() => {
+      if (document.visibilityState === "visible") void loadRevenue();
+    }, 30_000);
     document.addEventListener("visibilitychange", refreshWhenVisible);
     window.addEventListener("online", refreshWhenOnline);
 
     return () => {
+      window.clearInterval(refreshInterval);
       document.removeEventListener("visibilitychange", refreshWhenVisible);
       window.removeEventListener("online", refreshWhenOnline);
       supabase.removeChannel(channel);
