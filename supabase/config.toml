@@ -41,6 +41,8 @@ project_id = "acznyhzgbkdcmnbqvptt"
     verify_jwt = false
   [functions.ingest-profiles-data]
     verify_jwt = false
+  [functions.model-profile-lookup]
+    verify_jwt = false
   [functions.notify-account-assigned]
     verify_jwt = false
   [functions.process-email-queue]
