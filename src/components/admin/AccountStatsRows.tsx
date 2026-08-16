@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 interface Props {
   accountId: string;
   userId: string;
+  onAssignedDate?: (date: string | null) => void;
 }
 
 interface Stats {
@@ -18,7 +19,7 @@ interface Stats {
 
 const fmt = (n: number) => n.toLocaleString("de-DE");
 
-export default function AccountStatsRows({ accountId, userId }: Props) {
+export default function AccountStatsRows({ accountId, userId, onAssignedDate }: Props) {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -36,11 +37,27 @@ export default function AccountStatsRows({ accountId, userId }: Props) {
 
       if (cancelled) return;
 
+      // Report the most recent assignment start date (dd.MM.yyyy)
+      if (onAssignedDate) {
+        const starts = (assignments || [])
+          .map((a: any) => a.start_date)
+          .filter(Boolean)
+          .sort();
+        const latest = starts[starts.length - 1];
+        if (latest) {
+          const [y, m, d] = String(latest).slice(0, 10).split("-");
+          onAssignedDate(`${d}.${m}.${y}`);
+        } else {
+          onAssignedDate(null);
+        }
+      }
+
       if (!assignments || assignments.length === 0) {
         setStats({ yesterday: 0, week: 0, month: 0, allTime: 0, massDMs: null, openChats: null, oldestChat: null });
         setLoading(false);
         return;
       }
+
 
       const today = new Date();
       const iso = (d: Date) => d.toISOString().slice(0, 10);
